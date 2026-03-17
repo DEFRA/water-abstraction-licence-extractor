@@ -18,11 +18,13 @@
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.5.25277.114" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.5.25277.114" />
         <PackageReference Include="PDFtoImage" Version="5.1.1" />
+        <PackageReference Include="SharpZipLib" Version="1.4.2" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\WALE.ProcessFile.Database.PostgreSQL\WALE.ProcessFile.Database.PostgreSQL.csproj" />
       <ProjectReference Include="..\..\WALE.ProcessFile.RuleEngine\WALE.ProcessFile.RuleEngine.csproj" />
+      <ProjectReference Include="..\..\WALE.ProcessFile.Services.AwsS3\WALE.ProcessFile.Services.AwsS3.csproj" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">

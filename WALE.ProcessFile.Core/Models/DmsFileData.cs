@@ -11,4 +11,6 @@ public class DmsFileData
     public string? DestinationFileName { get; set; }
     
     public string? StrippedLicenceNumber { get; set; }
+    
+    public Guid? FileId { get; set; }
 }

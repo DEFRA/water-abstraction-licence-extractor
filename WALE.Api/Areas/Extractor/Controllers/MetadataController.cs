@@ -19,7 +19,7 @@ public class MetadataController(ICacheService cacheService) : Controller
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
-            Filepath = filename,
+            Filename = filename,
             NoOcrServiceName = noOcrServiceName
         };
         

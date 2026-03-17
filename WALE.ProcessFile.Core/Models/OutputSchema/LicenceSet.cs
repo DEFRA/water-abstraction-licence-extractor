@@ -1,5 +1,6 @@
 using System.Text;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
@@ -9,16 +10,7 @@ public class LicenceSet
     {
         get
         {
-            var licencesAlphabetical = Licences
-                .OrderBy(licence =>
-                {
-                    var licenceNumber = licence.LicenceNumber?
-                        .Replace(" ", string.Empty)
-                        .Replace("/", string.Empty);
-                    
-                    return licenceNumber + licence.LicenceVersion.LicenceVersionId;
-                });
-
+            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
             var outputSb = new StringBuilder();
             
             foreach (var licence in licencesAlphabetical)
@@ -28,12 +20,7 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                var licenceNumber = licence.LicenceNumber?
-                    .Replace(" ", string.Empty)
-                    .Replace("/", string.Empty);
-
-                var licenceVersionId = licence.LicenceVersion.LicenceVersionId;
-                outputSb.Append($"{licenceNumber}-{licenceVersionId}");
+                outputSb.Append(licence.Id);
             }
 
             return outputSb.ToString();
@@ -44,9 +31,7 @@ public class LicenceSet
     {
         get
         {
-            var licencesAlphabetical = Licences
-                .OrderBy(licence => licence.LicenceNumber + licence.LicenceVersion.LicenceVersionId);
-
+            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
             var outputSb = new StringBuilder();
             
             foreach (var licence in licencesAlphabetical)
@@ -56,7 +41,7 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                var licenceNumberParts = licence.LicenceNumber?
+                var licenceNumberParts = licence.LicenceNumber?.Value?
                     .Replace(" ", "/")
                     .Replace(".", "/")
                     .Split('/');

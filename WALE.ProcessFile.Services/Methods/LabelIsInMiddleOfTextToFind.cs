@@ -3,7 +3,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -15,7 +14,7 @@ public static class LabelIsInMiddleOfTextToFind
         ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult.Clone(
-            MatchType.MatchIsEitherSideOfLabel,
+            MatchedPosition.EitherSideOfLabel,
             LabelPosition.LabelIsInMiddleOfTextToFind,
             request.label);
         
@@ -26,9 +25,17 @@ public static class LabelIsInMiddleOfTextToFind
         {
             var beforeOnSameLine = request.textBeforeAtAndAfterLabel![0];
 
+            var beforeOnSameLineWords = request.line!.Columns
+                .SelectMany(c => c.Words)
+                .ToList();
+            
+            beforeOnSameLineWords = DocumentLineColumn.FilterWordsFromText(
+                beforeOnSameLineWords,
+                beforeOnSameLine.ColumnsText![0]);
+            
             var clonedLine = request.line!.Clone();
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLine.ColumnsText![0]));
+            clonedLine.Columns.Add(new DocumentLineColumn(beforeOnSameLineWords));
             
             inputLines.Add(clonedLine);
 
@@ -36,9 +43,17 @@ public static class LabelIsInMiddleOfTextToFind
             {
                 var afterOnSameLine = request.textBeforeAtAndAfterLabel![1];
                 
+                var afterOnSameLineWords = request.line.Columns
+                    .SelectMany(c => c.Words)
+                    .ToList();
+                
+                afterOnSameLineWords = DocumentLineColumn.FilterWordsFromText(
+                    afterOnSameLineWords,
+                    afterOnSameLine.ColumnsText![0]);
+                
                 clonedLine = request.line!.Clone();
                 clonedLine.Columns.Clear();
-                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLine.ColumnsText![0]));
+                clonedLine.Columns.Add(new DocumentLineColumn(afterOnSameLineWords));
                 
                 inputLines.Add(clonedLine);
             }
@@ -54,8 +69,8 @@ public static class LabelIsInMiddleOfTextToFind
             out _,
             out var removedLines);
         
-        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedLines, false);
-
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedLines, false);
+        
         foreach (var item in returnList)
         {
             FormattingHelper.RemoveRemoves(item, removedLines);

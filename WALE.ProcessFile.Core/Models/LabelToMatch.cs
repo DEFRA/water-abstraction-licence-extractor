@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -23,9 +24,12 @@ public class LabelToMatch
     public IReadOnlyList<string>? MustContain { get; set; }
     public int? MinimumSubMatches { get; init; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public MultipleServiceMatchBehaviour MultipleServiceMatchBehaviour { get; init; } =
         MultipleServiceMatchBehaviour.UseLastServiceResult;
     public bool CanGoOverPageBoundary { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LabelPosition Position { get; set; }
     public string? RelatedCategoryName { get; init; }
     public string? RelatedName { get; init; }
@@ -41,12 +45,23 @@ public class LabelToMatch
     public int PreviousLinesToFetch { get; init; } = 2;
     public int NextLinesToFetch { get; init; } = 4;
     public bool DoNotTrimLines { get; init; }
-    public MultipleBehaviour MultipleBehaviour { get; init; } = MultipleBehaviour.FindSingleInstanceOfLabelWithASingleValue;
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public MultipleMatchBehaviour MultipleMatchBehaviour { get; init; } = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue;
     public bool FindMultipleOnSingleLine { get; init; }
         
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public bool Completed { get; set; }
     public bool AutoCorrect { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ConfidenceType ConfidenceType { get; init; } = ConfidenceType.NotSet;
+
+    public int NoOcrConfidence { get; init; } = 100;
+    
+    public double? ConfidenceIfMatched { get; init; }
+
+    public double OcrConfidenceMinusNPerLine { get; init; } = 1;
     public IReadOnlyList<int> SkipLineNumbers { get; set; } = [];
 
     public LabelToMatch Clone()
@@ -79,12 +94,16 @@ public class LabelToMatch
             Possibilities = Possibilities?.ToList(),
             PreviousLinesToFetch = PreviousLinesToFetch,
             NextLinesToFetch = NextLinesToFetch,
-            MultipleBehaviour = MultipleBehaviour,
+            MultipleMatchBehaviour = MultipleMatchBehaviour,
             FindMultipleOnSingleLine = FindMultipleOnSingleLine,
             Completed = false,
             DoNotTrimLines = DoNotTrimLines,
             AutoCorrect = AutoCorrect,
-            SkipLineNumbers = SkipLineNumbers
+            SkipLineNumbers = SkipLineNumbers,
+            ConfidenceIfMatched = ConfidenceIfMatched,
+            OcrConfidenceMinusNPerLine = OcrConfidenceMinusNPerLine,
+            ConfidenceType = ConfidenceType,
+            NoOcrConfidence = NoOcrConfidence
         };
     }    
 }

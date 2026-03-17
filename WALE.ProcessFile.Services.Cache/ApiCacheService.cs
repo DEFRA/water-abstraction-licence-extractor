@@ -3,60 +3,96 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Cache;
 
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true;
-    public string? CacheFolder { get; set; }
-    public string? Host { get; set; }
-    public int Port { get; set; }
-    public string? DatabaseName { get; set; }
-    public string? Username { get; set; }
-    public string? Password { get; set; }
+    public bool UsesDatabase { get; set; } = true; // Because its back by a DB
+    public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
     public Task SetupAsync()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
-    public Task ClearCacheAsync(string pdfFilename)
+    public async Task ClearCacheAsync(string pdfFilename)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Cache/ClearSingle?pdfFilename={pdfFilename}";
+       
+        var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task ClearCacheAsync()
+    public async Task ClearCacheAsync()
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Cache/ClearAll";
+       
+        var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension,
+    public async Task<byte[]> DeflateImageAsync(
+        string pdfFilename,
+        int imageNumber,
+        int pageNumber,
+        int processRunId,
+        string extension,
         string serviceName)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/DeflateImage?pdfFilename={pdfFilename}"
+           + $"&imageNumber={imageNumber}&pageNumber={pageNumber}"
+           + $"&processRunId={processRunId}&extension={extension}&serviceName={serviceName}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilePath, string extension, string serviceName,
+    public Task<string> GetImageReferenceAsync(int pageNumber, int imageNumber, string pdfFilename, string extension, string serviceName,
         int? width = null, int? height = null)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilename, extension));
     }
 
-    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/GetImage?pageNumber={request.PageNumber}"
+           + $"&imageNumber={request.ImageNumber}&filename={request.Filename}"
+           + $"&noOcrServiceName={request.NoOcrServiceName}&extension={request.Extension}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>> GetImagesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<List<ImageDetails>>
+        GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Images/GetAll?filename={request.Filename}&noOcrServiceName={request.NoOcrServiceName}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<ImageDetails>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(
+            ImageReferenceHelper.GetNoOcrPageReferenceAsync(
+                request.Filename!,
+                request.NoOcrServiceName!,
+                request.PageNumber));
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
@@ -79,81 +115,275 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
+        var path = $"/Extractor/Ocr/GetImageText?pageNumber={request.PageNumber}"
+            + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return content;
     }
 
-    public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
+        var path = $"/Extractor/Ocr/GetScreenshotText?pageNumber={request.PageNumber}"
+           + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
+           + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return content;
     }
 
-    public Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
+        
+        var path = $"/Extractor/Ocr/GetTemporaryImageText?pageNumber={request.PageNumber}"
+            + $"&imageNumber={request.ImageNumber}&filename={filenameNoExtension}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        throw new NotImplementedException();
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(request.Filename);
+        var path = $"/Extractor/Ocr/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
+            + $"&filename={filenameNoExtension}"
+            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+
+        var response = await httpClient.GetAsync(path);
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName,
-        int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(
+        byte[] bytes,
+        int width,
+        int height,
+        string pdfFilename,
+        string noOcrServiceName,
+        int imageNumber,
+        int pageNumber,
+        string extension,
+        int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Images/SaveImageOnPage";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            Bytes = bytes,
+            Width = width,
+            Height = height,
+            PdfFilename = pdfFilename,
+            NoOcrServiceName = noOcrServiceName,
+            ImageNumber = imageNumber,
+            PageNumber = pageNumber,
+            Extension = extension,
+            ProcessRunId = processRunId
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
     }
 
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, List<Dictionary<string, object>> pagesMetadata)
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+        NoOcrServiceMetadataCacheRequest request,
+        List<Dictionary<string, object>> pagesMetadata)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveNoOcrPagesMetadata";
+        var pagesMetadataJson = JsonSerializer.Serialize(pagesMetadata, JsonHelper.GetSerializerOptions());
+        
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.NoOcrServiceName,
+            request.ProcessRunId,
+            pageLines = pagesMetadataJson
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+
+        return request;
     }
 
-    public Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveNoOcrImagesMetadata";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.NoOcrServiceName,
+            request.ProcessRunId,
+            ImagesMetadata = JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(NoOcrServicePageCacheRequest request, List<MinimalTextBlock> pageLines)
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
+        NoOcrServicePageCacheRequest request,
+        string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/NoOcr/SaveNoOcrPageTextLines";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.PageNumber,
+            request.NoOcrServiceName,
+            request.ProcessRunId,
+            pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+
+        return request;
     }
 
-    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveOcrImageText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            request.PageNumber,
+            request.ImageNumber,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveOcrImageText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            request.PageNumber,
+            request.ImageNumber,
+            PageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
+    public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveOcrScreenshotText";
+        
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.PageNumber,
+            request.ImageNumber,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            PageLines = pageLines
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveOcrScreenshotText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.Filename,
+            request.PageNumber,
+            request.ImageNumber,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            PageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrImageTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveTemporaryOcrImageText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.PageNumber,
+            request.ImageNumber,
+            request.Filename,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
+    public async Task SaveTemporaryOcrScreenshotTextAsync(
+        OcrServiceImageTextCacheRequest request,
+        List<LineAndWords> pageLines)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Ocr/SaveTemporaryOcrScreenshotText";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            request.PageNumber,
+            request.Filename,
+            request.OcrServiceName,
+            request.ProcessRunId,
+            Text = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
     }
 
-    public async Task<MetadataCollection?> GetMetadataAsync(string pdfFilePath, string noOcrServiceName, int processRunId)
+    public async Task<MetadataCollection?> GetMetadataAsync(string pdfFilename, string noOcrServiceName, int processRunId)
     {
-        var filepath = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        var path = $"/Extractor/Metadata/Get?filename={filepath}&noOcrServiceName={noOcrServiceName}";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
+        var path = $"/Extractor/Metadata/Get?filename={filenameNoExtension}&noOcrServiceName={noOcrServiceName}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
@@ -161,5 +391,65 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return !string.IsNullOrEmpty(content)
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
+    }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        var path = $"/Extractor/LinkedLicence/GetMap?regionCode={regionCode}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<NaldLinkedLicenceRawData>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    {
+        var path = "/Extractor/NaldData/GetAll";
+
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<NaldDataCollection>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    {
+        var path = "/Extractor/NaldData/GetLicenceStatusData";
+        
+        if (regionCode != null)
+        {
+            path += $"?regionCode={regionCode}";
+        }
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<NaldLicenceStatusData>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public Task<(
+            HashSet<(string, int)> Live,
+            HashSet<(string, int)> Lapsed,
+            HashSet<(string, int)> Expired,
+            HashSet<(string, int)> Revoked,
+            HashSet<(string, int)> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
     }
 }

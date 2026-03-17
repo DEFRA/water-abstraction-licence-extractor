@@ -1,6 +1,5 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -8,17 +7,7 @@ public interface ICacheService
 {
     public bool UsesDatabase { get; set; }
     
-    public string? CacheFolder { get; set; }
-    
-    public string? Host { get; set; }
-    
-    public int Port { get; set; }
-    
-    public string? DatabaseName { get; set; }
-    
-    public string? Username { get; set; }
-    
-    public string? Password { get; set; }
+    public string? CacheFolderOrUrl { get; set; }
     
     public Task SetupAsync();
 
@@ -26,12 +15,12 @@ public interface ICacheService
     
     public Task ClearCacheAsync();
     
-    public Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
+    public Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId, string extension, string serviceName);
 
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
@@ -39,7 +28,7 @@ public interface ICacheService
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
@@ -62,11 +51,11 @@ public interface ICacheService
     Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request);
 
-    public Task SaveImageOnPageAsync(
+    public Task<int> SaveImageOnPageAsync(
         byte[] bytes,
         int width,
         int height,
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int imageNumber,
         int pageNumber,
@@ -77,13 +66,13 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     
-    public Task SaveNoOcrImagesMetadata(
+    public Task SaveNoOcrImagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
     
-    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
-        List<MinimalTextBlock> pageLines);
+        string pageLines);
 
     public Task SaveOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request,
@@ -110,7 +99,21 @@ public interface ICacheService
         List<LineAndWords> pageLines);
 
     Task<MetadataCollection?> GetMetadataAsync(
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId);
+    
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
+
+    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode);
+    
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode);
+    
+    Task<(
+            HashSet<(string, int)> Live,
+            HashSet<(string, int)> Lapsed,
+            HashSet<(string, int)> Expired,
+            HashSet<(string, int)> Revoked,
+            HashSet<(string, int)> Impoundment)> 
+        GetNaldLicenceNumbersAsync(short? regionCode);
 }

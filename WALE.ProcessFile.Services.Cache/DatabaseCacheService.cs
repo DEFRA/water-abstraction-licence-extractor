@@ -4,32 +4,17 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.PdfPig;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Cache;
 
 public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService,
-    string host,
-    int port,
-    string databaseName,
-    string username,
-    string password) : ICacheService
+    IDatabaseWriteService databaseWriteService) : ICacheService
 {
     public bool UsesDatabase { get; set; } = true;
 
-    public string? CacheFolder { get; set; } = null;
-
-    public string? Host { get; set; } = host;
-    
-    public int Port { get; set; } = port;
-    
-    public string? DatabaseName { get; set; } = databaseName;
-    
-    public string? Username { get; set; } = username;
-    
-    public string? Password { get; set; } = password;
+    public string? CacheFolderOrUrl { get; set; } = null;
 
     public Task SetupAsync()
     {
@@ -47,16 +32,17 @@ public class DatabaseCacheService(
         return databaseWriteService.ClearCacheAsync(pdfFilename);
     }
     
-    public async Task<byte[]> DeflateImageAsync(string pdfFilePath, int imageNumber, int pageNumber, int processRunId,  string extension, string serviceName)
+    public async Task<byte[]> DeflateImageAsync(string pdfFilename, int imageNumber, int pageNumber, int processRunId,  string extension, string serviceName)
     {
-        var bytAry = await GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-        {
-            PageNumber = pageNumber,
-            ImageNumber = imageNumber,
-            Filepath = pdfFilePath,
-            Extension = extension,
-            NoOcrServiceName = serviceName
-        });
+        var bytAry = await GetImageBytesAsync(
+            new OcrServiceImageDataCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                Filename = pdfFilename,
+                Extension = extension,
+                NoOcrServiceName = serviceName
+            });
 
         if (bytAry == null)
         {
@@ -70,7 +56,7 @@ public class DatabaseCacheService(
             deflatedBytes,
             pix.Width,
             pix.Height,
-            pdfFilePath, 
+            pdfFilename, 
             serviceName,
             imageNumber,
             pageNumber,
@@ -83,74 +69,77 @@ public class DatabaseCacheService(
     public Task<string> GetImageReferenceAsync(
         int pageNumber,
         int imageNumber,
-        string pdfFilePath,
+        string pdfFilename,
         string extension,
         string serviceName,
         int? width = null,
         int? height = null)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        return Task.FromResult($"ImageReference-{pdfFilename}-{extension}-{pageNumber}-{imageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetImageReference(pageNumber, imageNumber, pdfFilename, extension));
     }
     
-    public Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
+    public Task<List<ImageDetails>>
         GetImagesAsync(OcrServiceImageDataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetImagesAsync(request);
     }
 
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetImageBytesAsync(request);
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrPagesMetadataAsync(request);
     }
 
     public Task<string?> GetNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrImagesMetadata(request);
     }
 
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request)
     {
-        var pdfFilename = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-        return Task.FromResult($"NoOcrPageReference-{pdfFilename}-{request.NoOcrServiceName}-{request.PageNumber}");
+        return Task.FromResult(
+            ImageReferenceHelper.GetNoOcrPageReferenceAsync(
+                request.Filename!,
+                request.NoOcrServiceName!,
+                request.PageNumber));
     }
     
     public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrPageTextLinesAsync(request);
     }
 
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);
     }
 
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetOcrScreenshotTextAsync(request);
     }
     
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseReadService.GetOcrImageTextAsync(request);
     }
     
     public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var content = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
         return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
@@ -158,7 +147,7 @@ public class DatabaseCacheService(
 
     public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var content = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
         return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
@@ -168,7 +157,7 @@ public class DatabaseCacheService(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
 
         var existing = await databaseReadService.GetNoOcrPagesMetadataAsync(request);
 
@@ -187,9 +176,9 @@ public class DatabaseCacheService(
         return await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
     }
 
-    public async Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
+    public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
      
         var existing = await databaseReadService.GetNoOcrImagesMetadata(request);
 
@@ -202,67 +191,137 @@ public class DatabaseCacheService(
         await databaseWriteService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
-    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLines(
+    public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
-        List<MinimalTextBlock> pageLines)
+        string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
-        
-        var pageLinesStr = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
-        return await databaseWriteService.SaveNoOcrPageAsync(request, pageLinesStr, request.ProcessRunId);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
+        return await databaseWriteService.SaveNoOcrPageAsync(request, pageLines, request.ProcessRunId);
     }
 
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrScreenshotTextAsync(request, pageLines, request.ProcessRunId);
     }
 
     public Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
     
     public Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveOcrImageTextAsync(request, pageLines, request.ProcessRunId);
     }
     
-    public Task SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilePath, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
+    public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, string pdfFilename, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilePath)!;
-        return databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+        var filename = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
+        await databaseWriteService.SaveImageOnPageAsync(bytes, width, height, filename, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+
+        return bytes.Length;
     }
     
     public Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveTemporaryOcrImageTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId); // TODO
     }
     
     public Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, List<LineAndWords> pageLines)
     {
-        request.Filepath = FileHelper.GetFilenameWithoutExtension(request.Filepath!);
+        request.Filename = FileHelper.GetFilenameWithoutExtension(request.Filename!);
         return databaseWriteService.SaveTemporaryOcrScreenshotTextAsync(request, JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions()), request.ProcessRunId);
     }
 
     public Task<MetadataCollection?> GetMetadataAsync(
-        string pdfFilePath,
+        string pdfFilename,
         string noOcrServiceName,
         int processRunId)
     {
         return BaseCacheService.GetMetadataAsync(
             this,
-            pdfFilePath,
+            pdfFilename,
             noOcrServiceName,
             processRunId);
+    }
+
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    {
+        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
+ 
+        return data
+            .Where(dataLine => dataLine.RegionCode == regionCode)
+            .ToList();
+    }
+
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    {
+        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
+        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        
+        return new NaldDataCollection
+        {
+            AbstractionLicences = await licencesTask,
+            AbstractionAndImpoundmentLicences = await allLicencesTask,
+            AbstractionLicenceVersions = await versionsTask,
+            AbstractionLicencePurposes = await purposesTask,
+            AbstractionLicencePoints = await pointsTask,
+            AbstractionLicenceQuantities = await quantitiesTask
+        };
+    }
+
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)>
+        GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
+    }
+
+    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+    }
+
+    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicencePointsAsync(regionCode);
+    }
+
+    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    {
+        return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
     }
 }

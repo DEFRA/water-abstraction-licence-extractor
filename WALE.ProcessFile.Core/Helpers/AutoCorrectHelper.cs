@@ -28,8 +28,10 @@ public static class AutoCorrectHelper
 
             foreach (var wordText in wordTexts)
             {
-                var wordBefore = returnLine.Words!.FirstOrDefault(x => x!.Text == wordText)
-                    ?? returnLine.Words!.FirstOrDefault(w => wordText.StartsWith(w!.Text));
+                var wordBefore = returnLine.Words!.FirstOrDefault(w => w!.Text == wordText)
+                    ?? returnLine.Words!.FirstOrDefault(w => wordText.StartsWith(w!.Text))
+                    ?? returnLine.Words!.FirstOrDefault(w => w!.Text.StartsWith(wordText))
+                    ?? returnLine.Words!.First();             
 
                 var newWord = new DocumentLineWord(
                     wordText,
@@ -87,7 +89,6 @@ public static class AutoCorrectHelper
                 }
 
                 column.Words = newWords;
-                column.Text = string.Join(' ', newWords.Select(w => w.Text));
             }
         }
     }
@@ -242,33 +243,28 @@ public static class AutoCorrectHelper
         return word;
     }
 
-    public static string? AutoCorrectText(
-        string? lineText,
+    public static List<DocumentLineWord> AutoCorrectText(
+        List<DocumentLineWord> lineWords,
         bool removeFirstWordIfLowercase,
         bool checkDictionary)
     {
-        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(lineText)
-            || CompanyNameHelper.CompanyWords.Any(companyWord => lineText?.StartsWith(companyWord) ?? false))
+        var firstWord = lineWords.FirstOrDefault();
+        
+        if (CompanyNameHelper.StartsWithCompanyOrPersonalPrefix(firstWord?.Text)
+            || CompanyNameHelper.CompanyWords.Any(companyWord => firstWord?.Text.StartsWith(companyWord) ?? false))
         {
-            return lineText;
+            return lineWords;
         }
         
-        var wordsSplit = lineText?.Split(' ');
-        
-        if (wordsSplit == null)
-        {
-            return null;
-        }
-        
-        var words = wordsSplit
-            .Select((line, index) =>
+        var words = lineWords
+            .Select((word, index) =>
             (
-                line,
-                wordsSplit.Length > index + 1 ? wordsSplit[index + 1] : null
+                word,
+                lineWords.Count > index + 1 ? lineWords[index + 1] : null
             ))
             .ToList();
 
-        var newWords = new List<string>();
+        var newWords = new List<DocumentLineWord>();
         var isFirstWord = true;
         var skipNextWord = false;
         
@@ -279,12 +275,18 @@ public static class AutoCorrectHelper
                 skipNextWord = false;
                 continue;
             }
+
+            var wordText = word.Text;
             
             if (isFirstWord)
             {
                 isFirstWord = false;
 
-                if (removeFirstWordIfLowercase && word.Length > 0 && char.IsLower(word[0]))
+                if (removeFirstWordIfLowercase
+                    && wordText.Length >= 1
+                    && char.IsLower(wordText[0])
+                    && !CompanyNameHelper.CompanyWords.Any(companyWord =>
+                        companyWord.Contains($"{wordText} ", StringComparison.InvariantCultureIgnoreCase)))
                 {
                     continue;
                 }
@@ -293,7 +295,7 @@ public static class AutoCorrectHelper
             const string esqTitle = "esq";
             
             // TO DO make more generic
-            if (word.Equals(esqTitle, StringComparison.InvariantCultureIgnoreCase))
+            if (wordText.Equals(esqTitle, StringComparison.InvariantCultureIgnoreCase))
             {
                 newWords.Add(word);
                 continue;
@@ -301,43 +303,62 @@ public static class AutoCorrectHelper
             
             if (words.Count >= 2)
             {
-                if (CompanyNameHelper.MayBeInitials(word))
+                if (CompanyNameHelper.MayBeInitials(wordText))
                 {
                     newWords.Add(word);                       
                     continue;
                 }
 
-                var wordSpeltCorrectly = !checkDictionary || CustomDictionary.Check(word) || Dictionary.Check(word);
+                var wordKnownToBeSpeltCorrectly = true;
+
+                if (checkDictionary)
+                {
+                    wordKnownToBeSpeltCorrectly = CustomDictionary.Check(wordText) || Dictionary.Check(wordText);
+                }
+                
+                var nextWordText = nextWord?.Text;
                 
                 if (
-                    !string.IsNullOrWhiteSpace(nextWord)
-                    && (word.Length > 1 || nextWord.Length > 1)
-                    && word.All(char.IsLetterOrDigit)
-                    && nextWord.All(char.IsLetterOrDigit)
-                    && (word.Length == 1 || !wordSpeltCorrectly))
+                    !string.IsNullOrWhiteSpace(nextWordText)
+                    && (wordText.Length > 1 || nextWordText.Length > 1)
+                    && wordText.All(char.IsLetterOrDigit)
+                    && nextWordText.All(char.IsLetterOrDigit)
+                    && (wordText.Length == 1 || !wordKnownToBeSpeltCorrectly))
                 {
-                    var removedSpaceCombinedWord = $"{word}{nextWord}";
-
-                    if (checkDictionary && (CustomDictionary.Check(removedSpaceCombinedWord) || Dictionary.Check(removedSpaceCombinedWord)))
+                    var removedSpaceCombinedWord = $"{word.Text}{nextWord?.Text}";
+                    
+                    if (checkDictionary)
                     {
-                        newWords.Add(removedSpaceCombinedWord);
-                        skipNextWord = true;
+                        if (CustomDictionary.Check(removedSpaceCombinedWord)
+                            || Dictionary.Check(removedSpaceCombinedWord))
+                        {
+                            var currentWordCloned = word.Clone();
+                            currentWordCloned.Text = removedSpaceCombinedWord;
+                            currentWordCloned.Autocorrected = true;
+                            
+                            newWords.Add(currentWordCloned);
+                            skipNextWord = true;
 
-                        continue;
+                            continue;
+                        }
                     }
                 }
 
-                var containsSymbol = !word.All(char.IsLetterOrDigit);
+                var containsSymbol = !wordText.All(char.IsLetterOrDigit);
                 
-                if (word.Length <= 1 || containsSymbol || word.Split('.').Length >= 3)
+                if (wordText.Length <= 1 || containsSymbol || wordText.Split('.').Length >= 3)
                 {
                     newWords.Add(word);                       
                     continue;
                 }
 
-                if (CommonMisspellings.TryGetValue(word, out var value))
+                if (CommonMisspellings.TryGetValue(wordText, out var fixedMispellingValue))
                 {
-                    newWords.Add(value);
+                    var currentWordCloned = word.Clone();
+                    currentWordCloned.Text = fixedMispellingValue;
+                    currentWordCloned.Autocorrected = true;
+                    
+                    newWords.Add(currentWordCloned);
                     continue;
                 }
                 
@@ -349,16 +370,22 @@ public static class AutoCorrectHelper
 
                 string? topSuggestion;
 
-                if (!wordSpeltCorrectly && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(word)))
+                if (!wordKnownToBeSpeltCorrectly
+                    && word.OcrConfidence < 90
+                    && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(wordText)))
                 {
-                    if (topSuggestion.Equals($"{word}s", StringComparison.InvariantCultureIgnoreCase)
-                        || $"{topSuggestion}s".Equals(word, StringComparison.InvariantCultureIgnoreCase))
+                    if (topSuggestion.Equals($"{wordText}s", StringComparison.InvariantCultureIgnoreCase)
+                        || $"{topSuggestion}s".Equals(wordText, StringComparison.InvariantCultureIgnoreCase))
                     {
                         newWords.Add(word);
                         continue;
                     }
                     
-                    newWords.Add(topSuggestion);
+                    var currentWordCloned = word.Clone();
+                    currentWordCloned.Text = topSuggestion;
+                    currentWordCloned.Autocorrected = true;
+                    
+                    newWords.Add(currentWordCloned);
                     continue;
                 }
             }
@@ -366,7 +393,7 @@ public static class AutoCorrectHelper
             newWords.Add(word);
         }
 
-        return string.Join(" ", newWords);
+        return newWords;
     }
 
     private static readonly Dictionary<string, string> CommonMisspellings = new()

@@ -10,8 +10,14 @@ public interface IDatabaseWriteService
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
     public Task UpdateLicenceAsync(int licenceId, string licenceData, string? pdfFilePath, int processRunId);
-    
-    public Task<int> SaveLicenceAsync(string? licenceNumber, string licenceData, string? pdfFilePath, int processRunId);
+
+    public Task<int> SaveLicenceAsync(
+        string? licenceNumber,
+        string licenceData,
+        string? filenameNoExtension,
+        Guid? fileId,
+        string? permitNumber,
+        int processRunId);
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
     

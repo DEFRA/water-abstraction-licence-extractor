@@ -9,4 +9,6 @@ public class MatchesResult
     public bool ScannedFile { get; set; }
     public List<string> ServicesUsed { get; set; } = [];
     public IReadOnlyList<PdfPage> Pages { get; set; } = [];
+    
+    public string? ErrorMessage { get; set; }
 }

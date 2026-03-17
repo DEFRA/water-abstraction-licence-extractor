@@ -23,17 +23,27 @@ public static class AfterTextContainsAnotherMatch
             return returnListTop;
         }
 
-        var originalText = request.line!.Text;
+        var originalWords = request.line!.Columns
+            .SelectMany(c => c.Words)
+            .ToList();
+        
+        var originalText = request.line.Text;
         request.line?.Columns.Clear();
 
         if (request.label.Text == null || request.label.Text.Count == 0)
         {
             return returnListTop;
         }
+        
+        var afterTextWords = DocumentLineColumn.FilterWordsFromText(
+            originalWords,
+            afterText);
 
         var asLine = new DocumentLine
         {
-            Columns = [new DocumentLineColumn(afterText)]
+            Columns = [new DocumentLineColumn(afterTextWords)],
+            PageNumber = request.line!.PageNumber,
+            LineNumber = request.line.LineNumber
         };
 
         var nextLine = request.nextLines?.FirstOrDefault();
@@ -52,7 +62,10 @@ public static class AfterTextContainsAnotherMatch
             return returnListTop;
         }
         
-        var results = await ApplicableToMost.FunctionAsync(request);
+        var clonedRequest = request.Clone();
+        clonedRequest.line = asLine;
+        
+        var results = await ApplicableToMost.FunctionAsync(clonedRequest);
         
         foreach (var result in results)
         {
@@ -64,11 +77,6 @@ public static class AfterTextContainsAnotherMatch
                 StringComparison.InvariantCultureIgnoreCase);
             
             result.CharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
-
-            if (result.CharPosition == 124)
-            {
-                
-            }
             
             result.MatchedLabel.Position = valueInAfterTextPosition > labelInAfterTextPosition ?
                 LabelPosition.LabelIsBeforeTextToFind : LabelPosition.LabelIsAfterTextToFind;

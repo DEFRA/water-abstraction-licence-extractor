@@ -1,17 +1,19 @@
+using WALE.ProcessFile.Core.Helpers;
+
 namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class RetryHelper
 {
     public const int MaxRetries = 5;
 
-    public static async Task WaitWithMessageAsync(int retryNumber)
+    public static async Task WaitWithMessageAsync(int retryNumber, string serviceName)
     {
         // NOTE - This seems to be do with a few things, including checkpointing
         
         var delayInMs = GetDelayMs(retryNumber);
         await Task.Delay(delayInMs);
         
-        Console.WriteLine($"WARNING - EndOfStreamException occured - waiting for {delayInMs}ms before retrying.");
+        ConsoleHelper.WriteLine($"WARNING - {serviceName} - EndOfStreamException occured - waiting for {delayInMs}ms before retrying.");
         // TODO - Log
     }
     

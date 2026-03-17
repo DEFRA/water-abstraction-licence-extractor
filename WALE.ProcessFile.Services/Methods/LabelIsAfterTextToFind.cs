@@ -2,7 +2,6 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
@@ -20,7 +19,7 @@ public static class LabelIsAfterTextToFind
         }*/
         
         var labelGroupResult = request.labelGroupResult.Clone(
-            MatchType.NearPreviousLineIsCompany,
+            MatchedPosition.OnOrNearPreviousLine,
             LabelPosition.LabelIsAfterTextToFind,
             request.label);
         
@@ -32,7 +31,7 @@ public static class LabelIsAfterTextToFind
             out _,
             out var removedLines);
 
-        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, modifiedPreviousLines, true);//false);
+        var returnList = FilterIntoFormat(request, labelGroupResult, modifiedPreviousLines, true);
 
         foreach (var item in returnList)
         {

@@ -29,8 +29,7 @@ public interface IDatabaseReadService
 
     Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    Task<List<(int pageNumber, int imageNumber, string extension, int width, int height)>>
-        GetImagesAsync(OcrServiceImageDataCacheRequest request);
+    Task<List<ImageDetails>> GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
@@ -62,17 +61,24 @@ public interface IDatabaseReadService
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<List<NaldLicence>> GetNaldLicencesAsync();
+    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
 
-    Task<(HashSet<string> Live, HashSet<string> Dead, HashSet<string> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
+    Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
 
-    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode);
+    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode);
 
-    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode);
+    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode);
 
-    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode);
+    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode);
 
-    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode);
+    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode);
 
-    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode);
+    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
+    
+    Task<Licence?> GetNewestLicenceAsync(string permitNumber);
 }

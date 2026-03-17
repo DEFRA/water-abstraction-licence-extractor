@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class OcrHelper
 {
-    public static IReadOnlyList<DocumentLine> Group(
+    public static async Task<IReadOnlyList<DocumentLine>> GroupAsync(
         IReadOnlyList<LineAndWords> returnLines,
         bool useNewProcessingFlow,
         int pageNumber,
@@ -22,7 +22,7 @@ public static class OcrHelper
         
         if (!useNewProcessingFlow)
         {
-            return LegacyGrouping(
+            return await LegacyGroupingAsync(
                 returnLines,
                 pageNumber,
                 horizontalColumnGapTrigger,
@@ -43,14 +43,53 @@ public static class OcrHelper
             .ToList();
 
         // 0. Autocorrect + remove corrupted
-        var autoCorrectedWords = rawLines
+        var removedSpecialCharacterAndEmptyWords = rawLines
             .Where(line => !string.IsNullOrEmpty(line.Text))
             .SelectMany(line => line.Words!)
             .Select(AutoCorrectHelper.ReplaceSomeSpecialCharacters)
             .Where(word => !string.IsNullOrEmpty(word?.Text))
-            .Select(AutoCorrectHelper.AutoCorrectWordIfNecessary)
-            .Where(word => !DataHelper.IsCorruptedWord(word, true))
             .ToList();
+
+        var correctWordTasks = new List<Task<DocumentLineWord?>>();
+
+        foreach (var word in removedSpecialCharacterAndEmptyWords)
+        {
+            var task = Task.Run(() =>
+                AutoCorrectHelper.AutoCorrectWordIfNecessary(word));
+            
+            correctWordTasks.Add(task);
+        }
+
+        var correctedWords = new List<DocumentLineWord?>();
+        
+        foreach (var task in correctWordTasks)
+        {
+            correctedWords.Add(await task);
+        }
+        
+        var checkForCorruptedWordsTasks = new List<Task<(bool Corrupted, DocumentLineWord? Word)>>();
+        
+        foreach (var word in correctedWords)
+        {
+            var task = Task.Run(() =>
+                (DataHelper.IsCorruptedWord(word, true), word));
+            
+            checkForCorruptedWordsTasks.Add(task);
+        }
+        
+        var autoCorrectedWords = new List<DocumentLineWord?>();
+        
+        foreach (var task in checkForCorruptedWordsTasks)
+        {
+            var (corrupted, word) = await task;
+
+            if (corrupted)
+            {
+                continue;
+            }
+
+            autoCorrectedWords.Add(word);
+        }
         
         // 0b. Remove tiny words
 
@@ -218,22 +257,35 @@ public static class OcrHelper
 
                 previousWord = word;
             }
-
-            foreach (var column in columns)
-            {
-                column.Text = string.Join(' ', column.Words.Select(w => w.Text));
-            }
             
-            var firstWordCoords = orderedWords.First().Coordinates;
+            var mostTopWordCoords = orderedWords
+                .OrderBy(w => w.Coordinates.Top)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostBottomWordCoords = orderedWords
+                .OrderByDescending(w => w.Coordinates.Bottom)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostLeftWordCoords = orderedWords
+                .OrderBy(w => w.Coordinates.Left)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostRightWordCoords = orderedWords
+                .OrderByDescending(w => w.Coordinates.Right)
+                .FirstOrDefault()?
+                .Coordinates;
             
             var documentLine = new DocumentLine(
                 lineNumber++,
                 pageNumber,
                 columns,
-                firstWordCoords.Top,
-                firstWordCoords.Right,
-                firstWordCoords.Bottom,
-                firstWordCoords.Left);
+                mostTopWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
+                mostRightWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                mostBottomWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
+                mostLeftWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
             
             orderedLines.Add(documentLine);
         }
@@ -329,8 +381,6 @@ public static class OcrHelper
                             nextLineColumnClosestSibling!.Words.Add(word);
                             nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                                 .OrderBy(w => w.Coordinates.Left).ToList();
-                            
-                            nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
                         }
                         else
                         {
@@ -343,8 +393,6 @@ public static class OcrHelper
                         nextLineColumnClosestSibling!.Words.Add(word);
                         nextLineColumnClosestSibling.Words = nextLineColumnClosestSibling.Words
                             .OrderBy(w => w.Coordinates.Left).ToList();
-                        
-                        nextLineColumnClosestSibling.Text = string.Join(' ', nextLineColumnClosestSibling.Words.Select(w => w.Text));
                     }
                     else
                     {
@@ -358,7 +406,6 @@ public static class OcrHelper
                 }
 
                 column.Words = newWords;
-                column.Text = string.Join(' ', column.Words.Select(w => w.Text));
             }
 
             combinedLines.Add(line);
@@ -397,7 +444,6 @@ public static class OcrHelper
                 if (anyColumnChange)
                 {
                     column.Words = newWordList;
-                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
                 }
             }
         }
@@ -426,8 +472,8 @@ public static class OcrHelper
         
         return returnList;
     }
-    
-    private static IReadOnlyList<DocumentLine> LegacyGrouping(
+
+    private static async Task<IReadOnlyList<DocumentLine>> LegacyGroupingAsync(
         IReadOnlyList<LineAndWords> inputLines,
         int pageNumber,
         int horizontalColumnGapTrigger,
@@ -439,10 +485,10 @@ public static class OcrHelper
     {
         const int unacceptableIncorrectValue = 80;
         var lineNumber = 0;
-        
+
         LineAndWords? previousLine = null;
         var lineIndex = 0;
-        
+
         // BoundingBox is { 0 X top left, 1 Y top left , 2 X top right , 3 Y top right,
         // 4 X bottom right , 5 Y bottom right , 6 X bottom left , 7 Y bottom left }
 
@@ -450,8 +496,8 @@ public static class OcrHelper
             .Where(line => !FormattingHelper.IsNullOrEmptyWhitespaceOrPunctuation(line.Text))
             .Where(line => !DataHelper.IsCorruptedLine(line.Words, true, unacceptableIncorrectValue))
             .ToList();
-        
-        var groupedLines = noneCorruptOrEmptyLines
+
+        var yGroupedLines = noneCorruptOrEmptyLines
             .GroupBy(line =>
             {
                 previousLine ??= line;
@@ -467,141 +513,171 @@ public static class OcrHelper
                 previousLine = line;
                 return lineIndex;
             })
-            .Select(lines =>
-            {
-                var words = new List<DocumentLineWord>();
-                DocumentLineWord? previousOkWord = null;
-
-                foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
-                {
-                    if (line.Words == null)
-                    {
-                        continue;
-                    }
-
-                    if (line.Text?.Contains("25/68/1/1") == true)
-                    {
-                        
-                    }
-                    
-                    var lineWords = new List<DocumentLineWord>();
-                    
-                    foreach (var word in line.Words)
-                    {
-                        var wordHeight = word!.Coordinates.Bottom - word.Coordinates.Top;
-                        
-                        if (minimumFontSize > wordHeight)
-                        {
-                            continue;
-                        }
-                        
-                        var wordTextWithoutPunctuation = word.Text
-                            .Replace(",", string.Empty)
-                            .Replace(".", string.Empty)
-                            .Replace(";", string.Empty)
-                            .Replace("'", string.Empty)
-                            .Replace("\"", string.Empty);                        
-                        
-                        if (word is { OcrConfidence: < 40, Text.Length: > 3 }
-                            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
-                            && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation)
-                            && !AutoCorrectHelper.Dictionary.Check(wordTextWithoutPunctuation))
-                        {
-                            var topSuggestion = AutoCorrectHelper.GetTopSuggestion(wordTextWithoutPunctuation);
-
-                            if (topSuggestion != null)
-                            {
-                                var lengthDiff = Math.Abs(topSuggestion.Length - word.Text.Length);
-
-                                if (lengthDiff < 2)
-                                {
-                                    lineWords.Add(
-                                        new DocumentLineWord(
-                                            topSuggestion,
-                                            word.OcrConfidence,
-                                            word.Coordinates,
-                                            word.HandwrittenOrTyped));
-                                    
-                                    previousOkWord = word;                                    
-                                    continue;
-                                }
-                            }
-                        }
-                        
-                        previousOkWord = word;                        
-                        lineWords.Add(word);
-                    }
-                    
-                    words.AddRange(lineWords);
-                }
-
-                var columns = new List<DocumentLineColumn>
-                {
-                    new()
-                };
-                
-                previousOkWord = null;
-                
-                foreach (var word in words.OrderBy(w => w.Coordinates.Left))
-                {
-                    var diffBetweenTops = word.Coordinates.Top - previousOkWord?.Coordinates.Top;
-
-                    if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop)
-                    {
-                        continue;
-                    }
-                    
-                    if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop)
-                    {
-                        continue;
-                    }
-                 
-                    var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
-                    var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
-                    var percentOfPrevious = previousOkWord != null ?
-                        GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
-                        : null;
-                    
-                    if (previousOkWord != null && percentOfPrevious < maxDiffPercentFontSize)
-                    {
-                        continue;
-                    }
-                    
-                    var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
-                    
-                    if (xDiff > horizontalColumnGapTrigger)
-                    {
-                        columns.Add(new DocumentLineColumn());
-                    }
-
-                    var column = columns.Last();
-                    column.Words.Add(word);
-
-                    previousOkWord = word;
-                }
-
-                foreach (var column in columns)
-                {
-                    column.Text = string.Join(' ', column.Words.Select(w => w.Text));
-                }
-                
-                var firstWordCoords = columns.FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates;
-                
-                var documentLine = new DocumentLine(
-                    lineNumber++,
-                    pageNumber,
-                    columns,
-                    firstWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
-                    firstWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
-                    firstWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
-                    firstWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
-
-                return documentLine;
-            })
-            .Where(line => !DataHelper.IsCorruptedText(line.Text, true, unacceptableIncorrectValue))
             .ToList();
 
+        var groupedLines = new List<DocumentLine>();
+        
+        foreach (var lines in yGroupedLines)
+        {
+            var wordTasks = new List<Task<DocumentLineWord?>>();
+
+            foreach (var line in lines.OrderBy(l => l.Words![0]!.Coordinates.Left))
+            {
+                if (line.Words == null)
+                {
+                    continue;
+                }
+
+                foreach (var word in line.Words)
+                {
+                    wordTasks.Add(CorrectWord(word!, minimumFontSize));
+                }
+            }
+
+            var words = new List<DocumentLineWord>();
+
+            foreach (var wordTask in wordTasks)
+            {
+                var word = await wordTask;
+
+                if (word != null)
+                {
+                    words.Add(word);
+                }
+            }
+
+            var columns = new List<DocumentLineColumn>
+            {
+                new()
+            };
+
+            DocumentLineWord? previousOkWord = null;
+
+            foreach (var word in words.OrderBy(w => w.Coordinates.Left))
+            {
+                var diffBetweenTops = word.Coordinates.Top - previousOkWord?.Coordinates.Top;
+
+                if (previousOkWord != null && diffBetweenTops > 0 && diffBetweenTops > maxPositiveDiffBetweenWordTop)
+                {
+                    continue;
+                }
+
+                if (previousOkWord != null && diffBetweenTops < 0 && diffBetweenTops < maxNegativeDiffBetweenWordTop)
+                {
+                    continue;
+                }
+
+                var previousWordHeight = previousOkWord?.Coordinates.Bottom - previousOkWord?.Coordinates.Top;
+                var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
+                var percentOfPrevious = previousOkWord != null
+                    ? GetPercentOfPrevious(previousWordHeight!.Value, wordHeight)
+                    : null;
+
+                if (previousOkWord != null && percentOfPrevious < maxDiffPercentFontSize)
+                {
+                    continue;
+                }
+
+                var xDiff = word.Coordinates.Left - previousOkWord?.Coordinates.Right;
+
+                if (xDiff > horizontalColumnGapTrigger)
+                {
+                    columns.Add(new DocumentLineColumn());
+                }
+
+                var column = columns.Last();
+                column.Words.Add(word);
+
+                previousOkWord = word;
+            }
+
+            var allWords = columns
+                .SelectMany(c => c.Words)
+                .ToList();
+            
+            var mostTopWordCoords = allWords
+                .OrderBy(w => w.Coordinates.Top)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostBottomWordCoords = allWords
+                .OrderByDescending(w => w.Coordinates.Bottom)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostLeftWordCoords = allWords
+                .OrderBy(w => w.Coordinates.Left)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var mostRightWordCoords = allWords
+                .OrderByDescending(w => w.Coordinates.Right)
+                .FirstOrDefault()?
+                .Coordinates;
+            
+            var documentLine = new DocumentLine(
+                lineNumber++,
+                pageNumber,
+                columns,
+                mostTopWordCoords?.Top ?? PositionConstants.UnknownCoordinate,
+                mostRightWordCoords?.Right ?? PositionConstants.UnknownCoordinate,
+                mostBottomWordCoords?.Bottom ?? PositionConstants.UnknownCoordinate,
+                mostLeftWordCoords?.Left ?? PositionConstants.UnknownCoordinate);
+
+            if (!DataHelper.IsCorruptedWords(
+                documentLine.Columns.SelectMany(c => c.Words).ToList(),
+                true,
+                unacceptableIncorrectValue))
+            {
+                groupedLines.Add(documentLine);   
+            }
+        }
+    
         return groupedLines;
+    }
+    
+    private static Task<DocumentLineWord?> CorrectWord(
+        DocumentLineWord word,
+        double minimumFontSize)
+    {
+        var wordHeight = word.Coordinates.Bottom - word.Coordinates.Top;
+                        
+        if (minimumFontSize > wordHeight)
+        {
+            return Task.FromResult((DocumentLineWord?)null);
+        }
+    
+        var wordTextWithoutPunctuation = word.Text
+            .Replace(",", string.Empty)
+            .Replace(".", string.Empty)
+            .Replace(";", string.Empty)
+            .Replace("'", string.Empty)
+            .Replace("\"", string.Empty);
+        
+        if (word.OcrConfidence < 40
+            && word.Text.Length > 3
+            && wordTextWithoutPunctuation.Count(char.IsAsciiLetter) > 3
+            && !AutoCorrectHelper.CustomDictionary.Check(wordTextWithoutPunctuation)
+            && !AutoCorrectHelper.Dictionary.Check(wordTextWithoutPunctuation))
+        {
+            var topSuggestion = AutoCorrectHelper.GetTopSuggestion(wordTextWithoutPunctuation);
+
+            if (topSuggestion != null)
+            {
+                var lengthDiff = Math.Abs(topSuggestion.Length - word.Text.Length);
+
+                if (lengthDiff < 2)
+                {
+                    return Task.FromResult(new DocumentLineWord(
+                        topSuggestion,
+                        word.OcrConfidence,
+                        word.Coordinates,
+                        word.HandwrittenOrTyped))!;
+                }
+            }
+        }
+
+        return Task.FromResult(word)!;
     }
 
     private static double? GetPercentOfPrevious(double previousWordHeight, double wordHeight)

@@ -1,5 +1,6 @@
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -7,7 +8,8 @@ public class LabelGroupResult
 {
     public IReadOnlyList<DocumentLine>? Text { get; set; }
 
-    public MatchType MatchType { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public MatchedPosition MatchedPosition { get; set; }
 
     public bool IsOcr { get; init; }
 
@@ -22,6 +24,49 @@ public class LabelGroupResult
     public string? LabelGroupName { get; set; }
     
     public LabelToMatch? MatchedLabel { get; set; }
+    
+    public double? Confidence
+    {
+        get
+        {
+            if (MatchedLabel == null)
+            {
+                return null;
+            }
+
+            switch (MatchedLabel.ConfidenceType)
+            {
+                case ConfidenceType.Static:
+                    return MatchedLabel.ConfidenceIfMatched;
+                case ConfidenceType.OcrConfidencePassthrough:
+                    return GetAverageConfidence();
+                case ConfidenceType.OcrConfidencePassthroughMinusNPerLine:
+                    return GetAverageConfidence() - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                case ConfidenceType.OcrConfidenceMultiplied:
+                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                case ConfidenceType.OcrConfidenceMultipliedMinusNPerLine:
+                    var returnFull = (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                    return returnFull - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                case ConfidenceType.NotSet:
+                    return null;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
+    private double? GetAverageConfidence()
+    {
+        if (Text == null || Text.Count == 0 || MatchedLabel == null)
+        {
+            return null;
+        }
+                    
+        var totalConfidence = Text.Sum(t => t.OcrConfidence
+            ?? MatchedLabel.NoOcrConfidence);
+
+        return totalConfidence / Text.Count;
+    }   
 
     public IReadOnlyList<LabelGroupResult> SubResults { get; set; } = new List<LabelGroupResult>();
 
@@ -34,7 +79,7 @@ public class LabelGroupResult
         return new LabelGroupResult
         {
             Text = Text?.ToList(),
-            MatchType = MatchType,
+            MatchedPosition = MatchedPosition,
             IsOcr = IsOcr,
             LineNumber = LineNumber,
             CharPosition = CharPosition,
@@ -56,12 +101,12 @@ public class LabelGroupResult
     }
     
     public LabelGroupResult Clone(
-        MatchType matchType,
+        MatchedPosition matchedPosition,
         LabelPosition position,
         LabelToMatch label)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedPosition = matchedPosition;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
 
@@ -69,13 +114,13 @@ public class LabelGroupResult
     }
     
     public LabelGroupResult Clone(
-        MatchType matchType,
+        MatchedPosition matchedPosition,
         LabelPosition position,
         LabelToMatch label,
         IEnumerable<DocumentLine> text)
     {
         var labelGroupResult = Clone();
-        labelGroupResult.MatchType = matchType;
+        labelGroupResult.MatchedPosition = matchedPosition;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
         labelGroupResult.Text = text.ToList();

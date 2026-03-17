@@ -26,7 +26,7 @@ public static class Number
         
         foreach (var line in linesList)
         {
-            if (DataHelper.IsCorruptedText(line?.Text, isOcr))
+            if (DataHelper.IsCorruptedLine(line?.Text, isOcr))
             {
                 if (matched)
                 {
@@ -78,10 +78,18 @@ public static class Number
             {
                 continue;
             }
+
+            var coords = returnLine
+                .OriginalLine
+                .Columns
+                .First()
+                .Words
+                .First()
+                .Coordinates;
             
             var columns = new List<DocumentLineColumn>
             {
-                new(returnLine.Text,[])
+                new([new(returnLine.Text, null, coords, null)])
             };
 
             var documentLine = new DocumentLine(

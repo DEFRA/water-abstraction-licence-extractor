@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -21,7 +23,7 @@ public static class JsOutputHelper
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
         var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
         var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData,"ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", PdfDataExtractorService.Name);
+        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", GeneralConstants.PdfPigDataExtractorServiceName);
 
         var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
@@ -31,22 +33,17 @@ public static class JsOutputHelper
         var meansFound = licence.MeansOfAbstraction.Length > 0;
         var status = "Not Found";
 
-        if (licence.LicenceFoundInList)
-        {
-            status = "Found";
-        }
-
-        if (licence.IsLiveLicence == true)
+        if (licence.NaldStatus == NaldLicenceStatus.Live)
         {
             status = "Live";
         }
 
-        if (licence.IsDeadLicence == true)
+        if (licence.NaldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed)
         {
             status = "Dead";
         }
 
-        if (licence.IsImpoundmentLicence == true)
+        if (licence.LicenceType == LicenceType.Impoundment)
         {
             status = "Impound";
         }
@@ -75,8 +72,7 @@ public static class JsOutputHelper
             Duration = durationInMSeconds,
             MatchedLabelText = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
             MatchedLabelPosition = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
-            LicenceNumber = licenceNumber,
-            NaldLicenceNumber = licence.NaldLicenceNumber,
+            LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
             AggregatesCount = licence.AbstractionLimits.Aggregates?.Sum(x => x.Limits.Count) ?? 0,
@@ -127,14 +123,14 @@ public static class JsOutputHelper
                 $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
                 resultFileStringBuilder);
 
-            var filename = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
+            var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
             var listRow = new OutputListDataItem
             {
-                imagePath = $"{filename}/{PdfDataExtractorService.Name}/Images/page-1.jpg",
-                filename = filename,
+                imagePath = $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
+                filename = filenameNoExtension,
                 licenceNumber =
-                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}<br><span style=\"color: silver\">{outputLine.NaldLicenceNumber}</span>",
+                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
                     $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
                 purposes = outputLine.Purposes,
@@ -285,7 +281,6 @@ public static class JsOutputHelper
     
     private static void Log(string message, StringBuilder outputStringBuilder)
     {
-        //Console.WriteLine(message);
         outputStringBuilder.Append(message);
     }
 
@@ -313,7 +308,7 @@ public static class JsOutputHelper
     }
     
     private static T2? GetValueOrDefault<T, T2>(
-        Dictionary<string, object> data,
+        Dictionary<string, object?> data,
         string fieldName,
         T2? defaultValue)
     {

@@ -5,17 +5,17 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
-using Tesseract;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
-/*using Microsoft.Extensions.Logging;*/
-using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 
 namespace WALE.ProcessFile.AzureFunction.ServiceBusTrigger.Functions;
 
@@ -61,12 +61,14 @@ public class MessageReceivedFunction(
         if (string.IsNullOrEmpty(tesseractExeDirectory)) throw new Exception($"{nameof(tesseractExeDirectory)} is missing");
         
         var fileName = Encoding.UTF8.GetString(message.Body);
-        var pdfFilePath = $"{pdfFolderPath}/{fileName}";
         
-        var previouslyParsedPaths = new List<string>
+        var previouslyParsedFiles = new List<string>
         {
-            pdfFilePath
+            fileName
         };
+        
+        var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
+        var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var fileLicenceMapping = new Dictionary<string, DmsFileData>();
 
@@ -78,23 +80,25 @@ public class MessageReceivedFunction(
             ],
             cacheService,
             outputService,
-            pdfFolderPath);
+            pdfPigDocumentService,
+            docnetAlternativeDocumentService);
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
-            pdfFilePath,
+            fileName,
             new LookupConfiguration(
-                LabelConfiguration.GetLabels(),
+                WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,
-                CompanyName.GetFirstNamesCsvFromFile(),
+                await CompanyName.GetFirstNamesCsvFromFileAsync(),
+                new LocalFileService(pdfFolderPath),
                 1),
-            previouslyParsedPaths,
+            previouslyParsedFiles,
             0);
         
         var json = JsonHelper.GetAsString(matches);
         var blobClient = GetBlobServiceClient(configuration["BlobAccountName"]!);
         
-        var filenameOnlyNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilePath);
-        var jsonFileName = $"{filenameOnlyNoExtension}.json";
+        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(fileName);
+        var jsonFileName = $"{filenameNoExtension}.json";
 
         var assetsClient = blobClient.GetBlobContainerClient("assets");
         await assetsClient.DeleteBlobIfExistsAsync(jsonFileName);

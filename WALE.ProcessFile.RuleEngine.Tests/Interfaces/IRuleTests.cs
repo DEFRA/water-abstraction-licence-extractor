@@ -54,7 +54,7 @@ public class IRuleTests
         };
         
         // Act
-        var result = rule.CanApply(null);
+        var result = rule.CanApply(null!);
 
         // Assert
         result.Should().BeFalse();
@@ -68,7 +68,7 @@ public class IRuleTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn(string.Empty)],
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(string.Empty, null))],
             0,
             0,
             0,
@@ -101,7 +101,7 @@ public class IRuleTests
         var documentLine = new DocumentLine(
             0,
             0,
-            [new DocumentLineColumn("   ")],
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords("   ", null))],
             0,
             0,
             0,

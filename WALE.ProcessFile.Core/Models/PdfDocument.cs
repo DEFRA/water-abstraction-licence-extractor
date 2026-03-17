@@ -1,56 +1,64 @@
-using Docnet.Core;
-using Docnet.Core.Models;
 using SkiaSharp;
-using UglyToad.PdfPig;
-using UglyToad.PdfPig.Rendering.Skia;
+using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.Services.PdfPig;
 
 namespace WALE.ProcessFile.Core.Models;
 
 public class PdfDocument
 {
     public bool FromCache { get; }
-    public string PdfFilePath { get; }
+    public string PdfFilename { get; }
     
-    private UglyToad.PdfPig.PdfDocument? PdfPigDocument { get; set; }
+    public string PdfFilenameNoExtension { get; }
+    
+    public IFileService FileService { get; }
+    
+    private IInternalPdfDocument? InternalDocument { get; set; }
+    
+    private IAlternativeImageProvider? AlternativeImageProvider { get; set; }
     
     private IOutputService OutputService { get; set; }
     
-    private static readonly DocLib DocLibInstance = DocLib.Instance;
+    INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; }
     
-    public PdfDocument(string pdfFilePath, bool fromCache, IOutputService outputService)
+    INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
+    
+    public PdfDocument(
+        string pdfFilename,
+        bool fromCache,
+        IOutputService outputService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
+        LookupConfiguration configuration)
     {
-        PdfFilePath = pdfFilePath;
+        PdfFilename = pdfFilename;
+        PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
+        FileService = configuration.FileService;
         FromCache = fromCache;
         OutputService = outputService;
+        NoOcrPdfDocumentService = noOcrPdfDocumentService;
+        NoOcrAlternativePdfDocumentService = noOcrAlternativePdfDocumentService;
         
         if (fromCache)
         {
             return;
         }
         
-        OpenPdfPigDocument();
+        OpenInternalDocument();
     }
 
-    private void OpenPdfPigDocument()
+    private void OpenInternalDocument()
     {
-        if (PdfPigDocument != null)
+        if (InternalDocument != null)
         {
             return;
         }
-        
-        PdfPigDocument = UglyToad.PdfPig.PdfDocument.Open(
-            PdfFilePath,
-            new ParsingOptions
-            {
-                UseLenientParsing = true,
-                SkipMissingFonts = true,
-                FilterProvider = ExpandedPdfPigFilterProvider.Instance,
-            });
 
-        PdfPigDocument!.AddSkiaPageFactory();
+        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(FileService, PdfFilename);
+        AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
     }
 
     private IReadOnlyList<PdfPage>? _pages;
@@ -64,22 +72,22 @@ public class PdfDocument
                 return _pages;
             }
             
-            if (FromCache && PdfPigDocument == null)
+            if (FromCache && InternalDocument == null)
             {
-                OpenPdfPigDocument();
+                OpenInternalDocument();
             }
             
-            _pages = PdfPigDocument!.GetPages()
+            _pages = InternalDocument!.GetPages()
                 .Select(page =>
                 {
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
-                        PdfFilePath);
+                        PdfFilename);
                     
                     var pdfPage = new PdfPage
                     {
-                        PdfPigPage = page,
+                        InternalPage = page,
                         Number = page.Number,
                         NumberOfImages = page.NumberOfImages,
                         DigitalText = page.Text,
@@ -93,7 +101,7 @@ public class PdfDocument
                         pdfPage.Providers.Add(new PdfPageProvider
                         {
                             Provider = providerName,
-                            Text = [page.Text]
+                            Text = [page.Text!]
                         });
                     }
                     
@@ -106,54 +114,28 @@ public class PdfDocument
         set => _pages = value;
     }
 
-    public List<(string Provider, SKBitmap Bitmap)> GetPageAsSkBitmap(int pageNumber, string noOcrServiceName)
+    public async Task<List<(string Provider, SKBitmap Bitmap)>> GetPageAsSkBitmapAsync(int pageNumber, string noOcrServiceName)
     {
-        if (FromCache && PdfPigDocument == null)
+        if (FromCache && InternalDocument == null)
         {
-            OpenPdfPigDocument();
+            OpenInternalDocument();
         }
 
-        var pdfPigBitmap = PdfPigDocument!.GetPageAsSKBitmap(
+        var pdfPigBitmap = InternalDocument!.GetPageAsSKBitmap(
             pageNumber,
             3F);
 
-        using var docReader = DocLibInstance.GetDocReader(
-            PdfFilePath,
-            new PageDimensions(1080, 1920));
-
-        using var pageReader = docReader.GetPageReader(pageNumber - 1);
-        var rawBytes = pageReader.GetImage();
-
-        for (var i = 0; i < rawBytes.Length / 4; i++)
-        {
-            var j = i * 4;
-            var alpha = rawBytes[j];
-            var red = rawBytes[j + 1];
-            var green = rawBytes[j + 2];
-            var blue = rawBytes[j + 3];
-
-            if (alpha != 0 || red != 0 || green != 0 || blue != 0) continue;
-
-            rawBytes[j] = byte.MaxValue;
-            rawBytes[j + 1] = byte.MaxValue;
-            rawBytes[j + 2] = byte.MaxValue;
-            rawBytes[j + 3] = byte.MaxValue;
-        }
-
-        var skImage = SKImage.FromPixelCopy(
-            new SKImageInfo(
-                pageReader.GetPageWidth(),
-                pageReader.GetPageHeight(),
-                SKColorType.Bgra8888
-            ),
-            rawBytes);
-
-        var docnetBitmap = SKBitmap.FromImage(skImage);
+        var docnetBitmap = await AlternativeImageProvider!.GetPageAsSkBitmapAsync(
+            FileService,
+            PdfFilename,
+            1080,
+            1920,
+            pageNumber);
 
         return
         [
             (noOcrServiceName, pdfPigBitmap),
-            ("Docnet", docnetBitmap)
+            (GeneralConstants.DocnetExtractorServiceName, docnetBitmap)
         ];
     }
 
@@ -163,11 +145,11 @@ public class PdfDocument
 
     public void Dispose()
     {
-        if (FromCache && PdfPigDocument == null)
+        if (FromCache && InternalDocument == null)
         {
             return;
         }
         
-        PdfPigDocument!.Dispose();
+        InternalDocument!.Dispose();
     }
 }

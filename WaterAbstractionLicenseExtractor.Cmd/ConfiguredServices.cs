@@ -6,8 +6,6 @@ public class ConfiguredServices
 {
     public IOutputService? OutputService { get; set; }
     
-    public IDatabaseReadService? DatabaseReadService { get; set; }
-
     public ICacheService? CacheService { get; init; }
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
@@ -18,7 +16,7 @@ public class ConfiguredServices
     
     public bool RegenerateMappingJson { get; init; }
     
-    public string? PdfFolderPath { get; init; }
+    public IFileService? FileService { get; init; }
     
     public string? ReportTemplatePath { get; init; }
     
@@ -38,7 +36,7 @@ public class ConfiguredServices
     
     public string? FullImageDataPath { get; init; }
     
-    public string? FileMappingPath { get; init; }
+    public string? DmsReportPath { get; init; }
     
     public bool RefreshCache{ get; init; }
 }

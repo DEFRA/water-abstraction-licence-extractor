@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Methods;
 
@@ -31,7 +30,7 @@ public static class Split
             nextLine,
             request.lineForPosition!,
             request.label.Text,
-            LabelPosition.Split,
+            LabelPosition.SplitAtLabel,
             UnknownLinesTotal,
             int.MaxValue,
             out _,
@@ -51,7 +50,7 @@ public static class Split
                     null,
                     line,
                     request.label.Text,
-                    LabelPosition.Split,
+                    LabelPosition.SplitAtLabel,
                     UnknownLinesTotal,
                     int.MaxValue,
                     out _,
@@ -94,7 +93,7 @@ public static class Split
 
                 var leftColumns = new List<DocumentLineColumn>
                 {
-                    new(leftPart, leftPartWords)
+                    new(leftPartWords)
                 };
 
                 var leftLine = request.line.Clone(leftColumns);
@@ -117,7 +116,7 @@ public static class Split
 
                     var rightColumns = new List<DocumentLineColumn>
                     {
-                        new(rightPart, rightPartWords)
+                        new(rightPartWords)
                     };
                     
                     var rightLine = request.line.Clone(rightColumns);
@@ -149,12 +148,12 @@ public static class Split
         leftPartLines = FormattingHelper.RemoveMultipleBlankLines(leftPartLines);
 
         var leftPartResult = request.labelGroupResult.Clone(
-            MatchType.NotApplicable,
-            LabelPosition.Split,
+            MatchedPosition.NotApplicable,
+            LabelPosition.SplitAtLabel,
             request.label,
             leftPartLines);
         
-        var results = await FilterIntoFormatAsync(request, leftPartResult, leftPartLines, false);
+        var results = FilterIntoFormat(request, leftPartResult, leftPartLines, false);
 
         rightPartLines = DataHelper.RemoveExcludesAndNotContains(
             request.label,
@@ -169,12 +168,12 @@ public static class Split
         if (rightPartLines.Count > 0)
         {
             var rightPartResult = request.labelGroupResult.Clone(
-                MatchType.NotApplicable,
-                LabelPosition.Split,
+                MatchedPosition.NotApplicable,
+                LabelPosition.SplitAtLabel,
                 request.label,
                 rightPartLines);
             
-            results.AddRange(await FilterIntoFormatAsync(request, rightPartResult, rightPartLines, false));
+            results.AddRange(FilterIntoFormat(request, rightPartResult, rightPartLines, false));
         }
         
         return await ProcessSubLabelsAsync(request, results);

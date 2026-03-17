@@ -19,7 +19,6 @@ public class IntermediateOutputLicence
     public string? MatchedLabelText;
     public string? MatchedLabelPosition;
     public string? LicenceNumber;
-    public string? NaldLicenceNumber;    
     public double? LicenceNumberOcrConfidence;
     public int LimitsCount;
     public int AggregatesCount;

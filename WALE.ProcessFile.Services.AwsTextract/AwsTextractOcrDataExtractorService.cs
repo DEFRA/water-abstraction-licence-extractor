@@ -63,7 +63,6 @@ public class AwsTextractOcrDataExtractorService
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
             string imageReference,
-            string pdfFilepath,
             int pageNumber,
             int imageNumber,
             PdfDocument pdfDocument,
@@ -77,7 +76,7 @@ public class AwsTextractOcrDataExtractorService
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filepath = pdfFilepath,
+            Filename = pdfDocument.PdfFilename,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -103,7 +102,7 @@ public class AwsTextractOcrDataExtractorService
                 bytesList = await _outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     noOcrServiceName,
-                    pdfFilepath);
+                    pdfDocument.PdfFilename);
             }
             else
             {
@@ -111,7 +110,7 @@ public class AwsTextractOcrDataExtractorService
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filepath = pdfFilepath,
+                    Filename = pdfDocument.PdfFilename,
                     NoOcrServiceName = noOcrServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
@@ -147,7 +146,7 @@ public class AwsTextractOcrDataExtractorService
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - {e}");
                 throw;
             }
 
@@ -164,8 +163,8 @@ public class AwsTextractOcrDataExtractorService
         const int horizontalColumnGap = 100;
         const int minFontSize = 5; // Can't really go lower, this is tiny
         const int considerableOverlapAmount = 3;
-        
-        return OcrHelper.Group(
+
+        return await OcrHelper.GroupAsync(
             returnLines,
             true,
             pageNumber,
@@ -174,13 +173,15 @@ public class AwsTextractOcrDataExtractorService
             considerableOverlapAmount);
     }
     
-    private static async Task<AnalyzeDocumentResponse> AnalyzeDocumentAsync(AmazonTextractClient client, AnalyzeDocumentRequest analyzeDocumentRequest)
+    private static async Task<DetectDocumentTextResponse> DetectDocumentTextAsync(
+        AmazonTextractClient client,
+        DetectDocumentTextRequest detectDocumentTextRequest)
     {
         await RequestLock.WaitAsync();
 
         try
         {
-            return await client.AnalyzeDocumentAsync(analyzeDocumentRequest);
+            return await client.DetectDocumentTextAsync(detectDocumentTextRequest);
         }
         finally
         {
@@ -218,50 +219,61 @@ public class AwsTextractOcrDataExtractorService
     {
         var stream = new MemoryStream(bytes);
         
-        var analyzeDocumentRequest = new AnalyzeDocumentRequest
+        var detectDocumentTextRequest = new DetectDocumentTextRequest
         {
             Document = new Document
             {
                 Bytes = stream
-            },
-            FeatureTypes = [FeatureType.FORMS]
+            }
         };
 
         const double coordinatesFormatMultiplier = 1_000.0;
 
         var client = GetTextractClient(_accessKey, _secretKey);
-        var analyzeDocumentResponse = await AnalyzeDocumentAsync(client, analyzeDocumentRequest);
+        var detectDocumentTextResponse = await DetectDocumentTextAsync(client, detectDocumentTextRequest);
         
         var returnList = new List<LineAndWords>();
         
-        foreach (var block in analyzeDocumentResponse.Blocks)
+        foreach (var blockWord in detectDocumentTextResponse.Blocks)
         {
-            if (block.BlockType != BlockType.WORD)
+            if (blockWord.BlockType != BlockType.WORD)
             {
                 continue;
             }
             
-            if (block.Text == null)
+            if (blockWord.Text == null)
             {
                 continue;
             }
+
+            var top = (blockWord.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier;
+            var bottom = (blockWord.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier;
+
+            var origLeft = (blockWord.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier;
+            var origRight = (blockWord.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier;
+            
+            var individualWords = blockWord.Text.Split(' ');
+            var totalWidth = origRight - origLeft;
+            var widthPerWord = totalWidth / individualWords.Length;
+            const int dividerWidth = 10;
+            
+            var words = individualWords
+                .Select((wordText, index) => (DocumentLineWord?)new DocumentLineWord(
+                    wordText,
+                    blockWord.Confidence,
+                    new DocumentLineWordCoordinates(
+                        top,
+                        origLeft + ((index + 1) * widthPerWord),
+                        bottom,
+                        origLeft + (index * widthPerWord) + (index > 0 ? dividerWidth : 0)
+                    ),
+                    blockWord.TextType.Value
+                    ))
+                .ToList();
             
             var line = new LineAndWords
             {
-                Words = new List<DocumentLineWord>
-                {
-                    new(
-                        block.Text,
-                        block.Confidence,
-                        new DocumentLineWordCoordinates(
-                            (block.Geometry.Polygon[0].Y ?? -1.0) * coordinatesFormatMultiplier,
-                               (block.Geometry.Polygon[1].X ?? -1.0) * coordinatesFormatMultiplier,
-                                (block.Geometry.Polygon[2].Y ?? -1.0) * coordinatesFormatMultiplier,
-                            (block.Geometry.Polygon[3].X ?? -1.0) * coordinatesFormatMultiplier
-                        ),
-                        block.TextType.Value
-                    )
-                }!
+                Words = words
             };
 
             returnList.Add(line);

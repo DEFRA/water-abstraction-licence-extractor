@@ -5,7 +5,6 @@ public class UnknownSectionLinkedLicencesCsvLine
     public string? Filename { get; set; }
     public string? LicenceNumber { get; set; }
     public string? ScrapedLicenceNumber { get; set; }
-    public string? NaldLicenceNumber { get; set; }
     public bool? LicenceIsLive { get; set; }
     
     public bool? LicenceIsDead { get; set; }

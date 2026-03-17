@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -7,15 +8,16 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
 using WALE.ProcessFile.Services.Tests.Helper;
-using MatchType = WALE.ProcessFile.Core.Enums.MatchType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[EnableParallelization]
 public class NoOcrDatabaseTests
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -33,26 +35,30 @@ public class NoOcrDatabaseTests
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(
         ReadService,
-        WriteService,
-        TestConfig.PostgresHost,
-        TestConfig.PostgresPort,
-        TestConfig.PostgresDbName,
-        TestConfig.PostgresUsername,
-        TestConfig.PostgresPassword);
+        WriteService);
     
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>(),
         CacheService,
         OutputService,
-        TestConfig.PdfFolder);
+        DocumentService,
+        DocnetAlternativeDocumentService);
 
     public NoOcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+    }
+    
+    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    {
+        var allNaldData = await CacheService.GetNaldDataAsync(regionCode);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -78,21 +84,22 @@ public class NoOcrDatabaseTests
 
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private LookupConfiguration LookupConfiguration()
+    private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             FileLicenceMapping,
-            CompanyName.GetFirstNamesCsvFromFile(),
+            await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            new LocalFileService(pdfFolder),
             3);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, bool useMainPdfFolder = true)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return _pdfDataExtractor.GetMatchesAsync(
-            TestConfig.PdfFolder + fileName,
-            LookupConfiguration(),
-            [TestConfig.PdfFolder + fileName],
+        return await _pdfDataExtractor.GetMatchesAsync(
+            fileName,
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
+            [fileName],
             0);
     }
     
@@ -100,7 +107,9 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
-        var processRun = await OutputService.SaveProcessRunAsync(new ProcessRun
+        await SetupLicenceNumbersAsync(3);
+        
+        var processRun = await OutputService.StartProcessRunAsync(new ProcessRun
         {
             Description = "Test run",
             StartDateTimeUtc = DateTime.UtcNow,
@@ -115,6 +124,8 @@ public class NoOcrDatabaseTests
     public async Task Uncached_Then_Changed()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
+        
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
         await CacheService.ClearCacheAsync(filename);
         
@@ -124,6 +135,8 @@ public class NoOcrDatabaseTests
 
     private async Task ProcessAsync(string filename)
     {
+        await SetupLicenceNumbersAsync(3);
+        
         // Act
         var resultFull = await GetMatchesAsync(filename);
         var resultList = resultFull.Matches!;
@@ -150,7 +163,7 @@ public class NoOcrDatabaseTests
         Assert.Equal("Ingleby Greenhow Water Society Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchType.MatchIsEitherSideOfLabel, nameResult.MatchType);
+        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         Assert.Equal(59, nameResult.LineNumber);
 
         // Note no other licence mentioned
@@ -225,7 +238,7 @@ public class NoOcrDatabaseTests
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
-        Assert.Equal(MatchType.Between, purposeResult.MatchType);
+        Assert.Equal(MatchedPosition.BetweenLabels, purposeResult.MatchedPosition);
 
         Assert.Single(purposeResult.SubResults);
 
@@ -245,20 +258,18 @@ public class NoOcrDatabaseTests
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults[1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            FileLicenceMapping,
             new NaldLicenceStatusData(),
             _naldData,
             _pdfDataExtractor,
-            TestConfig.PdfFolder,
             0,
-            LookupConfiguration());
+            await LookupConfigurationAsync(TestConfig.PdfFolder));
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 
         Assert.Equal(filename, agreedSchemaLicence.Filename);
-        Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber);
+        Assert.Equal("1/25/04/059", agreedSchemaLicence.LicenceNumber?.Value);
 
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
 

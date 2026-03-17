@@ -43,18 +43,18 @@ public class DocumentLine(
     {
         get
         {
-            var wordsWithConfidence = Columns
-                .SelectMany(column => column.Words)
-                .Where(word => word.OcrConfidence != null)
+            var columnsWithConfidence = Columns
+                .Where(column => column.OcrConfidence != null)
+                .Select(column => column.OcrConfidence)
                 .ToList();
 
-            if (wordsWithConfidence.Count == 0)
+            if (columnsWithConfidence.Count == 0)
             {
                 return null;
             }
 
-            var total = wordsWithConfidence.Sum(word => word.OcrConfidence!.Value);
-            return total / wordsWithConfidence.Count;
+            var totalConfidence = columnsWithConfidence.Sum(confidence => confidence!.Value);
+            return totalConfidence / columnsWithConfidence.Count;
         }
     }
     

@@ -1,3 +1,4 @@
+using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -6,16 +7,18 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.ProcessFile.Services.Services.PdfPig;
+using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 // These tests are slow as we are limited to one scan per second from AWS Textract by default
 [Collection("AWS Textract 2")]
+[EnableParallelization]
 public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -28,14 +31,20 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
-    static DoiRegressionTessaractAndAwsTextractOcrPdfTests()
+    private static readonly ICacheService DatabaseCacheService =
+        new DatabaseCacheService(ReadService, null!);
+    
+    private Task SetupLicenceNumbersAsync(short regionCode)
     {
-        LicenceNumber.Instance = new LicenceNumber(ReadService);
+        return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
- 
+    private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
+    private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
+    
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined5 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
@@ -46,45 +55,47 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         },
         CacheService,
         OutputService,
-        TestConfig.PdfFolder4);
+        DocumentService,
+        DocnetAlternativeDocumentService);
 
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
-        DeadLicences = [],
+        LapsedLicences = [],
+        ExpiredLicences = [],
+        RevokedLicences = [],
         ImpoundmentLicences = []
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];
 
-    private LookupConfiguration LookupConfiguration(int regionCode)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            LabelConfiguration.GetLabels(),
+            WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            textractFixture.FirstNamesCsv,
+            await textractFixture.FirstNamesCsvTask(),
+            new LocalFileService(pdfFolder),
             regionCode);
     }
     
-    private Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
         string f;
-        IPdfDataExtractorService extractor;
 
         switch (folderNumber)
         {
             case 5:
                 f = TestConfig.PdfFolder5;
-                extractor = _pdfDataExtractorCombined5;
                 break;
             default:
                 throw new Exception("Number not known");
         }
         
-        return extractor.GetMatchesAsync(
-            f + fileName,
-            LookupConfiguration(regionCode),
-            [f + fileName],
+        return await _pdfDataExtractorCombined5.GetMatchesAsync(
+            fileName,
+            await LookupConfigurationAsync(regionCode, f),
+            [fileName],
             0);
     }
     
@@ -92,6 +103,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12203045()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051966).PDF";
 
         // Act
@@ -103,15 +115,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("23rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -125,6 +135,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         // NOTE - This one worked even with just Tesseract (as long as the IEH removal code runs)
         
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12205044__Non-Application Licence Document [Original Licence] (14101966).pdf";
 
         // Act
@@ -136,15 +147,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("14IEH day of OCTOBER, 1966", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("1966-10-14", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
@@ -155,6 +164,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12303008()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12303008__Non-Application Licence Document [Original Licence] (11051966).PDF";
 
         // Act
@@ -166,15 +176,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11th day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -186,6 +194,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12303075()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12303075__Non-Application Licence Document [Original Licence] (08111966).PDF";
 
         // Act
@@ -197,15 +206,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -217,6 +224,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12303076()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12303076__Non-Application Licence Document [Original Licence] (08111966).PDF";
 
         // Act
@@ -228,15 +236,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 1966", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -248,6 +254,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100001()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100001__Application Minor Variation Issued Licence 17062025 .pdf";
 
         // Act
@@ -259,15 +266,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -279,6 +284,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100004()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100004__Application - Renewal - Same Terms – Issued licence - November 2014 8621766.pdf";
 
         // Act
@@ -290,15 +296,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 November 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -310,6 +314,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100010()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100010__1-21-00-010 5822315.PDF";
 
         // Act
@@ -321,15 +326,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("28 DAY OF March 1984", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -341,6 +344,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100023()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100023__Application - Transfer - Issued licence 22.7.2016 9423969.pdf";
 
         // Act
@@ -352,15 +356,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("22 July 2016", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -372,6 +374,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100052()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100052__Application - New - Issued licence 8677332.pdf";
 
         // Act
@@ -383,15 +386,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 December 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -403,6 +404,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100063()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100063__Application type unknown Licence Issued - 05031993.pdf";
 
         // Act
@@ -414,15 +416,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("5th AY OF March 1993", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -434,6 +434,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100065()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100065__Application New Licence Issued - [1974] - (1974).pdf";
 
         // Act
@@ -445,15 +446,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("21st day of March 1974", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -465,6 +464,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_2100068()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100068__Application Normal Variation Licence Issued 17062025.docx.pdf";
 
         // Act
@@ -476,15 +476,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -496,6 +494,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100069()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100069__Application New Licence Issued - [1997] - (1997).pdf";
 
         // Act
@@ -507,15 +506,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("30 June 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -527,6 +524,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     public async Task DoiNotFound_12100071R01()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(1);
         const string filename = "12100071R01__Application - New - Issued Licence 15-05-2018 10311405.pdf";
 
         // Act
@@ -538,15 +536,13 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 May 2018", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await SchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _fileLicenceMapping,
             _naldLicenceStatusData,
             _naldData,
             _pdfDataExtractorCombined5,
-            TestConfig.PdfFolder5,
             0,
-            LookupConfiguration(1));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         

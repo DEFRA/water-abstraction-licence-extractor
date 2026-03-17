@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.Tools.Helpers;
 
@@ -22,7 +23,7 @@ public static class ToolHelper
         var fullPath = Path.Combine(outputFolder, csvFileName);
 
         await using var writer = new StreamWriter(fullPath);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         await csv.WriteRecordsAsync(data);
 
@@ -44,11 +45,11 @@ public static class ToolHelper
             .Select(g => new { g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count);
 
-        Console.WriteLine($"\n{summaryTitle}:");
+        ConsoleHelper.WriteLine($"\n{summaryTitle}:");
         
         foreach (var item in summary)
         {
-            Console.WriteLine($"  {item.Key}: {item.Count} items");
+            ConsoleHelper.WriteLine($"  {item.Key}: {item.Count} items");
         }
     }
 
@@ -78,8 +79,8 @@ public static class ToolHelper
         var fullPath = await WriteCsvAsync(dataList, fileName, outputFolder);
 
         // Print completion message and summary
-        Console.WriteLine($"Report completed. Results written to: {fullPath}");
-        Console.WriteLine($"Total {processedItemsDescription} processed: {dataList.Count}");
+        ConsoleHelper.WriteLine($"Report completed. Results written to: {fullPath}");
+        ConsoleHelper.WriteLine($"Total {processedItemsDescription} processed: {dataList.Count}");
 
         // Print summary
         PrintSummary(dataList, keySelector, summaryTitle);

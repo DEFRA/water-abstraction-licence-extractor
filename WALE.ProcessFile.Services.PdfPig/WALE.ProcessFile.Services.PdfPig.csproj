@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="PdfPig" Version="0.1.13" />
+        <PackageReference Include="PdfPig.Filters.Jbig2.PdfboxJbig2" Version="0.1.12.1" />
+        <PackageReference Include="PdfPig.Rendering.Skia" Version="0.1.12.2" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
+    </ItemGroup>
+</Project>

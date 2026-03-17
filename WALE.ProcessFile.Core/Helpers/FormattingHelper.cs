@@ -12,9 +12,33 @@ public static class FormattingHelper
             .Replace(".", string.Empty)
             .Replace(" ", string.Empty)
             .Replace("-", string.Empty)
+            .Replace("_", string.Empty)            
             .Replace("/", string.Empty);
     }
-    
+
+    public static List<string> StripForComparisonMultipleOptions(string? formattedLicenceNumber, int regionCode)
+    {
+        var stripped = StripForComparison(formattedLicenceNumber, regionCode);
+
+        if (string.IsNullOrEmpty(stripped))
+        {
+            return [];
+        }
+
+        if (!stripped.Contains('_'))
+        {
+            return [stripped];
+        }
+
+        var licenceNumberNoSeperators = RemoveSeperators(formattedLicenceNumber)!;
+
+        return
+        [
+            stripped,
+            licenceNumberNoSeperators
+        ];
+    }
+
     public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))

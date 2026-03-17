@@ -32,8 +32,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "Abstraction"
             },
             {
               "licenceNumber": "25 68 001 248",
@@ -108,8 +108,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "Abstraction"
             }
           ],
           "limits": [
@@ -150,8 +150,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "Abstraction"
             },
             {
               "licenceNumber": "25 68 001 249",
@@ -167,8 +167,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "Abstraction"
             }
           ],
           "limits": [
@@ -281,8 +281,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "Abstraction"
               },
               {
                 "licenceNumber": "25 68 001 248",
@@ -345,8 +345,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "Abstraction"
         },
         {
           "licenceNumber": "25/68/001/248",
@@ -422,8 +422,8 @@
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
       },
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown"
+      "naldStatus": "Live",
+      "licenceType": "Abstraction"
     },
     {
       "id": "2568001247-LV20190619",
@@ -532,8 +532,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "Abstraction"
               }
             ],
             "limits": [
@@ -603,8 +603,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "Abstraction"
         }
       ],
       "licenceSets": [
@@ -654,8 +654,8 @@
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
       },
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown",
+      "naldStatus": "Live",
+      "licenceType": "Abstraction",
       "dmsPath": "Something to look for"
     },
     {
@@ -749,8 +749,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "Abstraction"
               },
               {
                 "licenceNumber": "25 68 001 249",
@@ -766,8 +766,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "Abstraction"
               }
             ],
             "limits": [
@@ -812,8 +812,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "Abstraction"
         },
         {
           "licenceNumber": "25/68/001/249",
@@ -838,8 +838,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "Abstraction"
         }
       ],
       "licenceSets": [

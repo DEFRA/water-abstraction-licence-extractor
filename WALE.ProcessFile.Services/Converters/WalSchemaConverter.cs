@@ -536,36 +536,48 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         int regionCode)
     {
-        var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumberInNaldFormat, regionCode);
-
-        if (string.IsNullOrEmpty(strippedLicenceNumber))
-        {
-            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
-        }
-
         if (naldLicenceStatusData.LiveLicences.Count == 0
-            || naldLicenceStatusData.ExpiredLicences.Count == 0
-            || naldLicenceStatusData.RevokedLicences.Count == 0
-            || naldLicenceStatusData.LapsedLicences.Count == 0
-            || naldLicenceStatusData.ImpoundmentLicences.Count == 0)
+            && naldLicenceStatusData.ExpiredLicences.Count == 0
+            && naldLicenceStatusData.RevokedLicences.Count == 0
+            && naldLicenceStatusData.LapsedLicences.Count == 0
+            && naldLicenceStatusData.ImpoundmentLicences.Count == 0)
+        {
+            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+        }
+        
+        var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
+            licenceNumberInNaldFormat,
+            regionCode);
+
+        if (strippedLicenceNumbers.Count == 0)
         {
             return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
         }
 
-        var isLiveLicence = naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber!);
-        var isExpired = naldLicenceStatusData.ExpiredLicences.Contains(strippedLicenceNumber!);
-        var isRevoked = naldLicenceStatusData.RevokedLicences.Contains(strippedLicenceNumber!);
-        var isLapsed = naldLicenceStatusData.LapsedLicences.Contains(strippedLicenceNumber!);
-        var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber!);
+        foreach (var strippedLicenceNumber in strippedLicenceNumbers)
+        {
+            var isLiveLicence = naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber);
+            var isExpired = naldLicenceStatusData.ExpiredLicences.Contains(strippedLicenceNumber);
+            var isRevoked = naldLicenceStatusData.RevokedLicences.Contains(strippedLicenceNumber);
+            var isLapsed = naldLicenceStatusData.LapsedLicences.Contains(strippedLicenceNumber);
+            var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber);
 
-        var status = NaldLicenceStatus.Unknown;
-        if (isLiveLicence) status = NaldLicenceStatus.Live;
-        else if (isExpired) status = NaldLicenceStatus.Expired;
-        else if (isRevoked) status = NaldLicenceStatus.Revoked;
-        else if (isLapsed) status = NaldLicenceStatus.Lapsed;
+            var status = NaldLicenceStatus.Unknown;
+                
+            if (isLiveLicence) status = NaldLicenceStatus.Live;
+            else if (isExpired) status = NaldLicenceStatus.Expired;
+            else if (isRevoked) status = NaldLicenceStatus.Revoked;
+            else if (isLapsed) status = NaldLicenceStatus.Lapsed;
+            else if (!isImpoundmentLicence)
+            {
+                continue;
+            }
 
-        var type = isImpoundmentLicence ? LicenceType.Impoundment : LicenceType.Abstraction;
-        return (status, type);
+            var type = isImpoundmentLicence ? LicenceType.Impoundment : LicenceType.Abstraction;
+            return (status, type);
+        }
+        
+        return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
     }
 
     private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionCode)

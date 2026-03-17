@@ -15,6 +15,7 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using LicenceType = WALE.ProcessFile.Core.Enums.LicenceType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -54,8 +55,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         DocumentService,
         DocnetAlternativeDocumentService);
 
-    private static int NoneNeRegionCode = 1;
-    private static int NeRegionCode = 3;
+    private static readonly int NoneNeRegionCode = 1;
+    private static readonly int NeRegionCode = 3;
     
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
         new()
@@ -101,14 +102,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
-        LiveLicences = [],
+        LiveLicences = [
+            "2568001247",
+            "2568001249"
+        ],
         LapsedLicences = [],
         ExpiredLicences = [],
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
     
-    private static readonly Dictionary<string, List<NaldData>> NaldData = [];
+    private static readonly Dictionary<string, List<NaldData>> NaldData = [
+        
+    ];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
     {
@@ -2567,6 +2573,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
         Assert.Null(agreedSchemaLicenceGroup.Licences[0].DmsPath);
+        Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[0].Status);
+        Assert.Equal(Core.Enums.OutputSchema.LicenceType.Abstraction, agreedSchemaLicenceGroup.Licences[0].LicenceType);
+        Assert.Equal(NaldLicenceStatus.Live, agreedSchemaLicenceGroup.Licences[0].NaldStatus);
+        
         Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber?.Value);
         Assert.Equal("Something to look for", agreedSchemaLicenceGroup.Licences[1].DmsPath);
         Assert.Equal("25/68/001/248", agreedSchemaLicenceGroup.Licences[2].LicenceNumber?.Value);
@@ -2579,6 +2589,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, primaryLicence.LinkedLicences.Length);
         
         Assert.Equal("25/68/001/247", primaryLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal(Core.Enums.OutputSchema.LicenceType.Abstraction, primaryLicence.LinkedLicences[0].LicenceType);
+        Assert.Equal(NaldLicenceStatus.Live, primaryLicence.LinkedLicences[0].NaldStatus);
+        
         Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -2681,6 +2694,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var expectedJson =
             await File.ReadAllTextAsync("Data/2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619.json");
 
+        // TODO there was a lot of unknown fields above that are wrong and need fixing
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),
             actualJson.Replace(" ", string.Empty).Replace("\n", string.Empty));

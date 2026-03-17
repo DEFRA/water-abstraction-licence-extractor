@@ -64,7 +64,9 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
-        DeadLicences = [],
+        LapsedLicences = [],
+        ExpiredLicences = [],
+        RevokedLicences = [],
         ImpoundmentLicences = []
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];

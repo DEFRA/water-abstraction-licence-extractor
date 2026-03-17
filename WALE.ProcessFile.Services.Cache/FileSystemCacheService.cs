@@ -492,7 +492,12 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }

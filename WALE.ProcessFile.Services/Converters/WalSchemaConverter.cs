@@ -116,7 +116,7 @@ public static partial class WalSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
 
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(
             licenceNumber,
             naldLicenceStatusData,
             regionCode);
@@ -148,6 +148,7 @@ public static partial class WalSchemaConverter
                         new LinkedLicenceSection
                         {
                             Source = LinkedLicenceSource.Nald,
+                            Direction = LinkedLicenceDirection.Incoming,
                             LinkReason = naldLinkedLicence.LinkType.ToString(),
                             SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
                                 ? $"From {naldLinkedLicence.IncomingLicenceNumber}"
@@ -325,20 +326,6 @@ public static partial class WalSchemaConverter
             Individual = individual
         };
         
-        var naldStatus = NaldLicenceStatus.Unknown;
-        if (isLiveLicence == true || isImpoundmentLicence == true)
-        {
-            naldStatus = NaldLicenceStatus.Live;
-        }
-        else if (isDeadLicence == true)
-        {
-            naldStatus = NaldLicenceStatus.Dead;
-        }
-        
-        var licenceType = isImpoundmentLicence == true
-            ? LicenceType.Impoundment
-            : LicenceType.Abstraction;
-
         if (!string.IsNullOrEmpty(naldDataLine?.ArepEiucCode))
         {
             noneSchemaData.Add("ArepEuicCode", naldDataLine.ArepEiucCode);
@@ -531,31 +518,41 @@ public static partial class WalSchemaConverter
         return text;
     }
 
-    private static (bool? isLive, bool? isDead, bool? isImpoundment, bool isFound) GetLiveDeadImpoundmentFound(
+    private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
         string? licenceNumberInNaldFormat,
         NaldLicenceStatusData naldLicenceStatusData,
         int regionCode)
     {
         var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceNumberInNaldFormat, regionCode);
 
-        var isLiveLicence = naldLicenceStatusData.LiveLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber)
-            : (bool?)null;
+        if (!string.IsNullOrEmpty(strippedLicenceNumber))
+        {
+            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+        }
 
-        var isDeadLicence = naldLicenceStatusData.DeadLicences.Count > 0 && !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? naldLicenceStatusData.DeadLicences.Contains(strippedLicenceNumber)
-            : (bool?)null;
+        if (naldLicenceStatusData.LiveLicences.Count == 0
+            || naldLicenceStatusData.ExpiredLicences.Count == 0
+            || naldLicenceStatusData.RevokedLicences.Count == 0
+            || naldLicenceStatusData.LapsedLicences.Count == 0
+            || naldLicenceStatusData.ImpoundmentLicences.Count == 0)
+        {
+            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+        }
 
-        var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Count > 0 &&
-                                   !string.IsNullOrEmpty(strippedLicenceNumber)
-            ? naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber)
-            : (bool?)null;
+        var isLiveLicence = naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber!);
+        var isExpired = naldLicenceStatusData.ExpiredLicences.Contains(strippedLicenceNumber!);
+        var isRevoked = naldLicenceStatusData.RevokedLicences.Contains(strippedLicenceNumber!);
+        var isLapsed = naldLicenceStatusData.LapsedLicences.Contains(strippedLicenceNumber!);
+        var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber!);
 
-        var isFound = isDeadLicence == true
-                      || isImpoundmentLicence == true
-                      || isLiveLicence == true;
+        var status = NaldLicenceStatus.Unknown;
+        if (isLiveLicence) status = NaldLicenceStatus.Live;
+        else if (isExpired) status = NaldLicenceStatus.Expired;
+        else if (isRevoked) status = NaldLicenceStatus.Revoked;
+        else if (isLapsed) status = NaldLicenceStatus.Lapsed;
 
-        return (isLiveLicence, isDeadLicence, isImpoundmentLicence, isFound);
+        var type = isImpoundmentLicence ? LicenceType.Impoundment : LicenceType.Abstraction;
+        return (status, type);
     }
 
     private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionCode)
@@ -601,7 +598,7 @@ public static partial class WalSchemaConverter
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
-        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(
             linkedLicencePermitNumber,
             naldLicenceStatusData,
             regionCode);
@@ -617,20 +614,6 @@ public static partial class WalSchemaConverter
             ? licenceNumbersMapping.GetValueOrDefault(strippedLinkedLicenceNumber)
             : null;
 
-        var naldStatus = NaldLicenceStatus.Unknown;
-        if (isLiveLicence == true || isImpoundmentLicence == true)
-        {
-            naldStatus = NaldLicenceStatus.Live;
-        }
-        else if (isDeadLicence == true)
-        {
-            naldStatus = NaldLicenceStatus.Dead;
-        }
-        
-        var licenceType = isImpoundmentLicence == true
-            ? LicenceType.Impoundment
-            : LicenceType.Abstraction;
-        
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
@@ -893,6 +876,7 @@ public static partial class WalSchemaConverter
                                 new LinkedLicenceSection
                                 {
                                     Source = LinkedLicenceSource.OtherDocument,
+                                    Direction = LinkedLicenceDirection.Incoming,
                                     SectionName = LinkedLicenceSectionNames.IncomingLink,
                                     LinkReason = $"From {incomingLink.LicenceNumber}",
                                     LineNumber = -1,
@@ -1322,7 +1306,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1334,20 +1318,6 @@ public static partial class WalSchemaConverter
                     : null;
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_AdditionalInformation_{count++}", linkedLicenceNumber.Confidence);
-                
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -1405,7 +1375,7 @@ public static partial class WalSchemaConverter
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1417,20 +1387,6 @@ public static partial class WalSchemaConverter
                     : null;
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_ReasonsForConditions_{count++}", linkedLicenceNumber.Confidence);
-                
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -1507,7 +1463,7 @@ public static partial class WalSchemaConverter
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
-            var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+            var (naldStatus, licenceType) = GetLicenceStatusAndType(
                 naldLinkedLicenceNumber,
                 naldLicenceStatusData,
                 regionCode);
@@ -1519,20 +1475,6 @@ public static partial class WalSchemaConverter
                 : null;
 
             noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
-            
-            var naldStatus = NaldLicenceStatus.Unknown;
-            if (isLiveLicence == true || isImpoundmentLicence == true)
-            {
-                naldStatus = NaldLicenceStatus.Live;
-            }
-            else if (isDeadLicence == true)
-            {
-                naldStatus = NaldLicenceStatus.Dead;
-            }
-        
-            var licenceType = isImpoundmentLicence == true
-                ? LicenceType.Impoundment
-                : LicenceType.Abstraction;
             
             returnList.Add(new LinkedLicence
             {
@@ -1606,8 +1548,8 @@ public static partial class WalSchemaConverter
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
 
@@ -1618,20 +1560,6 @@ public static partial class WalSchemaConverter
                     : null;
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
-
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -1699,7 +1627,7 @@ public static partial class WalSchemaConverter
 
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                        var (naldStatus, licenceType) = GetLicenceStatusAndType(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1711,20 +1639,6 @@ public static partial class WalSchemaConverter
                             : null;
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
-                        
-                        var naldStatus = NaldLicenceStatus.Unknown;
-                        if (isLiveLicence == true || isImpoundmentLicence == true)
-                        {
-                            naldStatus = NaldLicenceStatus.Live;
-                        }
-                        else if (isDeadLicence == true)
-                        {
-                            naldStatus = NaldLicenceStatus.Dead;
-                        }
-        
-                        var licenceType = isImpoundmentLicence == true
-                            ? LicenceType.Impoundment
-                            : LicenceType.Abstraction;
                         
                         return new LinkedLicence
                         {
@@ -1794,7 +1708,7 @@ public static partial class WalSchemaConverter
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                             null;
 
-                        var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                        var (naldStatus, licenceType) = GetLicenceStatusAndType(
                             naldLicenceNumber,
                             naldLicenceStatusData,
                             regionCode);
@@ -1806,20 +1720,6 @@ public static partial class WalSchemaConverter
                             : null;
 
                         noneSchemaData.Add($"Confidence:LinkedLicence_Points_{count++}", linkedLicenceNumber.Confidence);
-                        
-                        var naldStatus = NaldLicenceStatus.Unknown;
-                        if (isLiveLicence == true || isImpoundmentLicence == true)
-                        {
-                            naldStatus = NaldLicenceStatus.Live;
-                        }
-                        else if (isDeadLicence == true)
-                        {
-                            naldStatus = NaldLicenceStatus.Dead;
-                        }
-        
-                        var licenceType = isImpoundmentLicence == true
-                            ? LicenceType.Impoundment
-                            : LicenceType.Abstraction;
                         
                         return new LinkedLicence
                         {
@@ -1880,7 +1780,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -1892,20 +1792,6 @@ public static partial class WalSchemaConverter
                     : null;
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_Records_{count++}", linkedLicenceNumber.Confidence);
-                
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -1962,8 +1848,8 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
-                    licenceNumber,
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
+                    naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
 
@@ -1974,20 +1860,6 @@ public static partial class WalSchemaConverter
                     : null;
 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherConditions_{count++}", linkedLicenceNumber.Confidence);
-                
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -2045,7 +1917,7 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-                var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
                     regionCode);
@@ -2057,20 +1929,6 @@ public static partial class WalSchemaConverter
                     : null;
                 
                 noneSchemaData.Add($"Confidence:LinkedLicence_FurtherProvisions_{count++}", linkedLicenceNumber.Confidence);
-
-                var naldStatus = NaldLicenceStatus.Unknown;
-                if (isLiveLicence == true || isImpoundmentLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Live;
-                }
-                else if (isDeadLicence == true)
-                {
-                    naldStatus = NaldLicenceStatus.Dead;
-                }
-        
-                var licenceType = isImpoundmentLicence == true
-                    ? LicenceType.Impoundment
-                    : LicenceType.Abstraction;
                 
                 return new LinkedLicence
                 {
@@ -2451,8 +2309,8 @@ public static partial class WalSchemaConverter
                         (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                         null;
 
-                    var (isLiveLicence, isDeadLicence, isImpoundmentLicence, _) = GetLiveDeadImpoundmentFound(
-                        licenceNumber,
+                    var (naldStatus, licenceType) = GetLicenceStatusAndType(
+                        naldLicenceNumber,
                         naldLicenceStatusData,
                         regionCode);
 
@@ -2460,20 +2318,6 @@ public static partial class WalSchemaConverter
                         ? licenceNumbersMapping.GetValueOrDefault(strippedLicenceNumber)
                         : null;
 
-                    var naldStatus = NaldLicenceStatus.Unknown;
-                    if (isLiveLicence == true || isImpoundmentLicence == true)
-                    {
-                        naldStatus = NaldLicenceStatus.Live;
-                    }
-                    else if (isDeadLicence == true)
-                    {
-                        naldStatus = NaldLicenceStatus.Dead;
-                    }
-        
-                    var licenceType = isImpoundmentLicence == true
-                        ? LicenceType.Impoundment
-                        : LicenceType.Abstraction;
-                    
                     return new LinkedLicence
                     {
                         LicenceNumber = scrapedLicenceNumber,

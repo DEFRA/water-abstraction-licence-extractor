@@ -38,7 +38,7 @@ public static class JsOutputHelper
             status = "Live";
         }
 
-        if (licence.NaldStatus == NaldLicenceStatus.Dead)
+        if (licence.NaldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed)
         {
             status = "Dead";
         }

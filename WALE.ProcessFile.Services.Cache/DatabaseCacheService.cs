@@ -289,7 +289,12 @@ public class DatabaseCacheService(
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);

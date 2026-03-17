@@ -30,11 +30,21 @@ public class NaldDataController(ICacheService cacheService) : Controller
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToHashSet(),
-            DeadLicences = naldLicenceNumbers.Dead
+            LapsedLicences = naldLicenceNumbers.Lapsed
                 .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToHashSet(),
+            ExpiredLicences = naldLicenceNumbers.Expired
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),
+            RevokedLicences = naldLicenceNumbers.Revoked
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),            
             ImpoundmentLicences = naldLicenceNumbers.Impoundment
                 .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
                 .Where(x => !string.IsNullOrEmpty(x))

@@ -65,8 +65,7 @@ async Task ProgramAsync()
     var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(
-        regionCode);
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(regionCode);
 
     var dtStartGetDms = DateTime.Now;
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");

@@ -55,8 +55,10 @@ public static class GenerateLinkedLicencesCsv
                 : null;
 
             var isFound = licence.NaldStatus == NaldLicenceStatus.Live
-                || licence.NaldStatus == NaldLicenceStatus.Dead
-                || licence.LicenceType == LicenceType.Impoundment;
+                          || licence.NaldStatus == NaldLicenceStatus.Lapsed
+                          || licence.NaldStatus == NaldLicenceStatus.Expired
+                          || licence.NaldStatus == NaldLicenceStatus.Revoked                    
+                          || licence.LicenceType == LicenceType.Impoundment;
             
             var arepEuicCode = licence.NoneSchemaData.TryGetValue("ArepEuicCode", out var value2)
                 ? value2?.ToString()
@@ -78,7 +80,10 @@ public static class GenerateLinkedLicencesCsv
                 HasLicenceToLicenceAggregates = licence.AbstractionLimits
                     .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.LicenceToLicence) ?? false,
                 IsLive = licence.NaldStatus == NaldLicenceStatus.Live,
-                IsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                IsDead = licence.NaldStatus is
+                    NaldLicenceStatus.Lapsed
+                    or NaldLicenceStatus.Revoked
+                    or NaldLicenceStatus.Expired,
                 IsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                 LicenceFoundInList = isFound,
                 ArepEuicCode = arepEuicCode,
@@ -107,7 +112,9 @@ public static class GenerateLinkedLicencesCsv
                 var outputLineCloned = outputLine.Clone();
                 
                 var linkedLicenceIsFound = linkedLicence.NaldStatus == NaldLicenceStatus.Live
-                    || linkedLicence.NaldStatus == NaldLicenceStatus.Dead
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Lapsed
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Expired
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Revoked    
                     || linkedLicence.LicenceType == LicenceType.Impoundment;
                 
                 outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
@@ -135,7 +142,10 @@ public static class GenerateLinkedLicencesCsv
                 
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
                 outputLineCloned.LinkedLicenceIsLive = linkedLicence.NaldStatus == NaldLicenceStatus.Live;
-                outputLineCloned.LinkedLicenceIsDead = linkedLicence.NaldStatus == NaldLicenceStatus.Dead;
+                outputLineCloned.LinkedLicenceIsDead = linkedLicence.NaldStatus is
+                    NaldLicenceStatus.Lapsed
+                    or NaldLicenceStatus.Revoked
+                    or NaldLicenceStatus.Expired;
                 outputLineCloned.LinkedLicenceIsImpoundment = linkedLicence.LicenceType == LicenceType.Impoundment;
                 
                 returnList.Add(outputLineCloned);

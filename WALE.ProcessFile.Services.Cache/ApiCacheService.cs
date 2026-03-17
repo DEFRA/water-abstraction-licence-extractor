@@ -442,7 +442,12 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
+    public Task<(
+            HashSet<(string, int)> Live,
+            HashSet<(string, int)> Lapsed,
+            HashSet<(string, int)> Expired,
+            HashSet<(string, int)> Revoked,
+            HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();

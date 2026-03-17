@@ -68,7 +68,9 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     : null;
                 
                 var isFound = licence.NaldStatus == NaldLicenceStatus.Live
-                    || licence.NaldStatus == NaldLicenceStatus.Dead
+                    || licence.NaldStatus == NaldLicenceStatus.Lapsed
+                    || licence.NaldStatus == NaldLicenceStatus.Expired
+                    || licence.NaldStatus == NaldLicenceStatus.Revoked                    
                     || licence.LicenceType == LicenceType.Impoundment;
                 
                 returnList.Add(new UnknownSectionLinkedLicencesCsvLine
@@ -76,10 +78,12 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
                     Filename = licence.Filename,
                     LicenceNumber = licence.LicenceNumber?.Value,
                     ScrapedLicenceNumber = scrapedLicenceNumber,
-                    NaldLicenceNumber = licence.NaldLicenceNumber,
                     LicenceFoundInList = isFound,
                     LicenceIsLive = licence.NaldStatus == NaldLicenceStatus.Live,
-                    LicenceIsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                    LicenceIsDead = licence.NaldStatus is
+                        NaldLicenceStatus.Lapsed
+                        or NaldLicenceStatus.Revoked
+                        or NaldLicenceStatus.Expired,
                     LicenceIsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                     LinkedLicenceNumber = linkedLicence!.LicenceNumber,
                     PageNumber = -1

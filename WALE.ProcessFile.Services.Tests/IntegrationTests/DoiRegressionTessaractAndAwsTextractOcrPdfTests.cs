@@ -62,7 +62,9 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
-        DeadLicences = [],
+        LapsedLicences = [],
+        ExpiredLicences = [],
+        RevokedLicences = [],
         ImpoundmentLicences = []
     };
     private readonly Dictionary<string, List<NaldData>> _naldData = [];

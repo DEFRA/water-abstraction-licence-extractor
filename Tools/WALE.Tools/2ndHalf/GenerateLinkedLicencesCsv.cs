@@ -27,7 +27,7 @@ public static class GenerateLinkedLicencesCsv
         var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter(
-            $"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv",
+            $"LinkedLicences-{DateTime.Now:yyyyMMdd-hhmm}.csv",
             false,
             Encoding.Unicode);
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
@@ -55,7 +55,9 @@ public static class GenerateLinkedLicencesCsv
                 : null;
 
             var isFound = licence.NaldStatus == NaldLicenceStatus.Live
-                || licence.NaldStatus == NaldLicenceStatus.Dead
+                || licence.NaldStatus == NaldLicenceStatus.Lapsed
+                || licence.NaldStatus == NaldLicenceStatus.Expired
+                || licence.NaldStatus == NaldLicenceStatus.Revoked                    
                 || licence.LicenceType == LicenceType.Impoundment;
             
             var arepEuicCode = licence.NoneSchemaData.TryGetValue("ArepEuicCode", out var value2)
@@ -65,12 +67,11 @@ public static class GenerateLinkedLicencesCsv
             var outputLine = new LinkedLicencesCsvLine
             {
                 Filename = licence.Filename,
-                DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
+                DmsPath = licence.DmsPath,
                 FileId = licence.DmsFileId,
-                PermitNumber = licence.PermitNumber,
+                PermitNumber = licence.DmsPermitNumber,
                 LicenceNumber = licence.LicenceNumber?.Value,
                 ScrapedLicenceNumber = licenceNumber,
-                NaldLicenceNumber = licence.NaldLicenceNumber,
                 DateOfIssue = licence.LicenceVersion.IssueDate?.ToString("dd/MM/yyyy"),
                 IssuedBy = licence.LicenceVersion.Issuer,
                 HasInlicenceAggregates = licence.AbstractionLimits
@@ -78,22 +79,12 @@ public static class GenerateLinkedLicencesCsv
                 HasLicenceToLicenceAggregates = licence.AbstractionLimits
                     .Aggregates?.Any(agg => agg.PrimaryType == PrimaryType.LicenceToLicence) ?? false,
                 IsLive = licence.NaldStatus == NaldLicenceStatus.Live,
-                IsDead = licence.NaldStatus == NaldLicenceStatus.Dead,
+                IsLapsed = licence.NaldStatus == NaldLicenceStatus.Lapsed,
+                IsRevoked = licence.NaldStatus == NaldLicenceStatus.Revoked,
+                IsExpired = licence.NaldStatus == NaldLicenceStatus.Expired,
                 IsImpoundment = licence.LicenceType == LicenceType.Impoundment,
                 LicenceFoundInList = isFound,
-                ArepEuicCode = arepEuicCode,
-                LinkedLicenceNumber = "--",
-                ScrapedLinkedLicenceNumber = "--",
-                LinkedLicenceFilename = "--",
-                LinkedLicenceDmsPath = "--",
-                LinkedLicenceDocumentIncoming = "--",
-                LinkedLicenceDocumentOutgoing = "--",
-                LinkedLicenceNaldIncoming = "--",
-                LinkedLicenceNaldOutgoing = "--",
-                LinkedLicenceFoundInList = null,
-                LinkedLicenceIsLive = null,
-                LinkedLicenceIsDead = null,
-                LinkedLicenceIsImpoundment = null
+                ArepEuicCode = arepEuicCode
             };
             
             if (licence.LinkedLicences.Length == 0)
@@ -107,35 +98,37 @@ public static class GenerateLinkedLicencesCsv
                 var outputLineCloned = outputLine.Clone();
                 
                 var linkedLicenceIsFound = linkedLicence.NaldStatus == NaldLicenceStatus.Live
-                    || linkedLicence.NaldStatus == NaldLicenceStatus.Dead
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Lapsed
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Expired
+                    || linkedLicence.NaldStatus == NaldLicenceStatus.Revoked    
                     || linkedLicence.LicenceType == LicenceType.Impoundment;
-                
+
                 outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
                 outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.RawScrapedLicenceNumber;
                 outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename;
-                outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
-                    ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
-                    : null;
+                outputLineCloned.LinkedLicenceDmsPath = linkedLicence.DmsPath!;
 
                 outputLineCloned.LinkedLicenceDocumentIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                        .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
-                        .ToArray());
+                    .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceDocumentOutgoing = GetContainedInText(linkedLicence.ContainedIn!
                     .Where(ci => ci.Source == LinkedLicenceSource.Document)
-                    .ToArray());
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Incoming" })
-                    .ToArray());
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Incoming })
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldOutgoing = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, LinkReason: "Outgoing" })
-                    .ToArray());
+                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Outgoing })
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
                 outputLineCloned.LinkedLicenceIsLive = linkedLicence.NaldStatus == NaldLicenceStatus.Live;
-                outputLineCloned.LinkedLicenceIsDead = linkedLicence.NaldStatus == NaldLicenceStatus.Dead;
+                outputLineCloned.LinkedLicenceIsLapsed = linkedLicence.NaldStatus == NaldLicenceStatus.Lapsed;
+                outputLineCloned.LinkedLicenceIsExpired = linkedLicence.NaldStatus == NaldLicenceStatus.Expired;
+                outputLineCloned.LinkedLicenceIsRevoked = linkedLicence.NaldStatus == NaldLicenceStatus.Revoked;
                 outputLineCloned.LinkedLicenceIsImpoundment = linkedLicence.LicenceType == LicenceType.Impoundment;
                 
                 returnList.Add(outputLineCloned);
@@ -145,28 +138,36 @@ public static class GenerateLinkedLicencesCsv
         return returnList;
     }
 
-    private static string GetContainedInText(LinkedLicenceSection[] containedIn)
+    private static string? GetContainedInText(
+        LinkedLicenceSection[] containedIn,
+        LicenceType licenceType)
     {
         if (containedIn.Length == 0)
         {
-            return "--";
+            return null;
         }
         
         return string.Join("; ", containedIn
             .Select(ci =>
             {
+                var licenceTypeSuffix = string.Empty;
+                if (licenceType != LicenceType.Abstraction)
+                {
+                    licenceTypeSuffix = $" ({licenceType.ToString()})";
+                }
+                
                 if (ci.Source == LinkedLicenceSource.Nald)
                 {
-                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}";
+                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}{licenceTypeSuffix}";
                 }
 
                 if (ci.Source == LinkedLicenceSource.OtherDocument)
                 {
-                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}";
+                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}{licenceTypeSuffix}";
                 }
                         
                 return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
-                       $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}";
+                       $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}{licenceTypeSuffix}";
             }));
     }
 }

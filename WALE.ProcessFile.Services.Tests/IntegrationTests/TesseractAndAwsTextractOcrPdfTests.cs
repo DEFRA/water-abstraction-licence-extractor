@@ -63,7 +63,9 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
-        DeadLicences = [],
+        LapsedLicences = [],
+        ExpiredLicences = [],
+        RevokedLicences = [],
         ImpoundmentLicences = []
     };
     

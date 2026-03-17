@@ -127,7 +127,7 @@ public class DatabaseOutputService(
             licenceStr,
             filenameNoExtension,
             licence.DmsFileId,
-            licence.PermitNumber,
+            licence.DmsPermitNumber,
             processRunId);
     }
     

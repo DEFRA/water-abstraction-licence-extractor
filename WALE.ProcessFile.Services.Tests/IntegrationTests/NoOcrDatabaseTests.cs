@@ -58,7 +58,7 @@ public class NoOcrDatabaseTests
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await CacheService.GetNaldDataAsync(regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>

@@ -271,16 +271,16 @@ public class DatabaseCacheService(
         var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
         var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
         var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
-        var licencesAlternateFormatTask = databaseReadService.GetNaldLicencesAsync();
+        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync();
         
         return new NaldDataCollection
         {
-            Licences = await licencesTask,
-            LicencesAlternateFormat = await licencesAlternateFormatTask,
-            LicenceVersions = await versionsTask,
-            LicencePurposes = await purposesTask,
-            LicencePoints = await pointsTask,
-            LicenceQuantities = await quantitiesTask
+            AbstractionLicences = await licencesTask,
+            AbstractionAndImpoundmentLicences = await allLicencesTask,
+            AbstractionLicenceVersions = await versionsTask,
+            AbstractionLicencePurposes = await purposesTask,
+            AbstractionLicencePoints = await pointsTask,
+            AbstractionLicenceQuantities = await quantitiesTask
         };
     }
 
@@ -289,7 +289,12 @@ public class DatabaseCacheService(
         throw new NotImplementedException();
     }
 
-    public Task<(HashSet<(string, int)> Live, HashSet<(string, int)> Dead, HashSet<(string, int)> Impoundment)>
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);

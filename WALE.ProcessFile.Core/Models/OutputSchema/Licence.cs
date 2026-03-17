@@ -17,11 +17,9 @@ public class Licence
     
     public LicenceStatus Status { get; init; }
     
-    public string? NaldLicenceNumber { get; init; }
-    
     public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
-    public string? PermitNumber { get; set; }
+    public string? DmsPermitNumber { get; set; }
     
     public Guid? DmsFileId { get; set; }
     

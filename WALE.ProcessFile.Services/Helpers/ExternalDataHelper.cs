@@ -13,7 +13,7 @@ public static class ExternalDataHelper
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
 
-        foreach (var line in data.Licences!)
+        foreach (var line in data.AbstractionLicences!)
         {
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
             var key = $"{line.FgacRegionCode}|{line.Id}";
@@ -47,22 +47,22 @@ public static class ExternalDataHelper
 
         // Ensure versions are handled first as the other data depends on the licence version (issueNo, incrNo)
         AddNaldAbstractionLicenceVersionData(
-            data.LicenceVersions!,
+            data.AbstractionLicenceVersions!,
             internalLicenceIdsNotInDataset,
             ref returnList);
 
         AddNaldAbstractionLicenceQuantitiesData(
-            data.LicenceQuantities!,
+            data.AbstractionLicenceQuantities!,
             internalLicenceIdsNotInDataset,
             ref returnList);
         
         var purposeToLicenceMapping = AddNaldAbstractionLicencePurposeData(
-            data.LicencePurposes!,
+            data.AbstractionLicencePurposes!,
             internalLicenceIdsNotInDataset,
             ref returnList);
         
         AddNaldAbstractionLicencePointsData(
-            data.LicencePoints!,
+            data.AbstractionLicencePoints!,
             ref purposeToLicenceMapping);
 
         var changedKeyList = new Dictionary<string, List<NaldData>>();

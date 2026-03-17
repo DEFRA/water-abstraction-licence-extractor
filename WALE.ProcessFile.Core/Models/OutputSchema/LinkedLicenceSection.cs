@@ -7,6 +7,9 @@ public class LinkedLicenceSection
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LinkedLicenceSource Source { get; init; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LinkedLicenceDirection Direction { get; init; } = LinkedLicenceDirection.Outgoing;
     
     public string? SectionName { get; init; }
     

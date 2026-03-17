@@ -49,7 +49,7 @@ public class OcrDatabaseTests
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await CacheService.GetNaldDataAsync(regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(

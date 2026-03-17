@@ -14,8 +14,6 @@ public class LinkedLicencesCsvLine
     
     public string? ScrapedLicenceNumber { get; set; }
     
-    public string? NaldLicenceNumber { get; set; }
-    
     public string? ArepEuicCode { get; set; }
     
     public string? IssuedBy { get; set; }
@@ -24,7 +22,11 @@ public class LinkedLicencesCsvLine
     
     public bool? IsLive { get; set; }
     
-    public bool? IsDead { get; set; }
+    public bool? IsLapsed { get; set; }
+    
+    public bool? IsExpired { get; set; }
+
+    public bool? IsRevoked { get; set; }    
     
     public bool? IsImpoundment { get; set; }
     
@@ -33,7 +35,7 @@ public class LinkedLicencesCsvLine
     public bool HasInlicenceAggregates { get; set; }
     
     public bool HasLicenceToLicenceAggregates { get; set; }
-    
+
     public string? LinkedLicenceNumber { get; set; }
     
     public string? ScrapedLinkedLicenceNumber { get; set; }
@@ -52,7 +54,11 @@ public class LinkedLicencesCsvLine
     
     public bool? LinkedLicenceIsLive { get; set; }
     
-    public bool? LinkedLicenceIsDead { get; set; }
+    public bool? LinkedLicenceIsLapsed { get; set; }
+    
+    public bool? LinkedLicenceIsExpired { get; set; }
+    
+    public bool? LinkedLicenceIsRevoked { get; set; }
     
     public bool? LinkedLicenceIsImpoundment { get; set; }
     

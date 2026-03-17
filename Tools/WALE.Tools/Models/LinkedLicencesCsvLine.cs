@@ -36,21 +36,21 @@ public class LinkedLicencesCsvLine
     
     public bool HasLicenceToLicenceAggregates { get; set; }
 
-    public string LinkedLicenceNumber { get; set; } = "--";
+    public string? LinkedLicenceNumber { get; set; }
     
-    public string ScrapedLinkedLicenceNumber { get; set; } = "--";
+    public string? ScrapedLinkedLicenceNumber { get; set; }
     
-    public string LinkedLicenceFilename { get; set; } = "--";
+    public string? LinkedLicenceFilename { get; set; }
     
-    public string LinkedLicenceDmsPath { get; set; } = "--";
+    public string? LinkedLicenceDmsPath { get; set; }
     
-    public string LinkedLicenceDocumentOutgoing { get; set; } = "--";
+    public string? LinkedLicenceDocumentOutgoing { get; set; }
     
-    public string LinkedLicenceNaldOutgoing { get; set; } = "--";
+    public string? LinkedLicenceNaldOutgoing { get; set; }
     
-    public string LinkedLicenceDocumentIncoming { get; set; } = "--";
+    public string? LinkedLicenceDocumentIncoming { get; set; }
     
-    public string LinkedLicenceNaldIncoming { get; set; } = "--";
+    public string? LinkedLicenceNaldIncoming { get; set; }
     
     public bool? LinkedLicenceIsLive { get; set; }
     

@@ -2032,6 +2032,11 @@ public static partial class WalSchemaConverter
                 return LinkReasons.UsedInConjunction;
             }
 
+            if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return LinkReasons.Revocation;
+            }            
+            
             if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
             {
                 return LinkReasons.AggregateConditions;

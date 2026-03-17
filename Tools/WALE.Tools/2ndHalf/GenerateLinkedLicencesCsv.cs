@@ -27,7 +27,7 @@ public static class GenerateLinkedLicencesCsv
         var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter(
-            $"LinkedLicences-{DateTime.Today:yyyyMMdd}.csv",
+            $"LinkedLicences-{DateTime.Now:yyyyMMdd-hhmm}.csv",
             false,
             Encoding.Unicode);
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
@@ -67,7 +67,7 @@ public static class GenerateLinkedLicencesCsv
             var outputLine = new LinkedLicencesCsvLine
             {
                 Filename = licence.Filename,
-                DmsPath = !string.IsNullOrEmpty(licence.DmsPath) ? $"=HYPERLINK(\"{licence.DmsPath}\")" : null,
+                DmsPath = licence.DmsPath,
                 FileId = licence.DmsFileId,
                 PermitNumber = licence.DmsPermitNumber,
                 LicenceNumber = licence.LicenceNumber?.Value,
@@ -102,17 +102,15 @@ public static class GenerateLinkedLicencesCsv
                     || linkedLicence.NaldStatus == NaldLicenceStatus.Expired
                     || linkedLicence.NaldStatus == NaldLicenceStatus.Revoked    
                     || linkedLicence.LicenceType == LicenceType.Impoundment;
-                
-                outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber ?? "--";
-                outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.RawScrapedLicenceNumber ?? "--";
-                outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename ?? "--";
-                outputLineCloned.LinkedLicenceDmsPath = !string.IsNullOrEmpty(linkedLicence.DmsPath)
-                    ? $"=HYPERLINK(\"{linkedLicence.DmsPath}\")"
-                    : "--";
+
+                outputLineCloned.LinkedLicenceNumber = linkedLicence.LicenceNumber;
+                outputLineCloned.ScrapedLinkedLicenceNumber = linkedLicence.RawScrapedLicenceNumber;
+                outputLineCloned.LinkedLicenceFilename = linkedLicence.Filename;
+                outputLineCloned.LinkedLicenceDmsPath = linkedLicence.DmsPath!;
 
                 outputLineCloned.LinkedLicenceDocumentIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                        .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
-                        .ToArray(), linkedLicence.LicenceType);
+                    .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
+                    .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceDocumentOutgoing = GetContainedInText(linkedLicence.ContainedIn!
                     .Where(ci => ci.Source == LinkedLicenceSource.Document)
@@ -140,13 +138,13 @@ public static class GenerateLinkedLicencesCsv
         return returnList;
     }
 
-    private static string GetContainedInText(
+    private static string? GetContainedInText(
         LinkedLicenceSection[] containedIn,
         LicenceType licenceType)
     {
         if (containedIn.Length == 0)
         {
-            return "--";
+            return null;
         }
         
         return string.Join("; ", containedIn

@@ -872,7 +872,7 @@ public static partial class WalSchemaConverter
                         continue;
                     }
 
-                    var incomingLinks = GetLicencesThatReferenceLicence(
+                    var incomingLinks = GetLicencesThatReferenceLicenceInDocument(
                         allLicencesInSets,
                         licence.LicenceNumber?.Value!);
 
@@ -1001,7 +1001,7 @@ public static partial class WalSchemaConverter
     }
 
     private static List<(string LicenceNumber, string ScrapedLicenceNumber, string? Filename)>
-        GetLicencesThatReferenceLicence(IEnumerable<Licence> licences, string licenceNumber)
+        GetLicencesThatReferenceLicenceInDocument(IEnumerable<Licence> licences, string licenceNumber)
     {
         var returnList = new List<(string, string, string?)>();
 
@@ -1012,13 +1012,22 @@ public static partial class WalSchemaConverter
                 continue;
             }
 
-            if (licence.LinkedLicences.Any(lll => lll.LicenceNumber == licenceNumber))
+            var hasOutgoingDocumentLink = licence.LinkedLicences.Any(
+                lll => lll.LicenceNumber == licenceNumber
+                    && lll.ContainedIn!.Any(ci => ci is {
+                        Source: LinkedLicenceSource.Document,
+                        Direction: LinkedLicenceDirection.Outgoing
+                }));
+
+            if (!hasOutgoingDocumentLink)
             {
-                returnList.Add((
-                    licence.LicenceNumber!.Value!,
-                    licence.LicenceNumber!.Value!,
-                    licence.Filename));
+                continue;
             }
+            
+            returnList.Add((
+                licence.LicenceNumber!.Value!,
+                licence.LicenceNumber!.Value!,
+                licence.Filename));
         }
 
         return returnList;

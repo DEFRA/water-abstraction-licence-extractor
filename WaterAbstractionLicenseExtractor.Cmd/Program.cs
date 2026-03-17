@@ -545,8 +545,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfDataExtractor.InUse = true;
         }
 
-    try
-    {
         var previouslyParsedFiles = new List<string>
         {
             pdfFilename

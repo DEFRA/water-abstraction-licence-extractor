@@ -112,6 +112,7 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
+        var extractorSemaphore = new SemaphoreSlim(maxConcurrentScrapers, maxConcurrentScrapers);
 
         foreach (var (filePath, _) in dmsFilesToProcess)
         {
@@ -130,7 +131,8 @@ async Task ProgramAsync()
                     firstNamesCsv,
                     processRun,
                     extractorLock,
-                    naldLinkedLicenceHelper));
+                    naldLinkedLicenceHelper,
+                    extractorSemaphore));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -523,23 +525,26 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     HashSet<string> firstNamesCsv,
     ProcessRun processRun,
     Lock extractorLock,
-    NaldLinkedLicenceHelper naldLinkedLicenceHelper)
+    NaldLinkedLicenceHelper naldLinkedLicenceHelper,
+    SemaphoreSlim extractorSemaphore)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
     var dtStart = DateTime.Now;
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
-    IPdfDataExtractorService pdfDataExtractor;
-
-    lock (extractorLock)
-    {
-        pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
-        pdfDataExtractor.InUse = true;
-    }
+    IPdfDataExtractorService? pdfDataExtractor = null;
 
     try
     {
+        await extractorSemaphore.WaitAsync();
+
+        lock (extractorLock)
+        {
+            pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+            pdfDataExtractor.InUse = true;
+        }
+
         var previouslyParsedFiles = new List<string>
         {
             pdfFilename
@@ -603,7 +608,15 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
     finally
     {
-        pdfDataExtractor.InUse = false;
+        lock (extractorLock)
+        {
+            if (pdfDataExtractor != null)
+            {
+                pdfDataExtractor.InUse = false;
+            }
+        }
+
+        extractorSemaphore.Release();
     }
 }
 

@@ -8,7 +8,9 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Helpers;
+using CartesianReference = WALE.ProcessFile.Core.Models.OutputSchema.CartesianReference;
 using Date = WALE.ProcessFile.Services.Formats.Date;
+using NationalGridReference = WALE.ProcessFile.Core.Models.OutputSchema.NationalGridReference;
 
 namespace WALE.ProcessFile.Services.Converters;
 
@@ -286,8 +288,8 @@ public static partial class WalSchemaConverter
                             .First(ci => ci.SectionName == "LicenceHistory").PageNumber;
 
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
-                            .All(aci =>  aci.PageNumber == lhPageNumber
-                                && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
+                            .All(aci => aci.PageNumber == lhPageNumber
+                                        && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
 
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber,
                                    paddedLinkedLicenceNumber, regionCode)
@@ -458,7 +460,7 @@ public static partial class WalSchemaConverter
     private static bool IsPlusOrMinusACoupleOfLines(int? document1LineNumber, int? document2LineNumber)
     {
         return document1LineNumber >= document2LineNumber - 2
-            && document1LineNumber <= document2LineNumber + 2;            
+               && document1LineNumber <= document2LineNumber + 2;
     }
     
     private static string? GetDateFormatConsistent(
@@ -685,7 +687,7 @@ public static partial class WalSchemaConverter
             previouslyParsedPaths,
             processRunId,
             lookupConfiguration);
-        
+
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
 
@@ -1264,7 +1266,7 @@ public static partial class WalSchemaConverter
                     linkedLicence.LicenceNumber!.Value!,
                     lookupConfiguration.RegionCode) != false)
             .ToList();
-        
+
         return returnLicences;
     }
 
@@ -2180,13 +2182,17 @@ public static partial class WalSchemaConverter
                     var words = tableLine.Text.Split(' ');
                     var abstractionPoint = words[0];
                     var hourlyQuantity = words.Length >= 2 && double.TryParse(words[1], out var hourlyQuantityDbl)
-                        ? hourlyQuantityDbl : (double?)null;
+                        ? hourlyQuantityDbl
+                        : (double?)null;
                     var dailyQuantity = words.Length >= 3 && double.TryParse(words[2], out var dailyQuantityDbl)
-                        ? dailyQuantityDbl : (double?)null;
+                        ? dailyQuantityDbl
+                        : (double?)null;
                     var yearlyQuantity = words.Length >= 4 && double.TryParse(words[3], out var yearlyQuantityDbl)
-                        ? yearlyQuantityDbl : (double?)null;
+                        ? yearlyQuantityDbl
+                        : (double?)null;
                     var instantRate = words.Length >= 5 && double.TryParse(words[4], out var instantRateDbl)
-                        ? instantRateDbl : (double?)null;
+                        ? instantRateDbl
+                        : (double?)null;
 
                     if (hourlyQuantity == null
                         || dailyQuantity == null
@@ -2196,9 +2202,9 @@ public static partial class WalSchemaConverter
                         ConsoleHelper.WriteLine("INFO - Table was not in the expected format. Skipping");
                         continue;
                     }
-                    
-                    var points = new Point[] { new() { Id = abstractionPoint }};
-                    
+
+                    var points = new Point[] { new() { Id = abstractionPoint } };
+
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup
                     {
                         Points = points,
@@ -2244,20 +2250,20 @@ public static partial class WalSchemaConverter
             }
 
             var siblings = abstractionLimitPointSub.SubResults;
-            
+
             var purposeCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
-                    
+
             var purposeConditionSub = purposeCondition?
                 .SubResults
                 .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
                 .ToList();
-                    
-            var limitPurposes = purposeConditionSub?.Count > 0 ?
-                purposeConditionSub.Select(pcs =>
+
+            var limitPurposes = purposeConditionSub?.Count > 0
+                ? purposeConditionSub.Select(pcs =>
                     new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
-                    
+
             var pointCondition = siblings
                 .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
 
@@ -2265,16 +2271,17 @@ public static partial class WalSchemaConverter
                 .SubResults
                 .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
                 .ToList();
-                    
-            var limitPoints = pointConditionSub?.Count > 0 ?
-                pointConditionSub.Select(pcs =>
+
+            var limitPoints = pointConditionSub?.Count > 0
+                ? pointConditionSub.Select(pcs =>
                     new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
-            
+
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
                 .Any(t => t.Text.Contains("The aggregate quantity")
-                    || t.Text.Contains("The quantities detailed below are in aggregate")
-                    || t.Text.Contains("quantity equal to the difference between")) == true;
+                          || t.Text.Contains("The quantities detailed below are in aggregate")
+                          || t.Text.Contains("quantity equal to the difference between")) == true;
+
 
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
@@ -2369,13 +2376,12 @@ public static partial class WalSchemaConverter
                 .ToList();
 
             linkedLicenceNumbers = linkedLicenceNumbers
-
-            .Where(linkedLicence =>
+                .Where(linkedLicence =>
                     FormattingHelper.IsValidLicenceNumber(
                         linkedLicence.LicenceNumber!,
                         regionCode) != false)
                 .ToList();
-            
+
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
 
             var relatedNamesDict = new Dictionary<string, int>();
@@ -2388,19 +2394,19 @@ public static partial class WalSchemaConverter
             {
                 var allDuplicates = valueResults
                     .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
-                        && vr.PageNumber == valueResult.PageNumber
-                        && vr.LineNumber == valueResult.LineNumber)
+                                 && vr.PageNumber == valueResult.PageNumber
+                                 && vr.LineNumber == valueResult.LineNumber)
                     .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
                         sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
-                .ToList();
+                    .ToList();
 
-            var bestResult = allDuplicates
+                var bestResult = allDuplicates
                     .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
                     .First();
 
                 if (!newValueResults.Contains(bestResult.vr))
                 {
-                    newValueResults.Add(bestResult.vr);                    
+                    newValueResults.Add(bestResult.vr);
                 }
             }
 
@@ -2452,39 +2458,39 @@ public static partial class WalSchemaConverter
                 {
                     var anyPointsSpecified = abstractionLimit.Points?.Length > 1;
                     var limitedByPoints = anyPointsSpecified
-                        && abstractionLimit.Points!.Length != allPoints.Length;
+                                          && abstractionLimit.Points!.Length != allPoints.Length;
 
                     var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
                     var limitedByPurpose = anyPurposesSpecified
-                        && abstractionLimit.Purposes!.Length != allPurposes.Length;
+                                           && abstractionLimit.Purposes!.Length != allPurposes.Length;
 
                     var containsUnderThisLicenceText = abstractionLimitPointSub.Text?
                         .Any(t => t.Text.Contains("under this licence")) == true;
-                    
+
                     isAggregate = limitedByPoints || limitedByPurpose || containsUnderThisLicenceText;
                 }
-                
+
                 if (isAggregate)
                 {
                     aggregateAbstractionLimits.Add(abstractionLimit);
                     continue;
                 }
-                
+
                 var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
                 var individualGroup = individualGroups[pos];
-                
+
                 var groupPointsStr = individualGroup.Points?.Length > 0
                     ? string.Join(',', individualGroup.Points.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var limitPointsStr = abstractionLimit.Points?.Length > 0
                     ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var groupPurposesStr = individualGroup.Purposes?.Length > 0
                     ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
                     : string.Empty;
-                
+
                 var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
                     ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
                     : string.Empty;
@@ -2497,7 +2503,7 @@ public static partial class WalSchemaConverter
                         groupPointsStr = ig.Points?.Length > 0
                             ? string.Join(',', ig.Points.Select(p => p.Id))
                             : string.Empty;
-                        
+
                         groupPurposesStr = ig.Purposes?.Length > 0
                             ? string.Join(',', ig.Purposes.Select(p => p.Id))
                             : string.Empty;
@@ -2517,14 +2523,14 @@ public static partial class WalSchemaConverter
                         individualGroups.Add(individualGroup);
                     }
                 }
-                
+
                 individualGroup.Limits.Add(abstractionLimit);
             }
 
             var notIncluded = individualGroups
                 .Where(ig => !allIndividualGroups.Contains(ig))
                 .ToList();
-            
+
             allIndividualGroups.AddRange(notIncluded);
 
             if (aggregateAbstractionLimits.Count == 0)
@@ -2698,21 +2704,150 @@ public static partial class WalSchemaConverter
         NaldData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
-        noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
-        
+        var naldDataPeriods = naldDataLine?.Periods ?? [];
+        noneSchemaData.Add("NaldPeriodsData", naldDataPeriods);
+
+        var periodsFromMatches = GetPeriodsFromMatches(matches);
+        noneSchemaData.Add("ScrapedPeriodsData", periodsFromMatches.ToArray());
+
+        var returnPeriods = new List<PeriodOfAbstraction>();
+
+        foreach (var naldDataPeriod in naldDataPeriods)
+        {
+            var purposeIds = naldDataPeriod.PurposeIds.Select(p => $"NaldPurposeId:{p}").ToList();
+
+            var returnPeriod = new PeriodOfAbstraction
+            {
+                StartDate = $"{naldDataPeriod.PeriodStartDay}/{naldDataPeriod.PeriodStartMonth}",
+                EndDate = $"{naldDataPeriod.PeriodEndDay}/{naldDataPeriod.PeriodEndMonth}"
+            };
+
+            var matchingPeriod = periodsFromMatches.FirstOrDefault(p => IsMatchingPeriod(p, naldDataPeriod));
+
+            if (matchingPeriod != null)
+            {
+                returnPeriod.Id = matchingPeriod.Id;
+                returnPeriod.Description = matchingPeriod.Description;
+                returnPeriod.PeriodType = matchingPeriod.PeriodType;
+                returnPeriod.Inclusive = matchingPeriod.Inclusive;
+                returnPeriod.TimeCutoff = matchingPeriod.TimeCutoff;
+                purposeIds.AddRange(matchingPeriod.PurposeIds ?? []);
+
+                periodsFromMatches.Remove(matchingPeriod);
+            }
+
+            returnPeriod.PurposeIds = purposeIds.ToArray();
+            returnPeriods.Add(returnPeriod);
+        }
+
+        returnPeriods.AddRange(periodsFromMatches);
+
+        return returnPeriods.ToArray();
+    }
+
+    private static bool IsMatchingPeriod(PeriodOfAbstraction p, NaldDataPeriod naldDataPeriod)
+    {
+        if (p.PeriodType == AbstractionPeriodType.PerYear && IsWholeYear(naldDataPeriod))
+        {
+            return true;
+        }
+
+        return IsDateMatch(p.StartDate, naldDataPeriod.PeriodStartDay, naldDataPeriod.PeriodStartMonth) &&
+               IsDateMatch(p.EndDate, naldDataPeriod.PeriodEndDay, naldDataPeriod.PeriodEndMonth);
+    }
+
+    private static bool IsWholeYear(NaldDataPeriod naldDataPeriod)
+    {
+        if (naldDataPeriod.PeriodStartDay == null || naldDataPeriod.PeriodStartMonth == null ||
+            naldDataPeriod.PeriodEndDay == null || naldDataPeriod.PeriodEndMonth == null)
+        {
+            return false;
+        }
+
+        var startDay = naldDataPeriod.PeriodStartDay.Value;
+        var startMonth = naldDataPeriod.PeriodStartMonth.Value;
+        var endDay = naldDataPeriod.PeriodEndDay.Value;
+        var endMonth = naldDataPeriod.PeriodEndMonth.Value;
+
+        const int year = 2000;
+
+        try
+        {
+            var startDate = new DateTime(year, startMonth, startDay);
+            var endDate = new DateTime(year, endMonth, endDay);
+
+            return startDate == endDate ||
+                   startDate == endDate.AddDays(1) ||
+                   startDate == endDate.AddDays(1).AddYears(-1);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsDateMatch(string? dateStr, int? naldDay, int? naldMonth)
+    {
+        if (string.IsNullOrEmpty(dateStr))
+        {
+            return false;
+        }
+
+        var formattedDate = Date.DateFormatConsistent(dateStr);
+        if (string.IsNullOrEmpty(formattedDate))
+        {
+            return false;
+        }
+
+        var parts = formattedDate.Split('/');
+        if (parts.Length < 2)
+        {
+            return false;
+        }
+
+        if (!int.TryParse(parts[1], out var month))
+        {
+            // Try to match month name
+            var months = new[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+            var monthName = parts[1].ToLower();
+            for (var i = 0; i < months.Length; i++)
+            {
+                if (monthName.StartsWith(months[i]))
+                {
+                    month = i + 1;
+                    break;
+                }
+            }
+        }
+
+        if (month == 0 || month != naldMonth)
+        {
+            return false;
+        }
+
+        if (naldDay.HasValue && int.TryParse(parts[0], out var day))
+        {
+            return day == naldDay.Value;
+        }
+
+        return true;
+    }
+
+    private static List<PeriodOfAbstraction> GetPeriodsFromMatches(List<LabelGroupResult> matches)
+    {
         var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
         var returnList = new List<PeriodOfAbstraction>();
 
         if (periodResults == null)
         {
-            return returnList.ToArray();
+            return returnList;
         }
 
         if (periodResults.MatchedLabel?.Name == "DuringTheMonthsXToYOnlyText")
         {
             if (periodResults.SubResults.Count != 2)
             {
-                return returnList.ToArray();
+                return returnList;
             }
 
             returnList.Add(new PeriodOfAbstraction
@@ -2721,11 +2856,7 @@ public static partial class WalSchemaConverter
                 Description = periodResults.Text?.FirstOrDefault()?.Text,
                 Inclusive = true,
                 StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
-                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
+                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text
             });
         }
 
@@ -2778,10 +2909,10 @@ public static partial class WalSchemaConverter
             var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
             //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
-            var inclusive = text?.Contains("inclusive",
-                StringComparison.InvariantCultureIgnoreCase) ?? false;
-
             var allYear = text == "All year";
+
+            var inclusive =
+                allYear || (text?.Contains("inclusive", StringComparison.InvariantCultureIgnoreCase) ?? false);
 
             // TODO next bit should be done in config
             var dateParts = text?
@@ -2803,14 +2934,10 @@ public static partial class WalSchemaConverter
                 TimeCutoff = timeCutoff,
                 PointIds = null, // TODO set purpose ids and point ids
                 PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
             });
         }
 
-        return returnList.ToArray();
+        return returnList;
     }
 
     private static MeanOfAbstraction[] GetMeansOfAbstraction(
@@ -2904,14 +3031,85 @@ public static partial class WalSchemaConverter
         NaldData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
-        noneSchemaData.Add("NaldPointsData", naldDataLine?.Points ?? []);
+        var naldPointsData = naldDataLine?.Points ?? [];
+        noneSchemaData.Add("NaldPointsData", naldPointsData);
+
+        var pointsFromMatches = GetPointsFromMatches(matches, ref noneSchemaData);
+        noneSchemaData.Add("ScrapedPointsData", pointsFromMatches.ToArray());
+
+        var returnPoints = new List<PointOfAbstraction>();
+
+        foreach (var naldPointData in naldPointsData)
+        {
+            var purposeIds = naldPointData.PurposeIds.Select(p => $"NaldPurposeId:{p}").ToList();
+
+            var returnPoint = new PointOfAbstraction
+            {
+                Id = naldPointData.PointId.ToString(),
+                NaldPointId = naldPointData.PointId,
+                CartesianReferences = naldPointData.CartesianReferences.Select(r => new CartesianReference
+                {
+                    ReferenceIndex = r.ReferenceIndex,
+                    East = r.East,
+                    North = r.North
+                }).ToList(),
+                NationalGridReferences = naldPointData.NationalGridReferences.Select(r => new NationalGridReference
+                {
+                    ReferenceIndex = r.ReferenceIndex,
+                    Sheet = r.Sheet,
+                    East = r.East,
+                    North = r.North
+                }).ToList(),
+                Description = naldPointData.PointName,
+                Name = naldPointData.PointName
+            };
+
+            var matchingPoints = pointsFromMatches
+                .Where(p => IsMatchingPoint(p, naldPointData)).ToList();
+
+            if (matchingPoints.Count > 0)
+            {
+                returnPoint.Id = string.Join(',', matchingPoints.Select(p => p.Id));
+                returnPoint.Description = string.Join(',', matchingPoints.Select(p => p.Description));
+                returnPoint.TimeCutoff = matchingPoints.FirstOrDefault(m => m.TimeCutoff != null)?.TimeCutoff;
+
+                foreach (var matchingPoint in matchingPoints)
+                {
+                    purposeIds.AddRange(matchingPoint.PurposeIds ?? []);
+                    pointsFromMatches.Remove(matchingPoint);
+                }
+            }
+
+            returnPoint.PurposeIds = purposeIds.ToArray();
+            returnPoints.Add(returnPoint);
+        }
+
+        returnPoints.AddRange(pointsFromMatches);
+        return returnPoints.ToArray();
+    }
+
+    private static bool IsMatchingPoint(PointOfAbstraction pointOfAbstraction, NaldDataPoint naldPointData)
+    {
+        var description = pointOfAbstraction.Description?.ToLower();
         
+        if (description == null)
+        {
+            return false;
+        }
+
+        return naldPointData.NationalGridReferences.Any(ngr => description.Contains(ngr.ToString().ToLower())) || 
+               naldPointData.CartesianReferences.Any(cr => description.Contains(cr.ToString()));
+    }
+
+    private static List<PointOfAbstraction> GetPointsFromMatches(List<LabelGroupResult> matches,
+        ref Dictionary<string, object> noneSchemaData)
+    {
         var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
         var returnList = new List<PointOfAbstraction>();
 
         if (pointsResults == null)
         {
-            return returnList.ToArray();
+            return returnList;
         }
         
         noneSchemaData.Add("Confidence:Points", pointsResults.Confidence);
@@ -3008,9 +3206,7 @@ public static partial class WalSchemaConverter
                             Description = tableLine.Text,
                             Id = $"{pointNumber} {subId}", // e.g 2.1 - A
                             PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldDataLine,
-                                tableLine.Text) // TODO needs to get the correct point
+                            TimeCutoff = timeCutoff
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -3040,13 +3236,12 @@ public static partial class WalSchemaConverter
                     Description = description,
                     Id = pointNumber,
                     PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description) // TODO needs to get the correct point
+                    TimeCutoff = timeCutoff
                 });
             }
         }
 
-        return returnList.ToArray();
+        return returnList;
     }
 
     private static NaldData? GetNaldDataLine(
@@ -3062,51 +3257,6 @@ public static partial class WalSchemaConverter
                && naldData.TryGetValue(naldDataKey, out var naldDataLine)
             ? naldDataLine.First()
             : null;
-    }
-
-    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)
-    {
-        if (naldDataLine?.Points.Count is null or 0)
-        {
-            return null;
-        }
-
-        var points = naldDataLine.Points;
-        NaldDataPoint point;
-
-        if (points.Count == 1)
-        {
-            point = points[0];
-        }
-        else
-        {
-            // TODO - Work out which point matches the description
-
-            point = points
-                .First(p => p.PointId != 0);
-        }
-
-        return new NaldPointData
-        {
-            Id = point.PointId.ToString(),
-            Name = point.PointName,
-            NationalGridReferences = point.NationalGridReferences.Select(n =>
-                new NaldNationalGridReference
-                {
-                    ReferenceIndex = n.ReferenceIndex,
-                    Sheet = n.Sheet,
-                    East = n.East,
-                    North = n.North
-                }).ToList(),
-            CartesianReferences = point.CartesianReferences.Select(c =>
-                new NaldCartesianReference
-                {
-                    ReferenceIndex = c.ReferenceIndex,
-                    East = c.East,
-                    North = c.North
-                }).ToList(),
-            NaldPurposeIds = point.PurposeIds
-        };
     }
 
     private static NaldPurposeData? GetNaldPurposeData(NaldData? naldDataLine, string? description)
@@ -3140,47 +3290,13 @@ public static partial class WalSchemaConverter
         };
     }
 
-    private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
-    {
-        if (naldDataLine == null)
-        {
-        }
-
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodStartDay != null);
-
-        return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
-    }
-
-    private static string? GetNaldPeriodEndDate(NaldData? naldDataLine, string? description)
-    {
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodEndDay != null);
-
-        return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
-    }
-
     private static PurposeOfAbstraction[] GetPurposes(
         List<LabelGroupResult> matches,
         NaldData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
-        
+
         var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         var returnList = new List<PurposeOfAbstraction>();
 

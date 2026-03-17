@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public class NaldCartesianReference
+public class CartesianReference
 {
     public int ReferenceIndex { get; set; }
     public int? East { get; set; }

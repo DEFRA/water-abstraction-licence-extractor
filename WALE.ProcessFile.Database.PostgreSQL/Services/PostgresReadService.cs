@@ -758,7 +758,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result.ToList();
     }
 
-    public async Task<List<NaldLicence>> GetNaldLicencesAsync()
+    public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

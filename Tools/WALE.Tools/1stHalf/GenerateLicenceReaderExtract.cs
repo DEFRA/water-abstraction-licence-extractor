@@ -228,7 +228,7 @@ public static class GenerateLicenceReaderExtract
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
         
         var maxConcurrentScrapers = 10;
         var pdfDataExtractors = new List<PdfDataExtractorService>();

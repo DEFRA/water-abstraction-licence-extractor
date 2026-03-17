@@ -92,7 +92,7 @@ async Task ProgramAsync()
 
     var allNaldData =  await naldDataTask;
     
-    LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+    LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
         cacheService,

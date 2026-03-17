@@ -34,7 +34,7 @@ public class AzureOpenAiOcrPdfTests
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.LicencesAlternateFormat!);
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");

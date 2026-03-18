@@ -563,8 +563,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO sharepoint_fileid (file_id, dms_file_path, process_run_id, change_since_previous, first_seen_utc) 
-                           VALUES (@FileId, @DmsFilePath, @ProcessRunId, @ChangeSincePrevious, @FirstSeenUtc);
+                           INSERT INTO sharepoint_fileid (file_id, dms_file_path, process_run_id, status, status_date_utc) 
+                           VALUES (@FileId, @DmsFilePath, @ProcessRunId, @Status, @StatusDateUtc);
                            """;
 
         await ExecuteAsync(
@@ -576,8 +576,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 newDmsFileIdInformation.FileId,
                 newDmsFileIdInformation.DmsFilePath,
                 newDmsFileIdInformation.ProcessRunId,
-                newDmsFileIdInformation.ChangeSincePrevious,
-                newDmsFileIdInformation.FirstSeenUtc
+                newDmsFileIdInformation.Status,
+                newDmsFileIdInformation.StatusDateUtc
             });
     }
 

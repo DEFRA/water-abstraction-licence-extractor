@@ -8,7 +8,7 @@ public class DmsFileIdInformation
 
     public int ProcessRunId { get; set; }
 
-    public string? ChangeSincePrevious { get; set; }
+    public string? Status { get; set; }
     
-    public DateTime FirstSeenUtc { get; set; }
+    public DateTime StatusDateUtc { get; set; }
 }

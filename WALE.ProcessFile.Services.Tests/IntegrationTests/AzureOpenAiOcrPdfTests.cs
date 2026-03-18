@@ -70,7 +70,8 @@ public class AzureOpenAiOcrPdfTests
             _fileLicenceMapping,
             [],            
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
-            new LocalFileService(pdfFolder),            
+            new LocalFileService(pdfFolder),
+            CacheService,
             4); // TODO - whatever Hampshire & IOW is
     }
     

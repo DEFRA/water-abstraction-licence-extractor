@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Services;
 using Xunit;
 
@@ -40,6 +41,7 @@ public class FileTypeIdentifierServiceTests
             [],
             [],
             new LocalFileService(""),
+            new FileSystemCacheService(""),
             1);
 
         // Act
@@ -63,6 +65,7 @@ public class FileTypeIdentifierServiceTests
             [],
             [],
             new LocalFileService(""),
+            new FileSystemCacheService(""),
             1);
 
         // Act
@@ -79,7 +82,14 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This is a regular document";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], [], new LocalFileService(""),1);
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            new FileSystemCacheService("Cache"),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -136,6 +146,7 @@ public class FileTypeIdentifierServiceTests
             [],
             [],
             new LocalFileService(""),
+            new FileSystemCacheService(""),
             1);
     }
 

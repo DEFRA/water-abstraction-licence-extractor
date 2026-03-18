@@ -74,6 +74,7 @@ public static class GenerateAggregatesCsvForTesting
                     [], // TODO
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
                     new LocalFileService( KeyConfig.PdfFolder),
+                    CacheService,
                     3);
             }
 

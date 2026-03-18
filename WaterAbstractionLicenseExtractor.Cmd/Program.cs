@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
@@ -46,7 +47,7 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
+    /*var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
         services.ReportTemplatePath!,
         outputFolder,
         services.LoadAiJs,
@@ -56,7 +57,7 @@ async Task ProgramAsync()
         services.LicenceDataPath!,
         services.LicenceSetsDataPath!,
         services.ThumbnailImageDataPath!,
-        services.FullImageDataPath!);
+        services.FullImageDataPath!);*/
 
     // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
     // when we want to handle more than one region)
@@ -88,7 +89,7 @@ async Task ProgramAsync()
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
-    await moveReportHtmlFilesTask;
+    //await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
     
@@ -122,6 +123,7 @@ async Task ProgramAsync()
             dmsFileIdInformationDict,
             firstNamesCsv,
             services.FileService,
+            services.CacheService!,
             regionCode,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
         
@@ -346,17 +348,17 @@ async Task ProgramAsync()
     //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
 
-Dictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
+ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
     List<DmsFileIdInformation> dmsFileIdInformationList)
 {
-    var dmsFileIdInformationDict = new Dictionary<Guid, List<DmsFileIdInformation>>();
+    var dmsFileIdInformationDict = new ConcurrentDictionary<Guid, List<DmsFileIdInformation>>();
     
     foreach (var dmsFileIdInformation in dmsFileIdInformationList)
     {
         if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
         {
             changeList = [];
-            dmsFileIdInformationDict.Add(dmsFileIdInformation.FileId, changeList);
+            dmsFileIdInformationDict.TryAdd(dmsFileIdInformation.FileId, changeList);
         }
 
         changeList.Add(dmsFileIdInformation);
@@ -571,9 +573,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
-
-        await RecordFileIdAsync(dmsDataForFile, lookupConfig, processRun, cacheService);
-
+        
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             lookupConfig,
@@ -628,70 +628,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-async Task RecordFileIdAsync(
-    DmsFileData dmsDataForFile,
-    LookupConfiguration lookupConfig,
-    ProcessRun processRun,
-    ICacheService cacheService)
-{
-    if (!dmsDataForFile.FileId.HasValue)
-    {
-        return;
-    }
-
-    if (string.IsNullOrEmpty(dmsDataForFile.DmsPath))
-    {
-        throw new Exception("DMS file path is null - shouldn't happen");
-    }
-
-    var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId.Value);
-
-    var newDmsFileIdInformation = new DmsFileIdInformation
-    {
-        FileId = dmsDataForFile.FileId.Value,
-        DmsFilePath = dmsDataForFile.DmsPath,
-        ProcessRunId = processRun.ProcessRunId,
-        FirstSeenUtc = DateTime.UtcNow
-    };
-
-    if (beforeRecordList == null)
-    {
-        newDmsFileIdInformation.ChangeSincePrevious = "FirstSeen";
-        await cacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
-    }
-    else
-    {
-        var matchedFilePath = false;
-
-        foreach (var beforeRecord in beforeRecordList)
-        {
-            if (beforeRecord.DmsFilePath != dmsDataForFile.DmsPath)
-            {
-                continue;
-            }
-
-            matchedFilePath = true;
-            break;
-        }
-
-        if (!matchedFilePath)
-        {
-            var lastRecord = beforeRecordList
-                .OrderByDescending(r => r.FirstSeenUtc)
-                .First();
-            
-            var lastRecordFilenameOnly = lastRecord.DmsFilePath![(lastRecord.DmsFilePath.LastIndexOf('/') + 1)..];
-            var filenameOnly = dmsDataForFile.DmsPath![(dmsDataForFile.DmsPath.LastIndexOf('/') + 1)..];
-            
-            var isFilenameSame = lastRecordFilenameOnly == filenameOnly;
-
-            newDmsFileIdInformation.ChangeSincePrevious = isFilenameSame ? "Moved" : "Renamed";
-            await cacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
-        }
-    }
-}
-
-async Task MoveReportHtmlFilesAsync(
+/*async Task MoveReportHtmlFilesAsync(
     string reportTemplatePath,
     string outputFolder,
     bool loadAiJs,
@@ -750,7 +687,7 @@ async Task MoveReportHtmlFilesAsync(
     indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
 
     await File.WriteAllTextAsync(indexPath, indexHtml);
-}
+}*/
 
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>

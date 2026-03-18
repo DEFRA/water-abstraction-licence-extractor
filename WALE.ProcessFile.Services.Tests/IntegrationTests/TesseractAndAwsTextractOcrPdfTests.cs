@@ -79,6 +79,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             [],            
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
+            CacheService,
             regionCode);
     }
 

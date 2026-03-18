@@ -99,6 +99,7 @@ public static class FileTypeIdentificationExtract
             [],
             [],
             new LocalFileService(KeyConfig.PdfFolder),
+            new FileSystemCacheService("Cache"),
             3);
 
         var results = await fileTypeService.ProcessDirectoryAsync(

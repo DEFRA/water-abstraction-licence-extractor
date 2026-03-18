@@ -14,14 +14,21 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static partial class WalSchemaConverter
 {
-    private static Licence ToLicence(
+    private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
         NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         Dictionary<string, List<NaldData>> naldData,
-        NaldLinkedLicenceHelper? naldLinkedLicenceHelper)
+        NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
+        LookupConfiguration? lookupConfiguration,
+        int processRunId)
     {
+        var dmsFileIdInfo = await RecordFileIdAsync(
+            dmsFileData,
+            lookupConfiguration,
+            processRunId);
+        
         var matches = matchesResult.Matches;
         var regionCode = matchesResult.RegionCode;
 
@@ -48,7 +55,7 @@ public static partial class WalSchemaConverter
             : null;
         
         var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-        var licenceVersion = GetLicenceVersion(matches, naldDataLine, noneSchemaData);
+        var licenceVersion = GetLicenceVersion(matches, naldDataLine, noneSchemaData, dmsFileIdInfo);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -481,10 +488,13 @@ public static partial class WalSchemaConverter
     private static LicenceVersion GetLicenceVersion(
         List<LabelGroupResult> matches,
         NaldData? naldDataLine,
-        Dictionary<string, object?> noneSchemaData)
+        Dictionary<string, object?> noneSchemaData,
+        DmsFileIdInformation? dmsFileIdInformation)
     {
         return new LicenceVersion
         {
+            DmsFileIdStatus = dmsFileIdInformation?.Status,
+            DmsFileIdStatusDateUtc = dmsFileIdInformation?.StatusDateUtc,
             NaldIssueNumber = naldDataLine?.IssueNo,
             NaldIncrementNumber = naldDataLine?.IncrNo,
             NaldUpdateReason = naldDataLine?.AabvType,
@@ -672,14 +682,16 @@ public static partial class WalSchemaConverter
             matchesResult.RegionCode,
             lookupConfiguration.AllDmsData,
             out var dmsFileData);
-        
-        var primaryLicence = ToLicence(
+
+        var primaryLicence = await ToLicenceAsync(
             matchesResult,
             naldLicenceStatusData,
             dmsFileData,
             lookupConfiguration.AllDmsData,
             naldData,
-            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
+            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+            lookupConfiguration,
+            processRunId);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
@@ -845,6 +857,76 @@ public static partial class WalSchemaConverter
         return returnList;
     }
 
+    private static async Task<DmsFileIdInformation?> RecordFileIdAsync(
+        DmsFileData? dmsDataForFile,
+        LookupConfiguration? lookupConfig,
+        int processRunId)
+    {
+        if (dmsDataForFile?.FileId.HasValue != true
+            || lookupConfig == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrEmpty(dmsDataForFile.DmsPath))
+        {
+            throw new Exception("DMS file path is null - shouldn't happen");
+        }
+
+        var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId!.Value);
+
+        var newDmsFileIdInformation = new DmsFileIdInformation
+        {
+            FileId = dmsDataForFile.FileId.Value,
+            DmsFilePath = dmsDataForFile.DmsPath,
+            ProcessRunId = processRunId,
+            StatusDateUtc = DateTime.UtcNow
+        };
+
+        if (beforeRecordList == null)
+        {
+            newDmsFileIdInformation.Status = "FirstSeen";
+            
+            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
+            lookupConfig.DmsFileIds.TryAdd(newDmsFileIdInformation.FileId, [newDmsFileIdInformation]);
+        }
+        else
+        {
+            var matchedFilePath = false;
+
+            foreach (var beforeRecord in beforeRecordList)
+            {
+                if (beforeRecord.DmsFilePath != dmsDataForFile.DmsPath)
+                {
+                    continue;
+                }
+
+                matchedFilePath = true;
+                break;
+            }
+
+            if (matchedFilePath)
+            {
+                return newDmsFileIdInformation;
+            }
+            
+            var lastRecord = beforeRecordList
+                .OrderByDescending(r => r.StatusDateUtc)
+                .First();
+            
+            var lastRecordFilenameOnly = lastRecord.DmsFilePath![(lastRecord.DmsFilePath!.LastIndexOf('/') + 1)..];
+            var filenameOnly = dmsDataForFile.DmsPath![(dmsDataForFile.DmsPath.LastIndexOf('/') + 1)..];
+            
+            var isFilenameSame = lastRecordFilenameOnly == filenameOnly;
+            newDmsFileIdInformation.Status = isFilenameSame ? "Moved" : "Renamed";
+
+            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
+            lookupConfig.DmsFileIds[newDmsFileIdInformation.FileId].Add(newDmsFileIdInformation);
+        }
+
+        return newDmsFileIdInformation;
+    }
+    
     private static List<LicenceSet> AddIncomingLinks(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
@@ -1139,13 +1221,15 @@ public static partial class WalSchemaConverter
                             lookupConfiguration.AllDmsData,
                             out var dmsFileData);
                         
-                        var linkedLicence = ToLicence(
+                        var linkedLicence = await ToLicenceAsync(
                             matches,
                             naldLicenceStatusData,
                             dmsFileData,
                             lookupConfiguration.AllDmsData,
                             naldData,
-                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+                            lookupConfiguration,
+                            processRunId);
 
                         returnLicences.Add(linkedLicence);
                     }
@@ -1199,13 +1283,15 @@ public static partial class WalSchemaConverter
                             previouslyParsedFiles,
                             processRunId);
 
-                        var licence = ToLicence(
+                        var licence = await ToLicenceAsync(
                             relatedFileMatches,
                             naldLicenceStatusData,
                             dmsFileData,
                             lookupConfiguration.AllDmsData,
                             naldData,
-                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
+                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+                            lookupConfiguration,
+                            processRunId);
 
                         returnLicences.Add(licence);
                     }
@@ -1281,13 +1367,15 @@ public static partial class WalSchemaConverter
                 previouslyParsedFiles,
                 processRunId);
 
-            var licence = ToLicence(
+            var licence = await ToLicenceAsync(
                 relatedFileMatches,
                 naldLicenceStatusData,
                 dmsFileData,
                 lookupConfiguration.AllDmsData,
                 naldData,
-                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
+                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+                lookupConfiguration,
+                processRunId);
 
             returnLicences.Add(licence);
         }

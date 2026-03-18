@@ -10,6 +10,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.AzureComputerVision;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
@@ -91,6 +92,7 @@ public class MessageReceivedFunction(
                 [], // TODO
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(pdfFolderPath),
+                cacheService,
                 1),
             previouslyParsedFiles,
             0);

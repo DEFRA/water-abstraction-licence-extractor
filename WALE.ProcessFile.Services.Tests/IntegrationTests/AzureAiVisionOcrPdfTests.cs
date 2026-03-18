@@ -79,6 +79,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
             [],            
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
+            CacheService,
             regionCode);
     }
 

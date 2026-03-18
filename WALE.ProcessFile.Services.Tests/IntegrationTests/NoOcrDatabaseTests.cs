@@ -92,6 +92,7 @@ public class NoOcrDatabaseTests
             [],            
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
+            CacheService,
             3);
     }
     

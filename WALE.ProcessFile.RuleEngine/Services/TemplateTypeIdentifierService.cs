@@ -5,6 +5,7 @@ using WALE.ProcessFile.RuleEngine.RuleConfiguration;
 using WALE.ProcessFile.RuleEngine.Rules;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Services;
 
 namespace WALE.ProcessFile.RuleEngine.Services;
@@ -52,6 +53,7 @@ public class TemplateTypeIdentifierService
             [], // TODO
             [], // TODO
             new LocalFileService("TODO"),
+            new FileSystemCacheService("TODO"),
             regionCode);
         
         var content = await _pdfExtractorService!.GetMatchesAsync(

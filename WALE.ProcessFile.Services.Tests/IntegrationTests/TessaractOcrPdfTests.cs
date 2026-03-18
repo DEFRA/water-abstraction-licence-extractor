@@ -96,9 +96,10 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            [],            
+            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
+            CacheService,
             regionCode);
     }
     

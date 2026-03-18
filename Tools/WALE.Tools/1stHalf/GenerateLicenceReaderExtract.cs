@@ -249,6 +249,7 @@ public static class GenerateLicenceReaderExtract
         var lines = await GetLicenceReaderDataAsync(
             pdfDataExtractors,
             new LocalFileService(pdfFolder),
+            cacheService,
             regionCode,
             maxConcurrentScrapers);
 
@@ -294,6 +295,7 @@ public static class GenerateLicenceReaderExtract
     private static async Task<List<LicenceReaderCsvLineWithoutStatus>> GetLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
+        ICacheService cacheService,
         int regionCode,
         int maxConcurrentScrapers)
     {
@@ -354,6 +356,7 @@ public static class GenerateLicenceReaderExtract
             [], // TODO
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             fileService,
+            cacheService,
             regionCode);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");

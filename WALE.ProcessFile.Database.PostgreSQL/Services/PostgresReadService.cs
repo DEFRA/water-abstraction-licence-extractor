@@ -23,8 +23,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                file_id,
                                dms_file_path,
                                process_run_id,
-                               change_since_previous,
-                               first_seen_utc
+                               status,
+                               status_date_utc
                            FROM sharepoint_fileid
                            """;
 

@@ -875,7 +875,7 @@ public static partial class WalSchemaConverter
 
         var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId!.Value);
 
-        var newDmsFileIdInformation = new DmsFileIdInformation
+        var outputDmsFileIdInformation = new DmsFileIdInformation
         {
             FileId = dmsDataForFile.FileId.Value,
             DmsFilePath = dmsDataForFile.DmsPath,
@@ -885,46 +885,35 @@ public static partial class WalSchemaConverter
 
         if (beforeRecordList == null)
         {
-            newDmsFileIdInformation.Status = "FirstSeen";
+            outputDmsFileIdInformation.Status = "FirstSeen";
             
-            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
-            lookupConfig.DmsFileIds.TryAdd(newDmsFileIdInformation.FileId, [newDmsFileIdInformation]);
+            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(outputDmsFileIdInformation);
+            lookupConfig.DmsFileIds.TryAdd(outputDmsFileIdInformation.FileId, [outputDmsFileIdInformation]);
         }
         else
         {
-            var matchedFilePath = false;
-
-            foreach (var beforeRecord in beforeRecordList)
-            {
-                if (beforeRecord.DmsFilePath != dmsDataForFile.DmsPath)
-                {
-                    continue;
-                }
-
-                matchedFilePath = true;
-                break;
-            }
-
-            if (matchedFilePath)
-            {
-                return newDmsFileIdInformation;
-            }
-            
             var lastRecord = beforeRecordList
                 .OrderByDescending(r => r.StatusDateUtc)
                 .First();
+
+            var noChange = lastRecord.DmsFilePath == dmsDataForFile.DmsPath;
+
+            if (noChange)
+            {
+                return outputDmsFileIdInformation;
+            }
             
             var lastRecordFilenameOnly = lastRecord.DmsFilePath![(lastRecord.DmsFilePath!.LastIndexOf('/') + 1)..];
             var filenameOnly = dmsDataForFile.DmsPath![(dmsDataForFile.DmsPath.LastIndexOf('/') + 1)..];
             
             var isFilenameSame = lastRecordFilenameOnly == filenameOnly;
-            newDmsFileIdInformation.Status = isFilenameSame ? "Moved" : "Renamed";
+            outputDmsFileIdInformation.Status = isFilenameSame ? "Moved" : "Renamed";
 
-            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
-            lookupConfig.DmsFileIds[newDmsFileIdInformation.FileId].Add(newDmsFileIdInformation);
+            await lookupConfig.CacheService.AddDmsFileIdInformationAsync(outputDmsFileIdInformation);
+            lookupConfig.DmsFileIds[outputDmsFileIdInformation.FileId].Add(outputDmsFileIdInformation);
         }
 
-        return newDmsFileIdInformation;
+        return outputDmsFileIdInformation;
     }
     
     private static List<LicenceSet> AddIncomingLinks(

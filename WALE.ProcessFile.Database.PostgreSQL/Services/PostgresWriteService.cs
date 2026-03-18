@@ -559,9 +559,26 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
-        throw new NotImplementedException();
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO sharepoint_fileid (file_id, dms_file_path, process_run_id, change_since_previous, first_seen_utc) 
+                           VALUES (@FileId, @DmsFilePath, @ProcessRunId, @ChangeSincePrevious, @FirstSeenUtc);
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                newDmsFileIdInformation.FileId,
+                newDmsFileIdInformation.DmsFilePath,
+                newDmsFileIdInformation.ProcessRunId,
+                newDmsFileIdInformation.ChangeSincePrevious,
+                newDmsFileIdInformation.FirstSeenUtc
+            });
     }
 
     private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)

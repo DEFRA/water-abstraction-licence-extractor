@@ -639,6 +639,11 @@ async Task RecordFileIdAsync(
         return;
     }
 
+    if (string.IsNullOrEmpty(dmsDataForFile.DmsPath))
+    {
+        throw new Exception("DMS file path is null - shouldn't happen");
+    }
+
     var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId.Value);
 
     var newDmsFileIdInformation = new DmsFileIdInformation

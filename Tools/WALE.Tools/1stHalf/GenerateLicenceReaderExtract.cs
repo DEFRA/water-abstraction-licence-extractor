@@ -351,6 +351,7 @@ public static class GenerateLicenceReaderExtract
         var configuration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
             DmsFileData,
+            [], // TODO
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             fileService,
             regionCode);

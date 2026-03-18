@@ -50,6 +50,7 @@ public class TemplateTypeIdentifierService
             TemplateFinderRuleConfiguration.GetLabels(),
             [], // TODO
             [], // TODO
+            [], // TODO
             new LocalFileService("TODO"),
             regionCode);
         

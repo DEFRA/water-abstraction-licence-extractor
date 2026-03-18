@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseReadService
 {
-    Task<List<SharePointFileIdInformation>> GetSharePointFileIdInformationAsync();
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
     
     Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     

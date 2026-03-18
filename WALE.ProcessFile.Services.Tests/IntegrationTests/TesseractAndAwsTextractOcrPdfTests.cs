@@ -76,6 +76,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         return new(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
+            [],            
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             regionCode);

@@ -78,6 +78,7 @@ public static class TestsForAiPrompts
                         [],
                         [],
                         [],
+                        [],
                         new LocalFileService(KeyConfig.PdfFolder),
                         -1));
                 

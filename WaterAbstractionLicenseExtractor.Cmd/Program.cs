@@ -102,6 +102,15 @@ async Task ProgramAsync()
         allNaldData,
         allDmsData,
         regionCode);
+
+    var dmsFileIdInformationList = await cacheService.GetDmsFileIdInformationAsync();
+
+    foreach (var dmsFileIdInformation in dmsFileIdInformationList)
+    {
+        
+    }
+    
+    var dmsFileIdInformationDict = new Dictionary<Guid, List<DmsFileIdInformation>>();
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
@@ -113,24 +122,29 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
 
+        var lookupConfig = new LookupConfiguration(
+            WalLabelConfiguration.GetLabels(),
+            allDmsData,
+            dmsFileIdInformationDict,
+            firstNamesCsv,
+            services.FileService,
+            regionCode,
+            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
+        
         foreach (var (filePath, _) in dmsFilesToProcess)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
-                    services.FileService,
-                    regionCode,
                     processCount++,
                     processRun.NumberOfFiles,
-                    allDmsData,
                     naldLicenceStatusData,
                     naldData,
                     outputService,
                     pdfDataExtractors,
-                    firstNamesCsv,
                     processRun,
                     extractorLock,
-                    naldLinkedLicenceHelper));
+                    lookupConfig));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -511,19 +525,15 @@ ConfiguredServices ConfigureServices()
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
-    IFileService fileService,
-    int regionCode,
     int fileNumber,
     int totalNumber,
-    Dictionary<string, DmsFileData> allDmsData,
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
-    HashSet<string> firstNamesCsv,
     ProcessRun processRun,
     Lock extractorLock,
-    NaldLinkedLicenceHelper naldLinkedLicenceHelper)
+    LookupConfiguration lookupConfig)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -544,14 +554,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
-        
-        var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
-            allDmsData,
-            firstNamesCsv,
-            fileService,
-            regionCode,
-            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,

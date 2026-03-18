@@ -71,6 +71,7 @@ public static class GenerateAggregatesCsvForTesting
                 _lookupConfiguration = new LookupConfiguration(
                     WalLabelConfiguration.GetLabels(),
                     FileLicenceMapping,
+                    [], // TODO
                     CompanyName.GetFirstNamesCsvFromFileAsync().Result,
                     new LocalFileService( KeyConfig.PdfFolder),
                     3);

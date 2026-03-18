@@ -670,14 +670,14 @@ public static partial class WalSchemaConverter
         FormattingHelper.GetDmsFileData(
             licenceNumber,
             matchesResult.RegionCode,
-            lookupConfiguration.LicenceNumberMapping,
+            lookupConfiguration.AllDmsData,
             out var dmsFileData);
         
         var primaryLicence = ToLicence(
             matchesResult,
             naldLicenceStatusData,
             dmsFileData,
-            lookupConfiguration.LicenceNumberMapping,
+            lookupConfiguration.AllDmsData,
             naldData,
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
@@ -806,7 +806,7 @@ public static partial class WalSchemaConverter
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
-                lookupConfiguration.LicenceNumberMapping,
+                lookupConfiguration.AllDmsData,
                 matchesResult.RegionCode);
 
             
@@ -1136,14 +1136,14 @@ public static partial class WalSchemaConverter
                         FormattingHelper.GetDmsFileData(
                             licenceNumber,
                             matchesResult.RegionCode,
-                            lookupConfiguration.LicenceNumberMapping,
+                            lookupConfiguration.AllDmsData,
                             out var dmsFileData);
                         
                         var linkedLicence = ToLicence(
                             matches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            lookupConfiguration.LicenceNumberMapping,
+                            lookupConfiguration.AllDmsData,
                             naldData,
                             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
@@ -1171,7 +1171,7 @@ public static partial class WalSchemaConverter
                         var foundDmsData = FormattingHelper.GetDmsFileData(
                             licenceNumber,
                             matchesResult.RegionCode,
-                            lookupConfiguration.LicenceNumberMapping,
+                            lookupConfiguration.AllDmsData,
                             out var dmsFileData);
                         
                         if (!foundDmsData)
@@ -1190,7 +1190,7 @@ public static partial class WalSchemaConverter
                         var destinationFileName = dmsFileData!.DestinationFileName!;
 
                         var clonedConfig = lookupConfiguration.Clone();
-                        clonedConfig.LicenceNumberMapping = lookupConfiguration.LicenceNumberMapping;
+                        clonedConfig.AllDmsData = lookupConfiguration.AllDmsData;
                         clonedConfig.RegionCode = matchesResult.RegionCode;
                         
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
@@ -1203,7 +1203,7 @@ public static partial class WalSchemaConverter
                             relatedFileMatches,
                             naldLicenceStatusData,
                             dmsFileData,
-                            lookupConfiguration.LicenceNumberMapping,
+                            lookupConfiguration.AllDmsData,
                             naldData,
                             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 
@@ -1246,7 +1246,7 @@ public static partial class WalSchemaConverter
             var found = FormattingHelper.GetDmsFileData(
                 linkedLicence.LicenceNumber,
                 matchesResult.RegionCode,
-                lookupConfiguration.LicenceNumberMapping,
+                lookupConfiguration.AllDmsData,
                 out var dmsFileData);
             
             if (!found)
@@ -1285,7 +1285,7 @@ public static partial class WalSchemaConverter
                 relatedFileMatches,
                 naldLicenceStatusData,
                 dmsFileData,
-                lookupConfiguration.LicenceNumberMapping,
+                lookupConfiguration.AllDmsData,
                 naldData,
                 (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper);
 

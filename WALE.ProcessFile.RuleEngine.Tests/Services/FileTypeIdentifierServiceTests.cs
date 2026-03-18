@@ -33,7 +33,14 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This document contains license and permit information";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -49,7 +56,14 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This addendum modifies the agreement";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -65,7 +79,7 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This is a regular document";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        var lookupConfiguration = new LookupConfiguration([], [], [], [], new LocalFileService(""),1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -119,6 +133,7 @@ public class FileTypeIdentifierServiceTests
         return new LookupConfiguration(
             [],
             new Dictionary<string, DmsFileData>(),
+            [],
             [],
             new LocalFileService(""),
             1);

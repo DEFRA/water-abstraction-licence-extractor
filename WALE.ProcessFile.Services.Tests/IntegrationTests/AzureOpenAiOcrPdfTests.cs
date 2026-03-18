@@ -68,6 +68,7 @@ public class AzureOpenAiOcrPdfTests
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
+            [],            
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),            
             4); // TODO - whatever Hampshire & IOW is

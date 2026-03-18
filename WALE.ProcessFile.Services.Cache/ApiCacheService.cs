@@ -452,4 +452,17 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         throw new NotImplementedException();
     }
+
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        var path = "/Extractor/Dms/GetFileIds";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsFileIdInformation>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
 }

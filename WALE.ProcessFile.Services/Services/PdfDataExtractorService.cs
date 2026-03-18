@@ -115,7 +115,7 @@ public class PdfDataExtractorService(
             configuration.Labels,
             isOcr,
             noOcrDataExtractorService.Name,
-            configuration.LicenceNumberMapping,
+            configuration.AllDmsData,
             previouslyParsedPaths,
             configuration.RegionCode,
             processRunId,
@@ -342,7 +342,7 @@ public class PdfDataExtractorService(
                         unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        configuration.LicenceNumberMapping,
+                        configuration.AllDmsData,
                         previouslyParsedPaths,
                         configuration.RegionCode,
                         processRunId,
@@ -976,7 +976,7 @@ public class PdfDataExtractorService(
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.LicenceNumberMapping = licenceNumberMapping;
+            clonedConfig.AllDmsData = licenceNumberMapping;
             clonedConfig.RegionCode = regionCode;
             
             var relatedFileMatches = await GetMatchesAsync(

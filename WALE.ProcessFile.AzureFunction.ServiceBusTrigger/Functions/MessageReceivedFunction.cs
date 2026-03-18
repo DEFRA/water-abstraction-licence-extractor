@@ -88,6 +88,7 @@ public class MessageReceivedFunction(
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,
+                [], // TODO
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(pdfFolderPath),
                 1),

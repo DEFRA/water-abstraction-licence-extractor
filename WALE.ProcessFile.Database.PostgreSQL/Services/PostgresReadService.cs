@@ -15,9 +15,26 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseReadService
 {
-    public Task<List<SharePointFileIdInformation>> GetSharePointFileIdInformationAsync()
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
     {
-        throw new NotImplementedException();
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               file_id,
+                               dms_file_path,
+                               process_run_id,
+                               change_since_previous,
+                               first_seen_utc
+                           FROM sharepoint_fileid
+                           """;
+
+        var results = await QueryAsync<DmsFileIdInformation>(
+            connection,
+            sql,
+            0,
+            new { });
+        
+        return results.ToList();
     }
 
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)

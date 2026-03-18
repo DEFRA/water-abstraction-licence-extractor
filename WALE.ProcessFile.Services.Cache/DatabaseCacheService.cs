@@ -300,6 +300,11 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        return databaseReadService.GetDmsFileIdInformationAsync();
+    }
+
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);

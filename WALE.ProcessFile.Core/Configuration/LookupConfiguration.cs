@@ -5,22 +5,25 @@ namespace WALE.ProcessFile.Core.Configuration;
 
 public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
-    Dictionary<string, DmsFileData> licenceNumberMapping,
+    Dictionary<string, DmsFileData> allDmsData,
+    Dictionary<Guid, List<DmsFileIdInformation>> dmsFileIds,
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     int regionCode,
     int maxPagesToProcessWhenOcrNeeded = 20,
     object? naldLinkedLicenceHelper = null)
 {
-    public Dictionary<string, DmsFileData> LicenceNumberMapping { get; set; } = licenceNumberMapping;
-
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
 
+    public Dictionary<string, DmsFileData> AllDmsData { get; set; } = allDmsData;
+    
+    public Dictionary<Guid, List<DmsFileIdInformation>> DmsFileIds { get; set; } = dmsFileIds;
+
+    public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
+    
     public IFileService FileService { get; set; } = fileService;
 
     public int RegionCode { get; set; } = regionCode;
-
-    public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
 
     public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
 
@@ -30,7 +33,8 @@ public class LookupConfiguration(
     {
         return new LookupConfiguration(
             Labels,
-            LicenceNumberMapping,
+            AllDmsData,
+            DmsFileIds,
             ValidLowercaseFirstNames,
             FileService,
             RegionCode,

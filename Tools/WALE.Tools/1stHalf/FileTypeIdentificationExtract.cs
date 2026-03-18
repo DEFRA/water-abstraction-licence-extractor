@@ -97,6 +97,7 @@ public static class FileTypeIdentificationExtract
             labels,
             FileLicenceMapping,
             [],
+            [],
             new LocalFileService(KeyConfig.PdfFolder),
             3);
 

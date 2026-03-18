@@ -64,7 +64,7 @@ async Task ProgramAsync()
 
     var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
-    
+    var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(regionCode);
 
     var dtStartGetDms = DateTime.Now;
@@ -103,14 +103,8 @@ async Task ProgramAsync()
         allDmsData,
         regionCode);
 
-    var dmsFileIdInformationList = await cacheService.GetDmsFileIdInformationAsync();
-
-    foreach (var dmsFileIdInformation in dmsFileIdInformationList)
-    {
-        
-    }
-    
-    var dmsFileIdInformationDict = new Dictionary<Guid, List<DmsFileIdInformation>>();
+    var dmsFileIdInformationDict = TranformDmsFileIdInformation(
+        await dmsFileIdInformationListTask);
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
@@ -131,7 +125,7 @@ async Task ProgramAsync()
             regionCode,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
         
-        foreach (var (filePath, _) in dmsFilesToProcess)
+        foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -141,10 +135,12 @@ async Task ProgramAsync()
                     naldLicenceStatusData,
                     naldData,
                     outputService,
+                    cacheService,
                     pdfDataExtractors,
                     processRun,
                     extractorLock,
-                    lookupConfig));
+                    lookupConfig,
+                    dmsDataForFile));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -350,6 +346,25 @@ async Task ProgramAsync()
     //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
 
+Dictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
+    List<DmsFileIdInformation> dmsFileIdInformationList)
+{
+    var dmsFileIdInformationDict = new Dictionary<Guid, List<DmsFileIdInformation>>();
+    
+    foreach (var dmsFileIdInformation in dmsFileIdInformationList)
+    {
+        if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
+        {
+            changeList = [];
+            dmsFileIdInformationDict.Add(dmsFileIdInformation.FileId, changeList);
+        }
+
+        changeList.Add(dmsFileIdInformation);
+    }
+    
+    return dmsFileIdInformationDict;
+}
+
 Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
     IReadOnlyList<LicenceSetReference> licenceSetIds,
     IReadOnlyList<LicenceSet> licenceSets)
@@ -530,10 +545,12 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
+    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,
     Lock extractorLock,
-    LookupConfiguration lookupConfig)
+    LookupConfiguration lookupConfig,
+    DmsFileData dmsDataForFile)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -554,6 +571,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
+
+        await RecordFileIdAsync(dmsDataForFile, lookupConfig, processRun, cacheService);
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
@@ -606,6 +625,63 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     finally
     {
         pdfDataExtractor.InUse = false;
+    }
+}
+
+async Task RecordFileIdAsync(
+    DmsFileData dmsDataForFile,
+    LookupConfiguration lookupConfig,
+    ProcessRun processRun,
+    ICacheService cacheService)
+{
+    if (!dmsDataForFile.FileId.HasValue)
+    {
+        return;
+    }
+
+    var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId.Value);
+
+    var newDmsFileIdInformation = new DmsFileIdInformation
+    {
+        FileId = dmsDataForFile.FileId.Value,
+        DmsFilePath = dmsDataForFile.DmsPath,
+        ProcessRunId = processRun.ProcessRunId,
+        FirstSeenUtc = DateTime.UtcNow
+    };
+
+    if (beforeRecordList == null)
+    {
+        newDmsFileIdInformation.ChangeSincePrevious = "FirstSeen";
+        await cacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
+    }
+    else
+    {
+        var matchedFilePath = false;
+
+        foreach (var beforeRecord in beforeRecordList)
+        {
+            if (beforeRecord.FileId != dmsDataForFile.FileId.Value)
+            {
+                continue;
+            }
+
+            matchedFilePath = true;
+            break;
+        }
+
+        if (!matchedFilePath)
+        {
+            var filenameOnly = dmsDataForFile.DmsPath![dmsDataForFile.DmsPath.LastIndexOf('/')..];
+
+            var lastRecord = beforeRecordList
+                .OrderByDescending(r => r.FirstSeenUtc)
+                .First();
+
+            var isFilenameSame = lastRecord.DmsFilePath == filenameOnly;
+
+            newDmsFileIdInformation.ChangeSincePrevious = isFilenameSame ? "Moved" : "Renamed";
+            await cacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
+        }
     }
 }
 

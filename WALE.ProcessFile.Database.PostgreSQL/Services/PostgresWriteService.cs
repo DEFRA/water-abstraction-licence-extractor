@@ -558,7 +558,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 DateTimeUtc = DateTime.UtcNow
             });
     }
-    
+
+    public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    {
+        throw new NotImplementedException();
+    }
+
     private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

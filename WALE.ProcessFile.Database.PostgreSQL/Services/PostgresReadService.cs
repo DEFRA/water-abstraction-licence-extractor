@@ -1080,6 +1080,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            """;
 
+        // TODO check if this should  filter out to only none-revoked etc...
+        
         return (await QueryAsync<NaldAbstractionLicenceDataLine>(
             connection,
             sql,

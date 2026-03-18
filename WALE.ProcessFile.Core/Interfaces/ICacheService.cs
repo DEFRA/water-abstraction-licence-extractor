@@ -118,4 +118,5 @@ public interface ICacheService
         GetNaldLicenceNumbersAsync(short? regionCode);
 
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 }

@@ -465,4 +465,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             content,
             JsonHelper.GetSerializerOptions())!;
     }
+
+    public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    {
+        var path = "/Extractor/Dms/AddFileIdInformation";
+        var json = JsonSerializer.Serialize(newDmsFileIdInformation, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
 }

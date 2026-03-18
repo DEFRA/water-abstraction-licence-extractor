@@ -665,7 +665,7 @@ async Task RecordFileIdAsync(
 
         foreach (var beforeRecord in beforeRecordList)
         {
-            if (beforeRecord.FileId != dmsDataForFile.FileId.Value)
+            if (beforeRecord.DmsFilePath != dmsDataForFile.DmsPath)
             {
                 continue;
             }
@@ -676,13 +676,14 @@ async Task RecordFileIdAsync(
 
         if (!matchedFilePath)
         {
-            var filenameOnly = dmsDataForFile.DmsPath![dmsDataForFile.DmsPath.LastIndexOf('/')..];
-
             var lastRecord = beforeRecordList
                 .OrderByDescending(r => r.FirstSeenUtc)
                 .First();
-
-            var isFilenameSame = lastRecord.DmsFilePath == filenameOnly;
+            
+            var lastRecordFilenameOnly = lastRecord.DmsFilePath![(lastRecord.DmsFilePath.LastIndexOf('/') + 1)..];
+            var filenameOnly = dmsDataForFile.DmsPath![(dmsDataForFile.DmsPath.LastIndexOf('/') + 1)..];
+            
+            var isFilenameSame = lastRecordFilenameOnly == filenameOnly;
 
             newDmsFileIdInformation.ChangeSincePrevious = isFilenameSame ? "Moved" : "Renamed";
             await cacheService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);

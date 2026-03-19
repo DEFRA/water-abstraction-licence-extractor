@@ -2,6 +2,7 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class ValueWithConfidence<T>
 {
+    // ReSharper disable once UnusedMember.Global - Intended for serialisation
     public ValueWithConfidence() {}
 
     public ValueWithConfidence(T? value, double? ocrConfidence, double? confidence)

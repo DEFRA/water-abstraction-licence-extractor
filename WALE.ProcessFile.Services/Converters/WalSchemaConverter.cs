@@ -900,7 +900,7 @@ public static partial class WalSchemaConverter
 
             if (noChange)
             {
-                return outputDmsFileIdInformation;
+                return lastRecord;
             }
             
             var lastRecordFilenameOnly = lastRecord.DmsFilePath![(lastRecord.DmsFilePath!.LastIndexOf('/') + 1)..];

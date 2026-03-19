@@ -155,7 +155,9 @@ public static class GenerateLinkedLicencesCsv
             .Select(ci =>
             {
                 var licenceTypeSuffix = string.Empty;
-                if (licenceType != LicenceType.Abstraction)
+                if (licenceType != LicenceType.SurfaceWaterAbstraction
+                    && licenceType != LicenceType.GroundWaterAbstraction
+                    && licenceType != LicenceType.Abstraction)
                 {
                     licenceTypeSuffix = $" ({licenceType.ToString()})";
                 }

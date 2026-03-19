@@ -112,9 +112,43 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         ImpoundmentLicences = []
     };
     
-    private static readonly Dictionary<string, List<NaldData>> NaldData = [
-        
-    ];
+    private static readonly Dictionary<string, List<NaldData>> NaldData = GetNaldData();
+
+    private static Dictionary<string, List<NaldData>> GetNaldData()
+    {
+        var returnList = new Dictionary<string, List<NaldData>>
+        {
+            {
+                "25/68/001/247",
+                [
+                    new NaldData
+                    {
+                        AsrcCode = "G"
+                    }
+                ]
+            },
+            {
+                "25/68/001/248",
+                [
+                    new NaldData
+                    {
+                        AsrcCode = "S"
+                    }
+                ]
+            },
+            {
+                "25/68/001/249",
+                [
+                    new NaldData
+                    {
+                        AsrcCode = "S"
+                    }
+                ]
+            }
+        };
+
+        return returnList;
+    }
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
     {

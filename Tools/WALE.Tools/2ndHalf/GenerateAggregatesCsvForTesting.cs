@@ -111,6 +111,7 @@ public static class GenerateAggregatesCsvForTesting
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
 
         var naldLicenceStatusData = new NaldLicenceStatusData();
+        var naldData = new Dictionary<string, List<NaldData>>();
         
         foreach (var pdfFilePath in pdfFilePaths)
         {
@@ -130,6 +131,7 @@ public static class GenerateAggregatesCsvForTesting
         WalSchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
+            naldData,
             [],
             regionCode);
 
@@ -156,8 +158,7 @@ public static class GenerateAggregatesCsvForTesting
     {
         var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
         var naldLicenceStatusData = new NaldLicenceStatusData();
-
-        var firstNames = CompanyName.GetFirstNamesCsvFromFileAsync();
+        var naldData = new Dictionary<string, List<NaldData>>();
         
         var internalJson = await GetMatchesAsync("2-26-32-126 6937559.PDF", pdfDataExtractor);
         var licenceSets1 = await WalSchemaConverter.ToLicenceSetsAsync(
@@ -234,6 +235,7 @@ public static class GenerateAggregatesCsvForTesting
         WalSchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
+            naldData,
             [],
             regionCode);
         

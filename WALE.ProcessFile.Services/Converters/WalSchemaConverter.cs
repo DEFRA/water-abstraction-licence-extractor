@@ -85,6 +85,7 @@ public static partial class WalSchemaConverter
             naldDataLine,
             licenceNumbersMapping,
             naldLicenceStatusData,
+            naldData,
             matchesResult.RegionCode,
             ref noneSchemaData);
 
@@ -126,6 +127,7 @@ public static partial class WalSchemaConverter
         var (naldStatus, licenceType) = GetLicenceStatusAndType(
             licenceNumber,
             naldLicenceStatusData,
+            naldDataLine,
             regionCode);
 
         var linkedLicences = new List<LinkedLicence>();
@@ -149,10 +151,18 @@ public static partial class WalSchemaConverter
                 {
                     outputLicenceType = LicenceType.Impoundment;
                 }
+                else if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.SurfaceWaterAbstraction)
+                {
+                    outputLicenceType = LicenceType.SurfaceWaterAbstraction;
+                }
+                else if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.GroundWaterAbstraction)
+                {
+                    outputLicenceType = LicenceType.GroundWaterAbstraction;
+                }
                 else if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.Abstraction)
                 {
                     outputLicenceType = LicenceType.Abstraction;
-                }
+                }                
 
                 linkedLicences.Add(new LinkedLicence
                 {
@@ -185,6 +195,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetRecordsLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -192,6 +203,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -199,6 +211,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -206,6 +219,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -213,6 +227,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetPurposesLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -220,6 +235,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetPointsLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -227,6 +243,7 @@ public static partial class WalSchemaConverter
         linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
@@ -234,6 +251,7 @@ public static partial class WalSchemaConverter
         var licenceHistory = GetLicenceHistoryLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData);
@@ -245,11 +263,13 @@ public static partial class WalSchemaConverter
             regionCode,
             licenceNumber!,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping);
 
         var anywhereInDocumentLinkedLicences = GetAnywhereInDocumentLinkedLicences(
             matches,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData);
@@ -379,6 +399,7 @@ public static partial class WalSchemaConverter
         int regionCode,
         string? licenceNumber,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var linkedLicences1 = linkedLicences
@@ -438,6 +459,7 @@ public static partial class WalSchemaConverter
                         .Condition,
                     containedIn.ToArray(),
                     naldLicenceStatusData,
+                    naldData,
                     licenceNumbersMapping,
                     regionCode);
             })
@@ -545,6 +567,7 @@ public static partial class WalSchemaConverter
     private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
         string? licenceNumberInNaldFormat,
         NaldLicenceStatusData naldLicenceStatusData,
+        NaldData? naldData,
         int regionCode)
     {
         if (naldLicenceStatusData.LiveLicences.Count == 0
@@ -584,7 +607,25 @@ public static partial class WalSchemaConverter
                 continue;
             }
 
-            var type = isImpoundmentLicence ? LicenceType.Impoundment : LicenceType.Abstraction;
+            LicenceType type;
+
+            if (isImpoundmentLicence)
+            {
+                type = LicenceType.Impoundment;
+            }
+            else switch (naldData?.AsrcCode)
+            {
+                case "G":
+                    type = LicenceType.GroundWaterAbstraction;
+                    break;
+                case "S":
+                    type = LicenceType.SurfaceWaterAbstraction;
+                    break;
+                default:
+                    type = LicenceType.Abstraction;
+                    break;
+            }
+            
             return (status, type);
         }
         
@@ -623,7 +664,7 @@ public static partial class WalSchemaConverter
                    || licenceNumberStripped2.Contains(licenceNumberStripped1));
     }
 
-    private static LinkedLicence? ToLinkedLicence(
+    private static LinkedLicence ToLinkedLicence(
         string? linkedLicenceNumber,
         string? scrapedLinkedLicenceNumber,
         string? linkedLicencePermitNumber,
@@ -631,7 +672,8 @@ public static partial class WalSchemaConverter
         Condition? condition,
         LinkedLicenceSection[] containedIn,
         NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        Dictionary<string, List<NaldData>> naldData,
+        Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
         int regionCode)
     {
         var permitOrLicenceNumber = linkedLicencePermitNumber;
@@ -640,15 +682,18 @@ public static partial class WalSchemaConverter
             permitOrLicenceNumber = linkedLicenceNumber;
         }
         
+        var naldDataLine = GetNaldDataLine(naldData, permitOrLicenceNumber, regionCode);
+        
         var (naldStatus, licenceType) = GetLicenceStatusAndType(
             permitOrLicenceNumber,
             naldLicenceStatusData,
+            naldDataLine,
             regionCode);
 
         FormattingHelper.GetDmsFileData(
             linkedLicenceNumber,
             regionCode,
-            licenceNumbersMapping,
+            dmsLicenceNumbersMapping,
             out var dmsFileData);
 
         return new LinkedLicence
@@ -818,11 +863,10 @@ public static partial class WalSchemaConverter
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 naldLicenceStatusData,
+                naldData,
                 lookupConfiguration.AllDmsData,
                 matchesResult.RegionCode);
 
-            
-            
             var newLicenceSetIds = new List<LicenceSetReference>
             {
                 new()
@@ -920,6 +964,7 @@ public static partial class WalSchemaConverter
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
@@ -981,6 +1026,7 @@ public static partial class WalSchemaConverter
                                 }
                             ],
                             naldLicenceStatusData,
+                            naldData,
                             licenceNumbersMapping,
                             regionCode);
 
@@ -1039,6 +1085,7 @@ public static partial class WalSchemaConverter
                         regionCode,
                         licence.LicenceNumber?.Value,
                         naldLicenceStatusData,
+                        naldData,
                         licenceNumbersMapping).ToArray();
                 }
             }
@@ -1410,6 +1457,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1435,9 +1483,12 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -1478,6 +1529,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetReasonsForConditionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1503,10 +1555,12 @@ public static partial class WalSchemaConverter
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -1560,6 +1614,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetAnywhereInDocumentLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1592,9 +1647,12 @@ public static partial class WalSchemaConverter
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
+            var naldDataLine = GetNaldDataLine(naldData, linkedLicenceNumber, regionCode);
+            
             var (naldStatus, licenceType) = GetLicenceStatusAndType(
                 naldLinkedLicenceNumber,
                 naldLicenceStatusData,
+                naldDataLine,
                 regionCode);
 
             FormattingHelper.GetDmsFileData(
@@ -1651,6 +1709,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetLicenceHistoryLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1675,11 +1734,14 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
+                var naldDataLine = GetNaldDataLine(naldData, lln, regionCode);
+                
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -1722,6 +1784,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetPurposesLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1753,12 +1816,14 @@ public static partial class WalSchemaConverter
                         var naldLicenceNumber =
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                             null;
-
+                        
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
+                        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                        
                         var (naldStatus, licenceType) = GetLicenceStatusAndType(
                             naldLicenceNumber,
                             naldLicenceStatusData,
+                            naldDataLine,
                             regionCode);
 
                         FormattingHelper.GetDmsFileData(
@@ -1803,6 +1868,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetPointsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1833,6 +1899,8 @@ public static partial class WalSchemaConverter
                     {
                         var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
+                        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                        
                         var naldLicenceNumber =
                             (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                             null;
@@ -1840,6 +1908,7 @@ public static partial class WalSchemaConverter
                         var (naldStatus, licenceType) = GetLicenceStatusAndType(
                             naldLicenceNumber,
                             naldLicenceStatusData,
+                            naldDataLine,
                             regionCode);
 
                         FormattingHelper.GetDmsFileData(
@@ -1884,6 +1953,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetRecordsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1906,12 +1976,15 @@ public static partial class WalSchemaConverter
             {
                 var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -1952,6 +2025,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -1977,9 +2051,12 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -2020,6 +2097,7 @@ public static partial class WalSchemaConverter
     private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(
         List<LabelGroupResult> matches,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
@@ -2046,9 +2124,12 @@ public static partial class WalSchemaConverter
                 var naldLicenceNumber =
                     (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
                 var (naldStatus, licenceType) = GetLicenceStatusAndType(
                     naldLicenceNumber,
                     naldLicenceStatusData,
+                    naldDataLine,
                     regionCode);
 
                 FormattingHelper.GetDmsFileData(
@@ -2238,6 +2319,7 @@ public static partial class WalSchemaConverter
         NaldData? naldDataLine,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         int regionCode,
         ref Dictionary<string, object?> noneSchemaData)
     {
@@ -2442,9 +2524,12 @@ public static partial class WalSchemaConverter
                         (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                         null;
 
+                    var naldDataLine2 = GetNaldDataLine(naldData, naldLicenceNumber, regionCode);
+                    
                     var (naldStatus, licenceType) = GetLicenceStatusAndType(
                         naldLicenceNumber,
                         naldLicenceStatusData,
+                        naldDataLine2,
                         regionCode);
 
                     FormattingHelper.GetDmsFileData(
@@ -3629,6 +3714,7 @@ public static partial class WalSchemaConverter
     public static List<LicenceSet> AddAdditionalLicenceSets(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode)
     {
@@ -3638,6 +3724,7 @@ public static partial class WalSchemaConverter
             licenceSetGroups,
             true,
             naldLicenceStatusData,
+            naldData,
             licenceNumbersMapping,
             regionCode));
 

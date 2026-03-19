@@ -69,7 +69,9 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         }
         
         var filtered = linkedLicences
-            .Where(ll => ll.LicenceType == LicenceType.Abstraction);
+            .Where(ll => ll.LicenceType is LicenceType.SurfaceWaterAbstraction
+                or LicenceType.GroundWaterAbstraction
+                or LicenceType.Abstraction);
         
         return Ok(filtered);
     }

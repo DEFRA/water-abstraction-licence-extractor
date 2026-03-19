@@ -198,6 +198,7 @@ async Task ProgramAsync()
     var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
+        naldData,
         allDmsData,
         regionCode);
 
@@ -707,7 +708,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100073R01"))
+        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22723032G_"))
         
 //        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);

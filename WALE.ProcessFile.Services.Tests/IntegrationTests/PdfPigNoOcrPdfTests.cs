@@ -4247,6 +4247,44 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     }
     
     [Fact]
+    public async Task When_GTest()
+    {
+        // Arrange
+        await SetupLicenceNumbersAsync(4);
+        const string filename = "940040476g__Application – NA Formal Variation – Issued Licence 21032022.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 4, 2);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        
+        var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
+        Assert.NotNull(records);
+        Assert.Equal(11, records.Text!.Count);
+        
+        var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
+        Assert.NotNull(additionalInformation);
+        Assert.Equal(28, additionalInformation.Text!.Count);
+        
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _naldLicenceStatusData,
+            NaldData,
+            _pdfDataExtractor,
+            0,
+            await LookupConfigurationAsync(4, 2, TestConfig.PdfFolder2));
+        
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
+        Assert.Equal("9/40/04/0476/G", agreedSchemaLicence.LicenceNumber!.Value);
+        
+        Assert.Equal(4, agreedSchemaLicence.Purposes.Length);
+        Assert.Equal("Agriculture other than spray or trickle irrigation", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[1].Description);
+        // Ideally would check other purposes but the important thing was the licence number was read correctly 
+        
+        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+    }
+    
+    [Fact]
     public async Task When_PurposeHasPointsInIt_ThenNowGetsThem()
     {
         // Arrange

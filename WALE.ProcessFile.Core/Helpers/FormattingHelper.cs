@@ -386,7 +386,7 @@ public static class FormattingHelper
                 }
                 else
                 {
-                    return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
+                    return NotNe_ToNaldLicenceNumber(licenceNumber);
                 }
                 
                 parts.Add(part3);
@@ -411,7 +411,10 @@ public static class FormattingHelper
         
             if (!string.IsNullOrEmpty(postRSection))
             {
-                if (postRSection.Length == 1 && char.IsLetter(postRSection[0]))
+                if (postRSection.Length == 1
+                    && char.IsLetter(postRSection[0])
+                    && postRSection[0] != 'G'
+                    && postRSection[0] != 'S')
                 {
                     parts[^1] += postRSection;
                 }
@@ -492,7 +495,7 @@ public static class FormattingHelper
         }
         else
         {
-            return Yorkshire1_ToNaldLicenceNumber(licenceNumber);
+            return NotNe_ToNaldLicenceNumber(licenceNumber);
         }
 
         if (origLicenceNumber.Contains('/'))
@@ -643,8 +646,7 @@ public static class FormattingHelper
             //return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
         }
         
-        // TODO some other way
-        return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
+        return NotNe_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
     }
 
     public static string? FormatLicenceNumber(string? licenceNumber, int regionCode)
@@ -701,10 +703,10 @@ public static class FormattingHelper
             return licenceNumber;
         }
         
-        return NOTYorkshire1_PadLicenceNumber(licenceNumber, regionCode);
+        return NotNE_PadLicenceNumber(licenceNumber, regionCode);
     }
 
-    private static string? Yorkshire1_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    private static string? NotNe_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
     {
         if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
         {
@@ -788,6 +790,16 @@ public static class FormattingHelper
                 
                 section4 = $"S/{rest}";
             }
+            else if (section4.EndsWith("S", StringComparison.InvariantCultureIgnoreCase)
+                || section4.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var indexOfSlash = section4.IndexOf('/');
+
+                if (indexOfSlash == -1)
+                {
+                    section4 = section4[..^1] + '/' + section4[^1];
+                }
+            }
             else
             {
                 section4 = section4[..3] + "/" + section4[3..];   
@@ -820,7 +832,7 @@ public static class FormattingHelper
         return $"{section1}/{section2}/{section3}/{section4}";
     }
 
-    private static string? NOTYorkshire1_PadLicenceNumber(string? licenceNumber, int regionCode)
+    private static string? NotNE_PadLicenceNumber(string? licenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {

@@ -246,7 +246,7 @@ public static class GenerateLicenceReaderExtract
                     pdfFolder));
         }
 
-        var lines = await GetLicenceReaderDataAsync(
+        var outputLines = await GetLicenceReaderDataAsync(
             pdfDataExtractors,
             new LocalFileService(pdfFolder),
             cacheService,
@@ -255,7 +255,7 @@ public static class GenerateLicenceReaderExtract
 
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
-            lines,
+            outputLines,
             "LicenceReader",
             OutputFolder,
             line => line.LicenceNumber ?? "No Licence Number scraped",

@@ -119,7 +119,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var returnList = new Dictionary<string, List<NaldData>>
         {
             {
-                "25/68/001/247",
+                "1|2568001247",
                 [
                     new NaldData
                     {
@@ -128,7 +128,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 ]
             },
             {
-                "25/68/001/248",
+                "1|2568001248",
                 [
                     new NaldData
                     {
@@ -137,7 +137,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 ]
             },
             {
-                "25/68/001/249",
+                "1|2568001249",
                 [
                     new NaldData
                     {
@@ -2610,7 +2610,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
         Assert.Null(agreedSchemaLicenceGroup.Licences[0].DmsPath);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[0].Status);
-        Assert.Equal(Core.Enums.OutputSchema.LicenceType.Abstraction, agreedSchemaLicenceGroup.Licences[0].LicenceType);
+        Assert.Equal(Core.Enums.OutputSchema.LicenceType.SurfaceWaterAbstraction, agreedSchemaLicenceGroup.Licences[0].LicenceType);
         Assert.Equal(NaldLicenceStatus.Live, agreedSchemaLicenceGroup.Licences[0].NaldStatus);
         
         Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[1].LicenceNumber?.Value);
@@ -2625,7 +2625,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, primaryLicence.LinkedLicences.Length);
         
         Assert.Equal("25/68/001/247", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(Core.Enums.OutputSchema.LicenceType.Abstraction, primaryLicence.LinkedLicences[0].LicenceType);
+        Assert.Equal(Core.Enums.OutputSchema.LicenceType.GroundWaterAbstraction, primaryLicence.LinkedLicences[0].LicenceType);
         Assert.Equal(NaldLicenceStatus.Live, primaryLicence.LinkedLicences[0].NaldStatus);
         
         Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);

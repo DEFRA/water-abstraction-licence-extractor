@@ -559,6 +559,30 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
     
+    public async Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc)
+                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, @LicenceSectionValue, @VerificationType, @CreatedDateTimeUtc)
+                           RETURNING licence_section_verification_id
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                verification.LicenceFileId,
+                verification.ProcessRunId,
+                verification.LicenceSectionName,
+                verification.LicenceSectionValue,
+                verification.VerificationType,
+                verification.CreatedDateTimeUtc
+            });
+    }
+
     private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

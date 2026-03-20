@@ -60,4 +60,8 @@ public interface IOutputService
     Task<MatchesResult?> GetMatchesResult(string filename);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
+
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId);
+    
+    Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 }

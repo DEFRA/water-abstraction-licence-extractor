@@ -81,4 +81,6 @@ public interface IDatabaseReadService
     Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
     
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
+
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId);
 }

@@ -32,8 +32,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "GroundWaterAbstraction"
             },
             {
               "licenceNumber": "25 68 001 248",
@@ -108,8 +108,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "SurfaceWaterAbstraction"
             }
           ],
           "limits": [
@@ -150,8 +150,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "GroundWaterAbstraction"
             },
             {
               "licenceNumber": "25 68 001 249",
@@ -167,8 +167,8 @@
                   "pageNumber": 4
                 }
               ],
-              "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "naldStatus": "Live",
+              "licenceType": "SurfaceWaterAbstraction"
             }
           ],
           "limits": [
@@ -192,7 +192,9 @@
   "licences": [
     {
       "id": "2568001249-LV20190619",
-      "status": "ok",
+      "status": "Ok",
+      "naldStatus": "Live",
+      "licenceType": "SurfaceWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/249",
         "confidence": 85
@@ -281,8 +283,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "GroundWaterAbstraction"
               },
               {
                 "licenceNumber": "25 68 001 248",
@@ -345,8 +347,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "GroundWaterAbstraction"
         },
         {
           "licenceNumber": "25/68/001/248",
@@ -421,17 +423,18 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      },
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown"
+      }
     },
     {
       "id": "2568001247-LV20190619",
-      "status": "ok",
+      "status": "Ok",
+      "naldStatus": "Live",
+      "licenceType": "GroundWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/247",
         "confidence": 85
       },
+      "dmsPath": "Something to look for",
       "filename": "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
       "licenceVersion": {
         "licenceVersionId": "LV20190619",
@@ -532,8 +535,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "SurfaceWaterAbstraction"
               }
             ],
             "limits": [
@@ -603,8 +606,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction"
         }
       ],
       "licenceSets": [
@@ -653,14 +656,13 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      },
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown",
-      "dmsPath": "Something to look for"
+      }
     },
     {
       "id": "2568001248-LV20190619",
-      "status": "ok",
+      "status": "Ok",
+      "naldStatus": "Unknown",
+      "licenceType": "Unknown",
       "licenceNumber": {
         "value": "25/68/001/248",
         "confidence": 85
@@ -749,8 +751,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "GroundWaterAbstraction"
               },
               {
                 "licenceNumber": "25 68 001 249",
@@ -766,8 +768,8 @@
                     "pageNumber": 4
                   }
                 ],
-                "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "naldStatus": "Live",
+                "licenceType": "SurfaceWaterAbstraction"
               }
             ],
             "limits": [
@@ -812,8 +814,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "GroundWaterAbstraction"
         },
         {
           "licenceNumber": "25/68/001/249",
@@ -838,8 +840,8 @@
               "pageNumber": -1
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction"
         }
       ],
       "licenceSets": [
@@ -888,9 +890,7 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      },
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown"
+      }
     }
   ]
 }

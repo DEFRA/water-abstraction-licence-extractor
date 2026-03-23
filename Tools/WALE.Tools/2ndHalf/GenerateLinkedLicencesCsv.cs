@@ -69,6 +69,10 @@ public static class GenerateLinkedLicencesCsv
                 Filename = licence.Filename,
                 DmsPath = licence.DmsPath,
                 FileId = licence.DmsFileId,
+                FileIdStatus = licence.LicenceVersion.DmsFileIdStatus,
+                FileIdStatusChangeDate = licence.LicenceVersion.DmsFileIdStatusDateUtc?.ToString("dd/MM/yyyy"),
+                IssueNumber = licence.LicenceVersion.NaldIssueNumber,
+                IncrementNumber = licence.LicenceVersion.NaldIncrementNumber,
                 PermitNumber = licence.DmsPermitNumber,
                 LicenceNumber = licence.LicenceNumber?.Value,
                 ScrapedLicenceNumber = licenceNumber,
@@ -151,7 +155,9 @@ public static class GenerateLinkedLicencesCsv
             .Select(ci =>
             {
                 var licenceTypeSuffix = string.Empty;
-                if (licenceType != LicenceType.Abstraction)
+                if (licenceType != LicenceType.SurfaceWaterAbstraction
+                    && licenceType != LicenceType.GroundWaterAbstraction
+                    && licenceType != LicenceType.Abstraction)
                 {
                     licenceTypeSuffix = $" ({licenceType.ToString()})";
                 }

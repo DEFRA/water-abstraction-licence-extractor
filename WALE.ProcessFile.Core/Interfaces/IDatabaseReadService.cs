@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseReadService
 {
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    
     Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<byte[]?> GetPageScreenshotAsync(int pageNumber, string fileName, string noOcrServiceName);

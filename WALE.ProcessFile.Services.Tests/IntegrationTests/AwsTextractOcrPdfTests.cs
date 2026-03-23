@@ -61,8 +61,10 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
+            [],
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
+            CacheService,
             regionCode);
     }
 

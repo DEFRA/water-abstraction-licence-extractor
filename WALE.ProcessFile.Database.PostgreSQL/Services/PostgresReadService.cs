@@ -15,6 +15,28 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseReadService
 {
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               file_id,
+                               dms_file_path,
+                               process_run_id,
+                               status,
+                               status_date_utc
+                           FROM sharepoint_fileid
+                           """;
+
+        var results = await QueryAsync<DmsFileIdInformation>(
+            connection,
+            sql,
+            0,
+            new { });
+        
+        return results.ToList();
+    }
+
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
@@ -1058,6 +1080,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            """;
 
+        // TODO check if this should  filter out to only none-revoked etc...
+        
         return (await QueryAsync<NaldAbstractionLicenceDataLine>(
             connection,
             sql,

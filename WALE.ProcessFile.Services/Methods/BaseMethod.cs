@@ -122,13 +122,15 @@ public static class BaseMethod
 
                         foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
-
-                            if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
+                            if (!FormattingHelper.GetDmsFileData(
+                                licenceNumberLine.Text,
+                                request.regionCode,
+                                request.licenceNumberMapping,
+                                out var dmsFileData))
                             {
                                 continue;
                             }
-
+                            
                             var coords = licenceNumberLine
                                 .Columns
                                 .First()

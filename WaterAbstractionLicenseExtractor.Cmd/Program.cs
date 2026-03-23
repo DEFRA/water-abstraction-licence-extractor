@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
@@ -46,7 +47,7 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
+    /*var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
         services.ReportTemplatePath!,
         outputFolder,
         services.LoadAiJs,
@@ -56,7 +57,7 @@ async Task ProgramAsync()
         services.LicenceDataPath!,
         services.LicenceSetsDataPath!,
         services.ThumbnailImageDataPath!,
-        services.FullImageDataPath!);
+        services.FullImageDataPath!);*/
 
     // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
     // when we want to handle more than one region)
@@ -64,7 +65,7 @@ async Task ProgramAsync()
 
     var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
-    
+    var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(regionCode);
 
     var dtStartGetDms = DateTime.Now;
@@ -88,7 +89,7 @@ async Task ProgramAsync()
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
-    await moveReportHtmlFilesTask;
+    //await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
     
@@ -102,6 +103,9 @@ async Task ProgramAsync()
         allNaldData,
         allDmsData,
         regionCode);
+
+    var dmsFileIdInformationDict = TranformDmsFileIdInformation(
+        await dmsFileIdInformationListTask);
     
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
@@ -113,24 +117,32 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
 
-        foreach (var (filePath, _) in dmsFilesToProcess)
+        var lookupConfig = new LookupConfiguration(
+            WalLabelConfiguration.GetLabels(),
+            allDmsData,
+            dmsFileIdInformationDict,
+            firstNamesCsv,
+            services.FileService,
+            services.CacheService!,
+            regionCode,
+            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
+        
+        foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
-                    services.FileService,
-                    regionCode,
                     processCount++,
                     processRun.NumberOfFiles,
-                    allDmsData,
                     naldLicenceStatusData,
                     naldData,
                     outputService,
+                    cacheService,
                     pdfDataExtractors,
-                    firstNamesCsv,
                     processRun,
                     extractorLock,
-                    naldLinkedLicenceHelper));
+                    lookupConfig,
+                    dmsDataForFile));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -186,6 +198,7 @@ async Task ProgramAsync()
     var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
+        naldData,
         allDmsData,
         regionCode);
 
@@ -334,6 +347,25 @@ async Task ProgramAsync()
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
 
     //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
+}
+
+ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
+    List<DmsFileIdInformation> dmsFileIdInformationList)
+{
+    var dmsFileIdInformationDict = new ConcurrentDictionary<Guid, List<DmsFileIdInformation>>();
+    
+    foreach (var dmsFileIdInformation in dmsFileIdInformationList)
+    {
+        if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
+        {
+            changeList = [];
+            dmsFileIdInformationDict.TryAdd(dmsFileIdInformation.FileId, changeList);
+        }
+
+        changeList.Add(dmsFileIdInformation);
+    }
+    
+    return dmsFileIdInformationDict;
 }
 
 Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
@@ -511,19 +543,17 @@ ConfiguredServices ConfigureServices()
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
-    IFileService fileService,
-    int regionCode,
     int fileNumber,
     int totalNumber,
-    Dictionary<string, DmsFileData> allDmsData,
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
+    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
-    HashSet<string> firstNamesCsv,
     ProcessRun processRun,
     Lock extractorLock,
-    NaldLinkedLicenceHelper naldLinkedLicenceHelper)
+    LookupConfiguration lookupConfig,
+    DmsFileData dmsDataForFile)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -545,14 +575,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFilename
         };
         
-        var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
-            allDmsData,
-            firstNamesCsv,
-            fileService,
-            regionCode,
-            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
-
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             lookupConfig,
@@ -607,7 +629,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-async Task MoveReportHtmlFilesAsync(
+/*async Task MoveReportHtmlFilesAsync(
     string reportTemplatePath,
     string outputFolder,
     bool loadAiJs,
@@ -666,7 +688,7 @@ async Task MoveReportHtmlFilesAsync(
     indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
 
     await File.WriteAllTextAsync(indexPath, indexHtml);
-}
+}*/
 
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
@@ -686,7 +708,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-//        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100073R01"))
+        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22723032G_"))
         
 //        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);

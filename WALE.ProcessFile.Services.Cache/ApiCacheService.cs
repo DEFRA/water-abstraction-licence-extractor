@@ -452,4 +452,27 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         throw new NotImplementedException();
     }
+
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        var path = "/Extractor/Dms/GetFileIds";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsFileIdInformation>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    {
+        var path = "/Extractor/Dms/AddFileIdInformation";
+        var json = JsonSerializer.Serialize(newDmsFileIdInformation, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
 }

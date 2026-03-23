@@ -260,9 +260,11 @@ public static class ApplicableToMost
                     
                     foreach (var licenceNumberLine in licenceNumberLines2)
                     {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
-                        
-                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
+                        if (!FormattingHelper.GetDmsFileData(
+                            licenceNumberLine.Text,
+                            request.regionCode,
+                            request.licenceNumberMapping,
+                            out var dmsFileData))
                         {
                             continue;
                         }

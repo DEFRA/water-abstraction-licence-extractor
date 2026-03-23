@@ -86,6 +86,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
     {
         var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        if (useExtractor == 4) folder = TestConfig.PdfFolder4;
+        if (useExtractor == 5) folder = TestConfig.PdfFolder5;
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
@@ -467,5 +469,61 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
         Assert.Equal(new DateTime(1966, 05, 23), agreedSchemaLicence.LicenceVersion.IssueDate);
+    }
+    
+    [Fact]
+    public async Task DDDAA3_B4_ThenFoundCorrectly()
+    {
+        // Arrange
+        var regionCode = 3; 
+        await SetupLicenceNumbersAsync((short)regionCode);
+        const string filename = "12405035__Application type unknown Licence Issued - 08041968.pdf";
+        
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 5, regionCode);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("NORTHUMBRIAN RIVER AUTHORITY", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.Equal("10th day of MARCH, 19 66K", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.Null(licenceNumberResult);
+        
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractor,
+            0,
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
+        
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal("12405035-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("035", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+        Assert.Equal(9, agreedSchemaLicence.LinkedLicences.Length); // TODO I can see 14 in the file on pages 5, 6 and 9
+        Assert.Equal("1/23/05/001", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("1/25/05/002", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("1/25/05/005", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
+        Assert.Equal("1/25/05/008", agreedSchemaLicence.LinkedLicences[3].LicenceNumber);
+        Assert.Equal("1/25/05/004", agreedSchemaLicence.LinkedLicences[4].LicenceNumber);
+        Assert.Equal("1/25/05/003", agreedSchemaLicence.LinkedLicences[5].LicenceNumber);
+        Assert.Equal("1/25/05/007", agreedSchemaLicence.LinkedLicences[6].LicenceNumber);
+        Assert.Equal("1/25/05/001", agreedSchemaLicence.LinkedLicences[7].LicenceNumber);
+        Assert.Equal("1/24/05/001", agreedSchemaLicence.LinkedLicences[8].LicenceNumber);
+        Assert.Equal(new DateTime(1966, 03, 10), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 }

@@ -514,7 +514,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
-        Assert.Equal(9, agreedSchemaLicence.LinkedLicences.Length); // TODO I can see 14 in the file on pages 5, 6 and 9
+        Assert.Equal(9, agreedSchemaLicence.LinkedLicences.Length); // NOTE File has 14, but many don't exist in NALD
         Assert.Equal("1/23/05/001", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("1/25/05/002", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Equal("1/25/05/005", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
@@ -524,6 +524,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal("1/25/05/007", agreedSchemaLicence.LinkedLicences[6].LicenceNumber);
         Assert.Equal("1/25/05/001", agreedSchemaLicence.LinkedLicences[7].LicenceNumber);
         Assert.Equal("1/24/05/001", agreedSchemaLicence.LinkedLicences[8].LicenceNumber);
+        // 1/24/5/3 is missing in NALD (and others)
+        
         Assert.Equal(new DateTime(1966, 03, 10), agreedSchemaLicence.LicenceVersion.IssueDate);
     }
 }

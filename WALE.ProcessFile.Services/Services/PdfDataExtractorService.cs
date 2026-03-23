@@ -73,6 +73,7 @@ public class PdfDataExtractorService(
         int processRunId)
     {
         var dtStart = DateTime.Now;
+        var additionalInformationStore = new Dictionary<string, object?>();
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
@@ -119,7 +120,8 @@ public class PdfDataExtractorService(
             previouslyParsedPaths,
             configuration.RegionCode,
             processRunId,
-            configuration);
+            configuration,
+            additionalInformationStore);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
@@ -346,7 +348,8 @@ public class PdfDataExtractorService(
                         previouslyParsedPaths,
                         configuration.RegionCode,
                         processRunId,
-                        configuration);
+                        configuration,
+                        additionalInformationStore);
                     
                     serviceMatchesDict.Add(ocrService, serviceMatches);
                     var noMatchesFound = serviceMatches.Count == 0;
@@ -461,7 +464,9 @@ public class PdfDataExtractorService(
         noOcrDataExtractorService.Release(pdfDocument);
 
         returnResult.Matches = labelGroupMatches;
-        return returnResult;      
+        returnResult.AdditionalInformation = additionalInformationStore;
+        
+        return returnResult;
     }
 
     private static void ProfilePageIfSlow(
@@ -856,7 +861,8 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
-        LookupConfiguration lookupConfiguration)
+        LookupConfiguration lookupConfiguration,
+        Dictionary<string, object?> additionalInformationStore)
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
@@ -895,7 +901,8 @@ public class PdfDataExtractorService(
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,
-                    lookupConfiguration);
+                    lookupConfiguration,
+                    additionalInformationStore);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -1113,7 +1120,8 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
-        LookupConfiguration lookupConfiguration)
+        LookupConfiguration lookupConfiguration,
+        Dictionary<string, object?> additionalInformationStore)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -1292,7 +1300,8 @@ public class PdfDataExtractorService(
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
                         regionCode = regionCode,
-                        lookupConfiguration = lookupConfiguration
+                        lookupConfiguration = lookupConfiguration,
+                        additionalInformationStore = additionalInformationStore
                     };
                     
                     var singleValueWanted = matchedLabel.MultipleMatchBehaviour is
@@ -1700,7 +1709,8 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
-        LookupConfiguration lookupConfiguration)
+        LookupConfiguration lookupConfiguration,
+        Dictionary<string, object?> additionalInformationStore)
     {
         var subResults = new List<LabelGroupResult>();
         
@@ -1726,7 +1736,8 @@ public class PdfDataExtractorService(
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,
-                    lookupConfiguration);
+                    lookupConfiguration,
+                    additionalInformationStore);
 
                 if (subLabelGroupMatch.Count > 0)
                 {

@@ -1,6 +1,6 @@
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";

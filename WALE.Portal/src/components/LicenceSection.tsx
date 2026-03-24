@@ -1,4 +1,4 @@
-import { type ReactElement, useState, useRef } from 'react';
+import {type ReactElement, useState, useRef, cloneElement} from 'react';
 import { Client, LicenceSectionVerification } from '../api/generated/apiClient';
 
 /**
@@ -88,7 +88,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             </div>
             {isOpen && (
                 <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
-                    {React.cloneElement(children, { 
+                    {cloneElement(children, { 
                         isEditing, 
                         ref: bodyRef 
                     } as any)}

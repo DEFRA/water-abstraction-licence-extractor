@@ -82,7 +82,7 @@ public class LicenceFileProcessor
         }
     }
 
-    public string GenerateExcel<T>(T data, string fileName, Dictionary<string, string> headerMapping)
+    public void GenerateExcel<T>(T data, string fileName, Dictionary<string, string> headerMapping)
     {
         if (data == null)
         {
@@ -126,41 +126,6 @@ public class LicenceFileProcessor
 
         // Generate Excel file
         CreateExcelFile(items, itemType, outputPath, headerMapping);
-
-        return outputPath;
-    }
-
-    public string GenerateExcel(
-        IEnumerable<(string SheetName, Dictionary<string, string>? HeaderMapping, object Data)> worksheetData,
-        string fileName)
-    {
-        ArgumentNullException.ThrowIfNull(worksheetData);
-
-        var worksheets = worksheetData.ToList();
-        
-        if (worksheets.Count == 0)
-        {
-            throw new ArgumentException("At least one worksheet must be provided", nameof(worksheetData));
-        }
-
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            throw new ArgumentException("File name cannot be null or empty", nameof(fileName));
-        }
-
-        // Ensure the file has .xlsx extension
-        if (!fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-        {
-            fileName += ".xlsx";
-        }
-
-        // Create output file path in Resources folder
-        var outputPath = CreateOutputFilePath(fileName);
-
-        // Generate Excel file with multiple worksheets
-        CreateExcelFileWithWorksheets(worksheets, outputPath);
-
-        return outputPath;
     }
 
     /// <summary>

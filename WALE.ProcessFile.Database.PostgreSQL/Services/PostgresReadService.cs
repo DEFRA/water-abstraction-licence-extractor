@@ -1398,10 +1398,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
-        catch (Exception ex)
-        {
-            throw;
-        }
     }
     
     private async Task<IEnumerable<T>> QueryAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)

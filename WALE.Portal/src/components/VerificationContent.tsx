@@ -9,7 +9,11 @@ interface VerificationContentProps {
 export function VerificationContent({ licence }: VerificationContentProps) {
     return (
         <div id="properties" style={{ padding: '10px' }}>
-            <LicenceSection title="Linked Licences">
+            <LicenceSection 
+                title="Linked Licences" 
+                licenceFileId={licence.dmsFileId!} 
+                processRunId={licence.processRunId!}
+            >
                 <LinkedLicences 
                     licence={licence} 
                     isEditing={false} // This will be overridden by LicenceSection's React.cloneElement

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useImperativeHandle, ReactElement } from 'react';
+import React, { useState, useRef, ReactElement } from 'react';
+import { Client, LicenceSectionVerification } from '../api/generated/apiClient';
 
 /**
  * Interface that all licence section body components must implement.
@@ -20,21 +21,40 @@ interface LicenceSectionProps {
     title: string;
     children: ReactElement<LicenceSectionBodyProps>;
     initialOpen?: boolean;
+    licenceFileId: string;
+    processRunId: number;
 }
 
-export function LicenceSection({ title, children, initialOpen = false }: LicenceSectionProps) {
+export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [isEditing, setIsEditing] = useState(false);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
-    const handleEditToggle = () => {
-        if (isEditing) {
-            // Logic to Save Override
-            if (bodyRef.current) {
-                const data = bodyRef.current.getData();
-                console.log('Saving Override for', title, 'Data:', JSON.stringify(data, null, 2));
-                // Here we would typically call an API to save the override
+    const handleVerification = async (verificationType: string) => {
+        if (bodyRef.current) {
+            const data = bodyRef.current.getData();
+            console.log(`Creating ${verificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
+            
+            try {
+                const client = new Client();
+                const verification = new LicenceSectionVerification({
+                    licenceFileId: licenceFileId,
+                    processRunId: processRunId,
+                    licenceSectionName: title,
+                    licenceSectionValue: JSON.stringify(data),
+                    verificationType: verificationType
+                });
+
+                await client.createLicenceSectionVerification(verification);
+            } catch (error) {
+                console.error(`Error saving ${verificationType} verification:`, error);
             }
+        }
+    };
+
+    const handleEditToggle = async () => {
+        if (isEditing) {
+            await handleVerification('Override');
             setIsEditing(false);
         } else {
             setIsEditing(true);
@@ -61,8 +81,8 @@ export function LicenceSection({ title, children, initialOpen = false }: Licence
                     <button onClick={handleEditToggle} style={{ marginRight: '5px' }}>
                         {isEditing ? 'Save Override' : 'Edit'}
                     </button>
-                    <button onClick={() => console.log('Accept', title)} style={{ marginRight: '5px' }}>Accept</button>
-                    <button onClick={() => console.log('Reject', title)}>Reject</button>
+                    <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>
+                    <button onClick={() => handleVerification('Reject')}>Reject</button>
                     <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 import type {OutputListDataItem} from "../api/generated/apiClient.ts";
-import LicenceSetsListItem from "./LicenceSetsListItem.tsx";
+import LicenceSetsListItem from "./LicenceSetsListItem";
 import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListProps {

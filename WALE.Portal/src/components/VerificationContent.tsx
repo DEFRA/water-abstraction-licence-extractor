@@ -1,6 +1,6 @@
 import type {Licence} from "../api/generated/apiClient.ts";
-import {LicenceSection} from "./LicenceSection.tsx";
-import {LinkedLicences} from "./LinkedLicences.tsx";
+import {LicenceSection} from "./LicenceSection";
+import {LinkedLicences} from "./LinkedLicences";
 
 interface VerificationContentProps {
     licence: Licence;

@@ -1,6 +1,6 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import type { Licence } from "../api/generated/apiClient.ts";
-import { ILicenceSectionBody, LicenceSectionBodyProps } from "./LicenceSection.tsx";
+import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./LicenceSection";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence: Licence;

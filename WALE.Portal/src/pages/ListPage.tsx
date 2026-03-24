@@ -2,17 +2,17 @@ import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {useState, useEffect} from 'react'
 import {waleApiClient} from '../api/apiClient';
-import LicencesTableHeaders from "../components/LicencesTableHeaders.tsx";
-import LicencesTableRow from "../components/LicencesTableRow.tsx";
-import LicencesTableFooters from "../components/LicencesTableFooters.tsx";
-import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders.tsx";
-import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
-import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody.tsx";
+import LicencesTableHeaders from "../components/LicencesTableHeaders";
+import LicencesTableRow from "../components/LicencesTableRow";
+import LicencesTableFooters from "../components/LicencesTableFooters";
+import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
+import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
+import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
-import {ReportModalContainer} from "../components/ReportModalContainer.tsx";
+import {ReportModalContainer} from "../components/ReportModalContainer";
 
 function ListPage() {
     const [searchParams] = useSearchParams();

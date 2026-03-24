@@ -1,4 +1,4 @@
-import React, { useState, useRef, ReactElement } from 'react';
+import { type ReactElement, useState, useRef } from 'react';
 import { Client, LicenceSectionVerification } from '../api/generated/apiClient';
 
 /**

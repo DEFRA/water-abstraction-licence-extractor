@@ -1,6 +1,6 @@
 import {ReportContent} from './ReportContent';
 import {LicenceSetReportContent} from './LicenceSetReportContent';
-import {DraggableModal} from "./DraggableModal.tsx";
+import {DraggableModal} from "./DraggableModal";
 import type {ReportModal} from "../utils/types.ts";
 
 interface ReportModalContainerProps {

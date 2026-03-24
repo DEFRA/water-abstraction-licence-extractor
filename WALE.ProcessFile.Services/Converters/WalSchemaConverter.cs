@@ -436,7 +436,9 @@ public static partial class WalSchemaConverter
                         // in documents
                         if (containedIn.Any(fs => 
                             sectionItem.Source != LinkedLicenceSource.Nald
-                                && (fs.LineNumber == sectionItem.LineNumber && fs.PageNumber == sectionItem.PageNumber)))
+                                && (fs.LineNumber == sectionItem.LineNumber
+                                    && fs.PageNumber == sectionItem.PageNumber
+                                    && fs.Direction == sectionItem.Direction)))
                         {
                             continue;
                         }

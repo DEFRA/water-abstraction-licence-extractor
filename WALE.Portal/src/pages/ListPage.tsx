@@ -64,6 +64,14 @@ function ListPage() {
         minimizeModal
     } = useReportModals();
 
+    const openReportWithId = useCallback((filename: string) => {
+        openReport(filename, parseInt(processRunId ?? '0'));
+    }, [openReport, processRunId]);
+
+    const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
+        openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
+    }, [openLicenceSetReport, processRunId]);
+
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
@@ -112,8 +120,8 @@ function ListPage() {
                                 key={index} 
                                 data={filteredData} 
                                 oddRow={index % 2 === 0}
-                                onOpenReport={openReport}
-                                onOpenLicenceSetReport={openLicenceSetReport}
+                                onOpenReport={openReportWithId}
+                                onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />
                         ))}
@@ -129,8 +137,8 @@ function ListPage() {
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
                             data={filteredData} 
-                            onOpenReport={openReport} 
-                            onOpenLicenceSetReport={openLicenceSetReport} 
+                            onOpenReport={openReportWithId} 
+                            onOpenLicenceSetReport={openLicenceSetReportWithId} 
                             onTotalsCalculated={setLicenceSetsTotals}
                         />
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
@@ -145,7 +153,7 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onOpenLinkedLicence={openReport}
+                onOpenLinkedLicence={openReportWithId}
             />
         </>);
 }

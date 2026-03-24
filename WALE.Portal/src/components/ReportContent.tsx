@@ -13,12 +13,13 @@ interface ReportContentProps {
     filename: string;
     hideBackLink?: boolean;
     onOpenLinkedLicence: (filename: string) => void;
+    processRunId: number;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 type ViewType = 1 | 2;
 
-export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence}: ReportContentProps) {
+export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence, processRunId}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -300,6 +301,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                             <div id="overview">
                                 <VerificationContent
                                     licence={reportData2}
+                                    processRunId={processRunId}
                                 />
                             </div>
                         )}

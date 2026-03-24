@@ -34,7 +34,11 @@ export function ReportModalContainer({
                     onPositionChange={(pos) => onPositionChange(modal.id, pos)}
                 >
                     {modal.type === 'report' ? (
-                        <ReportContent filename={modal.filename} onOpenLinkedLicence={onOpenLinkedLicence} />
+                        <ReportContent 
+                            filename={modal.filename} 
+                            onOpenLinkedLicence={onOpenLinkedLicence} 
+                            processRunId={modal.processRunId}
+                        />
                     ) : (
                         <LicenceSetReportContent
                             filename={modal.filename}

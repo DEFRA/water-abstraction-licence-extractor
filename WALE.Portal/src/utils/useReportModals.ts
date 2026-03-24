@@ -5,11 +5,12 @@ export function useReportModals() {
     const [modals, setModals] = useState<ReportModal[]>([]);
     const [modalCounter, setModalCounter] = useState(0);
 
-    const openReport = useCallback((filename: string) => {
+    const openReport = useCallback((filename: string, processRunId: number) => {
         const newModal: ReportModal = {
             id: modalCounter,
             type: 'report',
             filename,
+            processRunId,
             position: { top: 40, left: 350 },
             size: { width: 'calc(100% - 370px)', height: 'calc(100% - 60px)' }
         };
@@ -18,12 +19,13 @@ export function useReportModals() {
         setModalCounter(prev => prev + 1);
     }, [modalCounter]);
 
-    const openLicenceSetReport = useCallback((filename: string, licenceSetId: string) => {
+    const openLicenceSetReport = useCallback((filename: string, licenceSetId: string, processRunId: number) => {
         const newModal: ReportModal = {
             id: modalCounter,
             type: 'licenceSet',
             filename,
             licenceSetId,
+            processRunId,
             position: { top: 40, left: 350 },
             size: { width: 'calc(100% - 370px)', height: 'calc(100% - 60px)' }
         };

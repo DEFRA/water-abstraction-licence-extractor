@@ -30,6 +30,7 @@ export interface ReportModal {
     type: 'report' | 'licenceSet';
     filename: string;
     licenceSetId?: string;
+    processRunId: number;
     position: { top: number; left: number };
     size: { width: string; height: string };
 }

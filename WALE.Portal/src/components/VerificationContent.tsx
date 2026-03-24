@@ -4,15 +4,16 @@ import {LinkedLicences} from "./LinkedLicences.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
+    processRunId: number;
 }
 
-export function VerificationContent({ licence }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId }: VerificationContentProps) {
     return (
         <div id="properties" style={{ padding: '10px' }}>
             <LicenceSection 
                 title="Linked Licences" 
                 licenceFileId={licence.dmsFileId!} 
-                processRunId={licence.processRunId!}
+                processRunId={processRunId}
             >
                 <LinkedLicences 
                     licence={licence} 

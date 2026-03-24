@@ -119,4 +119,6 @@ public interface ICacheService
 
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
+    
+    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
 }

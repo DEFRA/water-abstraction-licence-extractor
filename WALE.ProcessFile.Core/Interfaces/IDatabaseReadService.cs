@@ -83,4 +83,6 @@ public interface IDatabaseReadService
     Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
     
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
+    
+    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
 }

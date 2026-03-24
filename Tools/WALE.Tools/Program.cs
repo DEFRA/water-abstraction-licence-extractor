@@ -3,12 +3,13 @@ using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-var workflow = "GenerateLinkedLicencesCsv";//""GenerateLicenceReaderExtract";
+var workflow = "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 
 const int processRunId = 1648;
 const int regionCode = 3; // Anglia=1, NE=3
 var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
+var overrideRootPath = "/Users/ryanbarlow/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
 
 switch (workflow)
 {
@@ -37,6 +38,9 @@ switch (workflow)
     case "TemplateFinderExtract":
         await TemplateIdentificationExtract.GenerateTemplateFinderResult("NW");
         break;
+    case "OverrideAddIncrements":
+        await OverrideAddIncrements.GenerateOverrideFileAsync(overrideRootPath);
+        break;    
     
     // 2nd half tools
     case "GenerateLinkedLicencesCsv": // Generates a linked licence file for Mitin and Shaun

@@ -475,4 +475,16 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
+    {
+        var path = $"/Extractor/NaldData/GetCurrentIncrementNumber?permitNumber={permitNumber}" +
+            $"&issueNumber={issueNumber}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
+    }
 }

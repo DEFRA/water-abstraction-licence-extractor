@@ -341,7 +341,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/247",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,
@@ -368,7 +367,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/248",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,
@@ -581,7 +579,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/248",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,
@@ -608,7 +605,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/249",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,
@@ -822,7 +818,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/247",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,
@@ -849,7 +844,6 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "incomingLicenceNumber": "25/68/001/249",
               "sectionName": "AbstractionLimits",
               "linkReason": "AggregateCondition",
               "lineNumber": 111,

@@ -170,7 +170,7 @@ public static partial class WalSchemaConverter
                 else if (naldLinkedLicence.NaldLicence.Type == Core.Enums.LicenceType.Abstraction)
                 {
                     outputLicenceType = LicenceType.Abstraction;
-                }                
+                }
 
                 linkedLicences.Add(new LinkedLicence
                 {
@@ -186,9 +186,12 @@ public static partial class WalSchemaConverter
                             Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                 ? LinkedLicenceDirection.Incoming
                                 : LinkedLicenceDirection.Outgoing,
-                            LinkReason = naldLinkedLicence.LinkType.ToString(),
-                            SectionName = naldLinkedLicence.FromField,
-                            IncomingLicenceNumber = naldLinkedLicence.IncomingLicenceNumber
+                            LinkReason = GetLinkReason(
+                                naldLinkedLicence.FromFieldText,
+                                naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
+                                    ? licenceNumber
+                                    : naldLinkedLicence.NaldLicence.LicenceNumber),
+                            SectionName = naldLinkedLicence.FromField
                         }
                     ]
                 });
@@ -1022,7 +1025,6 @@ public static partial class WalSchemaConverter
                             {
                                 Source = LinkedLicenceSource.OtherDocument,
                                 Direction = LinkedLicenceDirection.Incoming,
-                                IncomingLicenceNumber = incomingLink.LicenceNumber,
                                 SectionName = section.SectionName,
                                 LinkReason = section.LinkReason,
                                 LineNumber = section.LineNumber,
@@ -2199,139 +2201,152 @@ public static partial class WalSchemaConverter
         foreach (var section in sections)
         {
             var text = string.Join('\n', section.Text!.Select(t => t.Text));
+            var result = GetLinkReason(text, linkedLicenceNumber);
 
-            if (string.IsNullOrEmpty(linkedLicenceNumber) || !text.Contains(linkedLicenceNumber))
+            if (!string.IsNullOrEmpty(result))
             {
-                continue;
+                return result;
             }
+        }
 
-            if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.LapsedLicence;
-            }
+        return null;
+    }
 
-            if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.DischargeAndReabstractionCondition;
-            }
+    private static string? GetLinkReason(string? text, string? linkedLicenceNumber)
+    {
+        if (string.IsNullOrEmpty(linkedLicenceNumber)
+            || string.IsNullOrEmpty(text)
+            || !text.Contains(linkedLicenceNumber))
+        {
+            return null;
+        }
 
-            if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.SimultaneousDischargeCondition;
-            }
+        if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.LapsedLicence;
+        }
 
-            if (text.Contains("simultaneous abstraction", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.SimultaneousAbstractionCondition;
-            }
+        if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.DischargeAndReabstractionCondition;
+        }
 
-            if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.SimultaneousCompensatoryDischargeCondition;
-            }
+        if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.SimultaneousDischargeCondition;
+        }
 
-            if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.CompensatoryDischargeCondition;
-            }
+        if (text.Contains("simultaneous abstraction", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.SimultaneousAbstractionCondition;
+        }
 
-            if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ReadInConjunction;
-            }
+        if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.SimultaneousCompensatoryDischargeCondition;
+        }
 
-            if (text.Contains("The donor licence was", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.DonorLicence;
-            }
+        if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.CompensatoryDischargeCondition;
+        }
 
-            if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
-                || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
-            {
-                return LinkReasons.UsedInConjunction;
-            }
+        if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ReadInConjunction;
+        }
 
-            if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.Revocation;
-            }            
-            
-            if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.AggregateConditions;
-            }
+        if (text.Contains("The donor licence was", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.DonorLicence;
+        }
 
-            if (text.Contains("emergency circumstances", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.EmergencyCircumstances;
-            }
+        if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
+            || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
+        {
+            return LinkReasons.UsedInConjunction;
+        }
 
-            if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.DewateringDischargeCondition;
-            }
+        if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.Revocation;
+        }            
+        
+        if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.AggregateConditions;
+        }
 
-            if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.WhenAddedTo;
-            }
+        if (text.Contains("emergency circumstances", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.EmergencyCircumstances;
+        }
 
-            if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.SubsequentAbstraction;
-            }
+        if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.DewateringDischargeCondition;
+        }
 
-            if (text.Contains("re-abstraction", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ReAbstraction;
-            }
+        if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.WhenAddedTo;
+        }
 
-            if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
-                && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
-                && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ReadingsDischargedAugmentationCondition;
-            }
+        if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.SubsequentAbstraction;
+        }
 
-            if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.AggregateCondition;
-            }
+        if (text.Contains("re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ReAbstraction;
+        }
 
-            if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ShallNotExceed;
-            }
+        if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
+            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ReadingsDischargedAugmentationCondition;
+        }
 
-            if (text.Contains("supporting", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.Supporting;
-            }
+        if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.AggregateCondition;
+        }
 
-            if (text.Contains("original licence", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.OriginalLicence;
-            }
+        if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ShallNotExceed;
+        }
 
-            if (text.Contains("transferred to this", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.TransferredToThis;
-            }
+        if (text.Contains("supporting", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.Supporting;
+        }
 
-            if (text.Contains("coincident", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.Coincident;
-            }
+        if (text.Contains("original licence", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.OriginalLicence;
+        }
 
-            if (text.Contains("shall be supported", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ShallBeSupported;
-            }
+        if (text.Contains("transferred to this", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.TransferredToThis;
+        }
 
-            if (text.Contains("residual flow", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return LinkReasons.ResidualFlow;
-            }
+        if (text.Contains("coincident", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.Coincident;
+        }
+
+        if (text.Contains("shall be supported", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ShallBeSupported;
+        }
+
+        if (text.Contains("residual flow", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.ResidualFlow;
         }
 
         return null;

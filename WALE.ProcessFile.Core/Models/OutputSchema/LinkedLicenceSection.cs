@@ -11,8 +11,6 @@ public class LinkedLicenceSection
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LinkedLicenceDirection Direction { get; init; } = LinkedLicenceDirection.Outgoing;
     
-    public string? IncomingLicenceNumber { get; init; }
-    
     public string? SectionName { get; init; }
     
     public string? LinkReason { get; init; }

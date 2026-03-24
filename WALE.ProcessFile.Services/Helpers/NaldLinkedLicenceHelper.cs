@@ -110,7 +110,8 @@ public class NaldLinkedLicenceHelper
                     {
                         NaldLicence = linkCandidate,
                         LinkType = NaldLinkedLicenceType.Outgoing,
-                        FromField = potentialNumberSource.Key
+                        FromField = potentialNumberSource.Key,
+                        FromFieldText = potentialNumberSource.Value
                     });
 
                     backMap.TryAdd(forwardLinkKey, []);
@@ -121,6 +122,7 @@ public class NaldLinkedLicenceHelper
                         NaldLicence = naldRawDataItem.ToNaldLicence(),
                         LinkType = NaldLinkedLicenceType.Incoming,
                         FromField = potentialNumberSource.Key,
+                        FromFieldText = potentialNumberSource.Value,
                         IncomingLicenceNumber = forwardLinkKey
                     });
                 }

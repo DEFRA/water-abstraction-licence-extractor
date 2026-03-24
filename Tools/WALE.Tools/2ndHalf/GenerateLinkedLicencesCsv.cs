@@ -161,18 +161,14 @@ public static class GenerateLinkedLicencesCsv
                 {
                     licenceTypeSuffix = $" ({licenceType.ToString()})";
                 }
-                
+
+                // Page and line numbers not relevant for NALD
                 if (ci.Source == LinkedLicenceSource.Nald)
                 {
-                    return $"{ci.Source}-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}{licenceTypeSuffix}";
+                    return $"{ci.SectionName ?? "UNKNOWN"}-{ci.LinkReason ?? "UNKNOWN"}{licenceTypeSuffix}";                    
                 }
-
-                if (ci.Source == LinkedLicenceSource.OtherDocument)
-                {
-                    return $"Document-Incoming-{ci.LinkReason ?? "UNKNOWN"}{licenceTypeSuffix}";
-                }
-                        
-                return $"{ci.Source}-Outgoing-{ci.LinkReason ?? "UNKNOWN"}-{ci.SectionName ?? "UNKNOWN"}" +
+                
+                return $"{ci.SectionName ?? "UNKNOWN"}-{ci.LinkReason ?? "UNKNOWN"}" +
                        $"-P{ci.PageNumber ?? -1}-L{ci.LineNumber ?? -1}{licenceTypeSuffix}";
             }));
     }

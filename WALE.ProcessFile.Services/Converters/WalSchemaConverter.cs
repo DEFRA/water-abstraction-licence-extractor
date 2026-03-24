@@ -187,9 +187,8 @@ public static partial class WalSchemaConverter
                                 ? LinkedLicenceDirection.Incoming
                                 : LinkedLicenceDirection.Outgoing,
                             LinkReason = naldLinkedLicence.LinkType.ToString(),
-                            SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
-                                ? $"From {naldLinkedLicence.IncomingLicenceNumber}"
-                                : naldLinkedLicence.FromField
+                            SectionName = naldLinkedLicence.FromField,
+                            IncomingLicenceNumber = naldLinkedLicence.IncomingLicenceNumber
                         }
                     ]
                 });
@@ -427,7 +426,8 @@ public static partial class WalSchemaConverter
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName
+                            && fs.Direction == sectionItem.Direction))
                         {
                             continue;
                         }
@@ -790,8 +790,8 @@ public static partial class WalSchemaConverter
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
                 linkedLicence.ContainedIn?.Any(ci =>
-                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits) ==
-                true)
+                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits
+                    && ci.Direction == LinkedLicenceDirection.Outgoing) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
             .Where(ln => ln != null)

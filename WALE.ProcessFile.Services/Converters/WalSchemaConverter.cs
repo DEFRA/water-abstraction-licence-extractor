@@ -187,9 +187,8 @@ public static partial class WalSchemaConverter
                                 ? LinkedLicenceDirection.Incoming
                                 : LinkedLicenceDirection.Outgoing,
                             LinkReason = naldLinkedLicence.LinkType.ToString(),
-                            SectionName = !string.IsNullOrEmpty(naldLinkedLicence.IncomingLicenceNumber)
-                                ? $"From {naldLinkedLicence.IncomingLicenceNumber}"
-                                : naldLinkedLicence.FromField
+                            SectionName = naldLinkedLicence.FromField,
+                            IncomingLicenceNumber = naldLinkedLicence.IncomingLicenceNumber
                         }
                     ]
                 });
@@ -427,7 +426,8 @@ public static partial class WalSchemaConverter
 
                     foreach (var sectionItem in sectionItems)
                     {
-                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName))
+                        if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName
+                            && fs.Direction == sectionItem.Direction))
                         {
                             continue;
                         }
@@ -436,7 +436,9 @@ public static partial class WalSchemaConverter
                         // in documents
                         if (containedIn.Any(fs => 
                             sectionItem.Source != LinkedLicenceSource.Nald
-                                && (fs.LineNumber == sectionItem.LineNumber && fs.PageNumber == sectionItem.PageNumber)))
+                                && (fs.LineNumber == sectionItem.LineNumber
+                                    && fs.PageNumber == sectionItem.PageNumber
+                                    && fs.Direction == sectionItem.Direction)))
                         {
                             continue;
                         }
@@ -790,8 +792,8 @@ public static partial class WalSchemaConverter
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
                 linkedLicence.ContainedIn?.Any(ci =>
-                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits) ==
-                true)
+                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits
+                    && ci.Direction == LinkedLicenceDirection.Outgoing) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
             .Where(ln => ln != null)
@@ -996,7 +998,7 @@ public static partial class WalSchemaConverter
                         continue;
                     }
 
-                    var incomingLinks = GetLicencesThatReferenceLicenceInDocument(
+                    var incomingLinks = GetLicencesReferencingLicenceInDocument(
                         allLicencesInSets,
                         licence.LicenceNumber?.Value!);
 
@@ -1009,12 +1011,24 @@ public static partial class WalSchemaConverter
                     {
                         // If already output, don't add again
                         if (licence.LinkedLicences.Any(ll =>
-                                ll.LicenceNumber == incomingLink.LicenceNumber &&
-                                ll.ContainedIn?.Any(ci => ci.SectionName == LinkedLicenceSectionNames.IncomingLink) ==
-                                true))
+                            ll.LicenceNumber == incomingLink.LicenceNumber &&
+                            ll.ContainedIn?.Any(ci => ci.Direction == LinkedLicenceDirection.Incoming) == true))
                         {
                             continue;
                         }
+
+                        var newSections = incomingLink.Sections
+                            .Select(section => new LinkedLicenceSection
+                            {
+                                Source = LinkedLicenceSource.OtherDocument,
+                                Direction = LinkedLicenceDirection.Incoming,
+                                IncomingLicenceNumber = incomingLink.LicenceNumber,
+                                SectionName = section.SectionName,
+                                LinkReason = section.LinkReason,
+                                LineNumber = section.LineNumber,
+                                PageNumber = section.PageNumber
+                            })
+                            .ToArray();
                         
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
@@ -1022,17 +1036,7 @@ public static partial class WalSchemaConverter
                             null,
                             incomingLink.Filename,
                             null,
-                            [
-                                new LinkedLicenceSection
-                                {
-                                    Source = LinkedLicenceSource.OtherDocument,
-                                    Direction = LinkedLicenceDirection.Incoming,
-                                    SectionName = LinkedLicenceSectionNames.IncomingLink,
-                                    LinkReason = $"From {incomingLink.LicenceNumber}",
-                                    LineNumber = -1,
-                                    PageNumber = -1,
-                                }
-                            ],
+                            newSections,
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
@@ -1123,10 +1127,14 @@ public static partial class WalSchemaConverter
         return returnList.ToArray();
     }
 
-    private static List<(string LicenceNumber, string ScrapedLicenceNumber, string? Filename)>
-        GetLicencesThatReferenceLicenceInDocument(IEnumerable<Licence> licences, string licenceNumber)
+    private static List<(
+        string LicenceNumber,
+        string ScrapedLicenceNumber,
+        string? Filename,
+        List<LinkedLicenceSection> Sections)>
+        GetLicencesReferencingLicenceInDocument(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<(string, string, string?)>();
+        var returnList = new List<(string, string, string?, List<LinkedLicenceSection>)>();
 
         foreach (var licence in licences)
         {
@@ -1134,23 +1142,37 @@ public static partial class WalSchemaConverter
             {
                 continue;
             }
+            
+            var outgoingLinkedLicences = licence.LinkedLicences
+                .Where(
+                    lll => lll.LicenceNumber == licenceNumber
+                        && lll.ContainedIn!.Any(ci => ci is {
+                            Source: LinkedLicenceSource.Document,
+                            Direction: LinkedLicenceDirection.Outgoing
+                        })
+                    )
+                .ToList();
 
-            var hasOutgoingDocumentLink = licence.LinkedLicences.Any(
-                lll => lll.LicenceNumber == licenceNumber
-                    && lll.ContainedIn!.Any(ci => ci is {
-                        Source: LinkedLicenceSource.Document,
-                        Direction: LinkedLicenceDirection.Outgoing
-                }));
-
-            if (!hasOutgoingDocumentLink)
+            if (!outgoingLinkedLicences.Any())
             {
                 continue;
             }
+
+            var sections = outgoingLinkedLicences
+                .Where(oll => oll.ContainedIn != null)
+                .SelectMany(oll => oll.ContainedIn!)
+                .Where(ci => ci is
+                    {
+                        Source: LinkedLicenceSource.Document,
+                        Direction: LinkedLicenceDirection.Outgoing
+                    })
+                .ToList();
             
             returnList.Add((
                 licence.LicenceNumber!.Value!,
                 licence.LicenceNumber!.Value!,
-                licence.Filename));
+                licence.Filename,
+                sections));
         }
 
         return returnList;
@@ -3975,7 +3997,7 @@ public static partial class WalSchemaConverter
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
                   || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                          ci.SectionName == LinkedLicenceSectionNames.IncomingLink) != true)
+                          ci.Direction == LinkedLicenceDirection.Incoming) != true)
                       .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

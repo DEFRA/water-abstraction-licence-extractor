@@ -341,10 +341,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/247",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/247",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
@@ -367,10 +368,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/248",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/248",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Unknown",
@@ -579,10 +581,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/248",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/248",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Unknown",
@@ -605,10 +608,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/249",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/249",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
@@ -818,10 +822,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/247",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/247",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
@@ -844,10 +849,11 @@
             {
               "source": "OtherDocument",
               "direction": "Incoming",
-              "sectionName": "IncomingLink",
-              "linkReason": "From 25/68/001/249",
-              "lineNumber": -1,
-              "pageNumber": -1
+              "incomingLicenceNumber": "25/68/001/249",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "AggregateCondition",
+              "lineNumber": 111,
+              "pageNumber": 4
             }
           ],
           "naldStatus": "Live",

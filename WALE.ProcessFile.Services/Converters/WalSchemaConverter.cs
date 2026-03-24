@@ -39,6 +39,14 @@ public static partial class WalSchemaConverter
 
         var noneSchemaData = new Dictionary<string, object?>();
 
+        if (matchesResult.AdditionalInformation != null)
+        {
+            foreach (var kvp in matchesResult.AdditionalInformation)
+            {
+                noneSchemaData.Add(kvp.Key, kvp.Value);
+            }
+        }
+
         var hasMultipleScheduleOfConditions = matches
             .Any(result => result.LabelGroupName == "ScheduleOfConditionsB");
 
@@ -1030,13 +1038,10 @@ public static partial class WalSchemaConverter
                             licenceNumbersMapping,
                             regionCode);
 
-                        if (incomingLinkedLicence != null)
+                        licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {
-                            licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
-                            {
-                                incomingLinkedLicence 
-                            }.ToArray();
-                        }
+                            incomingLinkedLicence 
+                        }.ToArray();
 
                         if (!addImplicitLicenceSet)
                         {

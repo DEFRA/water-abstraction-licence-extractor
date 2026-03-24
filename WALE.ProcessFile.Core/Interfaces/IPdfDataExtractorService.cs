@@ -24,7 +24,8 @@ public interface IPdfDataExtractorService
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
-        LookupConfiguration configuration);
+        LookupConfiguration configuration,
+        Dictionary<string, object?> additionalInformationStore);
 
     public void Dispose();
 }

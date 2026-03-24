@@ -39,14 +39,18 @@ public class NaldLinkedLicenceHelper
             .Select(l => l.LicenceNumber)
             .ToList();
 
-        if (candidateLicenceNumbers.Count != 1)
+        var returnList = new List<NaldLinkedLicence>();
+
+        foreach (var candidateLicenceNumber in candidateLicenceNumbers)
         {
-            return [];
+            var values = _linkedLicenceMap.TryGetValue(candidateLicenceNumber, out var linkedDict)
+                ? linkedDict.Values.SelectMany(v => v).ToList()
+                : [];
+            
+            returnList.AddRange(values);
         }
 
-        return _linkedLicenceMap.TryGetValue(candidateLicenceNumbers[0], out var linked)
-            ? linked.Values.SelectMany(v => v).ToList()
-            : [];
+        return returnList;
     }
 
     private static Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> BuildLinkedLicenceMap(

@@ -404,6 +404,24 @@ public static class FormattingHelper
                 parts.Add(part3);
                 parts.Add(part4);
             }
+            else if (first5Digits.Length == 2)
+            {
+                // Part 3 - 1
+                var part3 = "0" + first5Digits[0];
+                
+                // Part 4 - 1
+                var part4 = "0" + first5Digits[1];
+                
+                parts.Add(part3);
+                parts.Add(part4);
+            }
+            else if (first5Digits.Length == 1)
+            {
+                // Part 3 - 1
+                var part3 = "0" + first5Digits[0];
+                
+                parts.Add(part3);
+            }
             
             // Part 5 (optional) - R01, RO2 etc...
             

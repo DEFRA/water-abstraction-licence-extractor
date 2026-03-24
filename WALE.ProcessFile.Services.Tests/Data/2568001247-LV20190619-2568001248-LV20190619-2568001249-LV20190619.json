@@ -392,6 +392,11 @@
         }
       ],
       "noneSchemaData": {
+        "LicenceNumberCandidatesNotInNald": [
+          "5189 4996",
+          "14/10/2011",
+          "5179 4988"
+        ],
         "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 249",
         "Confidence:DateEffective": null,
@@ -625,6 +630,11 @@
         }
       ],
       "noneSchemaData": {
+        "LicenceNumberCandidatesNotInNald": [
+          "5189 4996",
+          "14/10/2011",
+          "5158 5029"
+        ],
         "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 247",
         "Confidence:DateEffective": null,
@@ -859,6 +869,11 @@
         }
       ],
       "noneSchemaData": {
+        "LicenceNumberCandidatesNotInNald": [
+          "5189 4996",
+          "14/10/2011",
+          "5168 5015"
+        ],
         "Features:MultipleScheduleOfConditions": false,
         "scrapedLicenceNumber": "25 68 001 248",
         "Confidence:DateEffective": null,

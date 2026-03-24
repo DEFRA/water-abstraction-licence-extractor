@@ -52,4 +52,13 @@ public class NaldDataController(ICacheService cacheService) : Controller
                 .ToHashSet()
         });
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetCurrentIncrementNumberAsync(
+        [FromQuery] string permitNumber,
+        [FromQuery] int issueNumber)
+    {
+        var incrementNumber = await cacheService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
+        return Ok(incrementNumber);
+    }
 }

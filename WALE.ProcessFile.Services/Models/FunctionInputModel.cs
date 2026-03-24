@@ -35,6 +35,8 @@ public class FunctionInputModel
     public int processRunId { get; set; }
     public int regionCode { get; set; }
 
+    public Dictionary<string, object?> additionalInformationStore { get; set; } = [];
+
     public FunctionInputModel Clone()
     {
         return new FunctionInputModel
@@ -65,7 +67,8 @@ public class FunctionInputModel
             cacheService = cacheService,
             pdfDataExtractorService = pdfDataExtractorService,
             processRunId = processRunId,
-            regionCode = regionCode
+            regionCode = regionCode,
+            additionalInformationStore = additionalInformationStore
         };
     }
 }

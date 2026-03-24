@@ -203,7 +203,13 @@ public static class ApplicableToMost
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                var (anyIsLicenceNumber, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
+                var (anyIsLicenceNumber, licenceNumberLines) =
+                    LicenceNumber.AnyIsLicenceNumber(
+                        [documentLine],
+                        request.label!,
+                        request.isOcr,
+                        request.additionalInformationStore);
+                
                 if (!isTableLine && anyIsLicenceNumber)
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -252,42 +258,48 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                var (anyIsLicenceNumber2, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
-                if (anyIsLicenceNumber2)
+                var (anyIsLicenceNumberF, licenceNumberLinesF) =
+                    LicenceNumber.AnyIsLicenceNumber(
+                        [documentLine],
+                        request.label!,
+                        request.isOcr,
+                        request.additionalInformationStore);
+
+                if (!anyIsLicenceNumberF)
                 {
-                    licenceNumberLines2 = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
-                    var returnList = new List<LabelGroupResult>();
+                    continue;
+                }
+
+                licenceNumberLinesF = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLinesF);
+                var returnList = new List<LabelGroupResult>();
                     
-                    foreach (var licenceNumberLine in licenceNumberLines2)
-                    {
-                        if (!FormattingHelper.GetDmsFileData(
+                foreach (var licenceNumberLine in licenceNumberLinesF)
+                {
+                    if (!FormattingHelper.GetDmsFileData(
                             licenceNumberLine.Text,
                             request.regionCode,
                             request.licenceNumberMapping,
                             out var dmsFileData))
-                        {
-                            continue;
-                        }
-
-                        var coords = documentLine
-                            .Columns
-                            .First()
-                            .Words
-                            .First()
-                            .Coordinates;
-                        
-                        licenceNumberLine.Columns[0].Words.Clear();
-                        licenceNumberLine.Columns[0].Words.AddRange(
-                            DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        
-                        returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
+                    {
+                        continue;
                     }
-                    
-                    return CheckContains(request.label, returnList);
+
+                    var coords = documentLine
+                        .Columns
+                        .First()
+                        .Words
+                        .First()
+                        .Coordinates;
+                        
+                    licenceNumberLine.Columns[0].Words.Clear();
+                    licenceNumberLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
+                    labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                        
+                    returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
                 }
-                
-                continue;
+                    
+                return CheckContains(request.label, returnList);
             }
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))

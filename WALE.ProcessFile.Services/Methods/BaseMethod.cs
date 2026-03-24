@@ -94,7 +94,12 @@ public static class BaseMethod
                 break;
             case LicenceNumber.Constant:
                 {
-                    var (success, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber(
+                        lines,
+                        request.label,
+                        request.isOcr,
+                        request.additionalInformationStore);
+                    
                     if (success)
                     {
                         licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -115,10 +120,15 @@ public static class BaseMethod
                 break;
             case LicenceNumberFilename.Constant:
                 {
-                    var (success, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber(lines, request.label, request.isOcr);
+                    var (success, licenceNumberLinesF) = LicenceNumber.AnyIsLicenceNumber(
+                            lines,
+                            request.label,
+                            request.isOcr,
+                            request.additionalInformationStore);
+                    
                     if (success)
                     {
-                        var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
+                        var licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLinesF);
 
                         foreach (var licenceNumberLine in licenceNumberLines)
                         {
@@ -236,7 +246,8 @@ public static class BaseMethod
                 request.previouslyParsedPaths!,
                 request.regionCode,
                 request.processRunId,
-                request.lookupConfiguration!);
+                request.lookupConfiguration!,
+                request.additionalInformationStore);
             
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)

@@ -310,6 +310,11 @@ public class DatabaseCacheService(
         return databaseWriteService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
     }
 
+    public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
+    {
+        return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
+    }
+
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);

@@ -3,7 +3,7 @@ import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
-import {OverviewContent} from "./OverviewContent.tsx";
+import {VerificationContent} from "./VerificationContent.tsx";
 import {getImageUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";
@@ -15,7 +15,7 @@ interface ReportContentProps {
     onOpenLinkedLicence: (filename: string) => void;
 }
 
-type TabType = 'overview' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
+type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 type ViewType = 1 | 2;
 
 export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence}: ReportContentProps) {
@@ -30,7 +30,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
     // const [textData, setTextData] = useState<string>('');
 
     // UI states
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
+    const [activeTab, setActiveTab] = useState<TabType>('verification');
     const [activeView, setActiveView] = useState<ViewType>(1);
 
     // Form states
@@ -168,13 +168,13 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                             <li>
                                 <a
                                     href="#"
-                                    className={activeTab === 'overview' ? 'selectedTab' : ''}
+                                    className={activeTab === 'verification' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        setActiveTab('overview');
+                                        setActiveTab('verification');
                                     }}
                                 >
-                                    Overview
+                                    Verification
                                 </a>
                             </li>
                             <li>
@@ -296,17 +296,15 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                             </div>
                         )}
 
-                        {activeTab === 'overview' && activeView === 1 && (
+                        {activeTab === 'verification' && activeView === 1 && reportData2 && (
                             <div id="overview">
-                                <OverviewContent
-                                    reportData={reportData}
-                                    onJumpToPage={jumpToPage}
-                                    onOpenLinkedLicence={onOpenLinkedLicence}
+                                <VerificationContent
+                                    licence={reportData2}
                                 />
                             </div>
                         )}
 
-                        {activeTab === 'overview' && activeView === 2 && (
+                        {activeTab === 'verification' && activeView === 2 && (
                             <div id="propertiesNew">
                                 <div
                                     id="licenceNumberTxtDiv"

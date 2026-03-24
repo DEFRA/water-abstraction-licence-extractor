@@ -1,0 +1,79 @@
+import React, { useState, useRef, useImperativeHandle, ReactElement } from 'react';
+
+/**
+ * Interface that all licence section body components must implement.
+ * This allows the parent LicenceSection to control view/edit mode and get edited data.
+ */
+export interface ILicenceSectionBody {
+    /**
+     * Returns the current data of the section as JSON.
+     */
+    getData: () => any;
+}
+
+export interface LicenceSectionBodyProps {
+    isEditing: boolean;
+    onDataChanged?: (data: any) => void;
+}
+
+interface LicenceSectionProps {
+    title: string;
+    children: ReactElement<LicenceSectionBodyProps>;
+    initialOpen?: boolean;
+}
+
+export function LicenceSection({ title, children, initialOpen = false }: LicenceSectionProps) {
+    const [isOpen, setIsOpen] = useState(initialOpen);
+    const [isEditing, setIsEditing] = useState(false);
+    const bodyRef = useRef<ILicenceSectionBody>(null);
+
+    const handleEditToggle = () => {
+        if (isEditing) {
+            // Logic to Save Override
+            if (bodyRef.current) {
+                const data = bodyRef.current.getData();
+                console.log('Saving Override for', title, 'Data:', JSON.stringify(data, null, 2));
+                // Here we would typically call an API to save the override
+            }
+            setIsEditing(false);
+        } else {
+            setIsEditing(true);
+            setIsOpen(true); // Ensure it's open when editing
+        }
+    };
+
+    return (
+        <div className="licence-section" style={{ border: '1px solid #ccc', marginBottom: '10px', borderRadius: '4px' }}>
+            <div 
+                className="licence-section-header" 
+                style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f5f5f5', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
+                <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={handleEditToggle} style={{ marginRight: '5px' }}>
+                        {isEditing ? 'Save Override' : 'Edit'}
+                    </button>
+                    <button onClick={() => console.log('Accept', title)} style={{ marginRight: '5px' }}>Accept</button>
+                    <button onClick={() => console.log('Reject', title)}>Reject</button>
+                    <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
+                </div>
+            </div>
+            {isOpen && (
+                <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
+                    {React.cloneElement(children, { 
+                        isEditing, 
+                        ref: bodyRef 
+                    } as any)}
+                </div>
+            )}
+        </div>
+    );
+}

@@ -1724,7 +1724,7 @@ public class PdfDataExtractorService(
                 {
                     subLabel.Remove = label.Remove;
                 }
-                            
+ 
                 var subLabelGroupMatch = await FindLabelGroupMatchesInLinesAsync(
                     wrappedLines,
                     [subLabel],
@@ -1816,8 +1816,10 @@ public class PdfDataExtractorService(
                 if (positionIndexOnLine > 0)
                 {
                     var previousChar = lineText[positionIndexOnLine - 1];
-
-                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.')
+                    var firstChar = match.Value[0];
+                    
+                    if (previousChar != ' ' && previousChar != ',' && previousChar != '.'
+                        && firstChar != ' ' && firstChar != ',' && firstChar != '.')
                     {
                         continue;
                     }

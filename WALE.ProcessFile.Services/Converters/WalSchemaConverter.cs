@@ -2507,9 +2507,10 @@ public static partial class WalSchemaConverter
                 : null;
             
             var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
-                .Any(t => t.Text.Contains("The aggregate quantity")
-                    || t.Text.Contains("The quantities detailed below are in aggregate")
-                    || t.Text.Contains("quantity equal to the difference between")) == true;
+                .Any(t => t.Text.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
+                    || t.Text.Contains("The quantities detailed below are in aggregate", StringComparison.InvariantCultureIgnoreCase)
+                    || t.Text.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
+                    || t.Text.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase)) == true;
 
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")

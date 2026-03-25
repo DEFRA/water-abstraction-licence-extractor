@@ -113,8 +113,10 @@ public static class LabelMatchingHelper
                         }
 
                         var previousChar = lineForPosition.Text[labelCharPosition - 1];
-
-                        if (previousChar is ' ' or ',' or '.')
+                        var firstChar = match.Value[0];
+                        
+                        if (previousChar is ' ' or ',' or '.'
+                            || firstChar is ' ' or ',' or '.')
                         {
                             return true;
                         }

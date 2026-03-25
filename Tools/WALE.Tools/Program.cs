@@ -3,9 +3,9 @@ using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-var workflow = "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
+var workflow = "GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 
-const int processRunId = 1648;
+const int processRunId = 1707;
 const int regionCode = 3; // Anglia=1, NE=3
 var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
@@ -50,7 +50,7 @@ switch (workflow)
         await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
         break;
     case "GenerateAggregatesCsvForTesting": // A file to give to James and team
-        await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync();
+        await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync(processRunId);
         break;
     case "TestsForAiPrompts": // An old POC in AI prompts to read files
         await TestsForAiPrompts.TestsForAiPromptsAsync();

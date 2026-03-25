@@ -3,6 +3,7 @@ import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
+import {getThumbnailUrl} from "../utils/images.ts";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;

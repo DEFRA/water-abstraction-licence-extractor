@@ -353,7 +353,27 @@ public static class JsOutputHelper
             {
                 return (T2)(object)(int)dblVal;
             }
+
+            if (value is T2)
+            {
+                return (T2)value;
+            }
             
+            var targetType = typeof(T2);
+            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                targetType = Nullable.GetUnderlyingType(targetType);
+            }
+
+            try
+            {
+                return (T2)Convert.ChangeType(value, targetType!);
+            }
+            catch
+            {
+                // Fallback to original behavior if conversion fails
+            }
+
             return (T2)value;
         }
         

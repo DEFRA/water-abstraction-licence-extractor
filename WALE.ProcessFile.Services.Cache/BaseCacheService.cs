@@ -10,13 +10,13 @@ public class BaseCacheService
 {
     public static async Task<MetadataCollection?> GetMetadataAsync(
         ICacheService cacheService,
-        string pdfFilename,
+        Guid fileId,
         string noOcrServiceName,
         int processRunId)
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
-            Filename = pdfFilename,
+            FileId = fileId,
             NoOcrServiceName = noOcrServiceName,
             ProcessRunId = processRunId
         };

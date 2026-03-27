@@ -3,7 +3,6 @@ using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Services;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -13,59 +12,48 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class ImagesController(IOutputService outputService, ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult> Thumbnail([FromQuery] string filename)
+    public async Task<ActionResult> Thumbnail(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string serviceName)
     {
-        var parts = filename.Split('/');
-        var fileName1 = parts[0];
-        var serviceName = parts[1];
-
-        var pageNumberStr = parts.Last()
-            .Replace("page-", string.Empty)
-            .Replace(".jpg", string.Empty);
-
-        var pageNumber = int.Parse(pageNumberStr);
         var data = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             serviceName,
-            fileName1);
+            fileId);
 
         if (data.Count == 0)
         {
-            throw new Exception($"Cannot find screenshot for {fileName1} - {serviceName} - {pageNumber}");
+            throw new Exception($"Cannot find screenshot for {fileId} - {serviceName} - {pageNumber}");
         }
 
         return File(data[0], "image/jpeg");
     }
 
     [HttpGet]
-    public async Task<ActionResult> Image([FromQuery] string filename)
+    public async Task<ActionResult> Image(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string serviceName)
     {
-        var parts = filename.Split('/');
-        var fileName1 = parts[0];
-        var serviceName = parts[1];
-
-        var pageNumberStr = parts.Last()
-            .Replace("page-", string.Empty)
-            .Replace(".jpg", string.Empty);
-
-        var pageNumber = int.Parse(pageNumberStr);
         var data = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             serviceName,
-            fileName1);
+            fileId);
 
         return File(data[0], "image/jpeg");
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PageImage>>> PageImages([FromQuery] string filename,
+    public async Task<ActionResult<IEnumerable<PageImage>>> PageImages(
+        [FromQuery] Guid fileId,
         [FromQuery] int? pageNumber)
     {
         var pageImages = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
                 PageNumber = pageNumber,
-                Filename = filename,
+                FileId = fileId,
                 NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName
             });
 
@@ -78,7 +66,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
                 PageNumber = pi.pageNumber,
                 ImageNumber = pi.imageNumber,
                 Extension = pi.extension!,
-                FileName = filename,
+                FileId = fileId,
                 Width = pi.width,
                 Height = pi.height
             });
@@ -88,7 +76,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
     
     [HttpGet]
     public async Task<ActionResult> PartialPageImage(
-        [FromQuery] string filename,
+        [FromQuery] Guid fileId,
         [FromQuery] string extension,
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber)
@@ -98,7 +86,7 @@ public class ImagesController(IOutputService outputService, ICacheService cacheS
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filename = filename,
+                FileId = fileId,
                 NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                 Extension = extension
             });

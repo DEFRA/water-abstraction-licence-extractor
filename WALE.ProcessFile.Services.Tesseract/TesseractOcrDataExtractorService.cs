@@ -37,7 +37,7 @@ public class TesseractOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -79,7 +79,7 @@ public class TesseractOcrDataExtractorService(
                     imageNumber,
                     isPageScreenshot,
                     imageReference,
-                    pdfDocument.PdfFilename,
+                    pdfDocument.FileId,
                     processRunId);
             }
             else

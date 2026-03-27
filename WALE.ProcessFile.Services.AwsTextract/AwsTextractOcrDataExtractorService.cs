@@ -76,7 +76,7 @@ public class AwsTextractOcrDataExtractorService
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -102,7 +102,7 @@ public class AwsTextractOcrDataExtractorService
                 bytesList = await _outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     noOcrServiceName,
-                    pdfDocument.PdfFilename);
+                    pdfDocument.FileId);
             }
             else
             {
@@ -110,7 +110,7 @@ public class AwsTextractOcrDataExtractorService
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filename = pdfDocument.PdfFilename,
+                    FileId = pdfDocument.FileId,
                     NoOcrServiceName = noOcrServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });

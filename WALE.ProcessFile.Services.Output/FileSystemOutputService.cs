@@ -21,17 +21,17 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilename)
+        Guid fileId)
     {
-        return GetPageScreenshotPaths(pageNumber, pdfServiceName, pdfFilename);
+        return GetPageScreenshotPaths(pageNumber, pdfServiceName, fileId);
     }
 
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilePath)
+        Guid fileId)
     {
-        var folderName = (outputFolder + "/" + FileHelper.GetFilenameWithoutExtension(pdfFilePath)).Replace("//", "/");
+        var folderName = outputFolder + "/" + fileId;
         var imgOutputPath = $"{folderName}/{pdfServiceName}/Images/";
 
         Directory.CreateDirectory(imgOutputPath); // This checks if exists, and creates the whole path too
@@ -57,32 +57,30 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task SaveLicenceSetsAsync(
         Dictionary<string, LicenceSet> licenceSets,
-        string pdfFilename,
+        Guid fileId,
         int processRunId)
     {
         var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
         
         return File.WriteAllTextAsync(
-            $"{outputFolder}/{filenameNoExtension}/licence-sets.jsonp",
+            $"{outputFolder}/{fileId}/licence-sets.jsonp",
             $"var licenceSets = {licenceSetsJson}");
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
+        Directory.CreateDirectory($"{outputFolder}/{licence.DmsFileId}");
         
         var licenceJson = JsonHelper.GetAsString(licence);
 
         await File.WriteAllTextAsync(
-            $"{outputFolder}/{filenameNoExtension}/licence.jsonp",
+            $"{outputFolder}/{licence.DmsFileId}/licence.jsonp",
             $"var data2 = {licenceJson}");
 
         return -1;
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -92,15 +90,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
+        Directory.CreateDirectory($"{outputFolder}/{fileId}");
 
         var internalJson = JsonHelper.GetAsString(matchesResult);
         
         await File.WriteAllTextAsync(
-            $"{outputFolder}/{filenameNoExtension}/internal.jsonp",
+            $"{outputFolder}/{fileId}/internal.jsonp",
             $"var data = {internalJson}");
 
         return -1;
@@ -118,13 +115,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilename,
+        Guid fileId,
         int processRunId)
     {
         var imagePaths = GetPageScreenshotPaths(
             pageNumber,
             noOcrServiceName,
-            pdfFilename);
+            fileId);
         
         var exists1 = File.Exists(imagePaths[0].ImageReference);
         var exists2 = imagePaths.Count >= 2 && File.Exists(imagePaths[1].ImageReference);
@@ -148,7 +145,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return images.Sum(i => i.Bitmap.ByteCount);
     }
 
-    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+    public Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        Guid fileId,
+        byte[] data,
         int processRunId)
     {
         throw new NotImplementedException();
@@ -171,12 +172,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         stream.Close();
     }
 
-    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilename, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName, int processRunId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-        Directory.CreateDirectory($"{outputFolder}/{filenameNoExtension}");
+        Directory.CreateDirectory($"{outputFolder}/{fileId}");
         
-        var folder = $"{outputFolder}/{filenameNoExtension}/Text";
+        var folder = $"{outputFolder}/{fileId}/Text";
         Directory.CreateDirectory(folder);
         
         var pageAllPath = $"{folder}/pages-all.txt";
@@ -204,12 +204,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, string pdfFilename)
+    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
         var pageScreenshotPaths = GetPageScreenshotPaths(
             pageNumber,
             pdfServiceName,
-            pdfFilename);
+            fileId);
 
         var returnList = new List<byte[]>();
         
@@ -246,17 +246,17 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(string filename)
+    public Task<Licence?> GetLicenceAsync(Guid fileId)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MatchesResult?> GetMatchesResult(string filename)
+    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
     {
         throw new NotImplementedException();
     }

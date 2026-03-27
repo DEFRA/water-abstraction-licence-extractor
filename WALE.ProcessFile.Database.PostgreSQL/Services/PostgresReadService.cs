@@ -43,7 +43,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT response 
                            FROM no_ocr_pages_metadata_cache 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                              AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
@@ -54,18 +54,18 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
         {
-            Filename = request.Filename,
+            request.FileId,
             request.NoOcrServiceName
         });
     }
 
-    public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, string fileName, string noOcrServiceName)
+    public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT data 
                            FROM page_screenshot 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId 
                                AND no_ocr_service_name = @NoOcrServiceName 
                                AND page_number = @PageNumber
                            LIMIT 1;
@@ -77,7 +77,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = fileName,
+                FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
                 PageNumber = pageNumber
             });
@@ -102,7 +102,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.PageNumber,
                 request.NoOcrServiceName
             });
@@ -118,7 +118,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                 , data 
                            FROM no_ocr_page_text_cache 
                            WHERE
-                               filename = @Filename
+                               file_id = @FileId
                                AND no_ocr_service_name = @NoOcrServiceName;
                            """;
 
@@ -128,7 +128,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.NoOcrServiceName
             });
 
@@ -146,20 +146,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 // TODO some weird circumstance meant that certain (not all) pages were repeated
                 // PROBABLY because of retry logic (might be limited to Ryan's machine)
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.Filename}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.FileId}");
             }
         }
         
         return returnDict;
     }
 
-    public async Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName)
+    public async Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT data 
                            FROM all_pages_text
-                           WHERE filename = @Filename
+                           WHERE file_id = @FileId
                              AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
@@ -170,7 +170,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = pdfFilename,
+                FileId = fileId,
                 NoOcrServiceName = noOcrServiceName
             });
     }
@@ -181,7 +181,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT response 
                            FROM no_ocr_images_metadata_cache
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId 
                              AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
                            """;
@@ -192,7 +192,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.NoOcrServiceName
             });
     }
@@ -203,9 +203,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM ocr_image_text_cache 
-                           WHERE filename = @Filename 
-                             AND ocr_service_name = @OcrServiceName 
-                             AND page_number = @PageNumber 
+                           WHERE file_id = @FileId
+                             AND ocr_service_name = @OcrServiceName
+                             AND page_number = @PageNumber
                              AND image_number = @ImageNumber
                            ORDER BY date_time_utc desc
                            LIMIT 1;
@@ -217,7 +217,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.OcrServiceName,
                 request.PageNumber,
                 request.ImageNumber
@@ -230,7 +230,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM ocr_screenshot_text_cache 
-                           WHERE filename = @Filename
+                           WHERE file_id = @FileId
                              AND ocr_service_name = @OcrServiceName
                              AND page_number = @PageNumber
                            ORDER BY date_time_utc desc
@@ -243,7 +243,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.OcrServiceName,
                 request.PageNumber
             });
@@ -255,7 +255,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM ocr_temporary_image_text_cache 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                              AND ocr_service_name = @OcrServiceName 
                              AND page_number = @PageNumber 
                              AND image_number = @ImageNumber
@@ -268,7 +268,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.OcrServiceName,
                 request.PageNumber,
                 request.ImageNumber
@@ -281,7 +281,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM ocr_temporary_screenshot_text_cache 
-                           WHERE filename = @Filename
+                           WHERE file_id = @FileId
                              AND ocr_service_name = @OcrServiceName
                              AND page_number = @PageNumber
                            LIMIT 1;
@@ -293,7 +293,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.OcrServiceName,
                 request.PageNumber
             });
@@ -319,7 +319,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.NoOcrServiceName,
                 request.PageNumber,
                 request.ImageNumber,
@@ -350,7 +350,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.FileId,
                 request.PageNumber
             });
 
@@ -376,7 +376,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0)).ToList();
     }
 
-    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(string filename)
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -389,7 +389,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM licence l
                            JOIN process_run pr
                                ON l.process_run_id = pr.process_run_id 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId 
                            ORDER BY l.process_run_id DESC
                            LIMIT 1;
                            """;
@@ -400,7 +400,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = filename
+                FileId = fileId
             });
     }
 
@@ -453,7 +453,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             })).ToList();
     }
 
-    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(string filename, int processRunId)
+    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -463,7 +463,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ls.schema_licence_set_id 
                            FROM licence_set ls
                            JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
-                           JOIN licence l on l.licence_id = lsl.licence_id AND l.filename = @Filename
+                           JOIN licence l on l.licence_id = lsl.licence_id AND l.file_id = @FileId
                            WHERE
                                ls.process_run_id = @ProcessRunId
                            """;
@@ -475,7 +475,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId,
-                Filename = filename
+                FileId = fileId
             })).ToList();
     }
 
@@ -601,7 +601,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return [];
     }
 
-    public async Task<Licence?> GetLicenceAsync(string filename)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -618,7 +618,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { Filename = filename });
+            new { FileId = fileId });
         if (result == null)
         {
             return null;
@@ -662,7 +662,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return data;
     }
 
-    public async Task<MatchesResult?> GetMatchesResult(string filename)
+    public async Task<MatchesResult?> GetMatchesResult(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -677,7 +677,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { Filename = filename });
+            new { FileId = fileId });
 
         return result == null 
             ? null 

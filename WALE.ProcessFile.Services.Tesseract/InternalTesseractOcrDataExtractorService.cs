@@ -18,7 +18,7 @@ public class InternalTesseractOcrDataExtractorService(
         int imageNumber,
         bool isPageScreenshot,
         string imageReference,
-        string pdfFilename,
+        Guid fileId,
         int processRunId)
     {
         List<byte[]> bytesList;
@@ -28,7 +28,7 @@ public class InternalTesseractOcrDataExtractorService(
             bytesList = await outputService.GetPageScreenshotDataAsync(
                 pageNumber,
                 noOcrServiceName,
-                pdfFilename);
+                fileId);
         }
         else
         {
@@ -36,7 +36,7 @@ public class InternalTesseractOcrDataExtractorService(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filename = pdfFilename,
+                FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
                 Extension = FileHelper.GetImageExtension(imageReference)
             });
@@ -89,7 +89,7 @@ public class InternalTesseractOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfFilename,
+            FileId = fileId,
             OcrServiceName = $"TesseractOcr-{pageSegMode}",
             ProcessRunId = processRunId
         };

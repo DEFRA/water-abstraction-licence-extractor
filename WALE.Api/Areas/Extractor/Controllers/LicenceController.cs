@@ -28,7 +28,6 @@ public class LicenceController(IOutputService outputService) : Controller
         
         var returnId = await outputService.SaveLicenceAsync(
             licence,
-            request.pdfFilename,
             request.processRunId);
 
         return Ok(returnId);
@@ -53,7 +52,7 @@ public class LicenceController(IOutputService outputService) : Controller
         
         await outputService.SaveLicenceSetsAsync(
             licenceSets,
-            request.pdfFilename!,
+            request.fileId!,
             request.processRunId);
 
         return Ok();
@@ -63,14 +62,14 @@ public class LicenceController(IOutputService outputService) : Controller
     {
         public string? licenceSets { get; set; }
         
-        public string? pdfFilename { get; set; }
+        public Guid fileId { get; set; }
         
         public int processRunId { get; set; }
     }
     
     public class SaveLicenceRequest
     {
-        public string? pdfFilename { get; set; }
+        public Guid fileId { get; set; }
         public int processRunId { get; set; }
         public string? licence  { get; set; }
     }

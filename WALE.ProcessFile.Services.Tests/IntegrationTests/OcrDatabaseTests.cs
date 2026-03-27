@@ -97,13 +97,19 @@ public class OcrDatabaseTests
         await SetupLicenceNumbersAsync(3);
         
         var filename = "14460030853 licence effective 24.07.2005";
-        await CacheService.ClearCacheAsync(filename);
+        var someGuid = Guid.NewGuid(); // TODO
+        
+        await CacheService.ClearCacheAsync(someGuid);
 
         filename = "14460030853 licence effective 24-07-2005";
-        await CacheService.ClearCacheAsync(filename);
+        someGuid = Guid.NewGuid(); // TODO
+        
+        await CacheService.ClearCacheAsync(someGuid);
         
         filename = "14460030853 licence effective 24.07.2005.pdf";
-        await CacheService.ClearCacheAsync(filename);
+        someGuid = Guid.NewGuid(); // TODO
+        
+        await CacheService.ClearCacheAsync(someGuid);
         
         await ProcessAsync(filename); // Uncached
         await ProcessAsync(filename); // Cached

@@ -1,5 +1,4 @@
 using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
@@ -8,35 +7,31 @@ public static class ImageReferenceHelper
     public static List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string filename)
+        Guid fileId)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
-
         return
         [
             (pdfServiceName,
-                $"Screenshot-{filenameNoExtension}-{pdfServiceName}-{pageNumber}"),
+                $"Screenshot-{fileId}-{pdfServiceName}-{pageNumber}"),
             (GeneralConstants.DocnetExtractorServiceName,
-                $"Screenshot-{filenameNoExtension}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
+                $"Screenshot-{fileId}-{GeneralConstants.DocnetExtractorServiceName}-{pageNumber}")
         ];
     }
     
     public static string GetImageReference(
         int pageNumber,
         int imageNumber,
-        string filename,
+        Guid fileId,
         string extension)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
-        return $"ImageReference-{filenameNoExtension}-{extension}-{pageNumber}-{imageNumber}";
+        return $"ImageReference-{fileId}-{extension}-{pageNumber}-{imageNumber}";
     }
     
     public static string GetNoOcrPageReferenceAsync(
-        string filename,
+        Guid fileId,
         string noOcrServiceName,
         int pageNumber)
     {
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename);
-        return $"NoOcrPageReference-{filenameNoExtension}-{noOcrServiceName}-{pageNumber}";
+        return $"NoOcrPageReference-{fileId}-{noOcrServiceName}-{pageNumber}";
     }
 }

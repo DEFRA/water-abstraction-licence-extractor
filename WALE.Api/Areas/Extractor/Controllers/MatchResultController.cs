@@ -14,7 +14,7 @@ public class MatchResultController(IOutputService outputService) : Controller
     {
         var matchResultId = await outputService.SaveMatchResultAsync(
             request.matches!,
-            request.pdfFilename!,
+            request.fileId!,
             request.processRunId);
         
         return Ok(matchResultId);
@@ -24,7 +24,7 @@ public class MatchResultController(IOutputService outputService) : Controller
     {
         public MatchesResult? matches { get; set; }
         
-        public string? pdfFilename { get; set; }
+        public Guid fileId { get; set; }
         
         public int processRunId { get; set; }
     }

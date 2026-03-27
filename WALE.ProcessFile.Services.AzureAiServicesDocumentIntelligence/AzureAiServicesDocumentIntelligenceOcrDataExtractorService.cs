@@ -39,7 +39,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -65,7 +65,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     GeneralConstants.PdfPigDataExtractorServiceName,
-                    pdfDocument.PdfFilename);
+                    pdfDocument.FileId);
             }
             else
             {
@@ -73,7 +73,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filename = pdfDocument.PdfFilename,
+                    FileId = pdfDocument.FileId,
                     NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
@@ -175,7 +175,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             }
             
             bytes = await cacheService.DeflateImageAsync(
-                request.Filename!,
+                request.FileId,
                 request.ImageNumber,
                 request.PageNumber,
                 request.ProcessRunId,

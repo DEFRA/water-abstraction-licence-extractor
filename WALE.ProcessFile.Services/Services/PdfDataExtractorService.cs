@@ -80,7 +80,7 @@ public class PdfDataExtractorService(
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
-            dmsDataForFile?.FileId,
+            dmsDataForFile!.FileId!.Value,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -158,7 +158,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filename = pdfFileName,
+                FileId = dmsDataForFile.FileId.Value,
                 NoOcrServiceName = Name
             });
 

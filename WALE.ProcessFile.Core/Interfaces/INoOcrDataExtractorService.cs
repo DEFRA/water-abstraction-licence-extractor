@@ -7,7 +7,7 @@ public interface INoOcrDataExtractorService
 {
     public Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFileName,
-        Guid? fileId,
+        Guid fileId,
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,

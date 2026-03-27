@@ -13,13 +13,13 @@ public class ImagesController(
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
-        [FromQuery] string filename,
+        [FromQuery] Guid fileId,
         [FromQuery] string noOcrServiceName)
     {
         var pageImages = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filename = filename,
+                FileId = fileId,
                 NoOcrServiceName = noOcrServiceName
             });
         
@@ -28,7 +28,7 @@ public class ImagesController(
     
     [HttpGet]
     public async Task<ActionResult> GetImageAsync(
-        [FromQuery] string filename,
+        [FromQuery] Guid fileId,
         [FromQuery] string extension,
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
@@ -39,7 +39,7 @@ public class ImagesController(
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filename = filename,
+                FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
                 Extension = extension
             });
@@ -54,7 +54,7 @@ public class ImagesController(
 
     [HttpGet]
     public async Task<ActionResult> DeflateImageAsync(
-        [FromQuery] string pdfFilename,
+        [FromQuery] Guid fileId,
         [FromQuery] int imageNumber,
         [FromQuery] int pageNumber,
         [FromQuery] int processRunId,
@@ -62,7 +62,7 @@ public class ImagesController(
         [FromQuery] string serviceName)
     {
         var bytes = await cacheService.DeflateImageAsync(
-            pdfFilename,
+            fileId,
             imageNumber,
             pageNumber,
             processRunId,
@@ -74,14 +74,14 @@ public class ImagesController(
     
     [HttpGet]
     public async Task<ActionResult> GetPageScreenshotAsync(
-        [FromQuery] string fileName,
+        [FromQuery] Guid fileId,
         [FromQuery] string serviceName,
         [FromQuery] int pageNumber)
     {
         var data = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             serviceName,
-            fileName);
+            fileId);
 
         return Ok(data);
     }
@@ -94,7 +94,7 @@ public class ImagesController(
             request.bytes,
             request.width,
             request.height,
-            request.pdfFilename!,
+            request.fileId,
             request.noOcrServiceName!,
             request.imageNumber,
             request.pageNumber,
@@ -111,7 +111,7 @@ public class ImagesController(
         await outputService.SavePageScreenshotInternalAsync(
             request.pageNumber,
             request.noOcrServiceName!,
-            request.pdfFilename!,
+            request.fileId,
             request.data,
             request.processRunId);
 
@@ -122,7 +122,7 @@ public class ImagesController(
     {
         public int pageNumber { get; set; }
         public string? noOcrServiceName { get; set; }
-        public string? pdfFilename { get; set; }
+        public Guid fileId { get; set; }
         public byte[] data { get; set; } = [];
         public int processRunId { get; set; }
     }
@@ -135,7 +135,7 @@ public class ImagesController(
 
         public int height { get; set; }
 
-        public string? pdfFilename { get; set; }
+        public Guid fileId { get; set; }
 
         public string? noOcrServiceName { get; set; }
 

@@ -12,6 +12,8 @@ public class PdfDocument
     public bool FromCache { get; }
     public string PdfFilename { get; }
     
+    public Guid FileId { get; set; }
+    
     public string PdfFilenameNoExtension { get; }
     
     public IFileService FileService { get; }
@@ -83,7 +85,7 @@ public class PdfDocument
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
-                        PdfFilename);
+                        FileId);
                     
                     var pdfPage = new PdfPage
                     {

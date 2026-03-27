@@ -75,9 +75,14 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
-        if (dmsDataForFile?.FileId == null)
+        if (dmsDataForFile == null)
         {
-            throw new ArgumentNullException(nameof(dmsDataForFile.FileId));
+            throw new ArgumentNullException(nameof(dmsDataForFile));
+        }
+        
+        if (dmsDataForFile.FileId == Guid.Empty)
+        {
+            throw new Exception("FileId is empty");
         }
         
         var dtStart = DateTime.Now;
@@ -85,7 +90,7 @@ public class PdfDataExtractorService(
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
-            dmsDataForFile!.FileId!.Value,
+            dmsDataForFile.FileId,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -163,7 +168,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                FileId = dmsDataForFile.FileId.Value,
+                FileId = dmsDataForFile.FileId,
                 NoOcrServiceName = Name
             });
 

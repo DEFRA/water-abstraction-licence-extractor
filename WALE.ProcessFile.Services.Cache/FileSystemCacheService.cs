@@ -509,7 +509,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
     public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)

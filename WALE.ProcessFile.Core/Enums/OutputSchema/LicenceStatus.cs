@@ -4,5 +4,6 @@ public enum LicenceStatus
 {
     Ok,
     NotFound,
-    PathMissing
+    PathMissing,
+    FileIdMissing
 }

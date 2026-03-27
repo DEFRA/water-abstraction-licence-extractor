@@ -919,7 +919,8 @@ public static partial class WalSchemaConverter
         LookupConfiguration? lookupConfig,
         int processRunId)
     {
-        if (dmsDataForFile?.FileId.HasValue != true
+        if (dmsDataForFile == null
+            || dmsDataForFile.FileId == Guid.Empty
             || lookupConfig == null)
         {
             return null;
@@ -930,11 +931,11 @@ public static partial class WalSchemaConverter
             throw new Exception("DMS file path is null - shouldn't happen");
         }
 
-        var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId!.Value);
+        var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId);
 
         var outputDmsFileIdInformation = new DmsFileIdInformation
         {
-            FileId = dmsDataForFile.FileId.Value,
+            FileId = dmsDataForFile.FileId,
             DmsFilePath = dmsDataForFile.DmsPath,
             ProcessRunId = processRunId,
             StatusDateUtc = DateTime.UtcNow
@@ -1429,19 +1430,25 @@ public static partial class WalSchemaConverter
 
                 continue;
             }
+            
+            var destinationFileId = dmsFileData.FileId;
+            if (destinationFileId == Guid.Empty)
+            {
+                returnLicences.Add(new Licence
+                {
+                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
+                    Status = LicenceStatus.FileIdMissing
+                });
+
+                continue;
+            }
 
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionCode = matchesResult.RegionCode;
             
-            FormattingHelper.GetDmsFileData(
-                linkedLicence.LicenceNumber,
-                matchesResult.RegionCode,
-                lookupConfiguration.AllDmsData,
-                out var linkedDmsFileData);
-            
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
-                linkedDmsFileData,
+                dmsFileData,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);

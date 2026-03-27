@@ -114,6 +114,7 @@ public class FileTypeIdentifierService
 
             var content = await serviceToUse.GetMatchesAsync(
                 fileName,
+                null,
                 configuration,
                 [],
                 0);

@@ -58,6 +58,7 @@ public class TemplateTypeIdentifierService
         
         var content = await _pdfExtractorService!.GetMatchesAsync(
             fileName,
+            null,
             lookupConfig,
             [],
             processRunId)!;

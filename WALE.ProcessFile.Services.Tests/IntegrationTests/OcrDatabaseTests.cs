@@ -71,6 +71,7 @@ public class OcrDatabaseTests
     {
         return await _pdfDataExtractorCombined.GetMatchesAsync(
             fileName,
+            null,
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 _fileLicenceMapping,

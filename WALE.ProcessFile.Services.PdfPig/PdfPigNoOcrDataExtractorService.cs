@@ -19,6 +19,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     public async Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFileName,
+        Guid? fileId,
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,

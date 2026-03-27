@@ -100,6 +100,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         return await _pdfDataExtractorCombined5.GetMatchesAsync(
             fileName,
+            null,
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
             0);

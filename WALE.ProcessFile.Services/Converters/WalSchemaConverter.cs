@@ -1342,8 +1342,15 @@ public static partial class WalSchemaConverter
                         clonedConfig.AllDmsData = lookupConfiguration.AllDmsData;
                         clonedConfig.RegionCode = matchesResult.RegionCode;
                         
+                        FormattingHelper.GetDmsFileData(
+                            licenceNumber,
+                            matchesResult.RegionCode,
+                            lookupConfiguration.AllDmsData,
+                            out var linkedDmsFileData);
+                        
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                             destinationFileName,
+                            linkedDmsFileData,
                             clonedConfig,
                             previouslyParsedFiles,
                             processRunId);
@@ -1426,8 +1433,15 @@ public static partial class WalSchemaConverter
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionCode = matchesResult.RegionCode;
             
+            FormattingHelper.GetDmsFileData(
+                linkedLicence.LicenceNumber,
+                matchesResult.RegionCode,
+                lookupConfiguration.AllDmsData,
+                out var linkedDmsFileData);
+            
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
+                linkedDmsFileData,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);

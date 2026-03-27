@@ -275,6 +275,7 @@ public static class GenerateLicenceReaderExtract
         {
             var result = await pdfDataExtractor.GetMatchesAsync(
                 fileName,
+                null,
                 configuration,
                 [fileName],
                 0);

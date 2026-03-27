@@ -79,6 +79,7 @@ public class AzureOpenAiOcrPdfTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            null,
             await LookupConfigurationAsync(PdfFolder),
             
             [fileName],

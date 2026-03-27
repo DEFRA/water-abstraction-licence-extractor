@@ -30,6 +30,7 @@ public class PdfDataExtractorService(
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
+        DmsFileData? dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId)
@@ -56,6 +57,7 @@ public class PdfDataExtractorService(
             
             return await GetMatchesInternalAsync(
                 pdfFileName,
+                dmsDataForFile,
                 configuration,
                 previouslyParsedFiles,
                 processRunId);
@@ -68,6 +70,7 @@ public class PdfDataExtractorService(
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFileName,
+        DmsFileData? dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
@@ -77,6 +80,7 @@ public class PdfDataExtractorService(
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
+            dmsDataForFile?.FileId,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -106,7 +110,10 @@ public class PdfDataExtractorService(
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
-            ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
+            ServicesUsed = [
+                noOcrDataExtractorService.Name,
+                GeneralConstants.DocnetExtractorServiceName
+            ] // TODO, tidy this up
         };
         
         var isOcr = false;
@@ -946,7 +953,7 @@ public class PdfDataExtractorService(
             .Select(result => result.Text?.FirstOrDefault())
             .ToList();
         
-        var pathsToFetch = new List<string>();
+        var pathsToFetch = new List<(string RelatedFileName, string LicenceNumber)>();
         
         foreach (var licenceNumber in licenceNumbers)
         {
@@ -972,10 +979,10 @@ public class PdfDataExtractorService(
             }
 
             previouslyParsedFiles.Add(destinationFilenames);
-            pathsToFetch.Add(destinationFilenames);
+            pathsToFetch.Add((destinationFilenames, licenceNumber.Text));
         }
 
-        foreach (var relatedFileName in pathsToFetch)
+        foreach (var (relatedFileName, relatedLicenceNumber) in pathsToFetch)
         {
             if (!File.Exists(relatedFileName))
             {
@@ -986,8 +993,15 @@ public class PdfDataExtractorService(
             clonedConfig.AllDmsData = licenceNumberMapping;
             clonedConfig.RegionCode = regionCode;
             
+            FormattingHelper.GetDmsFileData(
+                relatedLicenceNumber,
+                regionCode,
+                lookupConfiguration.AllDmsData,
+                out var linkedDmsFileData);
+            
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
+                linkedDmsFileData,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
@@ -1133,7 +1147,7 @@ public class PdfDataExtractorService(
             var fullLine = line.Line;
             var breakLineLoop = false;
             
-            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
+            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed)) // TODO we should change this to just accept one label
             {
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;

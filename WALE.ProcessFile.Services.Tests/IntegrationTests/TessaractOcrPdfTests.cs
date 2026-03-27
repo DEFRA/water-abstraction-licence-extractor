@@ -124,6 +124,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         return await _pdfDataExtractorCombined1.GetMatchesAsync(
             fileName,
+            null,
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
             0);

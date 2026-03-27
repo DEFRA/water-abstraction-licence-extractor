@@ -75,6 +75,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            null,
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
             0);

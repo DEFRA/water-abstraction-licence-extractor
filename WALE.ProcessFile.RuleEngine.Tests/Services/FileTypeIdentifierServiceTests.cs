@@ -119,7 +119,12 @@ public class FileTypeIdentifierServiceTests
         await File.WriteAllTextAsync(tempFile, "temp content");
 
         var mockMatchesResult = CreateMockMatchesResult("This document contains license information");
-        _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(It.IsAny<string>(), It.IsAny<LookupConfiguration>(), It.IsAny<List<string>>(), It.IsAny<int>()))
+        _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(
+                It.IsAny<string>(),
+                null,
+                It.IsAny<LookupConfiguration>(),
+                It.IsAny<List<string>>(),
+                It.IsAny<int>()))
             .ReturnsAsync(mockMatchesResult);
 
         try

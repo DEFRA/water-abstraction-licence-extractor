@@ -170,7 +170,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
-            null,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder),
             [fileName],
             0);

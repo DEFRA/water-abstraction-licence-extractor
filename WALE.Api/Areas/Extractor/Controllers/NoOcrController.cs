@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -87,29 +88,4 @@ public class NoOcrController(
 
         return Ok();
     }
-}
-
-public class SaveNoOcrImagesMetadataRequest
-{
-    public string? imagesMetadata { get; set; }
-    public Guid fileId { get; set; }
-    public int processRunId { get; set; }
-    public string? noOcrServiceName  { get; set; }
-}
-
-public class SaveAllPagesTextRequest
-{
-    public string? documentLines{ get; set; }
-    public Guid fileId { get; set; }
-    public string? noOcrServiceName{ get; set; }
-    public int processRunId{ get; set; }
-}
-
-public class SaveNoOcrPageTextLinesRequest
-{
-    public Guid fileId { get; set; }
-    public int pageNumber { get; set; }
-    public string? noOcrServiceName  { get; set; }
-    public int processRunId { get; set; }
-    public string? pageLines  { get; set; }
 }

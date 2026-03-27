@@ -75,6 +75,11 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
+        if (dmsDataForFile?.FileId == null)
+        {
+            throw new ArgumentNullException(nameof(dmsDataForFile.FileId));
+        }
+        
         var dtStart = DateTime.Now;
         var additionalInformationStore = new Dictionary<string, object?>();
         

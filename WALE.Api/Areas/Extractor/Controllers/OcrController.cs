@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -15,9 +16,9 @@ public class OcrController(
 {
     [HttpGet]
     public async Task<IActionResult> GetImageTextAsync(
+        [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
-        [FromQuery] Guid fileId,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -36,9 +37,9 @@ public class OcrController(
     
     [HttpGet]
     public async Task<IActionResult> GetTemporaryImageTextAsync(
+        [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber,
-        [FromQuery] Guid fileId,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -58,8 +59,8 @@ public class OcrController(
     
     [HttpGet]
     public async Task<IActionResult> GetScreenshotTextAsync(
-        [FromQuery] int pageNumber,
         [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -77,8 +78,8 @@ public class OcrController(
     
     [HttpGet]
     public async Task<IActionResult> GetTemporaryScreenshotTextAsync(
-        [FromQuery] int pageNumber,
         [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
@@ -170,30 +171,5 @@ public class OcrController(
             request.pageLines!);
 
         return Ok();
-    }
-    
-    public class SaveOcrImageTextRequest
-    {
-        public Guid fileId { get; set; }
-        public int pageNumber { get; set; }
-        public int imageNumber { get; set; }
-        public string? ocrServiceName  { get; set; }
-        public int processRunId { get; set; }
-        public string? pageLines { get; set; }
-    }
-    
-    public class SaveTemporaryOcrImageTextRequest
-    {
-        public Guid fileId { get; set; }
-        
-        public int processRunId { get; set; }
-        
-        public int pageNumber { get; set; }
-        
-        public int imageNumber { get; set; }
-        
-        public string? ocrServiceName { get; set; }
-        
-        public string? text { get; set; }
     }
 }

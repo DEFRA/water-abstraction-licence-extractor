@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -116,35 +117,5 @@ public class ImagesController(
             request.processRunId);
 
         return Ok();
-    }
-    
-    public class SavePageScreenshotRequest
-    {
-        public int pageNumber { get; set; }
-        public string? noOcrServiceName { get; set; }
-        public Guid fileId { get; set; }
-        public byte[] data { get; set; } = [];
-        public int processRunId { get; set; }
-    }
-    
-    public class SaveImageOnPageRequest
-    {
-        public byte[] bytes { get; set; } = [];
-
-        public int width { get; set; }
-
-        public int height { get; set; }
-
-        public Guid fileId { get; set; }
-
-        public string? noOcrServiceName { get; set; }
-
-        public int imageNumber { get; set; }
-
-        public int pageNumber { get; set; }
-
-        public string? extension { get; set; }
-
-        public int processRunId { get; set; }
     }
 }

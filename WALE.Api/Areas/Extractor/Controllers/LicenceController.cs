@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -52,25 +53,9 @@ public class LicenceController(IOutputService outputService) : Controller
         
         await outputService.SaveLicenceSetsAsync(
             licenceSets,
-            request.fileId!,
+            request.fileId,
             request.processRunId);
 
         return Ok();
-    }
-    
-    public class SaveLicenceSetsRequest
-    {
-        public string? licenceSets { get; set; }
-        
-        public Guid fileId { get; set; }
-        
-        public int processRunId { get; set; }
-    }
-    
-    public class SaveLicenceRequest
-    {
-        public Guid fileId { get; set; }
-        public int processRunId { get; set; }
-        public string? licence  { get; set; }
     }
 }

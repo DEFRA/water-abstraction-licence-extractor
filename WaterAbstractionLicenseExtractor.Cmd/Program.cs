@@ -137,7 +137,6 @@ async Task ProgramAsync()
                     naldLicenceStatusData,
                     naldData,
                     outputService,
-                    cacheService,
                     pdfDataExtractors,
                     processRun,
                     extractorLock,
@@ -243,7 +242,6 @@ async Task ProgramAsync()
                         await outputService.UpdateLicenceAsync(
                             licenceLoop,
                             existingLicenceId,
-                            filename,
                             processRun.ProcessRunId);
 
                         loopLicenceId = existingLicenceId;
@@ -252,7 +250,6 @@ async Task ProgramAsync()
                     {
                         loopLicenceId = await outputService.SaveLicenceAsync(
                             licenceLoop,
-                            filename,
                             processRun.ProcessRunId);
                     }
 
@@ -280,7 +277,6 @@ async Task ProgramAsync()
                 {
                     var loopLicenceId = await outputService.SaveLicenceAsync(
                         licenceLoop,
-                        filename,
                         processRun.ProcessRunId);
 
                     savedLicenceFilenames.Add(filename, loopLicenceId);
@@ -301,7 +297,7 @@ async Task ProgramAsync()
 
                 await outputService.SaveLicenceSetsAsync(
                     newLicenceSetsLoop,
-                    licenceLoop.Filename!,
+                    licenceLoop.DmsFileId!.Value,
                     processRun.ProcessRunId);
             }
         }
@@ -548,7 +544,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
-    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,
     Lock extractorLock,
@@ -577,13 +572,14 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
+            dmsDataForFile,
             lookupConfig,
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesFull,
-            pdfFilename,
+            dmsDataForFile.FileId,
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
@@ -708,8 +704,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22723032G_"))
-        
+ //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
 //        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
@@ -780,7 +775,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 var naldLicenceRef = (string)row["License Number"];
 
                 var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : (Guid?)null;
+                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
 
                 var dmsFileData = new DmsFileData
                 {

@@ -11,7 +11,22 @@ const LinkedLicenceItem = ({ linkedLicence }: { linkedLicence: LinkedLicence }) 
     return (
         <div className="linked-licence-item" style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
             <p style={{ margin: '0 0 4px 0' }}><strong>Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
-            {linkedLicence.description && <p style={{ margin: '0', fontSize: '0.9rem', color: '#666' }}>{linkedLicence.description}</p>}
+            <p style={{ margin: '0 0 4px 0' }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
+            {linkedLicence.containedIn && linkedLicence.containedIn.length > 0 && (
+                <div style={{ marginTop: '8px', fontSize: '0.9rem' }}>
+                    <strong>Contained In:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px' }}>
+                        {linkedLicence.containedIn.map((section, idx) => (
+                            <li key={idx} style={{ marginBottom: '4px' }}>
+                                <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
+                                <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
+                                <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
+                                <div><strong>Line:</strong> {section.lineNumber ?? 'N/A'}, <strong>Page:</strong> {section.pageNumber ?? 'N/A'}</div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
         </div>
     );
 };
@@ -61,7 +76,6 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         return (
             <div className="linked-licences-view">
                 <div className="linked-licences-list">
-                    <h4 style={{ margin: '0 0 10px 0', borderBottom: '2px solid #ddd', paddingBottom: '5px' }}>Linked Licences (Outgoing)</h4>
                     {isLoading && <p>Loading linked licences...</p>}
                     {error && <p style={{ color: 'red' }}>{error}</p>}
                     {!isLoading && !error && linkedLicences.length === 0 && <p>No linked licences found.</p>}

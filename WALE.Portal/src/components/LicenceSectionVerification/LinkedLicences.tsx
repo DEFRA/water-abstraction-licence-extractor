@@ -1,5 +1,5 @@
 import { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { type Licence, type LinkedLicence } from "../../api/generated/apiClient.ts";
+import { type Licence, type LinkedLicence, LinkedLicenceDirection } from "../../api/generated/apiClient.ts";
 import { waleApiClient } from "../../api/apiClient.ts";
 import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./LicenceSection";
 
@@ -10,13 +10,15 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 const LinkedLicenceItem = ({ linkedLicence }: { linkedLicence: LinkedLicence }) => {
     return (
         <div className="linked-licence-item" style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-            <p style={{ margin: '0 0 4px 0' }}><strong>Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
+            <p style={{ margin: '0 0 4px 0' }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
             <p style={{ margin: '0 0 4px 0' }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
-            {linkedLicence.containedIn && linkedLicence.containedIn.length > 0 && (
+            {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === LinkedLicenceDirection.Outgoing).length > 0 && (
                 <div style={{ marginTop: '8px', fontSize: '0.9rem' }}>
                     <strong>Contained In:</strong>
                     <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px' }}>
-                        {linkedLicence.containedIn.map((section, idx) => (
+                        {linkedLicence.containedIn
+                            .filter(s => s.direction === LinkedLicenceDirection.Outgoing)
+                            .map((section, idx) => (
                             <li key={idx} style={{ marginBottom: '4px' }}>
                                 <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                 <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>

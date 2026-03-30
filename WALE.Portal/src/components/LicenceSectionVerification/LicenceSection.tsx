@@ -1,5 +1,5 @@
 import {type ReactElement, useState, useRef, cloneElement} from 'react';
-import { Client, LicenceSectionVerification } from '../api/generated/apiClient';
+import { Client, LicenceSectionVerification } from '../../api/generated/apiClient';
 
 /**
  * Interface that all licence section body components must implement.
@@ -52,14 +52,18 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
         }
     };
 
-    const handleEditToggle = async () => {
-        if (isEditing) {
-            await handleVerification('Override');
-            setIsEditing(false);
-        } else {
-            setIsEditing(true);
-            setIsOpen(true); // Ensure it's open when editing
-        }
+    const handleSaveEdit = async () => {
+        await handleVerification('Override');
+        setIsEditing(false);
+    };
+
+    const handleDiscardEdit = async () => {
+        setIsEditing(false);
+    };
+
+    const handleBeginEdit = async () => {
+        setIsOpen(true);
+        setIsEditing(true);
     };
 
     return (
@@ -78,11 +82,19 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             >
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
                 <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={handleEditToggle} style={{ marginRight: '5px' }}>
-                        {isEditing ? 'Save Override' : 'Edit'}
-                    </button>
-                    <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>
-                    <button onClick={() => handleVerification('Reject')}>Reject</button>
+                    {(isEditing &&
+                        <>
+                        <button onClick={handleSaveEdit} style={{ marginRight: '5px' }}>Save</button>
+                        <button onClick={handleDiscardEdit} style={{ marginRight: '5px' }}>Discard</button>
+                        </>
+                    )}
+                    {!isEditing && (
+                        <>
+                            <button onClick={handleBeginEdit} style={{ marginRight: '5px' }}>Override</button>
+                            <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>
+                            <button onClick={() => handleVerification('Reject')}>Reject</button>
+                        </>
+                    )}
                     <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>
             </div>

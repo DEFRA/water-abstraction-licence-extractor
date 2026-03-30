@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.Api.Areas.Public.Controllers;
 
@@ -10,7 +11,7 @@ namespace WALE.Api.Areas.Public.Controllers;
 public class LinkedLicencesController(IOutputService outputService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetAsync([FromQuery] string permitNumber)
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
             await outputService.GetLinkedLicencesAsync(permitNumber);
@@ -24,7 +25,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetIncomingAsync([FromQuery] string permitNumber)
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetIncomingAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
             await outputService.GetLinkedLicencesAsync(permitNumber);
@@ -41,7 +42,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetOutgoingAsync([FromQuery] string permitNumber)
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetOutgoingAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
             await outputService.GetLinkedLicencesAsync(permitNumber);

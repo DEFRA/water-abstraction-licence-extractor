@@ -1,4 +1,4 @@
-import type {Licence} from "../api/generated/apiClient.ts";
+import type {Licence} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
 

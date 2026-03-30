@@ -3,7 +3,7 @@ import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
-import {VerificationContent} from "./VerificationContent";
+import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
 import {getImageUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";

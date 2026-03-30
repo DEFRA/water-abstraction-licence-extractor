@@ -21,7 +21,7 @@ export class Client {
      * @param permitNumber (optional) 
      * @return OK
      */
-    get(permitNumber: string | undefined): Promise<void> {
+    getAll(permitNumber: string | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/Get?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
@@ -32,34 +32,45 @@ export class Client {
         let options_: RequestInit = {
             method: "GET",
             headers: {
+                "Accept": "application/json"
             }
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet(_response);
+            return this.processGetAll(_response);
         });
     }
 
-    protected processGet(response: Response): Promise<void> {
+    protected processGetAll(response: Response): Promise<LinkedLicence[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            return;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<void>(null as any);
+        return Promise.resolve<LinkedLicence[]>(null as any);
     }
 
     /**
      * @param permitNumber (optional) 
      * @return OK
      */
-    getIncoming(permitNumber: string | undefined): Promise<void> {
+    getIncoming(permitNumber: string | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/GetIncoming?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
@@ -70,6 +81,7 @@ export class Client {
         let options_: RequestInit = {
             method: "GET",
             headers: {
+                "Accept": "application/json"
             }
         };
 
@@ -78,26 +90,36 @@ export class Client {
         });
     }
 
-    protected processGetIncoming(response: Response): Promise<void> {
+    protected processGetIncoming(response: Response): Promise<LinkedLicence[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            return;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<void>(null as any);
+        return Promise.resolve<LinkedLicence[]>(null as any);
     }
 
     /**
      * @param permitNumber (optional) 
      * @return OK
      */
-    getOutgoing(permitNumber: string | undefined): Promise<void> {
+    getOutgoing(permitNumber: string | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/GetOutgoing?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
@@ -108,6 +130,7 @@ export class Client {
         let options_: RequestInit = {
             method: "GET",
             headers: {
+                "Accept": "application/json"
             }
         };
 
@@ -116,19 +139,29 @@ export class Client {
         });
     }
 
-    protected processGetOutgoing(response: Response): Promise<void> {
+    protected processGetOutgoing(response: Response): Promise<LinkedLicence[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            return;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<void>(null as any);
+        return Promise.resolve<LinkedLicence[]>(null as any);
     }
 
     /**
@@ -207,7 +240,7 @@ export class Client {
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    getAll(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    getAll2(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetAll?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
@@ -226,11 +259,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll(_response);
+            return this.processGetAll2(_response);
         });
     }
 
-    protected processGetAll(response: Response): Promise<void> {
+    protected processGetAll2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -492,7 +525,7 @@ export class Client {
      * @param processRunId (optional) 
      * @return OK
      */
-    getAll2(processRunId: number | undefined): Promise<void> {
+    getAll3(processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetAll?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
@@ -507,11 +540,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll2(_response);
+            return this.processGetAll3(_response);
         });
     }
 
-    protected processGetAll2(response: Response): Promise<void> {
+    protected processGetAll3(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -717,7 +750,7 @@ export class Client {
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    get2(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    get(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Metadata/Get?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
@@ -736,11 +769,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet2(_response);
+            return this.processGet(_response);
         });
     }
 
-    protected processGet2(response: Response): Promise<void> {
+    protected processGet(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -759,7 +792,7 @@ export class Client {
      * @param regionCode (optional) 
      * @return OK
      */
-    getAll3(regionCode: number | undefined): Promise<void> {
+    getAll4(regionCode: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/GetAll?";
         if (regionCode === null)
             throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
@@ -774,11 +807,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll3(_response);
+            return this.processGetAll4(_response);
         });
     }
 
-    protected processGetAll3(response: Response): Promise<void> {
+    protected processGetAll4(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

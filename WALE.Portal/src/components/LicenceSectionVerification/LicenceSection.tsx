@@ -1,5 +1,6 @@
 import {type ReactElement, useState, useRef, cloneElement} from 'react';
-import { Client, LicenceSectionVerification } from '../../api/generated/apiClient';
+import { LicenceSectionVerification } from '../../api/generated/apiClient';
+import { waleApiClient } from '../../api/apiClient';
 
 /**
  * Interface that all licence section body components must implement.
@@ -36,7 +37,6 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             console.log(`Creating ${verificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
             
             try {
-                const client = new Client();
                 const verification = new LicenceSectionVerification({
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
@@ -45,7 +45,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     verificationType: verificationType
                 });
 
-                await client.createLicenceSectionVerification(verification);
+                await waleApiClient.createLicenceSectionVerification(verification);
             } catch (error) {
                 console.error(`Error saving ${verificationType} verification:`, error);
             }

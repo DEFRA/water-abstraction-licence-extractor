@@ -1,5 +1,6 @@
 import { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { type Licence, Client, type LinkedLicence } from "../../api/generated/apiClient.ts";
+import { type Licence, type LinkedLicence } from "../../api/generated/apiClient.ts";
+import { waleApiClient } from "../../api/apiClient.ts";
 import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./LicenceSection";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
@@ -9,7 +10,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 const LinkedLicenceItem = ({ linkedLicence }: { linkedLicence: LinkedLicence }) => {
     return (
         <div className="linked-licence-item" style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-            <p style={{ margin: '0 0 4px 0' }}><strong>Licence Number:</strong> {linkedLicence.licenceNumber?.value || 'N/A'}</p>
+            <p style={{ margin: '0 0 4px 0' }}><strong>Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
             {linkedLicence.description && <p style={{ margin: '0', fontSize: '0.9rem', color: '#666' }}>{linkedLicence.description}</p>}
         </div>
     );
@@ -36,8 +37,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setIsLoading(true);
                 setError(null);
                 try {
-                    const client = new Client();
-                    const results = await client.getOutgoing(permitNumber);
+                    const results = await waleApiClient.getOutgoing(permitNumber);
                     setLinkedLicences(results || []);
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);

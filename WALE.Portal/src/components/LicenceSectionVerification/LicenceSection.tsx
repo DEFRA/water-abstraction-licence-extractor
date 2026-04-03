@@ -29,6 +29,7 @@ interface LicenceSectionProps {
 export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [isEditing, setIsEditing] = useState(false);
+    const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
     const handleVerification = async (verificationType: string) => {
@@ -59,6 +60,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
 
     const handleDiscardEdit = async () => {
         setIsEditing(false);
+        setResetKey(prev => prev + 1);
     };
 
     const handleBeginEdit = async () => {
@@ -102,7 +104,8 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                 <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
                     {cloneElement(children, { 
                         isEditing, 
-                        ref: bodyRef 
+                        ref: bodyRef,
+                        key: resetKey
                     } as any)}
                 </div>
             )}

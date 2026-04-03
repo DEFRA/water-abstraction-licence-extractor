@@ -6,10 +6,11 @@ import { LinkedLicenceItem } from "./LinkedLicenceItem";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence: Licence;
+    onJumpToPage?: (pageNumber: number) => void;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, isEditing }, ref) => {
+    ({ licence, isEditing, onJumpToPage }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 isEditing={true}
                                 onUpdate={(updated) => handleUpdateLicence(index, updated)}
                                 onRemove={() => handleRemoveLicence(index)}
+                                onJumpToPage={onJumpToPage}
                             />
                         ))}
                     </div>
@@ -95,7 +97,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     {error && <p style={{ color: 'red' }}>{error}</p>}
                     {!isLoading && !error && linkedLicences.length === 0 && <p>No linked licences found.</p>}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
-                        <LinkedLicenceItem key={index} linkedLicence={ll} />
+                        <LinkedLicenceItem key={index} linkedLicence={ll} onJumpToPage={onJumpToPage} />
                     ))}
                 </div>
             </div>

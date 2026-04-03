@@ -5,9 +5,10 @@ import {LinkedLicences} from "./LinkedLicences";
 interface VerificationContentProps {
     licence: Licence;
     processRunId: number;
+    onJumpToPage: (pageNumber: number) => void;
 }
 
-export function VerificationContent({ licence, processRunId }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage }: VerificationContentProps) {
     return (
         <div id="properties" style={{ padding: '10px' }}>
             <LicenceSection 
@@ -18,6 +19,7 @@ export function VerificationContent({ licence, processRunId }: VerificationConte
                 <LinkedLicences 
                     licence={licence} 
                     isEditing={false} // This will be overridden by LicenceSection's React.cloneElement
+                    onJumpToPage={onJumpToPage}
                 />
             </LicenceSection>
         </div>

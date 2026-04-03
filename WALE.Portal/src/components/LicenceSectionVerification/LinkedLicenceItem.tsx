@@ -5,13 +5,15 @@ interface LinkedLicenceItemProps {
     isEditing?: boolean;
     onUpdate?: (updated: LinkedLicence) => void;
     onRemove?: () => void;
+    onJumpToPage?: (pageNumber: number) => void;
 }
 
 export const LinkedLicenceItem = ({ 
     linkedLicence, 
     isEditing, 
     onUpdate, 
-    onRemove 
+    onRemove,
+    onJumpToPage
 }: LinkedLicenceItemProps) => {
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
@@ -33,9 +35,7 @@ export const LinkedLicenceItem = ({
                 direction: LinkedLicenceDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
-                isBecauseOfAggregate: false,
-                lineNumber: 0,
-                pageNumber: 0
+                isBecauseOfAggregate: false
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
             onUpdate(new LinkedLicence({ ...linkedLicence, containedIn: newSections }));
@@ -113,34 +113,35 @@ export const LinkedLicenceItem = ({
                                             style={{ width: '100%', padding: '2px' }}
                                         />
                                     </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem' }}>Line Number:</label>
-                                        <input 
-                                            type="number" 
-                                            value={section.lineNumber ?? ''} 
-                                            onChange={(e) => handleSectionChange(idx, 'lineNumber', parseInt(e.target.value) || 0)}
-                                            style={{ width: '100%', padding: '2px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem' }}>Page Number:</label>
-                                        <input 
-                                            type="number" 
-                                            value={section.pageNumber ?? ''} 
-                                            onChange={(e) => handleSectionChange(idx, 'pageNumber', parseInt(e.target.value) || 0)}
-                                            style={{ width: '100%', padding: '2px' }}
-                                        />
-                                    </div>
                                     <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={!!section.isBecauseOfAggregate} 
-                                                onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
-                                                style={{ marginRight: '4px' }}
-                                            />
-                                            Because of Aggregate
-                                        </label>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', marginRight: '16px' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={!!section.isBecauseOfAggregate} 
+                                                    onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
+                                                    style={{ marginRight: '4px' }}
+                                                />
+                                                Because of Aggregate
+                                            </label>
+                                            {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
+                                                <button
+                                                    onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
+                                                    title={`Jump to page ${section.pageNumber}`}
+                                                    style={{ 
+                                                        background: 'none', 
+                                                        border: 'none', 
+                                                        cursor: 'pointer', 
+                                                        fontSize: '1.2rem',
+                                                        padding: '0 4px',
+                                                        display: 'flex',
+                                                        alignItems: 'center'
+                                                    }}
+                                                >
+                                                    📄
+                                                </button>
+                                            )}
+                                        </div>
                                         <button 
                                             onClick={() => handleRemoveSection(idx)}
                                             style={{ padding: '2px 6px', fontSize: '0.7rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
@@ -171,8 +172,26 @@ export const LinkedLicenceItem = ({
                             <li key={idx} style={{ marginBottom: '4px' }}>
                                 <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                 <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
-                                <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
-                                <div><strong>Line:</strong> {section.lineNumber ?? 'N/A'}, <strong>Page:</strong> {section.pageNumber ?? 'N/A'}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
+                                    {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
+                                        <button
+                                            onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
+                                            title={`Jump to page ${section.pageNumber}`}
+                                            style={{ 
+                                                background: 'none', 
+                                                border: 'none', 
+                                                cursor: 'pointer', 
+                                                fontSize: '1rem',
+                                                padding: 0,
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            📄
+                                        </button>
+                                    )}
+                                </div>
                             </li>
                         ))}
                     </ul>

@@ -302,6 +302,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                                 <VerificationContent
                                     licence={reportData2}
                                     processRunId={processRunId}
+                                    onJumpToPage={jumpToPage}
                                 />
                             </div>
                         )}

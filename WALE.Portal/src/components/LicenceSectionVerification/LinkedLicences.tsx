@@ -65,7 +65,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         if (isEditing) {
             return (
-                <div className="linked-licences-edit">
+                <div className="linked-licences-edit" style={{ padding: '8px' }}>
                     <div className="linked-licences-list">
                         {linkedLicences.map((ll, index) => (
                             <LinkedLicenceItem 
@@ -78,10 +78,20 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             />
                         ))}
                     </div>
-                    <div style={{ marginTop: '16px', padding: '8px', borderTop: '1px solid #eee' }}>
+                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
                         <button 
                             onClick={handleAddLicence}
-                            style={{ width: '100%', padding: '8px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ 
+                                padding: '10px 24px', 
+                                backgroundColor: '#1890ff', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '4px', 
+                                cursor: 'pointer', 
+                                fontWeight: 'bold',
+                                fontSize: '0.9rem',
+                                boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
+                            }}
                         >
                             + Add Linked Licence
                         </button>
@@ -91,11 +101,11 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         }
 
         return (
-            <div className="linked-licences-view">
+            <div className="linked-licences-view" style={{ padding: '8px' }}>
                 <div className="linked-licences-list">
-                    {isLoading && <p>Loading linked licences...</p>}
-                    {error && <p style={{ color: 'red' }}>{error}</p>}
-                    {!isLoading && !error && linkedLicences.length === 0 && <p>No linked licences found.</p>}
+                    {isLoading && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Loading linked licences...</p>}
+                    {error && <p style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</p>}
+                    {!isLoading && !error && linkedLicences.length === 0 && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No linked licences found.</p>}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
                         <LinkedLicenceItem key={index} linkedLicence={ll} onJumpToPage={onJumpToPage} />
                     ))}

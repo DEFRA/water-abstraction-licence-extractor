@@ -51,40 +51,40 @@ export const LinkedLicenceItem = ({
 
     if (isEditing) {
         return (
-            <div className="linked-licence-item-edit" style={{ padding: '12px', borderBottom: '1px solid #ccc', marginBottom: '12px', backgroundColor: '#f9f9f9' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <div style={{ flex: 1, marginRight: '8px' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Linked Licence Number:</label>
+            <div className="linked-licence-item-edit" style={{ padding: '16px', border: '1px solid #d9d9d9', borderRadius: '4px', marginBottom: '16px', backgroundColor: '#fafafa' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>Linked Licence Number:</label>
                         <input 
                             type="text" 
                             value={linkedLicence.licenceNumber || ''} 
                             onChange={(e) => handleChange('licenceNumber', e.target.value)}
-                            style={{ width: '100%', padding: '4px' }}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
                         />
                     </div>
-                    <div style={{ flex: 1, marginRight: '8px' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Permit Number:</label>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>Permit Number:</label>
                         <input 
                             type="text" 
                             value={linkedLicence.permitNumber || ''} 
                             onChange={(e) => handleChange('permitNumber', e.target.value)}
-                            style={{ width: '100%', padding: '4px' }}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
                         />
                     </div>
                     <button 
                         onClick={onRemove}
-                        style={{ alignSelf: 'flex-end', padding: '4px 8px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{ marginTop: '24px', padding: '6px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
                         Remove Licence
                     </button>
                 </div>
 
-                <div style={{ marginTop: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <div style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <strong style={{ fontSize: '0.9rem' }}>Contained In (Sections):</strong>
                         <button 
                             onClick={handleAddSection}
-                            style={{ padding: '2px 8px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            style={{ padding: '4px 12px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                         >
                             + Add Section
                         </button>
@@ -93,34 +93,34 @@ export const LinkedLicenceItem = ({
                         {(linkedLicence.containedIn || [])
                             .filter(s => s.direction === LinkedLicenceDirection.Outgoing)
                             .map((section, idx) => (
-                            <li key={idx} style={{ marginBottom: '12px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: 'white' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <li key={idx} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: 'white' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem' }}>Section Name:</label>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Section Name:</label>
                                         <input 
                                             type="text" 
                                             value={section.sectionName || ''} 
                                             onChange={(e) => handleSectionChange(idx, 'sectionName', e.target.value)}
-                                            style={{ width: '100%', padding: '2px' }}
+                                            style={{ width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem' }}>Link Reason:</label>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Link Reason:</label>
                                         <input 
                                             type="text" 
                                             value={section.linkReason || ''} 
                                             onChange={(e) => handleSectionChange(idx, 'linkReason', e.target.value)}
-                                            style={{ width: '100%', padding: '2px' }}
+                                            style={{ width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
                                         />
                                     </div>
-                                    <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', marginRight: '16px' }}>
+                                    <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                                                 <input 
                                                     type="checkbox" 
                                                     checked={!!section.isBecauseOfAggregate} 
                                                     onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
-                                                    style={{ marginRight: '4px' }}
+                                                    style={{ marginRight: '6px' }}
                                                 />
                                                 Because of Aggregate
                                             </label>
@@ -129,22 +129,24 @@ export const LinkedLicenceItem = ({
                                                     onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
                                                     title={`Jump to page ${section.pageNumber}`}
                                                     style={{ 
-                                                        background: 'none', 
-                                                        border: 'none', 
+                                                        background: '#f0f0f0', 
+                                                        border: '1px solid #d9d9d9', 
+                                                        borderRadius: '4px',
                                                         cursor: 'pointer', 
-                                                        fontSize: '1.2rem',
-                                                        padding: '0 4px',
+                                                        fontSize: '1rem',
+                                                        padding: '2px 6px',
                                                         display: 'flex',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        gap: '4px'
                                                     }}
                                                 >
-                                                    📄
+                                                    📄 <span style={{ fontSize: '0.7rem' }}>Page {section.pageNumber}</span>
                                                 </button>
                                             )}
                                         </div>
                                         <button 
                                             onClick={() => handleRemoveSection(idx)}
-                                            style={{ padding: '2px 6px', fontSize: '0.7rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                            style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                                         >
                                             Remove Section
                                         </button>
@@ -159,20 +161,24 @@ export const LinkedLicenceItem = ({
     }
 
     return (
-        <div className="linked-licence-item" style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
-            <p style={{ margin: '0 0 4px 0' }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
-            <p style={{ margin: '0 0 4px 0' }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
+        <div className="linked-licence-item" style={{ padding: '12px', borderBottom: '1px solid #eee' }}>
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                <p style={{ margin: 0 }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
+                <p style={{ margin: 0 }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
+            </div>
             {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === LinkedLicenceDirection.Outgoing).length > 0 && (
-                <div style={{ marginTop: '8px', fontSize: '0.9rem' }}>
-                    <strong>Contained In:</strong>
-                    <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px' }}>
+                <div style={{ marginTop: '12px', fontSize: '0.9rem' }}>
+                    <strong style={{ display: 'block', marginBottom: '8px' }}>Contained In:</strong>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                         {linkedLicence.containedIn
                             .filter(s => s.direction === LinkedLicenceDirection.Outgoing)
                             .map((section, idx) => (
-                            <li key={idx} style={{ marginBottom: '4px' }}>
-                                <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
-                                <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <li key={idx} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '4px' }}>
+                                    <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
+                                    <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                     {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                         <button
@@ -180,15 +186,17 @@ export const LinkedLicenceItem = ({
                                             title={`Jump to page ${section.pageNumber}`}
                                             style={{ 
                                                 background: 'none', 
-                                                border: 'none', 
+                                                border: '1px solid #d9d9d9', 
+                                                borderRadius: '4px',
                                                 cursor: 'pointer', 
-                                                fontSize: '1rem',
-                                                padding: 0,
+                                                fontSize: '0.85rem',
+                                                padding: '2px 6px',
                                                 display: 'flex',
-                                                alignItems: 'center'
+                                                alignItems: 'center',
+                                                gap: '4px'
                                             }}
                                         >
-                                            📄
+                                            📄 <span style={{ fontSize: '0.75rem' }}>Page {section.pageNumber}</span>
                                         </button>
                                     )}
                                 </div>

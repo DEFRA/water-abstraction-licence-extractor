@@ -27,7 +27,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 processRun.Description,
-                StartDateTimeUtc = processRun.StartDateTimeUtc,
+                processRun.StartDateTimeUtc,
                 processRun.NumberOfFiles
             });
 
@@ -196,9 +196,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                PageNumber = request.PageNumber,
-                NoOcrServiceName = request.NoOcrServiceName,
+                request.Filename,
+                request.PageNumber,
+                request.NoOcrServiceName,
                 Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
@@ -222,8 +222,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
         new
             {
-                Filename = request.Filename,
-                NoOcrServiceName = request.NoOcrServiceName,
+                request.Filename,
+                request.NoOcrServiceName,
                 Response = imagesMetadataStr,
                 DateTimeUtc = DateTime.UtcNow,
                 ProcessRunId = processRunId
@@ -244,8 +244,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                NoOcrServiceName = request.NoOcrServiceName,
+                request.Filename,
+                request.NoOcrServiceName,
                 Response = dataStr,
                 DateTimeUtc = DateTime.UtcNow,
                 ProcessRunId = processRunId
@@ -328,11 +328,11 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                OcrServiceName = request.OcrServiceName,
+                request.Filename,
+                request.OcrServiceName,
                 Data = data,
-                ImageNumber = request.ImageNumber,
-                PageNumber = request.PageNumber,
+                request.ImageNumber,
+                request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -352,10 +352,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                OcrServiceName = request.OcrServiceName,
+                request.Filename,
+                request.OcrServiceName,
                 Data = data,
-                PageNumber = request.PageNumber,
+                request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -375,11 +375,11 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                OcrServiceName = request.OcrServiceName,
+                request.Filename,
+                request.OcrServiceName,
                 Data = data,
-                ImageNumber = request.ImageNumber,
-                PageNumber = request.PageNumber,
+                request.ImageNumber,
+                request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -399,10 +399,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
-                OcrServiceName = request.OcrServiceName,
+                request.Filename,
+                request.OcrServiceName,
                 Data = data,
-                PageNumber = request.PageNumber,
+                request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });

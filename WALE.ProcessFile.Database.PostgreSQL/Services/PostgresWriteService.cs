@@ -27,7 +27,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 processRun.Description,
-                processRun.StartDateTimeUtc,
+                StartDateTimeUtc = processRun.StartDateTimeUtc,
                 processRun.NumberOfFiles
             });
 
@@ -197,8 +197,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.PageNumber,
-                request.NoOcrServiceName,
+                PageNumber = request.PageNumber,
+                NoOcrServiceName = request.NoOcrServiceName,
                 Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
@@ -223,7 +223,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         new
             {
                 Filename = request.Filename,
-                request.NoOcrServiceName,
+                NoOcrServiceName = request.NoOcrServiceName,
                 Response = imagesMetadataStr,
                 DateTimeUtc = DateTime.UtcNow,
                 ProcessRunId = processRunId
@@ -245,7 +245,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.NoOcrServiceName,
+                NoOcrServiceName = request.NoOcrServiceName,
                 Response = dataStr,
                 DateTimeUtc = DateTime.UtcNow,
                 ProcessRunId = processRunId
@@ -329,10 +329,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.OcrServiceName,
+                OcrServiceName = request.OcrServiceName,
                 Data = data,
-                request.ImageNumber,
-                request.PageNumber,
+                ImageNumber = request.ImageNumber,
+                PageNumber = request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -353,9 +353,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.OcrServiceName,
+                OcrServiceName = request.OcrServiceName,
                 Data = data,
-                request.PageNumber,
+                PageNumber = request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -376,10 +376,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.OcrServiceName,
+                OcrServiceName = request.OcrServiceName,
                 Data = data,
-                request.ImageNumber,
-                request.PageNumber,
+                ImageNumber = request.ImageNumber,
+                PageNumber = request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -400,9 +400,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Filename = request.Filename,
-                request.OcrServiceName,
+                OcrServiceName = request.OcrServiceName,
                 Data = data,
-                request.PageNumber,
+                PageNumber = request.PageNumber,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });
@@ -579,7 +579,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 verification.LicenceSectionName,
                 verification.LicenceSectionValue,
                 verification.VerificationType,
-                DateTime.UtcNow
+                CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
 

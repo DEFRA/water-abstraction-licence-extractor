@@ -265,4 +265,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId)
+    {
+        return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
+    }
+
+    public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
+    {
+        return Task.FromResult(0);
+    }
 }

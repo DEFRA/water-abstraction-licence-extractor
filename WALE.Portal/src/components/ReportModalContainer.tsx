@@ -1,6 +1,6 @@
 import {ReportContent} from './ReportContent';
 import {LicenceSetReportContent} from './LicenceSetReportContent';
-import {DraggableModal} from "./DraggableModal.tsx";
+import {DraggableModal} from "./DraggableModal";
 import type {ReportModal} from "../utils/types.ts";
 
 interface ReportModalContainerProps {
@@ -34,7 +34,11 @@ export function ReportModalContainer({
                     onPositionChange={(pos) => onPositionChange(modal.id, pos)}
                 >
                     {modal.type === 'report' ? (
-                        <ReportContent filename={modal.filename} onOpenLinkedLicence={onOpenLinkedLicence} />
+                        <ReportContent 
+                            filename={modal.filename} 
+                            onOpenLinkedLicence={onOpenLinkedLicence} 
+                            processRunId={modal.processRunId}
+                        />
                     ) : (
                         <LicenceSetReportContent
                             filename={modal.filename}

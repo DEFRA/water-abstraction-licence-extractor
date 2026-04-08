@@ -85,4 +85,6 @@ public interface IDatabaseReadService
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
+
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId);
 }

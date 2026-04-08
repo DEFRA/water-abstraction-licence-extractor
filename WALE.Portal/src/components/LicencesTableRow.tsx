@@ -1,9 +1,9 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
-import UnorderedListOfStrings from "./UnorderedListOfStrings.tsx";
+import UnorderedListOfStrings from "./UnorderedListOfStrings";
+import LicenceSetsList from "./LicenceSetsList";
+import LinkedLicencesList from "./LinkedLicencesList";
 import {getThumbnailUrl} from "../utils/images.ts";
-import LicenceSetsList from "./LicenceSetsList.tsx";
-import LinkedLicencesList from "./LinkedLicencesList.tsx";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;

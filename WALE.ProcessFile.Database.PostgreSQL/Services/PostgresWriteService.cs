@@ -196,7 +196,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.PageNumber,
                 request.NoOcrServiceName,
                 Data = data,
@@ -222,7 +222,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
         new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.NoOcrServiceName,
                 Response = imagesMetadataStr,
                 DateTimeUtc = DateTime.UtcNow,
@@ -244,7 +244,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.NoOcrServiceName,
                 Response = dataStr,
                 DateTimeUtc = DateTime.UtcNow,
@@ -328,7 +328,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -352,7 +352,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,
@@ -375,7 +375,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.ImageNumber,
@@ -399,7 +399,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                Filename = request.Filename,
+                request.Filename,
                 request.OcrServiceName,
                 Data = data,
                 request.PageNumber,
@@ -578,6 +578,31 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 newDmsFileIdInformation.ProcessRunId,
                 newDmsFileIdInformation.Status,
                 newDmsFileIdInformation.StatusDateUtc
+            });
+    }
+
+    
+    public async Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc)
+                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionValue AS jsonb), @VerificationType, @CreatedDateTimeUtc)
+                           RETURNING licence_section_verification_id
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                verification.LicenceFileId,
+                verification.ProcessRunId,
+                verification.LicenceSectionName,
+                verification.LicenceSectionValue,
+                verification.VerificationType,
+                CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
 

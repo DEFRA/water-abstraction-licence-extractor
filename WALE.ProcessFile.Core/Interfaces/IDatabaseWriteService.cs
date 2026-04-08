@@ -67,5 +67,7 @@ public interface IDatabaseWriteService
     
     Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
 
+    Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
+
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 }

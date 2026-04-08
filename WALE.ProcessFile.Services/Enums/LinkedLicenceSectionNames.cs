@@ -2,8 +2,6 @@ namespace WALE.ProcessFile.Services.Enums;
 
 public static class LinkedLicenceSectionNames
 {
-    public static readonly string IncomingLink = "IncomingLink";
-
     public static readonly string FurtherConditions = "FurtherConditions";
     
     public static readonly string FurtherProvisions = "FurtherProvisions";    

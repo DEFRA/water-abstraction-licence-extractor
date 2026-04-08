@@ -15,6 +15,28 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseReadService
 {
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               file_id,
+                               dms_file_path,
+                               process_run_id,
+                               status,
+                               status_date_utc
+                           FROM sharepoint_fileid
+                           """;
+
+        var results = await QueryAsync<DmsFileIdInformation>(
+            connection,
+            sql,
+            0,
+            new { });
+        
+        return results.ToList();
+    }
+
     public async Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
@@ -1058,6 +1080,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            """;
 
+        // TODO check if this should  filter out to only none-revoked etc...
+        
         return (await QueryAsync<NaldAbstractionLicenceDataLine>(
             connection,
             sql,
@@ -1282,6 +1306,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new { PermitNumber = permitNumber });
+        
         if (result == null)
         {
             return null;
@@ -1290,6 +1315,47 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         return data;
+    }
+
+    public async Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT DISTINCT
+                               (SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AABL_ID" = NALD_ABS_LIC_VERSIONS."AABL_ID"
+                                   AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                   AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
+                                   AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                               ) as "INCR_NO"
+                           FROM nald."NALD_ABS_LICENCES" NALD_ABS_LICENCES
+                           INNER JOIN nald."NALD_ABS_LIC_VERSIONS" NALD_ABS_LIC_VERSIONS
+                               ON NALD_ABS_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_ABS_LICENCES."FGAC_REGION_CODE"
+                               AND NALD_ABS_LIC_VERSIONS."AABL_ID" = NALD_ABS_LICENCES."ID"
+                           WHERE
+                               REPLACE(REPLACE(REPLACE(REPLACE(NALD_ABS_LICENCES."LIC_NO", '/', ''), '*', ''), '.', ''), ' ', '') = @PermitNumber
+                               AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = @IssueNumber
+                               AND NALD_ABS_LIC_VERSIONS."WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN');
+                           """;
+        
+        var result =  await QuerySingleOrDefaultAsync<int?>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                PermitNumber = permitNumber,
+                IssueNumber = issueNumber
+            });
+        
+        if (result == null)
+        {
+            return -1;
+        }
+
+        return result.Value;
     }
 
     public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId)
@@ -1320,13 +1386,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
             NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
             var result = await connection.QuerySingleOrDefaultAsync<T>(sql, param);
-            var duration =  DateTime.Now - dtStart;
+            var duration = DateTime.Now - dtStart;
 
             if (duration.TotalSeconds > 1)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -1337,14 +1404,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
-            
+
             if (retryNumber > RetryHelper.MaxRetries)
             {
                 throw;
             }
 
             ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - QuerySingleOrDefaultAsync retrying");
-            
+
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }

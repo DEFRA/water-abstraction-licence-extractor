@@ -116,4 +116,9 @@ public interface ICacheService
             HashSet<(string, int)> Revoked,
             HashSet<(string, int)> Impoundment)> 
         GetNaldLicenceNumbersAsync(short? regionCode);
+
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
+    
+    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
 }

@@ -203,7 +203,13 @@ public static class ApplicableToMost
                 var isLast = textBeforeAtAndAfterLabel.Last() == item;
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
-                var (anyIsLicenceNumber, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
+                var (anyIsLicenceNumber, licenceNumberLines) =
+                    LicenceNumber.AnyIsLicenceNumber(
+                        [documentLine],
+                        request.label!,
+                        request.isOcr,
+                        request.additionalInformationStore);
+                
                 if (!isTableLine && anyIsLicenceNumber)
                 {
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
@@ -252,40 +258,48 @@ public static class ApplicableToMost
             {
                 // TODO can swap this out now for shared method in Base
                 
-                var (anyIsLicenceNumber2, licenceNumberLines2) = LicenceNumber.AnyIsLicenceNumber([documentLine], request.label!, request.isOcr);
-                if (anyIsLicenceNumber2)
-                {
-                    licenceNumberLines2 = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines2);
-                    var returnList = new List<LabelGroupResult>();
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines2)
-                    {
-                        var stripped = FormattingHelper.StripForComparison(licenceNumberLine.Text, request.regionCode);
-                        
-                        if (request.licenceNumberMapping?.TryGetValue(stripped!, out var dmsFileData) != true)
-                        {
-                            continue;
-                        }
+                var (anyIsLicenceNumberF, licenceNumberLinesF) =
+                    LicenceNumber.AnyIsLicenceNumber(
+                        [documentLine],
+                        request.label!,
+                        request.isOcr,
+                        request.additionalInformationStore);
 
-                        var coords = documentLine
-                            .Columns
-                            .First()
-                            .Words
-                            .First()
-                            .Coordinates;
-                        
-                        licenceNumberLine.Columns[0].Words.Clear();
-                        licenceNumberLine.Columns[0].Words.AddRange(
-                            DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        
-                        returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
-                    }
-                    
-                    return CheckContains(request.label, returnList);
+                if (!anyIsLicenceNumberF)
+                {
+                    continue;
                 }
-                
-                continue;
+
+                licenceNumberLinesF = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLinesF);
+                var returnList = new List<LabelGroupResult>();
+                    
+                foreach (var licenceNumberLine in licenceNumberLinesF)
+                {
+                    if (!FormattingHelper.GetDmsFileData(
+                            licenceNumberLine.Text,
+                            request.regionCode,
+                            request.licenceNumberMapping,
+                            out var dmsFileData))
+                    {
+                        continue;
+                    }
+
+                    var coords = documentLine
+                        .Columns
+                        .First()
+                        .Words
+                        .First()
+                        .Coordinates;
+                        
+                    licenceNumberLine.Columns[0].Words.Clear();
+                    licenceNumberLine.Columns[0].Words.AddRange(
+                        DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
+                    labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                        
+                    returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
+                }
+                    
+                return CheckContains(request.label, returnList);
             }
 
             if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))

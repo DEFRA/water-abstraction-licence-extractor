@@ -558,6 +558,29 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 DateTimeUtc = DateTime.UtcNow
             });
     }
+
+    public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO sharepoint_fileid (file_id, dms_file_path, process_run_id, status, status_date_utc) 
+                           VALUES (@FileId, @DmsFilePath, @ProcessRunId, @Status, @StatusDateUtc);
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                newDmsFileIdInformation.FileId,
+                newDmsFileIdInformation.DmsFilePath,
+                newDmsFileIdInformation.ProcessRunId,
+                newDmsFileIdInformation.Status,
+                newDmsFileIdInformation.StatusDateUtc
+            });
+    }
+
     
     public async Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {

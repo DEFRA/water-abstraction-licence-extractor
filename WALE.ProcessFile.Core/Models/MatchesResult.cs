@@ -11,4 +11,6 @@ public class MatchesResult
     public IReadOnlyList<PdfPage> Pages { get; set; } = [];
     
     public string? ErrorMessage { get; set; }
+
+    public Dictionary<string, object?>? AdditionalInformation { get; set; } = [];
 }

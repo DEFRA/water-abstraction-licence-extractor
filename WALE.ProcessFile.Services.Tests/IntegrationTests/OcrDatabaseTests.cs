@@ -74,8 +74,10 @@ public class OcrDatabaseTests
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 _fileLicenceMapping,
+                [],                
                 await CompanyName.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
+                CacheService,
                 3),
             [fileName],
             0);

@@ -15,11 +15,20 @@ public class Licence
         }
     }
     
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceStatus Status { get; init; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public NaldLicenceStatus NaldStatus { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LicenceType LicenceType { get; set; }
     
     public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
     public string? DmsPermitNumber { get; set; }
+    
+    public string? DmsPath { get; set; }
     
     public Guid? DmsFileId { get; set; }
     
@@ -44,12 +53,4 @@ public class Licence
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
-    
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public NaldLicenceStatus NaldStatus { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public LicenceType LicenceType { get; set; }
-    
-    public string? DmsPath { get; set; }
 }

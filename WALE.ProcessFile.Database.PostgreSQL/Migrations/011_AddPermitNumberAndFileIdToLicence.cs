@@ -15,6 +15,6 @@ public class AddPermitNumberAndFileIdToLicence : Migration
     public override void Down()
     {
         Delete.Column("permit_number").FromTable("licence");
-        Delete.Column("file_id").FromTable("licence");        
+        Delete.Column("file_id").FromTable("licence");
     }
 }

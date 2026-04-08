@@ -61,14 +61,17 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
+            [],
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
+            CacheService,
             regionCode);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
+        if (number == 5) pdfFolder = TestConfig.PdfFolder5;
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
@@ -236,5 +239,32 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
+    }
+    
+    [Fact]
+    public async Task When_LicenceNumberWithMissingSpaceInFront()
+    {
+        // Arrange
+        await SetupLicenceNumbersAsync(3);
+        const string filename = "22712254__2-27-12-254 6960530.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3, 5);
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            new NaldLicenceStatusData(),
+            [],
+            _pdfDataExtractor,
+            0,
+            await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
+        
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+
+        Assert.Equal("2/27/12/254", agreedSchemaLicence.LicenceNumber?.Value);
+        Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
     }
 }

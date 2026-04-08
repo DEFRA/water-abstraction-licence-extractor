@@ -10,8 +10,6 @@ public class NaldLicencePointDataLine
     // Properties from NALD_ABS_PURP_POINTS table
     public required int AabpId { get; set; }
     public required int AaipId { get; set; }
-    public string? AmoaCode { get; set; }
-    public string? Notes { get; set; }
     public required short FgacRegionCode { get; set; }
 
     // Properties from NALD_POINTS table
@@ -21,9 +19,6 @@ public class NaldLicencePointDataLine
     public int? Cart1East { get; set; }
     public int? Cart1North { get; set; }
     public string? LocalName { get; set; }
-    public string? AsrcCode { get; set; }
-    public string? Disabled { get; set; }
-    public string? LocalNameWelsh { get; set; }
     public string? Ngr2Sheet { get; set; }
     public string? Ngr2East { get; set; }
     public string? Ngr2North { get; set; }
@@ -42,15 +37,4 @@ public class NaldLicencePointDataLine
     public string? AapcCode { get; set; }
     public string? AaptAptpCode { get; set; }
     public string? AaptAptsCode { get; set; }
-    public string? AbanCode { get; set; }
-    public string? LocationText { get; set; }
-    public int? AaddId { get; set; }
-    public decimal? Depth { get; set; }
-    public string? WrbNo { get; set; }
-    public string? BgsNo { get; set; }
-    public string? RegWellIndexRef { get; set; }
-    public string? HydroRef { get; set; }
-    public decimal? HydroInterceptDist { get; set; }
-    public decimal? HydroGwOffsetDist { get; set; }
-    public string? PointNotes { get; set; }
 }

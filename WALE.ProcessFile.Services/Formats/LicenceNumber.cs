@@ -96,15 +96,17 @@ public partial class LicenceNumber : ILicenceNumberService
     public static (bool Success, List<DocumentLine> MatchedLines) AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isOcr)
+        bool isOcr,
+        Dictionary<string, object?> additionalInformationStore)
     {
-        return Instance.AnyIsLicenceNumber(lines, label, isOcr);
+        return Instance.AnyIsLicenceNumber(lines, label, isOcr, additionalInformationStore);
     }
 
     (bool Success, List<DocumentLine> MatchedLines) ILicenceNumberService.AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
-        bool isOcr)
+        bool isOcr,
+        Dictionary<string, object?> additionalInformationStore)
     {
         var matchedLines = new List<DocumentLine>();
 
@@ -112,12 +114,12 @@ public partial class LicenceNumber : ILicenceNumberService
         var columnsToProcess = lines
             .Where(l => l != null)
             .SelectMany(l => l!.Columns.Select(c => (Line: l, Column: c)))
-            .Where(x => IsValidColumnForProcessing(x.Column, isOcr));
+            .Where(col => IsValidColumnForProcessing(col.Column, isOcr));
 
         // Flatten and validate sublines
         var subLinesToProcess = columnsToProcess
-            .SelectMany(x => GetSubLines(x.Column.Text).Select(subLine => (x.Line, x.Column, subLine)))
-            .Where(x => IsValidSubLine(x.subLine, x.Column.Text));
+            .SelectMany(col => GetSubLines(col.Column.Text).Select(subLine => (col.Line, col.Column, subLine)))
+            .Where(subLine => IsValidSubLine(subLine.subLine, subLine.Column.Text));
 
         var licenceIndex = GetLicenceIndex();
 
@@ -137,6 +139,20 @@ public partial class LicenceNumber : ILicenceNumberService
 
                 if (!licenceIndex.TryGetValue(normalizedCandidate, out var entries))
                 {
+                    const string licenceNumberCandidatesNotInNaldKey = "LicenceNumberCandidatesNotInNald";
+                    var notPresentInNaldList = new HashSet<string>();
+                    
+                    if (additionalInformationStore.TryGetValue(licenceNumberCandidatesNotInNaldKey, out var listObject))
+                    {
+                        notPresentInNaldList = (HashSet<string>)listObject!;
+                    }
+
+                    // Adding to a hashset never throws exception, even if it exists
+                    if (notPresentInNaldList.Add(candidateText))
+                    {
+                        additionalInformationStore[licenceNumberCandidatesNotInNaldKey] = notPresentInNaldList;   
+                    }
+                    
                     continue;
                 }
 

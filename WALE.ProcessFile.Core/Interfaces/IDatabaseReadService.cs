@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseReadService
 {
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    
     Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<byte[]?> GetPageScreenshotAsync(int pageNumber, string fileName, string noOcrServiceName);
@@ -81,6 +83,8 @@ public interface IDatabaseReadService
     Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
     
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
+    
+    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId);
 }

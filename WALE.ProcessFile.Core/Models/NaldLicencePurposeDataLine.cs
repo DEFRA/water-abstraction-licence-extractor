@@ -24,11 +24,6 @@ public class NaldLicencePurposeDataLine
     public char? HourlyQtyUsability { get; set; }
     public string? InstQty { get; set; }
     public char? InstQtyUsability { get; set; }
-    public DateTime? TimeLtdStartDate { get; set; }
-    public DateTime? TimeLtdEndDate { get; set; }
-    public string? Lands { get; set; }
-    public string? ArecCode { get; set; }
-    public int? DispOrd { get; set; }
     public string? Notes { get; set; }
     public short FgacRegionCode { get; set; }
     public string? PurpPrimDescr { get; set; }

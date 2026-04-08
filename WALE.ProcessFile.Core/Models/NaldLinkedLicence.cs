@@ -12,4 +12,6 @@ public record NaldLinkedLicence
     public string? IncomingLicenceNumber { get; init; }
     
     public required string FromField { get; init; }
+    
+    public required string? FromFieldText { get; init; }
 }

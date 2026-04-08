@@ -32,10 +32,10 @@ public static class ExternalDataHelper
             var naldData = new NaldData
             {
                 Id = line.Id,
-                ExpiryDate = RemoveNullWord(line.ExpiryDate),
-                OrigEffDate = RemoveNullWord(line.OrigEffectiveDate),
-                OrigSigDate = RemoveNullWord(line.OrigSignatureDate),
-                RevocationDate = RemoveNullWord(line.RevDate),
+                ExpiryDate = line.ExpiryDate,
+                RevocationDate = line.RevDate,
+                OrigEffDate = line.OrigEffectiveDate,
+                OrigSigDate = line.OrigSignatureDate,
                 LicenceNumber = line.LicenceNo!,
                 LicenceIdCharsAndDigitsOnly = stippedLicenceNumber,
                 FgacRegionCode = line.FgacRegionCode,
@@ -94,7 +94,7 @@ public static class ExternalDataHelper
         ref Dictionary<string, NaldData> generalNaldData)
     {
         foreach (var versionDataLine in naldCurrentVersionDataLines
-                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
+            .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
             if (!generalNaldData.TryGetValue(versionDataLine.LookupKey, out var naldData))
             {
@@ -102,9 +102,9 @@ public static class ExternalDataHelper
             }
 
             naldData.AabvType = versionDataLine.AabvType;
-            naldData.EffEndDate = RemoveNullWord(versionDataLine.EffEndDate);
-            naldData.EffStDate = RemoveNullWord(versionDataLine.EffStDate);
-            naldData.LicSigDate = RemoveNullWord(versionDataLine.LicSigDate);
+            naldData.EffEndDate = versionDataLine.EffEndDate;
+            naldData.EffStDate = versionDataLine.EffStDate;
+            naldData.LicSigDate = versionDataLine.LicSigDate;
             naldData.IncrNo = versionDataLine.IncrNo;
             naldData.AppNo = versionDataLine.AppNo;
             naldData.IssueNo = versionDataLine.IssueNo;

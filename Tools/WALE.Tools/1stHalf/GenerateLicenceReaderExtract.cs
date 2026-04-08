@@ -246,15 +246,16 @@ public static class GenerateLicenceReaderExtract
                     pdfFolder));
         }
 
-        var lines = await GetLicenceReaderDataAsync(
+        var outputLines = await GetLicenceReaderDataAsync(
             pdfDataExtractors,
             new LocalFileService(pdfFolder),
+            cacheService,
             regionCode,
             maxConcurrentScrapers);
 
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
-            lines,
+            outputLines,
             "LicenceReader",
             OutputFolder,
             line => line.LicenceNumber ?? "No Licence Number scraped",
@@ -294,6 +295,7 @@ public static class GenerateLicenceReaderExtract
     private static async Task<List<LicenceReaderCsvLineWithoutStatus>> GetLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
+        ICacheService cacheService,
         int regionCode,
         int maxConcurrentScrapers)
     {
@@ -351,8 +353,10 @@ public static class GenerateLicenceReaderExtract
         var configuration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
             DmsFileData,
+            [], // TODO
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             fileService,
+            cacheService,
             regionCode);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");

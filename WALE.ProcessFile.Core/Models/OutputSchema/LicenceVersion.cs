@@ -57,6 +57,10 @@ public class LicenceVersion
     public string? NaldUpdateReason { get; set; }
     
     public string? NaldStatus { get; set; }
+    
+    public string? DmsFileIdStatus { get; set; }
+    
+    public DateTime? DmsFileIdStatusDateUtc { get; set; }
 
     public static LicenceVersion Template => new()
     {
@@ -68,7 +72,9 @@ public class LicenceVersion
         EffectiveDate = DateTime.MinValue,
         ExpiryDate = DateTime.MinValue,
         IssueDate = DateTime.MinValue,
-        OriginalIssueDate = DateTime.MinValue
+        OriginalIssueDate = DateTime.MinValue,
+        DmsFileIdStatus = string.Empty,
+        DmsFileIdStatusDateUtc = DateTime.MinValue
     };
     
     public static string GetSchemaForPrompt()

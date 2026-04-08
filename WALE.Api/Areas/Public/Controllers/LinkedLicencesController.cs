@@ -57,4 +57,40 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         
         return Ok(filtered);
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAbstractionAsync([FromQuery] string permitNumber)
+    {
+        var linkedLicences =
+            await outputService.GetLinkedLicencesAsync(permitNumber);
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+        
+        var filtered = linkedLicences
+            .Where(ll => ll.LicenceType is LicenceType.SurfaceWaterAbstraction
+                or LicenceType.GroundWaterAbstraction
+                or LicenceType.Abstraction);
+        
+        return Ok(filtered);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetImpoundmentAsync([FromQuery] string permitNumber)
+    {
+        var linkedLicences =
+            await outputService.GetLinkedLicencesAsync(permitNumber);
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+        
+        var filtered = linkedLicences
+            .Where(ll => ll.LicenceType == LicenceType.Impoundment);
+        
+        return Ok(filtered);
+    }
 }

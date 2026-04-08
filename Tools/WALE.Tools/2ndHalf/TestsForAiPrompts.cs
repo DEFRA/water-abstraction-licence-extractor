@@ -70,7 +70,8 @@ public static class TestsForAiPrompts
                     new ApiKeyCredential(KeyConfig.OpenAiKey));
 
                 var chatClient = azureClient.GetChatClient(deploymentName);
-
+                var cacheService = new FileSystemCacheService("Cache/");
+                
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
                     pageImageGroups,
@@ -78,7 +79,9 @@ public static class TestsForAiPrompts
                         [],
                         [],
                         [],
+                        [],
                         new LocalFileService(KeyConfig.PdfFolder),
+                        cacheService,
                         -1));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");

@@ -6,7 +6,15 @@ public class LinkedLicencesCsvLine
     
     public Guid? FileId { get; set; }
     
+    public string? FileIdStatus { get; set; }
+    
+    public string? FileIdStatusChangeDate { get; set; }
+    
     public string? DmsPath { get; set; }
+    
+    public int? IssueNumber { get; set; }
+    
+    public int? IncrementNumber { get; set; }
     
     public string? LicenceNumber { get; set; }
     

@@ -502,6 +502,21 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(string pdfFilePath)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, FileHelper.GetFilenameWithoutExtension(pdfFilePath)!);

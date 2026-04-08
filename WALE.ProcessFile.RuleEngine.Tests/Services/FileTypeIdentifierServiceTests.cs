@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Services;
+using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Services;
 using Xunit;
 
@@ -33,7 +34,15 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This document contains license and permit information";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            new FileSystemCacheService(""),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -49,7 +58,15 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This addendum modifies the agreement";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            new FileSystemCacheService(""),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -65,7 +82,14 @@ public class FileTypeIdentifierServiceTests
         // Arrange
         //var content = "This is a regular document";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration([], [], [], new LocalFileService(""),1);
+        var lookupConfiguration = new LookupConfiguration(
+            [],
+            [],
+            [],
+            [],
+            new LocalFileService(""),
+            new FileSystemCacheService("Cache"),
+            1);
 
         // Act
         var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
@@ -120,7 +144,9 @@ public class FileTypeIdentifierServiceTests
             [],
             new Dictionary<string, DmsFileData>(),
             [],
+            [],
             new LocalFileService(""),
+            new FileSystemCacheService(""),
             1);
     }
 

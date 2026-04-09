@@ -258,6 +258,11 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId, processRunId);
     }
 
+    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    {
+        return databaseReadService.GetLicenceVerificationSummariesAsync();
+    }
+
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {
         return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);

@@ -19,4 +19,12 @@ public class OutputListDataItem
     public string? status{ get; set; }
     public LinkedLicence[]? linkedLicences { get; set; }
     public OutputListDataItemLicenceSet?[]? licenceSets { get; set; }
+    public List<LicenceVerificationSummary>? licenceVerificationSummary { get; set; }
+}
+
+public class LicenceVerificationSummary
+{
+    public Guid LicenceFileId { get; set; }
+    public string? LicenceSectionName { get; set; }
+    public string? VerificationType { get; set; }
 }

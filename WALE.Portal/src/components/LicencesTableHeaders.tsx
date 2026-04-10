@@ -271,7 +271,7 @@ export function LicencesTableHeaders({
                     Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '7%'}}>
-                    Licence number <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceNumber'); }}>&#8693;</a>
+                    Licence no. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceNumber'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '5%'}} className="default-hidden">
                     Licence holder <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceHolder'); }}>&#8693;</a>
@@ -283,22 +283,22 @@ export function LicencesTableHeaders({
                     Points <a href="#" onClick={(e) => { e.preventDefault(); handleSort('points'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '7%'}}>
-                    Abstraction limits <a href="#" onClick={(e) => { e.preventDefault(); handleSort('limitsCount'); }}>&#8693;</a>
+                    Abs. limits <a href="#" onClick={(e) => { e.preventDefault(); handleSort('limitsCount'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '5%'}}>
-                    Aggregates <a href="#" onClick={(e) => { e.preventDefault(); handleSort('aggregatesCount'); }}>&#8693;</a>
+                    Agg's <a href="#" onClick={(e) => { e.preventDefault(); handleSort('aggregatesCount'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '5%'}}>
-                    Scanned file <a href="#" onClick={(e) => { e.preventDefault(); handleSort('ocr'); }}>&#8693;</a>
+                    Scan <a href="#" onClick={(e) => { e.preventDefault(); handleSort('ocr'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '5%'}}>
-                    Issue date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issueDate'); }}>&#8693;</a>
+                    Iss. date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issueDate'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '6%'}}>
                     Issuer <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issuer'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '7%'}}>
-                    Means of abstraction <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>
+                    Means of abs. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '7%'}}>
                     Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
@@ -307,7 +307,7 @@ export function LicencesTableHeaders({
                     Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '3%'}}>
-                    Status <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
+                    Stat <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
                 </td>
             </tr>
         </>

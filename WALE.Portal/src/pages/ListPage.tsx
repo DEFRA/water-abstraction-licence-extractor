@@ -76,7 +76,7 @@ function ListPage() {
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
     return (
-        <>
+        <div className="list-page-container">
             <h1>
                 <a
                     href="#"
@@ -155,7 +155,7 @@ function ListPage() {
                 onPositionChange={updateModalPosition}
                 onOpenLinkedLicence={openReportWithId}
             />
-        </>);
+        </div>);
 }
 
 export default ListPage;

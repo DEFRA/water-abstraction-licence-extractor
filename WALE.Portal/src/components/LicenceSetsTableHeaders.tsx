@@ -3,9 +3,9 @@ export function LicenceSetsTableHeaders() {
         <>
             <tr>
                 <td></td>
-                <td>Licence set id</td>
+                <td>Licence set ID</td>
                 <td>Types</td>
-                <td>Licence number</td>
+                <td>Licence no.</td>
                 <td>Filename</td>
             </tr>
         </>

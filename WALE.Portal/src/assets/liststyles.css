@@ -1,5 +1,9 @@
 body.dragging iframe {pointer-events: none;}
 
+.list-page-container {
+  padding: 20px;
+}
+
 table td { padding: 5px; }
 table thead tr td { font-weight: bold; }
 table thead tr a { text-decoration: none; color: #000; cursor: pointer; }

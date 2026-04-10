@@ -23,9 +23,14 @@ export function LicencesTableFooters({ totals }: LicencesTableFootersProps) {
                 <td>{totals.linkedLicences}</td>
                 <td>{totals.licenceSets}</td>
                 <td>{totals.status}</td>
+                <td>{totals.licenceVerificationSummary}</td>
             </tr>
             <tr>
-                <td colSpan={11}></td>
+                <td colSpan={15}></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colSpan={13}></td>
                 <td style={{
                     fontWeight: 'normal', verticalAlign: 'top', fontSize: '10pt'
                 }}>

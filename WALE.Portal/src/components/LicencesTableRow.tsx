@@ -24,7 +24,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>
             </td>
-            <td><a href="#"
+            <td className='filename-cell'><a href="#"
                    onClick={(e) => {
                        e.preventDefault();
                        onOpenReport(item.filename!);
@@ -55,6 +55,11 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>{item.status}</td>
+            <td>
+                {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
+                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => `${v.licenceSectionName}: ${v.verificationType}`)}/>
+                    : '--')}
+            </td>
         </tr>
     );
 }

@@ -1375,6 +1375,24 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { LicenceFileId = licenceFileId, ProcessRunId = processRunId });
     }
 
+    public async Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT DISTINCT ON (licence_file_id, licence_section_name)
+                               licence_file_id AS LicenceFileId,
+                               licence_section_name AS LicenceSectionName,
+                               verification_type AS VerificationType
+                           FROM licence_section_verification
+                           ORDER BY licence_file_id, licence_section_name, licence_section_verification_id DESC
+                           """;
+
+        return await QueryAsync<LicenceVerificationSummary>(
+            connection,
+            sql,
+            0);
+    }
+
     private async Task<T?> QuerySingleOrDefaultAsync<T>(
         NpgsqlConnection connection,
         string sql,

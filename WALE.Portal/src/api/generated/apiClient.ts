@@ -165,6 +165,82 @@ export class Client {
     }
 
     /**
+     * @param permitNumber (optional) 
+     * @return OK
+     */
+    getAbstraction(permitNumber: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Public/LinkedLicences/GetAbstraction?";
+        if (permitNumber === null)
+            throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
+        else if (permitNumber !== undefined)
+            url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAbstraction(_response);
+        });
+    }
+
+    protected processGetAbstraction(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param permitNumber (optional) 
+     * @return OK
+     */
+    getImpoundment(permitNumber: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Public/LinkedLicences/GetImpoundment?";
+        if (permitNumber === null)
+            throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
+        else if (permitNumber !== undefined)
+            url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetImpoundment(_response);
+        });
+    }
+
+    protected processGetImpoundment(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     clearAll(): Promise<void> {
@@ -221,6 +297,76 @@ export class Client {
     }
 
     protected processClearSingle(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getFileIds(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Dms/GetFileIds";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFileIds(_response);
+        });
+    }
+
+    protected processGetFileIds(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    addFileIdInformation(body: DmsFileIdInformation): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Dms/AddFileIdInformation";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddFileIdInformation(_response);
+        });
+    }
+
+    protected processAddFileIdInformation(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -850,6 +996,49 @@ export class Client {
     }
 
     protected processGetLicenceStatusData(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param permitNumber (optional) 
+     * @param issueNumber (optional) 
+     * @return OK
+     */
+    getCurrentIncrementNumber(permitNumber: string | undefined, issueNumber: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetCurrentIncrementNumber?";
+        if (permitNumber === null)
+            throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
+        else if (permitNumber !== undefined)
+            url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
+        if (issueNumber === null)
+            throw new globalThis.Error("The parameter 'issueNumber' cannot be null.");
+        else if (issueNumber !== undefined)
+            url_ += "issueNumber=" + encodeURIComponent("" + issueNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCurrentIncrementNumber(_response);
+        });
+    }
+
+    protected processGetCurrentIncrementNumber(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2597,6 +2786,70 @@ export interface ICreateRequest {
     [key: string]: any;
 }
 
+export class DmsFileIdInformation implements IDmsFileIdInformation {
+    fileId?: string;
+    dmsFilePath?: string | undefined;
+    processRunId?: number;
+    status?: string | undefined;
+    statusDateUtc?: Date;
+
+    [key: string]: any;
+
+    constructor(data?: IDmsFileIdInformation) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.fileId = _data["fileId"];
+            this.dmsFilePath = _data["dmsFilePath"];
+            this.processRunId = _data["processRunId"];
+            this.status = _data["status"];
+            this.statusDateUtc = _data["statusDateUtc"] ? new Date(_data["statusDateUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): DmsFileIdInformation {
+        data = typeof data === 'object' ? data : {};
+        let result = new DmsFileIdInformation();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["fileId"] = this.fileId;
+        data["dmsFilePath"] = this.dmsFilePath;
+        data["processRunId"] = this.processRunId;
+        data["status"] = this.status;
+        data["statusDateUtc"] = this.statusDateUtc ? this.statusDateUtc.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IDmsFileIdInformation {
+    fileId?: string;
+    dmsFilePath?: string | undefined;
+    processRunId?: number;
+    status?: string | undefined;
+    statusDateUtc?: Date;
+
+    [key: string]: any;
+}
+
 export class DocumentLine implements IDocumentLine {
     lineNumber?: number;
     pageNumber?: number;
@@ -3573,9 +3826,12 @@ export interface ILabelToMatch2 {
 
 export class Licence implements ILicence {
     id?: string | undefined;
-    status?: number;
+    status?: LicenceStatus;
+    naldStatus?: NaldLicenceStatus;
+    licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
+    dmsPath?: string | undefined;
     dmsFileId?: string | undefined;
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
@@ -3588,9 +3844,6 @@ export class Licence implements ILicence {
     linkedLicences?: any[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
-    naldStatus?: NaldLicenceStatus;
-    licenceType?: LicenceType;
-    dmsPath?: string | undefined;
 
     [key: string]: any;
 
@@ -3611,8 +3864,11 @@ export class Licence implements ILicence {
             }
             this.id = _data["id"];
             this.status = _data["status"];
+            this.naldStatus = _data["naldStatus"];
+            this.licenceType = _data["licenceType"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
             this.dmsPermitNumber = _data["dmsPermitNumber"];
+            this.dmsPath = _data["dmsPath"];
             this.dmsFileId = _data["dmsFileId"];
             this.filename = _data["filename"];
             this.licenceVersion = _data["licenceVersion"] ? LicenceVersion.fromJS(_data["licenceVersion"]) : undefined as any;
@@ -3649,9 +3905,6 @@ export class Licence implements ILicence {
                     this.licenceSets!.push(LicenceSetReference.fromJS(item));
             }
             this.noneSchemaData = _data["noneSchemaData"];
-            this.naldStatus = _data["naldStatus"];
-            this.licenceType = _data["licenceType"];
-            this.dmsPath = _data["dmsPath"];
         }
     }
 
@@ -3670,8 +3923,11 @@ export class Licence implements ILicence {
         }
         data["id"] = this.id;
         data["status"] = this.status;
+        data["naldStatus"] = this.naldStatus;
+        data["licenceType"] = this.licenceType;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
         data["dmsPermitNumber"] = this.dmsPermitNumber;
+        data["dmsPath"] = this.dmsPath;
         data["dmsFileId"] = this.dmsFileId;
         data["filename"] = this.filename;
         data["licenceVersion"] = this.licenceVersion ? this.licenceVersion.toJSON() : undefined as any;
@@ -3708,18 +3964,18 @@ export class Licence implements ILicence {
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
         data["noneSchemaData"] = this.noneSchemaData;
-        data["naldStatus"] = this.naldStatus;
-        data["licenceType"] = this.licenceType;
-        data["dmsPath"] = this.dmsPath;
         return data;
     }
 }
 
 export interface ILicence {
     id?: string | undefined;
-    status?: number;
+    status?: LicenceStatus;
+    naldStatus?: NaldLicenceStatus;
+    licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
+    dmsPath?: string | undefined;
     dmsFileId?: string | undefined;
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
@@ -3732,9 +3988,6 @@ export interface ILicence {
     linkedLicences?: any[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
-    naldStatus?: NaldLicenceStatus;
-    licenceType?: LicenceType;
-    dmsPath?: string | undefined;
 
     [key: string]: any;
 }
@@ -3951,10 +4204,74 @@ export interface ILicenceSetReference {
     [key: string]: any;
 }
 
+export enum LicenceStatus {
+    Ok = "Ok",
+    NotFound = "NotFound",
+    PathMissing = "PathMissing",
+}
+
 export enum LicenceType {
     Unknown = "Unknown",
+    SurfaceWaterAbstraction = "SurfaceWaterAbstraction",
+    GroundWaterAbstraction = "GroundWaterAbstraction",
     Abstraction = "Abstraction",
     Impoundment = "Impoundment",
+}
+
+export class LicenceVerificationSummary implements ILicenceVerificationSummary {
+    licenceFileId?: string;
+    licenceSectionName?: string | undefined;
+    verificationType?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceVerificationSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceFileId = _data["licenceFileId"];
+            this.licenceSectionName = _data["licenceSectionName"];
+            this.verificationType = _data["verificationType"];
+        }
+    }
+
+    static fromJS(data: any): LicenceVerificationSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceVerificationSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceFileId"] = this.licenceFileId;
+        data["licenceSectionName"] = this.licenceSectionName;
+        data["verificationType"] = this.verificationType;
+        return data;
+    }
+}
+
+export interface ILicenceVerificationSummary {
+    licenceFileId?: string;
+    licenceSectionName?: string | undefined;
+    verificationType?: string | undefined;
+
+    [key: string]: any;
 }
 
 export class LicenceVersion implements ILicenceVersion {
@@ -3975,6 +4292,8 @@ export class LicenceVersion implements ILicenceVersion {
     naldIncrementNumber?: number | undefined;
     naldUpdateReason?: string | undefined;
     naldStatus?: string | undefined;
+    dmsFileIdStatus?: string | undefined;
+    dmsFileIdStatusDateUtc?: Date | undefined;
 
     [key: string]: any;
 
@@ -4010,6 +4329,8 @@ export class LicenceVersion implements ILicenceVersion {
             this.naldIncrementNumber = _data["naldIncrementNumber"];
             this.naldUpdateReason = _data["naldUpdateReason"];
             this.naldStatus = _data["naldStatus"];
+            this.dmsFileIdStatus = _data["dmsFileIdStatus"];
+            this.dmsFileIdStatusDateUtc = _data["dmsFileIdStatusDateUtc"] ? new Date(_data["dmsFileIdStatusDateUtc"].toString()) : undefined as any;
         }
     }
 
@@ -4043,6 +4364,8 @@ export class LicenceVersion implements ILicenceVersion {
         data["naldIncrementNumber"] = this.naldIncrementNumber;
         data["naldUpdateReason"] = this.naldUpdateReason;
         data["naldStatus"] = this.naldStatus;
+        data["dmsFileIdStatus"] = this.dmsFileIdStatus;
+        data["dmsFileIdStatusDateUtc"] = this.dmsFileIdStatusDateUtc ? this.dmsFileIdStatusDateUtc.toISOString() : undefined as any;
         return data;
     }
 }
@@ -4065,6 +4388,8 @@ export interface ILicenceVersion {
     naldIncrementNumber?: number | undefined;
     naldUpdateReason?: string | undefined;
     naldStatus?: string | undefined;
+    dmsFileIdStatus?: string | undefined;
+    dmsFileIdStatusDateUtc?: Date | undefined;
 
     [key: string]: any;
 }
@@ -4264,6 +4589,7 @@ export class MatchesResult implements IMatchesResult {
     servicesUsed?: string[];
     pages?: PdfPage[];
     errorMessage?: string | undefined;
+    additionalInformation?: any | undefined;
 
     [key: string]: any;
 
@@ -4302,6 +4628,7 @@ export class MatchesResult implements IMatchesResult {
                     this.pages!.push(PdfPage.fromJS(item));
             }
             this.errorMessage = _data["errorMessage"];
+            this.additionalInformation = _data["additionalInformation"];
         }
     }
 
@@ -4338,6 +4665,7 @@ export class MatchesResult implements IMatchesResult {
                 data["pages"].push(item ? item.toJSON() : undefined as any);
         }
         data["errorMessage"] = this.errorMessage;
+        data["additionalInformation"] = this.additionalInformation;
         return data;
     }
 }
@@ -4351,6 +4679,7 @@ export interface IMatchesResult {
     servicesUsed?: string[];
     pages?: PdfPage[];
     errorMessage?: string | undefined;
+    additionalInformation?: any | undefined;
 
     [key: string]: any;
 }
@@ -4364,6 +4693,7 @@ export class MatchesResult2 implements IMatchesResult2 {
     servicesUsed?: string[];
     pages?: PdfPage[];
     errorMessage?: string | undefined;
+    additionalInformation?: any | undefined;
 
     [key: string]: any;
 
@@ -4402,6 +4732,7 @@ export class MatchesResult2 implements IMatchesResult2 {
                     this.pages!.push(PdfPage.fromJS(item));
             }
             this.errorMessage = _data["errorMessage"];
+            this.additionalInformation = _data["additionalInformation"];
         }
     }
 
@@ -4438,6 +4769,7 @@ export class MatchesResult2 implements IMatchesResult2 {
                 data["pages"].push(item ? item.toJSON() : undefined as any);
         }
         data["errorMessage"] = this.errorMessage;
+        data["additionalInformation"] = this.additionalInformation;
         return data;
     }
 }
@@ -4451,6 +4783,7 @@ export interface IMatchesResult2 {
     servicesUsed?: string[];
     pages?: PdfPage[];
     errorMessage?: string | undefined;
+    additionalInformation?: any | undefined;
 
     [key: string]: any;
 }
@@ -4819,6 +5152,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
+    licenceVerificationSummary?: LicenceVerificationSummary[] | undefined;
 
     [key: string]: any;
 
@@ -4868,6 +5202,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                 for (let item of _data["licenceSets"])
                     this.licenceSets!.push(OutputListDataItemLicenceSet.fromJS(item));
             }
+            if (Array.isArray(_data["licenceVerificationSummary"])) {
+                this.licenceVerificationSummary = [] as any;
+                for (let item of _data["licenceVerificationSummary"])
+                    this.licenceVerificationSummary!.push(LicenceVerificationSummary.fromJS(item));
+            }
         }
     }
 
@@ -4915,6 +5254,11 @@ export class OutputListDataItem implements IOutputListDataItem {
             for (let item of this.licenceSets)
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.licenceVerificationSummary)) {
+            data["licenceVerificationSummary"] = [];
+            for (let item of this.licenceVerificationSummary)
+                data["licenceVerificationSummary"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -4935,6 +5279,7 @@ export interface IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
+    licenceVerificationSummary?: LicenceVerificationSummary[] | undefined;
 
     [key: string]: any;
 }

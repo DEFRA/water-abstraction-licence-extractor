@@ -55,6 +55,11 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>{item.status}</td>
+            <td>
+                {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
+                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => `${v.licenceSectionName}: ${v.verificationType}`)}/>
+                    : '--')}
+            </td>
         </tr>
     );
 }

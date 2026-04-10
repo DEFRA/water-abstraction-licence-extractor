@@ -59,7 +59,7 @@ export function LicencesTableHeaders({
     return (
         <>
             <tr>
-                <td colSpan={12}></td>
+                <td colSpan={14}></td>
                 <td>
                     <input
                         type="checkbox"
@@ -264,6 +264,21 @@ export function LicencesTableHeaders({
                         ]}
                     />
                 </td>
+                <td>
+                    <FilterSelect
+                        id="verified-filter"
+                        field="licenceVerificationSummary"
+                        type="EmptyOrNotArray"
+                        value={filters['licenceVerificationSummary']?.value ?? 'all'}
+                        onChange={onFilterChange}
+                        onReset={() => onResetFilters('licenceVerificationSummary')}
+                        options={[
+                            { value: 'all', label: 'All' },
+                            { value: 'populated', label: 'Not empty' },
+                            { value: 'empty', label: '--' }
+                        ]}
+                    />
+                </td>
             </tr>
             <tr>
                 <td style={{width: '5%'}}>&nbsp;</td>
@@ -308,6 +323,9 @@ export function LicencesTableHeaders({
                 </td>
                 <td style={{width: '3%'}}>
                     Stat <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
+                </td>
+                <td style={{width: '10%'}}>
+                    Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceVerificationSummary'); }}>&#8693;</a>
                 </td>
             </tr>
         </>

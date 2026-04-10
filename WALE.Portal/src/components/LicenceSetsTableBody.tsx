@@ -195,7 +195,7 @@ function renderListRow(
                 </ul>
             </td>
             <td className={licenceInSetType}>{firstLicenceInSet.licenceNumber}</td>
-            <td>
+            <td className='filename-cell'>
                 {firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
@@ -215,7 +215,7 @@ function renderListRow(
         rows.push(
             <tr key={`${licenceSetId}-${j}`} style={{backgroundColor}} className={`indent-level-${indentLevel}`}>
                 <td className={currentLicenceInSetType}>{licenceInSet.licenceNumber}</td>
-                <td>
+                <td className='filename-cell'>
                     {licenceInSet.filename !== '--' ? (
                         <a href='#' onClick={(e) => {
                             e.preventDefault();

@@ -24,7 +24,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>
             </td>
-            <td><a href="#"
+            <td className='filename-cell'><a href="#"
                    onClick={(e) => {
                        e.preventDefault();
                        onOpenReport(item.filename!);

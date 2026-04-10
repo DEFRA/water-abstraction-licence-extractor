@@ -22,6 +22,10 @@ td ul li {
   padding-left: 0;
 }
 
+.filename-cell {
+  overflow-wrap: anywhere;
+}
+
 .default-hidden { display: none; }
 .show-all .default-hidden { display: table-cell; }
 

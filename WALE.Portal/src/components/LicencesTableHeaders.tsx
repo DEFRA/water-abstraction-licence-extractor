@@ -59,7 +59,7 @@ export function LicencesTableHeaders({
     return (
         <>
             <tr>
-                <td colSpan={14}></td>
+                <td colSpan={12}></td>
                 <td>
                     <input
                         type="checkbox"
@@ -68,6 +68,7 @@ export function LicencesTableHeaders({
                         onChange={(e) => onToggleSingles(e.target.checked)}
                     /> Singles
                 </td>
+                <td colSpan={2}></td>
             </tr>
             <tr>
                 <td></td>

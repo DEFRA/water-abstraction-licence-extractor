@@ -1,5 +1,9 @@
 body.dragging iframe {pointer-events: none;}
 
+.list-page-container {
+  padding: 20px;
+}
+
 table td { padding: 5px; }
 table thead tr td { font-weight: bold; }
 table thead tr a { text-decoration: none; color: #000; cursor: pointer; }
@@ -10,6 +14,16 @@ table tbody tr { max-height: 40px; vertical-align: top; }
 td ul {
   margin-top: 0;
   margin-bottom: 0;
+  padding-left: 1rem;
+}
+
+td ul li {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.filename-cell {
+  overflow-wrap: anywhere;
 }
 
 .default-hidden { display: none; }

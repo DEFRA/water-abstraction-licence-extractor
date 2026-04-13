@@ -3,22 +3,22 @@ import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
-import {OverviewContent} from "./OverviewContent.tsx";
+import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
 import {getImageUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";
-import LicenceImages from "./LicenceImages.tsx";
+import LicenceImages from "./LicenceImages";
 
 interface ReportContentProps {
     filename: string;
     hideBackLink?: boolean;
     onOpenLinkedLicence: (filename: string) => void;
+    processRunId: number;
 }
 
-type TabType = 'overview' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
-type ViewType = 1 | 2;
+type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence}: ReportContentProps) {
+export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence, processRunId}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,13 +30,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
     // const [textData, setTextData] = useState<string>('');
 
     // UI states
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
-    const [activeView, setActiveView] = useState<ViewType>(1);
-
-    // Form states
-    const [licenceNumber, setLicenceNumber] = useState('');
-    const [licenceHolder, setLicenceHolder] = useState('');
-    const [showLicenceHolder, setShowLicenceHolder] = useState(false);
+    const [activeTab, setActiveTab] = useState<TabType>('verification');
 
     const iframeParentRef = useRef<HTMLDivElement>(null);
 
@@ -56,15 +50,6 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
                 if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
                 if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
-
-                // Extract form values from data
-                if (matchesResult.status === 'fulfilled') {
-                    const licNum = getText(matchesResult.value, '$.matches[?(@.labelGroupName==\'LicenceNumber\')]');
-                    const licHolder = getText(matchesResult.value, '$.matches[?(@.labelGroupName==\'Company\')]');
-
-                    if (licNum) setLicenceNumber(licNum);
-                    if (licHolder) setLicenceHolder(licHolder);
-                }
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -113,14 +98,6 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
         });
     };
 
-    const handleContinue = () => {
-        setShowLicenceHolder(true);
-    };
-
-    const handleBack = () => {
-        setShowLicenceHolder(false);
-    };
-
     if (loading) {
         return <div style={{padding: '20px'}}>Loading report...</div>;
     }
@@ -138,43 +115,18 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
             <div id="leftCol">
                 <div id="left-cell">
                     <div className="leftDetails">
-                        {/* View/Edit Toggle */}
-                        <div id="view-edit">
-                            <a
-                                href="#"
-                                className={activeView === 1 ? 'viewSelected' : ''}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setActiveView(1);
-                                }}
-                            >
-                                View
-                            </a>
-                            {' | '}
-                            <a
-                                href="#"
-                                className={activeView === 2 ? 'viewSelected' : ''}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setActiveView(2);
-                                }}
-                            >
-                                Edit
-                            </a>
-                        </div>
-
                         {/* Tab Navigation */}
                         <ul className="ul-links">
                             <li>
                                 <a
                                     href="#"
-                                    className={activeTab === 'overview' ? 'selectedTab' : ''}
+                                    className={activeTab === 'verification' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        setActiveTab('overview');
+                                        setActiveTab('verification');
                                     }}
                                 >
-                                    Overview
+                                    Verification
                                 </a>
                             </li>
                             <li>
@@ -296,57 +248,13 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
                             </div>
                         )}
 
-                        {activeTab === 'overview' && activeView === 1 && (
+                        {activeTab === 'verification' && reportData2 && (
                             <div id="overview">
-                                <OverviewContent
-                                    reportData={reportData}
+                                <VerificationContent
+                                    licence={reportData2}
+                                    processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
-                                    onOpenLinkedLicence={onOpenLinkedLicence}
                                 />
-                            </div>
-                        )}
-
-                        {activeTab === 'overview' && activeView === 2 && (
-                            <div id="propertiesNew">
-                                <div
-                                    id="licenceNumberTxtDiv"
-                                    style={{visibility: showLicenceHolder ? 'hidden' : 'visible'}}
-                                >
-                                    <label htmlFor="licenceNumberTxt">Licence number</label>
-                                    <br/>
-                                    <input
-                                        type="text"
-                                        id="licenceNumberTxt"
-                                        value={licenceNumber}
-                                        onChange={(e) => setLicenceNumber(e.target.value)}
-                                    />
-                                </div>
-
-                                <div
-                                    id="licenceHolderTxtDiv"
-                                    className="default-hidden"
-                                    style={{visibility: showLicenceHolder ? 'visible' : 'hidden'}}
-                                >
-                                    <label htmlFor="licenceHolderTxt">Licence holder</label>
-                                    <br/>
-                                    <input
-                                        type="text"
-                                        id="licenceHolderTxt"
-                                        value={licenceHolder}
-                                        onChange={(e) => setLicenceHolder(e.target.value)}
-                                    />
-                                </div>
-
-                                <div id="back-continue-area">
-                                    {showLicenceHolder && (
-                                        <button id="backButton" onClick={handleBack}>
-                                            Back
-                                        </button>
-                                    )}
-                                    <button id="continueButton" onClick={handleContinue}>
-                                        Continue
-                                    </button>
-                                </div>
                             </div>
                         )}
 

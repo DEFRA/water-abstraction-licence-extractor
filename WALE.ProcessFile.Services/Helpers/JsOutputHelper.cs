@@ -82,7 +82,8 @@ public static class JsOutputHelper
             Status = status,
             LinkedLicences = licence.LinkedLicences,
             LicenceSets = licenceSets,
-            LicenceSetReferences = licence.LicenceSets
+            LicenceSetReferences = licence.LicenceSets,
+            DmsFileId = licence.DmsFileId
         };
     }
     
@@ -92,7 +93,8 @@ public static class JsOutputHelper
         IOutputService outputService,
         bool regenerateMappingJson,
         ProcessRun processRun,
-        bool saveToFile)
+        bool saveToFile,
+        List<LicenceVerificationSummary>? licenceVerificationSummaries = null)
     {
         var resultFileStringBuilder = new StringBuilder(
             "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
@@ -109,6 +111,10 @@ public static class JsOutputHelper
         var linksDictionaries = new List<Dictionary<string, object>>();
 
         var listData = new List<OutputListDataItem>();
+
+        var summariesByFileId = licenceVerificationSummaries?
+            .GroupBy(x => x.LicenceFileId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
         {
@@ -167,7 +173,10 @@ public static class JsOutputHelper
 
                     };
                 })
-                .ToArray() ?? []
+                .ToArray() ?? [],
+                licenceVerificationSummary = outputLine.DmsFileId.HasValue && summariesByFileId != null && summariesByFileId.TryGetValue(outputLine.DmsFileId.Value, out var summaries)
+                    ? summaries
+                    : null
             };
 
             listData.Add(listRow);
@@ -353,7 +362,27 @@ public static class JsOutputHelper
             {
                 return (T2)(object)(int)dblVal;
             }
+
+            if (value is T2)
+            {
+                return (T2)value;
+            }
             
+            var targetType = typeof(T2);
+            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                targetType = Nullable.GetUnderlyingType(targetType);
+            }
+
+            try
+            {
+                return (T2)Convert.ChangeType(value, targetType!);
+            }
+            catch
+            {
+                // Fallback to original behavior if conversion fails
+            }
+
             return (T2)value;
         }
         

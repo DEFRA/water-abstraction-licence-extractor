@@ -1,5 +1,5 @@
 import type {OutputListDataItem} from "../api/generated/apiClient.ts";
-import LinkedLicencesListItem from "./LinkedLicencesListItem.tsx";
+import LinkedLicencesListItem from "./LinkedLicencesListItem";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;

@@ -1,9 +1,9 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
-import UnorderedListOfStrings from "./UnorderedListOfStrings.tsx";
+import UnorderedListOfStrings from "./UnorderedListOfStrings";
+import LicenceSetsList from "./LicenceSetsList";
+import LinkedLicencesList from "./LinkedLicencesList";
 import {getThumbnailUrl} from "../utils/images.ts";
-import LicenceSetsList from "./LicenceSetsList.tsx";
-import LinkedLicencesList from "./LinkedLicencesList.tsx";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
@@ -24,7 +24,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>
             </td>
-            <td><a href="#"
+            <td className='filename-cell'><a href="#"
                    onClick={(e) => {
                        e.preventDefault();
                        onOpenReport(item.filename!);
@@ -55,6 +55,11 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>{item.status}</td>
+            <td>
+                {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
+                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => `${v.licenceSectionName}: ${v.verificationType}`)}/>
+                    : '--')}
+            </td>
         </tr>
     );
 }

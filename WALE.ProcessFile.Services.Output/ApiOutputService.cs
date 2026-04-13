@@ -325,4 +325,19 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
+    {
+        throw new NotImplementedException();
+    }
 }

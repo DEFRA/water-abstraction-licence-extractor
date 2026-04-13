@@ -244,6 +244,21 @@ public class DatabaseOutputService(
         return licence?.LinkedLicences;
     }
 
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId)
+    {
+        return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId, processRunId);
+    }
+
+    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    {
+        return databaseReadService.GetLicenceVerificationSummariesAsync();
+    }
+
+    public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
+    {
+        return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)
     {
         var licences = await databaseReadService.GetLicencesAsync(processRunId);

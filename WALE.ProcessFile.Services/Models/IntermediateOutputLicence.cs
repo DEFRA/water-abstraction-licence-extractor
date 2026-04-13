@@ -29,5 +29,6 @@ public class IntermediateOutputLicence
     public LinkedLicence[]? LinkedLicences;
     public List<LicenceSet>? LicenceSets;
     public LicenceSetReference[] ? LicenceSetReferences;
+    public Guid? DmsFileId;
     public int NodeId;
 }

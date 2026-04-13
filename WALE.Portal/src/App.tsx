@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import ProcessRunsPage from "./pages/ProcessRunsPage.tsx";
-import ListPage from "./pages/ListPage.tsx";
+import ProcessRunsPage from "./pages/ProcessRunsPage";
+import ListPage from "./pages/ListPage";
 
 function App() {
     return (

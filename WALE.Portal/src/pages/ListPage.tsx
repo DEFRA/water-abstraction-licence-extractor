@@ -1,18 +1,18 @@
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
-import LicencesTableHeaders from "../components/LicencesTableHeaders.tsx";
-import LicencesTableRow from "../components/LicencesTableRow.tsx";
-import LicencesTableFooters from "../components/LicencesTableFooters.tsx";
-import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders.tsx";
-import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters.tsx";
-import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody.tsx";
+import LicencesTableHeaders from "../components/LicencesTableHeaders";
+import LicencesTableRow from "../components/LicencesTableRow";
+import LicencesTableFooters from "../components/LicencesTableFooters";
+import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
+import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
+import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
-import {ReportModalContainer} from "../components/ReportModalContainer.tsx";
+import {ReportModalContainer} from "../components/ReportModalContainer";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
@@ -64,11 +64,19 @@ function ListPage() {
         minimizeModal
     } = useReportModals();
 
+    const openReportWithId = useCallback((filename: string) => {
+        openReport(filename, parseInt(processRunId ?? '0'));
+    }, [openReport, processRunId]);
+
+    const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
+        openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
+    }, [openLicenceSetReport, processRunId]);
+
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
     return (
-        <>
+        <div className="list-page-container">
             <h1>
                 <a
                     href="#"
@@ -112,8 +120,8 @@ function ListPage() {
                                 key={index} 
                                 data={filteredData} 
                                 oddRow={index % 2 === 0}
-                                onOpenReport={openReport}
-                                onOpenLicenceSetReport={openLicenceSetReport}
+                                onOpenReport={openReportWithId}
+                                onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />
                         ))}
@@ -129,8 +137,8 @@ function ListPage() {
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
                             data={filteredData} 
-                            onOpenReport={openReport} 
-                            onOpenLicenceSetReport={openLicenceSetReport} 
+                            onOpenReport={openReportWithId} 
+                            onOpenLicenceSetReport={openLicenceSetReportWithId} 
                             onTotalsCalculated={setLicenceSetsTotals}
                         />
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
@@ -145,9 +153,9 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onOpenLinkedLicence={openReport}
+                onOpenLinkedLicence={openReportWithId}
             />
-        </>);
+        </div>);
 }
 
 export default ListPage;

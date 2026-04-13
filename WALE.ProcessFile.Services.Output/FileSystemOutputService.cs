@@ -271,7 +271,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
 
-    public async Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
     {
         throw new NotImplementedException();
     }

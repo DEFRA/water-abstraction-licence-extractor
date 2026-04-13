@@ -340,7 +340,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                 , height
                            FROM image_on_page 
                            WHERE
-                               (filename = @Filename or @Filename is null)
+                               (file_id = @FileId or @FileId is null)
                                 AND (page_number = @PageNumber or @PageNumber is null)
                            """;
 

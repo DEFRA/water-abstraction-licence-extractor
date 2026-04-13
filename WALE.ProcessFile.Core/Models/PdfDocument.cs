@@ -30,6 +30,7 @@ public class PdfDocument
     
     public PdfDocument(
         string pdfFilename,
+        Guid fileId,
         bool fromCache,
         IOutputService outputService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
@@ -37,6 +38,7 @@ public class PdfDocument
         LookupConfiguration configuration)
     {
         PdfFilename = pdfFilename;
+        FileId = fileId;
         PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         FileService = configuration.FileService;
         FromCache = fromCache;

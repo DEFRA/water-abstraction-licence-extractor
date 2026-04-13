@@ -31,6 +31,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         var pdfDocument = new PdfDocument(
             pdfFileName,
+            fileId,
             metadata != null,
             outputService,
             noOcrPdfDocumentService,

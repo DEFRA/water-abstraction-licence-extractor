@@ -90,7 +90,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM no_ocr_page_text_cache 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                              AND page_number = @PageNumber 
                              AND no_ocr_service_name = @NoOcrServiceName
                            LIMIT 1;
@@ -305,7 +305,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM image_on_page 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                              AND no_ocr_service_name = @NoOcrServiceName 
                              AND page_number = @PageNumber 
                              AND image_number = @ImageNumber 
@@ -609,7 +609,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                data,
                                licence_id 
                            FROM licence
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
@@ -668,7 +668,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT data 
                            FROM matches_result 
-                           WHERE filename = @Filename 
+                           WHERE file_id = @FileId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;

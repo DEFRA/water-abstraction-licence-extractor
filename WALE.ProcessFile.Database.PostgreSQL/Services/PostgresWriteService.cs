@@ -90,8 +90,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (file_id, licence_number, data, process_run_id, file_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @Data, @ProcessRunId, @FileId, @PermitNumber, @DateTimeUtc)
+                           INSERT INTO licence (file_id, licence_number, data, process_run_id, permit_number, date_time_utc)
+                           VALUES (@FileId, @LicenceNumber, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -423,6 +423,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM ocr_image_text_cache;
                            DELETE FROM ocr_screenshot_text_cache;
                            DELETE FROM page_screenshot;
+                           DELETE FROM ocr_temporary_image_text_cache;
+                           DELETE FROM ocr_temporary_screenshot_text_cache;
                            """;
 
         await ExecuteAsync(connection, sql, 0);
@@ -440,6 +442,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            DELETE FROM ocr_image_text_cache WHERE file_id = @FileId;
                            DELETE FROM ocr_screenshot_text_cache WHERE file_id = @FileId;
                            DELETE FROM page_screenshot WHERE file_id = @FileId;
+                           DELETE FROM ocr_temporary_image_text_cache WHERE file_id = @FileId;
+                           DELETE FROM ocr_temporary_screenshot_text_cache WHERE file_id = @FileId;
                            """;
         
         await ExecuteAsync(

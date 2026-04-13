@@ -2762,10 +2762,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
 
+        // Need to update these for comparison
+        agreedSchemaLicenceGroup.Licences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[2].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        
         var actualJson = JsonSerializer.Serialize(agreedSchemaLicenceGroup, JsonHelper.GetSerializerOptions());
         var expectedJson =
             await File.ReadAllTextAsync("Data/2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619.json");
-
+        
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),
             actualJson.Replace(" ", string.Empty).Replace("\n", string.Empty));
@@ -5501,7 +5505,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, 3);
-        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,

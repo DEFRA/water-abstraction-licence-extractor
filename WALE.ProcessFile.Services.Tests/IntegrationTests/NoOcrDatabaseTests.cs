@@ -100,7 +100,7 @@ public class NoOcrDatabaseTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
-            null,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
             0);

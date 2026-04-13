@@ -79,7 +79,7 @@ public class AzureOpenAiOcrPdfTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
-            null,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(PdfFolder),
             
             [fileName],

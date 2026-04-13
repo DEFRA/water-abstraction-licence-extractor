@@ -638,7 +638,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         // Act
         var resultFull = await _pdfDataExtractor.GetMatchesAsync(
             TestConfig.PdfFolder3 + fileName,
-            null,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             new LookupConfiguration(
                 GetYorkshireLabels(),
                 _fileLicenceMapping,

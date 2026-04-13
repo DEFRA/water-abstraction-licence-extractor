@@ -32,9 +32,9 @@ public class FileDataController(IOutputService outputService) : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> LicenceSectionVerifications([FromQuery] Guid licenceFileId, [FromQuery] int processRunId)
+    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> LicenceSectionVerifications([FromQuery] Guid licenceFileId)
     {
-        var results = await outputService.GetLicenceSectionVerificationsAsync(licenceFileId, processRunId);
+        var results = await outputService.GetLicenceSectionVerificationsAsync(licenceFileId);
         return Ok(results);
     }
 

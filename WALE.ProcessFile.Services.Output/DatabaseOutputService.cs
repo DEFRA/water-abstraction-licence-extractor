@@ -253,9 +253,9 @@ public class DatabaseOutputService(
         return licence?.LinkedLicences;
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId)
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
     {
-        return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId, processRunId);
+        return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId);
     }
 
     public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()

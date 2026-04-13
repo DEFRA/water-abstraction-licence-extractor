@@ -1780,19 +1780,14 @@ export class Client {
 
     /**
      * @param licenceFileId (optional) 
-     * @param processRunId (optional) 
      * @return OK
      */
-    licenceSectionVerifications(licenceFileId: string | undefined, processRunId: number | undefined): Promise<LicenceSectionVerification[]> {
+    licenceSectionVerifications(licenceFileId: string | undefined): Promise<LicenceSectionVerification[]> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceSectionVerifications?";
         if (licenceFileId === null)
             throw new globalThis.Error("The parameter 'licenceFileId' cannot be null.");
         else if (licenceFileId !== undefined)
             url_ += "licenceFileId=" + encodeURIComponent("" + licenceFileId) + "&";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

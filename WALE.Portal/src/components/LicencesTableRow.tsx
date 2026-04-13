@@ -57,7 +57,14 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
             <td>{item.status}</td>
             <td>
                 {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
-                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => `${v.licenceSectionName}: ${v.verificationType}`)}/>
+                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => {
+                        let color = 'inherit';
+                        if (v.verificationType === 'Accept') color = 'green';
+                        else if (v.verificationType === 'Reject') color = 'red';
+                        else if (v.verificationType === 'Override') color = 'blue';
+
+                        return <span style={{color}}>{`${v.licenceSectionName}: ${v.verificationType}`}</span>;
+                    })}/>
                     : '--')}
             </td>
         </tr>

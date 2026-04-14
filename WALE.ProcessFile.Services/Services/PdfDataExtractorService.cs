@@ -30,7 +30,7 @@ public class PdfDataExtractorService(
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
-        DmsFileData? dmsDataForFile,
+        DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId)
@@ -43,7 +43,7 @@ public class PdfDataExtractorService(
         
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(pdfFileName, _ => new SemaphoreSlim(1, 1));
+        var pathLock = PathLocks.GetOrAdd(dmsDataForFile.FileId.ToString(), _ => new SemaphoreSlim(1, 1));
         await pathLock.WaitAsync();
 
         try
@@ -52,7 +52,7 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFileName}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile!.FileId} {pdfFileName}");
             }
             
             return await GetMatchesInternalAsync(
@@ -245,7 +245,7 @@ public class PdfDataExtractorService(
         if ((DateTime.Now - dtStart).TotalMilliseconds >= 1000)
         {
             ConsoleHelper.WriteLine(
-                $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+                $"INFO - {nameof(PdfDataExtractorService)} - Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
                 $" - {pdfDocument.PdfFilename}");
         }
 
@@ -1008,10 +1008,18 @@ public class PdfDataExtractorService(
                 regionCode,
                 lookupConfiguration.AllDmsData,
                 out var linkedDmsFileData);
+
+            if (linkedDmsFileData == null)
+            {
+                ConsoleHelper.WriteLine(
+                    $"INFO - {nameof(PdfDataExtractorService)} - ProcessLinkedLicenceAsync - excluding file as doesn't have file id set");
+                
+                break;
+            }
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                linkedDmsFileData,
+                linkedDmsFileData!,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
@@ -1345,7 +1353,7 @@ public class PdfDataExtractorService(
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             ConsoleHelper.WriteLine(
-                                $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+                                $"INFO - {nameof(PdfDataExtractorService)} - ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
                         }
                         
                         if (request.label.FindMultipleOnSingleLine

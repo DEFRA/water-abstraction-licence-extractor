@@ -1349,6 +1349,14 @@ public static partial class WalSchemaConverter
                             lookupConfiguration.AllDmsData,
                             out var linkedDmsFileData);
                         
+                        if (linkedDmsFileData == null)
+                        {
+                            ConsoleHelper.WriteLine(
+                                $"INFO - {nameof(WalSchemaConverter)} - ProcessLinkedLicenceAsync - excluding file as doesn't have file id set");
+                
+                            break;
+                        }
+                        
                         var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                             destinationFileName,
                             linkedDmsFileData,
@@ -2449,7 +2457,7 @@ public static partial class WalSchemaConverter
                         || yearlyQuantity == null
                         || instantRate == null)
                     {
-                        ConsoleHelper.WriteLine("INFO - Table was not in the expected format. Skipping");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Table was not in the expected format. Skipping");
                         continue;
                     }
                     

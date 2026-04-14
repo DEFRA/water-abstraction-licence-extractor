@@ -116,7 +116,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT
                                 page_number
                                 , data 
-                           FROM no_ocr_page_text_cache 
+                           FROM no_ocr_page_text_cache
                            WHERE
                                file_id = @FileId
                                AND no_ocr_service_name = @NoOcrServiceName;

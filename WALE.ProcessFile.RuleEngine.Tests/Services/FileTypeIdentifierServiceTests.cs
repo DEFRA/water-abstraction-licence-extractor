@@ -121,7 +121,7 @@ public class FileTypeIdentifierServiceTests
         var mockMatchesResult = CreateMockMatchesResult("This document contains license information");
         _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(
                 It.IsAny<string>(),
-                null,
+                It.IsAny<DmsFileData>(),
                 It.IsAny<LookupConfiguration>(),
                 It.IsAny<List<string>>(),
                 It.IsAny<int>()))

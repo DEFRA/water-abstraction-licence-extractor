@@ -10,7 +10,7 @@ public interface IPdfDataExtractorService
     
     public Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
-        DmsFileData? dmsDataForFile,
+        DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId);

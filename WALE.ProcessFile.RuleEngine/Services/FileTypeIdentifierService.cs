@@ -115,9 +115,12 @@ public class FileTypeIdentifierService
                 _currentServiceIndex++;
             }
 
+            var filenameParts = fileName.Split("__");
+            var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
+            
             var content = await serviceToUse.GetMatchesAsync(
                 fileName,
-                null,
+                new DmsFileData { FileId = fileId },
                 configuration,
                 [],
                 0);

@@ -57,9 +57,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task SaveLicenceSetsAsync(
         Dictionary<string, LicenceSet> licenceSets,
-        Guid fileId,
+        Guid? fileId,
         int processRunId)
     {
+        if (fileId == null)
+        {
+            return Task.CompletedTask;
+        }
+        
         var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
         
         return File.WriteAllTextAsync(

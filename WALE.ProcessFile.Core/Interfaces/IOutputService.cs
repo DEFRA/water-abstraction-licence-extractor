@@ -21,7 +21,7 @@ public interface IOutputService
     
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
 
-    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid fileId, int processRunId);
+    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId);
     
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId);
 

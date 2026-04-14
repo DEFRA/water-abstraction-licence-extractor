@@ -63,8 +63,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid fileId, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
     {
+        if (fileId == null)
+        {
+            return;
+        }
+        
         var path = "/Extractor/Licence/SaveLicenceSets";
 
         var json = JsonSerializer.Serialize(new

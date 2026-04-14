@@ -52,7 +52,7 @@ public class DatabaseOutputService(
         return databaseWriteService.AddProcessRunAsync(processRun);
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid fileId, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
     {
         foreach (var licenceSetKvp in licenceSets)
         {

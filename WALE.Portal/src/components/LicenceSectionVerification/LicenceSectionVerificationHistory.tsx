@@ -65,7 +65,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                             }}
                         >
                             Verified at: {dateTime}<br/>
-                            Process run: {verification.processRunId}<br/>
+                            Verified against process run: {verification.processRunId}<br/>
                         </div>
                     )}
                 </div>

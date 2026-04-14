@@ -15,41 +15,34 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
         return <div>No verification history found for this licence.</div>;
     }
 
-    const groupedVerifications = (verifications || []).reduce((acc, verification) => {
-        const sectionName = verification.licenceSectionName || 'N/A';
-        if (!acc[sectionName]) {
-            acc[sectionName] = [];
-        }
-        acc[sectionName].push(verification);
-        return acc;
-    }, {} as Record<string, LicenceSectionVerification[]>);
+    const sortedVerifications = [...(verifications || [])].sort((a, b) => {
+        const nameA = a.licenceSectionName || '';
+        const nameB = b.licenceSectionName || '';
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+
+        const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+        const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+        return dateB - dateA;
+    });
 
     return (
         <div>
-            {Object.entries(groupedVerifications).map(([sectionName, sectionVerifications]) => (
-                <LicenceSectionVerificationHistory key={sectionName} title={sectionName}>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Process Run</th>
-                                <th>Action</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sectionVerifications.map((verification, index) => (
-                                <tr key={verification.licenceSectionVerificationId || index}>
-                                    <td>{verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A'}</td>
-                                    <td>{verification.processRunId}</td>
-                                    <td>{verification.verificationType || 'N/A'}</td>
-                                    <td>{verification.licenceSectionValue || 'N/A'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </LicenceSectionVerificationHistory>
-            ))}
+            {sortedVerifications.map((verification, index) => {
+                const sectionName = verification.licenceSectionName || 'N/A';
+                const verificationType = verification.verificationType || 'N/A';
+                const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
+                const title = `${sectionName} - ${verificationType} - ${date}`;
+                
+                return (
+                    <LicenceSectionVerificationHistory 
+                        key={verification.licenceSectionVerificationId || index} 
+                        title={title}
+                    >
+                        <div>{verification.licenceSectionValue || 'N/A'}</div>
+                    </LicenceSectionVerificationHistory>
+                );
+            })}
         </div>
     );
 }

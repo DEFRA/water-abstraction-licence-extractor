@@ -328,6 +328,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         dtStart = DateTime.Now;
         await cacheService.SaveNoOcrPageTextLinesAsync(pageRequest, serialisedPageLines);
+        
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SaveNoOcrPageTextLines ({serialisedPageLines.Length / 1024}kb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
         

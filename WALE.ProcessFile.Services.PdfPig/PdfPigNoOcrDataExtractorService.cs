@@ -247,7 +247,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 cacheService,
                 outputService,
                 processRunId,
-                pagesMetadata))
+                pagesMetadata)) // Careful - this is being updated - TODO redesign
             .ToList();
 
         foreach (var processPageTask in processPageTasks)
@@ -257,6 +257,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         var processPagesDuration = DateTime.Now - dtProcessPagesStart;
         var dtMetadataStart = DateTime.Now;
+
+        var pagesMetadataList = pagesMetadata
+            .OrderBy(pm => pm.TryGetValue("number", out var numberObj)
+                ? (int)numberObj
+                : throw new Exception("Page number is missing"))
+            .ToList();
         
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
@@ -265,10 +271,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 NoOcrServiceName = Name,
                 ProcessRunId = processRunId
             },
-            pagesMetadata.ToList());
+            pagesMetadataList);
 
         // Update line numbers, now in one big list
         var lineNumber = 0;
+        
         documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
         
         ConsoleHelper.WriteLine(
@@ -310,7 +317,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             { "number", page.Number },
             { "numberOfImages", page.NumberOfImages },
             { "text", page.DigitalText! },
-            { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) }
+            { "detailReference", await cacheService.GetNoOcrPageReferenceAsync(pageRequest) }
         });
 
         if (FormattingHelper.IsPageEmpty(page.DigitalText))

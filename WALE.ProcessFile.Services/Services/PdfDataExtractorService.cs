@@ -43,7 +43,10 @@ public class PdfDataExtractorService(
         
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(dmsDataForFile.FileId.ToString(), _ => new SemaphoreSlim(1, 1));
+        var pathLock = PathLocks.GetOrAdd(
+            dmsDataForFile.FileId.ToString(),
+            _ => new SemaphoreSlim(1, 1));
+        
         await pathLock.WaitAsync();
 
         try
@@ -75,11 +78,8 @@ public class PdfDataExtractorService(
         List<string> previouslyParsedPaths,
         int processRunId)
     {
-        if (dmsDataForFile == null)
-        {
-            throw new ArgumentNullException(nameof(dmsDataForFile));
-        }
-        
+        ArgumentNullException.ThrowIfNull(dmsDataForFile);
+
         if (dmsDataForFile.FileId == Guid.Empty)
         {
             throw new Exception("FileId is empty");

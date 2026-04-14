@@ -231,8 +231,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request,
-        string dataStr, int processRunId)
+    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(
+        NoOcrServiceMetadataCacheRequest request,
+        string dataStr,
+        int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

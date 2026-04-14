@@ -52,7 +52,7 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile!.FileId} {pdfFileName}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
             }
             
             return await GetMatchesInternalAsync(
@@ -195,9 +195,17 @@ public class PdfDataExtractorService(
                 return returnResult;
             }
 
-            var anyImageLargeEnoughToBePageScan = true;
+            var anyImageLargeEnoughToBePageScan = false;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
+            const int maxPagesToDetermineIfScan = 4;
+
+            var maxPagesToLookAt = totalPagesToProcess;
+            if (maxPagesToLookAt > maxPagesToDetermineIfScan)
+            {
+                maxPagesToLookAt = maxPagesToDetermineIfScan;
+            }
+
+            for (var pageNumberIndex = 0; pageNumberIndex < maxPagesToLookAt; pageNumberIndex++)
             {
                 var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
                 pageNumber = pageNumberIndex + 1;
@@ -507,7 +515,7 @@ public class PdfDataExtractorService(
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;
-        const int minHeightWhenWidthEnough = 100;
+        const int minHeightWhenWidthEnough = 130;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -517,7 +525,7 @@ public class PdfDataExtractorService(
         }
 
         const int minHeight = 1800;
-        const int minWidthWhenHeightEnough = 100;
+        const int minWidthWhenHeightEnough = 130;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;

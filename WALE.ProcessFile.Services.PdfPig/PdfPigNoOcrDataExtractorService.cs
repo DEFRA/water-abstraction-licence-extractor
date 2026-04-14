@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -231,7 +232,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     {
         var documentLines = new List<DocumentLine>();
         
-        var pagesMetadata = new List<Dictionary<string, object>>();
+        var pagesMetadata = new ConcurrentBag<Dictionary<string, object>>();
         var dtStart = DateTime.Now;
 
         var pages = pdfDocument.Pages;
@@ -255,8 +256,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         }
         
         var processPagesDuration = DateTime.Now - dtProcessPagesStart;
-        
         var dtMetadataStart = DateTime.Now;
+        
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
@@ -264,7 +265,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 NoOcrServiceName = Name,
                 ProcessRunId = processRunId
             },
-            pagesMetadata);
+            pagesMetadata.ToList());
 
         // Update line numbers, now in one big list
         var lineNumber = 0;
@@ -285,7 +286,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId,
-        List<Dictionary<string, object>> pagesMetadata)
+        ConcurrentBag<Dictionary<string, object>> pagesMetadata)
     {
         var dtStart = DateTime.Now;
         var size = await SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);

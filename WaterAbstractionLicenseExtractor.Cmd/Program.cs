@@ -557,7 +557,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
     lock (extractorLock)
     {
-        pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
         pdfDataExtractor.InUse = true;
     }
 

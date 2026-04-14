@@ -294,10 +294,10 @@ async Task ProgramAsync()
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
-
+                
                 await outputService.SaveLicenceSetsAsync(
                     newLicenceSetsLoop,
-                    licenceLoop.DmsFileId!.Value,
+                    licenceLoop.DmsFileId,
                     processRun.ProcessRunId);
             }
         }
@@ -705,7 +705,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
  //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-//        .Take(100)
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

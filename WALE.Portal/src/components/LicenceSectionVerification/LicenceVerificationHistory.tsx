@@ -1,4 +1,5 @@
 import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
+import { LicenceSectionVerificationHistory } from "./LicenceSectionVerificationHistory.tsx";
 
 interface LicenceVerificationHistoryProps {
     verifications: LicenceSectionVerification[] | undefined;
@@ -26,8 +27,7 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
     return (
         <div>
             {Object.entries(groupedVerifications).map(([sectionName, sectionVerifications]) => (
-                <div key={sectionName} className="mb-4">
-                    <h3>{sectionName}</h3>
+                <LicenceSectionVerificationHistory key={sectionName} title={sectionName}>
                     <table className="table">
                         <thead>
                             <tr>
@@ -48,7 +48,7 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </LicenceSectionVerificationHistory>
             ))}
         </div>
     );

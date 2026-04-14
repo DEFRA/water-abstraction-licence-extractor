@@ -5,13 +5,14 @@ import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./Licenc
 import { LinkedLicenceItem } from "./LinkedLicenceItem";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
-    licence: Licence;
+    licence?: Licence;
+    initialData?: { linkedLicences: LinkedLicence[] };
     onJumpToPage?: (pageNumber: number) => void;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, isEditing, onJumpToPage }, ref) => {
-        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
+    ({ licence, isEditing, onJumpToPage, initialData }, ref) => {
+        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData?.linkedLicences || []);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +24,10 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         }));
 
         useEffect(() => {
+            if (initialData) return;
+
             const fetchLinkedLicences = async () => {
-                const permitNumber = licence.dmsPermitNumber;
+                const permitNumber = licence?.dmsPermitNumber;
                 if (!permitNumber) return;
 
                 setIsLoading(true);
@@ -41,7 +44,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence.dmsPermitNumber]);
+        }, [licence?.dmsPermitNumber, initialData]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({

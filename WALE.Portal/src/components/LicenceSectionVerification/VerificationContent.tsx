@@ -81,6 +81,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage }: Ver
                 <LicenceVerificationHistory 
                     verifications={history}
                     isLoading={isLoadingHistory}
+                    onJumpToPage={onJumpToPage}
                 />
             )}
         </div>

@@ -1,12 +1,19 @@
 import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationHistory } from "./LicenceSectionVerificationHistory.tsx";
+import { LinkedLicences } from "./LinkedLicences.tsx";
+import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
     verifications: LicenceSectionVerification[] | undefined;
     isLoading: boolean;
+    onJumpToPage?: (pageNumber: number) => void;
 }
 
-export function LicenceVerificationHistory({ verifications, isLoading }: LicenceVerificationHistoryProps) {
+const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
+    "Linked Licences": LinkedLicences
+};
+
+export function LicenceVerificationHistory({ verifications, isLoading, onJumpToPage }: LicenceVerificationHistoryProps) {
     if (isLoading) {
         return <div>Loading history...</div>;
     }
@@ -26,6 +33,22 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
         return dateB - dateA;
     });
 
+    const renderVerificationContent = (verification: LicenceSectionVerification) => {
+        const sectionName = verification.licenceSectionName || '';
+        const Component = SECTION_COMPONENTS[sectionName];
+
+        if (Component && verification.licenceSectionValue) {
+            try {
+                const initialData = JSON.parse(verification.licenceSectionValue);
+                return <Component initialData={initialData} isEditing={false} onJumpToPage={onJumpToPage} />;
+            } catch (e) {
+                console.error("Error parsing verification value", e);
+            }
+        }
+
+        return <div>{verification.licenceSectionValue || 'N/A'}</div>;
+    };
+
     return (
         <div>
             {sortedVerifications.map((verification, index) => (
@@ -33,7 +56,7 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
                     key={verification.licenceSectionVerificationId || index} 
                     verification={verification}
                 >
-                    <div>{verification.licenceSectionValue || 'N/A'}</div>
+                    {renderVerificationContent(verification)}
                 </LicenceSectionVerificationHistory>
             ))}
         </div>

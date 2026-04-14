@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type {Licence, LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
-import {LicenceHistory} from "./LicenceHistory";
+import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
 
 interface VerificationContentProps {
@@ -78,7 +78,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage }: Ver
             )}
 
             {activeSubTab === 'history' && (
-                <LicenceHistory 
+                <LicenceVerificationHistory 
                     verifications={history}
                     isLoading={isLoadingHistory}
                 />

@@ -71,6 +71,11 @@ public static class FormattingHelper
             return StripForComparison_NE(formattedLicenceNumber);
         }
 
+        if (regionCode == 7)
+        {
+            return StripForComparison_7(formattedLicenceNumber);
+        }
+
         var licenceNumber = formattedLicenceNumber
             .Replace("//", "/")
             .Replace(".", "/")
@@ -112,6 +117,51 @@ public static class FormattingHelper
 
         // Commented out 12-01-2026 as it makes these the same 6/33/02/*G/0103 and 6/33/02/*G/0013
         return str;// str.Replace("0", string.Empty);
+    }
+    
+    private static string? StripForComparison_7(string? formattedLicenceNumber)
+    {
+        if (formattedLicenceNumber == null)
+        {
+            return formattedLicenceNumber;
+        }
+        
+        var licenceNumber = formattedLicenceNumber
+            .Replace("//", "/")
+            .Replace(".", "/")
+            .Replace(" ", "/")
+            .Replace("-", "/");
+
+        var parts = licenceNumber.Split('/');
+
+        var first = true;
+        var sb = new StringBuilder();
+
+        var partCount = 1;
+        
+        foreach (var part in parts)
+        {
+            var partChanged = part;
+
+            if (partCount++ != 3)
+            {
+                while (partChanged.StartsWith('0'))
+                {
+                    partChanged = partChanged[1..];
+                }
+            }
+
+            if (!first)
+            {
+                sb.Append('_');
+            }
+            
+            sb.Append(partChanged);
+            first = false;            
+        }
+
+        var str = sb.ToString();
+        return str;
     }
 
     private static string? StripForComparison_NE(string? formattedLicenceNumber)

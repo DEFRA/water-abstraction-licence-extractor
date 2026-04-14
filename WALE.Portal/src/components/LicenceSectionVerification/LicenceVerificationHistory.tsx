@@ -28,21 +28,14 @@ export function LicenceVerificationHistory({ verifications, isLoading }: Licence
 
     return (
         <div>
-            {sortedVerifications.map((verification, index) => {
-                const sectionName = verification.licenceSectionName || 'N/A';
-                const verificationType = verification.verificationType || 'N/A';
-                const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
-                const title = `${sectionName} - ${verificationType} - ${date}`;
-                
-                return (
-                    <LicenceSectionVerificationHistory 
-                        key={verification.licenceSectionVerificationId || index} 
-                        title={title}
-                    >
-                        <div>{verification.licenceSectionValue || 'N/A'}</div>
-                    </LicenceSectionVerificationHistory>
-                );
-            })}
+            {sortedVerifications.map((verification, index) => (
+                <LicenceSectionVerificationHistory 
+                    key={verification.licenceSectionVerificationId || index} 
+                    verification={verification}
+                >
+                    <div>{verification.licenceSectionValue || 'N/A'}</div>
+                </LicenceSectionVerificationHistory>
+            ))}
         </div>
     );
 }

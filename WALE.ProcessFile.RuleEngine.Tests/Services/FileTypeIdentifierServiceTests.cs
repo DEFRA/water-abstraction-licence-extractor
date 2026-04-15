@@ -12,7 +12,7 @@ namespace WALE.ProcessFile.RuleEngine.Tests.Services;
 
 public class FileTypeIdentifierServiceTests
 {
-    private readonly Mock<IPdfDataExtractorService> _mockPdfExtractorService;
+    private readonly Mock<IPdfDataExtractorService> _mockPdfExtractorService; // TODO remove Moq for FakeItEasy
     private readonly FileTypeIdentifierService _service;
 
     public FileTypeIdentifierServiceTests()

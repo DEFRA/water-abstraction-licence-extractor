@@ -49,7 +49,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>(),
+        new List<IOcrDataExtractorService>
+        {
+            // TODO mock of an OCR service that errors if called
+        },
         CacheService,
         OutputService,
         DocumentService,

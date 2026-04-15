@@ -173,7 +173,7 @@ function renderListRow(
                     item.imagePath === undefined ? (
                         <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
                     ) : (
-                        <img key={idx} src={getThumbnailUrl(item.imagePath)} style={{height: '80px'}} alt='No image found' onError={(e) => e.currentTarget.style.display = 'none'} />
+                        <img key={idx} src={getThumbnailUrl(item.fileId)} style={{height: '80px'}} alt='No image found' onError={(e) => e.currentTarget.style.display = 'none'} />
                     )
                 ))}
             </td>

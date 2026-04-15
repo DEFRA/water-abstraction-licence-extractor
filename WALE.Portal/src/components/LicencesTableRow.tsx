@@ -19,7 +19,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
                 <img
-                    src={getThumbnailUrl(item.imagePath ?? "")}
+                    src={getThumbnailUrl(item.fileId ?? "")}
                     style={{height: '80px'}}
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>

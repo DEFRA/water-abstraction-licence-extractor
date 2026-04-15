@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -105,7 +106,7 @@ public static class TemplateIdentificationExtract
         return value.Replace("\"", "\"\"");
     }
 
-    private static string ExtractPermitNumber(string fileName)
+    private static string? ExtractPermitNumber(string fileName)
     {
         if (string.IsNullOrEmpty(fileName))
         {
@@ -116,7 +117,22 @@ public static class TemplateIdentificationExtract
         
         return underscoreIndex >= 0 
             ? fileName[..underscoreIndex].Trim() 
-            : fileName;
+            : null;
+    }
+    
+    private static string? ExtractFileId(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return string.Empty;
+        }
+
+        var filenameParts = fileName.Split("__");
+        var fileId = filenameParts.Length >= 3 && Guid.TryParse(filenameParts[1], out var _fileId)
+            ? _fileId.ToString()
+            : null;
+
+        return fileId;
     }
 
     public static async Task GenerateTemplateFinderResult(string region)
@@ -129,55 +145,72 @@ public static class TemplateIdentificationExtract
         CreateExcelFileFromList(data, fullPath);
     }
 
-    public static void GenerateWaterPdfsFolderInventory()
+    public static void GenerateWaterPdfsFolderInventory(string username)
     {
         ConsoleHelper.WriteLine("Starting WaterPdfs folder inventory generation...");
 
         try
         {
-            // Get the parent directory of OutputFolder to access sibling folders
-            var outputFolderInfo = new DirectoryInfo(OutputFolder);
-            var parentDirectory = outputFolderInfo.Parent;
-
-            if (parentDirectory == null || !parentDirectory.Exists)
+            var waterPdfFoldersStr = $"/Users/{username}/Downloads/2025_11_11_parts;" +
+                $"/Users/{username}/Downloads/2025_12_12_parts;" +
+                $"/Users/{username}/Downloads/2026_02_13_parts;" +
+                $"/Users/{username}/Downloads/20260218-NW_dup;" +
+                $"/Users/{username}/Downloads/Anglian_2026_01_12;" +
+                $"/Users/{username}/Downloads/Anglian_20260225;" +
+                $"/Users/{username}/Downloads/Anglian_overrides_2026_02_22;" +
+                $"/Users/{username}/Downloads/DOI_Regression;" +
+                $"/Users/{username}/Downloads/Fw_ Yorkshire 1.1 Licences;" +
+                $"/Users/{username}/Downloads/NE_Oct_2025;" +
+                $"/Users/{username}/Downloads/NE_WC_only;" +
+                $"/Users/{username}/Downloads/WaterPdfs6000;" +
+                $"/Users/{username}/Documents/GitHub/WaterPdfs";
+        
+            var waterPdfFolderPaths = waterPdfFoldersStr
+                .Split(';')
+                .ToList();
+            
+            if (waterPdfFolderPaths.Count == 0)
             {
-                ConsoleHelper.WriteLine($"Parent directory not found for: {OutputFolder}");
+                ConsoleHelper.WriteLine("No folders specified");
                 return;
             }
 
-            ConsoleHelper.WriteLine($"Scanning parent directory: {parentDirectory.FullName}");
-
-            // Get all directories that start with "WaterPdfs"
-            var waterPdfsFolders = parentDirectory.GetDirectories("WaterPdfs*");
-
-            if (waterPdfsFolders.Length == 0)
-            {
-                ConsoleHelper.WriteLine("No folders starting with 'WaterPdfs' found.");
-                return;
-            }
-
-            ConsoleHelper.WriteLine($"Found {waterPdfsFolders.Length} folder(s) starting with 'WaterPdfs'");
+            ConsoleHelper.WriteLine($"Found {waterPdfFolderPaths.Count} folder(s) to look at");
 
             // Collect all file information
-            var fileInventory = new List<(string FolderName, string FileName, string PermitNumber, long FileSize, DateTime ModifiedTime)>();
+            var filesMetadata = new List<(
+                string FolderName,
+                string? PermitNumber,
+                string? FileId,
+                string FileName,
+                long FileSize,
+                DateTime ModifiedTime)>();
 
-            foreach (var folder in waterPdfsFolders.Where(d => d.Name != "WaterPdfsDuplicates"))
+            foreach (var folderPath in waterPdfFolderPaths)
             {
-                ConsoleHelper.WriteLine($"Processing folder: {folder.Name}");
-
+                ConsoleHelper.WriteLine($"Processing folder: {folderPath}");
+                var folder = new DirectoryInfo(folderPath);
+                
                 try
                 {
-                    var files = folder.GetFiles("*.pdf", SearchOption.AllDirectories);
-                    ConsoleHelper.WriteLine($"  Found {files.Length} file(s) in {folder.Name}");
+                    var filesInFolder = folder.GetFiles("*.pdf", SearchOption.AllDirectories);
+                    ConsoleHelper.WriteLine($"  Found {filesInFolder.Length} file(s) in {folder.Name}");
 
-                    foreach (var file in files)
+                    foreach (var file in filesInFolder)
                     {
                         var permitNumber = ExtractPermitNumber(file.Name);
+                        var fileId = ExtractFileId(file.Name);
+
+                        if (!string.IsNullOrEmpty(fileId))
+                        {
+                            
+                        }
                         
-                        fileInventory.Add((
+                        filesMetadata.Add((
                             FolderName: folder.Name,
-                            FileName: file.Name,
                             PermitNumber: permitNumber,
+                            FileId: fileId,
+                            FileName: file.Name,
                             FileSize: file.Length,
                             ModifiedTime: file.LastWriteTime
                         ));
@@ -186,9 +219,15 @@ public static class TemplateIdentificationExtract
                 catch (Exception ex)
                 {
                     ConsoleHelper.WriteLine($"  Error processing folder {folder.Name}: {ex.Message}");
+                    throw;
                 }
             }
 
+            var fileMetadataOrderedByFolderNameAndPermitNumber = filesMetadata
+                .OrderBy(tuple => tuple.FolderName)
+                .ThenBy(tuple => tuple.PermitNumber)
+                .ToList();
+            
             // Generate CSV file
             var csvFileName = $"WaterPdfs_Inventory_{DateTime.Today:yyyyMMdd}.csv";
             var csvFilePath = Path.Combine(OutputFolder, csvFileName);
@@ -196,28 +235,38 @@ public static class TemplateIdentificationExtract
             using (var writer = new StreamWriter(csvFilePath))
             {
                 // Write header
-                writer.WriteLine("FolderName,PermitNumber,FileName,FileSizeBytes,ModifiedTime");
-
+                writer.WriteLine("FolderName,PermitNumber,FileId,FileName,FileSizeBytes,ModifiedTime");
+                
                 // Write data rows
-                foreach (var file in fileInventory.OrderBy(f => f.FolderName).ThenBy(f => f.PermitNumber))
+                foreach (var fileMetadata in fileMetadataOrderedByFolderNameAndPermitNumber)
                 {
-                    var line = $"\"{EscapeCsv(file.FolderName)}\",\"{EscapeCsv(file.PermitNumber)}\",\"{EscapeCsv(file.FileName)}\",{file.FileSize},\"{file.ModifiedTime:yyyy-MM-dd HH:mm:ss}\"";
+                    var line = $"\"{EscapeCsv(fileMetadata.FolderName)}\",\"{EscapeCsv(fileMetadata.PermitNumber)}\"" +
+                        $",\"{EscapeCsv(fileMetadata.FileId)}\",\"{EscapeCsv(fileMetadata.FileName)}\"" +
+                        $",{fileMetadata.FileSize},\"{fileMetadata.ModifiedTime:yyyy-MM-dd HH:mm:ss}\"";
+                    
                     writer.WriteLine(line);
                 }
             }
 
             ConsoleHelper.WriteLine($"Inventory CSV created successfully: {csvFilePath}");
-            ConsoleHelper.WriteLine($"Total files processed: {fileInventory.Count}");
+            ConsoleHelper.WriteLine($"Total files processed: {filesMetadata.Count}");
 
             // Print summary by folder
-            var summary = fileInventory.GroupBy(f => f.FolderName)
-                .Select(g => new { FolderName = g.Key, FileCount = g.Count(), TotalSize = g.Sum(f => f.FileSize) });
+            var summary = filesMetadata
+                .GroupBy(tuple => tuple.FolderName)
+                .Select(grp => new
+                {
+                    FolderName = grp.Key,
+                    FileCount = grp.Count(),
+                    TotalSize = grp.Sum(f => f.FileSize)
+                })
+                .ToList();
 
             ConsoleHelper.WriteLine("\nSummary by folder:");
             
-            foreach (var item in summary)
+            foreach (var summaryItem in summary)
             {
-                ConsoleHelper.WriteLine($"  {item.FolderName}: {item.FileCount} files, {item.TotalSize:N0} bytes");
+                ConsoleHelper.WriteLine($"  {summaryItem.FolderName}: {summaryItem.FileCount} files, {summaryItem.TotalSize:N0} bytes");
             }
         }
         catch (Exception ex)

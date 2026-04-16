@@ -3,13 +3,15 @@ using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-var workflow = "GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
+var workflow = "ImportNaldData";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
+workflow = "FilesAvailableForLicenceIdentificationExtract";
 
 const int processRunId = 1707;
 const int regionCode = 3; // Anglia=1, NE=3
 var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
-var overrideRootPath = "/Users/user/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
+var username = "xxx";
+var overrideRootPath = $"/Users/{username}/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
 
 switch (workflow)
 {
@@ -32,8 +34,10 @@ switch (workflow)
     case "FileTypeIdentificationExtract": // Version File Type Identification
         await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
         break;
-    case "FilesAvailableForLicenceIdentificationExtract": // Identify files available for licence identification
-        TemplateIdentificationExtract.GenerateWaterPdfsFolderInventory();
+    case "FilesAvailableForLicenceIdentificationExtract": // Identify local files available for licence
+        // identification (feeds into other process)
+        
+        TemplateIdentificationExtract.GenerateWaterPdfsFolderInventory(username);
         break;
     case "TemplateFinderExtract":
         await TemplateIdentificationExtract.GenerateTemplateFinderResult("NW");

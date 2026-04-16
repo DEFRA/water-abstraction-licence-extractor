@@ -37,7 +37,7 @@ public class TesseractOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -79,7 +79,7 @@ public class TesseractOcrDataExtractorService(
                     imageNumber,
                     isPageScreenshot,
                     imageReference,
-                    pdfDocument.PdfFilename,
+                    pdfDocument.FileId,
                     processRunId);
             }
             else
@@ -88,7 +88,7 @@ public class TesseractOcrDataExtractorService(
                     pageNumber,
                     imageNumber,
                     imageReference,
-                    pdfDocument.PdfFilename,
+                    pdfDocument.FileId,
                     isPageScreenshot,
                     processRunId,
                     cacheService.UsesDatabase);
@@ -162,17 +162,16 @@ public class TesseractOcrDataExtractorService(
         int pageNumber,
         int imageNumber,
         string imageReference,
-        string pdfFilePath,
+        Guid fileId,
         bool isPageScreenshot,
         int processRunId,
         bool isDbBased)
     {
-        var pdfFileNameOnly = Path.GetFileNameWithoutExtension(pdfFilePath);
         var showDebugMessages = false;
 
         if (!showDebugMessages)
         {
-            ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - External process called");
+            ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - External process called");
         }
         
         var fileMode = isDbBased ? "Database" : "File";
@@ -191,7 +190,7 @@ public class TesseractOcrDataExtractorService(
             pageNumber.ToString(),
             imageNumber.ToString(),
             $"\"{imageReference}\"",
-            $"\"{pdfFilePath}\"",
+            $"\"{fileId}\"",
             isPageScreenshot.ToString(),
             processRunId.ToString(),
             $"\"{cacheService.CacheFolderOrUrl}\"",
@@ -240,7 +239,7 @@ public class TesseractOcrDataExtractorService(
 
             if (showDebugMessages)
             {
-                ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {pdfFileNameOnly}) - {line}");
+                ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - {line}");
             }
         }
         

@@ -86,6 +86,7 @@ public class MessageReceivedFunction(
 
         var matches = await pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData(), // TODO dont use this
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
                 fileLicenceMapping,

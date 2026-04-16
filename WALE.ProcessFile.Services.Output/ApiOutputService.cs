@@ -20,17 +20,17 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilename)
+        Guid fileId)
     {
-        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, pdfFilename);
+        return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, fileId);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilename)
+        Guid fileId)
     {
-        var path = $"/Extractor/Images/GetPageScreenshot?filename={pdfFilename}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
+        var path = $"/Extractor/Images/GetPageScreenshot?fileId={fileId}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
@@ -63,13 +63,18 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilename, int processRunId)
+    public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
     {
+        if (fileId == null)
+        {
+            return;
+        }
+        
         var path = "/Extractor/Licence/SaveLicenceSets";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilename,
+            fileId,
             processRunId,
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -79,13 +84,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId)
+    public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         var path = "/Extractor/Licence/Save";
 
         var json = JsonSerializer.Serialize(new
         {
-            pdfFilename,
+            fileId = licence.DmsFileId,
             processRunId,
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
@@ -98,7 +103,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId)
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -120,14 +125,14 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var path = "/Extractor/MatchResult/Save";
 
         var json = JsonSerializer.Serialize(new
         {
             Matches = matchesResult,
-            pdfFilename,
+            fileId,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
         
@@ -148,7 +153,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilename,
+        Guid fileId,
         int processRunId)
     {
         var filenameNoExtension = pdfDocument.PdfFilenameNoExtension;
@@ -163,7 +168,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
                 providerName,
                 bitmap,
                 pageNumber, 
-                filenameNoExtension,
+                fileId,
                 processRunId));
         }
 
@@ -179,7 +184,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         string providerName,
         SKBitmap bitmap,
         int pageNumber,
-        string pdfFilename,
+        Guid fileId,
         int processRunId)
     {
         var bytes = await GetAsJpegAsync(bitmap);
@@ -190,7 +195,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         {
             PageNumber = pageNumber,
             NoOcrServiceName = providerName,
-            PdfFilename = pdfFilename,
+            FileId = fileId,
             Data = bytes,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
@@ -202,7 +207,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return bytes.Length;
     }
 
-    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, byte[] data,
+    public Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        Guid fileId,
+        byte[] data,
         int processRunId)
     {
         throw new NotImplementedException();
@@ -238,7 +247,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task SaveAllPagesTextAsync(
         List<DocumentLine> documentLines,
-        string pdfFilename,
+        Guid fileId,
         string noOcrServiceName,
         int processRunId)
     {
@@ -247,7 +256,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
-            pdfFilename,
+            fileId,
             noOcrServiceName,
             processRunId
         }, JsonHelper.GetSerializerOptions());
@@ -272,7 +281,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        processRun.EndDateTimeUtc = DateTime.Parse(content);
+        processRun.EndDateTimeUtc = DateTime.Parse(content).ToUniversalTime();
     }
 
     public Task<List<ProcessRun>> GetProcessRunsAsync()
@@ -302,17 +311,17 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(string filename)
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(string filename)
+    public Task<Licence?> GetLicenceAsync(Guid fileId)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MatchesResult?> GetMatchesResult(string filename)
+    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
     {
         throw new NotImplementedException();
     }
@@ -327,7 +336,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
     {
         throw new NotImplementedException();
     }

@@ -36,7 +36,7 @@ public class AzureOpenAiOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -68,7 +68,7 @@ public class AzureOpenAiOcrDataExtractorService(
             var imagePrompt = await GetImagePromptAsync(
                 pageNumber,
                 imageNumber,
-                pdfDocument.PdfFilename,
+                pdfDocument.FileId,
                 imageReference);
             
             userPrompts.Add(imagePrompt);
@@ -134,14 +134,14 @@ public class AzureOpenAiOcrDataExtractorService(
             .ToList();
     }
     
-    async Task<ChatMessageContentPart> GetImagePromptAsync(int pageNumber, int imageNumber, string pdfFilename, string imageReference)
+    async Task<ChatMessageContentPart> GetImagePromptAsync(int pageNumber, int imageNumber, Guid fileId, string imageReference)
     {
         var imageBytes = await cacheService.GetImageBytesAsync(
             new OcrServiceImageDataCacheRequest
             {
                 PageNumber = pageNumber,
                 ImageNumber = imageNumber,
-                Filename = pdfFilename,
+                FileId = fileId,
                 NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                 Extension = FileHelper.GetImageExtension(imageReference)
             });

@@ -11,13 +11,13 @@ public interface IDatabaseReadService
     
     Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request);
     
-    Task<byte[]?> GetPageScreenshotAsync(int pageNumber, string fileName, string noOcrServiceName);
+    Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName);
     
     Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
     
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
-    Task<string?> GetAllPagesTextAsync(string pdfFilename, string noOcrServiceName);
+    Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     
@@ -35,13 +35,13 @@ public interface IDatabaseReadService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
-    Task<ProcessRun?> GetMostRecentProcessRunAsync(string filename);
+    Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
     Task<List<Licence>> GetLicencesAsync(int processRunId);
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
     
-    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(string filename, int processRunId);
+    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
     
@@ -55,11 +55,11 @@ public interface IDatabaseReadService
     
     Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
     
-    Task<Licence?> GetLicenceAsync(string filename);
+    Task<Licence?> GetLicenceAsync(Guid fileId);
     
     Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
     
-    Task<MatchesResult?> GetMatchesResult(string filename);
+    Task<MatchesResult?> GetMatchesResult(Guid fileId);
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 

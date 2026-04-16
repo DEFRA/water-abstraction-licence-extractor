@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string?> SaveImageBytesAsync(string filename, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
+    public async Task<string?> SaveImageBytesAsync(Guid fileId, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
     {
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
@@ -107,17 +107,16 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             bytes!,
             pix.Width,
             pix.Height,
-            filename,
+            fileId,
             GeneralConstants.PdfPigDataExtractorServiceName,
             imageNumber,
             pageNumber,
             returnExtension,
             processRunId);
         
-        var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(filename)!;
         var roundedSizeKb = (size / 1024.0).ToString("0.0");
         
-        ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} ({roundedSizeKb}kb) - {filenameNoExtension}");
+        ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} ({roundedSizeKb}kb) - {fileId}");
         
         return returnExtension;
     }

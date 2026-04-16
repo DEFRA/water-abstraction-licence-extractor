@@ -273,8 +273,12 @@ public static class GenerateLicenceReaderExtract
     {
         try
         {
+            var filenameParts = fileName.Split("__");
+            var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
+            
             var result = await pdfDataExtractor.GetMatchesAsync(
                 fileName,
+                new DmsFileData { FileId = fileId },
                 configuration,
                 [fileName],
                 0);

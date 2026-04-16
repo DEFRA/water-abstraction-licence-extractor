@@ -75,6 +75,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
             0);
@@ -258,7 +259,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             [],
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(2, TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

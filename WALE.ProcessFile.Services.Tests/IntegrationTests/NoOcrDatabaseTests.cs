@@ -100,6 +100,7 @@ public class NoOcrDatabaseTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
             0);
@@ -129,7 +130,9 @@ public class NoOcrDatabaseTests
         await SetupLicenceNumbersAsync(3);
         
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
-        await CacheService.ClearCacheAsync(filename);
+        var someGuid = Guid.NewGuid(); // TODO
+        
+        await CacheService.ClearCacheAsync(someGuid);
         
         await ProcessAsync(filename); // Uncached
         await ProcessAsync(filename); // Cached

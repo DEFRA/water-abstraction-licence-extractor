@@ -79,6 +79,7 @@ public class AzureOpenAiOcrPdfTests
     {
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(PdfFolder),
             
             [fileName],
@@ -97,7 +98,7 @@ public class AzureOpenAiOcrPdfTests
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Went from 8 to 7 2026-03-02 - not sure how
+        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Fluctuates between 7 and 8 a bit
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -110,12 +111,12 @@ public class AzureOpenAiOcrPdfTests
         
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
         
-        Assert.Null(nameResult);
-        /*Assert.True(nameResult.IsOcr);
+        Assert.True(nameResult!.IsOcr);
+        
         // NOTE - According to companies house this is actual H.N. BUTLER FARMS LTD        
         Assert.EndsWith(" Ltd", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Contains("(hereinafter referred to as \"the Authority\")", nameResult.MatchedLabel!.Text!.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);*/
+        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         

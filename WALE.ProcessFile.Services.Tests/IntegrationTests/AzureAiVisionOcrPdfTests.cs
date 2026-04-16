@@ -91,6 +91,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
             0);
@@ -1674,7 +1675,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(2, TestConfig.PdfFolder));
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

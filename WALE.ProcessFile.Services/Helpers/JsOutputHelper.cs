@@ -135,8 +135,8 @@ public static class JsOutputHelper
             {
                 imagePath = $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
                 filename = filenameNoExtension,
-                licenceNumber =
-                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+                fileId = outputLine.DmsFileId!.Value,
+                licenceNumber = $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
                     $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
                 purposes = outputLine.Purposes,

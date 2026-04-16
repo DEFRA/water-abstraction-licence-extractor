@@ -14,12 +14,12 @@ public class MetadataController(ICacheService cacheService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAsync(
-        [FromQuery] string filename,
+        [FromQuery] Guid fileId,
         [FromQuery] string noOcrServiceName)
     {
         var request = new NoOcrServiceMetadataCacheRequest
         {
-            Filename = filename,
+            FileId = fileId,
             NoOcrServiceName = noOcrServiceName
         };
         

@@ -561,6 +561,7 @@ public static class TestsForAiPrompts
 
         var mockPdfDocument = new PdfDocument(
             "[NOT_USED]",
+            Guid.NewGuid(),
             true,
             outputService,
             pdfPigDocumentService,

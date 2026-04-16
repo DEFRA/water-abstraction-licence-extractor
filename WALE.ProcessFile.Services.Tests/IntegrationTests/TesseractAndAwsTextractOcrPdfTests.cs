@@ -91,6 +91,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(folder, regionCode),
             [fileName],
             0);

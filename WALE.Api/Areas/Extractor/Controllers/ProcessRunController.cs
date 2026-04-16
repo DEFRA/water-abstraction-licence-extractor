@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -10,7 +11,7 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class ProcessRunController(IOutputService outputService) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateRequest request)
+    public async Task<IActionResult> CreateAsync([FromBody] ProcessRunCreateRequest request)
     {
         var processRun = await outputService.StartProcessRunAsync(new ProcessRun
         {
@@ -23,7 +24,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> FinishAsync([FromBody] EndRequest request)
+    public async Task<IActionResult> FinishAsync([FromBody] ProcessRunEndRequest request)
     {
         await outputService.FinishProcessRunAsync(new ProcessRun
         {
@@ -31,17 +32,5 @@ public class ProcessRunController(IOutputService outputService) : Controller
         }, request.regionCode);
 
         return Ok(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-    }
-    
-    public class CreateRequest
-    {
-        public string? description { get; set; }
-        public int numberOfFiles { get; set; }
-    }
-    
-    public class EndRequest
-    {
-        public int processRunId { get; set; }
-        public int regionCode { get; set; }
     }
 }

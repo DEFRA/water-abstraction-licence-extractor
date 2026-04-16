@@ -38,7 +38,7 @@ public class AzureAiVisionOcrDataExtractorService(
         {
             PageNumber = pageNumber,
             ImageNumber = imageNumber,
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             OcrServiceName = Name,
             ProcessRunId = processRunId
         };
@@ -69,7 +69,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 bytesList = await outputService.GetPageScreenshotDataAsync(
                     pageNumber,
                     GeneralConstants.PdfPigDataExtractorServiceName,
-                    pdfDocument.PdfFilename);
+                    pdfDocument.FileId);
             }
             else
             {
@@ -77,7 +77,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 {
                     PageNumber = pageNumber,
                     ImageNumber = imageNumber,
-                    Filename = pdfDocument.PdfFilename,
+                    FileId = pdfDocument.FileId,
                     NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName,
                     Extension = FileHelper.GetImageExtension(imageReference)
                 });
@@ -142,7 +142,7 @@ public class AzureAiVisionOcrDataExtractorService(
         OcrServiceImageTextCacheRequest request)
     {
         ReadInStreamHeaders? textHeaders;
-        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.Filename}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.FileId}");
         
         try
         {
@@ -194,7 +194,7 @@ public class AzureAiVisionOcrDataExtractorService(
                 
                 // Try deflate
                 bytes = await cacheService.DeflateImageAsync(
-                    request.Filename!,
+                    request.FileId,
                     request.ImageNumber,
                     request.PageNumber,
                     request.ProcessRunId,

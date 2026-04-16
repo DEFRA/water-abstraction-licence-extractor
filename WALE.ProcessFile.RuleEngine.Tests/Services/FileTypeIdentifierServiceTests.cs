@@ -12,7 +12,7 @@ namespace WALE.ProcessFile.RuleEngine.Tests.Services;
 
 public class FileTypeIdentifierServiceTests
 {
-    private readonly Mock<IPdfDataExtractorService> _mockPdfExtractorService;
+    private readonly Mock<IPdfDataExtractorService> _mockPdfExtractorService; // TODO remove Moq for FakeItEasy
     private readonly FileTypeIdentifierService _service;
 
     public FileTypeIdentifierServiceTests()
@@ -119,7 +119,12 @@ public class FileTypeIdentifierServiceTests
         await File.WriteAllTextAsync(tempFile, "temp content");
 
         var mockMatchesResult = CreateMockMatchesResult("This document contains license information");
-        _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(It.IsAny<string>(), It.IsAny<LookupConfiguration>(), It.IsAny<List<string>>(), It.IsAny<int>()))
+        _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<DmsFileData>(),
+                It.IsAny<LookupConfiguration>(),
+                It.IsAny<List<string>>(),
+                It.IsAny<int>()))
             .ReturnsAsync(mockMatchesResult);
 
         try

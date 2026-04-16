@@ -31,7 +31,7 @@ try
     var pageNumber = int.Parse(args[2]);
     var imageNumber = int.Parse(args[3]);
     var imageReference = args[4];
-    var pdfFilepath = args[5];
+    var fileId = Guid.Parse(args[5]);
     var isPageScreenshot = bool.Parse(args[6]);
     var processRunId = int.Parse(args[7]);
     var cacheFolderOrApiUrl = args[8];
@@ -53,7 +53,7 @@ try
         imageNumber,
         isPageScreenshot,
         imageReference,
-        pdfFilepath,
+        fileId,
         processRunId);
     
     await WriteLogFileIfDebugModeAsync(

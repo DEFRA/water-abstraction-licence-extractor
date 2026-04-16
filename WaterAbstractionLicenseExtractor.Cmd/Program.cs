@@ -137,7 +137,6 @@ async Task ProgramAsync()
                     naldLicenceStatusData,
                     naldData,
                     outputService,
-                    cacheService,
                     pdfDataExtractors,
                     processRun,
                     extractorLock,
@@ -243,7 +242,6 @@ async Task ProgramAsync()
                         await outputService.UpdateLicenceAsync(
                             licenceLoop,
                             existingLicenceId,
-                            filename,
                             processRun.ProcessRunId);
 
                         loopLicenceId = existingLicenceId;
@@ -252,7 +250,6 @@ async Task ProgramAsync()
                     {
                         loopLicenceId = await outputService.SaveLicenceAsync(
                             licenceLoop,
-                            filename,
                             processRun.ProcessRunId);
                     }
 
@@ -280,7 +277,6 @@ async Task ProgramAsync()
                 {
                     var loopLicenceId = await outputService.SaveLicenceAsync(
                         licenceLoop,
-                        filename,
                         processRun.ProcessRunId);
 
                     savedLicenceFilenames.Add(filename, loopLicenceId);
@@ -298,10 +294,10 @@ async Task ProgramAsync()
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
-
+                
                 await outputService.SaveLicenceSetsAsync(
                     newLicenceSetsLoop,
-                    licenceLoop.Filename!,
+                    licenceLoop.DmsFileId,
                     processRun.ProcessRunId);
             }
         }
@@ -338,13 +334,11 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-    processRun.EndDateTimeUtc = DateTime.UtcNow;
     await outputService.FinishProcessRunAsync(processRun, regionCode);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
-        $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+        $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
 
     //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
@@ -548,7 +542,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     NaldLicenceStatusData naldLicenceStatusData,
     Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
-    ICacheService cacheService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,
     Lock extractorLock,
@@ -564,7 +557,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
     lock (extractorLock)
     {
-        pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
         pdfDataExtractor.InUse = true;
     }
 
@@ -577,13 +570,14 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
+            dmsDataForFile,
             lookupConfig,
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesFull,
-            pdfFilename,
+            dmsDataForFile.FileId,
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
@@ -708,9 +702,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22723032G_"))
-        
-//        .Take(100)
+ //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
@@ -780,7 +773,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 var naldLicenceRef = (string)row["License Number"];
 
                 var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : (Guid?)null;
+                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
 
                 var dmsFileData = new DmsFileData
                 {

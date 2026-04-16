@@ -39,6 +39,7 @@ public class FileTypeIdentifierService
     /// Gets the page count of a PDF file without full processing
     /// </summary>
     /// <param name="filePath">The path to the PDF file</param>
+    /// <param name="fileId"></param>
     /// <param name="outputService">TODO</param>
     /// <param name="documentService"></param>
     /// <param name="alternativeDocumentService"></param>
@@ -46,6 +47,7 @@ public class FileTypeIdentifierService
     /// <returns>The number of pages in the PDF</returns>
     private static async Task<int> GetPageCountAsync(
         string filePath,
+        Guid fileId,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
         INoOcrAlternativePdfDocumentService alternativeDocumentService,
@@ -63,6 +65,7 @@ public class FileTypeIdentifierService
                 // TODO should this always load it?
                 var pdfDocument = new PdfDocument(
                     filePath,
+                    fileId,
                     false,
                     outputService,
                     documentService,
@@ -112,8 +115,12 @@ public class FileTypeIdentifierService
                 _currentServiceIndex++;
             }
 
+            var filenameParts = fileName.Split("__");
+            var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
+            
             var content = await serviceToUse.GetMatchesAsync(
                 fileName,
+                new DmsFileData { FileId = fileId },
                 configuration,
                 [],
                 0);
@@ -585,12 +592,21 @@ public class FileTypeIdentifierService
 
                 var newPageCounts = new Dictionary<string, int>();
 
-                var pageCountTasks = batch.Select(async file =>
+                var pageCountTasks = batch.Select(async filePath =>
                 {
+                    var filenameParts = filePath.Split("__");
+                    var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
+
+                    if (fileId == Guid.Empty)
+                    {
+                        throw new Exception("Filename is in incorrect format (missing fileid)");
+                    }
+                    
                     try
                     {
                         var pageCount = await GetPageCountAsync(
-                            file,
+                            filePath,
+                            fileId,
                             outputService,
                             documentService,
                             alternativeDocumentService,
@@ -598,15 +614,15 @@ public class FileTypeIdentifierService
                         
                         return new
                         {
-                            File = file,
+                            File = filePath,
                             PageCount = pageCount,
                             Success = true
                         };
                     }
                     catch (Exception ex)
                     {
-                        ConsoleHelper.WriteLine($"Error getting page count for {Path.GetFileName(file)}: {ex.Message}");
-                        return new { File = file, PageCount = 0, Success = false };
+                        ConsoleHelper.WriteLine($"Error getting page count for {Path.GetFileName(filePath)}: {ex.Message}");
+                        return new { File = filePath, PageCount = 0, Success = false };
                     }
                 });
 

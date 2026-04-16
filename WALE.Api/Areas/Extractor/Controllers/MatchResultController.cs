@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
@@ -10,22 +10,13 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class MatchResultController(IOutputService outputService) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> SaveAsync([FromBody] SaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] SaveMatchResultRequest matchResultRequest)
     {
         var matchResultId = await outputService.SaveMatchResultAsync(
-            request.matches!,
-            request.pdfFilename!,
-            request.processRunId);
+            matchResultRequest.matches!,
+            matchResultRequest.fileId!,
+            matchResultRequest.processRunId);
         
         return Ok(matchResultId);
-    }
-
-    public class SaveRequest
-    {
-        public MatchesResult? matches { get; set; }
-        
-        public string? pdfFilename { get; set; }
-        
-        public int processRunId { get; set; }
     }
 }

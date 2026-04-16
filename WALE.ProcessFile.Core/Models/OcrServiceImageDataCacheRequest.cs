@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class OcrServiceImageDataCacheRequest
 {
-    public string? Filename { get; set; }
+    public Guid FileId { get; set; }
     public int? PageNumber { get; set; }
     public int? ImageNumber { get; set; }
     public string? NoOcrServiceName  { get; set; }

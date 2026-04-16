@@ -90,6 +90,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
             0);
@@ -1574,6 +1575,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt33_ThenNowGetsThem()
     {
         // Arrange
+        await SetupLicenceNumbersAsync(3);
         const string filename = "2671309044__Application type unknown Licence Issued (30102002).pdf";
 
         // Act

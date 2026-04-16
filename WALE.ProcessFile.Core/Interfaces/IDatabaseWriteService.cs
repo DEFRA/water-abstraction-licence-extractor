@@ -9,22 +9,25 @@ public interface IDatabaseWriteService
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, string? pdfFilePath, int processRunId);
+    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
         string licenceData,
-        string? filenameNoExtension,
         Guid? fileId,
         string? permitNumber,
         int processRunId);
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
     
-    public Task<int> SaveMatchesResultAsync(string matchesResult, string pdfFilePath, int processRunId);
+    public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId);
 
-    public Task SavePageScreenshotAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
-        byte[] data, int processRunId);
+    public Task SavePageScreenshotAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        Guid fileId, 
+        byte[] data,
+        int processRunId);
 
     Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
@@ -32,13 +35,13 @@ public interface IDatabaseWriteService
     
     Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr, int processRunId);
    
-    Task SaveAllPagesTextAsync(string documentLinesStr, string pdfFilename, string noOcrServiceName, int processRunId);
+    Task SaveAllPagesTextAsync(string documentLinesStr, Guid fileId, string noOcrServiceName, int processRunId);
 
     Task SaveImageOnPageAsync(
         byte[] bytes,
         int width,
         int height,
-        string pdfFilePath,
+        Guid fileId,
         string noOcrServiceName,
         int imageNumber,
         int pageNumber,
@@ -55,7 +58,7 @@ public interface IDatabaseWriteService
     
     Task ClearCacheAsync();
     
-    Task ClearCacheAsync(string pdfFilename);
+    Task ClearCacheAsync(Guid fileId);
     
     Task UpdateProcessRunAsync(ProcessRun processRun);
     

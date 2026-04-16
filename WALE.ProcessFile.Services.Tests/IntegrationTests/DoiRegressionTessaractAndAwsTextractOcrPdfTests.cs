@@ -96,6 +96,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         
         return await _pdfDataExtractorCombined5.GetMatchesAsync(
             fileName,
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
             0);

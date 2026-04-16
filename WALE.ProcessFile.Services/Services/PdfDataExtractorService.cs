@@ -30,6 +30,7 @@ public class PdfDataExtractorService(
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
+        DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId)
@@ -42,7 +43,10 @@ public class PdfDataExtractorService(
         
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(pdfFileName, _ => new SemaphoreSlim(1, 1));
+        var pathLock = PathLocks.GetOrAdd(
+            dmsDataForFile.FileId.ToString(),
+            _ => new SemaphoreSlim(1, 1));
+        
         await pathLock.WaitAsync();
 
         try
@@ -51,11 +55,12 @@ public class PdfDataExtractorService(
             
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {pdfFileName}");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
             }
             
             return await GetMatchesInternalAsync(
                 pdfFileName,
+                dmsDataForFile,
                 configuration,
                 previouslyParsedFiles,
                 processRunId);
@@ -68,15 +73,24 @@ public class PdfDataExtractorService(
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFileName,
+        DmsFileData? dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
+        ArgumentNullException.ThrowIfNull(dmsDataForFile);
+
+        if (dmsDataForFile.FileId == Guid.Empty)
+        {
+            throw new Exception("FileId is empty");
+        }
+        
         var dtStart = DateTime.Now;
         var additionalInformationStore = new Dictionary<string, object?>();
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
+            dmsDataForFile.FileId,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -106,7 +120,10 @@ public class PdfDataExtractorService(
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
             RegionCode = configuration.RegionCode,
-            ServicesUsed = [ noOcrDataExtractorService.Name, GeneralConstants.DocnetExtractorServiceName ] // TODO, tidy this up
+            ServicesUsed = [
+                noOcrDataExtractorService.Name,
+                GeneralConstants.DocnetExtractorServiceName
+            ] // TODO, tidy this up
         };
         
         var isOcr = false;
@@ -151,7 +168,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                Filename = pdfFileName,
+                FileId = dmsDataForFile.FileId,
                 NoOcrServiceName = Name
             });
 
@@ -178,9 +195,17 @@ public class PdfDataExtractorService(
                 return returnResult;
             }
 
-            var anyImageLargeEnoughToBePageScan = true;
+            var anyImageLargeEnoughToBePageScan = false;
 
-            for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
+            const int maxPagesToDetermineIfScan = 4;
+
+            var maxPagesToLookAt = totalPagesToProcess;
+            if (maxPagesToLookAt > maxPagesToDetermineIfScan)
+            {
+                maxPagesToLookAt = maxPagesToDetermineIfScan;
+            }
+
+            for (var pageNumberIndex = 0; pageNumberIndex < maxPagesToLookAt; pageNumberIndex++)
             {
                 var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
                 pageNumber = pageNumberIndex + 1;
@@ -228,7 +253,7 @@ public class PdfDataExtractorService(
         if ((DateTime.Now - dtStart).TotalMilliseconds >= 1000)
         {
             ConsoleHelper.WriteLine(
-                $"Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+                $"INFO - {nameof(PdfDataExtractorService)} - Checking digital text stuff took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
                 $" - {pdfDocument.PdfFilename}");
         }
 
@@ -490,7 +515,7 @@ public class PdfDataExtractorService(
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;
-        const int minHeightWhenWidthEnough = 100;
+        const int minHeightWhenWidthEnough = 130;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -500,7 +525,7 @@ public class PdfDataExtractorService(
         }
 
         const int minHeight = 1800;
-        const int minWidthWhenHeightEnough = 100;
+        const int minWidthWhenHeightEnough = 130;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;
@@ -946,7 +971,7 @@ public class PdfDataExtractorService(
             .Select(result => result.Text?.FirstOrDefault())
             .ToList();
         
-        var pathsToFetch = new List<string>();
+        var pathsToFetch = new List<(string RelatedFileName, string LicenceNumber)>();
         
         foreach (var licenceNumber in licenceNumbers)
         {
@@ -972,10 +997,10 @@ public class PdfDataExtractorService(
             }
 
             previouslyParsedFiles.Add(destinationFilenames);
-            pathsToFetch.Add(destinationFilenames);
+            pathsToFetch.Add((destinationFilenames, licenceNumber.Text));
         }
 
-        foreach (var relatedFileName in pathsToFetch)
+        foreach (var (relatedFileName, relatedLicenceNumber) in pathsToFetch)
         {
             if (!File.Exists(relatedFileName))
             {
@@ -986,8 +1011,23 @@ public class PdfDataExtractorService(
             clonedConfig.AllDmsData = licenceNumberMapping;
             clonedConfig.RegionCode = regionCode;
             
+            FormattingHelper.GetDmsFileData(
+                relatedLicenceNumber,
+                regionCode,
+                lookupConfiguration.AllDmsData,
+                out var linkedDmsFileData);
+
+            if (linkedDmsFileData == null)
+            {
+                ConsoleHelper.WriteLine(
+                    $"INFO - {nameof(PdfDataExtractorService)} - ProcessLinkedLicenceAsync - excluding file as doesn't have file id set");
+                
+                break;
+            }
+            
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
+                linkedDmsFileData!,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
@@ -1133,7 +1173,7 @@ public class PdfDataExtractorService(
             var fullLine = line.Line;
             var breakLineLoop = false;
             
-            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
+            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed)) // TODO we should change this to just accept one label
             {
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
@@ -1321,7 +1361,7 @@ public class PdfDataExtractorService(
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             ConsoleHelper.WriteLine(
-                                $"ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+                                $"INFO - {nameof(PdfDataExtractorService)} - ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
                         }
                         
                         if (request.label.FindMultipleOnSingleLine

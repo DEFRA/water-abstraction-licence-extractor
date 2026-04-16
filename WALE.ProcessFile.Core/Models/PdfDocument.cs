@@ -12,6 +12,8 @@ public class PdfDocument
     public bool FromCache { get; }
     public string PdfFilename { get; }
     
+    public Guid FileId { get; set; }
+    
     public string PdfFilenameNoExtension { get; }
     
     public IFileService FileService { get; }
@@ -28,6 +30,7 @@ public class PdfDocument
     
     public PdfDocument(
         string pdfFilename,
+        Guid fileId,
         bool fromCache,
         IOutputService outputService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
@@ -35,6 +38,7 @@ public class PdfDocument
         LookupConfiguration configuration)
     {
         PdfFilename = pdfFilename;
+        FileId = fileId;
         PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
         FileService = configuration.FileService;
         FromCache = fromCache;
@@ -83,7 +87,7 @@ public class PdfDocument
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
-                        PdfFilename);
+                        FileId);
                     
                     var pdfPage = new PdfPage
                     {

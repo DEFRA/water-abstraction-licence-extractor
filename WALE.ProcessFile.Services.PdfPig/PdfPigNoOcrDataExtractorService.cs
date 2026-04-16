@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -19,6 +20,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     public async Task<PdfDocument> GetPdfDocumentAsync(
         string pdfFileName,
+        Guid fileId,
         IOutputService outputService,
         ICacheService cacheService,
         INoOcrPdfDocumentService noOcrPdfDocumentService,
@@ -26,10 +28,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         LookupConfiguration configuration,
         int processRunId)
     {
-        var metadata = await cacheService.GetMetadataAsync(pdfFileName, Name, processRunId);
+        var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
 
         var pdfDocument = new PdfDocument(
             pdfFileName,
+            fileId,
             metadata != null,
             outputService,
             noOcrPdfDocumentService,
@@ -38,7 +41,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (pdfDocument.FromCache)
         {
-            pdfDocument.Pages = GetPages(metadata!.PagesMetadata!, pdfFileName, outputService);
+            pdfDocument.Pages = GetPages(metadata!.PagesMetadata!, fileId, outputService);
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
         
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
@@ -58,7 +61,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         // This one is just for auditing - not used for processing
         var saveAllPagesTextTask = outputService.SaveAllPagesTextAsync(
             pdfDocument.DocumentLines!,
-            pdfFileName,
+            fileId,
             Name,
             processRunId);
 
@@ -74,7 +77,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     private List<PdfPage> GetPages(
         Dictionary<string, object> pagesTextMetadata,
-        string pdfFilePath,
+        Guid fileId,
         IOutputService outputService)
     {
         var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
@@ -83,10 +86,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
         {
             var pageElement = pageArray[pageNumber - 1];
+            
             var screenshotFilepaths = outputService.GetPageScreenshotReferences(
                 pageNumber,
                 Name,
-                pdfFilePath);
+                fileId);
             
             var pdfPage = new PdfPage
             {
@@ -148,7 +152,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         await cacheService.SaveNoOcrImagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filename = pdfDocument.PdfFilename,
+                FileId = pdfDocument.FileId,
                 NoOcrServiceName = Name,
                 ProcessRunId = processRunId
             }, imagesMetadata);
@@ -165,7 +169,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pdfDocument,
             pageNumber,
             pdfServiceName,
-            pdfDocument.PdfFilename,
+            pdfDocument.FileId,
             processRunId);
     }
 
@@ -228,7 +232,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     {
         var documentLines = new List<DocumentLine>();
         
-        var pagesMetadata = new List<Dictionary<string, object>>();
+        var pagesMetadata = new ConcurrentBag<Dictionary<string, object>>();
         var dtStart = DateTime.Now;
 
         var pages = pdfDocument.Pages;
@@ -243,7 +247,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 cacheService,
                 outputService,
                 processRunId,
-                pagesMetadata))
+                pagesMetadata)) // Careful - this is being updated - TODO redesign
             .ToList();
 
         foreach (var processPageTask in processPageTasks)
@@ -252,19 +256,26 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         }
         
         var processPagesDuration = DateTime.Now - dtProcessPagesStart;
-        
         var dtMetadataStart = DateTime.Now;
+
+        var pagesMetadataList = pagesMetadata
+            .OrderBy(pm => pm.TryGetValue("number", out var numberObj)
+                ? (int)numberObj
+                : throw new Exception("Page number is missing"))
+            .ToList();
+        
         await cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
-                Filename = pdfDocument.PdfFilename,
+                FileId = pdfDocument.FileId,
                 NoOcrServiceName = Name,
                 ProcessRunId = processRunId
             },
-            pagesMetadata);
+            pagesMetadataList);
 
         // Update line numbers, now in one big list
         var lineNumber = 0;
+        
         documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
         
         ConsoleHelper.WriteLine(
@@ -282,7 +293,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId,
-        List<Dictionary<string, object>> pagesMetadata)
+        ConcurrentBag<Dictionary<string, object>> pagesMetadata)
     {
         var dtStart = DateTime.Now;
         var size = await SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);
@@ -293,7 +304,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         var pageRequest = new NoOcrServicePageCacheRequest
         {
-            Filename = pdfDocument.PdfFilename,
+            FileId = pdfDocument.FileId,
             NoOcrServiceName = Name,
             PageNumber = page.Number,
             ProcessRunId = processRunId
@@ -306,7 +317,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             { "number", page.Number },
             { "numberOfImages", page.NumberOfImages },
             { "text", page.DigitalText! },
-            { "detailReference", cacheService.GetNoOcrPageReferenceAsync(pageRequest) }
+            { "detailReference", await cacheService.GetNoOcrPageReferenceAsync(pageRequest) }
         });
 
         if (FormattingHelper.IsPageEmpty(page.DigitalText))
@@ -325,6 +336,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         dtStart = DateTime.Now;
         await cacheService.SaveNoOcrPageTextLinesAsync(pageRequest, serialisedPageLines);
+        
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SaveNoOcrPageTextLines ({serialisedPageLines.Length / 1024}kb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
         
@@ -391,7 +403,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         {
             Number = page.Number,
             ScreenshotReferences = outputService
-                .GetPageScreenshotReferences(page.Number, Name, pdfDocument.PdfFilename)
+                .GetPageScreenshotReferences(page.Number, Name, pdfDocument.FileId)
                 .Select(sr => new ImageMetadataPageScreenshot
                 {
                     ImageReference = sr.ImageReference,
@@ -406,7 +418,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         foreach (var image in await pageImageService.GetImagesAsync())
         {
             imageSaveTasks.Add(image.SaveImageBytesAsync(
-                pdfDocument.PdfFilename,
+                pdfDocument.FileId,
                 imageNumber++,
                 page.Number,
                 cacheService,
@@ -427,7 +439,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var imageReference = await cacheService.GetImageReferenceAsync(
                 page.Number,
                 imageNumber++,
-                pdfDocument.PdfFilename,
+                pdfDocument.FileId,
                 extension,
                 Name);
                 

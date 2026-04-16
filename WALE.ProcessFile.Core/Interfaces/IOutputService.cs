@@ -12,24 +12,24 @@ public interface IOutputService
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilename);
+        Guid fileId);
     
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
-        string pdfFilename);
+        Guid fileId);
     
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
 
-    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, string pdfFilename, int processRunId);
+    public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId);
     
-    public Task<int> SaveLicenceAsync(Licence licence, string? pdfFilename, int processRunId);
+    public Task<int> SaveLicenceAsync(Licence licence, int processRunId);
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, string? pdfFilename, int processRunId);
+    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId);
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
     
-    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, string pdfFilename, int processRunId);
+    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
     
@@ -37,13 +37,21 @@ public interface IOutputService
         PdfDocument pdfDocument,
         int pageNumber,
         string noOcrServiceName,
-        string pdfFilename,
+        Guid fileId,
         int processRunId);
 
-    public Task SavePageScreenshotInternalAsync(int pageNumber, string noOcrServiceName, string pdfFilename, 
-        byte[] data, int processRunId);
+    public Task SavePageScreenshotInternalAsync(
+        int pageNumber,
+        string noOcrServiceName,
+        Guid fileId, 
+        byte[] data,
+        int processRunId);
     
-    public Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, string pdfFilename, string noOcrServiceName, int processRunId);
+    public Task SaveAllPagesTextAsync(
+        List<DocumentLine> documentLines,
+        Guid fileId,
+        string noOcrServiceName,
+        int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun, int regionId);
     
@@ -53,11 +61,11 @@ public interface IOutputService
 
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
     
-    Task<List<LicenceSet>> GetLicenceSetsAsync(string filename);
+    Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
     
-    Task<Licence?> GetLicenceAsync(string filename);
+    Task<Licence?> GetLicenceAsync(Guid fileId);
     
-    Task<MatchesResult?> GetMatchesResult(string filename);
+    Task<MatchesResult?> GetMatchesResult(Guid fileId);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 

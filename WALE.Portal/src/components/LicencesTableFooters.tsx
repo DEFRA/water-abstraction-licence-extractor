@@ -9,7 +9,6 @@ export function LicencesTableFooters({ totals }: LicencesTableFootersProps) {
         <>
             <tr style={{fontWeight: 'bold'}}>
                 <td>Total</td>
-                <td>{totals.filename}</td>
                 <td>{totals.licenceNumber}</td>
                 <td className="default-hidden">{totals.licenceHolder}</td>
                 <td>{totals.purposes}</td>
@@ -22,15 +21,14 @@ export function LicencesTableFooters({ totals }: LicencesTableFootersProps) {
                 <td>{totals.meansFound}</td>
                 <td>{totals.linkedLicences}</td>
                 <td>{totals.licenceSets}</td>
-                <td>{totals.status}</td>
                 <td>{totals.licenceVerificationSummary}</td>
             </tr>
             <tr>
-                <td colSpan={15}></td>
+                <td colSpan={14}></td>
                 <td></td>
             </tr>
             <tr>
-                <td colSpan={13}></td>
+                <td colSpan={10}></td>
                 <td style={{
                     fontWeight: 'normal', verticalAlign: 'top', fontSize: '10pt'
                 }}>

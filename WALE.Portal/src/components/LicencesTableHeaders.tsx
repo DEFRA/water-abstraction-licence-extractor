@@ -59,7 +59,7 @@ export function LicencesTableHeaders({
     return (
         <>
             <tr>
-                <td colSpan={12}></td>
+                <td colSpan={10}></td>
                 <td>
                     <input
                         type="checkbox"
@@ -71,7 +71,6 @@ export function LicencesTableHeaders({
                 <td colSpan={2}></td>
             </tr>
             <tr>
-                <td></td>
                 <td></td>
                 <td>
                     <FilterSelect
@@ -250,23 +249,6 @@ export function LicencesTableHeaders({
                 </td>
                 <td>
                     <FilterSelect
-                        id="status-filter"
-                        field="status"
-                        type="Values"
-                        value={filters['status']?.value ?? 'All'}
-                        onChange={onFilterChange}
-                        onReset={() => onResetFilters('status')}
-                        options={[
-                            { value: 'All', label: 'All' },
-                            { value: 'Live', label: 'Live' },
-                            { value: 'Dead', label: 'Dead' },
-                            { value: 'Impoundment', label: 'Impoundment' },
-                            { value: 'Not Found', label: 'Not Found' }
-                        ]}
-                    />
-                </td>
-                <td>
-                    <FilterSelect
                         id="verified-filter"
                         field="licenceVerificationSummary"
                         type="EmptyOrNotArray"
@@ -283,9 +265,6 @@ export function LicencesTableHeaders({
             </tr>
             <tr>
                 <td style={{width: '5%'}}>&nbsp;</td>
-                <td style={{width: '10%'}}>
-                    Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
-                </td>
                 <td style={{width: '7%'}}>
                     Licence no. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceNumber'); }}>&#8693;</a>
                 </td>
@@ -321,9 +300,6 @@ export function LicencesTableHeaders({
                 </td>
                 <td style={{width: '8%'}}>
                     Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
-                </td>
-                <td style={{width: '3%'}}>
-                    Stat <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '10%'}}>
                     Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceVerificationSummary'); }}>&#8693;</a>

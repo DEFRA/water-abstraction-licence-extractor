@@ -1,5 +1,7 @@
+import type {ReactNode} from "react";
+
 interface UnorderedListOfStringsProps {
-    items: string[];
+    items: (string | ReactNode)[];
 }
 
 function UnorderedListOfStrings({items}: UnorderedListOfStringsProps) {

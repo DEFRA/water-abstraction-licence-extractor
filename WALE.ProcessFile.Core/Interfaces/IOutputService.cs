@@ -61,7 +61,7 @@ public interface IOutputService
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, int processRunId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
     Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync();
 

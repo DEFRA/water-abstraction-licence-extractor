@@ -24,13 +24,14 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                     alt='No image found'
                     onError={(e) => e.currentTarget.style.display = 'none'}/>
             </td>
-            <td className='filename-cell'><a href="#"
+            <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
+                <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
                        onOpenReport(item.filename!);
-                   }}>{item.filename}</a>
+                   }}
+                   dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             </td>
-            <td id={dashesIfNullOrEmpty(item.licenceNumber)} dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
@@ -54,7 +55,6 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                     showSingles={showSingles}
                 />
             </td>
-            <td>{item.status}</td>
             <td>
                 {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
                     <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => {

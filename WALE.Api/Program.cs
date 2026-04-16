@@ -1,10 +1,12 @@
 using Scalar.AspNetCore;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
+using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -66,8 +68,18 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
+    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey")
+        ?? throw new NullReferenceException("AwsS3AccessKey");
+    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey")
+        ?? throw new NullReferenceException("AwsS3SecretKey");
+    var s3RegionName = config.GetValue<string>("AwsS3RegionName")
+        ?? throw new NullReferenceException("AwsS3RegionName");
+    var s3BucketName = config.GetValue<string>("AwsS3BucketName")
+        ?? throw new NullReferenceException("AwsS3BucketName");
+    
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
+        .AddS3Services(s3AccessKey, s3SecretKey, s3RegionName, s3BucketName)        
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),

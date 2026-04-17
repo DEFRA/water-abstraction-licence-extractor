@@ -1,6 +1,6 @@
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {useState, useEffect, useCallback} from 'react'
+import {useState, useEffect, useCallback, type ChangeEvent} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";
@@ -73,6 +73,19 @@ function ListPage() {
         openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
 
+    const fileUploaded = useCallback((file: ChangeEvent<HTMLInputElement>) => {
+        let data = new FormData()
+        
+        for (let idx = 0, len = file.target.files!.length; idx < len; idx++) {
+            data.append('file', file.target.files![idx]);
+        }
+        
+        fetch("http://localhost:8080/BFF/Files/Upload", {
+            method: 'PUT',
+            body: data
+        }).then();
+    }, []);
+    
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
@@ -161,9 +174,7 @@ function ListPage() {
 
             {activeTab === 'files' && (
                 <div id="files">
-                    <FilesList/>
-                    
-                    <input type="file" id="filesUpload" multiple />
+                    <FilesList onFilesSelected={fileUploaded}/>
                 </div>
             )}
 

@@ -1,10 +1,12 @@
 import FilesListItem from '../components/FilesListItem.tsx';
-import {useEffect, useState} from 'react'
+import {type ChangeEvent, useEffect, useState} from 'react'
 import {FilePdf} from "../class/FilePdf.tsx";
 
-interface FilesListProps {}
+interface FilesListProps {
+    onFilesSelected: (event: ChangeEvent<HTMLInputElement>) => void;
+}
 
-export function FilesList({}: FilesListProps) {
+export function FilesList({onFilesSelected}: FilesListProps) {
     const [files, setFiles] = useState<FilePdf[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -22,10 +24,7 @@ export function FilesList({}: FilesListProps) {
             }
         };
         
-        const getFiles = async () => {
-            let file = new FilePdf();
-            file.filename = 'xx1';
-            
+        const getFiles = async () => {            
             let response = await fetch("http://localhost:8080/BFF/Files/ListAll");
             let items = await response.json();
             
@@ -38,7 +37,7 @@ export function FilesList({}: FilesListProps) {
             
             return items;
         };
-
+        
         fetchFiles();
     }, []);
 
@@ -52,10 +51,12 @@ export function FilesList({}: FilesListProps) {
                 : (
                     <ul id="filesList">
                         {files.map((file) => (
-                            <FilesListItem file={file} />
+                            <FilesListItem file={file} key={file.filename} />
                         ))}
                     </ul>
                 )}
+
+            <input type="file" id="filesUpload" multiple onChange={onFilesSelected} />
         </>
     );
 }

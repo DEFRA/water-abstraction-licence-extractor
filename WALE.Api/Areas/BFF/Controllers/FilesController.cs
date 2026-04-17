@@ -30,14 +30,14 @@ public class FilesController(IFileService fileService) : Controller
         
         foreach (var file in Request.Form.Files)
         {
-            if (file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
             {
                 continue;
             }
          
             var fileExtension = Path.GetExtension(file.FileName);
             
-            if (!fileExtension.Equals("pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
             {
                 continue;
             }

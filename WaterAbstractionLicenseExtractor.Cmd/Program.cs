@@ -437,12 +437,10 @@ ConfiguredServices ConfigureServices()
             ?? throw new NullReferenceException("AwsS3BucketName");
         
         fileService = new AwsS3FileService(
-            accessKey,
-            secretKey,
             regionName,
             bucketName,
-            null,
-            null,
+            accessKey,
+            secretKey,
             null);
     }
     else

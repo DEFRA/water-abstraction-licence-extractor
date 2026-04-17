@@ -7,12 +7,10 @@ using WALE.ProcessFile.Core.Interfaces;
 namespace WALE.ProcessFile.Services.AwsS3;
 
 public class AwsS3FileService(
-    string accessKey,
-    string secretKey,
     string regionName,
     string bucketName,
-    string? roleArn,
-    string? roleSessionName,
+    string? accessKey,
+    string? secretKey,
     string? sessionToken) : IFileService
 {
     public async Task<List<string>> GetAllFilesAsync()
@@ -81,9 +79,18 @@ public class AwsS3FileService(
 
         if (!string.IsNullOrEmpty(accessKey))
         {
-            client = new AmazonS3Client(
-                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
-                s3Config);
+            if (!string.IsNullOrEmpty(sessionToken))
+            {
+                client = new AmazonS3Client(
+                    new SessionAWSCredentials(accessKey, secretKey, sessionToken),
+                    s3Config);                
+            }
+            else
+            {
+                client = new AmazonS3Client(
+                    new BasicAWSCredentials(accessKey, secretKey),
+                    s3Config);
+            }
         }
         else
         {

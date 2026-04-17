@@ -1,7 +1,7 @@
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback, type ChangeEvent} from 'react'
-import {waleApiClient} from '../api/apiClient';
+import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";
 import LicencesTableFooters from "../components/LicencesTableFooters";
@@ -80,7 +80,7 @@ function ListPage() {
             data.append('file', file.target.files![idx]);
         }
         
-        fetch("http://localhost:8080/BFF/Files/Upload", {
+        fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
             method: 'PUT',
             body: data
         }).then(() => {

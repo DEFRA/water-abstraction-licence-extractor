@@ -1,6 +1,7 @@
 import FilesListItem from '../components/FilesListItem.tsx';
 import {type ChangeEvent, useEffect, useState} from 'react'
 import {FilePdf} from "../class/FilePdf.tsx";
+import {waleApiBaseUrl} from "../api/apiClient.ts";
 
 interface FilesListProps {
     onFilesSelected: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -25,7 +26,7 @@ export function FilesList({onFilesSelected}: FilesListProps) {
         };
         
         const getFiles = async () => {            
-            let response = await fetch("http://localhost:8080/BFF/Files/ListAll");
+            let response = await fetch(waleApiBaseUrl + "/BFF/Files/ListAll");
             let items = await response.json();
             
             items = items.map(function(item: string | undefined) {

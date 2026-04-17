@@ -82,10 +82,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddS3Services(
-            s3AccessKey,
-            s3SecretKey,
             s3RegionName,
             s3BucketName,
+            s3AccessKey,
+            s3SecretKey,
             s3SessionToken)        
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(

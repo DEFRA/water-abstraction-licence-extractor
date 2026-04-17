@@ -23,7 +23,7 @@ function ListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'none'>('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -163,10 +163,6 @@ function ListPage() {
                 <div id="files">
                     <FilesList/>
                 </div>
-            )}
-
-            {activeTab === 'none' && (
-                <></>
             )}
 
             <ReportModalContainer

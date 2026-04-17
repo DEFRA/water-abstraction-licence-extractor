@@ -23,7 +23,7 @@ function ListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'none'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -83,7 +83,10 @@ function ListPage() {
         fetch("http://localhost:8080/BFF/Files/Upload", {
             method: 'PUT',
             body: data
-        }).then();
+        }).then(() => {
+            setActiveTab('none');
+            setTimeout(function() { setActiveTab('files'); }, 50);
+        });
     }, []);
     
     if (loading) return <div className="container"><p>Loading...</p></div>;
@@ -176,6 +179,10 @@ function ListPage() {
                 <div id="files">
                     <FilesList onFilesSelected={fileUploaded}/>
                 </div>
+            )}
+
+            {activeTab === 'none' && (
+                <></>
             )}
 
             <ReportModalContainer

@@ -28,5 +28,10 @@ public class LocalFileService(string folderPath) : IFileService
         return File.ReadAllBytesAsync($"{FolderPath}{pdfFilename}");
     }
 
+    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    {
+        throw new NotImplementedException();
+    }
+
     public string FolderPath { get; set; } = folderPath;
 }

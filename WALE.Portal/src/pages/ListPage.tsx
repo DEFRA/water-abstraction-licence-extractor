@@ -8,6 +8,7 @@ import LicencesTableFooters from "../components/LicencesTableFooters";
 import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
 import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
 import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
+import FilesList from "../components/FilesList";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
@@ -22,7 +23,7 @@ function ListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets'>('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -71,7 +72,7 @@ function ListPage() {
     const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
         openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
-
+    
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
@@ -98,6 +99,17 @@ function ListPage() {
                         setActiveTab('licenceSets');
                     }}>
                     Licence sets
+                </a>
+                {' | '}
+                <a
+                    href="#"
+                    id="filesLink"
+                    className={activeTab === 'files' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('files');
+                    }}>
+                    Files
                 </a>
             </h1>
 
@@ -144,6 +156,12 @@ function ListPage() {
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
                     </table>
                     <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
+                </div>
+            )}
+
+            {activeTab === 'files' && (
+                <div id="files">
+                    <FilesList/>
                 </div>
             )}
 

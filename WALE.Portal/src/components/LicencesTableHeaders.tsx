@@ -59,14 +59,14 @@ export function LicencesTableHeaders({
     return (
         <>
             <tr>
-                <td colSpan={10}></td>
+                <td colSpan={11}></td>
                 <td>
                     <input
                         type="checkbox"
                         id="showSingles"
                         checked={showSingles}
                         onChange={(e) => onToggleSingles(e.target.checked)}
-                    /> Singles
+                    /> Show singles
                 </td>
                 <td colSpan={2}></td>
             </tr>

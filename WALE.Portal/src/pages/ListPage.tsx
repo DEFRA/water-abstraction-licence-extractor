@@ -161,7 +161,7 @@ function ListPage() {
 
             {activeTab === 'files' && (
                 <div id="files">
-                    <ul id="filesList"><FilesList/></ul>
+                    <FilesList/>
                     
                     <input type="file" id="filesUpload" multiple />
                 </div>

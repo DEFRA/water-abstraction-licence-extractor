@@ -76,10 +76,23 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         ?? throw new NullReferenceException("AwsS3RegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
+    var s3RoleArn = config.GetValue<string>("AwsS3RoleArn")
+        ?? throw new NullReferenceException("AwsS3RoleArn");
+    var s3RoleSessionName = config.GetValue<string>("AwsS3RoleSessionName")
+        ?? throw new NullReferenceException("AwsS3RoleSessionName");
+    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken")
+        ?? throw new NullReferenceException("AwsS3SessionToken");      
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
-        .AddS3Services(s3AccessKey, s3SecretKey, s3RegionName, s3BucketName)        
+        .AddS3Services(
+            s3AccessKey,
+            s3SecretKey,
+            s3RegionName,
+            s3BucketName,
+            s3RoleArn,
+            s3RoleSessionName,
+            s3SessionToken)        
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),

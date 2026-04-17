@@ -10,7 +10,10 @@ public class AwsS3FileService(
     string accessKey,
     string secretKey,
     string regionName,
-    string bucketName) : IFileService
+    string bucketName,
+    string? roleArn,
+    string? roleSessionName,
+    string? sessionToken) : IFileService
 {
     public async Task<List<string>> GetAllFilesAsync()
     {
@@ -68,15 +71,24 @@ public class AwsS3FileService(
         {
             return _client;
         }
+
+        var s3Config = new AmazonS3Config
+        {
+            RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
+        };
         
-        var awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        
-        var client = new AmazonS3Client(
-            awsCredentials,
-            new AmazonS3Config
-            {
-                RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
-            });
+        AmazonS3Client client;
+
+        if (!string.IsNullOrEmpty(accessKey))
+        {
+            client = new AmazonS3Client(
+                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
+                s3Config);
+        }
+        else
+        {
+            client = new AmazonS3Client(s3Config);
+        }
         
         _client = client;
         return client;

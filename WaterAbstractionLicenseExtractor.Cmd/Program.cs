@@ -436,7 +436,14 @@ ConfiguredServices ConfigureServices()
         var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
             ?? throw new NullReferenceException("AwsS3BucketName");
         
-        fileService = new AwsS3FileService(accessKey, secretKey, regionName, bucketName);
+        fileService = new AwsS3FileService(
+            accessKey,
+            secretKey,
+            regionName,
+            bucketName,
+            null,
+            null,
+            null);
     }
     else
     {

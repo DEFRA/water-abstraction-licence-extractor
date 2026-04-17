@@ -1,7 +1,7 @@
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {useState, useEffect, useCallback, type ChangeEvent} from 'react'
-import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
+import {useState, useEffect, useCallback} from 'react'
+import {waleApiClient} from '../api/apiClient';
 import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";
 import LicencesTableFooters from "../components/LicencesTableFooters";
@@ -72,22 +72,6 @@ function ListPage() {
     const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
         openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
-
-    const fileUploaded = useCallback((file: ChangeEvent<HTMLInputElement>) => {
-        let data = new FormData()
-        
-        for (let idx = 0, len = file.target.files!.length; idx < len; idx++) {
-            data.append('file', file.target.files![idx]);
-        }
-        
-        fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
-            method: 'PUT',
-            body: data
-        }).then(() => {
-            setActiveTab('none');
-            setTimeout(function() { setActiveTab('files'); }, 50);
-        });
-    }, []);
     
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
@@ -177,7 +161,7 @@ function ListPage() {
 
             {activeTab === 'files' && (
                 <div id="files">
-                    <FilesList onFilesSelected={fileUploaded}/>
+                    <FilesList/>
                 </div>
             )}
 

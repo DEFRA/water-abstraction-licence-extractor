@@ -68,16 +68,13 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
-    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey")
-        ?? throw new NullReferenceException("AwsS3AccessKey");
-    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey")
-        ?? throw new NullReferenceException("AwsS3SecretKey");
     var s3RegionName = config.GetValue<string>("AwsS3RegionName")
         ?? throw new NullReferenceException("AwsS3RegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
-    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken")
-        ?? throw new NullReferenceException("AwsS3SessionToken");      
+    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey");
+    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey");
+    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken");
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)

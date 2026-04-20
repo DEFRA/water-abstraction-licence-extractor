@@ -9,9 +9,9 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string s3RegionName,
         string s3BucketName,
-        string s3AccessKey,
-        string s3SecretKey,
-        string s3SessionToken)
+        string? s3AccessKey,
+        string? s3SecretKey,
+        string? s3SessionToken)
     {
         services.AddTransient<IFileService>(_ => new AwsS3FileService(
             s3RegionName,

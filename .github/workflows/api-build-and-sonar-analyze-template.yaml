@@ -61,7 +61,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner --version 11.1.0
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
       - name: Extract short SHA
         id: shortsha
@@ -93,7 +93,7 @@ jobs:
           $project_key = "DEFRA_water-abstraction-licence-extractor"
           Write-Host "Using SonarQube Project Key: $project_key"
           .\.sonar\scanner\dotnet-sonarscanner begin `
-            /k:"$project_key" `
+            /k:"DEFRA_water-abstraction-licence-extractor" `
             /o:"defra" `
             /d:sonar.token="$env:SONAR_TOKEN" `
             /d:sonar.host.url="https://sonarcloud.io" `

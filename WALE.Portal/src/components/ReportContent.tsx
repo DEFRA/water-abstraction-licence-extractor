@@ -1,5 +1,5 @@
 import {useState, useEffect, useRef} from 'react';
-import {JSONPath} from 'jsonpath-plus';
+//import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
@@ -12,13 +12,13 @@ import LicenceImages from "./LicenceImages";
 interface ReportContentProps {
     filename: string;
     hideBackLink?: boolean;
-    onOpenLinkedLicence: (filename: string) => void;
+    //onOpenLinkedLicence: (filename: string) => void;
     processRunId: number;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicence, processRunId}: ReportContentProps) {
+export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +63,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
     }, [filename]);
 
     // Helper functions (converted from report.js)
-    const getText = (dataToUse: any, path: string): string | null => {
+    /*const getText = (dataToUse: any, path: string): string | null => {
         const matched = getMatch(dataToUse, path);
         return toText(matched);
     };
@@ -85,7 +85,7 @@ export function ReportContent({filename, hideBackLink = true, onOpenLinkedLicenc
     const toText = (matched: any): string | null => {
         if (!matched?.text || matched.text.length === 0) return null;
         return matched.text[0].text;
-    };
+    };*/
 
     const jumpToPage = (pageNumber: number) => {
         const imgEle = document.getElementById(`page${pageNumber}`);

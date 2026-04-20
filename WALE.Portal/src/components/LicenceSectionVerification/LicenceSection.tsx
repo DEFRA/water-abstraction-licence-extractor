@@ -11,6 +11,11 @@ export interface ILicenceSectionBody {
      * Returns the current data of the section as JSON.
      */
     getData: () => any;
+
+    /**
+     * Returns the original scraped data of the section as JSON.
+     */
+    getScrapedData: () => any;
 }
 
 export interface LicenceSectionBodyProps {
@@ -35,6 +40,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
     const handleVerification = async (verificationType: string) => {
         if (bodyRef.current) {
             const data = bodyRef.current.getData();
+            const scrapedData = bodyRef.current.getScrapedData();
             console.log(`Creating ${verificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
             
             try {
@@ -42,7 +48,9 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionScrapedValue: verificationType === 'Accept' || verificationType === 'Reject' ? JSON.stringify(data) : undefined,
+                    licenceSectionScrapedValue: verificationType === 'Accept' || verificationType === 'Reject' 
+                        ? JSON.stringify(data) 
+                        : (verificationType === 'Override' ? JSON.stringify(scrapedData) : undefined),
                     licenceSectionOverrideValue: verificationType === 'Override' ? JSON.stringify(data) : undefined,
                     verificationType: verificationType
                 });

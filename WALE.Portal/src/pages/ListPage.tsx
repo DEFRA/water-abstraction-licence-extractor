@@ -171,7 +171,7 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onOpenLinkedLicence={openReportWithId}
+                /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);
 }

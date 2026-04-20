@@ -1362,7 +1362,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT licence_section_verification_id, licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc
+                           SELECT licence_section_verification_id, licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_override_value, verification_type, created_date_time_utc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
                            ORDER BY created_date_time_utc DESC

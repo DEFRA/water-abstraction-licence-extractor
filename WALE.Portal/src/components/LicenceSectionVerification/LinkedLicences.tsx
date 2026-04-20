@@ -13,7 +13,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
     ({ licence, isEditing, onJumpToPage, initialData }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData?.linkedLicences || []);
-        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.linkedLicences || null);
+        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.linkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || null);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +39,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 try {
                     const results = await waleApiClient.getOutgoing(permitNumber);
                     setLinkedLicences(results || []);
-                    setScrapedData(results || []);
+                    setScrapedData(results?.map(ll => LinkedLicence.fromJS(ll)) || []);
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);
                     setError("Failed to load linked licences.");

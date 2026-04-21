@@ -69,7 +69,7 @@ export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = tr
             {licenceSetData.licences!.map((licence, i) => (
                 <div key={i}>
                     {licence.filename
-                        ? <img src={getImageUrl(`${licence.dmsFileId}/PdfPig/Images/page-1.jpg`)}
+                        ? <img src={getImageUrl(`${licence.dmsFileId}`, `1`, `PdfPig`)}
                                alt={`Licence sheet 1 for ${licence.filename}`}
                                style={{width: '100%'}}
                         />

@@ -274,15 +274,15 @@ export class Client {
     }
 
     /**
-     * @param pdfFilename (optional) 
+     * @param fileId (optional) 
      * @return OK
      */
-    clearSingle(pdfFilename: string | undefined): Promise<void> {
+    clearSingle(fileId: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Cache/ClearSingle?";
-        if (pdfFilename === null)
-            throw new globalThis.Error("The parameter 'pdfFilename' cannot be null.");
-        else if (pdfFilename !== undefined)
-            url_ += "pdfFilename=" + encodeURIComponent("" + pdfFilename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -382,16 +382,16 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    getAll2(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    getAll2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetAll?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (noOcrServiceName === null)
             throw new globalThis.Error("The parameter 'noOcrServiceName' cannot be null.");
         else if (noOcrServiceName !== undefined)
@@ -425,19 +425,19 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @param extension (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    getImage(filename: string | undefined, extension: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    getImage(fileId: string | undefined, extension: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetImage?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (extension === null)
             throw new globalThis.Error("The parameter 'extension' cannot be null.");
         else if (extension !== undefined)
@@ -483,7 +483,7 @@ export class Client {
     }
 
     /**
-     * @param pdfFilename (optional) 
+     * @param fileId (optional) 
      * @param imageNumber (optional) 
      * @param pageNumber (optional) 
      * @param processRunId (optional) 
@@ -491,12 +491,12 @@ export class Client {
      * @param serviceName (optional) 
      * @return OK
      */
-    deflateImage(pdfFilename: string | undefined, imageNumber: number | undefined, pageNumber: number | undefined, processRunId: number | undefined, extension: string | undefined, serviceName: string | undefined): Promise<void> {
+    deflateImage(fileId: string | undefined, imageNumber: number | undefined, pageNumber: number | undefined, processRunId: number | undefined, extension: string | undefined, serviceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/DeflateImage?";
-        if (pdfFilename === null)
-            throw new globalThis.Error("The parameter 'pdfFilename' cannot be null.");
-        else if (pdfFilename !== undefined)
-            url_ += "pdfFilename=" + encodeURIComponent("" + pdfFilename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (imageNumber === null)
             throw new globalThis.Error("The parameter 'imageNumber' cannot be null.");
         else if (imageNumber !== undefined)
@@ -546,17 +546,17 @@ export class Client {
     }
 
     /**
-     * @param fileName (optional) 
+     * @param fileId (optional) 
      * @param serviceName (optional) 
      * @param pageNumber (optional) 
      * @return OK
      */
-    getPageScreenshot(fileName: string | undefined, serviceName: string | undefined, pageNumber: number | undefined): Promise<void> {
+    getPageScreenshot(fileId: string | undefined, serviceName: string | undefined, pageNumber: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetPageScreenshot?";
-        if (fileName === null)
-            throw new globalThis.Error("The parameter 'fileName' cannot be null.");
-        else if (fileName !== undefined)
-            url_ += "fileName=" + encodeURIComponent("" + fileName) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (serviceName === null)
             throw new globalThis.Error("The parameter 'serviceName' cannot be null.");
         else if (serviceName !== undefined)
@@ -820,7 +820,7 @@ export class Client {
     /**
      * @return OK
      */
-    save2(body: SaveRequest): Promise<void> {
+    save2(body: SaveMatchRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Match/Save";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -857,7 +857,7 @@ export class Client {
     /**
      * @return OK
      */
-    save3(body: SaveRequest2): Promise<void> {
+    save3(body: SaveMatchResultRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/MatchResult/Save";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -892,16 +892,16 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    get(filename: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    get(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Metadata/Get?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (noOcrServiceName === null)
             throw new globalThis.Error("The parameter 'noOcrServiceName' cannot be null.");
         else if (noOcrServiceName !== undefined)
@@ -1202,15 +1202,19 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
-     * @param filename (optional) 
      * @param ocrServiceName (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
-    getImageText(pageNumber: number | undefined, imageNumber: number | undefined, filename: string | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
+    getImageText(fileId: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Ocr/GetImageText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
         else if (pageNumber !== undefined)
@@ -1219,10 +1223,6 @@ export class Client {
             throw new globalThis.Error("The parameter 'imageNumber' cannot be null.");
         else if (imageNumber !== undefined)
             url_ += "imageNumber=" + encodeURIComponent("" + imageNumber) + "&";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
         if (ocrServiceName === null)
             throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
         else if (ocrServiceName !== undefined)
@@ -1260,15 +1260,19 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
-     * @param filename (optional) 
      * @param ocrServiceName (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
-    getTemporaryImageText(pageNumber: number | undefined, imageNumber: number | undefined, filename: string | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
+    getTemporaryImageText(fileId: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Ocr/GetTemporaryImageText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
         else if (pageNumber !== undefined)
@@ -1277,10 +1281,6 @@ export class Client {
             throw new globalThis.Error("The parameter 'imageNumber' cannot be null.");
         else if (imageNumber !== undefined)
             url_ += "imageNumber=" + encodeURIComponent("" + imageNumber) + "&";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
         if (ocrServiceName === null)
             throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
         else if (ocrServiceName !== undefined)
@@ -1318,22 +1318,22 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
-     * @param filename (optional) 
      * @param ocrServiceName (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
-    getScreenshotText(pageNumber: number | undefined, filename: string | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
+    getScreenshotText(fileId: string | undefined, pageNumber: number | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Ocr/GetScreenshotText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
         else if (pageNumber !== undefined)
             url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
         if (ocrServiceName === null)
             throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
         else if (ocrServiceName !== undefined)
@@ -1371,22 +1371,22 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
-     * @param filename (optional) 
      * @param ocrServiceName (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
-    getTemporaryScreenshotText(pageNumber: number | undefined, filename: string | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
+    getTemporaryScreenshotText(fileId: string | undefined, pageNumber: number | undefined, ocrServiceName: string | undefined, processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Ocr/GetTemporaryScreenshotText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
         else if (pageNumber !== undefined)
             url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
         if (ocrServiceName === null)
             throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
         else if (ocrServiceName !== undefined)
@@ -1574,7 +1574,7 @@ export class Client {
     /**
      * @return OK
      */
-    create(body: CreateRequest): Promise<void> {
+    create(body: ProcessRunCreateRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/Create";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1611,7 +1611,7 @@ export class Client {
     /**
      * @return OK
      */
-    finish(body: EndRequest): Promise<void> {
+    finish(body: ProcessRunEndRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/Finish";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1646,15 +1646,15 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @return OK
      */
-    matchesResult(filename: string | undefined): Promise<MatchesResult2> {
+    matchesResult(fileId: string | undefined): Promise<MatchesResult2> {
         let url_ = this.baseUrl + "/BFF/FileData/MatchesResult?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1688,15 +1688,15 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @return OK
      */
-    licence(filename: string | undefined): Promise<Licence> {
+    licence(fileId: string | undefined): Promise<Licence> {
         let url_ = this.baseUrl + "/BFF/FileData/Licence?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1730,15 +1730,15 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @return OK
      */
-    licenceSets(filename: string | undefined): Promise<LicenceSet[]> {
+    licenceSets(fileId: string | undefined): Promise<LicenceSet[]> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceSets?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1870,15 +1870,107 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
      * @return OK
      */
-    thumbnail(filename: string | undefined): Promise<void> {
+    listAll(): Promise<string[]> {
+        let url_ = this.baseUrl + "/BFF/Files/ListAll";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processListAll(_response);
+        });
+    }
+
+    protected processListAll(response: Response): Promise<string[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(item);
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    upload(): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/Files/Upload";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpload(_response);
+        });
+    }
+
+    protected processUpload(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param pageNumber (optional) 
+     * @param serviceName (optional) 
+     * @return OK
+     */
+    thumbnail(fileId: string | undefined, pageNumber: number | undefined, serviceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Images/Thumbnail?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (pageNumber === null)
+            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
+        else if (pageNumber !== undefined)
+            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
+        if (serviceName === null)
+            throw new globalThis.Error("The parameter 'serviceName' cannot be null.");
+        else if (serviceName !== undefined)
+            url_ += "serviceName=" + encodeURIComponent("" + serviceName) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1908,15 +2000,25 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
+     * @param pageNumber (optional) 
+     * @param serviceName (optional) 
      * @return OK
      */
-    image(filename: string | undefined): Promise<void> {
+    image(fileId: string | undefined, pageNumber: number | undefined, serviceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Images/Image?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (pageNumber === null)
+            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
+        else if (pageNumber !== undefined)
+            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
+        if (serviceName === null)
+            throw new globalThis.Error("The parameter 'serviceName' cannot be null.");
+        else if (serviceName !== undefined)
+            url_ += "serviceName=" + encodeURIComponent("" + serviceName) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1946,16 +2048,16 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @return OK
      */
-    pageImages(filename: string | undefined, pageNumber: number | undefined): Promise<PageImage[]> {
+    pageImages(fileId: string | undefined, pageNumber: number | undefined): Promise<PageImage[]> {
         let url_ = this.baseUrl + "/BFF/Images/PageImages?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
         else if (pageNumber !== undefined)
@@ -2000,18 +2102,18 @@ export class Client {
     }
 
     /**
-     * @param filename (optional) 
+     * @param fileId (optional) 
      * @param extension (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
      * @return OK
      */
-    partialPageImage(filename: string | undefined, extension: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined): Promise<void> {
+    partialPageImage(fileId: string | undefined, extension: string | undefined, pageNumber: number | undefined, imageNumber: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Images/PartialPageImage?";
-        if (filename === null)
-            throw new globalThis.Error("The parameter 'filename' cannot be null.");
-        else if (filename !== undefined)
-            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         if (extension === null)
             throw new globalThis.Error("The parameter 'extension' cannot be null.");
         else if (extension !== undefined)
@@ -2729,58 +2831,6 @@ export enum ConfidenceType {
     Static = "Static",
 }
 
-export class CreateRequest implements ICreateRequest {
-    description?: string | undefined;
-    numberOfFiles?: number;
-
-    [key: string]: any;
-
-    constructor(data?: ICreateRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.description = _data["description"];
-            this.numberOfFiles = _data["numberOfFiles"];
-        }
-    }
-
-    static fromJS(data: any): CreateRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["description"] = this.description;
-        data["numberOfFiles"] = this.numberOfFiles;
-        return data;
-    }
-}
-
-export interface ICreateRequest {
-    description?: string | undefined;
-    numberOfFiles?: number;
-
-    [key: string]: any;
-}
-
 export class DmsFileIdInformation implements IDmsFileIdInformation {
     fileId?: string;
     dmsFilePath?: string | undefined;
@@ -3113,58 +3163,6 @@ export interface IDocumentLineWordCoordinates {
     right?: number;
     bottom?: number;
     left?: number;
-
-    [key: string]: any;
-}
-
-export class EndRequest implements IEndRequest {
-    processRunId?: number;
-    regionCode?: number;
-
-    [key: string]: any;
-
-    constructor(data?: IEndRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.processRunId = _data["processRunId"];
-            this.regionCode = _data["regionCode"];
-        }
-    }
-
-    static fromJS(data: any): EndRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new EndRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["processRunId"] = this.processRunId;
-        data["regionCode"] = this.regionCode;
-        return data;
-    }
-}
-
-export interface IEndRequest {
-    processRunId?: number;
-    regionCode?: number;
 
     [key: string]: any;
 }
@@ -3992,7 +3990,8 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceFileId?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
-    licenceSectionValue?: string | undefined;
+    licenceSectionScrapedValue?: string | undefined;
+    licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     createdDateTimeUtc?: Date;
 
@@ -4017,7 +4016,8 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.licenceFileId = _data["licenceFileId"];
             this.processRunId = _data["processRunId"];
             this.licenceSectionName = _data["licenceSectionName"];
-            this.licenceSectionValue = _data["licenceSectionValue"];
+            this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
+            this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
         }
@@ -4040,7 +4040,8 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["licenceFileId"] = this.licenceFileId;
         data["processRunId"] = this.processRunId;
         data["licenceSectionName"] = this.licenceSectionName;
-        data["licenceSectionValue"] = this.licenceSectionValue;
+        data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
+        data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
         return data;
@@ -4052,7 +4053,8 @@ export interface ILicenceSectionVerification {
     licenceFileId?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
-    licenceSectionValue?: string | undefined;
+    licenceSectionScrapedValue?: string | undefined;
+    licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     createdDateTimeUtc?: Date;
 
@@ -4203,6 +4205,7 @@ export enum LicenceStatus {
     Ok = "Ok",
     NotFound = "NotFound",
     PathMissing = "PathMissing",
+    FileIdMissing = "FileIdMissing",
 }
 
 export enum LicenceType {
@@ -5133,6 +5136,7 @@ export interface INaldPurposeData {
 
 export class OutputListDataItem implements IOutputListDataItem {
     imagePath?: string | undefined;
+    fileId?: string;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;
@@ -5167,6 +5171,7 @@ export class OutputListDataItem implements IOutputListDataItem {
                     this[property] = _data[property];
             }
             this.imagePath = _data["imagePath"];
+            this.fileId = _data["fileId"];
             this.filename = _data["filename"];
             this.licenceNumber = _data["licenceNumber"];
             this.licenceHolder = _data["licenceHolder"];
@@ -5219,6 +5224,7 @@ export class OutputListDataItem implements IOutputListDataItem {
                 data[property] = this[property];
         }
         data["imagePath"] = this.imagePath;
+        data["fileId"] = this.fileId;
         data["filename"] = this.filename;
         data["licenceNumber"] = this.licenceNumber;
         data["licenceHolder"] = this.licenceHolder;
@@ -5260,6 +5266,7 @@ export class OutputListDataItem implements IOutputListDataItem {
 
 export interface IOutputListDataItem {
     imagePath?: string | undefined;
+    fileId?: string;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;
@@ -5348,7 +5355,7 @@ export interface IOutputListDataItemLicenceSet {
 }
 
 export class PageImage implements IPageImage {
-    fileName!: string;
+    fileId!: string;
     extension!: string;
     pageNumber!: number;
     imageNumber!: number;
@@ -5372,7 +5379,7 @@ export class PageImage implements IPageImage {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.fileName = _data["fileName"];
+            this.fileId = _data["fileId"];
             this.extension = _data["extension"];
             this.pageNumber = _data["pageNumber"];
             this.imageNumber = _data["imageNumber"];
@@ -5394,7 +5401,7 @@ export class PageImage implements IPageImage {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["fileName"] = this.fileName;
+        data["fileId"] = this.fileId;
         data["extension"] = this.extension;
         data["pageNumber"] = this.pageNumber;
         data["imageNumber"] = this.imageNumber;
@@ -5405,7 +5412,7 @@ export class PageImage implements IPageImage {
 }
 
 export interface IPageImage {
-    fileName: string;
+    fileId: string;
     extension: string;
     pageNumber: number;
     imageNumber: number;
@@ -5843,6 +5850,110 @@ export interface IProcessRun {
     [key: string]: any;
 }
 
+export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
+    description?: string | undefined;
+    numberOfFiles?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunCreateRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.description = _data["description"];
+            this.numberOfFiles = _data["numberOfFiles"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunCreateRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunCreateRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["description"] = this.description;
+        data["numberOfFiles"] = this.numberOfFiles;
+        return data;
+    }
+}
+
+export interface IProcessRunCreateRequest {
+    description?: string | undefined;
+    numberOfFiles?: number;
+
+    [key: string]: any;
+}
+
+export class ProcessRunEndRequest implements IProcessRunEndRequest {
+    processRunId?: number;
+    regionCode?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunEndRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.processRunId = _data["processRunId"];
+            this.regionCode = _data["regionCode"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunEndRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunEndRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["processRunId"] = this.processRunId;
+        data["regionCode"] = this.regionCode;
+        return data;
+    }
+}
+
+export interface IProcessRunEndRequest {
+    processRunId?: number;
+    regionCode?: number;
+
+    [key: string]: any;
+}
+
 export class Purpose implements IPurpose {
     id?: string | undefined;
     description?: string | undefined;
@@ -5968,8 +6079,8 @@ export interface IPurposeOfAbstraction {
 }
 
 export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
+    fileId?: string;
     documentLines?: string | undefined;
-    pdfFilename?: string | undefined;
     noOcrServiceName?: string | undefined;
     processRunId?: number;
 
@@ -5990,8 +6101,8 @@ export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.fileId = _data["fileId"];
             this.documentLines = _data["documentLines"];
-            this.pdfFilename = _data["pdfFilename"];
             this.noOcrServiceName = _data["noOcrServiceName"];
             this.processRunId = _data["processRunId"];
         }
@@ -6010,8 +6121,8 @@ export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["fileId"] = this.fileId;
         data["documentLines"] = this.documentLines;
-        data["pdfFilename"] = this.pdfFilename;
         data["noOcrServiceName"] = this.noOcrServiceName;
         data["processRunId"] = this.processRunId;
         return data;
@@ -6019,8 +6130,8 @@ export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
 }
 
 export interface ISaveAllPagesTextRequest {
+    fileId?: string;
     documentLines?: string | undefined;
-    pdfFilename?: string | undefined;
     noOcrServiceName?: string | undefined;
     processRunId?: number;
 
@@ -6028,10 +6139,10 @@ export interface ISaveAllPagesTextRequest {
 }
 
 export class SaveImageOnPageRequest implements ISaveImageOnPageRequest {
+    fileId?: string;
     bytes?: string;
     width?: number;
     height?: number;
-    pdfFilename?: string | undefined;
     noOcrServiceName?: string | undefined;
     imageNumber?: number;
     pageNumber?: number;
@@ -6055,10 +6166,10 @@ export class SaveImageOnPageRequest implements ISaveImageOnPageRequest {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.fileId = _data["fileId"];
             this.bytes = _data["bytes"];
             this.width = _data["width"];
             this.height = _data["height"];
-            this.pdfFilename = _data["pdfFilename"];
             this.noOcrServiceName = _data["noOcrServiceName"];
             this.imageNumber = _data["imageNumber"];
             this.pageNumber = _data["pageNumber"];
@@ -6080,10 +6191,10 @@ export class SaveImageOnPageRequest implements ISaveImageOnPageRequest {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["fileId"] = this.fileId;
         data["bytes"] = this.bytes;
         data["width"] = this.width;
         data["height"] = this.height;
-        data["pdfFilename"] = this.pdfFilename;
         data["noOcrServiceName"] = this.noOcrServiceName;
         data["imageNumber"] = this.imageNumber;
         data["pageNumber"] = this.pageNumber;
@@ -6094,10 +6205,10 @@ export class SaveImageOnPageRequest implements ISaveImageOnPageRequest {
 }
 
 export interface ISaveImageOnPageRequest {
+    fileId?: string;
     bytes?: string;
     width?: number;
     height?: number;
-    pdfFilename?: string | undefined;
     noOcrServiceName?: string | undefined;
     imageNumber?: number;
     pageNumber?: number;
@@ -6108,9 +6219,8 @@ export interface ISaveImageOnPageRequest {
 }
 
 export class SaveLicenceRequest implements ISaveLicenceRequest {
-    pdfFilename?: string | undefined;
-    processRunId?: number;
     licence?: string | undefined;
+    processRunId?: number;
 
     [key: string]: any;
 
@@ -6129,9 +6239,8 @@ export class SaveLicenceRequest implements ISaveLicenceRequest {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.pdfFilename = _data["pdfFilename"];
-            this.processRunId = _data["processRunId"];
             this.licence = _data["licence"];
+            this.processRunId = _data["processRunId"];
         }
     }
 
@@ -6148,24 +6257,22 @@ export class SaveLicenceRequest implements ISaveLicenceRequest {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["pdfFilename"] = this.pdfFilename;
-        data["processRunId"] = this.processRunId;
         data["licence"] = this.licence;
+        data["processRunId"] = this.processRunId;
         return data;
     }
 }
 
 export interface ISaveLicenceRequest {
-    pdfFilename?: string | undefined;
-    processRunId?: number;
     licence?: string | undefined;
+    processRunId?: number;
 
     [key: string]: any;
 }
 
 export class SaveLicenceSetsRequest implements ISaveLicenceSetsRequest {
     licenceSets?: string | undefined;
-    pdfFilename?: string | undefined;
+    fileId?: string;
     processRunId?: number;
 
     [key: string]: any;
@@ -6186,7 +6293,7 @@ export class SaveLicenceSetsRequest implements ISaveLicenceSetsRequest {
                     this[property] = _data[property];
             }
             this.licenceSets = _data["licenceSets"];
-            this.pdfFilename = _data["pdfFilename"];
+            this.fileId = _data["fileId"];
             this.processRunId = _data["processRunId"];
         }
     }
@@ -6205,7 +6312,7 @@ export class SaveLicenceSetsRequest implements ISaveLicenceSetsRequest {
                 data[property] = this[property];
         }
         data["licenceSets"] = this.licenceSets;
-        data["pdfFilename"] = this.pdfFilename;
+        data["fileId"] = this.fileId;
         data["processRunId"] = this.processRunId;
         return data;
     }
@@ -6213,15 +6320,131 @@ export class SaveLicenceSetsRequest implements ISaveLicenceSetsRequest {
 
 export interface ISaveLicenceSetsRequest {
     licenceSets?: string | undefined;
-    pdfFilename?: string | undefined;
+    fileId?: string;
+    processRunId?: number;
+
+    [key: string]: any;
+}
+
+export class SaveMatchRequest implements ISaveMatchRequest {
+    matchesResultId?: number;
+    labelName?: string | undefined;
+    labelGroupName?: string | undefined;
+    data?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveMatchRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.matchesResultId = _data["matchesResultId"];
+            this.labelName = _data["labelName"];
+            this.labelGroupName = _data["labelGroupName"];
+            this.data = _data["data"];
+        }
+    }
+
+    static fromJS(data: any): SaveMatchRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveMatchRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["matchesResultId"] = this.matchesResultId;
+        data["labelName"] = this.labelName;
+        data["labelGroupName"] = this.labelGroupName;
+        data["data"] = this.data;
+        return data;
+    }
+}
+
+export interface ISaveMatchRequest {
+    matchesResultId?: number;
+    labelName?: string | undefined;
+    labelGroupName?: string | undefined;
+    data?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SaveMatchResultRequest implements ISaveMatchResultRequest {
+    fileId?: string;
+    matches?: MatchesResult | undefined;
+    processRunId?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveMatchResultRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.fileId = _data["fileId"];
+            this.matches = _data["matches"] ? MatchesResult.fromJS(_data["matches"]) : undefined as any;
+            this.processRunId = _data["processRunId"];
+        }
+    }
+
+    static fromJS(data: any): SaveMatchResultRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveMatchResultRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["fileId"] = this.fileId;
+        data["matches"] = this.matches ? this.matches.toJSON() : undefined as any;
+        data["processRunId"] = this.processRunId;
+        return data;
+    }
+}
+
+export interface ISaveMatchResultRequest {
+    fileId?: string;
+    matches?: MatchesResult | undefined;
     processRunId?: number;
 
     [key: string]: any;
 }
 
 export class SaveNoOcrImagesMetadataRequest implements ISaveNoOcrImagesMetadataRequest {
+    fileId?: string;
     imagesMetadata?: string | undefined;
-    filename?: string | undefined;
     processRunId?: number;
     noOcrServiceName?: string | undefined;
 
@@ -6242,8 +6465,8 @@ export class SaveNoOcrImagesMetadataRequest implements ISaveNoOcrImagesMetadataR
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.fileId = _data["fileId"];
             this.imagesMetadata = _data["imagesMetadata"];
-            this.filename = _data["filename"];
             this.processRunId = _data["processRunId"];
             this.noOcrServiceName = _data["noOcrServiceName"];
         }
@@ -6262,8 +6485,8 @@ export class SaveNoOcrImagesMetadataRequest implements ISaveNoOcrImagesMetadataR
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["fileId"] = this.fileId;
         data["imagesMetadata"] = this.imagesMetadata;
-        data["filename"] = this.filename;
         data["processRunId"] = this.processRunId;
         data["noOcrServiceName"] = this.noOcrServiceName;
         return data;
@@ -6271,8 +6494,8 @@ export class SaveNoOcrImagesMetadataRequest implements ISaveNoOcrImagesMetadataR
 }
 
 export interface ISaveNoOcrImagesMetadataRequest {
+    fileId?: string;
     imagesMetadata?: string | undefined;
-    filename?: string | undefined;
     processRunId?: number;
     noOcrServiceName?: string | undefined;
 
@@ -6280,7 +6503,7 @@ export interface ISaveNoOcrImagesMetadataRequest {
 }
 
 export class SaveNoOcrPageTextLinesRequest implements ISaveNoOcrPageTextLinesRequest {
-    filename?: string | undefined;
+    fileId?: string;
     pageNumber?: number;
     noOcrServiceName?: string | undefined;
     processRunId?: number;
@@ -6303,7 +6526,7 @@ export class SaveNoOcrPageTextLinesRequest implements ISaveNoOcrPageTextLinesReq
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.pageNumber = _data["pageNumber"];
             this.noOcrServiceName = _data["noOcrServiceName"];
             this.processRunId = _data["processRunId"];
@@ -6324,7 +6547,7 @@ export class SaveNoOcrPageTextLinesRequest implements ISaveNoOcrPageTextLinesReq
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["pageNumber"] = this.pageNumber;
         data["noOcrServiceName"] = this.noOcrServiceName;
         data["processRunId"] = this.processRunId;
@@ -6334,7 +6557,7 @@ export class SaveNoOcrPageTextLinesRequest implements ISaveNoOcrPageTextLinesReq
 }
 
 export interface ISaveNoOcrPageTextLinesRequest {
-    filename?: string | undefined;
+    fileId?: string;
     pageNumber?: number;
     noOcrServiceName?: string | undefined;
     processRunId?: number;
@@ -6344,7 +6567,7 @@ export interface ISaveNoOcrPageTextLinesRequest {
 }
 
 export class SaveOcrImageTextRequest implements ISaveOcrImageTextRequest {
-    filename?: string | undefined;
+    fileId?: string;
     pageNumber?: number;
     imageNumber?: number;
     ocrServiceName?: string | undefined;
@@ -6368,7 +6591,7 @@ export class SaveOcrImageTextRequest implements ISaveOcrImageTextRequest {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.pageNumber = _data["pageNumber"];
             this.imageNumber = _data["imageNumber"];
             this.ocrServiceName = _data["ocrServiceName"];
@@ -6390,7 +6613,7 @@ export class SaveOcrImageTextRequest implements ISaveOcrImageTextRequest {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["pageNumber"] = this.pageNumber;
         data["imageNumber"] = this.imageNumber;
         data["ocrServiceName"] = this.ocrServiceName;
@@ -6401,7 +6624,7 @@ export class SaveOcrImageTextRequest implements ISaveOcrImageTextRequest {
 }
 
 export interface ISaveOcrImageTextRequest {
-    filename?: string | undefined;
+    fileId?: string;
     pageNumber?: number;
     imageNumber?: number;
     ocrServiceName?: string | undefined;
@@ -6412,9 +6635,9 @@ export interface ISaveOcrImageTextRequest {
 }
 
 export class SavePageScreenshotRequest implements ISavePageScreenshotRequest {
+    fileId?: string;
     pageNumber?: number;
     noOcrServiceName?: string | undefined;
-    pdfFilename?: string | undefined;
     data?: string;
     processRunId?: number;
 
@@ -6435,9 +6658,9 @@ export class SavePageScreenshotRequest implements ISavePageScreenshotRequest {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.fileId = _data["fileId"];
             this.pageNumber = _data["pageNumber"];
             this.noOcrServiceName = _data["noOcrServiceName"];
-            this.pdfFilename = _data["pdfFilename"];
             this.data = _data["data"];
             this.processRunId = _data["processRunId"];
         }
@@ -6456,9 +6679,9 @@ export class SavePageScreenshotRequest implements ISavePageScreenshotRequest {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["fileId"] = this.fileId;
         data["pageNumber"] = this.pageNumber;
         data["noOcrServiceName"] = this.noOcrServiceName;
-        data["pdfFilename"] = this.pdfFilename;
         data["data"] = this.data;
         data["processRunId"] = this.processRunId;
         return data;
@@ -6466,133 +6689,17 @@ export class SavePageScreenshotRequest implements ISavePageScreenshotRequest {
 }
 
 export interface ISavePageScreenshotRequest {
+    fileId?: string;
     pageNumber?: number;
     noOcrServiceName?: string | undefined;
-    pdfFilename?: string | undefined;
     data?: string;
     processRunId?: number;
 
     [key: string]: any;
 }
 
-export class SaveRequest implements ISaveRequest {
-    matchesResultId?: number;
-    labelName?: string | undefined;
-    labelGroupName?: string | undefined;
-    data?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: ISaveRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.matchesResultId = _data["matchesResultId"];
-            this.labelName = _data["labelName"];
-            this.labelGroupName = _data["labelGroupName"];
-            this.data = _data["data"];
-        }
-    }
-
-    static fromJS(data: any): SaveRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new SaveRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["matchesResultId"] = this.matchesResultId;
-        data["labelName"] = this.labelName;
-        data["labelGroupName"] = this.labelGroupName;
-        data["data"] = this.data;
-        return data;
-    }
-}
-
-export interface ISaveRequest {
-    matchesResultId?: number;
-    labelName?: string | undefined;
-    labelGroupName?: string | undefined;
-    data?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class SaveRequest2 implements ISaveRequest2 {
-    matches?: MatchesResult | undefined;
-    pdfFilename?: string | undefined;
-    processRunId?: number;
-
-    [key: string]: any;
-
-    constructor(data?: ISaveRequest2) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.matches = _data["matches"] ? MatchesResult.fromJS(_data["matches"]) : undefined as any;
-            this.pdfFilename = _data["pdfFilename"];
-            this.processRunId = _data["processRunId"];
-        }
-    }
-
-    static fromJS(data: any): SaveRequest2 {
-        data = typeof data === 'object' ? data : {};
-        let result = new SaveRequest2();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["matches"] = this.matches ? this.matches.toJSON() : undefined as any;
-        data["pdfFilename"] = this.pdfFilename;
-        data["processRunId"] = this.processRunId;
-        return data;
-    }
-}
-
-export interface ISaveRequest2 {
-    matches?: MatchesResult | undefined;
-    pdfFilename?: string | undefined;
-    processRunId?: number;
-
-    [key: string]: any;
-}
-
 export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageTextRequest {
-    filename?: string | undefined;
+    fileId?: string;
     processRunId?: number;
     pageNumber?: number;
     imageNumber?: number;
@@ -6616,7 +6723,7 @@ export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageT
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.processRunId = _data["processRunId"];
             this.pageNumber = _data["pageNumber"];
             this.imageNumber = _data["imageNumber"];
@@ -6638,7 +6745,7 @@ export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageT
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["processRunId"] = this.processRunId;
         data["pageNumber"] = this.pageNumber;
         data["imageNumber"] = this.imageNumber;
@@ -6649,7 +6756,7 @@ export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageT
 }
 
 export interface ISaveTemporaryOcrImageTextRequest {
-    filename?: string | undefined;
+    fileId?: string;
     processRunId?: number;
     pageNumber?: number;
     imageNumber?: number;

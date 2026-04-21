@@ -28,7 +28,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(item.filename!);
+                       onOpenReport(item.fileId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             </td>

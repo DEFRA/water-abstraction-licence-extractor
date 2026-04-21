@@ -39,8 +39,6 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
         const loadAllData = async () => {
             try {
                 setLoading(true);
-
-                debugger;
                 
                 // Load data using API client
                 const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([

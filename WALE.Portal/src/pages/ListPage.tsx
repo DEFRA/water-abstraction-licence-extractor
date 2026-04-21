@@ -65,12 +65,12 @@ function ListPage() {
         minimizeModal
     } = useReportModals();
 
-    const openReportWithId = useCallback((filename: string) => {
-        openReport(filename, parseInt(processRunId ?? '0'));
+    const openReportWithId = useCallback((fileId: string) => {
+        openReport(fileId, parseInt(processRunId ?? '0'));
     }, [openReport, processRunId]);
 
-    const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
-        openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
+    const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
+        openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
     
     if (loading) return <div className="container"><p>Loading...</p></div>;

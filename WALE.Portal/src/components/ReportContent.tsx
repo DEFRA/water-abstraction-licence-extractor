@@ -10,15 +10,15 @@ import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClien
 import LicenceImages from "./LicenceImages";
 
 interface ReportContentProps {
-    filename: string;
+    fileId: string;
     hideBackLink?: boolean;
-    //onOpenLinkedLicence: (filename: string) => void;
+    //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -40,11 +40,13 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
             try {
                 setLoading(true);
 
+                debugger;
+                
                 // Load data using API client
                 const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([
-                    waleApiClient.matchesResult(filename),
-                    waleApiClient.licence(filename),
-                    waleApiClient.licenceSets(filename)
+                    waleApiClient.matchesResult(fileId),
+                    waleApiClient.licence(fileId),
+                    waleApiClient.licenceSets(fileId)
                 ]);
 
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
@@ -60,7 +62,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
         };
 
         loadAllData();
-    }, [filename]);
+    }, [fileId]);
 
     // Helper functions (converted from report.js)
     /*const getText = (dataToUse: any, path: string): string | null => {
@@ -244,7 +246,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                         
                         {activeTab === 'images' && (
                             <div id="images">
-                                <LicenceImages filename={filename} />
+                                <LicenceImages fileId={fileId} />
                             </div>
                         )}
 
@@ -275,7 +277,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                {filename}
+                                {reportData.filename}
                             </a>
                         </h1>
 
@@ -286,7 +288,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         <img
                                             key={pageNum}
                                             id={`page${pageNum}`}
-                                            src={getImageUrl(`${filename}/PdfPig/Images/page-${pageNum}.jpg`)}
+                                            src={getImageUrl(`${fileId}/PdfPig/Images/page-${pageNum}.jpg`)}
                                             alt="JPEG image (text not available)"
                                             onError={(e) => {
                                                 e.currentTarget.style.display = 'none';

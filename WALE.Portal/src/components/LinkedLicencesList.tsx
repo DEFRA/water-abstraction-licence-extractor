@@ -4,7 +4,7 @@ import LinkedLicencesListItem from "./LinkedLicencesListItem";
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
-    onOpenReport: (filename: string) => void;
+    onOpenReport: (fileId: string) => void;
 }
 
 export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesListProps) {

@@ -9,8 +9,8 @@ interface OutputItemTableRowProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
     oddRow: boolean;
-    onOpenReport: (filename: string) => void;
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
@@ -28,7 +28,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(item.filename!);
+                       onOpenReport(item.fileId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             </td>

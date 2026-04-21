@@ -21,11 +21,11 @@ export function LicenceImages({fileId}: LicenceImagesProps) {
                 setImages(sortedImages);
             });
     }, [fileId]);
-
+    
     return (
         <div className="licence-images">
             {images.map((image, index) => {
-                const imageUrl = `${waleApiBaseUrl}/BFF/Images/PartialPageImage?fileId=${image.fileId}&extension=${encodeURIComponent(image.extension)}&pageNumber=${image.pageNumber}&imageNumber=${image.imageNumber}`;
+                const imageUrl = `${waleApiBaseUrl}/BFF/Images/PartialPageImage?fileId=${fileId}&extension=${encodeURIComponent(image.extension)}&pageNumber=${image.pageNumber}&imageNumber=${image.imageNumber}`;
                 return (
                     <div key={index} className="licence-image-container" style={{ marginBottom: '20px' }}>
                         <img 

@@ -286,7 +286,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         <img
                                             key={pageNum}
                                             id={`page${pageNum}`}
-                                            src={getImageUrl(`${fileId}/PdfPig/Images/page-${pageNum}.jpg`)}
+                                            src={getImageUrl(`${fileId}`, `${pageNum}`, `PdfPig`)}
                                             alt="JPEG image (text not available)"
                                             onError={(e) => {
                                                 e.currentTarget.style.display = 'none';

@@ -40,23 +40,23 @@ export function FilesList({}: FilesListProps) {
         return items;
     };
     
-    const fileUploaded = useCallback((file: ChangeEvent<HTMLInputElement>) => {
-        let data = new FormData()
-
+    const fileUploaded = useCallback(async (file: ChangeEvent<HTMLInputElement>) => {
         for (let idx = 0, len = file.target.files!.length; idx < len; idx++) {
+            let data = new FormData()
             data.append('file', file.target.files![idx]);
-        }
 
-        setLoading(true);
+            setLoading(true);
         
-        fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
-            method: 'PUT',
-            body: data
-        }).then(() => {
-            fetchFiles();
-        });
+            await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
+                method: 'PUT',
+                body: data
+                });
+
+            await fetchFiles();
+        }
     }, []);
-    
+
+    if (loading && files.length > 0) return <div className="container"><p>Loading ({files.length} files)...</p></div>;
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
     

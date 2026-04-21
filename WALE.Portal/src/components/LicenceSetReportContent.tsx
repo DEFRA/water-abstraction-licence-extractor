@@ -6,12 +6,12 @@ import {getImageUrl} from "../utils/images.ts";
 import "../assets/licencesetstyles.css";
 
 interface LicenceSetReportContentProps {
-    filename: string;
+    fileId: string;
     licenceSetId: string;
     hideBackLink?: boolean;
 }
 
-export function LicenceSetReportContent({filename, licenceSetId, hideBackLink = true}: LicenceSetReportContentProps) {
+export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = true}: LicenceSetReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [licenceSetData, setLicenceSetData] = useState<LicenceSet | null>(null);
@@ -23,7 +23,7 @@ export function LicenceSetReportContent({filename, licenceSetId, hideBackLink = 
 
                 // Load data using API client
                 const [licenceSetsResult] = await Promise.allSettled([
-                    waleApiClient.licenceSets(filename)
+                    waleApiClient.licenceSets(fileId)
                 ]);
 
                 if (licenceSetsResult.status === 'fulfilled') {
@@ -39,7 +39,7 @@ export function LicenceSetReportContent({filename, licenceSetId, hideBackLink = 
         };
 
         loadAllData();
-    }, [filename, licenceSetId]);
+    }, [fileId, licenceSetId]);
 
     if (loading) {
         return <div style={{padding: '20px'}}>Loading report...</div>;
@@ -69,7 +69,7 @@ export function LicenceSetReportContent({filename, licenceSetId, hideBackLink = 
             {licenceSetData.licences!.map((licence, i) => (
                 <div key={i}>
                     {licence.filename
-                        ? <img src={getImageUrl(`${filename}/PdfPig/Images/page-1.jpg`)}
+                        ? <img src={getImageUrl(`${licence.dmsFileId}/PdfPig/Images/page-1.jpg`)}
                                alt={`Licence sheet 1 for ${licence.filename}`}
                                style={{width: '100%'}}
                         />

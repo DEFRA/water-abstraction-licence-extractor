@@ -23,50 +23,6 @@
         <Content Include="Data\first-names.csv">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <None Remove="Templates\report-template.html" />
-        <Content Include="Templates\report-template.html">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\LOCAL_report-template.html">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\jsonpath-0.8.0.js" />
-        <None Remove="Templates\settings.js" />
-        <None Remove="Templates\styles.css" />
-        <None Remove="Templates\report.js" />
-        <None Remove="Templates\jsonview.js" />
-        <Content Update="Templates\Assets\jsonpath-0.8.0.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\jsonview.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\report.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\settings.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\styles.css">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\list-template.html" />
-        <Content Include="Templates\list-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\Assets\report.js" />
-        <Content Include="Templates\Assets\report.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\licence-set-report-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\licencesetreport.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\process-runs-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
         <None Update="configs">
             <!-- Exclude the file from analysis -->
             <SonarQubeExclude>true</SonarQubeExclude>

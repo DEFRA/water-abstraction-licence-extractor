@@ -44,7 +44,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         options.AddPolicy("AllowPortal", policy =>
         {
             policy
-                .SetIsOriginAllowed(origin => true)
+                .SetIsOriginAllowed(_ => true)
                 /*.WithOrigins(
                     "http://localhost:5173",  // Vite dev server
                     "http://localhost:3000",   // Docker/production portal

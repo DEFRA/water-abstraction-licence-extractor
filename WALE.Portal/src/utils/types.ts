@@ -28,7 +28,7 @@ export interface SortConfig {
 export interface ReportModal {
     id: number;
     type: 'report' | 'licenceSet';
-    filename: string;
+    fileId: string;
     licenceSetId?: string;
     processRunId: number;
     position: { top: number; left: number };

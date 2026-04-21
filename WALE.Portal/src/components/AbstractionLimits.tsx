@@ -3,7 +3,7 @@ import { JSONPath } from 'jsonpath-plus';
 interface AbstractionLimitsProps {
     reportData: any;
     onJumpToPage: (pageNumber: number) => void;
-    onOpenLinkedLicence?: (filename: string) => void;
+    onOpenLinkedLicence?: (fileId: string) => void;
     level?: number;
 }
 
@@ -80,7 +80,7 @@ function getText(dataToUse: any, path: string): string | null {
 interface AbstractionLimitsSectionProps {
     abstractionLimitsMatches: any[];
     onJumpToPage: (pageNumber: number) => void;
-    onOpenLinkedLicence?: (filename: string) => void;
+    onOpenLinkedLicence?: (fileId: string) => void;
     isLinkedLicenceLevel: boolean;
     level: number;
 }
@@ -122,7 +122,7 @@ function AbstractionLimitsSection({
 interface ConditionBlockProps {
     conditionBlock: any;
     onJumpToPage: (pageNumber: number) => void;
-    onOpenLinkedLicence?: (filename: string) => void;
+    onOpenLinkedLicence?: (fileId: string) => void;
     isLinkedLicenceLevel: boolean;
     level: number;
 }
@@ -308,7 +308,7 @@ interface LinkedLicenceBlockProps {
     licenceNumber: string;
     linkedLicenceFilename: string | null;
     linkedLicence: any;
-    onOpenLinkedLicence?: (filename: string) => void;
+    onOpenLinkedLicence?: (fileId: string) => void;
     onJumpToPage: (pageNumber: number) => void;
     level: number;
 }
@@ -392,7 +392,7 @@ function LinkedLicenceBlock({
 interface NestedAbstractionLimitsProps {
     conditionBlocks: any[];
     onJumpToPage: (pageNumber: number) => void;
-    onOpenLinkedLicence?: (filename: string) => void;
+    onOpenLinkedLicence?: (fileId: string) => void;
     level: number;
 }
 

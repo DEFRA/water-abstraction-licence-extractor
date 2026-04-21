@@ -9,8 +9,8 @@ interface OutputItemTableRowProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
     oddRow: boolean;
-    onOpenReport: (filename: string) => void;
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     showSingles: boolean;
 }
 

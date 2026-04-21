@@ -5,8 +5,8 @@ import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsTableBodyProps {
     data: OutputListDataItem[];
-    onOpenReport: (filename: string) => void;
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     onTotalsCalculated?: (totals: LicenceSetsTotals) => void;
 }
 
@@ -153,8 +153,8 @@ function renderListRow(
     rows: ReactNode[],
     dataSorted: OutputListDataItem[],
     indentLevel: number,
-    onOpenReport: (filename: string) => void,
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void
+    onOpenReport: (fileId: string) => void,
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void
 ) {
     const oddRow = i % 2 === 0;
     const backgroundColor = oddRow ? "#F6F6F6" : "#FAFAFA";
@@ -173,7 +173,7 @@ function renderListRow(
                     item.imagePath === undefined ? (
                         <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
                     ) : (
-                        <img key={idx} src={getThumbnailUrl(item.fileId)} style={{height: '80px'}} alt='No image found' onError={(e) => e.currentTarget.style.display = 'none'} />
+                        <img key={idx} src={getThumbnailUrl(item.fileId!)} style={{height: '80px'}} alt='No image found' onError={(e) => e.currentTarget.style.display = 'none'} />
                     )
                 ))}
             </td>
@@ -181,7 +181,7 @@ function renderListRow(
                 <span className='lsId' title={licenceSetId}>
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(licencesInSet[0].filename!, licenceSetId);
+                        onOpenLicenceSetReport(licencesInSet[0].fileId!, licenceSetId);
                     }}>
                         {licenceSet.shortLicenceSetId}
                     </a>
@@ -199,7 +199,7 @@ function renderListRow(
                 {firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenReport(firstLicenceInSet.filename!);
+                        onOpenReport(firstLicenceInSet.fileId!);
                     }} className='filenameSet'>
                         {firstLicenceInSet.filename}
                     </a>
@@ -219,7 +219,7 @@ function renderListRow(
                     {licenceInSet.filename !== '--' ? (
                         <a href='#' onClick={(e) => {
                             e.preventDefault();
-                            onOpenReport(licenceInSet.filename!);
+                            onOpenReport(licenceInSet.fileId!);
                         }} className='filenameSet'>
                             {licenceInSet.filename}
                         </a>
@@ -256,7 +256,7 @@ function getLicencesInSet(dataSorted: OutputListDataItem[], licenceSetId: string
 
         if (licenceNumbers.indexOf(fullLicenceNumber) === -1) {
             let licence = dataSorted.find(item => item.licenceNumber === fullLicenceNumber) || {
-                filename: '--',
+                fileId: '--',
                 licenceNumber: fullLicenceNumber,
             } as OutputListDataItem;
 

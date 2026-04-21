@@ -18,7 +18,7 @@ public class FilesController(IFileService fileService) : Controller
     
     [HttpPut]
     [DisableRequestSizeLimit]
-    [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600, ValueLengthLimit = 20_971_520)] // 100Mb for all files, 20Mb per file
+    [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000, ValueLengthLimit = 20_971_520)] // 1Gb for all files, 20Mb per file
     public async Task<ActionResult<string>> UploadAsync()
     {
         if (!Request.Form.Files.Any())

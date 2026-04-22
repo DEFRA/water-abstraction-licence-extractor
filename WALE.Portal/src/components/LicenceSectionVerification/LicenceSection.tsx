@@ -97,13 +97,13 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             >
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
                 <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    {(isEditing &&
+                    {(isOpen && isEditing &&
                         <>
                         <button onClick={handleSaveEdit} style={{ marginRight: '5px' }}>Save</button>
                         <button onClick={handleDiscardEdit} style={{ marginRight: '5px' }}>Discard</button>
                         </>
                     )}
-                    {!isEditing && (
+                    {isOpen && !isEditing && (
                         <>
                             <button onClick={handleBeginEdit} style={{ marginRight: '5px' }}>Override</button>
                             <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>

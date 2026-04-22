@@ -3993,6 +3993,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
 
     [key: string]: any;
@@ -4019,6 +4020,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
             this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
+            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
         }
     }
@@ -4043,6 +4045,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
         data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
+        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
         return data;
     }
@@ -4056,6 +4059,7 @@ export interface ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
 
     [key: string]: any;

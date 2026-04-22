@@ -9,5 +9,6 @@ public class LicenceSectionVerification
     public string? LicenceSectionScrapedValue { get; set; }
     public string? LicenceSectionOverrideValue { get; set; }
     public string? VerificationType { get; set; }
+    public bool ScrapedDataIsDifferent { get; set; }
     public DateTime CreatedDateTimeUtc { get; set; }
 }

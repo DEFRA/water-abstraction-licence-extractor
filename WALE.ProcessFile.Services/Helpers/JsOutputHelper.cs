@@ -94,7 +94,7 @@ public static class JsOutputHelper
         bool regenerateMappingJson,
         ProcessRun processRun,
         bool saveToFile,
-        List<LicenceVerificationSummary>? licenceVerificationSummaries = null)
+        List<LicenceSectionVerification>? licenceVerificationSummaries = null)
     {
         var resultFileStringBuilder = new StringBuilder(
             "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +

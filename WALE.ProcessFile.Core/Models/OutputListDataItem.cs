@@ -20,5 +20,5 @@ public class OutputListDataItem
     public string? status{ get; set; }
     public LinkedLicence[]? linkedLicences { get; set; }
     public OutputListDataItemLicenceSet?[]? licenceSets { get; set; }
-    public List<LicenceVerificationSummary>? licenceVerificationSummary { get; set; }
+    public List<LicenceSectionVerification>? licenceVerificationSummary { get; set; }
 }

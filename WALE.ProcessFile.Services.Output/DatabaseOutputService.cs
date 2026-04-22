@@ -249,7 +249,7 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId);
     }
 
-    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceVerificationSummariesAsync()
     {
         return databaseReadService.GetLicenceVerificationSummariesAsync();
     }

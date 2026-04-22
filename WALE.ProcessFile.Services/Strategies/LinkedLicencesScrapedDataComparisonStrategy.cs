@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Services.Strategies;
 
@@ -25,10 +26,9 @@ public class LinkedLicencesScrapedDataComparisonStrategy : IScrapedDataCompariso
 
         try
         {
-            var scrapedLinkedLicences =
-                JsonSerializer.Deserialize<LinkedLicence[]>(verification.LicenceSectionScrapedValue);
-
-            var scrapedLicences = scrapedLinkedLicences ?? [];
+            var scrapedLicences =
+                JsonSerializer.Deserialize<LinkedLicence[]>(verification.LicenceSectionScrapedValue,
+                    JsonHelper.GetSerializerOptions()) ?? Array.Empty<LinkedLicence>();
 
             if (currentLinkedLicences.Length != scrapedLicences.Length)
             {

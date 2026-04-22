@@ -197,8 +197,9 @@ public static class JsOutputHelper
             {
                 foreach (var verification in listRow.latestLicenceSectionVerifications)
                 {
-                    if (verification.ProcessRunId !=
-                        processRun.ProcessRunId && // skip diff check if verification done on the current process run
+                    if (verification.ProcessRunId <
+                        processRun
+                            .ProcessRunId && // skip diff check if verification done on the current process run (or later)
                         verification.LicenceSectionName != null &&
                         scrapedDataComparisonStrategies.TryGetValue(verification.LicenceSectionName, out var strategy))
                     {

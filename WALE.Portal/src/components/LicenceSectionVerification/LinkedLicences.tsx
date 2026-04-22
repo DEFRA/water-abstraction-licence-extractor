@@ -19,12 +19,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
-            getData: () => ({
-                linkedLicences: linkedLicences
-            }),
-            getScrapedData: () => ({
-                linkedLicences: scrapedData
-            })
+            getData: () => (linkedLicences),
+            getScrapedData: () => (scrapedData)
         }));
 
         useEffect(() => {

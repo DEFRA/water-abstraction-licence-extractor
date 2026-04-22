@@ -49,9 +49,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionScrapedValue: verificationType === 'Accept' || verificationType === 'Reject' 
-                        ? JSON.stringify(data) 
-                        : (verificationType === 'Override' ? JSON.stringify(scrapedData) : undefined),
+                    licenceSectionScrapedValue: JSON.stringify(scrapedData),
                     licenceSectionOverrideValue: verificationType === 'Override' ? JSON.stringify(data) : undefined,
                     verificationType: verificationType
                 });

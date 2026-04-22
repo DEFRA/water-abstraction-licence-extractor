@@ -112,7 +112,7 @@ public static class JsOutputHelper
 
         var listData = new List<OutputListDataItem>();
 
-        var summariesByFileId = latestLicenceSectionVerifications?
+        var verificationsByFileId = latestLicenceSectionVerifications?
             .GroupBy(x => x.LicenceFileId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -174,8 +174,8 @@ public static class JsOutputHelper
                     };
                 })
                 .ToArray() ?? [],
-                latestLicenceSectionVerifications = outputLine.DmsFileId.HasValue && summariesByFileId != null && summariesByFileId.TryGetValue(outputLine.DmsFileId.Value, out var summaries)
-                    ? summaries
+                latestLicenceSectionVerifications = outputLine.DmsFileId.HasValue && verificationsByFileId != null && verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value, out var verifications)
+                    ? verifications
                     : null
             };
 

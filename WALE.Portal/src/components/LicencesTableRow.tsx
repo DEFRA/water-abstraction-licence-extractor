@@ -63,7 +63,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                         else if (v.verificationType === 'Reject') color = 'red';
                         else if (v.verificationType === 'Override') color = 'blue';
 
-                        return <span style={{color}}>{`${v.licenceSectionName}: ${v.verificationType}`}</span>;
+                        return <span style={{color}}>{`${v.licenceSectionName}: ${v.verificationType}`}{v.scrapedDataIsDifferent && ' 🚩'}</span>;
                     })}/>
                     : '--')}
             </td>

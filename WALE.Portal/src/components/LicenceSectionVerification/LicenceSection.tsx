@@ -29,9 +29,10 @@ interface LicenceSectionProps {
     initialOpen?: boolean;
     licenceFileId: string;
     processRunId: number;
+    onRefresh?: () => void;
 }
 
-export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId }: LicenceSectionProps) {
+export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId, onRefresh }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [isEditing, setIsEditing] = useState(false);
     const [resetKey, setResetKey] = useState(0);
@@ -56,6 +57,9 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                 });
 
                 await waleApiClient.createLicenceSectionVerification(verification);
+                if (onRefresh) {
+                    onRefresh();
+                }
             } catch (error) {
                 console.error(`Error saving ${verificationType} verification:`, error);
             }

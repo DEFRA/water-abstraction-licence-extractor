@@ -250,11 +250,11 @@ export function LicencesTableHeaders({
                 <td>
                     <FilterSelect
                         id="verified-filter"
-                        field="licenceVerificationSummary"
+                        field="latestLicenceSectionVerifications"
                         type="EmptyOrNotArray"
-                        value={filters['licenceVerificationSummary']?.value ?? 'all'}
+                        value={filters['latestLicenceSectionVerifications']?.value ?? 'all'}
                         onChange={onFilterChange}
-                        onReset={() => onResetFilters('licenceVerificationSummary')}
+                        onReset={() => onResetFilters('latestLicenceSectionVerifications')}
                         options={[
                             { value: 'all', label: 'All' },
                             { value: 'populated', label: 'Not empty' },
@@ -302,7 +302,7 @@ export function LicencesTableHeaders({
                     Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '10%'}}>
-                    Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceVerificationSummary'); }}>&#8693;</a>
+                    Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('latestLicenceSectionVerifications'); }}>&#8693;</a>
                 </td>
             </tr>
         </>

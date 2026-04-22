@@ -1383,7 +1383,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { LicenceFileId = licenceFileId });
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceVerificationSummariesAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

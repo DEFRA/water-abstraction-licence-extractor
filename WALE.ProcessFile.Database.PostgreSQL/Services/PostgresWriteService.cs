@@ -595,8 +595,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc)
-                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionValue AS jsonb), @VerificationType, @CreatedDateTimeUtc)
+                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_override_value, verification_type, created_date_time_utc)
+                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @CreatedDateTimeUtc)
                            RETURNING licence_section_verification_id
                            """;
 
@@ -609,7 +609,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 verification.LicenceFileId,
                 verification.ProcessRunId,
                 verification.LicenceSectionName,
-                verification.LicenceSectionValue,
+                verification.LicenceSectionScrapedValue,
+                verification.LicenceSectionOverrideValue,
                 verification.VerificationType,
                 CreatedDateTimeUtc = DateTime.UtcNow
             });

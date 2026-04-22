@@ -9,11 +9,12 @@ interface VerificationContentProps {
     licence: Licence;
     processRunId: number;
     onJumpToPage: (pageNumber: number) => void;
+    onRefresh?: () => void;
 }
 
 type SubTabType = 'verify' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('verify');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -68,6 +69,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage }: Ver
                     title="Linked Licences" 
                     licenceFileId={licence.dmsFileId!} 
                     processRunId={processRunId}
+                    onRefresh={onRefresh}
                 >
                     <LinkedLicences 
                         licence={licence} 

@@ -1362,7 +1362,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT licence_section_verification_id, licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc
+                           SELECT
+                               licence_section_verification_id AS LicenceSectionVerificationId,
+                               licence_file_id AS LicenceFileId,
+                               process_run_id AS ProcessRunId,
+                               licence_section_name AS LicenceSectionName,
+                               licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_override_value AS LicenceSectionOverrideValue,
+                               verification_type AS VerificationType,
+                               created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
                            ORDER BY created_date_time_utc DESC
@@ -1375,19 +1383,24 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { LicenceFileId = licenceFileId });
     }
 
-    public async Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT DISTINCT ON (licence_file_id, licence_section_name)
+                               licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
+                               process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
-                               verification_type AS VerificationType
+                               licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_override_value AS LicenceSectionOverrideValue,
+                               verification_type AS VerificationType,
+                               created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
-                           ORDER BY licence_file_id, licence_section_name, licence_section_verification_id DESC
+                           ORDER BY licence_file_id, licence_section_name, created_date_time_utc DESC
                            """;
 
-        return await QueryAsync<LicenceVerificationSummary>(
+        return await QueryAsync<LicenceSectionVerification>(
             connection,
             sql,
             0);

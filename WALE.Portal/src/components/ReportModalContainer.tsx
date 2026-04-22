@@ -9,6 +9,7 @@ interface ReportModalContainerProps {
     onMaximize: (id: number) => void;
     onMinimize: (id: number) => void;
     onPositionChange: (id: number, position: { top: number; left: number }) => void;
+    onRefresh?: () => void;
     //onOpenLinkedLicence: (fileId: string) => void;
 }
 
@@ -17,7 +18,8 @@ export function ReportModalContainer({
         onClose,
         onMaximize,
         onMinimize,
-        onPositionChange/*,
+        onPositionChange,
+        onRefresh/*,
         onOpenLinkedLicence*/
     }: ReportModalContainerProps) {
     return (
@@ -38,6 +40,7 @@ export function ReportModalContainer({
                             fileId={modal.fileId}
                             /*onOpenLinkedLicence={onOpenLinkedLicence}*/
                             processRunId={modal.processRunId}
+                            onRefresh={onRefresh}
                         />
                     ) : (
                         <LicenceSetReportContent

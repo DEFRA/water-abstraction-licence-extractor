@@ -11,6 +11,11 @@ export interface ILicenceSectionBody {
      * Returns the current data of the section as JSON.
      */
     getData: () => any;
+
+    /**
+     * Returns the original scraped data of the section as JSON.
+     */
+    getScrapedData: () => any;
 }
 
 export interface LicenceSectionBodyProps {
@@ -24,9 +29,10 @@ interface LicenceSectionProps {
     initialOpen?: boolean;
     licenceFileId: string;
     processRunId: number;
+    onRefresh?: () => void;
 }
 
-export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId }: LicenceSectionProps) {
+export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId, onRefresh }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [isEditing, setIsEditing] = useState(false);
     const [resetKey, setResetKey] = useState(0);
@@ -35,6 +41,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
     const handleVerification = async (verificationType: string) => {
         if (bodyRef.current) {
             const data = bodyRef.current.getData();
+            const scrapedData = bodyRef.current.getScrapedData();
             console.log(`Creating ${verificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
             
             try {
@@ -42,11 +49,15 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionValue: JSON.stringify(data),
+                    licenceSectionScrapedValue: JSON.stringify(scrapedData),
+                    licenceSectionOverrideValue: verificationType === 'Override' ? JSON.stringify(data) : undefined,
                     verificationType: verificationType
                 });
 
                 await waleApiClient.createLicenceSectionVerification(verification);
+                if (onRefresh) {
+                    onRefresh();
+                }
             } catch (error) {
                 console.error(`Error saving ${verificationType} verification:`, error);
             }
@@ -84,13 +95,13 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             >
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
                 <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    {(isEditing &&
+                    {(isOpen && isEditing &&
                         <>
                         <button onClick={handleSaveEdit} style={{ marginRight: '5px' }}>Save</button>
                         <button onClick={handleDiscardEdit} style={{ marginRight: '5px' }}>Discard</button>
                         </>
                     )}
-                    {!isEditing && (
+                    {isOpen && !isEditing && (
                         <>
                             <button onClick={handleBeginEdit} style={{ marginRight: '5px' }}>Override</button>
                             <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>

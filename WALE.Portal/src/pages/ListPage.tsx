@@ -39,21 +39,21 @@ function ListPage() {
 
     const totals = useTotals(filteredData);
 
-    useEffect(() => {
-        const fetchOutputList = async () => {
-            try {
-                const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
-                setOutputList(listDataItems);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
-                console.error('Error fetching process runs:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOutputList();
+    const fetchOutputList = useCallback(async () => {
+        try {
+            const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
+            setOutputList(listDataItems);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
+            console.error('Error fetching process runs:', err);
+        } finally {
+            setLoading(false);
+        }
     }, [processRunId]);
+
+    useEffect(() => {
+        fetchOutputList();
+    }, [fetchOutputList]);
 
     const {
         modals,
@@ -171,6 +171,7 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
+                onRefresh={fetchOutputList}
                 /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);

@@ -26,7 +26,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
 
         var licences = await outputService.GetLicencesAsync(processRunId);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
-        var licenceVerificationSummaries = await outputService.GetLicenceVerificationSummariesAsync();
+        var latestLicenceSectionVerifications = await outputService.GetLatestLicenceSectionVerificationsAsync();
 
         var outputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
@@ -48,7 +48,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 ProcessRunId = processRunId
             }, // Not used
             false,
-            licenceVerificationSummaries.ToList());
+            latestLicenceSectionVerifications.ToList());
 
         return Ok(listData);
     }

@@ -14,11 +14,12 @@ interface ReportContentProps {
     hideBackLink?: boolean;
     //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
+    onRefresh?: () => void;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -254,6 +255,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     licence={reportData2}
                                     processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
+                                    onRefresh={onRefresh}
                                 />
                             </div>
                         )}

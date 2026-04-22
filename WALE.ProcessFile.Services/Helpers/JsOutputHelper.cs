@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Strategies;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
@@ -21,14 +22,17 @@ public static class JsOutputHelper
         Dictionary<string, LicenceSet> licenceSetsFull)
     {
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
-        var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
-        var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData,"ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", GeneralConstants.PdfPigDataExtractorServiceName);
+        var licenceHolderOcrConfidence =
+            GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
+        var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData, "ocr", "--");
+        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData, "servicesUsed",
+            GeneralConstants.PdfPigDataExtractorServiceName);
 
         var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
         var licenceNumber = licence.LicenceNumber;
-        var licenceNumberOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData,"licenceNumberConfidence", null);
+        var licenceNumberOcrConfidence =
+            GetValueOrDefault<double, double?>(licence.NoneSchemaData, "licenceNumberConfidence", null);
 
         var meansFound = licence.MeansOfAbstraction.Length > 0;
         var status = "Not Found";
@@ -47,7 +51,7 @@ public static class JsOutputHelper
         {
             status = "Impound";
         }
-        
+
         var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = licence.LicenceVersion.Issuer;
 
@@ -55,7 +59,7 @@ public static class JsOutputHelper
             .Where(ls => licenceSetsFull.ContainsKey(ls.LicenceSetId!))
             .Select(ls => licenceSetsFull[ls.LicenceSetId!])
             .ToList();
-        
+
         return new IntermediateOutputLicence
         {
             LineNumber = completeNumber,
@@ -70,8 +74,10 @@ public static class JsOutputHelper
             Certainty = GetValueOrDefault<int, int>(licence.NoneSchemaData, "issuedToCertainty", -1),
             MatchType = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchType", "N/A"),
             Duration = durationInMSeconds,
-            MatchedLabelText = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
-            MatchedLabelPosition = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
+            MatchedLabelText =
+                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
+            MatchedLabelPosition =
+                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
             LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
@@ -86,7 +92,7 @@ public static class JsOutputHelper
             DmsFileId = licence.DmsFileId
         };
     }
-    
+
     public static async Task<IReadOnlyList<OutputListDataItem>> SaveListDataAsync(
         List<IntermediateOutputLicence> outputLines,
         string outputFolder,
@@ -94,7 +100,7 @@ public static class JsOutputHelper
         bool regenerateMappingJson,
         ProcessRun processRun,
         bool saveToFile,
-        List<LicenceVerificationSummary>? licenceVerificationSummaries = null)
+        List<LicenceSectionVerification>? latestLicenceSectionVerifications = null)
     {
         var resultFileStringBuilder = new StringBuilder(
             "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
@@ -112,7 +118,12 @@ public static class JsOutputHelper
 
         var listData = new List<OutputListDataItem>();
 
-        var summariesByFileId = licenceVerificationSummaries?
+        var scrapedDataComparisonStrategies = new List<IScrapedDataComparisonStrategy>
+        {
+            new LinkedLicencesScrapedDataComparisonStrategy()
+        }.ToDictionary(s => s.SectionName);
+
+        var verificationsByFileId = latestLicenceSectionVerifications?
             .GroupBy(x => x.LicenceFileId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -133,10 +144,12 @@ public static class JsOutputHelper
 
             var listRow = new OutputListDataItem
             {
-                imagePath = $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
+                imagePath =
+                    $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
-                licenceNumber = $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+                licenceNumber =
+                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
                     $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
                 purposes = outputLine.Purposes,
@@ -150,34 +163,50 @@ public static class JsOutputHelper
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
                 licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
-                {
-                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
-
-                    if (ls == null)
                     {
+                        var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+
+                        if (ls == null)
+                        {
+                            return new OutputListDataItemLicenceSet
+                            {
+                                LicenceSetId = "ERROR",
+                                ShortLicenceSetId = "ERROR"
+                            };
+                        }
+
+                        var licenceSetType = lsr.LicenceSetType;
+
                         return new OutputListDataItemLicenceSet
                         {
-                            LicenceSetId = "ERROR",
-                            ShortLicenceSetId = "ERROR"
+                            LicenceSetId = ls.LicenceSetId,
+                            ShortLicenceSetId = ls.ShortLicenceSetId,
+                            LicenceSetTypes = ls.LicenceSetTypes,
+                            LicenceSetType = licenceSetType
                         };
-                    }
-                    
-                    var licenceSetType = lsr.LicenceSetType;
-
-                    return new OutputListDataItemLicenceSet
-                    {
-                        LicenceSetId = ls.LicenceSetId,
-                        ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = ls.LicenceSetTypes,
-                        LicenceSetType = licenceSetType
-
-                    };
-                })
-                .ToArray() ?? [],
-                licenceVerificationSummary = outputLine.DmsFileId.HasValue && summariesByFileId != null && summariesByFileId.TryGetValue(outputLine.DmsFileId.Value, out var summaries)
-                    ? summaries
+                    })
+                    .ToArray() ?? [],
+                latestLicenceSectionVerifications = outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
+                                                    verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value,
+                                                        out var verifications)
+                    ? verifications
                     : null
             };
+
+            if (listRow.latestLicenceSectionVerifications != null)
+            {
+                foreach (var verification in listRow.latestLicenceSectionVerifications)
+                {
+                    if (verification.ProcessRunId <
+                        processRun
+                            .ProcessRunId && // skip diff check if verification done on the current process run (or later)
+                        verification.LicenceSectionName != null &&
+                        scrapedDataComparisonStrategies.TryGetValue(verification.LicenceSectionName, out var strategy))
+                    {
+                        verification.ScrapedDataIsDifferent = strategy.ScrapedDataIsDifferent(verification, listRow);
+                    }
+                }
+            }
 
             listData.Add(listRow);
 
@@ -210,7 +239,7 @@ public static class JsOutputHelper
             {
                 continue;
             }
-            
+
             foreach (var linkedLicence in outputLine.LinkedLicences)
             {
                 var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
@@ -230,7 +259,7 @@ public static class JsOutputHelper
         {
             return listData;
         }
-        
+
         Directory.CreateDirectory($"{outputFolder}Additional");
 
         var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
@@ -269,17 +298,17 @@ public static class JsOutputHelper
         var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
         await File.WriteAllTextAsync(nodeGraphDataFile,
             $"var data = {JsonSerializer.Serialize(nodeGraphData, JsonHelper.GetSerializerOptions())};");
-        
+
         return listData;
     }
-    
+
     private static string ToPercent(double? value, string? ocr)
     {
         if (ocr != "OCR")
         {
             return string.Empty;
         }
-    
+
         if (value == null)
         {
             return string.Empty;
@@ -287,7 +316,7 @@ public static class JsOutputHelper
 
         return " (" + Math.Round(value.Value, 1) + "%)";
     }
-    
+
     private static void Log(string message, StringBuilder outputStringBuilder)
     {
         outputStringBuilder.Append(message);
@@ -312,10 +341,10 @@ public static class JsOutputHelper
 
                 return jsonElement.Value.GetDouble();
         }
-        
+
         throw new NotImplementedException();
     }
-    
+
     private static T2? GetValueOrDefault<T, T2>(
         Dictionary<string, object?> data,
         string fieldName,
@@ -334,24 +363,24 @@ public static class JsOutputHelper
             {
                 var ary = (JsonElement[])value;
                 var firstElement = ary.Length >= 1 ? ary.FirstOrDefault() : (JsonElement?)null;
-                
+
                 return (T2?)(GetValue(firstElement, typeof(T2)) ?? defaultValue);
             }
-            
+
             if (value.GetType() == typeof(string[]))
             {
                 var ary = (string[])value;
                 return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
             }
-            
+
             if (value.GetType() == typeof(List<JsonElement>))
             {
                 var list = (List<JsonElement>)value;
                 var firstElement = list.Count >= 1 ? list.FirstOrDefault() : (JsonElement?)null;
-                
+
                 return (T2?)(GetValue(firstElement, typeof(T2)) ?? (object?)defaultValue);
             }
-            
+
             if (value.GetType() == typeof(List<string>))
             {
                 var list = (List<string>)value;
@@ -367,7 +396,7 @@ public static class JsOutputHelper
             {
                 return (T2)value;
             }
-            
+
             var targetType = typeof(T2);
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -385,19 +414,22 @@ public static class JsOutputHelper
 
             return (T2)value;
         }
-        
+
         if (typeof(T) == typeof(string))
         {
             return (T2)(object)element.GetString()!;
         }
+
         if (typeof(T) == typeof(double))
         {
             return (T2)(object)element.GetDouble();
         }
+
         if (typeof(T) == typeof(int))
         {
             return (T2)(object)element.GetInt32();
         }
+
         if (typeof(T) == typeof(string[]))
         {
             var v = element.GetRawText();
@@ -405,7 +437,7 @@ public static class JsOutputHelper
 
             return (T2)(object)ary.FirstOrDefault()!;
         }
-        
+
         throw new NotSupportedException($"{typeof(T).Name} is not supported");
     }
 }

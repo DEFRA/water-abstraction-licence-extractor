@@ -71,7 +71,7 @@ public interface IOutputService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
-    Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 }

@@ -36,17 +36,18 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
         const Component = SECTION_COMPONENTS[sectionName];
+        const value = verification.licenceSectionOverrideValue || verification.licenceSectionScrapedValue;
 
-        if (Component && verification.licenceSectionValue) {
+        if (Component && value) {
             try {
-                const initialData = JSON.parse(verification.licenceSectionValue);
+                const initialData = JSON.parse(value);
                 return <Component initialData={initialData} isEditing={false} onJumpToPage={onJumpToPage} />;
             } catch (e) {
                 console.error("Error parsing verification value", e);
             }
         }
 
-        return <div>{verification.licenceSectionValue || 'N/A'}</div>;
+        return <div>{value || 'N/A'}</div>;
     };
 
     return (

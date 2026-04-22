@@ -15,7 +15,7 @@ export interface Totals {
     issuer: number;
     meansFound: number;
     linkedLicences: number;
-    licenceVerificationSummary: number;
+    latestLicenceSectionVerifications: number;
     licenceSets: number;
     status: number;
 }
@@ -35,7 +35,7 @@ export function useTotals(filteredData: OutputListDataItem[]): Totals {
             issuer: countNonEmpty(filteredData, 'issuer', ''),
             meansFound: countNonEmpty(filteredData, 'meansFound', false),
             linkedLicences: countNonEmpty(filteredData, 'linkedLicences', []),
-            licenceVerificationSummary: countNonEmpty(filteredData, 'licenceVerificationSummary', []),
+            latestLicenceSectionVerifications: countNonEmpty(filteredData, 'latestLicenceSectionVerifications', []),
             licenceSets: countNonEmptyLicenceSets(filteredData),
             status: filteredData.length // Status always has a value
         };

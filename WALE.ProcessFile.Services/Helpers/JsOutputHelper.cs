@@ -123,6 +123,11 @@ public static class JsOutputHelper
             new LinkedLicencesScrapedDataComparisonStrategy()
         }.ToDictionary(s => s.SectionName);
 
+        var mergeOverrideStrategies = new List<IMergeOverrideStrategy>
+        {
+            new LinkedLicencesMergeOverrideStrategy()
+        }.ToDictionary(s => s.SectionName);
+
         var verificationsByFileId = latestLicenceSectionVerifications?
             .GroupBy(x => x.LicenceFileId)
             .ToDictionary(g => g.Key, g => g.ToList());
@@ -195,15 +200,19 @@ public static class JsOutputHelper
 
             if (listRow.latestLicenceSectionVerifications != null)
             {
-                foreach (var verification in listRow.latestLicenceSectionVerifications)
+                foreach (var verification in listRow.latestLicenceSectionVerifications.Where(verification =>
+                             verification.ProcessRunId <= processRun.ProcessRunId &&
+                             verification.LicenceSectionName != null))
                 {
-                    if (verification.ProcessRunId <
-                        processRun
-                            .ProcessRunId && // skip diff check if verification done on the current process run (or later)
-                        verification.LicenceSectionName != null &&
-                        scrapedDataComparisonStrategies.TryGetValue(verification.LicenceSectionName, out var strategy))
+                    if (verification.ProcessRunId != processRun.ProcessRunId &&
+                        scrapedDataComparisonStrategies.TryGetValue(verification.LicenceSectionName!, out var strategy))
                     {
                         verification.ScrapedDataIsDifferent = strategy.ScrapedDataIsDifferent(verification, listRow);
+                    }
+
+                    if (mergeOverrideStrategies.TryGetValue(verification.LicenceSectionName!, out var mergeStrategy))
+                    {
+                        mergeStrategy.Merge(verification, listRow);
                     }
                 }
             }

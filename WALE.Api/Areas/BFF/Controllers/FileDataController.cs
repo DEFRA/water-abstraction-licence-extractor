@@ -18,9 +18,9 @@ public class FileDataController(IOutputService outputService) : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId)
+    public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId, [FromQuery] int? processRunId = null)
     {
-        var result = await outputService.GetLicenceAsync(fileId);
+        var result = await outputService.GetLicenceAsync(fileId, processRunId);
         return Ok(result);
     }
     

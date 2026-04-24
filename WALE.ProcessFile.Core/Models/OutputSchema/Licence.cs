@@ -6,6 +6,8 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class Licence
 {
+    public int? ProcessRunId { get; set; }
+    
     public string Id
     {
         get

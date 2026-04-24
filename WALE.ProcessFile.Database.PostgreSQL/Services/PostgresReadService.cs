@@ -602,7 +602,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return [];
     }
 
-    public async Task<Licence?> GetLicenceAsync(Guid fileId, int? processRunId = null)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -611,9 +611,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_id 
                            FROM licence
                            WHERE file_id = @FileId
-                           AND (@ProcessRunId IS NULL OR process_run_id = @ProcessRunId)
-                           ORDER BY process_run_id DESC
-                           LIMIT 1;
+                           AND process_run_id = @ProcessRunId;
                            """;
 
         var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
@@ -632,10 +630,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.ProcessRunId = processRunId;
         return data;
     }
 
-    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int? processRunId = null)
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -644,9 +643,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_id 
                            FROM licence
                            WHERE licence_number = @LicenceNumber 
-                             AND (@ProcessRunId IS NULL OR process_run_id = @ProcessRunId)
-                           ORDER BY process_run_id DESC
-                           LIMIT 1;
+                             AND process_run_id = @ProcessRunId;
                            """;
 
         var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(

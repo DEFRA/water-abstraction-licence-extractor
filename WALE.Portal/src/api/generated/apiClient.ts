@@ -1689,14 +1689,19 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param processRunId (optional) 
      * @return OK
      */
-    licence(fileId: string | undefined): Promise<Licence> {
+    licence(fileId: string | undefined, processRunId: number | undefined): Promise<Licence> {
         let url_ = this.baseUrl + "/BFF/FileData/Licence?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
         else if (fileId !== undefined)
             url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

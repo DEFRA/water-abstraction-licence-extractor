@@ -316,7 +316,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int? processRunId = null)
+    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         throw new NotImplementedException();
     }

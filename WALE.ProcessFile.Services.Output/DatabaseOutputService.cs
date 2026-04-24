@@ -228,7 +228,7 @@ public class DatabaseOutputService(
         return databaseReadService.GetProcessRunsAsync();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int? processRunId = null)
+    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         return databaseReadService.GetLicenceAsync(fileId, processRunId);
     }

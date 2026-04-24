@@ -6,14 +6,14 @@ import { LinkedLicenceItem } from "./LinkedLicenceItem";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
-    initialData?: { linkedLicences: LinkedLicence[] };
+    initialData?: LinkedLicence[];
     onJumpToPage?: (pageNumber: number) => void;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
     ({ licence, isEditing, onJumpToPage, initialData }, ref) => {
-        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData?.linkedLicences || []);
-        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.linkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || null);
+        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData || []);
+        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.map(ll => LinkedLicence.fromJS(ll)) || null);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
 

@@ -4,6 +4,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class OutputListDataItem
 {
+    public int? processRunId { get; set; }
     public string? imagePath { get; set; }
     public Guid fileId { get; set; }
     public string? filename { get; set; }

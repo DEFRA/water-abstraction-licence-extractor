@@ -55,9 +55,9 @@ public interface IDatabaseReadService
     
     Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
     
-    Task<Licence?> GetLicenceAsync(Guid fileId);
+    Task<Licence?> GetLicenceAsync(Guid fileId, int? processRunId = null);
     
-    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int? processRunId = null);
     
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
 

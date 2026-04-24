@@ -33,7 +33,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new { });
-        
+
         return results.ToList();
     }
 
@@ -53,10 +53,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new
-        {
-            request.FileId,
-            request.NoOcrServiceName
-        });
+            {
+                request.FileId,
+                request.NoOcrServiceName
+            });
     }
 
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
@@ -86,7 +86,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
-        
+
         const string sql = """
                            SELECT data 
                            FROM no_ocr_page_text_cache 
@@ -111,7 +111,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
-        
+
         const string sql = """
                            SELECT
                                 page_number
@@ -137,7 +137,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             return null;
         }
-        
+
         var returnDict = new Dictionary<int, string>();
 
         foreach (var (pageNumber, data) in resultList)
@@ -146,10 +146,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 // TODO some weird circumstance meant that certain (not all) pages were repeated
                 // PROBABLY because of retry logic (might be limited to Ryan's machine)
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.FileId}");
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PostgresReadService)} - Page number {pageNumber} is duplicated in {request.FileId}");
             }
         }
-        
+
         return returnDict;
     }
 
@@ -248,7 +249,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.PageNumber
             });
     }
-    
+
     public async Task<string?> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
@@ -426,7 +427,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
             licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
-            
+
             return licence;
         }).ToList();
     }
@@ -517,7 +518,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE licence_set_id = @LicenceSetId 
                              AND process_run_id = @ProcessRunId
                            """;
-        
+
         return (await QueryAsync<LicenceSetLicence>(
             connection,
             sql,
@@ -564,7 +565,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new { ProcessRunId = processRunId });
-        
+
         return results.Select(r => (r.LicenceSetId, (LicenceSetType)r.LicenceSetType)).ToList();
     }
 
@@ -572,11 +573,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         /*const string sql = """
-                           SELECT 
+                           SELECT
                                aggregate_set_id,
                                schema_aggregate_set_id,
-                               data 
-                           FROM aggregate_set 
+                               data
+                           FROM aggregate_set
                            WHERE licence_set_id = @LicenceSetId
                            """;*/
 
@@ -588,20 +589,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         int processRunId)
     {
         await using var connection = GetPostgresConnection();
-            /*const string sql = """
-                                SELECT 
-                                    aggregate_set_id,
-                                    schema_aggregate_set_id,
-                                    data 
-                                FROM aggregate_set 
-                                WHERE process_run_id = @ProcessRunId
-                                """;*/
-        
+        /*const string sql = """
+                            SELECT
+                                aggregate_set_id,
+                                schema_aggregate_set_id,
+                                data
+                            FROM aggregate_set
+                            WHERE process_run_id = @ProcessRunId
+                            """;*/
+
         // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
         return [];
     }
 
-    public async Task<Licence?> GetLicenceAsync(Guid fileId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int? processRunId = null)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -610,26 +611,31 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_id 
                            FROM licence
                            WHERE file_id = @FileId
+                           AND (@ProcessRunId IS NULL OR process_run_id = @ProcessRunId)
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
-        
-        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
             connection,
             sql,
             0,
-            new { FileId = fileId });
+            new
+            {
+                FileId = fileId,
+                ProcessRunId = processRunId
+            });
         if (result == null)
         {
             return null;
         }
-        
+
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         return data;
     }
 
-    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int? processRunId = null)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -638,11 +644,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_id 
                            FROM licence
                            WHERE licence_number = @LicenceNumber 
-                             AND process_run_id = @ProcessRunId
+                             AND (@ProcessRunId IS NULL OR process_run_id = @ProcessRunId)
+                           ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
-        
-        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
             connection,
             sql,
             0,
@@ -651,12 +658,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 LicenceNumber = licenceNumber,
                 ProcessRunId = processRunId
             });
-        
+
         if (result == null)
         {
             return null;
         }
-        
+
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         return data;
@@ -672,15 +679,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
-        
-        var result =  await QuerySingleOrDefaultAsync<string>(
+
+        var result = await QuerySingleOrDefaultAsync<string>(
             connection,
             sql,
             0,
             new { FileId = fileId });
 
-        return result == null 
-            ? null 
+        return result == null
+            ? null
             : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
     }
 
@@ -733,9 +740,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
                                AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
-                           
+
                            UNION
-                           
+
                            select distinct
                                lic."LIC_NO" AS LicenceNumber,
                                null AS Param1,
@@ -771,12 +778,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                AND (lic."REV_DATE" IS NULL OR lic."REV_DATE" >= CURRENT_DATE)
                                AND lic."NOTES" IS NOT NULL
                            """;
-        
+
         var result = await QueryAsync<NaldLinkedLicenceRawData>(
             connection,
             sql,
             0);
-        
+
         return result.ToList();
     }
 
@@ -798,12 +805,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                1 AS Type
                            FROM nald."NALD_IMP_LICENCES";
                            """;
-        
+
         var result = await QueryAsync<NaldLicence>(
             connection,
             sql,
             0);
-        
+
         return result.ToList();
     }
 
@@ -828,16 +835,18 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             await expiredTask,
             await revokedTask,
             await impoundmentTask);
-        
+
         // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
-        async Task<HashSet<(string, int)>> RunWithNewConnectionAsync(Func<NpgsqlConnection, Task<HashSet<(string, int)>>> query)
+        async Task<HashSet<(string, int)>> RunWithNewConnectionAsync(
+            Func<NpgsqlConnection, Task<HashSet<(string, int)>>> query)
         {
             await using var connection = GetPostgresConnection();
             return await query(connection);
         }
     }
 
-    private async Task<HashSet<(string, int)>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -874,19 +883,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND NALD_ABS_LIC_VERSIONS."WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
                              AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
                            """;
-        
+
         var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode });
-        
+
         return results
             .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
-    
-    private async Task<HashSet<(string, int)>> GetRevokedLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+
+    private async Task<HashSet<(string, int)>> GetRevokedLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -921,19 +931,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              )
                              AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
                            """;
-        
+
         var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode });
-        
+
         return results
             .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
-    
-    private async Task<HashSet<(string, int)>> GetLapsedLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+
+    private async Task<HashSet<(string, int)>> GetLapsedLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -968,19 +979,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              )
                              AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
                            """;
-        
+
         var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode });
-        
+
         return results
             .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
 
-    private async Task<HashSet<(string, int)>> GetExpiredLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetExpiredLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -1015,19 +1027,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              )
                              AND (@RegionCode IS NULL OR NALD_ABS_LICENCES."FGAC_REGION_CODE" = @RegionCode);
                            """;
-        
+
         var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
             connection,
             sql,
             0,
             new { RegionCode = regionCode });
-        
+
         return results
             .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
 
-    private async Task<HashSet<(string, int)>> GetImpoundmentLicenceNumbersAsync(NpgsqlConnection connection, short? regionCode)
+    private async Task<HashSet<(string, int)>> GetImpoundmentLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
     {
         const string sql = """
                            SELECT
@@ -1081,7 +1094,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            """;
 
         // TODO check if this should  filter out to only none-revoked etc...
-        
+
         return (await QueryAsync<NaldAbstractionLicenceDataLine>(
             connection,
             sql,
@@ -1300,18 +1313,18 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
-        
-        var result =  await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
             connection,
             sql,
             0,
             new { PermitNumber = permitNumber });
-        
+
         if (result == null)
         {
             return null;
         }
-        
+
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         return data;
@@ -1339,8 +1352,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                AND NALD_ABS_LIC_VERSIONS."ISSUE_NO" = @IssueNumber
                                AND NALD_ABS_LIC_VERSIONS."WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN');
                            """;
-        
-        var result =  await QuerySingleOrDefaultAsync<int?>(
+
+        var result = await QuerySingleOrDefaultAsync<int?>(
             connection,
             sql,
             0,
@@ -1349,7 +1362,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 PermitNumber = permitNumber,
                 IssueNumber = issueNumber
             });
-        
+
         if (result == null)
         {
             return -1;
@@ -1447,21 +1460,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
     }
-    
-    private async Task<IEnumerable<T>> QueryAsync<T>(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+
+    private async Task<IEnumerable<T>> QueryAsync<T>(NpgsqlConnection connection, string sql, int retryNumber,
+        object? param = null)
     {
         try
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
             NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
             var result = await connection.QueryAsync<T>(sql, param);
-            var duration =  DateTime.Now - dtStart;
+            var duration = DateTime.Now - dtStart;
 
             if (duration.TotalSeconds > 1)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
             }
 
             return result;
@@ -1472,14 +1487,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 throw;
             }
-            
+
             if (retryNumber > RetryHelper.MaxRetries)
             {
                 throw;
             }
 
             ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - QueryAsync retrying");
-            
+
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
         }
@@ -1488,13 +1503,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     private NpgsqlConnection GetPostgresConnection()
     {
         var dtStart = DateTime.Now;
-        
+
         var conn = dataSourceProvider.DataSource.OpenConnection();
-        var duration =  DateTime.Now - dtStart;
+        var duration = DateTime.Now - dtStart;
 
         if (duration.TotalSeconds > 1)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - OpenConnection took {duration.TotalMilliseconds}ms");
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(PostgresReadService)} - OpenConnection took {duration.TotalMilliseconds}ms");
         }
 
         return conn;

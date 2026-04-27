@@ -1,5 +1,5 @@
 import FilesListItem from '../components/FilesListItem.tsx';
-import {type ChangeEvent, useCallback, useEffect, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {FilePdf} from "../class/FilePdf.tsx";
 import {waleApiBaseUrl} from "../api/apiClient.ts";
 
@@ -40,17 +40,22 @@ export function FilesList({}: FilesListProps) {
         return items;
     };
     
-    const fileUploaded = useCallback(async (file: ChangeEvent<HTMLInputElement>) => {
-        for (let idx = 0, len = file.target.files!.length; idx < len; idx++) {
+    const dropHandler = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        event.preventDefault();
+        
+        let files = event.dataTransfer!.files;
+
+        for (let idx = 0; idx < files.length; idx++) {
             let data = new FormData()
-            data.append('file', file.target.files![idx]);
+            data.append('file', files[idx]);
 
             setLoading(true);
         
             await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
                 method: 'PUT',
                 body: data
-                });
+            });
 
             await fetchFiles();
         }
@@ -62,17 +67,19 @@ export function FilesList({}: FilesListProps) {
     
     return (
         <>
+            <div id="dragDropArea"
+                onDrop={(e) => dropHandler(e)}
+                onDragOver={(e) => e.preventDefault()}></div>
+
             {files.length === 0
                 ? (<p>No files found.</p>)
                 : (
                     <ul id="filesList">
                         {files.map((file) => (
-                            <FilesListItem file={file} key={file.filename} />
+                            <FilesListItem file={file} key={file.filename}/>
                         ))}
                     </ul>
                 )}
-
-            <input type="file" id="filesUpload" multiple onChange={fileUploaded} />
         </>
     );
 }

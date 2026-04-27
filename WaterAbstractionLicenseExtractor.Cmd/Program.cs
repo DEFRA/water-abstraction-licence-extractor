@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
+using System.Net;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
@@ -129,6 +130,8 @@ async Task ProgramAsync()
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
+            await Task.Delay(2000);
+            
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
@@ -456,7 +459,14 @@ ConfiguredServices ConfigureServices()
         fileService = new LocalFileService(pdfFolderPath);   
     }
     
-    var httpClient = new HttpClient();
+//    ServicePointManager.DefaultConnectionLimit = 10;
+    
+    var clientHandler = new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+    };
+    
+    var httpClient = new HttpClient(clientHandler);
     httpClient.BaseAddress = new Uri(apiBaseUrl);
     
     var cacheService = new ApiCacheService(httpClient);
@@ -708,7 +718,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
  //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-        .Take(1)
+//        .Take(1)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

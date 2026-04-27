@@ -130,7 +130,7 @@ async Task ProgramAsync()
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
-            await Task.Delay(2000);
+//            await Task.Delay(2000);
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -718,7 +718,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
 //       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
  //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-//        .Take(1)
+        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

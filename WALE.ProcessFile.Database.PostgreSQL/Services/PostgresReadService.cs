@@ -369,6 +369,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                end_date_time_utc, 
                                number_of_files 
                            FROM process_run
+                           WHERE end_date_time_utc IS NOT NULL
                            """;
 
         return (await QueryAsync<ProcessRun>(
@@ -1426,7 +1427,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
 
             var result = await connection.QuerySingleOrDefaultAsync<T>(sql, param);
             var duration = DateTime.Now - dtStart;
@@ -1454,7 +1459,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - QuerySingleOrDefaultAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
-            return await QuerySingleOrDefaultAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
+            return await QuerySingleOrDefaultAsync<T>(
+                GetPostgresConnection(),
+                sql,
+                retryNumber + 1,
+                param);
         }
     }
 
@@ -1465,7 +1474,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
 
             var result = await connection.QueryAsync<T>(sql, param);
             var duration = DateTime.Now - dtStart;
@@ -1493,7 +1506,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - QueryAsync retrying");
 
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
-            return await QueryAsync<T>(GetPostgresConnection(), sql, retryNumber + 1, param);
+            return await QueryAsync<T>(
+                GetPostgresConnection(),
+                sql,
+                retryNumber + 1,
+                param);
         }
     }
 
@@ -1501,13 +1518,13 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         var dtStart = DateTime.Now;
 
-        var conn = dataSourceProvider.DataSource.OpenConnection();
+        var conn = dataSourceProvider.DataSource.CreateConnection();
         var duration = DateTime.Now - dtStart;
 
         if (duration.TotalSeconds > 1)
         {
             ConsoleHelper.WriteLine(
-                $"WARNING - {nameof(PostgresReadService)} - OpenConnection took {duration.TotalMilliseconds}ms");
+                $"WARNING - {nameof(PostgresReadService)} - CreateConnection took {duration.TotalMilliseconds}ms");
         }
 
         return conn;

@@ -622,8 +622,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             var result = await connection.ExecuteScalarAsync<int>(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -659,8 +663,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             await connection.ExecuteAsync(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -689,5 +697,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     }
     
     private NpgsqlConnection GetPostgresConnection()
-        => dataSourceProvider.DataSource.CreateConnection();
+    {
+        var dtStart = DateTime.Now;
+
+        var conn = dataSourceProvider.DataSource.CreateConnection();
+        var duration = DateTime.Now - dtStart;
+
+        if (duration.TotalSeconds > 1)
+        {
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(PostgresReadService)} - CreateConnection took {duration.TotalMilliseconds}ms");
+        }
+
+        return conn;
+    }
 }

@@ -22,8 +22,26 @@ public class AwsS3FileService(
                 BucketName = FolderPath
             });
 
-        return response.S3Objects
+
+        var returnList = response.S3Objects
             .Select(s3Object => s3Object.Key)
+            .ToList();
+
+        while (!string.IsNullOrEmpty(response.NextContinuationToken))
+        {
+            response = await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    ContinuationToken = response.NextContinuationToken,
+                    BucketName = FolderPath
+                });
+            
+            returnList.AddRange(response.S3Objects
+                .Select(s3Object => s3Object.Key));
+        }
+
+        return returnList
+            .OrderBy(filename => filename)
             .ToList();
     }
 

@@ -38,11 +38,23 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
+    const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+    const [pendingVerificationType, setPendingVerificationType] = useState<string | null>(null);
+    const [verificationNotes, setVerificationNotes] = useState('');
+
     const handleVerification = async (verificationType: string) => {
+        setPendingVerificationType(verificationType);
+        setVerificationNotes('');
+        setShowVerificationPrompt(true);
+    };
+
+    const confirmVerification = async () => {
+        if (!pendingVerificationType) return;
+        
         if (bodyRef.current) {
             const data = bodyRef.current.getData();
             const scrapedData = bodyRef.current.getScrapedData();
-            console.log(`Creating ${verificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
+            console.log(`Creating ${pendingVerificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
             
             try {
                 const verification = new LicenceSectionVerification({
@@ -50,8 +62,9 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     processRunId: processRunId,
                     licenceSectionName: title,
                     licenceSectionScrapedValue: JSON.stringify(scrapedData),
-                    licenceSectionOverrideValue: verificationType === 'Override' ? JSON.stringify(data) : undefined,
-                    verificationType: verificationType
+                    licenceSectionOverrideValue: pendingVerificationType === 'Override' ? JSON.stringify(data) : undefined,
+                    verificationType: pendingVerificationType,
+                    notes: verificationNotes
                 });
 
                 await waleApiClient.createLicenceSectionVerification(verification);
@@ -59,13 +72,17 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                     onRefresh();
                 }
             } catch (error) {
-                console.error(`Error saving ${verificationType} verification:`, error);
+                console.error(`Error saving ${pendingVerificationType} verification:`, error);
             }
         }
+        setShowVerificationPrompt(false);
+        setPendingVerificationType(null);
     };
 
     const handleSaveEdit = async () => {
-        await handleVerification('Override');
+        setPendingVerificationType('Override');
+        setVerificationNotes('');
+        setShowVerificationPrompt(true);
         setIsEditing(false);
     };
 
@@ -118,6 +135,46 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                         ref: bodyRef,
                         key: resetKey
                     } as any)}
+                </div>
+            )}
+            {showVerificationPrompt && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        maxWidth: '500px',
+                        width: '100%',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                    }}>
+                        <h4 style={{ marginTop: 0 }}>Verification Confirmation</h4>
+                        <p>Are you sure you want to {pendingVerificationType?.toLowerCase()} the {title} for this licence?</p>
+                        <div style={{ marginBottom: '15px' }}>
+                            <label htmlFor="verificationNotes" style={{ display: 'block', marginBottom: '5px' }}>Notes:</label>
+                            <textarea
+                                id="verificationNotes"
+                                value={verificationNotes}
+                                onChange={(e) => setVerificationNotes(e.target.value)}
+                                style={{ width: '100%', minHeight: '80px', padding: '8px', boxSizing: 'border-box' }}
+                                placeholder="Enter notes here..."
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button onClick={() => { setShowVerificationPrompt(false); setPendingVerificationType(null); }}>No</button>
+                            <button onClick={confirmVerification} style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer' }}>Yes</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

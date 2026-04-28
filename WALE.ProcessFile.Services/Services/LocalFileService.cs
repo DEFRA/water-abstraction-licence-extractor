@@ -23,12 +23,12 @@ public class LocalFileService(string folderPath) : IFileService
                 FileShare.Read));
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public Task<byte[]> GetFileAsBytesAsync(string filename)
     {
-        return File.ReadAllBytesAsync($"{FolderPath}{pdfFilename}");
+        return File.ReadAllBytesAsync($"{FolderPath}{filename}");
     }
 
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    public Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
         throw new NotImplementedException();
     }

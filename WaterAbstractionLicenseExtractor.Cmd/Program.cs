@@ -48,18 +48,6 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    /*var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
-        services.ReportTemplatePath!,
-        outputFolder,
-        services.LoadAiJs,
-        services.ListDataPath!,
-        services.ProcessRunsDataPath!,
-        services.InternalDataPath!,
-        services.LicenceDataPath!,
-        services.LicenceSetsDataPath!,
-        services.ThumbnailImageDataPath!,
-        services.FullImageDataPath!);*/
-
     // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
     // when we want to handle more than one region)
     const short regionCode = 3;
@@ -90,7 +78,6 @@ async Task ProgramAsync()
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
-    //await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
     
@@ -342,8 +329,6 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
-
-    //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
 }
 
 ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
@@ -425,40 +410,6 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var useS3 = false;//true;
-    IFileService fileService;
-
-    if (useS3)
-    {
-        var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
-            ?? throw new NullReferenceException("AwsS3AccessKey");
-        var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
-            ?? throw new NullReferenceException("AwsS3SecretKey");
-        var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
-            ?? throw new NullReferenceException("AwsS3RegionName");
-        var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
-            ?? throw new NullReferenceException("AwsS3BucketName");
-        
-        fileService = new AwsS3FileService(
-            regionName,
-            bucketName,
-            accessKey,
-            secretKey,
-            null);
-    }
-    else
-    {
-        var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-            ?? throw new NullReferenceException("PdfFolderPath");
-        
-        if (!pdfFolderPath.EndsWith('/'))
-        {
-            pdfFolderPath += "/";
-        }
-        
-        fileService = new LocalFileService(pdfFolderPath);   
-    }
-    
     #pragma warning disable SYSLIB0014
     ServicePointManager.DefaultConnectionLimit = 100;
     #pragma warning restore SYSLIB0014
@@ -470,6 +421,48 @@ ConfiguredServices ConfigureServices()
     
     var httpClient = new HttpClient(clientHandler);
     httpClient.BaseAddress = new Uri(apiBaseUrl);
+    
+    var fileServiceType = "api";
+    IFileService fileService;
+
+    switch (fileServiceType)
+    {
+        case "api":
+            fileService = new ApiFileService(httpClient);
+            break;
+        case "s3":
+        {
+            var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
+                ?? throw new NullReferenceException("AwsS3AccessKey");
+            var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
+                ?? throw new NullReferenceException("AwsS3SecretKey");
+            var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
+                ?? throw new NullReferenceException("AwsS3RegionName");
+            var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
+                ?? throw new NullReferenceException("AwsS3BucketName");
+        
+            fileService = new AwsS3FileService(
+                regionName,
+                bucketName,
+                accessKey,
+                secretKey,
+                null);
+            break;
+        }
+        default:
+        {
+            var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
+                ?? throw new NullReferenceException("PdfFolderPath");
+        
+            if (!pdfFolderPath.EndsWith('/'))
+            {
+                pdfFolderPath += "/";
+            }
+        
+            fileService = new LocalFileService(pdfFolderPath);
+            break;
+        }
+    }
     
     var cacheService = new ApiCacheService(httpClient);
     var outputService = new ApiOutputService(httpClient);
@@ -640,67 +633,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-/*async Task MoveReportHtmlFilesAsync(
-    string reportTemplatePath,
-    string outputFolder,
-    bool loadAiJs,
-    string listDataPath,
-    string processRunsPath,
-    string internalDataPath,
-    string licenceDataPath,
-    string licenceSetsDataPath,
-    string thumbnailImageDataPath,
-    string fullImageDataPath)
-{
-    Copy(reportTemplatePath, outputFolder);
-
-    var aiFiles = Directory.GetFiles("Data");
-
-    foreach (var aiFile in aiFiles)
-    {
-        if (!aiFile.EndsWith(".js"))
-        {
-            continue;
-        }
-
-        var aiFilePath = aiFile.Split('/').Last().Replace(".js", string.Empty);
-
-        Directory.CreateDirectory($"{outputFolder}{aiFilePath}");
-        File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
-    }
-
-    var reportPath = $"{outputFolder}report.html";
-    File.Move($"{outputFolder}report-template.html", reportPath, true);
-
-    var reportHtml = await File.ReadAllTextAsync(reportPath);
-    reportHtml = reportHtml.Replace("[INTERNAL_DATA_PATH]", internalDataPath);
-    reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
-    reportHtml = reportHtml.Replace("[FULL_IMAGE_DATA_PATH]", fullImageDataPath);
-    reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
-
-    await File.WriteAllTextAsync(reportPath, reportHtml);
-
-    File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
-
-    var processRunSelectorPath = $"{outputFolder}index.html";
-    File.Move($"{outputFolder}process-runs-template.html", processRunSelectorPath, true);
-
-    var processRunsHtml = await File.ReadAllTextAsync(processRunSelectorPath);
-    processRunsHtml = processRunsHtml.Replace("[PROCESS_RUNS_DATA_PATH]", processRunsPath);
-
-    await File.WriteAllTextAsync(processRunSelectorPath, processRunsHtml);
-
-    var indexPath = $"{outputFolder}list.html";
-    File.Move($"{outputFolder}list-template.html", indexPath, true);
-
-    var indexHtml = await File.ReadAllTextAsync(indexPath);
-    indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
-    indexHtml = indexHtml.Replace("[LIST_DATA_PATH]", listDataPath);
-    indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
-
-    await File.WriteAllTextAsync(indexPath, indexHtml);
-}*/
-
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
     GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
@@ -718,8 +650,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
-//       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
- //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
+        //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
+        //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
         .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
@@ -732,7 +664,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
 
-    // Register encoding provider for ExcelDataReader
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     var filesInFolder = await fileService.GetAllFilesAsync();
@@ -776,11 +707,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 }
 
                 var dmsPath = (string)row["Definitive URL"];
-                
-                //var dmsPathFilename = dmsPath.Split('/').Last();
-                //destinationFileName = $"{permitNumber}__{dmsPathFilename}";
-
-                var destinationFileName = (string)row[1];//"DestinationFilename"];/
+                var destinationFileName = (string)row[1];
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {
@@ -790,7 +717,9 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 var naldLicenceRef = (string)row["License Number"];
 
                 var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
+                var fileId = filenameParts.Length >= 2
+                    ? Guid.Parse(filenameParts[1])
+                    : throw new Exception("Filename format was incorrect");
 
                 var dmsFileData = new DmsFileData
                 {
@@ -812,19 +741,4 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
         filenamesWithLicenceNumbers,
         licenceNumbersWithFilenames
     );
-}
-
-void Copy(string sourceDir, string targetDir)
-{
-    Directory.CreateDirectory(targetDir);
-
-    foreach (var file in Directory.GetFiles(sourceDir))
-    {
-        File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-
-    foreach (var directory in Directory.GetDirectories(sourceDir))
-    {
-        Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
-    }
 }

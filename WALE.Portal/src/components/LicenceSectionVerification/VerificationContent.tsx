@@ -18,6 +18,12 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('verify');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [verifyResetKey, setVerifyResetKey] = useState(0);
+
+    const handleVerified = () => {
+        setActiveSubTab('history');
+        setVerifyResetKey(prev => prev + 1);
+    };
 
     useEffect(() => {
         if (activeSubTab === 'history' && licence.dmsFileId) {
@@ -65,18 +71,21 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
             </ul>
 
             {activeSubTab === 'verify' && (
-                <LicenceSection 
-                    title="Linked Licences" 
-                    licenceFileId={licence.dmsFileId!} 
-                    processRunId={processRunId}
-                    onRefresh={onRefresh}
-                >
-                    <LinkedLicences 
-                        licence={licence} 
-                        isEditing={false} // This will be overridden by LicenceSection's React.cloneElement
-                        onJumpToPage={onJumpToPage}
-                    />
-                </LicenceSection>
+                <div key={verifyResetKey}>
+                    <LicenceSection 
+                        title="Linked Licences" 
+                        licenceFileId={licence.dmsFileId!} 
+                        processRunId={processRunId}
+                        onRefresh={onRefresh}
+                        onVerified={handleVerified}
+                    >
+                        <LinkedLicences 
+                            licence={licence} 
+                            isEditing={false} // This will be overridden by LicenceSection's React.cloneElement
+                            onJumpToPage={onJumpToPage}
+                        />
+                    </LicenceSection>
+                </div>
             )}
 
             {activeSubTab === 'history' && (

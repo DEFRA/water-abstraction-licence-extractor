@@ -3823,6 +3823,7 @@ export interface ILabelToMatch2 {
 }
 
 export class Licence implements ILicence {
+    processRunId?: number | undefined;
     id?: string | undefined;
     status?: LicenceStatus;
     naldStatus?: NaldLicenceStatus;
@@ -3860,6 +3861,7 @@ export class Licence implements ILicence {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.processRunId = _data["processRunId"];
             this.id = _data["id"];
             this.status = _data["status"];
             this.naldStatus = _data["naldStatus"];
@@ -3919,6 +3921,7 @@ export class Licence implements ILicence {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["processRunId"] = this.processRunId;
         data["id"] = this.id;
         data["status"] = this.status;
         data["naldStatus"] = this.naldStatus;
@@ -3967,6 +3970,7 @@ export class Licence implements ILicence {
 }
 
 export interface ILicence {
+    processRunId?: number | undefined;
     id?: string | undefined;
     status?: LicenceStatus;
     naldStatus?: NaldLicenceStatus;
@@ -3998,6 +4002,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
 
@@ -4025,6 +4030,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
             this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
+            this.notes = _data["notes"];
             this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
         }
@@ -4050,6 +4056,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
         data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
+        data["notes"] = this.notes;
         data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
         return data;
@@ -4064,6 +4071,7 @@ export interface ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
 
@@ -5088,6 +5096,7 @@ export interface INaldPurposeData {
 }
 
 export class OutputListDataItem implements IOutputListDataItem {
+    processRunId?: number | undefined;
     imagePath?: string | undefined;
     fileId?: string;
     filename?: string | undefined;
@@ -5123,6 +5132,7 @@ export class OutputListDataItem implements IOutputListDataItem {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.processRunId = _data["processRunId"];
             this.imagePath = _data["imagePath"];
             this.fileId = _data["fileId"];
             this.filename = _data["filename"];
@@ -5176,6 +5186,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["processRunId"] = this.processRunId;
         data["imagePath"] = this.imagePath;
         data["fileId"] = this.fileId;
         data["filename"] = this.filename;
@@ -5218,6 +5229,7 @@ export class OutputListDataItem implements IOutputListDataItem {
 }
 
 export interface IOutputListDataItem {
+    processRunId?: number | undefined;
     imagePath?: string | undefined;
     fileId?: string;
     filename?: string | undefined;

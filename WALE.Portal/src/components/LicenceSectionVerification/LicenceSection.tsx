@@ -30,9 +30,10 @@ interface LicenceSectionProps {
     licenceFileId: string;
     processRunId: number;
     onRefresh?: () => void;
+    onVerified?: () => void;
 }
 
-export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId, onRefresh }: LicenceSectionProps) {
+export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [isEditing, setIsEditing] = useState(false);
     const [resetKey, setResetKey] = useState(0);
@@ -70,6 +71,9 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                 await waleApiClient.createLicenceSectionVerification(verification);
                 if (onRefresh) {
                     onRefresh();
+                }
+                if (onVerified) {
+                    onVerified();
                 }
             } catch (error) {
                 console.error(`Error saving ${pendingVerificationType} verification:`, error);

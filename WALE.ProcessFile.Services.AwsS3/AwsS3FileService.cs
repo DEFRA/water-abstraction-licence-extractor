@@ -45,9 +45,9 @@ public class AwsS3FileService(
             .ToList();
     }
 
-    public async Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename)
     {
-        var stream = await GetFileAsStreamAsync(pdfFilename);
+        var stream = await GetFileAsStreamAsync(filename);
 
         using var binaryReader = new BinaryReader(stream);
         return binaryReader.ReadBytes((int)stream.Length);
@@ -66,14 +66,14 @@ public class AwsS3FileService(
         return file.ResponseStream;
     }
 
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    public Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
         var client = GetS3Client();
         
         return client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = FolderPath,
-            Key = pdfFilename,
+            Key = filename,
             InputStream = stream,
             ContentType = "application/pdf"
         }, CancellationToken.None);

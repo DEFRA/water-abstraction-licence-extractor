@@ -615,7 +615,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            AND process_run_id = @ProcessRunId;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId)?>(
             connection,
             sql,
             0,
@@ -1460,6 +1460,56 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
             await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
             return await QuerySingleOrDefaultAsync<T>(
+                GetPostgresConnection(),
+                sql,
+                retryNumber + 1,
+                param);
+        }
+    }
+    
+    private async Task<T?> QueryFirstOrDefaultAsync<T>(
+        NpgsqlConnection connection,
+        string sql,
+        int retryNumber,
+        object? param = null)
+    {
+        try
+        {
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
+            var result = await connection.QueryFirstOrDefaultAsync<T>(sql, param);
+            var duration = DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - QueryFirstOrDefaultAsync retrying");
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresReadService));
+            return await QueryFirstOrDefaultAsync<T>(
                 GetPostgresConnection(),
                 sql,
                 retryNumber + 1,

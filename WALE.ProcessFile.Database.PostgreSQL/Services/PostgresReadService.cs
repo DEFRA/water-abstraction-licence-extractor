@@ -1381,6 +1381,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
+                               notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
@@ -1406,6 +1407,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
+                               notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
                            ORDER BY licence_file_id, licence_section_name, created_date_time_utc DESC

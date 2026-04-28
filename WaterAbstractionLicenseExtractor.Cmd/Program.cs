@@ -459,7 +459,9 @@ ConfiguredServices ConfigureServices()
         fileService = new LocalFileService(pdfFolderPath);   
     }
     
-//    ServicePointManager.DefaultConnectionLimit = 10;
+    #pragma warning disable SYSLIB0014
+    ServicePointManager.DefaultConnectionLimit = 100;
+    #pragma warning restore SYSLIB0014
     
     var clientHandler = new HttpClientHandler
     {

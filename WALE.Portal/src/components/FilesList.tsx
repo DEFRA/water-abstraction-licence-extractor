@@ -11,6 +11,7 @@ export function FilesList({}: FilesListProps) {
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [failedUploads, setFailedUploads] = useState<{ filename: string; error: string }[]>([]);
 
     useEffect(() => {
         fetchFiles();
@@ -51,27 +52,82 @@ export function FilesList({}: FilesListProps) {
 
         setUploading(true);
         setSuccessMessage(null);
+        setFailedUploads([]);
         setUploadProgress({ current: 0, total: filesToUpload.length });
 
-        for (let idx = 0; idx < filesToUpload.length; idx++) {
-            let data = new FormData()
-            data.append('file', filesToUpload[idx]);
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000; // 1 second
+        const failed: { filename: string; error: string }[] = [];
 
-            await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
-                method: 'PUT',
-                body: data
-            });
+        for (let idx = 0; idx < filesToUpload.length; idx++) {
+            const file = filesToUpload[idx];
+            let success = false;
+            let lastError = '';
+
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    let data = new FormData()
+                    data.append('file', file);
+
+                    const response = await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
+                        method: 'PUT',
+                        body: data
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Upload failed with status ${response.status}`);
+                    }
+
+                    success = true;
+                    break;
+                } catch (err) {
+                    lastError = err instanceof Error ? err.message : 'Unknown error';
+                    if (attempt < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    }
+                }
+            }
+
+            if (!success) {
+                failed.push({ filename: file.name, error: lastError });
+            }
 
             setUploadProgress(prev => ({ ...prev, current: idx + 1 }));
             await fetchFiles();
         }
 
         setUploading(false);
-        setSuccessMessage(`Uploaded ${filesToUpload.length} ${filesToUpload.length === 1 ? 'file' : 'files'} successfully`);
+        setFailedUploads(failed);
         
-        // Clear success message after 5 seconds
-        setTimeout(() => setSuccessMessage(null), 5000);
+        const successfulCount = filesToUpload.length - failed.length;
+        if (successfulCount > 0) {
+            setSuccessMessage(`Uploaded ${successfulCount} ${successfulCount === 1 ? 'file' : 'files'} successfully`);
+            // Clear success message after 5 seconds
+            setTimeout(() => setSuccessMessage(null), 5000);
+        }
     }, []);
+
+    const downloadErrorCsv = () => {
+        if (failedUploads.length === 0) return;
+
+        const headers = ["Filename", "Error"];
+        const rows = failedUploads.map(f => [f.filename, `"${f.error.replace(/"/g, '""')}"`]);
+        
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "upload_errors.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const downloadCsv = () => {
         if (files.length === 0) return;
@@ -110,6 +166,26 @@ export function FilesList({}: FilesListProps) {
             {successMessage && (
                 <div style={{ backgroundColor: '#d4edda', border: '1px solid #c3e6cb', color: '#155724', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
                     <p style={{ margin: 0 }}>{successMessage}</p>
+                </div>
+            )}
+
+            {failedUploads.length > 0 && (
+                <div style={{ backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
+                    <p style={{ margin: 0 }}>{failedUploads.length} {failedUploads.length === 1 ? 'file' : 'files'} failed to upload after retries.</p>
+                    <button 
+                        onClick={downloadErrorCsv}
+                        style={{
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            padding: '5px 10px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginTop: '10px'
+                        }}
+                    >
+                        Download Error Report CSV
+                    </button>
                 </div>
             )}
 

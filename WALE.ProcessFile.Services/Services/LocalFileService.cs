@@ -28,9 +28,12 @@ public class LocalFileService(string folderPath) : IFileService
         return File.ReadAllBytesAsync($"{FolderPath}{filename}");
     }
 
-    public Task UploadFileAsStreamAsync(string filename, Stream stream)
+    public async Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
-        throw new NotImplementedException();
+        await Task.Delay(1000);
+        var filePath = Path.Combine(FolderPath, filename);
+        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await stream.CopyToAsync(fileStream);
     }
 
     public string FolderPath { get; set; } = folderPath;

@@ -60,7 +60,7 @@ public class InternalTesseractOcrDataExtractorService(
         {
             try
             {
-                var returnList = GetDataFromTesseract(bytes);
+                var returnList = await GetDataFromTesseractAsync(bytes);
                 var numberOfWords = returnList.Sum(line => line.Words!.Count);
 
                 if (numberOfWords <= maxNumberOfWords)
@@ -106,7 +106,7 @@ public class InternalTesseractOcrDataExtractorService(
         return textLines;
     }
     
-    private List<LineAndWords> GetDataFromTesseract(byte[] bytes)
+    private Task<List<LineAndWords>> GetDataFromTesseractAsync(byte[] bytes)
     {
         var ocrImage = Pix.LoadFromMemory(bytes);
         
@@ -115,7 +115,7 @@ public class InternalTesseractOcrDataExtractorService(
 
         if (minHeight > ocrImage.Height || minWidth > ocrImage.Width)
         {
-            return [];
+            return Task.FromResult(new List<LineAndWords>());
         }
         
         Page? page = null;
@@ -147,7 +147,7 @@ public class InternalTesseractOcrDataExtractorService(
             throw new TimeoutException($"Tesseract process timed out after {maxExecutionTimeMs} seconds");
         }
         
-        return processTask.Result;
+        return processTask;
     }
 
     private static PageSegMode ConvertPageSegMode(Core.Enums.PageSegMode pageSegMode)

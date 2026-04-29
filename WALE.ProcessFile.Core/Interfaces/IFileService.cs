@@ -6,9 +6,9 @@ public interface IFileService
     
     public Task<Stream> GetFileAsStreamAsync(string filename);
 
-    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename);
+    public Task<byte[]> GetFileAsBytesAsync(string filename);
     
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream);
+    public Task UploadFileAsStreamAsync(string filename, Stream stream);
     
     public string FolderPath { get; set; }
 }

@@ -44,7 +44,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                 // Load data using API client
                 const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([
                     waleApiClient.matchesResult(fileId),
-                    waleApiClient.licence(fileId),
+                    waleApiClient.licence(fileId, processRunId),
                     waleApiClient.licenceSets(fileId)
                 ]);
 

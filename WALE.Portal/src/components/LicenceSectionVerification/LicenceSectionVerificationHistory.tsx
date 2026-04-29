@@ -12,6 +12,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
 
     const sectionName = verification.licenceSectionName || 'N/A';
     const verificationType = verification.verificationType || 'N/A';
+    const notes = verification.notes;
     const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleDateString() : 'N/A';
     const dateTime = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
 
@@ -64,6 +65,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                                 textAlign: 'right'
                             }}
                         >
+                            {notes && (<span>Notes: {notes}<br/></span>)}
                             Verified at: {dateTime}<br/>
                             Verified against process run: {verification.processRunId}<br/>
                         </div>

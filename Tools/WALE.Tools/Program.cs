@@ -4,7 +4,7 @@ using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
 var workflow = "ImportNaldData";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
-workflow = "FilesAvailableForLicenceIdentificationExtract";
+//workflow = "FilesAvailableForLicenceIdentificationExtract";
 
 const int processRunId = 1707;
 const int regionCode = 3; // Anglia=1, NE=3

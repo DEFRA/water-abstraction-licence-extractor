@@ -23,14 +23,17 @@ public class LocalFileService(string folderPath) : IFileService
                 FileShare.Read));
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public Task<byte[]> GetFileAsBytesAsync(string filename)
     {
-        return File.ReadAllBytesAsync($"{FolderPath}{pdfFilename}");
+        return File.ReadAllBytesAsync($"{FolderPath}{filename}");
     }
 
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    public async Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
-        throw new NotImplementedException();
+        await Task.Delay(1000);
+        var filePath = Path.Combine(FolderPath, filename);
+        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await stream.CopyToAsync(fileStream);
     }
 
     public string FolderPath { get; set; } = folderPath;

@@ -131,3 +131,9 @@ h1 a.selected {
 .partiallyEncompassedIn {
   color: hotpink;
 }
+
+#dragDropArea {
+  border: 1px dotted #000;
+  width: 500px;
+  height: 500px;
+}

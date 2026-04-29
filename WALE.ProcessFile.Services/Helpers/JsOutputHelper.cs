@@ -149,6 +149,7 @@ public static class JsOutputHelper
 
             var listRow = new OutputListDataItem
             {
+                processRunId = processRun.ProcessRunId,
                 imagePath =
                     $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
                 filename = filenameNoExtension,

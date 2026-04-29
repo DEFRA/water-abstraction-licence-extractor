@@ -51,19 +51,19 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         {
             new TesseractOcrDataExtractorService(
                 TestConfig.TesseractPath,
-                Core.Enums.PageSegMode.SparseTextOsd,
+                PageSegMode.SparseTextOsd,
                 CacheService, OutputService,
                 TestConfig.DotnetPath,
                 TestConfig.TesseractExeName,
                 TestConfig.TesseractExeDirectory),
             new TesseractOcrDataExtractorService(
                 TestConfig.TesseractPath,
-                Core.Enums.PageSegMode.Auto,
+                PageSegMode.Auto,
                 CacheService,
                 OutputService,
                 TestConfig.DotnetPath,
                 TestConfig.TesseractExeName,
-                TestConfig.TesseractExeDirectory),
+                TestConfig.TesseractExeDirectory)
         },
         CacheService,
         OutputService,
@@ -328,7 +328,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.Null(licenceNumber);

@@ -200,11 +200,6 @@ public static class TemplateIdentificationExtract
                     {
                         var permitNumber = ExtractPermitNumber(file.Name);
                         var fileId = ExtractFileId(file.Name);
-
-                        if (!string.IsNullOrEmpty(fileId))
-                        {
-                            
-                        }
                         
                         filesMetadata.Add((
                             FolderName: folder.Name,

@@ -22,14 +22,32 @@ public class AwsS3FileService(
                 BucketName = FolderPath
             });
 
-        return response.S3Objects
+
+        var returnList = response.S3Objects
             .Select(s3Object => s3Object.Key)
+            .ToList();
+
+        while (!string.IsNullOrEmpty(response.NextContinuationToken))
+        {
+            response = await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    ContinuationToken = response.NextContinuationToken,
+                    BucketName = FolderPath
+                });
+            
+            returnList.AddRange(response.S3Objects
+                .Select(s3Object => s3Object.Key));
+        }
+
+        return returnList
+            .OrderBy(filename => filename)
             .ToList();
     }
 
-    public async Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename)
     {
-        var stream = await GetFileAsStreamAsync(pdfFilename);
+        var stream = await GetFileAsStreamAsync(filename);
 
         using var binaryReader = new BinaryReader(stream);
         return binaryReader.ReadBytes((int)stream.Length);
@@ -48,14 +66,14 @@ public class AwsS3FileService(
         return file.ResponseStream;
     }
 
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    public Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
         var client = GetS3Client();
         
         return client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = FolderPath,
-            Key = pdfFilename,
+            Key = filename,
             InputStream = stream,
             ContentType = "application/pdf"
         }, CancellationToken.None);

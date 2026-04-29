@@ -63,7 +63,7 @@ public interface IOutputService
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
     
-    Task<Licence?> GetLicenceAsync(Guid fileId);
+    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
     

@@ -595,8 +595,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_override_value, verification_type, created_date_time_utc)
-                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @CreatedDateTimeUtc)
+                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_override_value, verification_type, notes, created_date_time_utc)
+                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @Notes, @CreatedDateTimeUtc)
                            RETURNING licence_section_verification_id
                            """;
 
@@ -612,6 +612,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 verification.LicenceSectionScrapedValue,
                 verification.LicenceSectionOverrideValue,
                 verification.VerificationType,
+                verification.Notes,
                 CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
@@ -622,8 +623,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             var result = await connection.ExecuteScalarAsync<int>(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -659,8 +664,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             await connection.ExecuteAsync(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -689,5 +698,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     }
     
     private NpgsqlConnection GetPostgresConnection()
-        => dataSourceProvider.DataSource.CreateConnection();
+    {
+        var dtStart = DateTime.Now;
+
+        var conn = dataSourceProvider.DataSource.CreateConnection();
+        var duration = DateTime.Now - dtStart;
+
+        if (duration.TotalSeconds > 1)
+        {
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(PostgresReadService)} - CreateConnection took {duration.TotalMilliseconds}ms");
+        }
+
+        return conn;
+    }
 }

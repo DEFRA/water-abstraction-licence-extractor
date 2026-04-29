@@ -102,8 +102,6 @@ export function FilesList({}: FilesListProps) {
         const successfulCount = filesToUpload.length - failed.length;
         if (successfulCount > 0) {
             setSuccessMessage(`Uploaded ${successfulCount} ${successfulCount === 1 ? 'file' : 'files'} successfully`);
-            // Clear success message after 5 seconds
-            setTimeout(() => setSuccessMessage(null), 5000);
         }
     }, []);
 
@@ -164,14 +162,46 @@ export function FilesList({}: FilesListProps) {
             )}
             
             {successMessage && (
-                <div style={{ backgroundColor: '#d4edda', border: '1px solid #c3e6cb', color: '#155724', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
+                <div style={{ backgroundColor: '#d4edda', border: '1px solid #c3e6cb', color: '#155724', padding: '10px', marginBottom: '10px', borderRadius: '4px', position: 'relative' }}>
                     <p style={{ margin: 0 }}>{successMessage}</p>
+                    <button 
+                        onClick={() => setSuccessMessage(null)}
+                        style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '10px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#155724',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        ×
+                    </button>
                 </div>
             )}
 
             {failedUploads.length > 0 && (
-                <div style={{ backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
+                <div style={{ backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '10px', marginBottom: '10px', borderRadius: '4px', position: 'relative' }}>
                     <p style={{ margin: 0 }}>{failedUploads.length} {failedUploads.length === 1 ? 'file' : 'files'} failed to upload after retries.</p>
+                    <button 
+                        onClick={() => setFailedUploads([])}
+                        style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '10px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#721c24',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        ×
+                    </button>
                     <button 
                         onClick={downloadErrorCsv}
                         style={{

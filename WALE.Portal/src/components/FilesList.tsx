@@ -1,4 +1,3 @@
-import FilesListItem from '../components/FilesListItem.tsx';
 import {useCallback, useEffect, useState} from 'react'
 import {FilePdf} from "../class/FilePdf.tsx";
 import {waleApiBaseUrl} from "../api/apiClient.ts";
@@ -74,6 +73,28 @@ export function FilesList({}: FilesListProps) {
         setTimeout(() => setSuccessMessage(null), 5000);
     }, []);
 
+    const downloadCsv = () => {
+        if (files.length === 0) return;
+
+        const headers = ["Filename"];
+        const rows = files.map(file => [file.filename]);
+        
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "files.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (loading && files.length > 0) return <div className="container"><p>Loading ({files.length} files)...</p></div>;
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
@@ -94,17 +115,29 @@ export function FilesList({}: FilesListProps) {
 
             <div id="dragDropArea"
                 onDrop={(e) => dropHandler(e)}
-                onDragOver={(e) => e.preventDefault()}></div>
+                onDragOver={(e) => e.preventDefault()}>
+                <p>Drop files here</p>
+            </div>
 
-            {files.length === 0
-                ? (<p>No files found.</p>)
-                : (
-                    <ul id="filesList">
-                        {files.map((file) => (
-                            <FilesListItem file={file} key={file.filename}/>
-                        ))}
-                    </ul>
+            <div style={{ marginTop: '20px' }}>
+                <h3>{files.length} {'files'}</h3>
+                {files.length > 0 && (
+                    <button 
+                        onClick={downloadCsv}
+                        style={{
+                            backgroundColor: '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 15px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginTop: '10px'
+                        }}
+                    >
+                        Download File List CSV
+                    </button>
                 )}
+            </div>
         </>
     );
 }

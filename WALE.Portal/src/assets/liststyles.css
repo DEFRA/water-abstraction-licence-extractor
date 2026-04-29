@@ -133,7 +133,24 @@ h1 a.selected {
 }
 
 #dragDropArea {
-  border: 1px dotted #000;
+  border: 2px dashed #007bff;
   width: 500px;
-  height: 500px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
+  font-size: 1.2rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+#dragDropArea:hover {
+  background-color: #e9ecef;
+}
+
+#dragDropArea p {
+  margin: 0;
 }

@@ -2,14 +2,15 @@ import {useCallback, useEffect, useState} from 'react'
 import {FilePdf} from "../class/FilePdf.tsx";
 import {waleApiBaseUrl} from "../api/apiClient.ts";
 
-interface FilesListProps {}
+interface FilesListProps {
+}
 
 export function FilesList({}: FilesListProps) {
     const [files, setFiles] = useState<FilePdf[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, currentChunk: 0, totalChunks: 0 });
+    const [uploadProgress, setUploadProgress] = useState({current: 0, total: 0, currentChunk: 0, totalChunks: 0});
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [failedUploads, setFailedUploads] = useState<{ filename: string; error: string }[]>([]);
 
@@ -33,7 +34,7 @@ export function FilesList({}: FilesListProps) {
         let response = await fetch(waleApiBaseUrl + "/BFF/Files/ListAll");
         let items = await response.json();
 
-        items = items.map(function(item: string | undefined) {
+        items = items.map(function (item: string | undefined) {
             let returnItem = new FilePdf();
             returnItem.filename = item;
 
@@ -42,18 +43,18 @@ export function FilesList({}: FilesListProps) {
 
         return items;
     };
-    
+
     const dropHandler = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
         event.stopPropagation();
         event.preventDefault();
-        
+
         let filesToUpload = event.dataTransfer!.files;
         if (filesToUpload.length === 0) return;
 
         setUploading(true);
         setSuccessMessage(null);
         setFailedUploads([]);
-        setUploadProgress({ current: 0, total: filesToUpload.length, currentChunk: 0, totalChunks: 0 });
+        setUploadProgress({current: 0, total: filesToUpload.length, currentChunk: 0, totalChunks: 0});
 
         const MAX_RETRIES = 3;
         const RETRY_DELAY = 1000; // 1 second
@@ -66,7 +67,7 @@ export function FilesList({}: FilesListProps) {
             let lastError = '';
 
             const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-            setUploadProgress(prev => ({ ...prev, currentChunk: 0, totalChunks: totalChunks > 1 ? totalChunks : 0 }));
+            setUploadProgress(prev => ({...prev, currentChunk: 0, totalChunks: totalChunks > 1 ? totalChunks : 0}));
 
             if (file.size <= CHUNK_SIZE) {
                 // Simple upload for small files
@@ -110,8 +111,13 @@ export function FilesList({}: FilesListProps) {
                             data.append('filename', file.name);
                             data.append('chunkIndex', chunkIndex.toString());
                             data.append('totalChunks', totalChunks.toString());
-                            if (currentUploadId) {
-                                data.append('uploadId', currentUploadId);
+
+                            if (chunkIndex > 0) {
+                                if (currentUploadId) {
+                                    data.append('uploadId', currentUploadId);
+                                } else {
+                                    throw new Error("Somehow lost track of the upload ID");
+                                }
                             }
 
                             const response = await fetch(waleApiBaseUrl + "/BFF/Files/UploadChunk", {
@@ -122,15 +128,13 @@ export function FilesList({}: FilesListProps) {
                             if (!response.ok) {
                                 throw new Error(`Chunk ${chunkIndex + 1} upload failed with status ${response.status}`);
                             }
-
-                            const result = await response.text();
                             
                             if (chunkIndex === 0) {
-                                currentUploadId = result;
+                                currentUploadId = await response.text();
                             }
 
                             chunkSuccess = true;
-                            setUploadProgress(prev => ({ ...prev, currentChunk: chunkIndex + 1 }));
+                            setUploadProgress(prev => ({...prev, currentChunk: chunkIndex + 1}));
                             break;
                         } catch (err) {
                             lastError = err instanceof Error ? err.message : 'Unknown error';
@@ -148,16 +152,16 @@ export function FilesList({}: FilesListProps) {
             }
 
             if (!success) {
-                failed.push({ filename: file.name, error: lastError });
+                failed.push({filename: file.name, error: lastError});
             }
 
-            setUploadProgress(prev => ({ ...prev, current: idx + 1, currentChunk: 0, totalChunks: 0 }));
+            setUploadProgress(prev => ({...prev, current: idx + 1, currentChunk: 0, totalChunks: 0}));
             await fetchFiles();
         }
 
         setUploading(false);
         setFailedUploads(failed);
-        
+
         const successfulCount = filesToUpload.length - failed.length;
         if (successfulCount > 0) {
             setSuccessMessage(`Uploaded ${successfulCount} ${successfulCount === 1 ? 'file' : 'files'} successfully`);
@@ -169,13 +173,13 @@ export function FilesList({}: FilesListProps) {
 
         const headers = ["Filename", "Error"];
         const rows = failedUploads.map(f => [f.filename, `"${f.error.replace(/"/g, '""')}"`]);
-        
+
         const csvContent = [
             headers.join(","),
             ...rows.map(row => row.join(","))
         ].join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
@@ -191,13 +195,13 @@ export function FilesList({}: FilesListProps) {
 
         const headers = ["Filename"];
         const rows = files.map(file => [file.filename]);
-        
+
         const csvContent = [
             headers.join(","),
             ...rows.map(row => row.join(","))
         ].join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
@@ -211,26 +215,40 @@ export function FilesList({}: FilesListProps) {
     if (loading && files.length > 0) return <div className="container"><p>Loading ({files.length} files)...</p></div>;
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
-    
+
     return (
         <>
             {uploading && (
-                <div style={{ backgroundColor: '#e7f3ff', border: '1px solid #b3d7ff', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
-                    <p style={{ margin: 0 }}>
+                <div style={{
+                    backgroundColor: '#e7f3ff',
+                    border: '1px solid #b3d7ff',
+                    padding: '10px',
+                    marginBottom: '10px',
+                    borderRadius: '4px'
+                }}>
+                    <p style={{margin: 0}}>
                         Uploading {uploadProgress.current} of {uploadProgress.total} files...
                         {uploadProgress.totalChunks > 0 && (
-                            <span style={{ marginLeft: '10px', fontSize: '0.9em', color: '#555' }}>
+                            <span style={{marginLeft: '10px', fontSize: '0.9em', color: '#555'}}>
                                 (Part {uploadProgress.currentChunk} of {uploadProgress.totalChunks})
                             </span>
                         )}
                     </p>
                 </div>
             )}
-            
+
             {successMessage && (
-                <div style={{ backgroundColor: '#d4edda', border: '1px solid #c3e6cb', color: '#155724', padding: '10px', marginBottom: '10px', borderRadius: '4px', position: 'relative' }}>
-                    <p style={{ margin: 0 }}>{successMessage}</p>
-                    <button 
+                <div style={{
+                    backgroundColor: '#d4edda',
+                    border: '1px solid #c3e6cb',
+                    color: '#155724',
+                    padding: '10px',
+                    marginBottom: '10px',
+                    borderRadius: '4px',
+                    position: 'relative'
+                }}>
+                    <p style={{margin: 0}}>{successMessage}</p>
+                    <button
                         onClick={() => setSuccessMessage(null)}
                         style={{
                             position: 'absolute',
@@ -250,9 +268,18 @@ export function FilesList({}: FilesListProps) {
             )}
 
             {failedUploads.length > 0 && (
-                <div style={{ backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '10px', marginBottom: '10px', borderRadius: '4px', position: 'relative' }}>
-                    <p style={{ margin: 0 }}>{failedUploads.length} {failedUploads.length === 1 ? 'file' : 'files'} failed to upload after retries.</p>
-                    <button 
+                <div style={{
+                    backgroundColor: '#f8d7da',
+                    border: '1px solid #f5c6cb',
+                    color: '#721c24',
+                    padding: '10px',
+                    marginBottom: '10px',
+                    borderRadius: '4px',
+                    position: 'relative'
+                }}>
+                    <p style={{margin: 0}}>{failedUploads.length} {failedUploads.length === 1 ? 'file' : 'files'} failed
+                        to upload after retries.</p>
+                    <button
                         onClick={() => setFailedUploads([])}
                         style={{
                             position: 'absolute',
@@ -268,7 +295,7 @@ export function FilesList({}: FilesListProps) {
                     >
                         ×
                     </button>
-                    <button 
+                    <button
                         onClick={downloadErrorCsv}
                         style={{
                             backgroundColor: '#dc3545',
@@ -286,15 +313,15 @@ export function FilesList({}: FilesListProps) {
             )}
 
             <div id="dragDropArea"
-                onDrop={(e) => dropHandler(e)}
-                onDragOver={(e) => e.preventDefault()}>
+                 onDrop={(e) => dropHandler(e)}
+                 onDragOver={(e) => e.preventDefault()}>
                 <p>Drop files here</p>
             </div>
 
-            <div style={{ marginTop: '20px' }}>
+            <div style={{marginTop: '20px'}}>
                 <h3>{files.length} {'files'}</h3>
                 {files.length > 0 && (
-                    <button 
+                    <button
                         onClick={downloadCsv}
                         style={{
                             backgroundColor: '#007bff',

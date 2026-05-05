@@ -79,6 +79,58 @@ public class AwsS3FileService(
         }, CancellationToken.None);
     }
 
+    private readonly Dictionary<string, string> _multipartUploadIds = new();
+
+    public async Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks)
+    {
+        var client = GetS3Client();
+
+        if (chunkIndex == 0)
+        {
+            var initiateResponse = await client.InitiateMultipartUploadAsync(new InitiateMultipartUploadRequest
+            {
+                BucketName = FolderPath,
+                Key = filename,
+                ContentType = "application/pdf"
+            });
+            _multipartUploadIds[filename] = initiateResponse.UploadId;
+        }
+
+        if (!_multipartUploadIds.TryGetValue(filename, out var uploadId))
+        {
+            throw new InvalidOperationException($"No multipart upload in progress for file {filename}");
+        }
+
+        await client.UploadPartAsync(new UploadPartRequest
+        {
+            BucketName = FolderPath,
+            Key = filename,
+            UploadId = uploadId,
+            PartNumber = chunkIndex + 1,
+            InputStream = stream,
+            PartSize = stream.Length
+        });
+
+        if (chunkIndex == totalChunks - 1)
+        {
+            var parts = await client.ListPartsAsync(new ListPartsRequest
+            {
+                BucketName = FolderPath,
+                Key = filename,
+                UploadId = uploadId
+            });
+
+            await client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
+            {
+                BucketName = FolderPath,
+                Key = filename,
+                UploadId = uploadId,
+                PartETags = parts.Parts.Select(p => new PartETag((int)p.PartNumber, p.ETag)).ToList()
+            });
+            _multipartUploadIds.Remove(filename);
+        }
+    }
+
     public string FolderPath { get; set; } = bucketName;
     
     private AmazonS3Client GetS3Client()

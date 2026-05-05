@@ -10,7 +10,7 @@ public interface IFileService
     
     public Task UploadFileAsStreamAsync(string filename, Stream stream);
 
-    public Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks);
+    public Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null);
     
     public string FolderPath { get; set; }
 }

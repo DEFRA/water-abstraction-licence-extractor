@@ -44,7 +44,7 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         throw new NotImplementedException();
     }
 
-    public Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks)
+    public Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null)
     {
         throw new NotImplementedException();
     }

@@ -59,7 +59,7 @@ public class FilesController(IFileService fileService) : Controller
 
     [HttpPut]
     [DisableRequestSizeLimit]
-    public async Task<ActionResult<string>> UploadChunkAsync([FromForm] string filename, [FromForm] int chunkIndex, [FromForm] int totalChunks)
+    public async Task<ActionResult<string>> UploadChunkAsync([FromForm] string filename, [FromForm] int chunkIndex, [FromForm] int totalChunks, [FromForm] string? uploadId = null)
     {
         if (!Request.Form.Files.Any())
         {
@@ -83,8 +83,8 @@ public class FilesController(IFileService fileService) : Controller
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks);
+        var resultUploadId = await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks, uploadId);
 
-        return Ok($"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
+        return Ok(resultUploadId ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
     }
 }

@@ -57,6 +57,7 @@ export function FilesList({}: FilesListProps) {
 
         const MAX_RETRIES = 3;
         const RETRY_DELAY = 1000; // 1 second
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
         const failed: { filename: string; error: string }[] = [];
 
         for (let idx = 0; idx < filesToUpload.length; idx++) {
@@ -64,26 +65,72 @@ export function FilesList({}: FilesListProps) {
             let success = false;
             let lastError = '';
 
-            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-                try {
-                    let data = new FormData()
-                    data.append('file', file);
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-                    const response = await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
-                        method: 'PUT',
-                        body: data
-                    });
+            if (file.size <= CHUNK_SIZE) {
+                // Simple upload for small files
+                for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                    try {
+                        let data = new FormData()
+                        data.append('file', file);
 
-                    if (!response.ok) {
-                        throw new Error(`Upload failed with status ${response.status}`);
+                        const response = await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
+                            method: 'PUT',
+                            body: data
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Upload failed with status ${response.status}`);
+                        }
+
+                        success = true;
+                        break;
+                    } catch (err) {
+                        lastError = err instanceof Error ? err.message : 'Unknown error';
+                        if (attempt < MAX_RETRIES) {
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                        }
+                    }
+                }
+            } else {
+                // Chunked upload for large files
+                success = true; // Assume success and set to false if any chunk fails
+                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                    const start = chunkIndex * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, file.size);
+                    const chunk = file.slice(start, end);
+
+                    let chunkSuccess = false;
+                    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                        try {
+                            let data = new FormData();
+                            data.append('file', chunk);
+                            data.append('filename', file.name);
+                            data.append('chunkIndex', chunkIndex.toString());
+                            data.append('totalChunks', totalChunks.toString());
+
+                            const response = await fetch(waleApiBaseUrl + "/BFF/Files/UploadChunk", {
+                                method: 'PUT',
+                                body: data
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`Chunk ${chunkIndex + 1} upload failed with status ${response.status}`);
+                            }
+
+                            chunkSuccess = true;
+                            break;
+                        } catch (err) {
+                            lastError = err instanceof Error ? err.message : 'Unknown error';
+                            if (attempt < MAX_RETRIES) {
+                                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                            }
+                        }
                     }
 
-                    success = true;
-                    break;
-                } catch (err) {
-                    lastError = err instanceof Error ? err.message : 'Unknown error';
-                    if (attempt < MAX_RETRIES) {
-                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    if (!chunkSuccess) {
+                        success = false;
+                        break;
                     }
                 }
             }

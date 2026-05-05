@@ -9,6 +9,8 @@ public interface IFileService
     public Task<byte[]> GetFileAsBytesAsync(string filename);
     
     public Task UploadFileAsStreamAsync(string filename, Stream stream);
+
+    public Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks);
     
     public string FolderPath { get; set; }
 }

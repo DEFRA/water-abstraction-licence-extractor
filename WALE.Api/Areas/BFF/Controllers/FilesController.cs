@@ -56,4 +56,35 @@ public class FilesController(IFileService fileService) : Controller
         
         return Ok(resultSb.ToString());
     }
+
+    [HttpPut]
+    [DisableRequestSizeLimit]
+    public async Task<ActionResult<string>> UploadChunkAsync([FromForm] string filename, [FromForm] int chunkIndex, [FromForm] int totalChunks)
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest("No file in request.");
+        }
+
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest("Only PDF files are allowed.");
+        }
+
+        var fileExtension = Path.GetExtension(filename);
+        if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest("Only PDF files are allowed.");
+        }
+
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        stream.Position = 0;
+
+        await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks);
+
+        return Ok($"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
+    }
 }

@@ -36,5 +36,13 @@ public class LocalFileService(string folderPath) : IFileService
         await stream.CopyToAsync(fileStream);
     }
 
+    public async Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks)
+    {
+        var filePath = Path.Combine(FolderPath, filename);
+        var mode = chunkIndex == 0 ? FileMode.Create : FileMode.Append;
+        await using var fileStream = new FileStream(filePath, mode, FileAccess.Write, FileShare.None);
+        await stream.CopyToAsync(fileStream);
+    }
+
     public string FolderPath { get; set; } = folderPath;
 }

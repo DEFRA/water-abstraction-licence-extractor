@@ -96,6 +96,7 @@ export function FilesList({}: FilesListProps) {
             } else {
                 // Chunked upload for large files
                 success = true; // Assume success and set to false if any chunk fails
+                let currentUploadId: string | null = null;
                 for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                     const start = chunkIndex * CHUNK_SIZE;
                     const end = Math.min(start + CHUNK_SIZE, file.size);
@@ -109,6 +110,9 @@ export function FilesList({}: FilesListProps) {
                             data.append('filename', file.name);
                             data.append('chunkIndex', chunkIndex.toString());
                             data.append('totalChunks', totalChunks.toString());
+                            if (currentUploadId) {
+                                data.append('uploadId', currentUploadId);
+                            }
 
                             const response = await fetch(waleApiBaseUrl + "/BFF/Files/UploadChunk", {
                                 method: 'PUT',
@@ -117,6 +121,12 @@ export function FilesList({}: FilesListProps) {
 
                             if (!response.ok) {
                                 throw new Error(`Chunk ${chunkIndex + 1} upload failed with status ${response.status}`);
+                            }
+
+                            const result = await response.text();
+                            
+                            if (chunkIndex === 0) {
+                                currentUploadId = result;
                             }
 
                             chunkSuccess = true;

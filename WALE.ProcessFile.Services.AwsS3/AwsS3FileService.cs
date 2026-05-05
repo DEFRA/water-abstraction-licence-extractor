@@ -79,9 +79,7 @@ public class AwsS3FileService(
         }, CancellationToken.None);
     }
 
-    private readonly Dictionary<string, string> _multipartUploadIds = new();
-
-    public async Task UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks)
+    public async Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null)
     {
         var client = GetS3Client();
 
@@ -93,10 +91,10 @@ public class AwsS3FileService(
                 Key = filename,
                 ContentType = "application/pdf"
             });
-            _multipartUploadIds[filename] = initiateResponse.UploadId;
+            uploadId = initiateResponse.UploadId;
         }
 
-        if (!_multipartUploadIds.TryGetValue(filename, out var uploadId))
+        if (string.IsNullOrEmpty(uploadId))
         {
             throw new InvalidOperationException($"No multipart upload in progress for file {filename}");
         }
@@ -127,8 +125,9 @@ public class AwsS3FileService(
                 UploadId = uploadId,
                 PartETags = parts.Parts.Select(p => new PartETag((int)p.PartNumber, p.ETag)).ToList()
             });
-            _multipartUploadIds.Remove(filename);
         }
+
+        return uploadId;
     }
 
     public string FolderPath { get; set; } = bucketName;

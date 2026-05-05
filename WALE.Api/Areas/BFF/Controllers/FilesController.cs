@@ -68,9 +68,9 @@ public class FilesController(IFileService fileService) : Controller
 
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
+        if (!file.ContentType.Equals("application/octet-stream", StringComparison.InvariantCultureIgnoreCase))
         {
-            return BadRequest("Only PDF files are allowed.");
+            return BadRequest("Expects binary stream.");
         }
 
         var fileExtension = Path.GetExtension(filename);

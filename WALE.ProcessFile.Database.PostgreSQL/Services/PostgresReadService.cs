@@ -1381,6 +1381,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
+                               licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
@@ -1399,7 +1400,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT DISTINCT ON (licence_file_id, licence_section_name)
+                           SELECT DISTINCT ON (licence_file_id, licence_section_name, licence_section_item_id)
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
                                process_run_id AS ProcessRunId,
@@ -1407,10 +1408,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
+                               licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
-                           ORDER BY licence_file_id, licence_section_name, created_date_time_utc DESC
+                           ORDER BY 
+                               licence_file_id, 
+                               licence_section_name, 
+                               licence_section_item_id, 
+                               created_date_time_utc DESC
                            """;
 
         return await QueryAsync<LicenceSectionVerification>(
@@ -1468,7 +1474,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 param);
         }
     }
-    
+
     private async Task<T?> QueryFirstOrDefaultAsync<T>(
         NpgsqlConnection connection,
         string sql,

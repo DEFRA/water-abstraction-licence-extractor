@@ -481,4 +481,53 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var content = await response.Content.ReadAsStringAsync();
         return int.Parse(content);
     }
+
+    public async Task<List<DmsExtract>> GetDmsExtractAsync()
+    {
+        var path = "/Extractor/Dms/GetExtract";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsExtract>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        var path = "/Extractor/Dms/SaveDmsFileReaderResult";
+        var json = JsonSerializer.Serialize(dmsFileReaderResult, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
+    {
+        var path = "/Extractor/Dms/GetDmsFileReaderResults";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsFileReaderResult>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveImportRunDateAsync(string dataSource)
+    {
+        var path = "/Extractor/Import/SaveDate";
+        var json = JsonSerializer.Serialize(new
+        {
+            DataSource = dataSource
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
 }

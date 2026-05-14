@@ -1,8 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Interfaces;
 using WALE.ProcessFile.RuleEngine.Models;
-using WALE.ProcessFile.RuleEngine.Helpers;
-using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.RuleEngine.Rules.FileType;
 
@@ -17,7 +15,7 @@ public class LicenceFileTypeRule : IRule<FileTypeResult>
     public bool CanApply(MatchesResult content)
     {
         return content.Matches?
-            .Where(m => m.LabelGroupName == "Licence Header")?.Any() == true;
+            .Where(m => m.LabelGroupName == "Licence Header").Any() == true;
     }
 
     public FileTypeResult Apply(MatchesResult content)
@@ -32,8 +30,6 @@ public class LicenceFileTypeRule : IRule<FileTypeResult>
             Confidence = 0.9,
             IdentifiedByRule = RuleName,
             MatchedTerms = matchedTerms?.SelectMany(m => m.Text!.Select(t => t.Text)).ToList()!,
-            DateOfIssue = Date.DateFormatConsistent(RuleSharedHelper.ExtractDateOfIssue(content)),
-            LicenceNumber = RuleSharedHelper.ExtractLicenceNumber(content),
             Metadata = new Dictionary<string, object>
             {
                 ["MatchCount"] = matchedTerms?.Count ?? 0

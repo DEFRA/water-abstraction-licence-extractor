@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -14,6 +15,20 @@ public class FilesController(IFileService fileService) : Controller
     {
         var result = await fileService.GetAllFilesAsync();
         return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<FileMetadata>>> ListAllWithMetadataAsync()
+    {
+        var result = await fileService.GetAllFilesWithMetadataAsync();
+        return Ok(result);
+    }
+    
+    [HttpDelete]
+    public async Task<ActionResult<string>> DeleteAsync(string filename)
+    {
+        await fileService.DeleteAsync(filename);
+        return Ok();
     }
     
     [HttpPut]
@@ -35,7 +50,8 @@ public class FilesController(IFileService fileService) : Controller
                 continue;
             }
          
-            var fileExtension = Path.GetExtension(file.FileName);
+            var lowercaseFileName = file.FileName.ToLowerInvariant();
+            var fileExtension = Path.GetExtension(lowercaseFileName);
             
             if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -45,8 +61,8 @@ public class FilesController(IFileService fileService) : Controller
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
             
-            await fileService.UploadFileAsStreamAsync(file.FileName, stream);
-            resultSb.AppendLine($"File {file.FileName} has been uploaded.");
+            await fileService.UploadFileAsStreamAsync(lowercaseFileName, stream);
+            resultSb.AppendLine($"File {lowercaseFileName} has been uploaded.");
         }
 
         if (resultSb.Length == 0)

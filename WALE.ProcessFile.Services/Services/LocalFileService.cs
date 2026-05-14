@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -11,6 +12,21 @@ public class LocalFileService(string folderPath) : IFileService
                 .GetFiles(FolderPath)
                 .Select(path => path.Split('/').Last())
                 .ToList());
+    }
+
+    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    {
+        var folder = new DirectoryInfo(FolderPath);
+        var filesInFolder = folder.GetFiles("*.*", SearchOption.AllDirectories);
+
+        return Task.FromResult(filesInFolder
+            .Select(f => new FileMetadata
+            {
+                Filename = f.Name,
+                Filesize = f.Length,
+                ModifiedTime = f.LastWriteTime
+            })
+            .ToList());
     }
 
     public Task<Stream> GetFileAsStreamAsync(string filename)
@@ -48,4 +64,8 @@ public class LocalFileService(string folderPath) : IFileService
     }
 
     public string FolderPath { get; set; } = folderPath;
+    public Task DeleteAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
 }

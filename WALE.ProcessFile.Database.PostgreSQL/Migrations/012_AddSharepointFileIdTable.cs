@@ -10,7 +10,7 @@ public class AddSharepointFileIdTable : Migration
         Create.Table("sharepoint_fileid").InSchema("public")
             .WithColumn("file_id").AsGuid()
             .WithColumn("dms_file_path").AsString()
-            .WithColumn("process_run_id").AsInt32();        
+            .WithColumn("process_run_id").AsInt32();
     }
 
     public override void Down()

@@ -61,7 +61,10 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        await GetDmsFilesAndMappingAsync(services.FileService!, services.DmsReportPath!, regionCode);
+        await GetDmsFilesAndMappingAsync(
+            services.FileService!,
+            services.DmsReportPath!,
+            regionCode);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
@@ -635,7 +638,10 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
+    GetDmsFilesAndMappingAsync(
+        IFileService fileService,
+        string dmsReportPath,
+        int regionCode)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
     var filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
@@ -659,7 +665,10 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
 }
 
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromExcelDownloadInfoFileAsync(IFileService fileService, string dmsReportPath, int regionCode)
+    GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+        IFileService fileService,
+        string dmsReportPath,
+        int regionCode)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
@@ -706,8 +715,32 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
                 }
 
-                var dmsPath = (string)row["Definitive URL"];
-                var destinationFileName = (string)row[1];
+                string destinationFileName;
+                string dmsPath;
+                Guid fileId;
+                
+                if (dataTable.Columns.Contains("Definitive URL"))
+                {
+                    dmsPath = (string)row["Definitive URL"];
+                    destinationFileName = (string)row[1];
+                    
+                    var filenameParts = destinationFileName.Split("__");
+                    fileId = filenameParts.Length >= 2
+                        ? Guid.Parse(filenameParts[1])
+                        : throw new Exception("Filename format was incorrect");
+                }
+                else
+                {
+                    var fileIdColumn = row["File Id"] != DBNull.Value ? (string)row["File Id"] : null;
+                    
+                    if (!Guid.TryParse(fileIdColumn, out fileId))
+                    {
+                        continue;
+                    }
+                    
+                    dmsPath = (string)row["File URL"];
+                    destinationFileName = $"{permitNumber}_{fileId}.pdf";
+                }
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {
@@ -715,11 +748,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 }
 
                 var naldLicenceRef = (string)row["License Number"];
-
-                var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 2
-                    ? Guid.Parse(filenameParts[1])
-                    : throw new Exception("Filename format was incorrect");
 
                 var dmsFileData = new DmsFileData
                 {

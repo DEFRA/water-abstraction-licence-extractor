@@ -545,6 +545,76 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 LicenceSetType = licenceSetType
             });
     }
+    
+    public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        await using var connection = GetPostgresConnection();
+        
+        const string sql = @"
+            INSERT INTO public.dms_file_reader (
+                status,
+                error_message,
+                licence_number,
+                permit_number,
+                file_name,
+                original_file_name,
+                file_id,
+                date_of_issue,
+                number_of_pages,
+                primary_type,
+                secondary_type,
+                file_type,
+                confidence,
+                identified_by_rule,
+                matched_terms,
+                file_size)
+            VALUES (
+                @Status,
+                @ErrorMessage,
+                @LicenceNumber,
+                @PermitNumber,
+                @FileName,
+                @OriginalFileName,
+                @FileId,
+                @DateOfIssue,
+                @NumberOfPages,
+                @PrimaryType,
+                @SecondaryType,
+                @FileType,
+                @Confidence,
+                @IdentifiedByRule,
+                @MatchedTerms,
+                @FileSize)";
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+        {
+            dmsFileReaderResult.Status,
+            dmsFileReaderResult.ErrorMessage,
+            dmsFileReaderResult.LicenceNumber,
+            dmsFileReaderResult.PermitNumber,
+            dmsFileReaderResult.FileName,
+            dmsFileReaderResult.OriginalFileName,
+            dmsFileReaderResult.FileId,
+            dmsFileReaderResult.DateOfIssue,
+            dmsFileReaderResult.NumberOfPages,
+            dmsFileReaderResult.PrimaryType,
+            dmsFileReaderResult.SecondaryType,
+            dmsFileReaderResult.FileType,
+            dmsFileReaderResult.Confidence,
+            dmsFileReaderResult.IdentifiedByRule,
+            dmsFileReaderResult.MatchedTerms,
+            dmsFileReaderResult.FileSize
+        });
+    }
+
+    public Task SaveImportRunDateAsync(string dataSource)
+    {
+        throw new NotImplementedException();
+    }
 
     public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
     {

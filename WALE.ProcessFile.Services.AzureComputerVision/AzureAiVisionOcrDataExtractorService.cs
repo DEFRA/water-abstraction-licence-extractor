@@ -264,6 +264,7 @@ public class AzureAiVisionOcrDataExtractorService(
             returnLines.AddRange(pageLines);
         }
 
+        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Received response in X seconds - {request.FileId}");
         return returnLines;
     }
     

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -15,6 +16,19 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<string>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    {
+        var path = "/BFF/Files/ListAllWithMetadata";
+       
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<FileMetadata>>(
             content,
             JsonHelper.GetSerializerOptions())!;
     }
@@ -50,4 +64,11 @@ public class ApiFileService(HttpClient httpClient) : IFileService
     }
 
     public string FolderPath { get; set; } = "N/A";
+    public async Task DeleteAsync(string filename)
+    {
+        var path = $"/BFF/Files/Delete?filename={filename}";
+       
+        var response = await httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+    }
 }

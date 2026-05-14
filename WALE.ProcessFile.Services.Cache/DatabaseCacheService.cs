@@ -290,10 +290,30 @@ public class DatabaseCacheService(
     {
         return databaseWriteService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
     }
+    
+    public Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        return databaseWriteService.SaveDmsFileReaderResultAsync(dmsFileReaderResult);
+    }
 
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
+    }
+
+    public Task<List<DmsExtract>> GetDmsExtractAsync()
+    {
+        return databaseReadService.GetDmsExtractAsync();
+    }
+
+    public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
+    {
+        return databaseReadService.GetDmsFileReaderResultsAsync();
+    }
+
+    public Task SaveImportRunDateAsync(string dataSource)
+    {
+        return databaseWriteService.SaveImportRunDateAsync(dataSource);
     }
 
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)

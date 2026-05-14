@@ -3,6 +3,7 @@ using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -41,7 +42,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (pdfDocument.FromCache)
         {
-            pdfDocument.Pages = GetPages(metadata!.PagesMetadata!, fileId, outputService);
+            pdfDocument.Pages = GetPages(
+                metadata!.PagesMetadata!,
+                fileId,
+                outputService,
+                configuration.SkipFileWhenMoreThenPages);
+            
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
         
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
@@ -78,9 +84,20 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private List<PdfPage> GetPages(
         Dictionary<string, object> pagesTextMetadata,
         Guid fileId,
-        IOutputService outputService)
+        IOutputService outputService,
+        int skipFileWhenMoreThenPages)
     {
-        var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
+        var pageArray = ((JsonElement)pagesTextMetadata["pages"])
+            .EnumerateArray()
+            .ToList();
+
+        if (pageArray.Count > skipFileWhenMoreThenPages)
+        {
+            throw new TooManyPagesException(
+                "Too many pages in this file - it is being skipped",
+                pageArray.Count);
+        }
+        
         var pagesList = new List<PdfPage>();
             
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)

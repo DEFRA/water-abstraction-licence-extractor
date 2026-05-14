@@ -10,7 +10,7 @@ public static class DuplicateLicenceIdentificationExtract
 {
     private static readonly string OutputFolder = KeyConfig.OutputFolder;
 
-    public static async Task GenerateDuplicateLicenceIdentificationExtractAsync(
+    public static async Task<int> GenerateDuplicateLicenceIdentificationExtractAsync(
         string excelFilePath,
         string pdfFolder,
         bool byFileName)
@@ -102,6 +102,8 @@ public static class DuplicateLicenceIdentificationExtract
         
         // Create an Excel file with the results
         CreateExcelFileFromList(outputResults, fullPath);
+
+        return 1;
     }
 
     private static void CreateExcelFileFromList<T>(List<T> results, string filePath)

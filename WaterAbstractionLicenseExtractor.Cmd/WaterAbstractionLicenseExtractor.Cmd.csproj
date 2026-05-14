@@ -12,10 +12,6 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
     </ItemGroup>
 
-   
-
-    
-
     <ItemGroup>
       <Folder Include="Data\" />
     </ItemGroup>

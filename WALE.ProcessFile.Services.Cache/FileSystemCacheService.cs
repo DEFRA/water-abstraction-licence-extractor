@@ -517,6 +517,26 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<DmsExtract>> GetDmsExtractAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveImportRunDateAsync(string dataSource)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

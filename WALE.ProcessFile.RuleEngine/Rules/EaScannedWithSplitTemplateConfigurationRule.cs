@@ -4,7 +4,7 @@ using WALE.ProcessFile.RuleEngine.Models;
 
 namespace WALE.ProcessFile.RuleEngine.Rules;
 
-public class EAScannedWithSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
+public class EaScannedWithSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
     public string RuleName => "EA-Scanned (Potential Spilt Required)";
     public string? Region { get; set; }

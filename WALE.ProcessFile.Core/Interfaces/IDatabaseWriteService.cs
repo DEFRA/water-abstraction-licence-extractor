@@ -73,4 +73,7 @@ public interface IDatabaseWriteService
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
+
+    Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
+    Task SaveImportRunDateAsync(string dataSource);
 }

@@ -203,7 +203,7 @@ public static class AutoCorrectHelper
         
         if (word.Text.Contains("dayof", StringComparison.InvariantCultureIgnoreCase))
         {
-            word.Text = "day of";
+            word.Text = "day-of";
             word.Autocorrected = true;
             
             return word;

@@ -156,7 +156,6 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         Guid fileId,
         int processRunId)
     {
-        var filenameNoExtension = pdfDocument.PdfFilenameNoExtension;
         var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         var byteSize = 0;

@@ -4,7 +4,7 @@ using WALE.ProcessFile.RuleEngine.Models;
 
 namespace WALE.ProcessFile.RuleEngine.Rules;
 
-public class EADigitalTemplateConfigurationRule : IRule<TemplateFinderResult>
+public class EaDigitalTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
     public string RuleName => "EA-Digital";
     public string? Region { get; set; }

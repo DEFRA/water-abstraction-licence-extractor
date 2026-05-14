@@ -17,8 +17,6 @@ ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
-app.UseResponseCompression();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -27,7 +25,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowPortal");
+app.UseCors();
+app.UseResponseCompression();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.Run();
@@ -41,16 +40,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
 
     services.AddCors(options =>
     {
-        options.AddPolicy("AllowPortal", policy =>
+        options.AddDefaultPolicy(policy =>
         {
             policy
                 .SetIsOriginAllowed(_ => true)
-                /*.WithOrigins(
-                    "http://localhost:5173",  // Vite dev server
-                    "http://localhost:3000",   // Docker/production portal
-                    "http://localhost:8080",
-                    "http://localhost"
-                )*/
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

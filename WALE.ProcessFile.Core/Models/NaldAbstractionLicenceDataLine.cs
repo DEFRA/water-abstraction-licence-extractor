@@ -8,6 +8,7 @@ public class NaldAbstractionLicenceDataLine
     public DateTime? RevDate { get; set; }
     public DateTime? OrigEffectiveDate { get; set; }
     public DateTime? OrigSignatureDate { get; set; }
+    public DateTime? LapsedDate { get; set; }
     public string? ArepEiucCode { get; set; }
     public short FgacRegionCode { get; set; }
 }

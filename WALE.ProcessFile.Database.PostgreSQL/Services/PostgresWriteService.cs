@@ -611,9 +611,123 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         });
     }
 
-    public Task SaveImportRunDateAsync(string dataSource)
+    public async Task SaveImportRunDateAsync(string dataSource)
     {
-        throw new NotImplementedException();
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO import_dates (data_source, date_time)
+                           VALUES (@DataSource, @DateTime)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                DataSource = dataSource,
+                DateTime = DateTime.Now
+            });
+    }
+
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        await ClearLicenceFinderResultsAsync();
+        
+        foreach (var result in results)
+        {
+            await SaveLicenceFinderResultAsync(result);
+        }
+    }
+    
+    private async Task ClearLicenceFinderResultsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM licence_finder_result;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
+    
+    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO licence_finder_result (
+                                    permit_number,
+                                    file_url,
+                                    rule_used,
+                                    change_audit_action,
+                                    license_number,
+                                    document_date,
+                                    signature_date,
+                                    date_of_issue,
+                                    other_reference,
+                                    file_size,
+                                    disclosure_status,
+                                    region,
+                                    nald_id,
+                                    nald_issue_no,
+                                    nald_increment_no,
+                                    primary_template,
+                                    secondary_template,
+                                    number_of_pages,
+                                    doi_signature_date_match,
+                                    included_in_version_match,
+                                    single_licence_in_version_match,
+                                    version_match_file_url,
+                                    duplicate_licence_in_version_match_result,
+                                    nald_issue,
+                                    file_id,
+                                    file_id_status,
+                                    file_id_status_change_date,
+                                    is_water_company,
+                                    folder_name_auto_correct,
+                                    seen_in_dms_extract,
+                                    we_have_downloaded)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FileUrl,
+                                    @RuleUsed,
+                                    @ChangeAuditAction,
+                                    @LicenseNumber,
+                                    @DocumentDate,
+                                    @SignatureDate,
+                                    @DateOfIssue,
+                                    @OtherReference,
+                                    @FileSize,
+                                    @DisclosureStatus,
+                                    @Region,
+                                    @NaldId,
+                                    @NaldIssueNo,
+                                    @NaldIncrementNo,
+                                    @PrimaryTemplate,
+                                    @SecondaryTemplate,
+                                    @NumberOfPages,
+                                    @DoiSignatureDateMatch,
+                                    @IncludedInVersionMatch,
+                                    @SingleLicenceInVersionMatch,
+                                    @VersionMatchFileUrl,
+                                    @DuplicateLicenceInVersionMatchResult,
+                                    @NaldIssue,
+                                    @FileId,
+                                    @FileIdStatus,
+                                    @FileIdStatusChangeDate,
+                                    @IsWaterCompany,
+                                    @FolderNameAutoCorrect,
+                                    @SeenInDmsExtract,
+                                    @WeHaveDownloaded)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
     }
 
     public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)

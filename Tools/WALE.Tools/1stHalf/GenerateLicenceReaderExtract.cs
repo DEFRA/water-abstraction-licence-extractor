@@ -1,6 +1,7 @@
 using System.Net;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -102,19 +103,44 @@ public static class GenerateLicenceReaderExtract
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
+        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
         var allNaldData = await cacheService.GetNaldDataAsync(null);
+        
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
-        var naldLicenceDataByPermitNumber = new Dictionary<string, NaldAbstractionLicenceDataLine>();
-        
-        foreach (var line in allNaldData.AbstractionLicences!)
-        {
-            var dmsStylePermitNumber = FormattingHelper.CleanPermitNumber(line.LicenceNo!);
+        var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
 
-            if (!naldLicenceDataByPermitNumber.TryAdd(dmsStylePermitNumber, line))
+        foreach (var naldLine in allNaldData.AbstractionLicences!)
+        {
+            var comparisonLicenceNumber = FormattingHelper.StripForComparison(
+                naldLine.LicenceNo,
+                naldLine.FgacRegionCode);
+
+            if (!comparableAbstractionLicences.TryAdd(comparisonLicenceNumber!, [naldLine]))
             {
-                // TODO log? - Ignore for now - we have ~3 collisions so its edge case
+                comparableAbstractionLicences[comparisonLicenceNumber!].Add(naldLine);
             }
+        }
+        
+        var naldLicenceStatusData = await naldLicenceStatusDataTask;
+        var naldLiveLicenceDataByLowercasePermitNumber = new Dictionary<string, NaldAbstractionLicenceDataLine>();
+        
+        foreach (var licenceNumber in naldLicenceStatusData.LiveLicences)
+        {
+            var fullLicencePossibilities = comparableAbstractionLicences.Single(
+                x => x.Key == licenceNumber);
+
+            var fullLicences = fullLicencePossibilities.Value
+                .Where(x =>
+                    (x.ExpiryDate == null || x.ExpiryDate > DateTime.Now)
+                    && (x.RevDate == null || x.RevDate > DateTime.Now)
+                    && (x.LapsedDate == null || x.LapsedDate > DateTime.Now));
+
+            // TODO WA/055/0018/031 + WA/055/0018/31 both get compared to be the same here
+            var fullLicence = fullLicences.First();
+            
+            var dmsStylePermitNumber = FormattingHelper.CleanPermitNumber(fullLicence.LicenceNo!).ToLower();
+            naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
         }
 
         var maxConcurrentScrapers = 10;
@@ -161,7 +187,7 @@ public static class GenerateLicenceReaderExtract
             fileService,
             cacheService,
             maxConcurrentScrapers,
-            naldLicenceDataByPermitNumber,
+            naldLiveLicenceDataByLowercasePermitNumber,
             dmsExtractInfo);
 
         var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
@@ -188,7 +214,7 @@ public static class GenerateLicenceReaderExtract
         IFileService fileService,
         ICacheService cacheService,
         int maxConcurrentScrapers,
-        Dictionary<string, NaldAbstractionLicenceDataLine> naldLicenceDataByPermitNumber,
+        Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo)
     {
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
@@ -199,13 +225,34 @@ public static class GenerateLicenceReaderExtract
         var processedFileIds = new HashSet<Guid>(
             existingResults.Select(existingResult => existingResult.FileId));
 
-        var allPdfFiles = (await fileService.GetAllFilesWithMetadataAsync())
+        var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync())
             .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToList();
+
+        var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync();
+        var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
+        
+        foreach (var licenceFinderResult in licenceFinderResultsRaw)
+        {
+            if (string.IsNullOrWhiteSpace(licenceFinderResult.FileId))
+            {
+                continue;
+            }
+
+            if (!Guid.TryParse(licenceFinderResult.FileId!, out var fileId))
+            {
+                continue;
+            }
+
+            if (!licenceFinderResultsByFileId.TryAdd(fileId, [licenceFinderResult]))
+            {
+                licenceFinderResultsByFileId[fileId].Add(licenceFinderResult);
+            }
+        }
         
         // Create file entries from PDF files and filter out already processed ones
-        var filesToProcessRaw = allPdfFiles
+        var filesToProcessRaw = allPdfFilesInS3
             .Select(fileMetadata =>
             {
                 var permitNumber = ExtractPermitNumber(fileMetadata.Filename);
@@ -231,54 +278,33 @@ public static class GenerateLicenceReaderExtract
                 };
             })
             .Where(templateFinderInputNullable => templateFinderInputNullable != null)
-            .Where(templateFinderInput =>
-                !processedFileIds.Contains(templateFinderInput!.FileId)
-                && !ExcludedFiles.Contains(templateFinderInput.FileName!)) // Comment out this line if debugging a certain file
+            .Where(templateFinderInputNullable => licenceFinderResultsByFileId.ContainsKey(templateFinderInputNullable!.FileId))
+            .Where(templateFinderInputNullable =>
+                true//!processedFileIds.Contains(templateFinderInputNullable!.FileId)
+                && !ExcludedFiles.Contains(templateFinderInputNullable.FileName!)) // Comment out this line if debugging a certain file
             .Select(templateFinderInputNullable => templateFinderInputNullable!)
             .ToList();
-
-        var filesToProcessByPermitNumber = new Dictionary<string, List<TemplateFinderInput>>();
-
-        foreach (var file in filesToProcessRaw)
-        {
-            if (!filesToProcessByPermitNumber.TryAdd(file.PermitNumber!, [file]))
-            {
-                filesToProcessByPermitNumber[file.PermitNumber!].Add(file);
-            }
-        }
         
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFiles.Count} total PDF files at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
-        var excludedCount = allPdfFiles.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
+        var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process (with correct filenames etc..): {filesToProcessByPermitNumber.Count} files");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process (with correct filenames etc..): {filesToProcessRaw.Count} files");
 
-        if (filesToProcessByPermitNumber.Count == 0)
+        if (filesToProcessRaw.Count == 0)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
             return;
         }
         
-        var filesToProcess = new List<TemplateFinderInput>();
-        
-        foreach (var naldLicencePermitNumberData in naldLicenceDataByPermitNumber)
-        {
-            if (!filesToProcessByPermitNumber.TryGetValue(naldLicencePermitNumberData.Key, out var value))
-            {
-                continue;
-            }
-            
-            filesToProcess.AddRange(value);
-        }
-        
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        filesToProcess = filesToProcess
+        /*filesToProcess = filesToProcess
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
             .Take(10)
-            .ToList();
+            .ToList();*/
         
         await SetRunDateAsync(cacheService);
         
@@ -294,7 +320,7 @@ public static class GenerateLicenceReaderExtract
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {originalConfiguration.Labels.Count} label groups from configuration");
 
-        ConsoleHelper.WriteLine($"\n=== Processing {filesToProcess.Count} files ===");
+        ConsoleHelper.WriteLine($"\n=== Processing {filesToProcessRaw.Count} files ===");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...\n");
         
         var filenameIdx = 1;
@@ -308,17 +334,22 @@ public static class GenerateLicenceReaderExtract
         var templateService = new TemplateTypeIdentifierService("TODO");
         var fileTypeService = new FileTypeIdentifierService();
             
-        foreach (var fileToProcess in filesToProcess)
+        foreach (var fileToProcess in filesToProcessRaw)
         {
+            var lowercasePermitNumber = fileToProcess.PermitNumber!.ToLower();
+            
             var configuration = originalConfiguration.Clone();
-            var naldData = naldLicenceDataByPermitNumber.ContainsKey(fileToProcess.PermitNumber!)
-                ? naldLicenceDataByPermitNumber[fileToProcess.PermitNumber!]
-                : null;
+            var naldData = naldLiveLicenceDataByLowercasePermitNumber.GetValueOrDefault(lowercasePermitNumber);
 
+            if (naldData == null)
+            {
+                
+            }
+            
             configuration.RegionCode = naldData?.FgacRegionCode ?? -1;
             
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
-                $"(File {filenameIdx++} of {filesToProcess.Count})");
+                $"(File {filenameIdx++} of {filesToProcessRaw.Count})");
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -363,7 +394,7 @@ public static class GenerateLicenceReaderExtract
         
         scrapingTasks.Clear();
 
-        ConsoleHelper.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {filesToProcess.Count} files.");
+        ConsoleHelper.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {filesToProcessRaw.Count} files.");
 
         // Combine existing results with newly processed results
         var allResults = existingResults
@@ -392,12 +423,6 @@ public static class GenerateLicenceReaderExtract
         
         try
         {
-            lock (extractorLock)
-            {
-                pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
-                pdfDataExtractor.InUse = true;
-            }
-            
             var fileIdString = fileMetadata.FileId.ToString();
             var lowercasePermitNumber = fileMetadata.PermitNumber!.ToLowerInvariant();
             var dmsExtractHasPermitRow = dmsExtractInfo.ContainsKey(fileMetadata.PermitNumber!);
@@ -421,6 +446,12 @@ public static class GenerateLicenceReaderExtract
                     FileSize = fileMetadata.FileSize
                 };
             }
+
+            lock (extractorLock)
+            {
+                pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
+                pdfDataExtractor.InUse = true;
+            }
             
             MatchesResult internalJson;
 
@@ -430,8 +461,24 @@ public static class GenerateLicenceReaderExtract
                     fileMetadata,
                     pdfDataExtractor,
                     configuration);
-                
-                ConsoleHelper.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
+
+                ConsoleHelper.WriteLine(
+                    $"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
+            }
+            catch (TooManyPagesException tex)
+            {
+                var tooManyPagesResult = new DmsFileReaderResult
+                {
+                    Status = "Skipped",
+                    ErrorMessage = tex.ToString(),
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    FileId = fileMetadata.FileId,
+                    NumberOfPages = tex.NumberOfPages
+                };
+
+                await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
+                return null;
             }
             catch (Exception ex)
             {

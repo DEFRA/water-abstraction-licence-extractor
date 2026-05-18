@@ -166,7 +166,7 @@ public class AwsS3FileService(
                 BucketName = FolderPath,
                 Key = filename,
                 UploadId = uploadId,
-                PartETags = parts.Parts.Select(p => new PartETag((int)p.PartNumber, p.ETag)).ToList()
+                PartETags = parts.Parts.Select(p => new PartETag(p.PartNumber!.Value, p.ETag)).ToList()
             });
         }
 

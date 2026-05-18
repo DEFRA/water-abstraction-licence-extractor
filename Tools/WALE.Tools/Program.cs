@@ -3,11 +3,14 @@ using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-var workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
+string workflow;
+//workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
 //workflow = "ImportNaldData";
-workflow = "ImportDmsData";
-workflow = "RemoveRedundantFilesFromS3";
+//workflow = "ImportDmsData";
+//workflow = "RemoveRedundantFilesFromS3";
+//workflow = "ClearCacheMultiple";
+workflow = "GenerateLicenceReaderExtract";
 
 const int processRunId = 1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -59,6 +62,10 @@ switch (workflow)
     
     case "RemoveRedundantFilesFromS3": // ONE-OFF - Remove duplicate and files with incorrect names in S3
         await RemoveRedundantFilesFromS3.RunAsync();
+        break;
+    
+    case "ClearCacheMultiple": // ONE-OFF - Clear multiple caches
+        await ClearCacheMultiple.RunAsync();
         break;
     
     case "GenerateEALicenceFeaturesCsv": // ONE-OFF - Pull licence features out a file

@@ -130,4 +130,10 @@ public interface ICacheService
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
 
     Task SaveImportRunDateAsync(string dataSource);
+
+    Task<string?> GetImportRunDateAsync(string dataSource);
+    
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
+    
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 }

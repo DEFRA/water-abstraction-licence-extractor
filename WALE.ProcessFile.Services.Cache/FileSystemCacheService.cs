@@ -537,6 +537,21 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<string?> GetImportRunDateAsync(string dataSource)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

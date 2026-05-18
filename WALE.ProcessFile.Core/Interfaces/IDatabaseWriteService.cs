@@ -75,5 +75,8 @@ public interface IDatabaseWriteService
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
+    
     Task SaveImportRunDateAsync(string dataSource);
+
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 }

@@ -530,4 +530,40 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<string?> GetImportRunDateAsync(string dataSource)
+    {
+        var path = "/Extractor/Import/GetDate";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        var path = "/Extractor/LicenceFinder/GetResults";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<LicenceFinderResult>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        var path = "/Extractor/LicenceFinder/SaveResults";
+        var json = JsonSerializer.Serialize(new
+        {
+            results
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
 }

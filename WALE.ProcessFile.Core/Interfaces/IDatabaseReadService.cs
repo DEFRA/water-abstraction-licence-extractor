@@ -93,4 +93,8 @@ public interface IDatabaseReadService
     Task<List<DmsExtract>> GetDmsExtractAsync();
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
+    
+    Task<string?> GetImportRunDateAsync(string dataSource);
+
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
 }

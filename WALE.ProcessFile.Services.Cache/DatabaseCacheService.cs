@@ -316,6 +316,21 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveImportRunDateAsync(dataSource);
     }
 
+    public Task<string?> GetImportRunDateAsync(string dataSource)
+    {
+        return databaseReadService.GetImportRunDateAsync(dataSource);
+    }
+
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        return databaseReadService.GetLicenceFinderResultsAsync();
+    }
+
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        return databaseWriteService.SaveLicenceFinderResultsAsync(results);
+    }
+
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);

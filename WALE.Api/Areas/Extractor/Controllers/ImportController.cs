@@ -9,6 +9,13 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class ImportController(ICacheService cacheService) : Controller
 {
+    [HttpGet]
+    public async Task<ActionResult> GetDateAsync(string dataSource)
+    {
+        var date = await cacheService.GetImportRunDateAsync(dataSource);
+        return Ok(date);
+    }
+    
     [HttpPost]
     public async Task<ActionResult> SaveDateAsync(
         [FromBody] SaveDateRequest request)

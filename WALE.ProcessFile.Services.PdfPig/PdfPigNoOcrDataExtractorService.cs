@@ -429,35 +429,24 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .ToList()
         };
         
-        var imageNumber = 1;
-        var imageSaveTasks = new List<Task<string?>>();
-
-        foreach (var image in await pageImageService.GetImagesAsync())
-        {
-            imageSaveTasks.Add(image.SaveImageBytesAsync(
+        var imageSaveTasks = (await pageImageService.GetImagesAsync())
+            .Select((image, idx) => image.SaveImageBytesAsync(
                 pdfDocument.FileId,
-                imageNumber++,
+                idx + 1,
                 page.Number,
                 cacheService,
-                processRunId));
-        }
-        
-        imageNumber = 1;
+                processRunId))
+            .ToList();
         
         foreach (var imageSaveTask in imageSaveTasks)
         {
-            var extension = await imageSaveTask;
-        
-            if (extension == null)
-            {
-                continue;
-            }
-                
+            var (fileExtension, imageNumber) = await imageSaveTask;
+
             var imageReference = await cacheService.GetImageReferenceAsync(
                 page.Number,
-                imageNumber++,
+                imageNumber,
                 pdfDocument.FileId,
-                extension,
+                fileExtension,
                 Name);
                 
             metadataPage.Images.Add(imageReference);

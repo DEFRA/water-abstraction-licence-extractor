@@ -9,6 +9,7 @@ string workflow;
 //workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
+//workflow = "ClearCacheMultiple";
 workflow = "GenerateLicenceReaderExtract";
 
 const int processRunId = 1707;
@@ -61,6 +62,10 @@ switch (workflow)
     
     case "RemoveRedundantFilesFromS3": // ONE-OFF - Remove duplicate and files with incorrect names in S3
         await RemoveRedundantFilesFromS3.RunAsync();
+        break;
+    
+    case "ClearCacheMultiple": // ONE-OFF - Clear multiple caches
+        await ClearCacheMultiple.RunAsync();
         break;
     
     case "GenerateEALicenceFeaturesCsv": // ONE-OFF - Pull licence features out a file

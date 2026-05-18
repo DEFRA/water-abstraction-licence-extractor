@@ -38,14 +38,20 @@ public static class ConsoleHelper
         _writeCount += 1;
     }
 
-    public static void RemoveLastLine()
+    public static void TryRemoveLastLine()
     {
-        Console.SetCursorPosition(0, _writeCount);
-        Console.Write(Enumerable.Repeat(' ', Console.BufferWidth).ToArray());
-        Console.SetCursorPosition(0, _writeCount);
-        
-        // Need to do the following for the cursor not to lose its place
-        Console.CursorVisible = false;
-        Console.CursorVisible = true;
+        try
+        {
+            Console.SetCursorPosition(0, _writeCount);
+            Console.Write(Enumerable.Repeat(' ', Console.BufferWidth).ToArray());
+            Console.SetCursorPosition(0, _writeCount);
+
+        }
+        catch
+        {
+            // Need to do the following for the cursor not to lose its place
+            Console.CursorVisible = false;
+            Console.CursorVisible = true;
+        }
     }
 }

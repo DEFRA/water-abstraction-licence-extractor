@@ -221,10 +221,14 @@ public static class GenerateLicenceReaderExtract
         
         // NOTE - Next line for debugging only
         //existingResults.Clear();
+
+        var redos = new List<Guid>();
         
         var processedFileIds = new HashSet<Guid>(
-            existingResults.Select(existingResult => existingResult.FileId));
-
+            existingResults
+                .Where(existingResult => !redos.Contains(existingResult.FileId))
+                .Select(existingResult => existingResult.FileId));
+        
         var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync())
             .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
@@ -280,12 +284,13 @@ public static class GenerateLicenceReaderExtract
             .Where(templateFinderInputNullable => templateFinderInputNullable != null)
             .Where(templateFinderInputNullable => licenceFinderResultsByFileId.ContainsKey(templateFinderInputNullable!.FileId))
             .Where(templateFinderInputNullable =>
-                true//!processedFileIds.Contains(templateFinderInputNullable!.FileId)
+                !processedFileIds.Contains(templateFinderInputNullable!.FileId)
                 && !ExcludedFiles.Contains(templateFinderInputNullable.FileName!)) // Comment out this line if debugging a certain file
             .Select(templateFinderInputNullable => templateFinderInputNullable!)
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
+                ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
@@ -300,9 +305,10 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        /*filesToProcess = filesToProcess
+        /*filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
+            //.Skip(10)
             .Take(10)
             .ToList();*/
         
@@ -343,13 +349,13 @@ public static class GenerateLicenceReaderExtract
 
             if (naldData == null)
             {
-                
+                Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - No nald data found for {lowercasePermitNumber}");
             }
             
             configuration.RegionCode = naldData?.FgacRegionCode ?? -1;
             
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
-                $"(File {filenameIdx++} of {filesToProcessRaw.Count})");
+                $" (File {filenameIdx++} of {filesToProcessRaw.Count})");
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(

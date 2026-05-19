@@ -19,4 +19,5 @@ public interface IFileService
     public string FolderPath { get; set; }
     
     public Task DeleteAsync(string filename);
+    Task<bool> ExistsAsync(string filename);
 }

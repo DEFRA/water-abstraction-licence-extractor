@@ -58,6 +58,11 @@ public class FilesController(IFileService fileService) : Controller
                 continue;
             }
             
+            if (await fileService.ExistsAsync(lowercaseFileName))
+            {
+                continue;
+            }
+            
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
             

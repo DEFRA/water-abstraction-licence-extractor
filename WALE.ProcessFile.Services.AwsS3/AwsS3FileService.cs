@@ -186,6 +186,19 @@ public class AwsS3FileService(
         });
     }
 
+    public async Task<bool> ExistsAsync(string filename)
+    {
+        var client = GetS3Client();
+        var file = await client.GetObjectAsync(
+            new GetObjectRequest
+            {
+                BucketName = FolderPath,
+                Key = filename
+            });
+
+        return file != null;
+    }
+
     private AmazonS3Client GetS3Client()
     {
         if (_client != null)

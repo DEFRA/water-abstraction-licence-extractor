@@ -64,11 +64,23 @@ public class ApiFileService(HttpClient httpClient) : IFileService
     }
 
     public string FolderPath { get; set; } = "N/A";
+    
     public async Task DeleteAsync(string filename)
     {
         var path = $"/BFF/Files/Delete?filename={filename}";
        
         var response = await httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<bool> ExistsAsync(string filename)
+    {
+        var path = $"/Extractor/Files/Exists?filename={filename}";
+        
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return "true".Equals(content, StringComparison.OrdinalIgnoreCase);
     }
 }

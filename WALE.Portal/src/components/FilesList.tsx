@@ -197,7 +197,15 @@ export function FilesList({}: FilesListProps) {
         let uploadTasks : any[] = [];
         
         for (let idx = 0; idx < filesToUpload.length; idx++) {
-            uploadTasks.push(uploadFileAsync(filesToUpload[idx], idx, failed));
+            let file = filesToUpload[idx];
+            
+            /*let indexOf = files.indexOf(file.name);
+
+            if (indexOf !== -1) {
+                continue;
+            }*/
+            
+            uploadTasks.push(uploadFileAsync(file, idx, failed));
 
             if (uploadTasks.length != maxConcurrentScrapers) {
                 continue;

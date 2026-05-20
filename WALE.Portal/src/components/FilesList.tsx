@@ -199,11 +199,11 @@ export function FilesList({}: FilesListProps) {
         for (let idx = 0; idx < filesToUpload.length; idx++) {
             let file = filesToUpload[idx];
             
-            /*let indexOf = files.indexOf(file.name);
+            let alreadyHave = files.some(x => x.filename === file.name);
 
-            if (indexOf !== -1) {
+            if (alreadyHave) {
                 continue;
-            }*/
+            }
             
             uploadTasks.push(uploadFileAsync(file, idx, failed));
 
@@ -236,7 +236,7 @@ export function FilesList({}: FilesListProps) {
 
         setLoading(true);
         fetchFiles();
-    }, []);
+    }, [files]);
 
     const downloadErrorCsv = () => {
         if (failedUploads.length === 0) return;

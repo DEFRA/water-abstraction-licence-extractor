@@ -161,8 +161,6 @@ async Task ProgramAsync()
 
         if (scrapingTasks.Count != 0)
         {
-            await Task.WhenAll(scrapingTasks);
-
             foreach (var scrapingTask in scrapingTasks)
             {
                 var scrapeResultLicenceSets = await scrapingTask;

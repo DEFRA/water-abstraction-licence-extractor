@@ -177,7 +177,6 @@ export function FilesList({}: FilesListProps) {
         }
 
         setUploadProgress(prev => ({...prev, current: idx + 1, currentChunk: 0, totalChunks: 0}));
-        await fetchFiles();
     };
     
     const dropHandler = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
@@ -194,8 +193,29 @@ export function FilesList({}: FilesListProps) {
         
         const failed: { filename: string; error: string }[] = [];
 
+        const maxConcurrentScrapers = 5;
+        let uploadTasks : any[] = [];
+        
         for (let idx = 0; idx < filesToUpload.length; idx++) {
-            await uploadFileAsync(filesToUpload[idx], idx, failed);
+            uploadTasks.push(uploadFileAsync(filesToUpload[idx], idx, failed));
+
+            if (uploadTasks.length != maxConcurrentScrapers) {
+                continue;
+            }
+
+            while (uploadTasks.length > maxConcurrentScrapers) {
+                for (let idx = 0; idx < uploadTasks.length; idx++) {
+                    let uploadTask = uploadTasks[idx];
+                    await uploadTask;
+                }
+            }
+        }
+
+        if (uploadTasks.length != 0) {
+            for (let idx = 0; idx < uploadTasks.length; idx++) {
+                let uploadTask = uploadTasks[idx];
+                await uploadTask;
+            }
         }
 
         setUploading(false);
@@ -205,6 +225,9 @@ export function FilesList({}: FilesListProps) {
         if (successfulCount > 0) {
             setSuccessMessage(`Uploaded ${successfulCount} ${successfulCount === 1 ? 'file' : 'files'} successfully`);
         }
+
+        setLoading(true);
+        fetchFiles();
     }, []);
 
     const downloadErrorCsv = () => {

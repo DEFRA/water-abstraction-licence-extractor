@@ -185,7 +185,8 @@ public static class ImportDmsData
                     {"Disclosure Status", ["DisclosureStatus"]},
                     {"Other Reference", ["OtherReference"]},
                     {"Modified Date", ["ModifiedDate"]},
-                    {"File ID", ["FileId"]}
+                    {"File ID", ["FileId"]},
+                    {"ETag", ["FileId"]}
                 },
                 [
                     "ActivityGrouping",

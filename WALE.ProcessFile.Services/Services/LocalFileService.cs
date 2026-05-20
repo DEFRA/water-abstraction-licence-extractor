@@ -68,4 +68,9 @@ public class LocalFileService(string folderPath) : IFileService
     {
         throw new NotImplementedException();
     }
+
+    public Task<bool> ExistsAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
 }

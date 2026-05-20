@@ -11,17 +11,34 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, isEditing, onJumpToPage, initialData }, ref) => {
+    ({ licence, onJumpToPage, initialData, onItemVerificationRequested, onVerificationCancelled }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData || []);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.map(ll => LinkedLicence.fromJS(ll)) || null);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
+        const [editingIndex, setEditingIndex] = useState<number | null>(null);
+        const [originalItem, setOriginalItem] = useState<LinkedLicence | null>(null);
+        const [isAddingNew, setIsAddingNew] = useState(false);
+        const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
-            getData: () => (linkedLicences),
-            getScrapedData: () => (scrapedData)
-        }));
+            getData: (itemId?: string) => {
+                if (itemId) {
+                    return linkedLicences.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                }
+                return linkedLicences;
+            },
+            getScrapedData: (itemId?: string) => {
+                if (itemId) {
+                    return scrapedData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                }
+                return scrapedData;
+            },
+            onVerificationCancelled: () => {
+                setIsWaitingForVerification(false);
+            }
+        }), [linkedLicences, scrapedData]);
 
         useEffect(() => {
             if (initialData) return;
@@ -53,7 +70,12 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 permitNumber: '',
                 containedIn: []
             });
-            setLinkedLicences([...linkedLicences, newLicence]);
+            const newList = [...linkedLicences, newLicence];
+            setLinkedLicences(newList);
+            setEditingIndex(newList.length - 1);
+            setIsAddingNew(true);
+            setOriginalItem(null);
+            setIsWaitingForVerification(false);
         };
 
         const handleUpdateLicence = (index: number, updated: LinkedLicence) => {
@@ -65,54 +87,80 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         const handleRemoveLicence = (index: number) => {
             const newList = linkedLicences.filter((_, i) => i !== index);
             setLinkedLicences(newList);
+            if (editingIndex === index) {
+                setEditingIndex(null);
+                setIsAddingNew(false);
+                setOriginalItem(null);
+            }
+            else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
         };
 
-        if (isEditing) {
-            return (
-                <div className="linked-licences-edit" style={{ padding: '8px' }}>
-                    <div className="linked-licences-list">
-                        {linkedLicences.map((ll, index) => (
-                            <LinkedLicenceItem 
-                                key={index} 
-                                linkedLicence={ll} 
-                                isEditing={true}
-                                onUpdate={(updated) => handleUpdateLicence(index, updated)}
-                                onRemove={() => handleRemoveLicence(index)}
-                                onJumpToPage={onJumpToPage}
-                            />
-                        ))}
-                    </div>
-                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-                        <button 
-                            onClick={handleAddLicence}
-                            style={{ 
-                                padding: '10px 24px', 
-                                backgroundColor: '#1890ff', 
-                                color: 'white', 
-                                border: 'none', 
-                                borderRadius: '4px', 
-                                cursor: 'pointer', 
-                                fontWeight: 'bold',
-                                fontSize: '0.9rem',
-                                boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
-                            }}
-                        >
-                            + Add Linked Licence
-                        </button>
-                    </div>
-                </div>
-            );
-        }
+        const handleDiscard = () => {
+            if (editingIndex === null) return;
+
+            if (isAddingNew) {
+                handleRemoveLicence(editingIndex);
+            } else if (originalItem) {
+                const newList = [...linkedLicences];
+                newList[editingIndex] = originalItem;
+                setLinkedLicences(newList);
+                setEditingIndex(null);
+                setOriginalItem(null);
+            } else {
+                setEditingIndex(null);
+            }
+            setIsAddingNew(false);
+        };
 
         return (
-            <div className="linked-licences-view" style={{ padding: '8px' }}>
+            <div className="linked-licences-container" style={{ padding: '8px' }}>
                 <div className="linked-licences-list">
                     {isLoading && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Loading linked licences...</p>}
                     {error && <p style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</p>}
                     {!isLoading && !error && linkedLicences.length === 0 && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No linked licences found.</p>}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
-                        <LinkedLicenceItem key={index} linkedLicence={ll} onJumpToPage={onJumpToPage} />
+                        <LinkedLicenceItem 
+                            key={index} 
+                            linkedLicence={ll} 
+                            isEditing={editingIndex === index && !isWaitingForVerification}
+                            isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
+                            onUpdate={(updated) => handleUpdateLicence(index, updated)}
+                            onRemove={() => handleRemoveLicence(index)}
+                            onDiscard={handleDiscard}
+                            onJumpToPage={onJumpToPage}
+                            onVerify={() => onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), 'Confirm')}
+                            onReject={() => onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), 'Remove')}
+                            onOverride={() => {
+                                if (editingIndex === index) {
+                                    setIsWaitingForVerification(true);
+                                    onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), isAddingNew ? 'Added' : 'Edit');
+                                } else {
+                                    setEditingIndex(index);
+                                    setIsAddingNew(false);
+                                    setOriginalItem(LinkedLicence.fromJS(ll));
+                                    setIsWaitingForVerification(false);
+                                }
+                            }}
+                        />
                     ))}
+                </div>
+                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                    <button 
+                        onClick={handleAddLicence}
+                        style={{ 
+                            padding: '10px 24px', 
+                            backgroundColor: '#1890ff', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer', 
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
+                        }}
+                    >
+                        + Add Linked Licence
+                    </button>
                 </div>
             </div>
         );

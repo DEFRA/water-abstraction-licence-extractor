@@ -4071,6 +4071,7 @@ export interface ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;

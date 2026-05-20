@@ -3,17 +3,27 @@ import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection } from "../
 interface LinkedLicenceItemProps {
     linkedLicence: LinkedLicence;
     isEditing?: boolean;
+    isAddingNew?: boolean;
     onUpdate?: (updated: LinkedLicence) => void;
     onRemove?: () => void;
+    onDiscard?: () => void;
     onJumpToPage?: (pageNumber: number) => void;
+    onVerify?: () => void;
+    onReject?: () => void;
+    onOverride?: () => void;
 }
 
 export const LinkedLicenceItem = ({ 
     linkedLicence, 
     isEditing, 
+    isAddingNew,
     onUpdate, 
     onRemove,
-    onJumpToPage
+    onDiscard,
+    onJumpToPage,
+    onVerify,
+    onReject,
+    onOverride
 }: LinkedLicenceItemProps) => {
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
@@ -49,6 +59,19 @@ export const LinkedLicenceItem = ({
         }
     };
 
+    const handleEdit = () => {
+        if (onOverride) {
+            onOverride();
+        }
+    };
+
+    const handleDiscardClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (onDiscard) {
+            onDiscard();
+        }
+    };
+
     if (isEditing) {
         return (
             <div className="linked-licence-item-edit" style={{ padding: '16px', border: '1px solid #d9d9d9', borderRadius: '4px', marginBottom: '16px', backgroundColor: '#fafafa' }}>
@@ -59,7 +82,8 @@ export const LinkedLicenceItem = ({
                             type="text" 
                             value={linkedLicence.licenceNumber || ''} 
                             onChange={(e) => handleChange('licenceNumber', e.target.value)}
-                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
+                            readOnly={!isAddingNew}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: !isAddingNew ? '#f0f0f0' : 'white' }}
                         />
                     </div>
                     <div style={{ flex: 1 }}>
@@ -68,15 +92,10 @@ export const LinkedLicenceItem = ({
                             type="text" 
                             value={linkedLicence.permitNumber || ''} 
                             onChange={(e) => handleChange('permitNumber', e.target.value)}
-                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
+                            readOnly={!isAddingNew}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: !isAddingNew ? '#f0f0f0' : 'white' }}
                         />
                     </div>
-                    <button 
-                        onClick={onRemove}
-                        style={{ marginTop: '24px', padding: '6px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    >
-                        Remove Licence
-                    </button>
                 </div>
 
                 <div style={{ marginTop: '16px' }}>
@@ -126,7 +145,10 @@ export const LinkedLicenceItem = ({
                                             </label>
                                             {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                                 <button
-                                                    onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onJumpToPage && onJumpToPage(section.pageNumber!);
+                                                    }}
                                                     title={`Jump to page ${section.pageNumber}`}
                                                     style={{ 
                                                         background: '#f0f0f0', 
@@ -156,6 +178,20 @@ export const LinkedLicenceItem = ({
                         ))}
                     </ul>
                 </div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                    <button 
+                        onClick={handleEdit}
+                        style={{ padding: '6px 20px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                        Save
+                    </button>
+                    <button 
+                        onClick={handleDiscardClick}
+                        style={{ padding: '6px 20px', backgroundColor: '#f0f0f0', color: 'rgba(0, 0, 0, 0.85)', border: '1px solid #d9d9d9', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                        Discard
+                    </button>
+                </div>
             </div>
         );
     }
@@ -182,7 +218,9 @@ export const LinkedLicenceItem = ({
                                     <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                     {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                         <button
-                                            onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
+                                            onClick={() => {
+                                                onJumpToPage && onJumpToPage(section.pageNumber!);
+                                            }}
                                             title={`Jump to page ${section.pageNumber}`}
                                             style={{ 
                                                 background: 'none', 
@@ -205,6 +243,26 @@ export const LinkedLicenceItem = ({
                     </ul>
                 </div>
             )}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                <button 
+                    onClick={onVerify}
+                    style={{ padding: '4px 12px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                    Confirm
+                </button>
+                <button 
+                    onClick={onReject}
+                    style={{ padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                    Remove
+                </button>
+                <button 
+                    onClick={onOverride}
+                    style={{ padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                    Edit
+                </button>
+            </div>
         </div>
     );
 };

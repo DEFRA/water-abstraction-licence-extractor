@@ -37,11 +37,42 @@ export function FilesList({}: FilesListProps) {
         items = items.map(function (item: string | undefined) {
             let returnItem = new FilePdf();
             returnItem.filename = item;
+            returnItem.permitNumber = extractPermitNumber(returnItem.filename);
+            returnItem.fileId = extractFileId(returnItem.filename);
 
             return returnItem;
         });
 
         return items;
+    };
+    
+    const extractPermitNumber = (fileName : string | undefined) => {
+        if (fileName === null || fileName === undefined || fileName === "")
+        {
+            return "";
+        }
+
+        let underscoreIndex = fileName.indexOf("__");
+
+        return underscoreIndex >= 0
+            ? fileName.substring(0, underscoreIndex).trim() : null;
+    };
+
+    const extractFileId = (fileName : string | undefined) => {
+        if (fileName === null || fileName === undefined || fileName === "")
+        {
+            return null;
+        }
+
+        let filenameParts = fileName.split("__");
+
+        if (filenameParts.length != 2)
+        {
+            return null;
+        }
+
+        let fileIdWithExtension = filenameParts[1].trim();
+        return fileIdWithExtension!.split('.')[0];
     };
 
     const dropHandler = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
@@ -98,6 +129,7 @@ export function FilesList({}: FilesListProps) {
                 // Chunked upload for large files
                 success = true; // Assume success and set to false if any chunk fails
                 let currentUploadId: string | null = null;
+                
                 for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                     const start = chunkIndex * CHUNK_SIZE;
                     const end = Math.min(start + CHUNK_SIZE, file.size);
@@ -193,8 +225,8 @@ export function FilesList({}: FilesListProps) {
     const downloadCsv = () => {
         if (files.length === 0) return;
 
-        const headers = ["Filename"];
-        const rows = files.map(file => [file.filename]);
+        const headers = ["Filename","PermitNumber","FileId"];
+        const rows = files.map(file => [file.filename, file.permitNumber, file.fileId]);
 
         const csvContent = [
             headers.join(","),
@@ -211,9 +243,7 @@ export function FilesList({}: FilesListProps) {
         link.click();
         document.body.removeChild(link);
     };
-
-    if (loading && files.length > 0) return <div className="container"><p>Loading ({files.length} files)...</p></div>;
-    if (loading) return <div className="container"><p>Loading...</p></div>;
+    
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
     return (
@@ -318,25 +348,34 @@ export function FilesList({}: FilesListProps) {
                 <p>Drop files here</p>
             </div>
 
-            <div style={{marginTop: '20px'}}>
-                <h3>{files.length} {'files'}</h3>
-                {files.length > 0 && (
-                    <button
-                        onClick={downloadCsv}
-                        style={{
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 15px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            marginTop: '10px'
-                        }}
-                    >
-                        Download File List CSV
-                    </button>
-                )}
-            </div>
+            {!loading && (
+                <div style={{marginTop: '20px'}}>
+                    <h3>{files.length} {'files'}</h3>
+                    {files.length > 0 && (
+                        <button
+                            onClick={downloadCsv}
+                            style={{
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                marginTop: '10px'
+                            }}
+                        >
+                            Download File List CSV
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {loading && files.length > 0 && (
+                <div className="container"><p>Loading ({files.length} files)...</p></div>
+            )}
+            {loading && files.length === 0 && (
+                <div className="container"><p>Loading...</p></div>
+            )}
         </>
     );
 }

@@ -226,7 +226,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return returnList;
     }
 
-    public Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
+    public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
     }

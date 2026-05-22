@@ -14,7 +14,7 @@ public static class ImportDmsData
     {
         ConsoleHelper.WriteLine("Starting DMS data import...");
 
-        var dmsRecords = GetDmsExtracts();
+        var dmsRecords = GetDmsExtractsFromResourcesFolder();
 
         if (dmsRecords.Count == 0)
         {
@@ -163,7 +163,7 @@ public static class ImportDmsData
     /// Reads all files starting with 'Consolidated' from the resources folder
     /// </summary>
     /// <returns>Combined list of DMS extract records from all matching files</returns>
-    private static Dictionary<string, List<DmsExtract>> GetDmsExtracts()
+    private static Dictionary<string, List<DmsExtract>> GetDmsExtractsFromResourcesFolder()
     {
         var allDmsRecords = new Dictionary<string, List<DmsExtract>>(StringComparer.OrdinalIgnoreCase);
         var filepaths = FindFilesByPattern("Consolidated");

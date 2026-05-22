@@ -52,10 +52,10 @@ async Task ProgramAsync()
     // when we want to handle more than one region)
     const short regionCode = 3;
 
-    var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
+    var naldDataTask = cacheService.GetNaldDataAsync(null);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(regionCode);
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
 
     var dtStartGetDms = DateTime.Now;
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
@@ -64,7 +64,6 @@ async Task ProgramAsync()
         await GetDmsFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
-            regionCode,
             false,
             cacheService);
 
@@ -191,8 +190,7 @@ async Task ProgramAsync()
         licenceSetGroups,
         naldLicenceStatusData,
         naldData,
-        allDmsData,
-        regionCode);
+        allDmsData);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
@@ -327,7 +325,7 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    await outputService.FinishProcessRunAsync(processRun, regionCode);
+    await outputService.FinishProcessRunAsync(processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
@@ -641,7 +639,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     GetDmsFilesAndMappingAsync(
         IFileService fileService,
         string dmsReportPath,
-        int regionCode,
         bool getFromFile,
         ICacheService cacheService)
 {
@@ -654,7 +651,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
             fileService,
             dmsReportPath,
-            regionCode);
+            -1 // TODO
+        );
     }
     else
     {

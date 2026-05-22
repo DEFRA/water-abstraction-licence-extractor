@@ -24,7 +24,10 @@ switch (workflow)
         // - Licence number
         // - Which template does it match
         // - Fetch number of pages
-        return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(localPdfFolder);
+        // Addendum / schedule
+
+        var includeVersionMatch = true;
+        return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
     
     case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs into the DB
         return await ImportNaldData.ImportAsync();

@@ -25,7 +25,14 @@ try
 
     if (args.Length < 11)
     {
-        throw new Exception("Not enough arguments provided");
+        await WriteLogFileIfDebugModeAsync(
+            "Error.txt",
+            "Not enough arguments provided",
+            true,
+            true,
+            true);
+
+        return;
     }
 
     var pageSegMode = Enum.Parse<WALE.ProcessFile.Core.Enums.PageSegMode>(args[0]);
@@ -72,8 +79,6 @@ catch (Exception ex)
         true,
         true,
         true);
-
-    throw;
 }
 
 return;

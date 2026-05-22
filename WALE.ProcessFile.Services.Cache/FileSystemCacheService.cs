@@ -552,6 +552,26 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

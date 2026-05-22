@@ -639,6 +639,106 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             await SaveLicenceFinderResultAsync(result);
         }
     }
+
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        await ClearVersionFilesToDownloadAsync();
+        
+        foreach (var result in results)
+        {
+            await SaveVersionFileToDownloadAsync(result);
+        }
+    }
+
+    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        await ClearVersionFilesAsync();
+        
+        foreach (var result in results)
+        {
+            await SaveVersionFileAsync(result);
+        }
+    }
+
+    private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO version_files_to_download (
+                                    permit_number,
+                                    full_path,
+                                    site_path,
+                                    library_and_file_path)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FullPath,
+                                    @SitePath,
+                                    @LibraryAndFilePath)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
+    }
+    
+    private async Task SaveVersionFileAsync(VersionFile result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO version_files (
+                                    permit_number,
+                                    full_path,
+                                    site_path,
+                                    library_and_file_path,
+                                    region_id,
+                                    file_name,
+                                    file_id,
+                                    file_size)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FullPath,
+                                    @SitePath,
+                                    @LibraryAndFilePath,
+                                    @RegionId,
+                                    @FileName,
+                                    @FileId,
+                                    @FileSize)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
+    }
+
+    private async Task ClearVersionFilesToDownloadAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM version_files_to_download;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
+    
+    private async Task ClearVersionFilesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM version_files;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
     
     private async Task ClearLicenceFinderResultsAsync()
     {

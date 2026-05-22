@@ -61,7 +61,7 @@ public class InternalTesseractOcrDataExtractorService(
             try
             {
                 var returnList = await GetDataFromTesseractAsync(bytes);
-                var numberOfWords = returnList.Sum(line => line.Words!.Count);
+                var numberOfWords = returnList.Sum(line => line.Words?.Count ?? 0);
 
                 if (numberOfWords <= maxNumberOfWords)
                 {
@@ -106,7 +106,7 @@ public class InternalTesseractOcrDataExtractorService(
         return textLines;
     }
     
-    private Task<List<LineAndWords>> GetDataFromTesseractAsync(byte[] bytes)
+    private async Task<List<LineAndWords>> GetDataFromTesseractAsync(byte[] bytes)
     {
         var ocrImage = Pix.LoadFromMemory(bytes);
         
@@ -115,39 +115,59 @@ public class InternalTesseractOcrDataExtractorService(
 
         if (minHeight > ocrImage.Height || minWidth > ocrImage.Width)
         {
-            return Task.FromResult(new List<LineAndWords>());
+            return [];
         }
         
-        Page? page = null;
+        const int maxExecutionTimeMs = 30_000;
+        var timeout = TimeSpan.FromMilliseconds(maxExecutionTimeMs);
         
-        var tesseractEngine = GetEngine();
-        var engine = tesseractEngine;
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(timeout);
+        
+        var token = cts.Token;
         
         var processTask = Task.Run(() =>
         {
-            //var dtProcessStart = DateTime.Now;
-            page = engine.Process(ocrImage, ConvertPageSegMode(pageSegMode));
-            //var tsProcess = (DateTime.Now - dtProcessStart).TotalMilliseconds;
+            try
+            {
+                var tesseractEngine = GetEngine();
+                token.ThrowIfCancellationRequested();
+                
+                var page = tesseractEngine.Process(ocrImage, ConvertPageSegMode(pageSegMode));
             
-            //var dtIterateStart = DateTime.Now;
-            var textLines = GetTextLinesFromPageAsync(page);
-            //var tsIterate = (DateTime.Now - dtIterateStart).TotalMilliseconds;
-            
-            return textLines;
-        });
-            
-        const int maxExecutionTimeMs = 30_000;
-        var isCompletedSuccessfully = processTask.Wait(TimeSpan.FromMilliseconds(maxExecutionTimeMs));
+                token.ThrowIfCancellationRequested();
+                
+                var textLines = GetTextLinesFromPageAsync(page, token);
+                return textLines;
+            }
+            catch (Exception e)
+            {
+                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - (Inside task run) {e}");
+                return null;
+            }
+        }, token);
+        
+        const int maxExecutionTimeMs2 = 31_000;
+        var timeout2 = TimeSpan.FromMilliseconds(maxExecutionTimeMs2);
+        
+        var delay = Task.Delay(timeout2);
+        var raceResult = await Task.WhenAny(processTask, delay);
 
-        page?.Dispose();
-        tesseractEngine.Dispose();
-
-        if (!isCompletedSuccessfully)
+        if (raceResult == delay)
         {
-            throw new TimeoutException($"Tesseract process timed out after {maxExecutionTimeMs} seconds");
+            ConsoleHelper.WriteLine("ERROR - TesseractInternal - Timeout occured (race check found)");
+            throw new TimeoutException();
+        }
+
+        var result = await processTask;
+        
+        if (raceResult == null)
+        {
+            ConsoleHelper.WriteLine("ERROR - TesseractInternal - Timeout occured (cancellation token respected)");
+            throw new TimeoutException();
         }
         
-        return processTask;
+        return result!;
     }
 
     private static PageSegMode ConvertPageSegMode(Core.Enums.PageSegMode pageSegMode)
@@ -160,20 +180,22 @@ public class InternalTesseractOcrDataExtractorService(
         };
     }
     
-    private static List<LineAndWords> GetTextLinesFromPageAsync(Page page)
+    private static List<LineAndWords> GetTextLinesFromPageAsync(Page page, CancellationToken token)
     {
         using var iterator = page.GetIterator();
         iterator.Begin();
 
-        return ToPageLines(iterator);
+        return ToPageLines(iterator, token);
     }
 
-    private static List<LineAndWords> ToPageLines(ResultIterator? iterator)
+    private static List<LineAndWords> ToPageLines(ResultIterator? iterator, CancellationToken token)
     {
         var returnLines = new List<LineAndWords>();
         
         do
         {
+            token.ThrowIfCancellationRequested();
+            
             var lineText = iterator!.GetText(PageIteratorLevel.TextLine);
 
             if (lineText == null)
@@ -191,6 +213,8 @@ public class InternalTesseractOcrDataExtractorService(
 
             do
             {
+                token.ThrowIfCancellationRequested();
+                
                 //var dtWordStart = DateTime.Now;
                 var wordText = iterator.GetText(PageIteratorLevel.Word);
                 //var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
@@ -223,7 +247,7 @@ public class InternalTesseractOcrDataExtractorService(
     private TesseractEngine GetEngine()
     {
         var engine = new TesseractEngine(dataPath, "eng");
-        engine.SetVariable("tessedit_parallelize", "1");
+        engine.SetVariable("tessedit_parallelize", "10");
         engine.SetVariable("user_defined_dpi", "200");
 
         return engine;

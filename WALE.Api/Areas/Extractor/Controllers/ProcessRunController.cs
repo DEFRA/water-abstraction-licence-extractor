@@ -29,7 +29,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
         await outputService.FinishProcessRunAsync(new ProcessRun
         {
             ProcessRunId = request.processRunId
-        }, request.regionCode);
+        });
 
         return Ok(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
     }

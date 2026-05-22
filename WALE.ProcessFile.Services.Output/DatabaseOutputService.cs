@@ -190,7 +190,7 @@ public class DatabaseOutputService(
         await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, fileId, noOcrServiceName, processRunId);
     }
 
-    public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
+    public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         // Fix up missing LicenceIds in LicenceSetList
         var licenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(
@@ -204,8 +204,10 @@ public class DatabaseOutputService(
             {
                 continue;
             }
-
-            var licenceTransformed = FormattingHelper.FormatLicenceNumber(missingLicenceId.LicenceNumber, regionId)!;
+            
+            var licenceTransformed = FormattingHelper.FormatLicenceNumber(
+                missingLicenceId.LicenceNumber,
+                missingLicenceId.RegionId!.Value)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

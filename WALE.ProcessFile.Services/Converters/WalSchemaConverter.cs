@@ -877,8 +877,7 @@ public static partial class WalSchemaConverter
                 false,
                 naldLicenceStatusData,
                 naldData,
-                lookupConfiguration.AllDmsData,
-                matchesResult.RegionCode);
+                lookupConfiguration.AllDmsData);
 
             var newLicenceSetIds = new List<LicenceSetReference>
             {
@@ -979,8 +978,7 @@ public static partial class WalSchemaConverter
         bool addImplicitLicenceSet,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode)
+        Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var returnList = new List<LicenceSet>();
 
@@ -1032,7 +1030,7 @@ public static partial class WalSchemaConverter
                                 PageNumber = section.PageNumber
                             })
                             .ToArray();
-                        
+
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
@@ -1043,7 +1041,7 @@ public static partial class WalSchemaConverter
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
-                            regionCode);
+                            -1); // TODO regionCode);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {
@@ -1094,7 +1092,7 @@ public static partial class WalSchemaConverter
 
                     licence.LinkedLicences = ConsolidateLinkedLicences(
                         licence.LinkedLicences.ToList(),
-                        regionCode,
+                        -1, // TODO regionCode,
                         licence.LicenceNumber?.Value,
                         naldLicenceStatusData,
                         naldData,
@@ -3787,8 +3785,7 @@ public static partial class WalSchemaConverter
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode)
+        Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
@@ -3797,8 +3794,7 @@ public static partial class WalSchemaConverter
             true,
             naldLicenceStatusData,
             naldData,
-            licenceNumbersMapping,
-            regionCode));
+            licenceNumbersMapping));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         return distinctLicenceSets;

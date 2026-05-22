@@ -331,6 +331,26 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveLicenceFinderResultsAsync(results);
     }
 
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        return databaseReadService.GetVersionFilesToDownloadAsync();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        return databaseWriteService.SaveVersionFilesToDownloadAsync(results);
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        return databaseReadService.GetVersionFilesAsync();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        return databaseWriteService.SaveVersionFilesAsync(results);
+    }
+
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);

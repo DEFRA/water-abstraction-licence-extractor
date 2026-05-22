@@ -566,4 +566,56 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        var path = "/Extractor/VersionFiles/GetToDownload";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<VersionFileToDownload>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        var path = "/Extractor/VersionFiles/SaveToDownload";
+        var json = JsonSerializer.Serialize(new
+        {
+            results
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        var path = "/Extractor/VersionFiles/GetAll";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<VersionFile>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        var path = "/Extractor/VersionFiles/SaveAll";
+        var json = JsonSerializer.Serialize(new
+        {
+            results
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
 }

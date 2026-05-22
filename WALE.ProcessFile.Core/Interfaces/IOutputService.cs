@@ -53,7 +53,7 @@ public interface IOutputService
         string noOcrServiceName,
         int processRunId);
     
-    Task FinishProcessRunAsync(ProcessRun processRun, int regionId);
+    Task FinishProcessRunAsync(ProcessRun processRun);
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     

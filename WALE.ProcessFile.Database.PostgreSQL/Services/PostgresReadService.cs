@@ -486,12 +486,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               licence_id,
-                               licence_number,
-                               licence_version_id,
-                               licence_set_id,
-                               process_run_id
-                           FROM licence_set_licence 
+                                licence_id,
+                                licence_number,
+                                licence_version_id,
+                                licence_set_id,
+                                process_run_id,
+                                l."FGAC_REGION_CODE" as region_id
+                           FROM licence_set_licence as lsl
+                           LEFT JOIN nald."NALD_ABS_LICENCES" as l on licence_number = l."LIC_NO"
                            WHERE process_run_id = @ProcessRunId
                            """;
 
@@ -1558,6 +1560,50 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            """;
 
         var results = await QueryAsync<LicenceFinderResult>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                permit_number,
+                                full_path,
+                                site_path,
+                                library_and_file_path
+                           FROM public.version_files_to_download
+                           """;
+
+        var results = await QueryAsync<VersionFileToDownload>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
+    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                permit_number,
+                                full_path,
+                                site_path,
+                                library_and_file_path,
+                                region_id,
+                                file_id,
+                                file_name,
+                                file_size
+                           FROM public.version_files
+                           """;
+
+        var results = await QueryAsync<VersionFile>(
             connection,
             sql,
             0);

@@ -97,4 +97,7 @@ public interface IDatabaseReadService
     Task<string?> GetImportRunDateAsync(string dataSource);
 
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
+    
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+    Task<List<VersionFile>> GetVersionFilesAsync();
 }

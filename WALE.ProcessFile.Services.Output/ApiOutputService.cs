@@ -265,14 +265,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
+    public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
 
         var json = JsonSerializer.Serialize(new
         {
-            processRun.ProcessRunId,
-            regionCode = regionId
+            processRun.ProcessRunId
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

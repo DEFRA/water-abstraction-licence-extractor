@@ -1,7 +1,7 @@
 import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection } from "../../api/generated/apiClient.ts";
 
 interface LinkedLicenceItemProps {
-    linkedLicence: LinkedLicence;
+    linkedLicence?: LinkedLicence;
     isEditing?: boolean;
     isAddingNew?: boolean;
     onUpdate?: (updated: LinkedLicence) => void;
@@ -14,7 +14,7 @@ interface LinkedLicenceItemProps {
 }
 
 export const LinkedLicenceItem = ({ 
-    linkedLicence, 
+    linkedLicence: linkedLicenceProp,
     isEditing, 
     isAddingNew,
     onUpdate, 
@@ -25,6 +25,12 @@ export const LinkedLicenceItem = ({
     onReject,
     onOverride
 }: LinkedLicenceItemProps) => {
+    const linkedLicence = linkedLicenceProp;
+
+    if (!linkedLicence) {
+        return null;
+    }
+
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
             onUpdate(new LinkedLicence({ ...linkedLicence, [field]: value }));
@@ -243,26 +249,28 @@ export const LinkedLicenceItem = ({
                     </ul>
                 </div>
             )}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
-                <button 
-                    onClick={onVerify}
-                    style={{ padding: '4px 12px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
-                >
-                    Confirm
-                </button>
-                <button 
-                    onClick={onReject}
-                    style={{ padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
-                >
-                    Remove
-                </button>
-                <button 
-                    onClick={onOverride}
-                    style={{ padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
-                >
-                    Edit
-                </button>
-            </div>
+            {(onVerify || onReject || onOverride) && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                    <button 
+                        onClick={onVerify}
+                        style={{ padding: '4px 12px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                        Confirm
+                    </button>
+                    <button 
+                        onClick={onReject}
+                        style={{ padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                        Remove
+                    </button>
+                    <button 
+                        onClick={onOverride}
+                        style={{ padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                        Edit
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

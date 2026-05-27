@@ -1,6 +1,6 @@
 import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationHistory } from "./LicenceSectionVerificationHistory.tsx";
-import { LinkedLicences } from "./LinkedLicences.tsx";
+import { LinkedLicenceItem } from "./LinkedLicenceItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -10,7 +10,7 @@ interface LicenceVerificationHistoryProps {
 }
 
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
-    "Linked Licences": LinkedLicences
+    "Linked Licences": LinkedLicenceItem
 };
 
 export function LicenceVerificationHistory({ verifications, isLoading, onJumpToPage }: LicenceVerificationHistoryProps) {
@@ -40,8 +40,8 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
 
         if (Component && value) {
             try {
-                const initialData = JSON.parse(value);
-                return <Component initialData={initialData} isEditing={false} onJumpToPage={onJumpToPage} />;
+                const data = JSON.parse(value);
+                return <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage} />;
             } catch (e) {
                 console.error("Error parsing verification value", e);
             }

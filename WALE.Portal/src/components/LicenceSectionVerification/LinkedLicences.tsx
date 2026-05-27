@@ -6,14 +6,13 @@ import { LinkedLicenceItem } from "./LinkedLicenceItem";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
-    initialData?: LinkedLicence[];
     onJumpToPage?: (pageNumber: number) => void;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, onJumpToPage, initialData, onItemVerificationRequested, onVerificationCancelled }, ref) => {
-        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>(initialData || []);
-        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(initialData?.map(ll => LinkedLicence.fromJS(ll)) || null);
+    ({ licence, onJumpToPage, onItemVerificationRequested, onVerificationCancelled }, ref) => {
+        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
+        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -41,8 +40,6 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         }), [linkedLicences, scrapedData]);
 
         useEffect(() => {
-            if (initialData) return;
-
             const fetchLinkedLicences = async () => {
                 const permitNumber = licence?.dmsPermitNumber;
                 if (!permitNumber) return;
@@ -62,7 +59,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber, initialData]);
+        }, [licence?.dmsPermitNumber]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({

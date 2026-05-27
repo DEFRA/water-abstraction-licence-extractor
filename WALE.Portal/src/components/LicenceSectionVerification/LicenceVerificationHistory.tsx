@@ -1,6 +1,6 @@
-import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
-import { LicenceSectionVerificationHistory } from "./LicenceSectionVerificationHistory.tsx";
-import { LinkedLicenceItem } from "./LinkedLicenceItem.tsx";
+import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
+import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
+import {LinkedLicenceItem} from "./LinkedLicenceItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -13,7 +13,7 @@ const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
     "Linked Licences": LinkedLicenceItem
 };
 
-export function LicenceVerificationHistory({ verifications, isLoading, onJumpToPage }: LicenceVerificationHistoryProps) {
+export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage}: LicenceVerificationHistoryProps) {
     if (isLoading) {
         return <div>Loading history...</div>;
     }
@@ -36,7 +36,6 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
         const Component = SECTION_COMPONENTS[sectionName];
-        const verificationType = verification.verificationType;
 
         const renderValue = (value: string | undefined, label?: string) => {
             if (!value) return null;
@@ -45,7 +44,7 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
             if (Component) {
                 try {
                     const data = JSON.parse(value);
-                    content = <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage} />;
+                    content = <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage}/>;
                 } catch (e) {
                     console.error("Error parsing verification value", e);
                     content = <div>{value}</div>;
@@ -55,40 +54,26 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
             }
 
             return (
-                <div key={label} style={label ? { marginBottom: '10px' } : undefined}>
-                    {label && <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{label}:</div>}
+                <div key={label} style={label ? {marginBottom: '10px'} : undefined}>
+                    {label && <div style={{fontWeight: 'bold', marginBottom: '5px'}}>{label}:</div>}
                     {content}
                 </div>
             );
         };
-
-        if (verificationType === 'Confirmed' || verificationType === 'Removed') {
-            return renderValue(verification.licenceSectionScrapedValue);
-        }
-
-        if (verificationType === 'Added') {
-            return renderValue(verification.licenceSectionOverrideValue);
-        }
-
-        if (verificationType === 'Edited') {
-            return (
-                <div>
-                    {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
-                    {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
-                </div>
-            );
-        }
-
-        // Fallback to old logic if verificationType is unknown
-        const value = verification.licenceSectionOverrideValue || verification.licenceSectionScrapedValue;
-        return renderValue(value);
+        
+        return (
+            <div>
+                {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
+                {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
+            </div>
+        );
     };
 
     return (
         <div>
             {sortedVerifications.map((verification, index) => (
-                <LicenceSectionVerificationHistory 
-                    key={verification.licenceSectionVerificationId || index} 
+                <LicenceSectionVerificationHistory
+                    key={verification.licenceSectionVerificationId || index}
                     verification={verification}
                 >
                     {renderVerificationContent(verification)}

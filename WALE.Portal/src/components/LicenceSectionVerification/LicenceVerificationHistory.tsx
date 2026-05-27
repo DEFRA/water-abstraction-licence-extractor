@@ -36,18 +36,52 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
         const Component = SECTION_COMPONENTS[sectionName];
-        const value = verification.licenceSectionOverrideValue || verification.licenceSectionScrapedValue;
+        const verificationType = verification.verificationType;
 
-        if (Component && value) {
-            try {
-                const data = JSON.parse(value);
-                return <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage} />;
-            } catch (e) {
-                console.error("Error parsing verification value", e);
+        const renderValue = (value: string | undefined, label?: string) => {
+            if (!value) return null;
+
+            let content;
+            if (Component) {
+                try {
+                    const data = JSON.parse(value);
+                    content = <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage} />;
+                } catch (e) {
+                    console.error("Error parsing verification value", e);
+                    content = <div>{value}</div>;
+                }
+            } else {
+                content = <div>{value}</div>;
             }
+
+            return (
+                <div key={label} style={label ? { marginBottom: '10px' } : undefined}>
+                    {label && <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{label}:</div>}
+                    {content}
+                </div>
+            );
+        };
+
+        if (verificationType === 'Confirmed' || verificationType === 'Removed') {
+            return renderValue(verification.licenceSectionScrapedValue);
         }
 
-        return <div>{value || 'N/A'}</div>;
+        if (verificationType === 'Added') {
+            return renderValue(verification.licenceSectionOverrideValue);
+        }
+
+        if (verificationType === 'Edited') {
+            return (
+                <div>
+                    {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
+                    {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
+                </div>
+            );
+        }
+
+        // Fallback to old logic if verificationType is unknown
+        const value = verification.licenceSectionOverrideValue || verification.licenceSectionScrapedValue;
+        return renderValue(value);
     };
 
     return (

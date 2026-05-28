@@ -57,14 +57,28 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
             </td>
             <td>
                 {((item.latestLicenceSectionVerifications?.length ?? 0) > 0 ?
-                    <UnorderedListOfStrings items={item.latestLicenceSectionVerifications!.map(v => {
-                        let color = 'inherit';
-                        if (v.verificationType === 'Accept') color = 'green';
-                        else if (v.verificationType === 'Reject') color = 'red';
-                        else if (v.verificationType === 'Override') color = 'blue';
+                    Object.entries(
+                        item.latestLicenceSectionVerifications!.reduce((acc, v) => {
+                            const key = v.licenceSectionName ?? "Unknown";
+                            if (!acc[key]) acc[key] = [];
+                            acc[key].push(v);
+                            return acc;
+                        }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
+                    ).map(([sectionName, verifications]) => (
+                        <div key={sectionName} style={{ marginBottom: '10px' }}>
+                            <strong>{sectionName}</strong>
+                            <UnorderedListOfStrings items={verifications!.map(v => {
+                                let color = 'inherit';
+                                if (v.verificationType === 'Confirmed') color = 'green';
+                                else if (v.verificationType === 'AutoPass') color = 'green';
+                                else if (v.verificationType === 'Removed') color = 'red';
+                                else if (v.verificationType === 'Edited') color = 'darkorange';
+                                else if (v.verificationType === 'Added') color = 'blue';
 
-                        return <span style={{color}}>{`${v.licenceSectionName}: ${v.verificationType}`}{v.scrapedDataIsDifferent && ' 🚩'}</span>;
-                    })}/>
+                                return <span style={{color}}>{`${v.licenceSectionItemId} - ${v.verificationType}`}{v.scrapedDataIsDifferent && ' 🚩'}</span>;
+                            })}/>
+                        </div>
+                    ))
                     : '--')}
             </td>
         </tr>

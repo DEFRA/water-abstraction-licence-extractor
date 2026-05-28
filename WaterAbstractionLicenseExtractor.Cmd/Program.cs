@@ -61,12 +61,17 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        await GetDmsFilesAndMappingAsync(services.FileService!, services.DmsReportPath!, regionCode);
+        await GetDmsFilesAndMappingAsync(
+            services.FileService!,
+            services.DmsReportPath!,
+            regionCode,
+            false,
+            cacheService);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
     ConsoleHelper.WriteLine(
-        $"INFO - WALE.Cmd - Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        $"INFO - WALE.Cmd - Got {dmsFilesToProcess.Count} DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
@@ -156,8 +161,6 @@ async Task ProgramAsync()
 
         if (scrapingTasks.Count != 0)
         {
-            await Task.WhenAll(scrapingTasks);
-
             foreach (var scrapingTask in scrapingTasks)
             {
                 var scrapeResultLicenceSets = await scrapingTask;
@@ -635,14 +638,31 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
+    GetDmsFilesAndMappingAsync(
+        IFileService fileService,
+        string dmsReportPath,
+        int regionCode,
+        bool getFromFile,
+        ICacheService cacheService)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-    var filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
-        fileService,
-        dmsReportPath,
-        regionCode);
-
+    (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
+        LicenceNumbersWithFilenames) filesAndMapping;
+    
+    if (getFromFile)
+    {
+        filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+            fileService,
+            dmsReportPath,
+            regionCode);
+    }
+    else
+    {
+        filesAndMapping = await GetFilesAndMappingFromLicenceFinderResultsAsync(
+            fileService,
+            cacheService);
+    }
+    
     /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
         .Where(filePath => filePath.Key.Contains("22722086"))
         .ToDictionary(filePath => filePath.Key, k => k.Value);*/
@@ -652,14 +672,65 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
         //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
         //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-        .Take(100)
+        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
 }
 
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
+        LicenceNumbersWithFilenames)>
+    GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
+{
+    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
+    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
+
+    var lowercaseFilesInFolder = (await fileService.GetAllFilesAsync()).Select(f => f.ToLower()).ToList();
+    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync();
+
+    foreach (var licenceFinderResult in licenceFinderResults)
+    {
+        if (licenceFinderResult.FileId == null)
+        {
+            continue;
+        }
+        
+        var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
+        
+        if (!lowercaseFilesInFolder.Contains(destinationFileName))
+        {
+            continue;
+        }
+
+        var regionName = licenceFinderResult.Region;
+        
+        var dmsFileData = new DmsFileData
+        {
+            DestinationFileName = destinationFileName,
+            NaldLicenceRef = licenceFinderResult.LicenseNumber,
+            PermitNumber = licenceFinderResult.PermitNumber,
+            DmsPath = licenceFinderResult.FileUrl,
+            StrippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                RegionHelper.GetRegionId(regionName))!,
+            FileId = Guid.Parse(licenceFinderResult.FileId!)
+        };
+
+        filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
+        licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
+    }
+    
+    return (
+        filenamesWithLicenceNumbers,
+        licenceNumbersWithFilenames
+    );
+}
+
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromExcelDownloadInfoFileAsync(IFileService fileService, string dmsReportPath, int regionCode)
+    GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+        IFileService fileService,
+        string dmsReportPath,
+        int regionCode)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
@@ -706,8 +777,32 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
                 }
 
-                var dmsPath = (string)row["Definitive URL"];
-                var destinationFileName = (string)row[1];
+                string destinationFileName;
+                string dmsPath;
+                Guid fileId;
+                
+                if (dataTable.Columns.Contains("Definitive URL"))
+                {
+                    dmsPath = (string)row["Definitive URL"];
+                    destinationFileName = (string)row[1];
+                    
+                    var filenameParts = destinationFileName.Split("__");
+                    fileId = filenameParts.Length >= 2
+                        ? Guid.Parse(filenameParts[1])
+                        : throw new Exception("Filename format was incorrect");
+                }
+                else
+                {
+                    var fileIdColumn = row["File Id"] != DBNull.Value ? (string)row["File Id"] : null;
+                    
+                    if (!Guid.TryParse(fileIdColumn, out fileId))
+                    {
+                        continue;
+                    }
+                    
+                    dmsPath = (string)row["File URL"];
+                    destinationFileName = $"{permitNumber}_{fileId}.pdf";
+                }
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {
@@ -715,11 +810,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                 }
 
                 var naldLicenceRef = (string)row["License Number"];
-
-                var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 2
-                    ? Guid.Parse(filenameParts[1])
-                    : throw new Exception("Filename format was incorrect");
 
                 var dmsFileData = new DmsFileData
                 {

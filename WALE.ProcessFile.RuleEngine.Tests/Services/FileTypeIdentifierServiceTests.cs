@@ -12,40 +12,29 @@ namespace WALE.ProcessFile.RuleEngine.Tests.Services;
 
 public class FileTypeIdentifierServiceTests
 {
-    private readonly Mock<IPdfDataExtractorService> _mockPdfExtractorService; // TODO remove Moq for FakeItEasy
     private readonly FileTypeIdentifierService _service;
 
     public FileTypeIdentifierServiceTests()
     {
-        _mockPdfExtractorService = new Mock<IPdfDataExtractorService>();
-        _service = new FileTypeIdentifierService([_mockPdfExtractorService.Object]);
+        _service = new FileTypeIdentifierService();
     }
 
     [Fact]
     public void Constructor_WithNullPdfExtractor_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileTypeIdentifierService(null!));
+        Assert.Throws<ArgumentNullException>(() => new FileTypeIdentifierService());
     }
 
     [Fact(Skip = "Needs investigation and fixing")]
-    public async Task IdentifyFileType_WithLicenseContent_ShouldReturnLicenseType()
+    public void IdentifyFileType_WithLicenseContent_ShouldReturnLicenseType()
     {
         // Arrange
         //var content = "This document contains license and permit information";
         var filePath = "";
         
-        var lookupConfiguration = new LookupConfiguration(
-            [],
-            [],
-            [],
-            [],
-            new LocalFileService(""),
-            new FileSystemCacheService(""),
-            1);
-
         // Act
-        var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
+        var result = _service.IdentifyFileType(new MatchesResult(), filePath);
 
         // Assert
         result.Should().NotBeNull();
@@ -53,23 +42,14 @@ public class FileTypeIdentifierServiceTests
     }
 
     [Fact(Skip = "Needs investigation and fixing")]
-    public async Task IdentifyFileType_WithAddendumContent_ShouldReturnAddendumType()
+    public void IdentifyFileType_WithAddendumContent_ShouldReturnAddendumType()
     {
         // Arrange
         //var content = "This addendum modifies the agreement";
         var filePath = "";
         
-        var lookupConfiguration = new LookupConfiguration(
-            [],
-            [],
-            [],
-            [],
-            new LocalFileService(""),
-            new FileSystemCacheService(""),
-            1);
-
         // Act
-        var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
+        var result = _service.IdentifyFileType(new MatchesResult(), filePath);
 
         // Assert
         result.Should().NotBeNull();
@@ -77,60 +57,41 @@ public class FileTypeIdentifierServiceTests
     }
 
     [Fact]
-    public async Task IdentifyFileType_WithNoMatchingContent_ShouldReturnNull()
+    public void IdentifyFileType_WithNoMatchingContent_ShouldReturnNull()
     {
         // Arrange
         //var content = "This is a regular document";
         var filePath = "";
-        var lookupConfiguration = new LookupConfiguration(
-            [],
-            [],
-            [],
-            [],
-            new LocalFileService(""),
-            new FileSystemCacheService("Cache"),
-            1);
 
         // Act
-        var result = await _service.IdentifyFileTypeAsync(filePath, lookupConfiguration);
+        var result = _service.IdentifyFileType(new MatchesResult(), filePath);
 
         // Assert
         result.Should().BeNull();
     }
 
     [Fact(Skip = "Needs investigation and fixing")]
-    public async Task IdentifyFileTypeAsync_WithNonExistentFile_ShouldThrowFileNotFoundException()
+    public void IdentifyFileTypeAsync_WithNonExistentFile_ShouldThrowFileNotFoundException()
     {
         // Arrange
-        var configuration = CreateTestConfiguration();
         var nonExistentFile = "non-existent-file.pdf";
 
         // Act & Assert
-        await Assert.ThrowsAsync<FileNotFoundException>(() => 
-            _service.IdentifyFileTypeAsync(nonExistentFile, configuration));
+        Assert.Throws<FileNotFoundException>(() => 
+            _service.IdentifyFileType(new MatchesResult(), nonExistentFile));
     }
 
     [Fact(Skip = "Needs investigation and fixing")]
     public async Task IdentifyFileTypeAsync_WithValidPdfFile_ShouldReturnFileType()
     {
         // Arrange
-        var configuration = CreateTestConfiguration();
         var tempFile = Path.GetTempFileName();
         await File.WriteAllTextAsync(tempFile, "temp content");
-
-        var mockMatchesResult = CreateMockMatchesResult("This document contains license information");
-        _mockPdfExtractorService.Setup(x => x.GetMatchesAsync(
-                It.IsAny<string>(),
-                It.IsAny<DmsFileData>(),
-                It.IsAny<LookupConfiguration>(),
-                It.IsAny<List<string>>(),
-                It.IsAny<int>()))
-            .ReturnsAsync(mockMatchesResult);
 
         try
         {
             // Act
-            var result = await _service.IdentifyFileTypeAsync(tempFile, configuration);
+            var result = _service.IdentifyFileType(new MatchesResult(), tempFile);
 
             // Assert
             result.Should().NotBeNull();

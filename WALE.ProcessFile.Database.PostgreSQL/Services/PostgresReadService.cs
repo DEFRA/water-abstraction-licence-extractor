@@ -1425,6 +1425,152 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0);
     }
 
+    public async Task<List<DmsExtract>> GetDmsExtractAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               site_collection,
+                               library_name,
+                               permit_number,
+                               file_name,
+                               file_size,
+                               file_type,
+                               customer_operator_name,
+                               facility_name,
+                               facility_address,
+                               facility_address_postcode,
+                               regime,
+                               activity_class,
+                               activity_sub_class,
+                               type_of_permit,
+                               catchment,
+                               national_security,
+                               disclosure_status,
+                               document_date,
+                               upload_date,
+                               file_url,
+                               other_reference,
+                               modified_date,
+                               file_id
+                           FROM public.dms_extract
+                           """;
+
+        var results = await QueryAsync<DmsExtract>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+    
+    public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               status,
+                               error_message,
+                               licence_number,
+                               permit_number,
+                               file_name,
+                               original_file_name,
+                               file_id,
+                               date_of_issue,
+                               number_of_pages,
+                               primary_type,
+                               secondary_type,
+                               file_type,
+                               confidence,
+                               identified_by_rule,
+                               matched_terms,
+                               file_size
+                           FROM public.dms_file_reader
+                           """;
+
+        var results = await QueryAsync<DmsFileReaderResult>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
+    public async Task<string?> GetImportRunDateAsync(string dataSource)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           select date_time
+                           from import_dates
+                           where "data_source" = @DataSource
+                           order by date_time desc
+                           limit 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<string?>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                DataSource = dataSource
+            });
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return result;
+    }
+
+    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               permit_number,
+                               file_url,
+                               rule_used,
+                               change_audit_action,
+                               license_number,
+                               document_date,
+                               signature_date,
+                               date_of_issue,
+                               other_reference,
+                               file_size,
+                               disclosure_status,
+                               region,
+                               nald_id,
+                               nald_issue_no,
+                               nald_increment_no,
+                               primary_template,
+                               secondary_template,
+                               number_of_pages,
+                               doi_signature_date_match,
+                               included_in_version_match,
+                               single_licence_in_version_match,
+                               version_match_file_url,
+                               duplicate_licence_in_version_match_result,
+                               nald_issue,
+                               file_id,
+                               file_id_status,
+                               file_id_status_change_date,
+                               is_water_company,
+                               folder_name_auto_correct,
+                               seen_in_dms_extract,
+                               we_have_downloaded
+                           FROM public.licence_finder_result
+                           """;
+
+        var results = await QueryAsync<LicenceFinderResult>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
     private async Task<T?> QuerySingleOrDefaultAsync<T>(
         NpgsqlConnection connection,
         string sql,

@@ -298,6 +298,13 @@ public class PdfDataExtractorService(
             for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
             {
                 var imageReference = pageImages[imageNumberIndex];
+
+                if (imageReference.Contains("-error-", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Skipping missing image {imageReference}");
+                    continue;
+                }
+                
                 imageNumber = imageNumberIndex + 1;
                 
                 var breakImageLoop = false;

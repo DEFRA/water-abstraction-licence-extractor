@@ -3,6 +3,7 @@ using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -41,7 +42,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (pdfDocument.FromCache)
         {
-            pdfDocument.Pages = GetPages(metadata!.PagesMetadata!, fileId, outputService);
+            pdfDocument.Pages = GetPages(
+                metadata!.PagesMetadata!,
+                fileId,
+                outputService,
+                configuration.SkipFileWhenMoreThenPages);
+            
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
         
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
@@ -78,9 +84,20 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private List<PdfPage> GetPages(
         Dictionary<string, object> pagesTextMetadata,
         Guid fileId,
-        IOutputService outputService)
+        IOutputService outputService,
+        int skipFileWhenMoreThenPages)
     {
-        var pageArray = ((JsonElement)pagesTextMetadata["pages"]).EnumerateArray().ToList();
+        var pageArray = ((JsonElement)pagesTextMetadata["pages"])
+            .EnumerateArray()
+            .ToList();
+
+        if (pageArray.Count > skipFileWhenMoreThenPages)
+        {
+            throw new TooManyPagesException(
+                "Too many pages in this file - it is being skipped",
+                pageArray.Count);
+        }
+        
         var pagesList = new List<PdfPage>();
             
         for (var pageNumber = 1; pageNumber <= pageArray.Count; pageNumber++)
@@ -412,35 +429,24 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .ToList()
         };
         
-        var imageNumber = 1;
-        var imageSaveTasks = new List<Task<string?>>();
-
-        foreach (var image in await pageImageService.GetImagesAsync())
-        {
-            imageSaveTasks.Add(image.SaveImageBytesAsync(
+        var imageSaveTasks = (await pageImageService.GetImagesAsync())
+            .Select((image, idx) => image.SaveImageBytesAsync(
                 pdfDocument.FileId,
-                imageNumber++,
+                idx + 1,
                 page.Number,
                 cacheService,
-                processRunId));
-        }
-        
-        imageNumber = 1;
+                processRunId))
+            .ToList();
         
         foreach (var imageSaveTask in imageSaveTasks)
         {
-            var extension = await imageSaveTask;
-        
-            if (extension == null)
-            {
-                continue;
-            }
-                
+            var (fileExtension, imageNumber) = await imageSaveTask;
+
             var imageReference = await cacheService.GetImageReferenceAsync(
                 page.Number,
-                imageNumber++,
+                imageNumber,
                 pdfDocument.FileId,
-                extension,
+                fileExtension,
                 Name);
                 
             metadataPage.Images.Add(imageReference);

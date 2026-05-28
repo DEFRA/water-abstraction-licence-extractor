@@ -4,7 +4,7 @@ using WALE.ProcessFile.RuleEngine.Models;
 
 namespace WALE.ProcessFile.RuleEngine.Rules;
 
-public class EAScannedWithoutSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
+public class EaScannedWithoutSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
     public string RuleName => "EA-Scanned";
     public string? Region { get; set; }

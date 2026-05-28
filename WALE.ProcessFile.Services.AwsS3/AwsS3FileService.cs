@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.AwsS3;
 
@@ -42,6 +43,48 @@ public class AwsS3FileService(
 
         return returnList
             .OrderBy(filename => filename)
+            .ToList();
+    }
+
+    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    {
+        var client = GetS3Client();
+        var response = await client.ListObjectsV2Async(
+            new ListObjectsV2Request
+            {
+                BucketName = FolderPath
+            });
+
+
+        var returnList = response.S3Objects
+            .Select(s3Object => new FileMetadata
+            {
+               Filename = s3Object.Key,
+               Filesize = s3Object.Size!.Value,
+               ModifiedTime = s3Object.LastModified ?? DateTime.MinValue
+            })
+            .ToList();
+
+        while (!string.IsNullOrEmpty(response.NextContinuationToken))
+        {
+            response = await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    ContinuationToken = response.NextContinuationToken,
+                    BucketName = FolderPath
+                });
+            
+            returnList.AddRange(response.S3Objects
+                .Select(s3Object => new FileMetadata
+                {
+                    Filename = s3Object.Key,
+                    Filesize = s3Object.Size!.Value,
+                    ModifiedTime = s3Object.LastModified ?? DateTime.MinValue
+                }));
+        }
+
+        return returnList
+            .OrderBy(fm => fm.Filename)
             .ToList();
     }
 
@@ -123,7 +166,7 @@ public class AwsS3FileService(
                 BucketName = FolderPath,
                 Key = filename,
                 UploadId = uploadId,
-                PartETags = parts.Parts.Select(p => new PartETag((int)p.PartNumber, p.ETag)).ToList()
+                PartETags = parts.Parts.Select(p => new PartETag(p.PartNumber!.Value, p.ETag)).ToList()
             });
         }
 
@@ -132,6 +175,42 @@ public class AwsS3FileService(
 
     public string FolderPath { get; set; } = bucketName;
     
+    public Task DeleteAsync(string filename)
+    {
+        var client = GetS3Client();
+        
+        return client.DeleteObjectAsync(new DeleteObjectRequest
+        {
+            BucketName = FolderPath,
+            Key = filename
+        });
+    }
+
+    public async Task<bool> ExistsAsync(string filename)
+    {
+        try
+        {
+            var client = GetS3Client();
+            var file = await client.GetObjectAsync(
+                new GetObjectRequest
+                {
+                    BucketName = FolderPath,
+                    Key = filename
+                });
+
+            return file != null;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+
+            throw;
+        }
+    }
+
     private AmazonS3Client GetS3Client()
     {
         if (_client != null)

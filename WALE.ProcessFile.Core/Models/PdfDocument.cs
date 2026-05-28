@@ -1,6 +1,7 @@
 using SkiaSharp;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -28,6 +29,8 @@ public class PdfDocument
     
     INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
     
+    int SkipFileIfMoreThenPages { get; set; }
+    
     public PdfDocument(
         string pdfFilename,
         Guid fileId,
@@ -45,7 +48,8 @@ public class PdfDocument
         OutputService = outputService;
         NoOcrPdfDocumentService = noOcrPdfDocumentService;
         NoOcrAlternativePdfDocumentService = noOcrAlternativePdfDocumentService;
-        
+        SkipFileIfMoreThenPages = configuration.SkipFileWhenMoreThenPages;
+            
         if (fromCache)
         {
             return;
@@ -62,6 +66,13 @@ public class PdfDocument
         }
 
         InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(FileService, PdfFilename);
+        if (InternalDocument.GetPages().Count > SkipFileIfMoreThenPages)
+        {
+            throw new TooManyPagesException(
+                "Too many pages in this file - it is being skipped",
+                InternalDocument.GetPages().Count);
+        }
+        
         AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
     }
 

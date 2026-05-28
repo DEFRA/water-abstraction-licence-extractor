@@ -118,7 +118,22 @@ public interface ICacheService
         GetNaldLicenceNumbersAsync(short? regionCode);
 
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
+    
+    Task<List<DmsExtract>> GetDmsExtractAsync();
+
+    Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
+
+    Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
+
+    Task SaveImportRunDateAsync(string dataSource);
+
+    Task<string?> GetImportRunDateAsync(string dataSource);
+    
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
+    
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 }

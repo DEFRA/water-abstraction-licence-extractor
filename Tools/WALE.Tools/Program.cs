@@ -3,72 +3,95 @@ using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
-var workflow = "ImportNaldData";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
+string workflow;
+//workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
+//workflow = "ImportNaldData";
+//workflow = "ImportDmsData";
+//workflow = "RemoveRedundantFilesFromS3";
+//workflow = "ClearCacheMultiple";
+workflow = "GenerateLicenceReaderExtract";
 
 const int processRunId = 1707;
-const int regionCode = 3; // Anglia=1, NE=3
-var pdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
+var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
-var username = "xxx";
-var overrideRootPath = $"/Users/{username}/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
+var folderPathUsername = "xxx";
 
 switch (workflow)
 {
-    // 1st half of process tools
-    case "GenerateLicenceReaderExtract": // Scrapes the DOI that will be used in Live Licence Identification
-        await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(pdfFolder, regionCode);
+    case "GenerateLicenceReaderExtract": // FREQUENT - Foreach file in storage, scrape (and feed into the DB);
+        // - DOI (that will be used in Live Licence Identification)
+        // - Licence number
+        // - Which template does it match
+        // - Fetch number of pages
+        return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(localPdfFolder);
+    
+    case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs into the DB
+        return await ImportNaldData.ImportAsync();
+    
+    case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX files into the DB
+        return await ImportDmsData.ImportAsync();
+    
+    case "DuplicateLicenceIdentificationExtractBySize": // INFREQUENT - Identify duplicates by file size
+        return await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
+            duplicateResultsFilePath,
+            localPdfFolder,
+            false);
+    
+    case "GenerateAggregatesCsvForTesting": // INFREQUENT - A file to give to James and team
+        return await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync(processRunId);
+    
+    case "GenerateLinkedLicencesCsv": // NOT ENVISIONED TO BE USED ANY LONGER - Generates a linked licence
+        // file for Mitin and Shaun
+        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
         break;
-    case "DuplicateLicenceIdentificationExtract": // Identify duplicates by name (NOTE We don't run anymore)
+    
+    case "FilesAvailableForLicenceIdentificationExtract": // SUPERSEDED BY API / THIS PRODUCES REPORT
+        // Identify all filenames and metadata (s3/local) that we  have stored (feeds into other process). May
+        // be useful to find deltas of downloaded files
+        
+        await InventoryFileGenerator.GenerateWaterPdfsFolderInventoryAsync(folderPathUsername);
+        break;
+    
+    case "DuplicateLicenceIdentificationExtract": // OBSOLETE - Identify duplicates by name
         await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
             duplicateResultsFilePath,
             KeyConfig.PdfFolderForDuplicates,
             true);
         break;
-    case "DuplicateLicenceIdentificationExtractBySize": // Identify duplicates by file size
-        await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
-            duplicateResultsFilePath,
-            pdfFolder,
-            false);
-        break;
-    case "FileTypeIdentificationExtract": // Version File Type Identification
-        await FileTypeIdentificationExtract.GenerateFileTypeIdentificationAsync();
-        break;
-    case "FilesAvailableForLicenceIdentificationExtract": // Identify local files available for licence
-        // identification (feeds into other process)
-        
-        TemplateIdentificationExtract.GenerateWaterPdfsFolderInventory(username);
-        break;
-    case "TemplateFinderExtract":
-        await TemplateIdentificationExtract.GenerateTemplateFinderResult("NW");
-        break;
-    case "OverrideAddIncrements":
-        await OverrideAddIncrements.GenerateOverrideFileAsync(overrideRootPath);
-        break;    
     
-    // 2nd half tools
-    case "GenerateLinkedLicencesCsv": // Generates a linked licence file for Mitin and Shaun
-        await GenerateLinkedLicencesCsv.GenerateCsvAsync(processRunId);
+    case "RemoveRedundantFilesFromS3": // ONE-OFF - Remove duplicate and files with incorrect names in S3
+        await RemoveRedundantFilesFromS3.RunAsync();
         break;
-    case "GenerateUnknownSectionLinkedLicencesCsv": // A one-off file for debugging
-        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
+    
+    case "ClearCacheMultiple": // ONE-OFF - Clear multiple caches
+        await ClearCacheMultiple.RunAsync();
         break;
-    case "GenerateAggregatesCsvForTesting": // A file to give to James and team
-        await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync(processRunId);
-        break;
-    case "TestsForAiPrompts": // An old POC in AI prompts to read files
-        await TestsForAiPrompts.TestsForAiPromptsAsync();
-        break;
-    case "GenerateEALicenceFeaturesCsv": // Pull licence features out a file (Ryan)
+    
+    case "GenerateEALicenceFeaturesCsv": // ONE-OFF - Pull licence features out a file
         await GenerateEaLicenceFeaturesCsv.GenerateCsvAsync(processRunId);
         break;
-    case "PopulateCachedImageWidthAndHeights": // Populate image widths and heights for cached images (one off)
+    
+    case "PopulateCachedImageWidthAndHeights": // ONE-OFF - Populate image widths and heights for cached images
         await PopulateCachedImageWidthAndHeights.PopulateWidthAndHeightsAsync();
         break;
-    case "UpdateCachedImageWidthAndHeightsFilenames": // Populate image widths and heights for cached images (one off)
+    
+    case "UpdateCachedImageWidthAndHeightsFilenames": // ONE-OFF - Populate image widths and heights for cached images
         await UpdateCachedImageWidthAndHeightsFilenames.PopulateWidthAndHeightsAsync();
         break;
-    case "ImportNaldData": // A (monthly?) import needed to import data from CSVs
-        await ImportNaldData.ImportAsync();
+    
+    case "GenerateUnknownSectionLinkedLicencesCsv": // ONE-OFF - A debugging file
+        await GenerateUnknownSectionLinkedLicencesCsv.GenerateCsvAsync(processRunId);
+        break;
+    
+    case "OverrideAddIncrements": // ONE OFF - Add increment info to override file
+        var overrideRootPath = $"/Users/{folderPathUsername}/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
+        await OverrideAddIncrements.GenerateOverrideFileAsync(overrideRootPath);
+        break;
+    
+    case "TestsForAiPrompts": // POC - An old POC in AI prompts to read files
+        await TestsForAiPrompts.TestsForAiPromptsAsync();
         break;
 }
+
+return 0;

@@ -37,13 +37,148 @@ export function FilesList({}: FilesListProps) {
         items = items.map(function (item: string | undefined) {
             let returnItem = new FilePdf();
             returnItem.filename = item;
+            returnItem.permitNumber = extractPermitNumber(returnItem.filename);
+            returnItem.fileId = extractFileId(returnItem.filename);
 
             return returnItem;
         });
 
         return items;
     };
+    
+    const extractPermitNumber = (fileName : string | undefined) => {
+        if (fileName === null || fileName === undefined || fileName === "")
+        {
+            return "";
+        }
 
+        let underscoreIndex = fileName.indexOf("__");
+
+        return underscoreIndex >= 0
+            ? fileName.substring(0, underscoreIndex).trim() : null;
+    };
+
+    const extractFileId = (fileName : string | undefined) => {
+        if (fileName === null || fileName === undefined || fileName === "")
+        {
+            return null;
+        }
+
+        let filenameParts = fileName.split("__");
+
+        if (filenameParts.length != 2)
+        {
+            return null;
+        }
+
+        let fileIdWithExtension = filenameParts[1].trim();
+        return fileIdWithExtension!.split('.')[0];
+    };
+
+    const uploadFileAsync = async (
+            file : File,
+            idx : number,
+            failed : { filename: string; error: string }[])=> {
+        let success = false;
+        let lastError = '';
+
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000; // 1 second
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+        
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        setUploadProgress(prev => ({...prev, currentChunk: 0, totalChunks: totalChunks > 1 ? totalChunks : 0}));
+
+        if (file.size <= CHUNK_SIZE) {
+            // Simple upload for small files
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    let data = new FormData()
+                    data.append('file', file);
+
+                    const response = await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
+                        method: 'PUT',
+                        body: data
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Upload failed with status ${response.status}`);
+                    }
+
+                    success = true;
+                    break;
+                } catch (err) {
+                    lastError = err instanceof Error ? err.message : 'Unknown error';
+                    if (attempt < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    }
+                }
+            }
+        } else {
+            // Chunked upload for large files
+            success = true; // Assume success and set to false if any chunk fails
+            let currentUploadId: string | null = null;
+
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                const start = chunkIndex * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
+
+                let chunkSuccess = false;
+                for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                    try {
+                        let data = new FormData();
+                        data.append('file', chunk);
+                        data.append('filename', file.name);
+                        data.append('chunkIndex', chunkIndex.toString());
+                        data.append('totalChunks', totalChunks.toString());
+
+                        if (chunkIndex > 0) {
+                            if (currentUploadId) {
+                                data.append('uploadId', currentUploadId);
+                            } else {
+                                throw new Error("Somehow lost track of the upload ID");
+                            }
+                        }
+
+                        const response = await fetch(waleApiBaseUrl + "/BFF/Files/UploadChunk", {
+                            method: 'PUT',
+                            body: data
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Chunk ${chunkIndex + 1} upload failed with status ${response.status}`);
+                        }
+
+                        if (chunkIndex === 0) {
+                            currentUploadId = await response.text();
+                        }
+
+                        chunkSuccess = true;
+                        setUploadProgress(prev => ({...prev, currentChunk: chunkIndex + 1}));
+                        break;
+                    } catch (err) {
+                        lastError = err instanceof Error ? err.message : 'Unknown error';
+                        if (attempt < MAX_RETRIES) {
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                        }
+                    }
+                }
+
+                if (!chunkSuccess) {
+                    success = false;
+                    break;
+                }
+            }
+        }
+
+        if (!success) {
+            failed.push({filename: file.name, error: lastError});
+        }
+
+        setUploadProgress(prev => ({...prev, current: idx + 1, currentChunk: 0, totalChunks: 0}));
+    };
+    
     const dropHandler = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
         event.stopPropagation();
         event.preventDefault();
@@ -55,108 +190,40 @@ export function FilesList({}: FilesListProps) {
         setSuccessMessage(null);
         setFailedUploads([]);
         setUploadProgress({current: 0, total: filesToUpload.length, currentChunk: 0, totalChunks: 0});
-
-        const MAX_RETRIES = 3;
-        const RETRY_DELAY = 1000; // 1 second
-        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+        
         const failed: { filename: string; error: string }[] = [];
 
+        const maxConcurrentScrapers = 5;
+        let uploadTasks : any[] = [];
+        
         for (let idx = 0; idx < filesToUpload.length; idx++) {
-            const file = filesToUpload[idx];
-            let success = false;
-            let lastError = '';
+            let file = filesToUpload[idx];
+            
+            /*let indexOf = files.indexOf(file.name);
 
-            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-            setUploadProgress(prev => ({...prev, currentChunk: 0, totalChunks: totalChunks > 1 ? totalChunks : 0}));
+            if (indexOf !== -1) {
+                continue;
+            }*/
+            
+            uploadTasks.push(uploadFileAsync(file, idx, failed));
 
-            if (file.size <= CHUNK_SIZE) {
-                // Simple upload for small files
-                for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-                    try {
-                        let data = new FormData()
-                        data.append('file', file);
-
-                        const response = await fetch(waleApiBaseUrl + "/BFF/Files/Upload", {
-                            method: 'PUT',
-                            body: data
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`Upload failed with status ${response.status}`);
-                        }
-
-                        success = true;
-                        break;
-                    } catch (err) {
-                        lastError = err instanceof Error ? err.message : 'Unknown error';
-                        if (attempt < MAX_RETRIES) {
-                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-                        }
-                    }
-                }
-            } else {
-                // Chunked upload for large files
-                success = true; // Assume success and set to false if any chunk fails
-                let currentUploadId: string | null = null;
-                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-                    const start = chunkIndex * CHUNK_SIZE;
-                    const end = Math.min(start + CHUNK_SIZE, file.size);
-                    const chunk = file.slice(start, end);
-
-                    let chunkSuccess = false;
-                    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-                        try {
-                            let data = new FormData();
-                            data.append('file', chunk);
-                            data.append('filename', file.name);
-                            data.append('chunkIndex', chunkIndex.toString());
-                            data.append('totalChunks', totalChunks.toString());
-
-                            if (chunkIndex > 0) {
-                                if (currentUploadId) {
-                                    data.append('uploadId', currentUploadId);
-                                } else {
-                                    throw new Error("Somehow lost track of the upload ID");
-                                }
-                            }
-
-                            const response = await fetch(waleApiBaseUrl + "/BFF/Files/UploadChunk", {
-                                method: 'PUT',
-                                body: data
-                            });
-
-                            if (!response.ok) {
-                                throw new Error(`Chunk ${chunkIndex + 1} upload failed with status ${response.status}`);
-                            }
-                            
-                            if (chunkIndex === 0) {
-                                currentUploadId = await response.text();
-                            }
-
-                            chunkSuccess = true;
-                            setUploadProgress(prev => ({...prev, currentChunk: chunkIndex + 1}));
-                            break;
-                        } catch (err) {
-                            lastError = err instanceof Error ? err.message : 'Unknown error';
-                            if (attempt < MAX_RETRIES) {
-                                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-                            }
-                        }
-                    }
-
-                    if (!chunkSuccess) {
-                        success = false;
-                        break;
-                    }
-                }
+            if (uploadTasks.length != maxConcurrentScrapers) {
+                continue;
             }
 
-            if (!success) {
-                failed.push({filename: file.name, error: lastError});
+            while (uploadTasks.length > maxConcurrentScrapers) {
+                for (let idx = 0; idx < uploadTasks.length; idx++) {
+                    let uploadTask = uploadTasks[idx];
+                    await uploadTask;
+                }
             }
+        }
 
-            setUploadProgress(prev => ({...prev, current: idx + 1, currentChunk: 0, totalChunks: 0}));
-            await fetchFiles();
+        if (uploadTasks.length != 0) {
+            for (let idx = 0; idx < uploadTasks.length; idx++) {
+                let uploadTask = uploadTasks[idx];
+                await uploadTask;
+            }
         }
 
         setUploading(false);
@@ -166,6 +233,9 @@ export function FilesList({}: FilesListProps) {
         if (successfulCount > 0) {
             setSuccessMessage(`Uploaded ${successfulCount} ${successfulCount === 1 ? 'file' : 'files'} successfully`);
         }
+
+        setLoading(true);
+        fetchFiles();
     }, []);
 
     const downloadErrorCsv = () => {
@@ -193,8 +263,8 @@ export function FilesList({}: FilesListProps) {
     const downloadCsv = () => {
         if (files.length === 0) return;
 
-        const headers = ["Filename"];
-        const rows = files.map(file => [file.filename]);
+        const headers = ["Filename","PermitNumber","FileId"];
+        const rows = files.map(file => [file.filename, file.permitNumber, file.fileId]);
 
         const csvContent = [
             headers.join(","),
@@ -211,9 +281,7 @@ export function FilesList({}: FilesListProps) {
         link.click();
         document.body.removeChild(link);
     };
-
-    if (loading && files.length > 0) return <div className="container"><p>Loading ({files.length} files)...</p></div>;
-    if (loading) return <div className="container"><p>Loading...</p></div>;
+    
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
     return (
@@ -318,25 +386,34 @@ export function FilesList({}: FilesListProps) {
                 <p>Drop files here</p>
             </div>
 
-            <div style={{marginTop: '20px'}}>
-                <h3>{files.length} {'files'}</h3>
-                {files.length > 0 && (
-                    <button
-                        onClick={downloadCsv}
-                        style={{
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 15px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            marginTop: '10px'
-                        }}
-                    >
-                        Download File List CSV
-                    </button>
-                )}
-            </div>
+            {!loading && (
+                <div style={{marginTop: '20px'}}>
+                    <h3>{files.length} {'files'}</h3>
+                    {files.length > 0 && (
+                        <button
+                            onClick={downloadCsv}
+                            style={{
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                marginTop: '10px'
+                            }}
+                        >
+                            Download File List CSV
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {loading && files.length > 0 && (
+                <div className="container"><p>Loading ({files.length} files)...</p></div>
+            )}
+            {loading && files.length === 0 && (
+                <div className="container"><p>Loading...</p></div>
+            )}
         </>
     );
 }

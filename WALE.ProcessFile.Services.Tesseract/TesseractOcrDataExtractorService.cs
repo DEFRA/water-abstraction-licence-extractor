@@ -67,20 +67,28 @@ public class TesseractOcrDataExtractorService(
 
             if (runTesseractInsideThisProcess)
             {
-                var inprocessTesseractService = new InternalTesseractOcrDataExtractorService(
-                    outputService,
-                    cacheService,
-                    tessDataPath,
-                    pageSegMode);
+                try
+                {
+                    var inprocessTesseractService = new InternalTesseractOcrDataExtractorService(
+                        outputService,
+                        cacheService,
+                        tessDataPath,
+                        pageSegMode);
 
-                returnLines = await inprocessTesseractService.ProcessAsync(
-                    GeneralConstants.PdfPigDataExtractorServiceName,
-                    pageNumber,
-                    imageNumber,
-                    isPageScreenshot,
-                    imageReference,
-                    pdfDocument.FileId,
-                    processRunId);
+                    returnLines = await inprocessTesseractService.ProcessAsync(
+                        GeneralConstants.PdfPigDataExtractorServiceName,
+                        pageNumber,
+                        imageNumber,
+                        isPageScreenshot,
+                        imageReference,
+                        pdfDocument.FileId,
+                        processRunId);
+                }
+                catch (Exception ex)
+                {
+                    ConsoleHelper.WriteLine($"ERROR - {Name} - Error occurred processing {imageReference} - {ex}");
+                    canSave = false;
+                } 
             }
             else
             {

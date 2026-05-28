@@ -9,7 +9,7 @@ public static class TemplateFinderRuleConfiguration
     {
         return
         [
-            ("EALabel", GetEALabels()),
+            ("EALabel", GetEaLabels()),
             ("NESplitLabels", GetSplitLabels()),
             ("AnglianSplitLabels", GetAnglianSplitLabels()),
             ("NWSplitLabels", GetNWSplitLabels()),
@@ -20,10 +20,10 @@ public static class TemplateFinderRuleConfiguration
             ("NWNRAModern1", GetNRANWModern1Labels()),
             ("AnglianNRAModern2", GetNRAAnglianModern2Labels()),
             ("NRAOld", GetNRAOldLabels()),
-            ("NWNRAOld", GetNRANWOldLabels()),
+            ("NWNRAOld", GetNRANWOldLabels())
         ];
     }
-    private static List<LabelToMatch> GetEALabels()
+    private static List<LabelToMatch> GetEaLabels()
     {
         return
         [

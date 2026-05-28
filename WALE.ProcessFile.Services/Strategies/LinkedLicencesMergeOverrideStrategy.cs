@@ -13,28 +13,61 @@ public class LinkedLicencesMergeOverrideStrategy : IMergeOverrideStrategy
 
     public void Merge(LicenceSectionVerification verification, OutputListDataItem listRow)
     {
-        if (verification.VerificationType == "Reject")
-        {
-            return;
-        }
-
-        if (verification is { ScrapedDataIsDifferent: false, VerificationType: "Accept" })
-        {
-            return;
-        }
-
         try
         {
-            var overrideLicences = JsonSerializer.Deserialize<LinkedLicence[]>(
-                verification.LicenceSectionOverrideValue
-                ?? verification.LicenceSectionScrapedValue!, JsonHelper.GetSerializerOptions()) ?? [];
+            var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
+                verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                JsonHelper.GetSerializerOptions());
 
             var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
                 .Where(x => x.ContainedIn != null &&
                             x.ContainedIn.All(c => c.Direction != LinkedLicenceDirection.Outgoing))
                 .ToArray();
 
-            listRow.linkedLicences = overrideLicences.Union(incomingOnlyLinkedLicences).ToArray();
+            var outgoingLinkedLicences = (listRow.linkedLicences ?? [])
+                .Where(x => x.ContainedIn != null &&
+                            x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing))
+                .ToArray();
+
+            var existingLinkedLicence =
+                outgoingLinkedLicences.FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId);
+
+            var result = incomingOnlyLinkedLicences.Union(outgoingLinkedLicences).ToList();
+
+            switch (verification.VerificationType)
+            {
+                case "Confirmed":
+                case "AutoPass":
+                    if (existingLinkedLicence == null)
+                    {
+                        result.Add(overrideLicence!);
+                    }
+                    else if (verification.ScrapedDataIsDifferent)
+                    {
+                        result.Remove(existingLinkedLicence);
+                        result.Add(overrideLicence!);
+                    }
+
+                    break;
+                case "Removed":
+                    if (existingLinkedLicence != null)
+                    {
+                        result.Remove(existingLinkedLicence);
+                    }
+
+                    break;
+                case "Edited":
+                case "Added":
+                    if (existingLinkedLicence != null)
+                    {
+                        result.Remove(existingLinkedLicence);
+                    }
+
+                    result.Add(overrideLicence!);
+                    break;
+            }
+
+            listRow.linkedLicences = result.ToArray();
         }
         catch
         {

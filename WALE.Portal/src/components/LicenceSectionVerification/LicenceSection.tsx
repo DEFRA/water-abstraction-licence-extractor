@@ -10,21 +10,23 @@ export interface ILicenceSectionBody {
     /**
      * Returns the current data of the section as JSON.
      */
-    getData: () => any;
+    getData: (itemId?: string) => any;
 
     /**
      * Returns the original scraped data of the section as JSON.
      */
-    getScrapedData: () => any;
+    getScrapedData: (itemId?: string) => any;
 }
 
 export interface LicenceSectionBodyProps {
-    isEditing: boolean;
     onDataChanged?: (data: any) => void;
+    onItemVerificationRequested?: (itemId: string, type: 'Confirm' | 'Remove' | 'Edit' | 'Added') => void;
+    onVerificationCancelled?: () => void;
 }
 
 interface LicenceSectionProps {
     title: string;
+    itemType?: string;
     children: ReactElement<LicenceSectionBodyProps>;
     initialOpen?: boolean;
     licenceFileId: string;
@@ -33,18 +35,19 @@ interface LicenceSectionProps {
     onVerified?: () => void;
 }
 
-export function LicenceSection({ title, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified }: LicenceSectionProps) {
+export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
-    const [isEditing, setIsEditing] = useState(false);
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
     const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
     const [pendingVerificationType, setPendingVerificationType] = useState<string | null>(null);
+    const [pendingVerificationItemId, setPendingVerificationItemId] = useState<string | undefined>(undefined);
     const [verificationNotes, setVerificationNotes] = useState('');
 
-    const handleVerification = async (verificationType: string) => {
+    const handleVerification = async (verificationType: string, itemId?: string) => {
         setPendingVerificationType(verificationType);
+        setPendingVerificationItemId(itemId);
         setVerificationNotes('');
         setShowVerificationPrompt(true);
     };
@@ -53,22 +56,44 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
         if (!pendingVerificationType) return;
         
         if (bodyRef.current) {
-            const data = bodyRef.current.getData();
-            const scrapedData = bodyRef.current.getScrapedData();
-            console.log(`Creating ${pendingVerificationType} Verification for`, title, 'Data:', JSON.stringify(data, null, 2));
+            const data = bodyRef.current.getData(pendingVerificationItemId);
+            const scrapedData = bodyRef.current.getScrapedData(pendingVerificationItemId);
+            
+            // Map the pending verification type to the required verificationType string
+            let verificationType = '';
+            switch (pendingVerificationType) {
+                case 'Confirm':
+                    verificationType = 'Confirmed';
+                    break;
+                case 'Remove':
+                    verificationType = 'Removed';
+                    break;
+                case 'Edit':
+                    verificationType = 'Edited';
+                    break;
+                case 'Added':
+                    verificationType = 'Added';
+                    break;
+                default:
+                    verificationType = pendingVerificationType;
+            }
+
+            console.log(`Creating ${verificationType} Verification for`, title, 'Item:', pendingVerificationItemId, 'Data:', JSON.stringify(data, null, 2));
             
             try {
                 const verification = new LicenceSectionVerification({
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionScrapedValue: JSON.stringify(scrapedData),
-                    licenceSectionOverrideValue: pendingVerificationType === 'Override' ? JSON.stringify(data) : undefined,
-                    verificationType: pendingVerificationType,
+                    licenceSectionScrapedValue: verificationType === 'Added' ? undefined : JSON.stringify(scrapedData),
+                    licenceSectionOverrideValue: (verificationType === 'Edited' || verificationType === 'Added') ? JSON.stringify(data) : undefined,
+                    verificationType: verificationType,
+                    licenceSectionItemId: pendingVerificationItemId,
                     notes: verificationNotes
                 });
 
                 await waleApiClient.createLicenceSectionVerification(verification);
+                setResetKey(prev => prev + 1);
                 if (onRefresh) {
                     onRefresh();
                 }
@@ -81,23 +106,7 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
         }
         setShowVerificationPrompt(false);
         setPendingVerificationType(null);
-    };
-
-    const handleSaveEdit = async () => {
-        setPendingVerificationType('Override');
-        setVerificationNotes('');
-        setShowVerificationPrompt(true);
-        setIsEditing(false);
-    };
-
-    const handleDiscardEdit = async () => {
-        setIsEditing(false);
-        setResetKey(prev => prev + 1);
-    };
-
-    const handleBeginEdit = async () => {
-        setIsOpen(true);
-        setIsEditing(true);
+        setPendingVerificationItemId(undefined);
     };
 
     return (
@@ -116,28 +125,20 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
             >
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
                 <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    {(isOpen && isEditing &&
-                        <>
-                        <button onClick={handleSaveEdit} style={{ marginRight: '5px' }}>Save</button>
-                        <button onClick={handleDiscardEdit} style={{ marginRight: '5px' }}>Discard</button>
-                        </>
-                    )}
-                    {isOpen && !isEditing && (
-                        <>
-                            <button onClick={handleBeginEdit} style={{ marginRight: '5px' }}>Override</button>
-                            <button onClick={() => handleVerification('Accept')} style={{ marginRight: '5px' }}>Accept</button>
-                            <button onClick={() => handleVerification('Reject')}>Reject</button>
-                        </>
-                    )}
                     <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>
             </div>
             {isOpen && (
                 <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
                     {cloneElement(children, { 
-                        isEditing, 
                         ref: bodyRef,
-                        key: resetKey
+                        key: resetKey,
+                        onItemVerificationRequested: (itemId: string, type: 'Confirm' | 'Remove' | 'Edit' | 'Added') => handleVerification(type, itemId),
+                        onVerificationCancelled: () => {
+                            setPendingVerificationType(null);
+                            setPendingVerificationItemId(undefined);
+                            setShowVerificationPrompt(false);
+                        }
                     } as any)}
                 </div>
             )}
@@ -163,7 +164,10 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
                     }}>
                         <h4 style={{ marginTop: 0 }}>Verification Confirmation</h4>
-                        <p>Are you sure you want to {pendingVerificationType?.toLowerCase()} the {title} for this licence?</p>
+                        <p>
+                            Are you sure you want to {pendingVerificationType === 'Edit' ? 'save changes for' : pendingVerificationType === 'Added' ? 'add' : pendingVerificationType?.toLowerCase()} 
+                            {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
+                        </p>
                         <div style={{ marginBottom: '15px' }}>
                             <label htmlFor="verificationNotes" style={{ display: 'block', marginBottom: '5px' }}>Notes:</label>
                             <textarea
@@ -175,7 +179,13 @@ export function LicenceSection({ title, children, initialOpen = false, licenceFi
                             />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => { setShowVerificationPrompt(false); setPendingVerificationType(null); }}>No</button>
+                            <button onClick={() => { 
+                                setShowVerificationPrompt(false); 
+                                setPendingVerificationType(null); 
+                                if (bodyRef.current && (bodyRef.current as any).onVerificationCancelled) {
+                                    (bodyRef.current as any).onVerificationCancelled();
+                                }
+                            }}>No</button>
                             <button onClick={confirmVerification} style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer' }}>Yes</button>
                         </div>
                     </div>

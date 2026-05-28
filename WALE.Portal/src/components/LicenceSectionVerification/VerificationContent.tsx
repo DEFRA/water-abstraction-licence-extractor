@@ -74,6 +74,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                 <div key={verifyResetKey}>
                     <LicenceSection 
                         title="Linked Licences" 
+                        itemType="linked licence"
                         licenceFileId={licence.dmsFileId!} 
                         processRunId={processRunId}
                         onRefresh={onRefresh}
@@ -81,7 +82,6 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <LinkedLicences 
                             licence={licence} 
-                            isEditing={false} // This will be overridden by LicenceSection's React.cloneElement
                             onJumpToPage={onJumpToPage}
                         />
                     </LicenceSection>

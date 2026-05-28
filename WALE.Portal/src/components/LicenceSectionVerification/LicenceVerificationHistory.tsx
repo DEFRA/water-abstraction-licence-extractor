@@ -1,6 +1,6 @@
-import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
-import { LicenceSectionVerificationHistory } from "./LicenceSectionVerificationHistory.tsx";
-import { LinkedLicences } from "./LinkedLicences.tsx";
+import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
+import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
+import {LinkedLicenceItem} from "./LinkedLicenceItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -10,10 +10,10 @@ interface LicenceVerificationHistoryProps {
 }
 
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
-    "Linked Licences": LinkedLicences
+    "Linked Licences": LinkedLicenceItem
 };
 
-export function LicenceVerificationHistory({ verifications, isLoading, onJumpToPage }: LicenceVerificationHistoryProps) {
+export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage}: LicenceVerificationHistoryProps) {
     if (isLoading) {
         return <div>Loading history...</div>;
     }
@@ -36,25 +36,44 @@ export function LicenceVerificationHistory({ verifications, isLoading, onJumpToP
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
         const Component = SECTION_COMPONENTS[sectionName];
-        const value = verification.licenceSectionOverrideValue || verification.licenceSectionScrapedValue;
 
-        if (Component && value) {
-            try {
-                const initialData = JSON.parse(value);
-                return <Component initialData={initialData} isEditing={false} onJumpToPage={onJumpToPage} />;
-            } catch (e) {
-                console.error("Error parsing verification value", e);
+        const renderValue = (value: string | undefined, label?: string) => {
+            if (!value) return null;
+
+            let content;
+            if (Component) {
+                try {
+                    const data = JSON.parse(value);
+                    content = <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage}/>;
+                } catch (e) {
+                    console.error("Error parsing verification value", e);
+                    content = <div>{value}</div>;
+                }
+            } else {
+                content = <div>{value}</div>;
             }
-        }
 
-        return <div>{value || 'N/A'}</div>;
+            return (
+                <div key={label} style={label ? {marginBottom: '10px'} : undefined}>
+                    {label && <div style={{fontWeight: 'bold', marginBottom: '5px'}}>{label}:</div>}
+                    {content}
+                </div>
+            );
+        };
+        
+        return (
+            <div>
+                {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
+                {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
+            </div>
+        );
     };
 
     return (
         <div>
             {sortedVerifications.map((verification, index) => (
-                <LicenceSectionVerificationHistory 
-                    key={verification.licenceSectionVerificationId || index} 
+                <LicenceSectionVerificationHistory
+                    key={verification.licenceSectionVerificationId || index}
                     verification={verification}
                 >
                     {renderVerificationContent(verification)}

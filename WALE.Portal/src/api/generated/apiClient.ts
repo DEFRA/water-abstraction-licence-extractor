@@ -382,6 +382,44 @@ export class Client {
     }
 
     /**
+     * @param filename (optional) 
+     * @return OK
+     */
+    get(filename: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Files/Get?";
+        if (filename === null)
+            throw new globalThis.Error("The parameter 'filename' cannot be null.");
+        else if (filename !== undefined)
+            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet(_response);
+        });
+    }
+
+    protected processGet(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
@@ -896,7 +934,7 @@ export class Client {
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    get(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    get2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Metadata/Get?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -915,11 +953,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet(_response);
+            return this.processGet2(_response);
         });
     }
 
-    protected processGet(response: Response): Promise<void> {
+    protected processGet2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1938,6 +1976,50 @@ export class Client {
     }
 
     protected processUpload(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    uploadChunk(body: Body): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/Files/UploadChunk";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = Object.keys(body as any).map((key) => {
+            return encodeURIComponent(key) + '=' + encodeURIComponent((body as any)[key]);
+        }).join('&')
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUploadChunk(_response);
+        });
+    }
+
+    protected processUploadChunk(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -4002,6 +4084,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
@@ -4030,6 +4113,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
             this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
+            this.licenceSectionItemId = _data["licenceSectionItemId"];
             this.notes = _data["notes"];
             this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
@@ -4056,6 +4140,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
         data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
+        data["licenceSectionItemId"] = this.licenceSectionItemId;
         data["notes"] = this.notes;
         data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
@@ -4071,6 +4156,7 @@ export interface ILicenceSectionVerification {
     licenceSectionScrapedValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
+    licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
@@ -6979,6 +7065,107 @@ export interface IValueWithConfidenceOfstring {
     value?: string | undefined;
     ocrConfidence?: number | undefined;
     confidence?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class Anonymous implements IAnonymous {
+    filename?: string;
+
+    [key: string]: any;
+
+    constructor(data?: IAnonymous) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.filename = _data["filename"];
+        }
+    }
+
+    static fromJS(data: any): Anonymous {
+        data = typeof data === 'object' ? data : {};
+        let result = new Anonymous();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["filename"] = this.filename;
+        return data;
+    }
+}
+
+export interface IAnonymous {
+    filename?: string;
+
+    [key: string]: any;
+}
+
+export class Body extends Anonymous implements IBody {
+    chunkIndex?: number;
+    totalChunks?: number;
+    uploadId?: string;
+
+    [key: string]: any;
+
+    constructor(data?: IBody) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.chunkIndex = _data["chunkIndex"];
+            this.totalChunks = _data["totalChunks"];
+            this.uploadId = _data["uploadId"];
+        }
+    }
+
+    static override fromJS(data: any): Body {
+        data = typeof data === 'object' ? data : {};
+        let result = new Body();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["chunkIndex"] = this.chunkIndex;
+        data["totalChunks"] = this.totalChunks;
+        data["uploadId"] = this.uploadId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IBody extends IAnonymous {
+    chunkIndex?: number;
+    totalChunks?: number;
+    uploadId?: string;
 
     [key: string]: any;
 }

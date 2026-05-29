@@ -619,7 +619,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             naldData,
             pdfDataExtractor,
             processRun.ProcessRunId,
-            lookupConfig);
+            lookupConfig,
+            dmsDataForFile);
 
         return licenceSets;
     }
@@ -663,7 +664,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
         //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
         //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-        .Take(10)
+        .Take(100)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
@@ -810,7 +811,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     DmsPath = dmsPath,
                     StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
                     FileId = fileId,
-                    RegionId = -1
+                    RegionId = GeneralConstants.GenericRegionCode
                 };
 
                 filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);

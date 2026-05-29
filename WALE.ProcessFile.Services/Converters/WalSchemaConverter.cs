@@ -61,7 +61,15 @@ public static partial class WalSchemaConverter
                 ocrConfidence,
                 confidence)
             : null;
-        
+
+        if (dmsFileData != null)
+        {
+            licenceNumberWithConfidence ??= new ValueWithConfidence<string>(
+                dmsFileData.NaldLicenceRef,
+                null,
+                100.0);
+        }
+
         var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
         var licenceVersion = GetLicenceVersion(matches, naldDataLine, noneSchemaData, dmsFileIdInfo);
 
@@ -749,22 +757,15 @@ public static partial class WalSchemaConverter
         Dictionary<string, List<NaldData>> naldData,
         IPdfDataExtractorService pdfDataExtractorService,
         int processRunId,
-        LookupConfiguration lookupConfiguration)
+        LookupConfiguration lookupConfiguration,
+        DmsFileData? dmsDataForFile = null)
     {
         var returnList = new List<LicenceSet>();
-
-        var (licenceNumber, _, _, _) = GetLicenceNumber(matchesResult);
-        
-        FormattingHelper.GetDmsFileData(
-            licenceNumber,
-            matchesResult.RegionCode,
-            lookupConfiguration.AllDmsData,
-            out var dmsFileData);
 
         var primaryLicence = await ToLicenceAsync(
             matchesResult,
             naldLicenceStatusData,
-            dmsFileData,
+            dmsDataForFile,
             lookupConfiguration.AllDmsData,
             naldData,
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
@@ -1325,6 +1326,7 @@ public static partial class WalSchemaConverter
                     foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
                     {
                         var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
+
                         var licenceNumberTransformed =
                             FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
 
@@ -3845,6 +3847,15 @@ public static partial class WalSchemaConverter
             }
 
             var licence = licenceSetGroup.First().Licences.First();
+
+            if (licence.LicenceNumber == null)
+            {
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(WalSchemaConverter)} - AddImplicitExplicitAndEncompassingLicenceSets - Licence doesnt have licence number set");
+                
+                continue;
+            }
+            
             var licenceSetsForLicence = GetAllLicenceSetsForLicence(
                 licence.LicenceNumber!.Value!,
                 distinctLicenceSets);

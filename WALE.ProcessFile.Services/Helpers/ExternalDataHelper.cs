@@ -11,7 +11,7 @@ public static class ExternalDataHelper
     {
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
-        
+
         foreach (var line in data.AbstractionLicences!)
         {
             var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, line.FgacRegionCode)!;
@@ -22,12 +22,12 @@ public static class ExternalDataHelper
                 internalLicenceIdsNotInDataset.Add(key);
                 continue;
             }
-            
+
             if (returnList.TryGetValue(key, out _))
             {
                 throw new Exception("Repeat row");
             }
-            
+
             var naldData = new NaldData
             {
                 Id = line.Id,
@@ -40,7 +40,7 @@ public static class ExternalDataHelper
                 FgacRegionCode = line.FgacRegionCode,
                 ArepEiucCode = line.ArepEiucCode
             };
-            
+
             returnList.Add(key, naldData);
         }
 
@@ -68,7 +68,7 @@ public static class ExternalDataHelper
 
         foreach (var (_, naldData) in returnList)
         {
-            var key = naldData.LicenceIdCharsAndDigitsOnly!;
+            var key = naldData.FgacRegionCode + "|" + naldData.LicenceIdCharsAndDigitsOnly;
 
             if (changedKeyList.TryGetValue(key, out var value))
             {
@@ -121,17 +121,14 @@ public static class ExternalDataHelper
         foreach (var quantitiesDataLine in naldLicenceQuantitiesDataLines
             .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
-            var key = quantitiesDataLine.AabvAablId.ToString()!;
-            
-            if (!generalNaldData.TryGetValue(key, out var naldData))
+            if (!generalNaldData.TryGetValue(quantitiesDataLine.LookupKey, out var naldData))
             {
-                throw new KeyNotFoundException(key);
+                throw new KeyNotFoundException(quantitiesDataLine.LookupKey);
             }
 
             // Ignore non-current quantity data
             if (naldData.IncrNo != quantitiesDataLine.AabvIncrNo
-                || naldData.IssueNo != quantitiesDataLine.AabvIssueNo
-                || naldData.FgacRegionCode != quantitiesDataLine.FgacRegionCode)
+                || naldData.IssueNo != quantitiesDataLine.AabvIssueNo)
             {
                 continue;
             }

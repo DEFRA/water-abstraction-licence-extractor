@@ -14,7 +14,7 @@ public static class ExternalDataHelper
         
         foreach (var line in data.AbstractionLicences!)
         {
-            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
+            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, line.FgacRegionCode)!;
             var key = line.Id.ToString();
 
             if (!licenceNumbersWithFilenames.ContainsKey(stippedLicenceNumber))

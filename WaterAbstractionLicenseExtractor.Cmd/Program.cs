@@ -808,7 +808,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef)!,
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
                     FileId = fileId,
                     RegionId = -1
                 };

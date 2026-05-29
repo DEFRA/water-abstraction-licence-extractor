@@ -333,7 +333,8 @@ public static partial class WalSchemaConverter
             }
 
             var stripedLinkedLicenceNumber = FormattingHelper.StripForComparison(
-                anywhereInDocumentLinkedLicence.LicenceNumber)!;
+                anywhereInDocumentLinkedLicence.LicenceNumber,
+                regionCode)!;
             
             if (stripedLinkedLicenceNumber.Length < 4)
             {
@@ -418,7 +419,7 @@ public static partial class WalSchemaConverter
             .GroupBy(linkedLicence =>
             {
                 var regionCode = GeneralConstants.GenericRegionCode;
-                return (FormattingHelper.StripForComparison(linkedLicence.LicenceNumber), regionCode);
+                return (FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode), regionCode);
             })
             .Select(linkedLicencesGroup =>
             {
@@ -605,7 +606,8 @@ public static partial class WalSchemaConverter
         }
         
         var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-            licenceNumberInNaldFormat);
+            licenceNumberInNaldFormat,
+            regionCode);
 
         if (strippedLicenceNumbers.Count == 0)
         {
@@ -1393,8 +1395,9 @@ public static partial class WalSchemaConverter
 
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
-            var strippedLlNumbers =
-                FormattingHelper.StripForComparisonMultipleOptions(linkedLicence.LicenceNumber);
+            var strippedLlNumbers = FormattingHelper.StripForComparisonMultipleOptions(
+                linkedLicence.LicenceNumber,
+                linkedLicence.RegionId!.Value);
 
             if (strippedLlNumbers.Count == 0)
             {
@@ -1408,7 +1411,7 @@ public static partial class WalSchemaConverter
                 // Already found it
                 if (returnLicences.Any(returnLicence =>
                     FormattingHelper.StripForComparison(
-                        returnLicence.LicenceNumber?.Value) == strippedLlNumber))
+                        returnLicence.LicenceNumber?.Value, returnLicence.RegionId!.Value) == strippedLlNumber))
                 {
                     continueOuter = true;
                     break;
@@ -3334,7 +3337,8 @@ public static partial class WalSchemaConverter
         int regionCode)
     {
         var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-            licenceNumber);
+            licenceNumber,
+            regionCode);
 
         foreach (var strippedLicenceNumber in strippedLicenceNumbers)
         {

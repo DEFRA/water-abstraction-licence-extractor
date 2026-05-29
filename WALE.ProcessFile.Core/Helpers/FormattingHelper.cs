@@ -18,7 +18,7 @@ public static class FormattingHelper
 
     public static List<string> StripForComparisonMultipleOptions(
         string? formattedLicenceNumber,
-        int regionCode = GeneralConstants.GenericRegionCode)
+        int regionCode)
     {
         var stripped = StripForComparison(formattedLicenceNumber, regionCode);
 
@@ -63,7 +63,7 @@ public static class FormattingHelper
 
     public static string? StripForComparison(
         string? formattedLicenceNumber,
-        int regionCode = GeneralConstants.GenericRegionCode)
+        int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {

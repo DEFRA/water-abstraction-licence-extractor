@@ -67,10 +67,15 @@ public class InternalTesseractOcrDataExtractorService(
                 {
                     continue;
                 }
-                        
+
                 maxNumberOfWords = numberOfWords;
                 textLines = returnList;
 
+                canSave = true;
+            }
+            catch (TimeoutException tex)
+            {
+                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - Timeout {tex}");
                 canSave = true;
             }
             catch (Exception e)

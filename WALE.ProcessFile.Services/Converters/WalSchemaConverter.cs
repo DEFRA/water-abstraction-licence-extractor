@@ -1342,7 +1342,7 @@ public static partial class WalSchemaConverter
 
                         var clonedConfig = lookupConfiguration.Clone();
                         clonedConfig.AllDmsData = lookupConfiguration.AllDmsData;
-                        clonedConfig.RegionCode = matchesResult.RegionCode;
+                        clonedConfig.RegionId = matchesResult.RegionCode;
                         
                         FormattingHelper.GetDmsFileData(
                             licenceNumber,
@@ -1452,7 +1452,7 @@ public static partial class WalSchemaConverter
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.RegionCode = matchesResult.RegionCode;
+            clonedConfig.RegionId = matchesResult.RegionCode;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName,
@@ -1478,7 +1478,7 @@ public static partial class WalSchemaConverter
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(
                     linkedLicence.LicenceNumber!.Value!,
-                    lookupConfiguration.RegionCode) != false)
+                    lookupConfiguration.RegionId) != false)
             .ToList();
         
         return returnLicences;

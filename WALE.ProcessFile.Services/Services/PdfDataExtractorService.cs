@@ -119,7 +119,7 @@ public class PdfDataExtractorService(
             Filename = pdfFileName,
             NumberOfPages = pdfDocument.Pages.Count,
             Pages = pdfDocument.Pages,
-            RegionCode = configuration.RegionCode,
+            RegionCode = configuration.RegionId,
             ServicesUsed = [
                 noOcrDataExtractorService.Name,
                 GeneralConstants.DocnetExtractorServiceName
@@ -135,7 +135,7 @@ public class PdfDataExtractorService(
             noOcrDataExtractorService.Name,
             configuration.AllDmsData,
             previouslyParsedPaths,
-            configuration.RegionCode,
+            configuration.RegionId,
             processRunId,
             configuration,
             additionalInformationStore);
@@ -378,7 +378,7 @@ public class PdfDataExtractorService(
                         ocrService.Name,
                         configuration.AllDmsData,
                         previouslyParsedPaths,
-                        configuration.RegionCode,
+                        configuration.RegionId,
                         processRunId,
                         configuration,
                         additionalInformationStore);
@@ -1016,7 +1016,7 @@ public class PdfDataExtractorService(
 
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.AllDmsData = licenceNumberMapping;
-            clonedConfig.RegionCode = regionCode;
+            clonedConfig.RegionId = regionCode;
             
             FormattingHelper.GetDmsFileData(
                 relatedLicenceNumber,

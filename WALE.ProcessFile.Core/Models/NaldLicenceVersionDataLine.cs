@@ -2,7 +2,7 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class NaldLicenceVersionDataLine
 {
-    public string LookupKey => $"{FgacRegionCode}|{AablId}";
+    public string LookupKey => AablId.ToString()!;
     public int? AablId { get; set; }
     public short IssueNo { get; set; }
     public short IncrNo { get; set; }

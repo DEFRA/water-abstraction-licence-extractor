@@ -381,7 +381,7 @@ public static class GenerateLicenceReaderExtract
                 Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - No nald data found for {lowercasePermitNumber}");
             }
             
-            configuration.RegionCode = naldData?.FgacRegionCode ?? -1;
+            configuration.RegionId = naldData?.FgacRegionCode ?? -1;
             
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
                 $" (File {filenameIdx++} of {filesToProcessRaw.Count})");

@@ -85,7 +85,6 @@ async Task ProgramAsync()
     LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
-    
     var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
@@ -573,9 +572,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         };
 
         lookupConfig = lookupConfig.Clone();
-        lookupConfig.RegionCode = naldData.TryGetValue(dmsDataForFile.StrippedLicenceNumber!, out var value)
-            ? value.First().FgacRegionCode
-            : throw new KeyNotFoundException("Licence number not found in nald data");
+        lookupConfig.RegionId = dmsDataForFile.RegionId;
         
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
@@ -695,8 +692,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
         {
             continue;
         }
-
-        var regionName = licenceFinderResult.Region;
         
         var dmsFileData = new DmsFileData
         {
@@ -705,7 +700,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
             PermitNumber = licenceFinderResult.PermitNumber,
             DmsPath = licenceFinderResult.FileUrl,
             StrippedLicenceNumber = FormattingHelper.StripForComparison(licenceFinderResult.LicenseNumber)!,
-            FileId = Guid.Parse(licenceFinderResult.FileId!)
+            FileId = Guid.Parse(licenceFinderResult.FileId!),
+            RegionId = RegionHelper.GetRegionId(licenceFinderResult.Region)
         };
 
         filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
@@ -809,7 +805,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
                     StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef)!,
-                    FileId = fileId
+                    FileId = fileId,
+                    RegionId = -1
                 };
 
                 filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);

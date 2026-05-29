@@ -90,7 +90,18 @@ async Task ProgramAsync()
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
     
+    const int unsetRegionCode = -2;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+    
+    var lookupConfig = new LookupConfiguration(
+        WalLabelConfiguration.GetLabels(),
+        allDmsData,
+        dmsFileIdInformationDict,
+        firstNamesCsv,
+        services.FileService,
+        services.CacheService!,
+        unsetRegionCode,
+        naldLinkedLicenceHelper: naldLinkedLicenceHelper);
     
     try
     {
@@ -99,17 +110,6 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
-        const int unsetRegionCode = -2;
-        
-        var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
-            allDmsData,
-            dmsFileIdInformationDict,
-            firstNamesCsv,
-            services.FileService,
-            services.CacheService!,
-            unsetRegionCode,
-            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {

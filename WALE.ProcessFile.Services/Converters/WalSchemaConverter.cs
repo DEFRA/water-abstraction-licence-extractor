@@ -402,7 +402,8 @@ public static partial class WalSchemaConverter
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
             NaldStatus = naldStatus,
-            LicenceType = licenceType
+            LicenceType = licenceType,
+            RegionId = dmsFileData?.RegionId
         };
     }
 
@@ -695,15 +696,20 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
-        int regionCode)
+        int? regionId)
     {
         var permitOrLicenceNumber = linkedLicencePermitNumber;
         if (string.IsNullOrWhiteSpace(permitOrLicenceNumber))
         {
             permitOrLicenceNumber = linkedLicenceNumber;
         }
+
+        if (regionId == null)
+        {
+            throw new Exception("regionId is null");
+        }
         
-        var naldDataLine = GetNaldDataLine(naldData, permitOrLicenceNumber, regionCode);
+        var naldDataLine = GetNaldDataLine(naldData, permitOrLicenceNumber, regionId.Value);
         
         FormattingHelper.GetDmsFileData(
             linkedLicenceNumber,
@@ -715,7 +721,7 @@ public static partial class WalSchemaConverter
             permitOrLicenceNumber,
             naldLicenceStatusData,
             naldDataLine,
-            regionCode);
+            regionId.Value);
 
         return new LinkedLicence
         {
@@ -1048,7 +1054,8 @@ public static partial class WalSchemaConverter
                             newSections,
                             naldLicenceStatusData,
                             naldData,
-                            licenceNumbersMapping);
+                            licenceNumbersMapping,
+                            licence.RegionId);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {

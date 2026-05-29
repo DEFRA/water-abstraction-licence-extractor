@@ -207,7 +207,7 @@ public class DatabaseOutputService(
             
             var licenceTransformed = FormattingHelper.FormatLicenceNumber(
                 missingLicenceId.LicenceNumber,
-                missingLicenceId.RegionId!.Value)!;
+                GeneralConstants.GenericRegionCode)!;
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

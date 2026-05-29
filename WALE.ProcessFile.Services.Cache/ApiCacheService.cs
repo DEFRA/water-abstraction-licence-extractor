@@ -387,9 +387,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             : null;
     }
 
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
-        var path = $"/Extractor/LinkedLicence/GetMap?regionCode={regionCode}";
+        var path = "/Extractor/LinkedLicence/GetMap";
         
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();

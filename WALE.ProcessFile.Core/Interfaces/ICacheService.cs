@@ -103,7 +103,7 @@ public interface ICacheService
         string noOcrServiceName,
         int processRunId);
     
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
     Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions);
     

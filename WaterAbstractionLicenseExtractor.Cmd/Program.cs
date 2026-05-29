@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -48,10 +49,6 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
-    // when we want to handle more than one region)
-    const short regionCode = 3;
-
     var naldDataTask = cacheService.GetNaldDataAsync(null, false);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
@@ -87,14 +84,9 @@ async Task ProgramAsync()
     
     LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
-        cacheService,
-        regionCode);
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
     
-    var naldData = ExternalDataHelper.TransformNaldData(
-        allNaldData,
-        allDmsData,
-        regionCode);
+    var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
@@ -108,7 +100,8 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
-
+        const int unsetRegionCode = -2;
+        
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             allDmsData,
@@ -116,7 +109,7 @@ async Task ProgramAsync()
             firstNamesCsv,
             services.FileService,
             services.CacheService!,
-            regionCode,
+            unsetRegionCode,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
@@ -578,6 +571,11 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
+
+        lookupConfig = lookupConfig.Clone();
+        lookupConfig.RegionCode = naldData.TryGetValue(dmsDataForFile.StrippedLicenceNumber!, out var value)
+            ? value.First().FgacRegionCode
+            : throw new KeyNotFoundException("Licence number not found in nald data");
         
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
@@ -650,9 +648,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     {
         filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
             fileService,
-            dmsReportPath,
-            -1 // TODO
-        );
+            dmsReportPath);
     }
     else
     {
@@ -708,9 +704,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
             NaldLicenceRef = licenceFinderResult.LicenseNumber,
             PermitNumber = licenceFinderResult.PermitNumber,
             DmsPath = licenceFinderResult.FileUrl,
-            StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                licenceFinderResult.LicenseNumber,
-                RegionHelper.GetRegionId(regionName))!,
+            StrippedLicenceNumber = FormattingHelper.StripForComparison(licenceFinderResult.LicenseNumber)!,
             FileId = Guid.Parse(licenceFinderResult.FileId!)
         };
 
@@ -727,8 +721,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
     GetFilesAndMappingFromExcelDownloadInfoFileAsync(
         IFileService fileService,
-        string dmsReportPath,
-        int regionCode)
+        string dmsReportPath)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
@@ -815,7 +808,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!,
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef)!,
                     FileId = fileId
                 };
 

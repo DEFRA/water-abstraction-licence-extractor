@@ -190,12 +190,12 @@ public partial class LicenceNumber : ILicenceNumberService
         return (matchedLines.Count > 0, matchedLines);
     }
 
-    public static List<NaldLicence> GetNaldLicences(string licenceNumber, short regionCode)
+    public static List<NaldLicence> GetNaldLicences(string licenceNumber)
     {
-        return Instance.GetNaldLicences(licenceNumber, regionCode);
+        return Instance.GetNaldLicences(licenceNumber);
     }
 
-    List<NaldLicence> ILicenceNumberService.GetNaldLicences(string licenceNumber, short regionCode)
+    List<NaldLicence> ILicenceNumberService.GetNaldLicences(string licenceNumber)
     {
         var normalized = NormalizeLicenceNumber(licenceNumber);
 
@@ -210,7 +210,6 @@ public partial class LicenceNumber : ILicenceNumberService
         return candidates
             .Where(c => SegmentsMatch(segments, c.Segments))
             .Select(c => c.NaldLicence)
-            .Where(l => l.RegionCode == regionCode)
             .ToList();
     }
 

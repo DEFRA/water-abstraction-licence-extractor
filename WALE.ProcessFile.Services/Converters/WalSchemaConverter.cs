@@ -270,7 +270,6 @@ public static partial class WalSchemaConverter
 
         linkedLicences = ConsolidateLinkedLicences(
             linkedLicences,
-            regionCode,
             licenceNumber!,
             naldLicenceStatusData,
             naldData,
@@ -290,15 +289,14 @@ public static partial class WalSchemaConverter
         {
             var paddedAllDocumentLinkedLicenceNumber =
                 FormattingHelper.FormatLicenceNumber(anywhereInDocumentLinkedLicence.LicenceNumber, regionCode);
-            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
+            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber))
             {
                 continue;
             }
 
             var found = linkedLicences
                 .Any(linkedLicence =>
-                    LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber,
-                        regionCode));
+                    LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber, linkedLicence.LicenceNumber));
 
             if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
             {
@@ -325,14 +323,13 @@ public static partial class WalSchemaConverter
                                 && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
 
                         return LicenceNumberContainsOther(paddedAllDocumentLinkedLicenceNumber,
-                                   paddedLinkedLicenceNumber, regionCode)
+                                   paddedLinkedLicenceNumber)
                                && onlyInLicenceHistory;
                     });
             }
 
             var stripedLinkedLicenceNumber = FormattingHelper.StripForComparison(
-                anywhereInDocumentLinkedLicence.LicenceNumber,
-                regionCode)!;
+                anywhereInDocumentLinkedLicence.LicenceNumber)!;
             
             if (stripedLinkedLicenceNumber.Length < 4)
             {
@@ -341,7 +338,7 @@ public static partial class WalSchemaConverter
 
             if (linkedLicences.Any(linkedLicence2 =>
                 LicenceNumberContainsOther(linkedLicence2.LicenceNumber,
-                    anywhereInDocumentLinkedLicence.LicenceNumber, regionCode)))
+                    anywhereInDocumentLinkedLicence.LicenceNumber)))
             {
                 found = true;
             }
@@ -406,14 +403,17 @@ public static partial class WalSchemaConverter
 
     private static List<LinkedLicence> ConsolidateLinkedLicences(
         List<LinkedLicence> linkedLicences,
-        int regionCode,
         string? licenceNumber,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
         var linkedLicences1 = linkedLicences
-            .GroupBy(linkedLicence => FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionCode))
+            .GroupBy(linkedLicence =>
+            {
+                var regionCode = GeneralConstants.GenericRegionCode;
+                return (FormattingHelper.StripForComparison(linkedLicence.LicenceNumber), regionCode);
+            })
             .Select(linkedLicencesGroup =>
             {
                 var containedIn = new List<LinkedLicenceSection>();
@@ -439,9 +439,9 @@ public static partial class WalSchemaConverter
                         // in documents
                         if (containedIn.Any(fs => 
                             sectionItem.Source != LinkedLicenceSource.Nald
-                                && (fs.LineNumber == sectionItem.LineNumber
-                                    && fs.PageNumber == sectionItem.PageNumber
-                                    && fs.Direction == sectionItem.Direction)))
+                                && fs.LineNumber == sectionItem.LineNumber
+                                && fs.PageNumber == sectionItem.PageNumber
+                                && fs.Direction == sectionItem.Direction))
                         {
                             continue;
                         }
@@ -454,9 +454,11 @@ public static partial class WalSchemaConverter
                     .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.LicenceNumber))?
                     .LicenceNumber;
                 
-                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumberStr, regionCode);
+                var linkedLicenceNumber = FormattingHelper.FormatLicenceNumber(
+                    licenceNumberStr,
+                    linkedLicencesGroup.Key.regionCode);
                 
-                return ToLinkedLicence(
+                return (ToLinkedLicence(
                     linkedLicenceNumber,
                     linkedLicencesGroup
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
@@ -473,12 +475,11 @@ public static partial class WalSchemaConverter
                     containedIn.ToArray(),
                     naldLicenceStatusData,
                     naldData,
-                    licenceNumbersMapping,
-                    regionCode);
+                    licenceNumbersMapping), linkedLicencesGroup.Key.regionCode);
             })
-            .Where(linkedLicence => linkedLicence != null)
-            .Select(linkedLicence => linkedLicence!)
-            .Where(linkedLicence => !LicenceNumberContainsOther(licenceNumber, linkedLicence.LicenceNumber, regionCode))
+            .Where(linkedLicence => !LicenceNumberContainsOther(
+                licenceNumber,
+                linkedLicence.Item1.LicenceNumber))
             .ToList();
 
         var newLinkedLicences = new List<LinkedLicence>();
@@ -486,12 +487,14 @@ public static partial class WalSchemaConverter
         foreach (var linkedLicence in linkedLicences1)
         {
             if (newLinkedLicences.Any(linkedLicence2 =>
-                LicenceNumberContainsOther(linkedLicence2.LicenceNumber, linkedLicence.LicenceNumber, regionCode)))
+                LicenceNumberContainsOther(
+                    linkedLicence2.LicenceNumber,
+                    linkedLicence.Item1.LicenceNumber)))
             {
                 continue;
             }
 
-            newLinkedLicences.Add(linkedLicence);
+            newLinkedLicences.Add(linkedLicence.Item1);
         }
 
         return newLinkedLicences;
@@ -593,8 +596,7 @@ public static partial class WalSchemaConverter
         }
         
         var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-            licenceNumberInNaldFormat,
-            regionCode);
+            licenceNumberInNaldFormat);
 
         if (strippedLicenceNumbers.Count == 0)
         {
@@ -645,10 +647,10 @@ public static partial class WalSchemaConverter
         return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
     }
 
-    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionCode)
+    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2)
     {
         var licenceNumberStripped1 =
-            FormattingHelper.StripForComparison(licenceNumber1, regionCode);
+            FormattingHelper.StripForComparison(licenceNumber1);
 
         if (string.IsNullOrWhiteSpace(licenceNumberStripped1))
         {
@@ -656,7 +658,7 @@ public static partial class WalSchemaConverter
         }
 
         var licenceNumberStripped2 =
-            FormattingHelper.StripForComparison(licenceNumber2, regionCode);
+            FormattingHelper.StripForComparison(licenceNumber2);
 
         if (string.IsNullOrWhiteSpace(licenceNumberStripped2))
         {
@@ -686,14 +688,23 @@ public static partial class WalSchemaConverter
         LinkedLicenceSection[] containedIn,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
-        int regionCode)
+        Dictionary<string, DmsFileData> dmsLicenceNumbersMapping)
     {
         var permitOrLicenceNumber = linkedLicencePermitNumber;
         if (string.IsNullOrWhiteSpace(permitOrLicenceNumber))
         {
             permitOrLicenceNumber = linkedLicenceNumber;
         }
+
+        FormattingHelper.GetDmsFileData(
+            linkedLicenceNumber,
+            GeneralConstants.GenericRegionCode,
+            dmsLicenceNumbersMapping,
+            out var dmsFileData);
+        
+        var regionCode = naldData.TryGetValue(dmsFileData!.StrippedLicenceNumber!, out var value)
+            ? value.First().FgacRegionCode
+            : throw new KeyNotFoundException("Licence number not found in nald data");
         
         var naldDataLine = GetNaldDataLine(naldData, permitOrLicenceNumber, regionCode);
         
@@ -702,12 +713,6 @@ public static partial class WalSchemaConverter
             naldLicenceStatusData,
             naldDataLine,
             regionCode);
-
-        FormattingHelper.GetDmsFileData(
-            linkedLicenceNumber,
-            regionCode,
-            dmsLicenceNumbersMapping,
-            out var dmsFileData);
 
         return new LinkedLicence
         {
@@ -1040,8 +1045,7 @@ public static partial class WalSchemaConverter
                             newSections,
                             naldLicenceStatusData,
                             naldData,
-                            licenceNumbersMapping,
-                            -1); // TODO regionCode);
+                            licenceNumbersMapping);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {
@@ -1092,7 +1096,6 @@ public static partial class WalSchemaConverter
 
                     licence.LinkedLicences = ConsolidateLinkedLicences(
                         licence.LinkedLicences.ToList(),
-                        -1, // TODO regionCode,
                         licence.LicenceNumber?.Value,
                         naldLicenceStatusData,
                         naldData,
@@ -1381,7 +1384,7 @@ public static partial class WalSchemaConverter
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
             var strippedLlNumbers =
-                FormattingHelper.StripForComparisonMultipleOptions(linkedLicence.LicenceNumber, matchesResult.RegionCode);
+                FormattingHelper.StripForComparisonMultipleOptions(linkedLicence.LicenceNumber);
 
             if (strippedLlNumbers.Count == 0)
             {
@@ -1395,8 +1398,7 @@ public static partial class WalSchemaConverter
                 // Already found it
                 if (returnLicences.Any(returnLicence =>
                     FormattingHelper.StripForComparison(
-                        returnLicence.LicenceNumber?.Value,
-                        matchesResult.RegionCode) == strippedLlNumber))
+                        returnLicence.LicenceNumber?.Value) == strippedLlNumber))
                 {
                     continueOuter = true;
                     break;
@@ -3322,8 +3324,7 @@ public static partial class WalSchemaConverter
         int regionCode)
     {
         var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-            licenceNumber,
-            regionCode);
+            licenceNumber);
 
         foreach (var strippedLicenceNumber in strippedLicenceNumbers)
         {

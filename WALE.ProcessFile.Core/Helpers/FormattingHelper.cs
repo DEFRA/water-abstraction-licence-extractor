@@ -16,7 +16,9 @@ public static class FormattingHelper
             .Replace("/", string.Empty);
     }
 
-    public static List<string> StripForComparisonMultipleOptions(string? formattedLicenceNumber, int regionCode)
+    public static List<string> StripForComparisonMultipleOptions(
+        string? formattedLicenceNumber,
+        int regionCode = GeneralConstants.GenericRegionCode)
     {
         var stripped = StripForComparison(formattedLicenceNumber, regionCode);
 
@@ -58,8 +60,10 @@ public static class FormattingHelper
 
         return false;
     }
-    
-    public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
+
+    public static string? StripForComparison(
+        string? formattedLicenceNumber,
+        int regionCode = GeneralConstants.GenericRegionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {

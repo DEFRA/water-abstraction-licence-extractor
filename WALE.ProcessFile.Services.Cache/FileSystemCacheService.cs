@@ -477,7 +477,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             processRunId);
     }
 
-    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
         throw new NotImplementedException();
     }

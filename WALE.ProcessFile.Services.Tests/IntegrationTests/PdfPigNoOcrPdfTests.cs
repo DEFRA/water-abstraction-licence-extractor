@@ -57,15 +57,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         OutputService,
         DocumentService,
         DocnetAlternativeDocumentService);
-
-    private static readonly int NoneNeRegionCode = 1;
-    private static readonly int NeRegionCode = 3;
     
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
         new()
         {
             { 
-                FormattingHelper.StripForComparison("25 68 001 247", NoneNeRegionCode)!,
+                FormattingHelper.StripForComparison("25 68 001 247")!,
                 new DmsFileData
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
@@ -74,7 +71,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 }
             },
             {
-                FormattingHelper.StripForComparison("25 68 001 248", NoneNeRegionCode)!,
+                FormattingHelper.StripForComparison("25 68 001 248")!,
                 new DmsFileData
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
@@ -83,7 +80,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
+                FormattingHelper.StripForComparison("NE/026/0034/018")!,
                 new DmsFileData
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
@@ -92,7 +89,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/052", NeRegionCode)!,
+                FormattingHelper.StripForComparison("NE/026/0034/052")!,
                 new DmsFileData
                 {
                     DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
@@ -106,7 +103,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         new()
         {
             { 
-                FormattingHelper.StripForComparison("25 68 001 247", NeRegionCode)!,
+                FormattingHelper.StripForComparison("25 68 001 247")!,
                 new DmsFileData
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
@@ -115,7 +112,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 }
             },
             {
-                FormattingHelper.StripForComparison("25 68 001 248", NeRegionCode)!,
+                FormattingHelper.StripForComparison("25 68 001 248")!,
                 new DmsFileData
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
@@ -124,7 +121,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 }
             },
             {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
+                FormattingHelper.StripForComparison("NE/026/0034/018")!,
                 new DmsFileData
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",

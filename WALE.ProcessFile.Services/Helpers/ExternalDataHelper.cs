@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 
@@ -7,15 +8,15 @@ public static class ExternalDataHelper
 {
     public static Dictionary<string, List<NaldData>> TransformNaldData(
         NaldDataCollection data,
-        Dictionary<string, DmsFileData> licenceNumbersWithFilenames,
-        int regionCode)
+        Dictionary<string, DmsFileData> licenceNumbersWithFilenames)
     {
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
-
+        
         foreach (var line in data.AbstractionLicences!)
         {
-            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
+            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo)!;
+            
             var key = $"{line.FgacRegionCode}|{line.Id}";
 
             if (!licenceNumbersWithFilenames.ContainsKey(stippedLicenceNumber))

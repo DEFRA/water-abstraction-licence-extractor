@@ -236,13 +236,9 @@ public class DatabaseCacheService(
             processRunId);
     }
 
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
-        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
- 
-        return data
-            .Where(dataLine => dataLine.RegionCode == regionCode)
-            .ToList();
+        return databaseReadService.GetNaldLinkedLicenceRawDataAsync();
     }
 
     public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)

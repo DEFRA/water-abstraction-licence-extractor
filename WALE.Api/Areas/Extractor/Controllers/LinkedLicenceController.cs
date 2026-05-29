@@ -9,11 +9,11 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class LinkedLicenceController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetMapAsync([FromQuery] int regionCode)
+    public async Task<IActionResult> GetMapAsync()
     {
-        var naldLinkedLicenceRawDataForRegion =
-            await cacheService.GetNaldLinkedLicenceRawDataAsync(regionCode);
+        var naldLinkedLicenceRawData =
+            await cacheService.GetNaldLinkedLicenceRawDataAsync();
         
-        return Ok(naldLinkedLicenceRawDataForRegion);
+        return Ok(naldLinkedLicenceRawData);
     }
 }

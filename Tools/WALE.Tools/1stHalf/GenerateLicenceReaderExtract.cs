@@ -113,9 +113,7 @@ public static class GenerateLicenceReaderExtract
 
         foreach (var naldLine in allNaldData.AbstractionLicences!)
         {
-            var comparisonLicenceNumber = FormattingHelper.StripForComparison(
-                naldLine.LicenceNo,
-                naldLine.FgacRegionCode);
+            var comparisonLicenceNumber = FormattingHelper.StripForComparison(naldLine.LicenceNo);
 
             if (!comparableAbstractionLicences.TryAdd(comparisonLicenceNumber!, [naldLine]))
             {

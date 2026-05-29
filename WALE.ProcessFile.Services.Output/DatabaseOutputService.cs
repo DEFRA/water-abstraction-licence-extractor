@@ -207,7 +207,7 @@ public class DatabaseOutputService(
             
             var licenceTransformed = FormattingHelper.FormatLicenceNumber(
                 missingLicenceId.LicenceNumber,
-                GeneralConstants.GenericRegionCode)!;
+                GeneralConstants.GenericRegionCode)!; // Used as not known real region code
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

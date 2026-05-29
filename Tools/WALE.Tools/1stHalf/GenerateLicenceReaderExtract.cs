@@ -104,7 +104,7 @@ public static class GenerateLicenceReaderExtract
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
-        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
+        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         var allNaldData = await cacheService.GetNaldDataAsync(null, false);
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);

@@ -107,7 +107,7 @@ public interface ICacheService
 
     Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions);
     
-    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode);
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
     
     Task<(
             HashSet<(string, int)> Live,

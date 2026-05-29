@@ -52,7 +52,7 @@ async Task ProgramAsync()
     var naldDataTask = cacheService.GetNaldDataAsync(null, false);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
 
     var dtStartGetDms = DateTime.Now;
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
@@ -89,8 +89,8 @@ async Task ProgramAsync()
 
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
-    
-    const int unsetRegionCode = -2;
+
+    const int unsetRegionCode = GeneralConstants.GenericRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(

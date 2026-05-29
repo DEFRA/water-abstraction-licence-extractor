@@ -423,7 +423,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         var path = "/Extractor/NaldData/GetLicenceStatusData";
         

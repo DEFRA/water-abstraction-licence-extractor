@@ -692,6 +692,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
         {
             continue;
         }
+
+        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
         
         var dmsFileData = new DmsFileData
         {
@@ -699,9 +701,11 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
             NaldLicenceRef = licenceFinderResult.LicenseNumber,
             PermitNumber = licenceFinderResult.PermitNumber,
             DmsPath = licenceFinderResult.FileUrl,
-            StrippedLicenceNumber = FormattingHelper.StripForComparison(licenceFinderResult.LicenseNumber)!,
+            StrippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                regionId)!,
             FileId = Guid.Parse(licenceFinderResult.FileId!),
-            RegionId = RegionHelper.GetRegionId(licenceFinderResult.Region)
+            RegionId = regionId
         };
 
         filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);

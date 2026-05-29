@@ -14,5 +14,5 @@ public class DmsFileData
     
     public Guid FileId { get; set; }
     
-    public int RegionId{ get; set; }
+    public int RegionId { get; set; }
 }

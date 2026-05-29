@@ -52,7 +52,7 @@ async Task ProgramAsync()
     // when we want to handle more than one region)
     const short regionCode = 3;
 
-    var naldDataTask = cacheService.GetNaldDataAsync(null);
+    var naldDataTask = cacheService.GetNaldDataAsync(null, false);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);

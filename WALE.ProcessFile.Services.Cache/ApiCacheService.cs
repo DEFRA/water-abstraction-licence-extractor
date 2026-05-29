@@ -400,13 +400,18 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
     {
         var path = "/Extractor/NaldData/GetAll";
 
         if (regionCode != null)
         {
             path += $"?regionCode={regionCode}";
+        }
+        
+        if (allVersions)
+        {
+            path += "?allVersions=true";
         }
 
         var response = await httpClient.GetAsync(path);

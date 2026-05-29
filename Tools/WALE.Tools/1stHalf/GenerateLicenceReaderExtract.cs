@@ -17,6 +17,7 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
+using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
 namespace WALE.Tools._1stHalf;
@@ -104,7 +105,7 @@ public static class GenerateLicenceReaderExtract
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
-        var allNaldData = await cacheService.GetNaldDataAsync(null);
+        var allNaldData = await cacheService.GetNaldDataAsync(null, false);
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -182,7 +183,7 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
         }
         
-        await GetAndSaveLicenceReaderDataAsync(
+        var outputLines = await GetAndSaveLicenceReaderDataAsync(
             pdfDataExtractors,
             fileService,
             cacheService,
@@ -191,6 +192,15 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo,
             includeVersionMatch);
 
+        // Generate CSV report
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            outputLines,
+            "LicenceReader",
+            "Output",
+            line => line.LicenceNumber ?? "No Licence Number scraped",
+            "licence records",
+            "Licence Processing Summary");
+        
         var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
 
@@ -210,7 +220,7 @@ public static class GenerateLicenceReaderExtract
             0);
     }
 
-    private static async Task GetAndSaveLicenceReaderDataAsync(
+    private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
@@ -322,7 +332,7 @@ public static class GenerateLicenceReaderExtract
         if (filesToProcessRaw.Count == 0)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
-            return;
+            return existingResults;
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
@@ -448,6 +458,7 @@ public static class GenerateLicenceReaderExtract
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
+        return allResults;
     }
 
     private static Task SetRunDateAsync(ICacheService cacheService)

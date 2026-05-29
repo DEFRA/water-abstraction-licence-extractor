@@ -11,9 +11,11 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class NaldDataController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllAsync([FromQuery] short? regionCode = null)
+    public async Task<IActionResult> GetAllAsync(
+        [FromQuery] short? regionCode = null,
+        [FromQuery] bool? allVersions = null)
     {
-        var naldData = await cacheService.GetNaldDataAsync(regionCode);
+        var naldData = await cacheService.GetNaldDataAsync(regionCode, allVersions ?? false);
         return Ok(naldData);
     }
 

@@ -424,7 +424,7 @@ public static partial class WalSchemaConverter
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> licenceNumbersMapping)
     {
-        var linkedLicences1 = linkedLicences
+        var tempLinkedLicences = linkedLicences
             .GroupBy(linkedLicence => (
                 FormattingHelper.StripForComparison(
                     linkedLicence.LicenceNumber,
@@ -498,13 +498,13 @@ public static partial class WalSchemaConverter
             })
             .Where(linkedLicence => !LicenceNumberContainsOther(
                 licenceNumber,
-                licenceNumber,
+                linkedLicence.Item1.LicenceNumber,
                 linkedLicence.regionId))
             .ToList();
 
         var newLinkedLicences = new List<LinkedLicence>();
 
-        foreach (var linkedLicence in linkedLicences1)
+        foreach (var linkedLicence in tempLinkedLicences)
         {
             if (newLinkedLicences.Any(linkedLicence2 =>
                 LicenceNumberContainsOther(

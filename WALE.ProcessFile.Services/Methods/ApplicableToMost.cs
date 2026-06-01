@@ -98,6 +98,17 @@ public static class ApplicableToMost
 
             var lineWords = request.line!.Columns
                 .SelectMany(c => c.Words)
+                .Select((w, idx) =>
+                {
+                    w.Text = DataHelper.RemoveExcludes(
+                        matchedLabel,
+                        w.Text,
+                        idx == 0,
+                        false,
+                        out _);
+
+                    return w;
+                })
                 .ToList();
 
             lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);

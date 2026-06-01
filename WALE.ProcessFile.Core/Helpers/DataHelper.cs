@@ -206,28 +206,38 @@ public static partial class DataHelper
 
                 if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var indexOf = returnStr.IndexOf(
-                        textToMatch.Text,
-                        StringComparison.InvariantCultureIgnoreCase);
+                    var anyFound = false;
+                    var loopIdx = 0;
+                    
+                    while (loopIdx++ <= 10)
+                    {
+                        var indexOf = returnStr.IndexOf(
+                            textToMatch.Text,
+                            StringComparison.InvariantCultureIgnoreCase);
 
-                    if (indexOf == -1)
+                        if (indexOf == -1)
+                        {
+                            break;
+                        }
+
+                        var isCharBefore = indexOf >= 1 && !char.IsWhiteSpace(returnStr[indexOf - 1]);
+                        var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
+                            && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
+
+                        // TODO - I think this behaviour is wrong, it works for commas but not for stuff like ... - config needs expanding
+                        if (isCharBefore && isCharAfter)
+                        {
+                            break;
+                        }
+
+                        returnStr = ReplaceFirst(returnStr, textToMatch.Text, string.Empty);
+                        anyFound = true;
+                    }
+
+                    if (!anyFound)
                     {
                         continue;
                     }
-                    
-                    var isCharBefore = indexOf >= 1 && !char.IsWhiteSpace(returnStr[indexOf - 1]);
-                    var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
-                        && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
-
-                    if (isCharBefore && isCharAfter)
-                    {
-                        continue;
-                    }
-                    
-                    returnStr = returnStr.Replace(
-                        textToMatch.Text,
-                        string.Empty,
-                        StringComparison.InvariantCultureIgnoreCase);
                 }
 
                 removesUsedList.Add(textToMatch.Text);
@@ -236,6 +246,18 @@ public static partial class DataHelper
 
         removesUsed = removesUsedList.Count != 0 ? removesUsedList : null;
         return FormattingHelper.TrimFormatting(returnStr, trimPunctuationStart, trimPunctuationEnd)!;
+    }
+    
+    private static string ReplaceFirst(string text, string search, string replace)
+    {
+        var pos = text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+        
+        if (pos < 0)
+        {
+            return text;
+        }
+        
+        return text[..pos] + replace + text[(pos + search.Length)..];
     }
     
     [GeneratedRegex(@"[a-zA-Z]\d[a-zA-Z]")]

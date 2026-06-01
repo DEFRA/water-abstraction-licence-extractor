@@ -7,6 +7,7 @@ using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -143,7 +144,7 @@ async Task ProgramAsync()
 
                 if (scrapeResultLicenceSets.Count == 0)
                 {
-                    throw new Exception("An empty licence set was returned");
+                    continue;
                 }
 
                 licenceSetGroups.Add(scrapeResultLicenceSets);
@@ -158,7 +159,7 @@ async Task ProgramAsync()
 
                 if (scrapeResultLicenceSets.Count == 0)
                 {
-                    throw new Exception("An empty licence set was returned");
+                    continue;
                 }
 
                 licenceSetGroups.Add(scrapeResultLicenceSets);
@@ -624,6 +625,16 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         return licenceSets;
     }
+    catch (TooManyPagesException)
+    {
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
+    }
+    catch (TooManyImagesException)
+    {
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");        
+        return [];
+    }
     finally
     {
         pdfDataExtractor.InUse = false;
@@ -664,7 +675,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .Skip(0)
         //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
         //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-        .Take(100)
+        .Where(x => x.Value.RegionId == 3) // North east
+        .Take(200)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

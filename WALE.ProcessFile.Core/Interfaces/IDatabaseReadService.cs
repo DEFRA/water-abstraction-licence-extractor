@@ -63,7 +63,7 @@ public interface IDatabaseReadService
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
+    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
 
     Task<(
         HashSet<(string, int)> Live,
@@ -72,15 +72,15 @@ public interface IDatabaseReadService
         HashSet<(string, int)> Revoked,
         HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
 
-    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode);
+    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions);
+    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take);
 
-    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode);
+    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode);
+    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
+    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode, int skip, int take);
     
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
@@ -90,7 +90,7 @@ public interface IDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
 
-    Task<List<DmsExtract>> GetDmsExtractAsync();
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
     

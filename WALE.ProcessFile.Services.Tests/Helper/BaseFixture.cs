@@ -18,7 +18,7 @@ public class BaseFixture : IDisposable
         {
             if (!_licencesAlternateFormatValues.TryGetValue(regionCode, out var licences))
             {
-                var allNaldData = await cacheService.GetNaldDataAsync(regionCode, false);
+                var allNaldData = await cacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
                 licences = allNaldData.AbstractionAndImpoundmentLicences!;
             
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);

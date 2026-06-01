@@ -400,18 +400,22 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
+    public async Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
-        var path = "/Extractor/NaldData/GetAll";
+        var path = $"/Extractor/NaldData/GetAll?skip={skip}&take={take}";
 
         if (regionCode != null)
         {
-            path += $"?regionCode={regionCode}";
+            path += $"&regionCode={regionCode}";
         }
         
         if (allVersions)
         {
-            path += "?allVersions=true";
+            path += "&allVersions=true";
         }
 
         var response = await httpClient.GetAsync(path);
@@ -487,9 +491,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return int.Parse(content);
     }
 
-    public async Task<List<DmsExtract>> GetDmsExtractAsync()
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
-        var path = "/Extractor/Dms/GetExtract";
+        var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}";
 
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();

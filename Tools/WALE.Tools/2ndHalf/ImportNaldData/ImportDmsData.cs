@@ -39,18 +39,32 @@ public static class ImportDmsData
 
         var loopIndex = 0;
         
+        var tasks = new List<Task>();
+        
         foreach (var dmsRecord in dmsRecords.SelectMany(
             dmsFiles => dmsFiles.Value))
         {
-            await InsertDmsRow(dataSource, dmsRecord);
+            tasks.Add(InsertDmsRow(dataSource, dmsRecord));
+            loopIndex++;
+                
+            if (tasks.Count == 20)
+            {
+                await Task.WhenAll(tasks);
+                tasks.Clear();
+            }
 
-            if (loopIndex++ % 1000 == 0)
+            if (loopIndex % 1000 == 0)
             {
                 ConsoleHelper.WriteLine($"{loopIndex} records inserted so far");
             }
         }
         
+        await Task.WhenAll(tasks);
+        tasks.Clear();
+        
+        ConsoleHelper.WriteLine($"{loopIndex} records inserted");
         ConsoleHelper.WriteLine("DMS extract import done");
+
         return 1;
     }
     

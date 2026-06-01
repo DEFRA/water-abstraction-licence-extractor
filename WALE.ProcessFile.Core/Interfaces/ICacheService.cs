@@ -105,7 +105,11 @@ public interface ICacheService
     
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions);
+    Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take);
     
     Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
     
@@ -123,7 +127,7 @@ public interface ICacheService
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
-    Task<List<DmsExtract>> GetDmsExtractAsync();
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
 

@@ -632,8 +632,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
     public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
     {
-        await ClearLicenceFinderResultsAsync();
-        
         foreach (var result in results)
         {
             await SaveLicenceFinderResultAsync(result);
@@ -740,7 +738,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0);
     }
     
-    private async Task ClearLicenceFinderResultsAsync()
+    public async Task ClearLicenceFinderResultsAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

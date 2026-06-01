@@ -331,6 +331,11 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveLicenceFinderResultsAsync(results);
     }
 
+    public Task ClearLicenceFinderResultsAsync()
+    {
+        return databaseWriteService.ClearLicenceFinderResultsAsync();
+    }
+
     public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
     {
         return databaseReadService.GetVersionFilesToDownloadAsync();

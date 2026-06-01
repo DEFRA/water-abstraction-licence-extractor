@@ -141,6 +141,8 @@ public interface ICacheService
     
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
+    Task ClearLicenceFinderResultsAsync();
+    
     Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
 
     Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);

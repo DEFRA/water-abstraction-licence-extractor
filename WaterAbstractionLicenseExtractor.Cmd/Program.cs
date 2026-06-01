@@ -50,7 +50,7 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    var naldDataTask = cacheService.GetNaldDataAsync(null, false);
+    var naldDataTask = cacheService.GetNaldDataAsync(null, false, 0, int.MaxValue);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
@@ -674,9 +674,9 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         .OrderBy(filePath => filePath.Key)
         .Skip(0)
         //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
+        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100068"))
         .Where(x => x.Value.RegionId == 3) // North east
-        .Take(200)
+        //.Take(200)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

@@ -101,10 +101,12 @@ public static class InventoryFileGenerator
 
         var fileService = new ApiFileService(httpClient);
 
-        var allPdfFileNames = (await fileService.GetAllFilesWithMetadataAsync())
+        var allPdfFileNames = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
             .OrderBy(fm => fm.Filename)
             .ToList();
 
+        // TODO - Need to implement pagination above
+        
         foreach (var fileMetadata in allPdfFileNames)
         {
             var filenameParts = fileMetadata.Filename.Split("__");

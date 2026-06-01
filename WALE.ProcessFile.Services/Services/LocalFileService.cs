@@ -14,7 +14,7 @@ public class LocalFileService(string folderPath) : IFileService
                 .ToList());
     }
 
-    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)
     {
         var folder = new DirectoryInfo(FolderPath);
         var filesInFolder = folder.GetFiles("*.*", SearchOption.AllDirectories);

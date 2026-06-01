@@ -291,11 +291,13 @@ public static class GenerateLicenceReaderExtract
                 .Where(existingResult => !redos.Contains(existingResult.FileId))
                 .Select(existingResult => existingResult.FileId));
         
-        var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync())
+        var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
             .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToList();
 
+        // TODO - Need to implement paging above
+        
         var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync();
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
@@ -371,7 +373,7 @@ public static class GenerateLicenceReaderExtract
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
-                ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));

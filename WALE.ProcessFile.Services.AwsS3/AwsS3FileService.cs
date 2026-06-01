@@ -46,25 +46,40 @@ public class AwsS3FileService(
             .ToList();
     }
 
-    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)
     {
         var client = GetS3Client();
-        var response = await client.ListObjectsV2Async(
-            new ListObjectsV2Request
-            {
-                BucketName = FolderPath
-            });
-
+        var response = !string.IsNullOrEmpty(startAfter)
+            ? await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    BucketName = FolderPath,
+                    StartAfter = startAfter,
+                    MaxKeys = take
+                })
+            : await client.ListObjectsV2Async(
+                new ListObjectsV2Request
+                {
+                    BucketName = FolderPath,
+                    MaxKeys = take
+                });
 
         var returnList = response.S3Objects
             .Select(s3Object => new FileMetadata
             {
                Filename = s3Object.Key,
                Filesize = s3Object.Size!.Value,
-               ModifiedTime = s3Object.LastModified ?? DateTime.MinValue
+               ModifiedTime = s3Object.LastModified ?? DateTime.MinValue,
             })
             .ToList();
 
+        if (returnList.Count == take)
+        {
+            return returnList
+                .OrderBy(fm => fm.Filename)
+                .ToList();
+        }
+        
         while (!string.IsNullOrEmpty(response.NextContinuationToken))
         {
             response = await client.ListObjectsV2Async(

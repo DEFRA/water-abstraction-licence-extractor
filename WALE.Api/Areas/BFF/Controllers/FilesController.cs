@@ -18,9 +18,14 @@ public class FilesController(IFileService fileService) : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<FileMetadata>>> ListAllWithMetadataAsync()
+    public async Task<ActionResult<IEnumerable<FileMetadata>>> ListAllWithMetadataAsync(
+        [FromQuery] string? startAfter,
+        [FromQuery] int take)
     {
-        var result = await fileService.GetAllFilesWithMetadataAsync();
+        var result = await fileService.GetAllFilesWithMetadataAsync(
+            startAfter ?? string.Empty,
+            take);
+        
         return Ok(result);
     }
     

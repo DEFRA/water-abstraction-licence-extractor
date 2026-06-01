@@ -17,7 +17,9 @@ public static class RemoveRedundantFilesFromS3
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
 
         var fileService = new ApiFileService(httpClient);
-        var files = await fileService.GetAllFilesWithMetadataAsync();
+        var files = await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue);
+        
+        // TODO may need to implement pagination above
         
         var notWantedFiles = new List<FileMetadata>();
 

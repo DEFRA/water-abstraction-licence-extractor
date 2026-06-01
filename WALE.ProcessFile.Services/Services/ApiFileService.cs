@@ -20,9 +20,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync()
+    public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)
     {
-        var path = "/BFF/Files/ListAllWithMetadata";
+        var path = $"/BFF/Files/ListAllWithMetadata?startAfter={startAfter}&take={take}";
        
         var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();

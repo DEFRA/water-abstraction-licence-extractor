@@ -6,7 +6,7 @@ public interface IFileService
 {
     public Task<List<string>> GetAllFilesAsync();
     
-    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync();
+    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take);
     
     public Task<Stream> GetFileAsStreamAsync(string filename);
 

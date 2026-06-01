@@ -74,7 +74,7 @@ public interface IDatabaseReadService
 
     Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode);
 
-    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode);
+    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions);
 
     Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode);
 
@@ -97,4 +97,7 @@ public interface IDatabaseReadService
     Task<string?> GetImportRunDateAsync(string dataSource);
 
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
+    
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+    Task<List<VersionFile>> GetVersionFilesAsync();
 }

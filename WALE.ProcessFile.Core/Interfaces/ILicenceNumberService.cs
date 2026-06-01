@@ -10,7 +10,7 @@ public interface ILicenceNumberService
         bool isOcr,
         Dictionary<string, object?> additionalInformationStore);
 
-    List<NaldLicence> GetNaldLicences(string licenceNumber, short regionCode);
+    List<NaldLicence> GetNaldLicences(string licenceNumber);
     
     List<NaldLicence> ExtractNaldLicences(string? sourceText);
 }

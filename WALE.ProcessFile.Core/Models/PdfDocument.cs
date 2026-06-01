@@ -30,6 +30,8 @@ public class PdfDocument
     INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
     
     int SkipFileIfMoreThenPages { get; set; }
+
+    public static int SkipFileIfMoreThenImages { get; set; } = 50;
     
     public PdfDocument(
         string pdfFilename,
@@ -95,6 +97,14 @@ public class PdfDocument
             _pages = InternalDocument!.GetPages()
                 .Select(page =>
                 {
+                    if (page.NumberOfImages > SkipFileIfMoreThenImages)
+                    {
+                        throw new TooManyImagesException(
+                            "Too many images in this file - it is being skipped",
+                            page.NumberOfImages,
+                            InternalDocument.GetPages().Count);
+                    }
+                    
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",

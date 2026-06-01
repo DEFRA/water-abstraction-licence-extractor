@@ -17,6 +17,7 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
+using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
 namespace WALE.Tools._1stHalf;
@@ -81,7 +82,7 @@ public static class GenerateLicenceReaderExtract
             alternativeDocumentService);
     }
 
-    public static async Task<int> GenerateLicenceReaderExtractAsync(string localPdfFolder)
+    public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
     {
         var dtStart = DateTime.Now;
 
@@ -103,8 +104,8 @@ public static class GenerateLicenceReaderExtract
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
-        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(null);
-        var allNaldData = await cacheService.GetNaldDataAsync(null);
+        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
+        var allNaldData = await cacheService.GetNaldDataAsync(null, false);
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -163,7 +164,7 @@ public static class GenerateLicenceReaderExtract
         IFileService fileService = fileServiceType switch
         {
             "api" => new ApiFileService(httpClient),
-            _ => new LocalFileService(localPdfFolder)
+            _ => new LocalFileService("TODO")
         };
 
         var dmsExtractInfoRaw = await cacheService.GetDmsExtractAsync();
@@ -182,14 +183,24 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
         }
         
-        await GetAndSaveLicenceReaderDataAsync(
+        var outputLines = await GetAndSaveLicenceReaderDataAsync(
             pdfDataExtractors,
             fileService,
             cacheService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
-            dmsExtractInfo);
+            dmsExtractInfo,
+            includeVersionMatch);
 
+        // Generate CSV report
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            outputLines,
+            "LicenceReader",
+            "Output",
+            line => line.LicenceNumber ?? "No Licence Number scraped",
+            "licence records",
+            "Licence Processing Summary");
+        
         var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
 
@@ -209,13 +220,14 @@ public static class GenerateLicenceReaderExtract
             0);
     }
 
-    private static async Task GetAndSaveLicenceReaderDataAsync(
+    private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
-        Dictionary<string, List<DmsExtract>> dmsExtractInfo)
+        Dictionary<string, List<DmsExtract>> dmsExtractInfo,
+        bool includeVersionMatch)
     {
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
@@ -282,11 +294,30 @@ public static class GenerateLicenceReaderExtract
                 };
             })
             .Where(templateFinderInputNullable => templateFinderInputNullable != null)
-            .Where(templateFinderInputNullable => licenceFinderResultsByFileId.ContainsKey(templateFinderInputNullable!.FileId))
-            .Where(templateFinderInputNullable =>
-                !processedFileIds.Contains(templateFinderInputNullable!.FileId)
-                && !ExcludedFiles.Contains(templateFinderInputNullable.FileName!)) // Comment out this line if debugging a certain file
             .Select(templateFinderInputNullable => templateFinderInputNullable!)
+            .Where(templateFinderInput => licenceFinderResultsByFileId.ContainsKey(templateFinderInput.FileId))
+            .ToList();
+
+        if (includeVersionMatch)
+        {
+            var versionFiles = await cacheService.GetVersionFilesAsync();
+
+            foreach (var versionFile in versionFiles)
+            {
+                filesToProcessRaw.Add(new TemplateFinderInput
+                { 
+                    FileName = $"{versionFile.PermitNumber!.ToLower()}__{versionFile.FileId}.pdf",
+                    PermitNumber = versionFile.PermitNumber,
+                    FileId = versionFile.FileId!.Value,
+                    FileSize = versionFile.FileSize!.Value
+                });
+            }
+        }
+        
+        filesToProcessRaw = filesToProcessRaw
+            .Where(templateFinderInput =>
+                !processedFileIds.Contains(templateFinderInput.FileId)
+                && !ExcludedFiles.Contains(templateFinderInput.FileName!)) // Comment out this line if debugging a certain file
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
@@ -301,7 +332,7 @@ public static class GenerateLicenceReaderExtract
         if (filesToProcessRaw.Count == 0)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
-            return;
+            return existingResults;
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
@@ -352,7 +383,7 @@ public static class GenerateLicenceReaderExtract
                 Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - No nald data found for {lowercasePermitNumber}");
             }
             
-            configuration.RegionCode = naldData?.FgacRegionCode ?? -1;
+            configuration.RegionId = naldData?.FgacRegionCode ?? -1;
             
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
                 $" (File {filenameIdx++} of {filesToProcessRaw.Count})");
@@ -384,6 +415,25 @@ public static class GenerateLicenceReaderExtract
                 }
                 
                 scrapingTasks.Remove(finishedTask);
+
+                var toRemoveList = new List<Task<DmsFileReaderResult?>>();
+                
+                // Check the others see if any completed (this might be superflous)
+                foreach (var scrapingTask in scrapingTasks)
+                {
+                    if (!scrapingTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    returnList.Add(scrapingTask.Result!); 
+                    toRemoveList.Add(scrapingTask);
+                }
+
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    scrapingTasks.Remove(toRemoveItem);
+                }
             }
         }
         
@@ -408,6 +458,7 @@ public static class GenerateLicenceReaderExtract
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
+        return allResults;
     }
 
     private static Task SetRunDateAsync(ICacheService cacheService)
@@ -472,6 +523,21 @@ public static class GenerateLicenceReaderExtract
                     $"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
             }
             catch (TooManyPagesException tex)
+            {
+                var tooManyPagesResult = new DmsFileReaderResult
+                {
+                    Status = "Skipped",
+                    ErrorMessage = tex.ToString(),
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    FileId = fileMetadata.FileId,
+                    NumberOfPages = tex.NumberOfPages
+                };
+
+                await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
+                return null;
+            }
+            catch (TooManyImagesException tex)
             {
                 var tooManyPagesResult = new DmsFileReaderResult
                 {

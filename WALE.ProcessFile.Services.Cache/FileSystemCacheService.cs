@@ -477,17 +477,17 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             processRunId);
     }
 
-    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
     }
@@ -548,6 +548,26 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     }
 
     public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
     {
         throw new NotImplementedException();
     }

@@ -387,9 +387,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             : null;
     }
 
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
-        var path = $"/Extractor/LinkedLicence/GetMap?regionCode={regionCode}";
+        var path = "/Extractor/LinkedLicence/GetMap";
         
         var response = await httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
@@ -400,13 +400,18 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
     {
         var path = "/Extractor/NaldData/GetAll";
 
         if (regionCode != null)
         {
             path += $"?regionCode={regionCode}";
+        }
+        
+        if (allVersions)
+        {
+            path += "?allVersions=true";
         }
 
         var response = await httpClient.GetAsync(path);
@@ -418,7 +423,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         var path = "/Extractor/NaldData/GetLicenceStatusData";
         
@@ -557,6 +562,58 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
     {
         var path = "/Extractor/LicenceFinder/SaveResults";
+        var json = JsonSerializer.Serialize(new
+        {
+            results
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        var path = "/Extractor/VersionFiles/GetToDownload";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<VersionFileToDownload>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        var path = "/Extractor/VersionFiles/SaveToDownload";
+        var json = JsonSerializer.Serialize(new
+        {
+            results
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        var path = "/Extractor/VersionFiles/GetAll";
+
+        var response = await httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<VersionFile>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        var path = "/Extractor/VersionFiles/SaveAll";
         var json = JsonSerializer.Serialize(new
         {
             results

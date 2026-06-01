@@ -486,12 +486,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               licence_id,
-                               licence_number,
-                               licence_version_id,
-                               licence_set_id,
-                               process_run_id
-                           FROM licence_set_licence 
+                                licence_id,
+                                licence_number,
+                                licence_version_id,
+                                licence_set_id,
+                                process_run_id,
+                                l."FGAC_REGION_CODE" as region_id
+                           FROM licence_set_licence as lsl
+                           LEFT JOIN nald."NALD_ABS_LICENCES" as l on licence_number = l."LIC_NO"
                            WHERE process_run_id = @ProcessRunId
                            """;
 
@@ -1100,57 +1102,66 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { RegionCode = regionCode })).ToList();
     }
 
-    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode)
+    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
+        var sql = """
                            SELECT
-                               "AABL_ID" AS AablId,
-                               "ISSUE_NO" AS IssueNo,
-                               "INCR_NO" AS IncrNo,
-                               "AABV_TYPE" AS AabvType,
-                               "EFF_ST_DATE" AS EffStDate,
-                               "STATUS" AS Status,
-                               "RETURNS_REQ" AS ReturnsReq,
-                               "CHARGEABLE" AS Chargeable,
-                               "ASRC_CODE" AS AsrcCode,
-                               "ACON_APAR_ID" AS AconAparId,
-                               "ACON_AADD_ID" AS AconAaddId,
-                               "ALTY_CODE" AS AltyCode,
-                               "ACCL_CODE" AS AcclCode,
-                               "MULTIPLE_LH" AS MultipleLh,
-                               "LIC_SIG_DATE" AS LicSigDate,
-                               "APP_NO" AS AppNo,
-                               "LIC_DOC_FLAG" AS LicDocFlag,
-                               "EFF_END_DATE" AS EffEndDate,
-                               "EXPIRY_DATE1" AS ExpiryDate1,
-                               "WA_ALTY_CODE" AS WaAltyCode,
-                               "VOL_CONV" AS VolConv,
-                               "WRT_CODE" AS WrtCode,
-                               "DEREG_CODE" AS DeregCode,
-                               "FGAC_REGION_CODE" AS FgacRegionCode
+                             "AABL_ID" AS AablId,
+                             "ISSUE_NO" AS IssueNo,
+                             "INCR_NO" AS IncrNo,
+                             "AABV_TYPE" AS AabvType,
+                             "EFF_ST_DATE" AS EffStDate,
+                             "STATUS" AS Status,
+                             "RETURNS_REQ" AS ReturnsReq,
+                             "CHARGEABLE" AS Chargeable,
+                             "ASRC_CODE" AS AsrcCode,
+                             "ACON_APAR_ID" AS AconAparId,
+                             "ACON_AADD_ID" AS AconAaddId,
+                             "ALTY_CODE" AS AltyCode,
+                             "ACCL_CODE" AS AcclCode,
+                             "MULTIPLE_LH" AS MultipleLh,
+                             "LIC_SIG_DATE" AS LicSigDate,
+                             "APP_NO" AS AppNo,
+                             "LIC_DOC_FLAG" AS LicDocFlag,
+                             "EFF_END_DATE" AS EffEndDate,
+                             "EXPIRY_DATE1" AS ExpiryDate1,
+                             "WA_ALTY_CODE" AS WaAltyCode,
+                             "VOL_CONV" AS VolConv,
+                             "WRT_CODE" AS WrtCode,
+                             "DEREG_CODE" AS DeregCode,
+                             "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE (@RegionCode is null or "FGAC_REGION_CODE" = @RegionCode)
-                             AND "ISSUE_NO" = (
-                                 SELECT max(lic_ver_subquery."ISSUE_NO")
-                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
-                                 WHERE lic_ver_subquery."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
-                                   AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
-                                   AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
-                                   AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
-                                   AND lic_ver_subquery."STATUS" <> 'DRAFT'
-                             )
-                             AND "INCR_NO" = (
-                                 SELECT max(lic_ver_subquery_2."INCR_NO")
-                                 FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery_2
-                                 WHERE lic_ver_subquery_2."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
-                                   AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
-                                   AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
-                                   AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
-                                   AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
-                             )
-                             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
                            """;
+
+        if (!allVersions)
+        {
+            sql += """
+                    AND "ISSUE_NO" = (
+                        SELECT max(lic_ver_subquery."ISSUE_NO")
+                        FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
+                        WHERE lic_ver_subquery."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                          AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                          AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                          AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
+                          AND lic_ver_subquery."STATUS" <> 'DRAFT'
+                    )
+                    AND "INCR_NO" = (
+                          SELECT max(lic_ver_subquery_2."INCR_NO")
+                          FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery_2
+                          WHERE lic_ver_subquery_2."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                            AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                            AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                            AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
+                            AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
+                      )
+                    """;
+        }
+            
+        sql += """
+            AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
+        """;
 
         return (await QueryAsync<NaldLicenceVersionDataLine>(
             connection,
@@ -1564,6 +1575,50 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            """;
 
         var results = await QueryAsync<LicenceFinderResult>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                permit_number,
+                                full_path,
+                                site_path,
+                                library_and_file_path
+                           FROM public.version_files_to_download
+                           """;
+
+        var results = await QueryAsync<VersionFileToDownload>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
+    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                permit_number,
+                                full_path,
+                                site_path,
+                                library_and_file_path,
+                                region_id,
+                                file_id,
+                                file_name,
+                                file_size
+                           FROM public.version_files
+                           """;
+
+        var results = await QueryAsync<VersionFile>(
             connection,
             sql,
             0);

@@ -57,7 +57,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         OutputService,
         DocumentService,
         DocnetAlternativeDocumentService);
-
+    
     private static readonly int NoneNeRegionCode = 1;
     private static readonly int NeRegionCode = 3;
     

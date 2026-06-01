@@ -24,4 +24,6 @@ public class LinkedLicence
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceType LicenceType { get; set; }
+    
+    public int? RegionId { get; set; }
 }

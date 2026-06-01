@@ -7,15 +7,14 @@ public static class ExternalDataHelper
 {
     public static Dictionary<string, List<NaldData>> TransformNaldData(
         NaldDataCollection data,
-        Dictionary<string, DmsFileData> licenceNumbersWithFilenames,
-        int regionCode)
+        Dictionary<string, DmsFileData> licenceNumbersWithFilenames)
     {
         var returnList = new Dictionary<string, NaldData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
 
         foreach (var line in data.AbstractionLicences!)
         {
-            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, regionCode)!;
+            var stippedLicenceNumber = FormattingHelper.StripForComparison(line.LicenceNo, line.FgacRegionCode)!;
             var key = $"{line.FgacRegionCode}|{line.Id}";
 
             if (!licenceNumbersWithFilenames.ContainsKey(stippedLicenceNumber))
@@ -120,7 +119,7 @@ public static class ExternalDataHelper
         ref Dictionary<string, NaldData> generalNaldData)
     {
         foreach (var quantitiesDataLine in naldLicenceQuantitiesDataLines
-                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
+            .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
         {
             if (!generalNaldData.TryGetValue(quantitiesDataLine.LookupKey, out var naldData))
             {
@@ -128,8 +127,8 @@ public static class ExternalDataHelper
             }
 
             // Ignore non-current quantity data
-            if (naldData.IncrNo != quantitiesDataLine.AabvIncrNo ||
-                naldData.IssueNo != quantitiesDataLine.AabvIssueNo)
+            if (naldData.IncrNo != quantitiesDataLine.AabvIncrNo
+                || naldData.IssueNo != quantitiesDataLine.AabvIssueNo)
             {
                 continue;
             }
@@ -157,7 +156,7 @@ public static class ExternalDataHelper
         var returnDict = new Dictionary<string, NaldData>();
 
         foreach (var purposeDataLine in naldLicencePurposeDataLines
-                     .Where(x => !licenceNumbersNotInDataset.Contains(x.LicenceIdLookupKey)))
+            .Where(x => !licenceNumbersNotInDataset.Contains(x.LicenceIdLookupKey)))
         {
             if (!generalNaldData.TryGetValue(purposeDataLine.LicenceIdLookupKey, out var naldData))
             {
@@ -210,7 +209,7 @@ public static class ExternalDataHelper
             };
 
             var existingPeriod = naldData.Periods.FirstOrDefault(x => x.ToString() == period.ToString());
-            
+
             if (existingPeriod != null)
             {
                 existingPeriod.PurposeIds.Add(naldDataPurpose.Id);

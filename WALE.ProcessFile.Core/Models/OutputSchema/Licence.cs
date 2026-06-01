@@ -55,4 +55,6 @@ public class Licence
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
+    
+    public int? RegionId { get; set; }
 }

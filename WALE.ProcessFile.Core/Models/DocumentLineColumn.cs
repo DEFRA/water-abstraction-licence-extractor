@@ -176,6 +176,7 @@ public class DocumentLineColumn
         System.Diagnostics.Debug.Assert(
             inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.InvariantCultureIgnoreCase),
             $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
+        
         return outputWords;
     }
 }

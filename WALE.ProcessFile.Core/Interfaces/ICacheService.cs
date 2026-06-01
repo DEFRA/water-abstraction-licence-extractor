@@ -103,11 +103,11 @@ public interface ICacheService
         string noOcrServiceName,
         int processRunId);
     
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode);
+    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions);
     
-    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode);
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
     
     Task<(
             HashSet<(string, int)> Live,
@@ -136,4 +136,12 @@ public interface ICacheService
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
     
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+
+    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
+    
+    Task<List<VersionFile>> GetVersionFilesAsync();
+    
+    Task SaveVersionFilesAsync(List<VersionFile> results);
 }

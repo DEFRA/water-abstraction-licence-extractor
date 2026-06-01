@@ -118,6 +118,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     .Select(fp => fp.ImageReference)
                     .ToList()!
             };
+            
+            if (pdfPage.NumberOfImages  > PdfDocument.SkipFileIfMoreThenImages)
+            {
+                throw new TooManyImagesException(
+                    "Too many images in this file - it is being skipped",
+                    pdfPage.NumberOfImages,
+                    pageArray.Count);
+            }
 
             var providers = screenshotFilepaths
                 .Select(fp => fp.ProviderName)

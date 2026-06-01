@@ -187,7 +187,8 @@ public static class TestsForAiPrompts
                         baseLicenceData.LicenceNumber, -1, -1),
                     MeansOfAbstraction = meansOfAbstraction,
                     DefinitionOfYear = baseLicenceData.DefinitionOfYear,
-                    PeriodsOfAbstraction = periodsOfAbstraction
+                    PeriodsOfAbstraction = periodsOfAbstraction,
+                    RegionId = -1 // TODO
                 };
                 
                 var filenameNoExtension = pdfFilename.Split('.').First();

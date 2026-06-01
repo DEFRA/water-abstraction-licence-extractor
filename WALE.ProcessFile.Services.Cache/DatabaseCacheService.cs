@@ -236,19 +236,15 @@ public class DatabaseCacheService(
             processRunId);
     }
 
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
-        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
- 
-        return data
-            .Where(dataLine => dataLine.RegionCode == regionCode)
-            .ToList();
+        return databaseReadService.GetNaldLinkedLicenceRawDataAsync();
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
     {
         var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
-        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions);
         var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
         var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
         var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
@@ -265,7 +261,7 @@ public class DatabaseCacheService(
         };
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
     }
@@ -331,14 +327,34 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveLicenceFinderResultsAsync(results);
     }
 
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        return databaseReadService.GetVersionFilesToDownloadAsync();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        return databaseWriteService.SaveVersionFilesToDownloadAsync(results);
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        return databaseReadService.GetVersionFilesAsync();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        return databaseWriteService.SaveVersionFilesAsync(results);
+    }
+
     public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
     {
         return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
     }
 
-    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode, bool allVersions)
     {
-        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions);
     }
 
     public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)

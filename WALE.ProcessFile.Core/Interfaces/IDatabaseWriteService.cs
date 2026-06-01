@@ -79,4 +79,8 @@ public interface IDatabaseWriteService
     Task SaveImportRunDateAsync(string dataSource);
 
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+
+    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
+
+    Task SaveVersionFilesAsync(List<VersionFile> results);
 }

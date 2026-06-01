@@ -482,7 +482,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
+    public Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
         throw new NotImplementedException();
     }
@@ -517,7 +521,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<List<DmsExtract>> GetDmsExtractAsync()
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
         throw new NotImplementedException();
     }

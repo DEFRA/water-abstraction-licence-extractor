@@ -787,7 +787,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result.ToList();
     }
 
-    public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -803,13 +803,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS RegionCode,
                                "ID" AS Id,
                                1 AS Type
-                           FROM nald."NALD_IMP_LICENCES";
+                           FROM nald."NALD_IMP_LICENCES"
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         var result = await QueryAsync<NaldLicence>(
             connection,
             sql,
-            0);
+            0,
+            new { Skip = skip, Take = take });
 
         return result.ToList();
     }
@@ -845,7 +848,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         }
     }
 
-    private async Task<HashSet<(string, int)>> GetLiveLicenceNumbersAsync(NpgsqlConnection connection,
+    private async Task<HashSet<(string, int)>> GetLiveLicenceNumbersAsync(
+        NpgsqlConnection connection,
         short? regionCode)
     {
         const string sql = """
@@ -1063,7 +1067,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             .ToHashSet();
     }
 
-    public async Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode)
+    public async Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1091,6 +1095,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LICENCES"
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         // TODO check if this should  filter out to only none-revoked etc...
@@ -1099,10 +1105,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { RegionCode = regionCode })).ToList();
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
     }
 
-    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions)
+    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         var sql = """
@@ -1161,16 +1172,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             
         sql += """
             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
+            LIMIT @take
+            OFFSET @skip;
         """;
 
         return (await QueryAsync<NaldLicenceVersionDataLine>(
             connection,
             sql,
             0,
-            new { RegionCode = regionCode })).ToList();
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
     }
 
-    public async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode)
+    public async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1213,16 +1231,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            JOIN nald."NALD_PURP_USES" pu
                                ON p."APUR_APUS_CODE" = pu."CODE"
                            WHERE @RegionCode is null or p."FGAC_REGION_CODE" = @RegionCode
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         return (await QueryAsync<NaldLicencePurposeDataLine>(
             connection,
             sql,
             0,
-            new { RegionCode = regionCode })).ToList();
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
     }
 
-    public async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode)
+    public async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1275,16 +1300,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ON pp."AAIP_ID" = p."ID"
                                AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
                            WHERE @RegionCode is null or pp."FGAC_REGION_CODE" = @RegionCode
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         return (await QueryAsync<NaldLicencePointDataLine>(
             connection,
             sql,
             0,
-            new { RegionCode = regionCode })).ToList();
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
     }
 
-    public async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode)
+    public async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1301,13 +1333,20 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         return (await QueryAsync<NaldLicenceQuantitiesDataLine>(
             connection,
             sql,
             0,
-            new { RegionCode = regionCode })).ToList();
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
     }
 
     public async Task<Licence?> GetNewestLicenceAsync(string permitNumber)
@@ -1436,7 +1475,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0);
     }
 
-    public async Task<List<DmsExtract>> GetDmsExtractAsync()
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1465,12 +1504,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                modified_date,
                                file_id
                            FROM public.dms_extract
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         var results = await QueryAsync<DmsExtract>(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                Skip = skip,
+                Take = take
+            });
 
         return results.ToList();
     }

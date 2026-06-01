@@ -48,7 +48,7 @@ public class OcrDatabaseTests
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
-        var allNaldData = await CacheService.GetNaldDataAsync(regionCode, false);
+        var allNaldData = await CacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     

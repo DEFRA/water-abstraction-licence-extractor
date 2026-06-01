@@ -105,7 +105,39 @@ public static class GenerateLicenceReaderExtract
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-        var allNaldData = await cacheService.GetNaldDataAsync(null, false);
+        
+        const int take = 10_000;
+        var allNaldData = new NaldDataCollection
+        {
+            AbstractionAndImpoundmentLicences = [],
+            AbstractionLicencePoints = [],
+            AbstractionLicencePurposes = [],
+            AbstractionLicenceQuantities = [],
+            AbstractionLicences = [],
+            AbstractionLicenceVersions = []
+        };
+
+        var allNaldDataPartial = new NaldDataCollection();
+        var loopIdx = 0;
+
+        while (loopIdx == 0
+            || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
+            || allNaldDataPartial.AbstractionLicencePoints!.Count == take
+            || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
+            || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
+            || allNaldDataPartial.AbstractionLicences!.Count == take
+            || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+        {
+            var skip = take * loopIdx++;
+            
+            allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
+            allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
+            allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
+            allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
+            allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
+            allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
+            allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+        }
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -128,9 +160,15 @@ public static class GenerateLicenceReaderExtract
         
         foreach (var licenceNumber in naldLicenceStatusData.LiveLicences)
         {
-            var fullLicencePossibilities = comparableAbstractionLicences.Single(
+            var fullLicencePossibilities = comparableAbstractionLicences.SingleOrDefault(
                 x => x.Key == licenceNumber);
 
+            // If we didn't fetch data for the region, this could happen
+            if (fullLicencePossibilities.Key == null)
+            {
+                continue;
+            }
+            
             var fullLicences = fullLicencePossibilities.Value
                 .Where(x =>
                     (x.ExpiryDate == null || x.ExpiryDate > DateTime.Now)
@@ -167,7 +205,19 @@ public static class GenerateLicenceReaderExtract
             _ => new LocalFileService("TODO")
         };
 
-        var dmsExtractInfoRaw = await cacheService.GetDmsExtractAsync();
+        var dmsExtractInfoRaw = new List<DmsExtract>();
+
+        List<DmsExtract> dmsExtractPartial = [];
+        loopIdx = 0;
+
+        while (loopIdx == 0 || dmsExtractPartial.Count == take)
+        {
+            var skip = take * loopIdx++;
+            
+            dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
+            dmsExtractInfoRaw.AddRange(dmsExtractPartial);
+        }
+        
         var dmsExtractInfo = new Dictionary<string, List<DmsExtract>>();
 
         foreach (var dmsRow in dmsExtractInfoRaw)

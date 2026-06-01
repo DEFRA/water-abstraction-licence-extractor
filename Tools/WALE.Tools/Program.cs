@@ -11,7 +11,7 @@ string workflow;
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
 workflow = "GenerateLicenceReaderExtract";
-workflow = "ImportOverrideData";
+//workflow = "ImportOverrideData";
 
 const int processRunId = 1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -27,7 +27,7 @@ switch (workflow)
         // - Fetch number of pages
         // Addendum / schedule
 
-        var includeVersionMatch = true;
+        var includeVersionMatch = false;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
     
     case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs (from FME S3) into the DB

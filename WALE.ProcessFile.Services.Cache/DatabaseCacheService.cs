@@ -241,14 +241,18 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldLinkedLicenceRawDataAsync();
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, bool allVersions)
+    public async Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
-        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
-        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions);
-        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
-        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
-        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
-        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode, skip, take);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions, skip, take);
+        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode, skip, take);
+        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode, skip, take);
+        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode, skip, take);
+        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(skip, take);
         
         return new NaldDataCollection
         {
@@ -297,9 +301,9 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
     }
 
-    public Task<List<DmsExtract>> GetDmsExtractAsync()
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
-        return databaseReadService.GetDmsExtractAsync();
+        return databaseReadService.GetDmsExtractAsync(skip, take);
     }
 
     public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
@@ -345,30 +349,5 @@ public class DatabaseCacheService(
     public Task SaveVersionFilesAsync(List<VersionFile> results)
     {
         return databaseWriteService.SaveVersionFilesAsync(results);
-    }
-
-    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
-    {
-        return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
-    }
-
-    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode, bool allVersions)
-    {
-        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions);
-    }
-
-    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
-    {
-        return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
-    }
-
-    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
-    {
-        return databaseReadService.GetNaldLicencePointsAsync(regionCode);
-    }
-
-    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
-    {
-        return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
     }
 }

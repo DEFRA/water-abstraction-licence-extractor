@@ -27,9 +27,11 @@ public class DmsController(ICacheService cacheService) : Controller
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetExtractAsync()
+    public async Task<IActionResult> GetExtractAsync(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
     {
-        var dmsExtract = await cacheService.GetDmsExtractAsync();
+        var dmsExtract = await cacheService.GetDmsExtractAsync(skip, take);
         
         return Ok(dmsExtract);
     }

@@ -30,7 +30,13 @@ public static partial class DataHelper
         
         foreach (var line in inputList)
         {
-            _ = RemoveExcludes(label, line.Text, false, false, out var removesUsedLoopOuter);
+            _ = RemoveExcludes(
+                label,
+                line.Text,
+                false,
+                false,
+                null,
+                out var removesUsedLoopOuter);
 
             // The whole line wants removing
             if (removesUsedLoopOuter?.Contains(line.Text) == true)
@@ -42,6 +48,21 @@ public static partial class DataHelper
             
             foreach (var column in line.Columns)
             {
+                column.Words = column.Words
+                    .Select((w, idx) =>
+                    {
+                        w.Text = RemoveExcludes(
+                            label,
+                            w.Text,
+                            false,
+                            false,
+                            idx,
+                            out _);
+
+                        return w;
+                    })
+                    .ToList();
+                
                 if (removeNotContains && LabelMatchingHelper.ShouldSkipResultAsForbidden(column.Text, label))
                 {
                     isForbidden = true;
@@ -54,6 +75,7 @@ public static partial class DataHelper
                     column.Text,
                     isLastColumn && trimPunctuation,
                     isLastColumn && trimPunctuation,
+                    null,
                     out var removesUsedLoop);
 
                 var alteredTextWords = DocumentLineColumn.FilterWordsFromText(
@@ -114,6 +136,7 @@ public static partial class DataHelper
         string betweenText,
         bool trimPunctuationStart,
         bool trimPunctuationEnd,
+        int? individualWordLineIndex,
         out IReadOnlyList<string>? removesUsed)
     {
         removesUsed = null;
@@ -158,7 +181,8 @@ public static partial class DataHelper
 
                 if (textToMatch.ColumnMustStartWith || textToMatch.LineMustStartWith)
                 {
-                    if (!returnStr.StartsWith(textToMatch.Text))
+                    if ((individualWordLineIndex != 0 && individualWordLineIndex != null)
+                        || !returnStr.StartsWith(textToMatch.Text))
                     {
                         continue;
                     }
@@ -224,8 +248,7 @@ public static partial class DataHelper
                         var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
                             && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
 
-                        // TODO - I think this behaviour is wrong, it works for commas but not for stuff like ... - config needs expanding
-                        if (isCharBefore && isCharAfter)
+                        if (textToMatch.ExceptWhenInsideWord && isCharBefore && isCharAfter)
                         {
                             break;
                         }

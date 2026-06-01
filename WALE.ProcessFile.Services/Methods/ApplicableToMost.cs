@@ -89,6 +89,7 @@ public static class ApplicableToMost
                 t,
                 true,
                 false,
+                null,
                 out var removedLines);
             
             if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
@@ -105,6 +106,7 @@ public static class ApplicableToMost
                         w.Text,
                         idx == 0,
                         false,
+                        idx,
                         out _);
 
                     return w;

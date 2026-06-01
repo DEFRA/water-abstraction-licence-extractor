@@ -1501,10 +1501,10 @@ public static class WalLabelConfiguration
                                 NextLinesToFetch = 1,
                                 Remove =
                                 [
-                                    new("3.1"),
-                                    new("3.2"),
-                                    new("3.3"),
-                                    new("3.4")
+                                    new("3.1") { ExceptWhenInsideWord = true },
+                                    new("3.2") { ExceptWhenInsideWord = true },
+                                    new("3.3") { ExceptWhenInsideWord = true },
+                                    new("3.4") { ExceptWhenInsideWord = true },
                                 ]
                             },
                             new()
@@ -2104,9 +2104,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("1 ")
                             {
                                 LineMustStartWith = true,
@@ -2144,9 +2144,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2168,9 +2168,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2202,9 +2202,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2236,9 +2236,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2266,9 +2266,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2303,9 +2303,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2448,5 +2448,5 @@ public static class WalLabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
         new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberHeaderLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
+        new($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/") { IsRegularExpression = true };
 }

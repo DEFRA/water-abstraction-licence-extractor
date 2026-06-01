@@ -17,6 +17,13 @@ public class LicenceFinderController(ICacheService cacheService) : Controller
     }
     
     [HttpPost]
+    public async Task<ActionResult> ClearResultsAsync()
+    {
+        await cacheService.ClearLicenceFinderResultsAsync();
+        return Ok();
+    }
+    
+    [HttpPost]
     public async Task<ActionResult> SaveResultsAsync(
         [FromBody] LicenceFinderCreateRequest request)
     {

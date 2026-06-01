@@ -576,6 +576,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task ClearLicenceFinderResultsAsync()
+    {
+        var path = "/Extractor/LicenceFinder/ClearResults";
+        
+        var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
     {
         var path = "/Extractor/VersionFiles/GetToDownload";

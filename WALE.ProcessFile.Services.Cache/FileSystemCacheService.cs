@@ -556,6 +556,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task ClearLicenceFinderResultsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
     {
         throw new NotImplementedException();

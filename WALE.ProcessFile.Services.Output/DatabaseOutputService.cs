@@ -56,54 +56,57 @@ public class DatabaseOutputService(
     {
         foreach (var licenceSetKvp in licenceSets)
         {
-            var licenceSet = licenceSetKvp.Value;
-            
-            var licenceSetId = await databaseWriteService.SaveLicenceSetAsync(
-                licenceSet.LicenceSetId,
-                licenceSet.ShortLicenceSetId,
-                processRunId);   
-            
-            foreach (var licence in licenceSet.Licences)
-            {
-                var licenceId = licence.NoneSchemaData.TryGetValue("licenceId", out var licenceIdOut)
-                    ? (int?)licenceIdOut
-                    : null;
-                
-                if (string.IsNullOrEmpty(licence.LicenceNumber?.Value) && licenceId == null)
-                {
-                    // TODO log
-                    continue;
-                }
-                
-                await databaseWriteService.InsertLicenceSetLicenceAsync(
-                    licenceSetId,
-                    licenceId,
-                    licence.LicenceNumber?.Value,
-                    licence.LicenceVersion.LicenceVersionId,
-                    processRunId);   
-            }
+            await SaveLicenceSetAsync(licenceSetKvp.Value, fileId, processRunId);
+        }
+    }
 
-            foreach (var licenceSetType in licenceSet.LicenceSetTypes)
+    public async Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
+    {
+        var licenceSetId = await databaseWriteService.SaveLicenceSetAsync(
+            licenceSet.LicenceSetId,
+            licenceSet.ShortLicenceSetId,
+            processRunId);   
+        
+        foreach (var licence in licenceSet.Licences)
+        {
+            var licenceId = licence.NoneSchemaData.TryGetValue("licenceId", out var licenceIdOut)
+                ? (int?)licenceIdOut
+                : null;
+            
+            if (string.IsNullOrEmpty(licence.LicenceNumber?.Value) && licenceId == null)
             {
-                await databaseWriteService.SaveLicenceSetTypeAsync(
-                    licenceSetId,
-                    (int)licenceSetType,
-                    processRunId);   
-            }
-
-            if (licenceSet.AggregateSets == null)
-            {
+                // TODO log
                 continue;
             }
             
-            foreach (var aggregateSet in licenceSet.AggregateSets)
-            {
-                await databaseWriteService.SaveAggregateSetAsync(
-                    licenceSetId,
-                    aggregateSet.AggregateSetId,
-                    JsonSerializer.Serialize(aggregateSet.Aggregates, JsonHelper.GetSerializerOptions()),
-                    processRunId);
-            }
+            await databaseWriteService.InsertLicenceSetLicenceAsync(
+                licenceSetId,
+                licenceId,
+                licence.LicenceNumber?.Value,
+                licence.LicenceVersion.LicenceVersionId,
+                processRunId);   
+        }
+
+        foreach (var licenceSetType in licenceSet.LicenceSetTypes)
+        {
+            await databaseWriteService.SaveLicenceSetTypeAsync(
+                licenceSetId,
+                (int)licenceSetType,
+                processRunId);   
+        }
+
+        if (licenceSet.AggregateSets == null)
+        {
+            return;
+        }
+        
+        foreach (var aggregateSet in licenceSet.AggregateSets)
+        {
+            await databaseWriteService.SaveAggregateSetAsync(
+                licenceSetId,
+                aggregateSet.AggregateSetId,
+                JsonSerializer.Serialize(aggregateSet.Aggregates, JsonHelper.GetSerializerOptions()),
+                processRunId);
         }
     }
 

@@ -72,6 +72,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
+    public Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         Directory.CreateDirectory($"{outputFolder}/{licence.DmsFileId}");

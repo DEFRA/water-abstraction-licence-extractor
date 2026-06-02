@@ -23,6 +23,8 @@ public interface IOutputService
 
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId);
     
+    public Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId);
+    
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId);
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId);

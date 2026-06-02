@@ -74,12 +74,14 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                                 else if (v.verificationType === 'Removed') color = 'red';
                                 else if (v.verificationType === 'Edited') color = 'darkorange';
                                 else if (v.verificationType === 'Added') color = 'blue';
+                                else if (v.verificationType === 'AutoFail') color = 'red';
+                                else if (v.verificationType === 'AutoWarn') color = 'darkorange';
 
                                 return <span style={{color}}>{`${v.licenceSectionItemId} - ${v.verificationType}`}{v.scrapedDataIsDifferent && ' 🚩'}</span>;
                             })}/>
                         </div>
                     ))
-                    : '--')}
+                    : 'No verifications')}
             </td>
         </tr>
     );

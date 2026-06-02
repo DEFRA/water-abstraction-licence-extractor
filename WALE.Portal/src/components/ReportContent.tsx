@@ -31,7 +31,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     // const [textData, setTextData] = useState<string>('');
 
     // UI states
-    const [activeTab, setActiveTab] = useState<TabType>('verification');
+    const [activeTab, setActiveTab] = useState<TabType>('json-new');
 
     const iframeParentRef = useRef<HTMLDivElement>(null);
 
@@ -121,18 +121,6 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                             <li>
                                 <a
                                     href="#"
-                                    className={activeTab === 'verification' ? 'selectedTab' : ''}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setActiveTab('verification');
-                                    }}
-                                >
-                                    Verification
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="#"
                                     className={activeTab === 'json-new' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -200,6 +188,18 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     }}
                                 >
                                     Images
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    className={activeTab === 'verification' ? 'selectedTab' : ''}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setActiveTab('verification');
+                                    }}
+                                >
+                                    Verification
                                 </a>
                             </li>
                         </ul>

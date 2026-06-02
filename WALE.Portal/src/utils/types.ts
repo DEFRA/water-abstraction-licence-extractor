@@ -9,6 +9,7 @@ export type FilterType =
     | 'ArrayValue'
     | 'ArrayValueMapped'
     | 'ArrayValueArrayValueMapped'
+    | 'LicenceVerification'
     | 'Values';
 
 export type OutputListDataItemKey = Extract<keyof OutputListDataItem, string>;

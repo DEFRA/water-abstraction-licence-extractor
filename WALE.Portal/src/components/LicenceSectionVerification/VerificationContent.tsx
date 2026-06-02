@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type {Licence, LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
@@ -20,13 +20,8 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [verifyResetKey, setVerifyResetKey] = useState(0);
 
-    const handleVerified = () => {
-        setActiveSubTab('history');
-        setVerifyResetKey(prev => prev + 1);
-    };
-
-    useEffect(() => {
-        if (activeSubTab === 'history' && licence.dmsFileId) {
+    const fetchHistory = useCallback(() => {
+        if (licence.dmsFileId) {
             setIsLoadingHistory(true);
             waleApiClient.licenceSectionVerifications(licence.dmsFileId)
                 .then((data) => {
@@ -39,7 +34,18 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     setIsLoadingHistory(false);
                 });
         }
-    }, [activeSubTab, licence.dmsFileId]);
+    }, [licence.dmsFileId]);
+
+    const handleVerified = () => {
+        fetchHistory();
+        setVerifyResetKey(prev => prev + 1);
+    };
+
+    useEffect(() => {
+        if (activeSubTab === 'history') {
+            fetchHistory();
+        }
+    }, [activeSubTab, fetchHistory]);
 
     return (
         <div id="properties" style={{ padding: '10px' }}>

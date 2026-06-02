@@ -17,12 +17,17 @@ export function LicenceSectionVerificationHistory({ verification, children, init
     const dateTime = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
 
     const getVerificationTypeColor = (type: string) => {
-        switch (type.toLowerCase()) {
-            case 'reject':
-                return 'red';
-            case 'accept':
+        switch (type) {
+            case 'Confirmed':
+            case 'AutoPass':
                 return 'green';
-            case 'override':
+            case 'Removed':
+            case 'AutoFail':
+                return 'red';
+            case 'Edited':
+            case 'AutoWarn':
+                return 'darkorange';
+            case 'Added':
                 return 'blue';
             default:
                 return 'inherit';

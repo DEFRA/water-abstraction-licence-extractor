@@ -9,7 +9,7 @@ interface LinkedLicencesListProps {
 
 export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesListProps) {
     if (!item.linkedLicences?.length) {
-        return '--';
+        return 'No Linked Licences';
     }
 
     return (<ul>

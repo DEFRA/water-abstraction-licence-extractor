@@ -231,7 +231,7 @@ export function LicencesTableHeaders({
                             { value: 'Records', label: 'In Records' },
                             { value: 'ImplicitBackLink', label: 'Implicit back link' },
                             { value: 'Populated', label: 'Not empty' },
-                            { value: 'Empty', label: '--' }
+                            { value: 'Empty', label: 'No Linked Licences' }
                         ]}
                     />
                 </td>

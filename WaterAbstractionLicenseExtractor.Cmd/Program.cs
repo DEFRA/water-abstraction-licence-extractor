@@ -50,7 +50,7 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    var naldDataTask = cacheService.GetNaldDataAsync(null, false, 0, int.MaxValue);
+    var naldDataTask = GetNaldDataAsync(null, cacheService);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
@@ -114,7 +114,7 @@ async Task ProgramAsync()
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
-//            await Task.Delay(2000);
+            await Task.Delay(1000);
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -202,7 +202,8 @@ async Task ProgramAsync()
     {
         if (licenceSetGroup.Count == 0)
         {
-            // TODO log this - it shouldn't happen
+            // This shouldn't happen
+            ConsoleHelper.WriteLine("WARNING - WALE.Cmd - Empty licence set group found");
             continue;
         }
 
@@ -278,11 +279,15 @@ async Task ProgramAsync()
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
-                
-                await outputService.SaveLicenceSetsAsync(
-                    newLicenceSetsLoop,
-                    licenceLoop.DmsFileId,
-                    processRun.ProcessRunId);
+
+                foreach (var licenceSet in newLicenceSetsLoop)
+                {
+                    // Not batched as we get a 413 on the server
+                    await outputService.SaveLicenceSetAsync(
+                        licenceSet.Value,
+                        licenceLoop.DmsFileId,
+                        processRun.ProcessRunId);   
+                }
             }
         }
 
@@ -323,6 +328,44 @@ async Task ProgramAsync()
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+}
+
+async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, ICacheService cacheService)
+{
+    const int take = 10_000;
+    var allNaldData = new NaldDataCollection
+    {
+        AbstractionAndImpoundmentLicences = [],
+        AbstractionLicencePoints = [],
+        AbstractionLicencePurposes = [],
+        AbstractionLicenceQuantities = [],
+        AbstractionLicences = [],
+        AbstractionLicenceVersions = []
+    };
+
+    var allNaldDataPartial = new NaldDataCollection();
+    var loopIdx = 0;
+
+    while (loopIdx == 0
+           || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
+           || allNaldDataPartial.AbstractionLicencePoints!.Count == take
+           || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
+           || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
+           || allNaldDataPartial.AbstractionLicences!.Count == take
+           || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+    {
+        var skip = take * loopIdx++;
+            
+        allNaldDataPartial = await cacheService.GetNaldDataAsync(regionCode, false, skip, take);
+        allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
+        allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
+        allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
+        allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
+        allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
+        allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+    }
+    
+    return allNaldData;
 }
 
 ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
@@ -574,7 +617,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         lookupConfig = lookupConfig.Clone();
         lookupConfig.RegionId = dmsDataForFile.RegionId;
-        
+
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             dmsDataForFile,
@@ -588,10 +631,10 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
-        
+
         if (matchesFull.Matches != null)
         {
-            // TODO move this to one batch save
+            // TODO move this to one batch save - do this in the morning to get 15 calls down to 1
             var saveTasks = matchesFull.Matches
                 .Select(match => outputService.SaveMatchAsync(
                     matchResultId,
@@ -599,9 +642,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
                     match.LabelGroupName,
                     match))
                 .ToList();
-            
+
             await Task.WhenAll(saveTasks);
-            
+
             var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
 
             if (saveDuration >= 1000)
@@ -612,7 +655,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         }
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
@@ -632,7 +676,12 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
     catch (TooManyImagesException)
     {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");        
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
+    }
+    catch (Exception)
+    {
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error");
         return [];
     }
     finally
@@ -672,11 +721,11 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
 
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
-        .Skip(0)
         //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12100068"))
+        //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
         .Where(x => x.Value.RegionId == 3) // North east
-        //.Take(200)
+        //.Skip(155)
+        .Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;
@@ -689,7 +738,9 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
 
-    var lowercaseFilesInFolder = (await fileService.GetAllFilesAsync()).Select(f => f.ToLower()).ToList();
+    var allDestinationFilenames = await fileService.GetAllFilesAsync();
+
+    var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
     var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync();
 
     foreach (var licenceFinderResult in licenceFinderResults)
@@ -706,6 +757,10 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
             continue;
         }
 
+        // Fix casing
+        destinationFileName = allDestinationFilenames.First(fname =>
+            fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
+        
         var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
         
         var dmsFileData = new DmsFileData

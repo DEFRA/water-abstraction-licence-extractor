@@ -84,6 +84,27 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
+    {
+        if (fileId == null)
+        {
+            return;
+        }
+        
+        var path = "/Extractor/Licence/SaveLicenceSet";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            fileId,
+            processRunId,
+            licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         var path = "/Extractor/Licence/Save";

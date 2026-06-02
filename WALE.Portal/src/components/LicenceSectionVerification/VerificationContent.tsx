@@ -79,6 +79,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         processRunId={processRunId}
                         onRefresh={onRefresh}
                         onVerified={handleVerified}
+                        initialOpen={true}
                     >
                         <LinkedLicences 
                             licence={licence} 

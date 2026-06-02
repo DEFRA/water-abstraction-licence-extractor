@@ -79,7 +79,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                             })}/>
                         </div>
                     ))
-                    : '--')}
+                    : 'No verifications')}
             </td>
         </tr>
     );

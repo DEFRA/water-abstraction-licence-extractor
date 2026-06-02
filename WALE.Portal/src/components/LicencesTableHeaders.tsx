@@ -251,14 +251,17 @@ export function LicencesTableHeaders({
                     <FilterSelect
                         id="verified-filter"
                         field="latestLicenceSectionVerifications"
-                        type="EmptyOrNotArray"
+                        type="LicenceVerification"
                         value={filters['latestLicenceSectionVerifications']?.value ?? 'all'}
                         onChange={onFilterChange}
                         onReset={() => onResetFilters('latestLicenceSectionVerifications')}
                         options={[
                             { value: 'all', label: 'All' },
                             { value: 'populated', label: 'Not empty' },
-                            { value: 'empty', label: '--' }
+                            { value: 'empty', label: 'No verifications' },
+                            { value: 'AutoPass', label: 'AutoPass' },
+                            { value: 'AutoWarn', label: 'AutoWarn' },
+                            { value: 'AutoFail', label: 'AutoFail' }
                         ]}
                     />
                 </td>

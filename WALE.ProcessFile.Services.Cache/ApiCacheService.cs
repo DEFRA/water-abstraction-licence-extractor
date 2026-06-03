@@ -135,26 +135,28 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return content;
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var path = $"/Extractor/Ocr/GetTemporaryImageText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetAndSaveTemporaryImageText?pageNumber={request.PageNumber}"
             + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var path = $"/Extractor/Ocr/GetTemporaryScreenshotText?pageNumber={request.PageNumber}"
+        var path = $"/Extractor/Ocr/GetAndSaveTemporaryScreenshotText?pageNumber={request.PageNumber}"
             + $"&fileId={request.FileId}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
@@ -170,26 +172,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         string extension,
         int processRunId)
     {
-        var path = "/Extractor/Images/SaveImageOnPage";
+        var dtStart = DateTime.UtcNow;
+        var path = $"/Extractor/Images/SaveImageOnPage?width={width}&height={height}&fileId={fileId}" +
+            $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
+            $"&extension={extension}&processRunId={processRunId}";
 
-        var json = JsonSerializer.Serialize(new
-        {
-            Bytes = bytes,
-            Width = width,
-            Height = height,
-            FileId = fileId,
-            NoOcrServiceName = noOcrServiceName,
-            ImageNumber = imageNumber,
-            PageNumber = pageNumber,
-            Extension = extension,
-            ProcessRunId = processRunId
-        }, JsonHelper.GetSerializerOptions());
-        
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new ByteArrayContent(bytes, 0, bytes.Length);
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
         
         var content = await response.Content.ReadAsStringAsync();
+
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+        ConsoleHelper.WriteLine($"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
+        
         return int.Parse(content);
     }
 

@@ -36,28 +36,6 @@ public class OcrController(
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetTemporaryImageTextAsync(
-        [FromQuery] Guid fileId,
-        [FromQuery] int pageNumber,
-        [FromQuery] int imageNumber,
-        [FromQuery] string ocrServiceName,
-        [FromQuery] int processRunId)
-    {
-        var imageText = await cacheService.GetTemporaryOcrImageTextAsync(
-            new OcrServiceImageTextCacheRequest
-            {
-                PageNumber = pageNumber,
-                ImageNumber = imageNumber,
-                FileId = fileId,
-                OcrServiceName = ocrServiceName,
-                ProcessRunId = processRunId
-            }); 
-
-        var content = JsonSerializer.Serialize(imageText, JsonHelper.GetSerializerOptions());
-        return Ok(content);
-    }
-    
-    [HttpGet]
     public async Task<IActionResult> GetScreenshotTextAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
@@ -77,13 +55,35 @@ public class OcrController(
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetTemporaryScreenshotTextAsync(
+    public async Task<IActionResult> GetAndSaveTemporaryImageTextAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] int imageNumber,
+        [FromQuery] string ocrServiceName,
+        [FromQuery] int processRunId)
+    {
+        var imageText = await cacheService.GetAndSaveTemporaryOcrImageTextAsync(
+            new OcrServiceImageTextCacheRequest
+            {
+                PageNumber = pageNumber,
+                ImageNumber = imageNumber,
+                FileId = fileId,
+                OcrServiceName = ocrServiceName,
+                ProcessRunId = processRunId
+            }); 
+
+        var content = JsonSerializer.Serialize(imageText, JsonHelper.GetSerializerOptions());
+        return Ok(content);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAndSaveTemporaryScreenshotTextAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] string ocrServiceName,
         [FromQuery] int processRunId)
     {
-        var imageText = await cacheService.GetTemporaryOcrScreenshotTextAsync(
+        var imageText = await cacheService.GetAndSaveTemporaryOcrScreenshotTextAsync(
             new OcrServiceImageTextCacheRequest
             {
                 PageNumber = pageNumber,

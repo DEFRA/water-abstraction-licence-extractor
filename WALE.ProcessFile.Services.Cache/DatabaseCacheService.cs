@@ -123,16 +123,32 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrImageTextAsync(request);
     }
     
-    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var content = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
-        return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
+        var text = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
+        var linesAndWords =  JsonSerializer.Deserialize<List<LineAndWords>>(text!, JsonHelper.GetSerializerOptions())!;
+        
+        await databaseWriteService.SaveOcrImageTextAsync(
+            request,
+            text!,
+            request.ProcessRunId);
+
+        await databaseWriteService.DeleteTemporaryOcrImageTextAsync(request);
+        return linesAndWords;
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var content = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
-        return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
+        var text = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(text!, JsonHelper.GetSerializerOptions())!;
+
+        await databaseWriteService.SaveOcrScreenshotTextAsync(
+            request,
+            text!,
+            request.ProcessRunId);
+        
+        await databaseWriteService.DeleteTemporaryOcrScreenshotTextAsync(request);
+        return linesAndWords;
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(

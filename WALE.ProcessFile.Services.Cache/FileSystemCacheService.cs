@@ -284,7 +284,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return await File.ReadAllTextAsync(outputFilename);
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
@@ -310,7 +310,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
     }
     
-    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";

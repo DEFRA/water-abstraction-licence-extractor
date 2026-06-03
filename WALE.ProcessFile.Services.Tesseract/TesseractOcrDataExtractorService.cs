@@ -63,7 +63,7 @@ public class TesseractOcrDataExtractorService(
             
             // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
             // crash Tesseract and take our process down with it
-            var runTesseractInsideThisProcess = false; 
+            var runTesseractInsideThisProcess = true; 
 
             if (runTesseractInsideThisProcess)
             {
@@ -122,12 +122,14 @@ public class TesseractOcrDataExtractorService(
                 {
                     if (isPageScreenshot)
                     {
-                        returnLines = await cacheService.GetTemporaryOcrScreenshotTextAsync(request);
+                        returnLines = await cacheService.GetAndSaveTemporaryOcrScreenshotTextAsync(request);
                     }
                     else
                     {
-                        returnLines = await cacheService.GetTemporaryOcrImageTextAsync(request);
+                        returnLines = await cacheService.GetAndSaveTemporaryOcrImageTextAsync(request);
                     }
+
+                    canSave = false;
                 }
             }
 
@@ -135,13 +137,11 @@ public class TesseractOcrDataExtractorService(
             {
                 if (isPageScreenshot)
                 {
-                    await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
-                    //await cacheService.DeleteTemporaryOcrScreenshotTextAsync(request);                    
+                    await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);              
                 }
                 else
                 {
                     await cacheService.SaveOcrImageTextAsync(request, returnLines);
-                    //await cacheService.DeleteOcrImageTextAsync(request, returnLines);
                 }
             }
         }

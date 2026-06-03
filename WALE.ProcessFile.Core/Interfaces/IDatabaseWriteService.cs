@@ -85,4 +85,8 @@ public interface IDatabaseWriteService
     Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
 
     Task SaveVersionFilesAsync(List<VersionFile> results);
+
+    Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+
+    Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
 }

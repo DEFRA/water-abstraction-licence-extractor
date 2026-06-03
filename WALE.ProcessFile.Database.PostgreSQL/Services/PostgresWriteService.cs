@@ -658,6 +658,53 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         }
     }
 
+    public async Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM ocr_temporary_image_text_cache
+                           WHERE file_id = @FileId
+                               AND ocr_service_name = @OcrServiceName 
+                               AND page_number = @PageNumber 
+                               AND image_number = @ImageNumber;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                request.FileId,
+                request.OcrServiceName,
+                request.ImageNumber,
+                request.PageNumber
+            });
+    }
+
+    public async Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM ocr_temporary_screenshot_text_cache
+                           WHERE
+                                file_id = @FileId
+                                AND ocr_service_name = @OcrServiceName
+                                AND page_number = @PageNumber
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                request.FileId,
+                request.OcrServiceName,
+                request.PageNumber
+            });
+    }
+
     private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
     {
         await using var connection = GetPostgresConnection();

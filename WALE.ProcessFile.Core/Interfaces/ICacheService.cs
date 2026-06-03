@@ -43,10 +43,10 @@ public interface ICacheService
     
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
     
-    Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(
+    Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request);
     
-    Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
+    Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request);
 
     public Task<int> SaveImageOnPageAsync(

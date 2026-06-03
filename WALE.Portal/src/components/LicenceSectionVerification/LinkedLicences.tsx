@@ -114,7 +114,26 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 <div className="linked-licences-list">
                     {isLoading && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Loading linked licences...</p>}
                     {error && <p style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</p>}
-                    {!isLoading && !error && linkedLicences.length === 0 && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No linked licences found.</p>}
+                    {!isLoading && !error && linkedLicences.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                            <p style={{ color: '#888', marginBottom: '16px' }}>No linked licences found.</p>
+                            <button 
+                                onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                style={{ 
+                                    padding: '6px 20px', 
+                                    backgroundColor: '#52c41a', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    borderRadius: '4px', 
+                                    cursor: 'pointer', 
+                                    fontWeight: '600',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Confirm No Outgoing Linked Licences
+                            </button>
+                        </div>
+                    )}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
                         <LinkedLicenceItem 
                             key={index} 
@@ -125,12 +144,12 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             onRemove={() => handleRemoveLicence(index)}
                             onDiscard={handleDiscard}
                             onJumpToPage={onJumpToPage}
-                            onVerify={() => onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), 'Confirm')}
-                            onReject={() => onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), 'Remove')}
+                            onVerify={() => onItemVerificationRequested?.('Confirm', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                            onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                             onOverride={() => {
                                 if (editingIndex === index) {
                                     setIsWaitingForVerification(true);
-                                    onItemVerificationRequested?.((ll.licenceNumber || ll.permitNumber || `item-${index}`), isAddingNew ? 'Added' : 'Edit');
+                                    onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
                                 } else {
                                     setEditingIndex(index);
                                     setIsAddingNew(false);

@@ -13,8 +13,6 @@ public interface IDatabaseReadService
     
     Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName);
     
-    Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
-    
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);

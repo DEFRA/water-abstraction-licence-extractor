@@ -29,8 +29,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         LookupConfiguration configuration,
         int processRunId)
     {
+        var dtStart = DateTime.Now;
         var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
+        var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
 
+        ConsoleHelper.WriteLine(
+            $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Attempting to get pdf document from cache (API)" +
+            $" took {durationMs}ms - {pdfFileName}");
+        
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,

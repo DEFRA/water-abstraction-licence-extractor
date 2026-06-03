@@ -108,11 +108,6 @@ public class DatabaseCacheService(
                 request.PageNumber));
     }
     
-    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        return databaseReadService.GetNoOcrPageTextLinesAsync(request);
-    }
-
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
         return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);

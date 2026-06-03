@@ -110,10 +110,6 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        throw new NotImplementedException();
-    }
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {

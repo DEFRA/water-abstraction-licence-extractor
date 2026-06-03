@@ -252,19 +252,6 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
     
-    public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        var outputFilename = await GetNoOcrPageReferenceAsync(request);
-        var existsInCache = File.Exists(outputFilename);
-
-        if (!existsInCache)
-        {
-            return null;
-        }
-        
-        return await File.ReadAllTextAsync(outputFilename);
-    }
-
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);

@@ -97,8 +97,9 @@ public class ImagesController(
         [FromQuery] string? extension,
         [FromQuery] int processRunId)
     {
-        var data = new byte[Request.ContentLength!.Value];
-        _ = await Request.Body.ReadAsync(data);
+        var ms = new MemoryStream();
+        await Request.Body.CopyToAsync(ms);
+        var data = ms.ToArray();
         
         await cacheService.SaveImageOnPageAsync(
             data,
@@ -121,8 +122,9 @@ public class ImagesController(
         [FromQuery] string? noOcrServiceName,
         [FromQuery] int processRunId)
     {
-        var data = new byte[Request.ContentLength!.Value];
-        _ = await Request.Body.ReadAsync(data);
+        var ms = new MemoryStream();
+        await Request.Body.CopyToAsync(ms);
+        var data = ms.ToArray();
         
         await outputService.SavePageScreenshotInternalAsync(
             pageNumber,

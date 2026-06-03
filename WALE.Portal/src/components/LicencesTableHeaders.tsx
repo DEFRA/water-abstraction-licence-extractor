@@ -261,7 +261,11 @@ export function LicencesTableHeaders({
                             { value: 'empty', label: 'No verifications' },
                             { value: 'AutoPass', label: 'AutoPass' },
                             { value: 'AutoWarn', label: 'AutoWarn' },
-                            { value: 'AutoFail', label: 'AutoFail' }
+                            { value: 'AutoFail', label: 'AutoFail' },
+                            { value: 'Confirmed', label: 'Confirmed' },
+                            { value: 'Removed', label: 'Removed' },
+                            { value: 'Edited', label: 'Edited' },
+                            { value: 'Added', label: 'Added' },
                         ]}
                     />
                 </td>

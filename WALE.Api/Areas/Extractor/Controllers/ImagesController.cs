@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -89,32 +88,50 @@ public class ImagesController(
     
     [HttpPost]
     public async Task<ActionResult> SaveImageOnPageAsync(
-        [FromBody] SaveImageOnPageRequest request)
+        [FromQuery] Guid fileId,
+        [FromQuery] int width,
+        [FromQuery] int height,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int imageNumber,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? extension,
+        [FromQuery] int processRunId)
     {
+        var ms = new MemoryStream();
+        await Request.Body.CopyToAsync(ms);
+        var data = ms.ToArray();
+        
         await cacheService.SaveImageOnPageAsync(
-            request.bytes,
-            request.width,
-            request.height,
-            request.fileId,
-            request.noOcrServiceName!,
-            request.imageNumber,
-            request.pageNumber,
-            request.extension!,
-            request.processRunId);
+            data,
+            width,
+            height,
+            fileId,
+            noOcrServiceName!,
+            imageNumber,
+            pageNumber,
+            extension!,
+            processRunId);
 
-        return Ok(request.bytes.Length);
+        return Ok(data.Length);
     }
     
     [HttpPost]
     public async Task<ActionResult> SavePageScreenshotAsync(
-        [FromBody] SavePageScreenshotRequest request)
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int processRunId)
     {
+        var ms = new MemoryStream();
+        await Request.Body.CopyToAsync(ms);
+        var data = ms.ToArray();
+        
         await outputService.SavePageScreenshotInternalAsync(
-            request.pageNumber,
-            request.noOcrServiceName!,
-            request.fileId,
-            request.data,
-            request.processRunId);
+            pageNumber,
+            noOcrServiceName!,
+            fileId,
+            data,
+            processRunId);
 
         return Ok();
     }

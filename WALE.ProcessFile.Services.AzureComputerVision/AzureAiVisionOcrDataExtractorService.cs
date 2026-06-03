@@ -141,6 +141,8 @@ public class AzureAiVisionOcrDataExtractorService(
         string imageReference,
         OcrServiceImageTextCacheRequest request)
     {
+        var dtStart = DateTime.Now;
+        
         ReadInStreamHeaders? textHeaders;
         ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.FileId}");
         
@@ -242,7 +244,7 @@ public class AzureAiVisionOcrDataExtractorService(
         if (results.AnalyzeResult.ReadResults.Count > 1)
         {
             throw new Exception(
-                "Cache is broken with more then one result - generally the result of passing in a PDF rather then an image");
+                "Azure AI response is unexpected with more then one result - generally the result of passing in a PDF rather then an image");
         }
 
         var returnLines = new List<(string Text, IList<Word> Words)>();
@@ -264,7 +266,9 @@ public class AzureAiVisionOcrDataExtractorService(
             returnLines.AddRange(pageLines);
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Received response in X seconds - {request.FileId}");
+        var tsDuration = (dtStart - DateTime.UtcNow).TotalSeconds.ToString("0.0");
+        
+        ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Received response in {tsDuration} seconds - {request.FileId}");
         return returnLines;
     }
     

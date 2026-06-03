@@ -129,6 +129,20 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
+    public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    {
+        var path = "/Extractor/Match/SaveMultiple";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            matches
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
     {
         var path = "/Extractor/Match/Save";
@@ -208,21 +222,21 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         int processRunId)
     {
         var bytes = await GetAsJpegAsync(bitmap);
-            
-        const string path = "/Extractor/Images/SavePageScreenshot";
 
-        var json = JsonSerializer.Serialize(new
-        {
-            PageNumber = pageNumber,
-            NoOcrServiceName = providerName,
-            FileId = fileId,
-            Data = bytes,
-            ProcessRunId = processRunId
-        }, JsonHelper.GetSerializerOptions());
-            
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var dtStart = DateTime.UtcNow;
+        var path = $"/Extractor/Images/SavePageScreenshot?pageNumber={pageNumber}&noOcrServiceName={providerName}" +
+            $"&fileId={fileId}&processRunId={processRunId}";
+
+        var httpContent = new ByteArrayContent(bytes, 0, bytes.Length);
         var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
+
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+
+        if (_showAllLogs)
+        {
+            ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
+        }
 
         return bytes.Length;
     }
@@ -364,4 +378,6 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    private static bool _showAllLogs = false;
 }

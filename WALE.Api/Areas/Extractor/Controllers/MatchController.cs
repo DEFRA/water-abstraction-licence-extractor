@@ -27,4 +27,11 @@ public class MatchController(IOutputService outputService) : Controller
         
         return Ok();
     }
+    
+    [HttpPost]
+    public async Task<IActionResult> SaveMultipleAsync([FromBody] SaveMatchesRequest matchesRequest)
+    {
+        await outputService.SaveMatchesAsync(matchesRequest.matches!);
+        return Ok();
+    }
 }

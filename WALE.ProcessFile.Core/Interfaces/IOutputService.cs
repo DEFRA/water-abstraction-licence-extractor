@@ -28,6 +28,8 @@ public interface IOutputService
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId);
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId);
+
+    public Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches);
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
     

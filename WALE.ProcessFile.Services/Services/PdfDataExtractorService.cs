@@ -97,10 +97,24 @@ public class PdfDataExtractorService(
             noOcrAlternativePdfDocumentService,
             configuration,
             processRunId);
+
+        var sizeKb = (pdfDocument.SizeBytes / 1024.0).ToString("0.0");
+        var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
         
-        ConsoleHelper.WriteLine(
-            $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document (cache = {pdfDocument.FromCache}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
-            $" - {pdfDocument.PdfFilename}");
+        if (pdfDocument.FromCache)
+        {
+            ConsoleHelper.WriteLine(
+                $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document from cache. " +
+                $"Cache size = {sizeKb}kb." +
+                $"Took {durationMs}ms - {pdfDocument.PdfFilename}");
+        }
+        else
+        {
+            ConsoleHelper.WriteLine(
+                $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document from s3. " +
+                $"Size = {sizeKb}kb." +
+                $"Took {durationMs}ms - {pdfDocument.PdfFilename}");            
+        }
         
         if (pdfDocument.DocumentLines == null)
         {
@@ -144,8 +158,6 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting digital text label matches took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        dtStart = DateTime.Now;
-        
         // De-dupe
         var newLabelGroupMatches = new List<LabelGroupResult>();
 
@@ -164,6 +176,7 @@ public class PdfDataExtractorService(
         }
 
         labelGroupMatches = newLabelGroupMatches;
+        dtStart = DateTime.Now;
         
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
@@ -172,6 +185,10 @@ public class PdfDataExtractorService(
                 NoOcrServiceName = Name
             });
 
+        ConsoleHelper.WriteLine(
+            $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
+            $" - {pdfDocument.PdfFilename}");
+        
         int pageNumber;
         int imageNumber;
         

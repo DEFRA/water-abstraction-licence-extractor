@@ -38,7 +38,6 @@ public static class ImportDmsData
         ConsoleHelper.WriteLine($"{count} records to insert");
 
         var loopIndex = 0;
-        
         var tasks = new List<Task>();
         
         foreach (var dmsRecord in dmsRecords.SelectMany(

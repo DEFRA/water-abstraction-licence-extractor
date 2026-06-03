@@ -83,31 +83,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        await using var connection = GetPostgresConnection();
-
-        const string sql = """
-                           SELECT data 
-                           FROM no_ocr_page_text_cache 
-                           WHERE file_id = @FileId
-                             AND page_number = @PageNumber 
-                             AND no_ocr_service_name = @NoOcrServiceName
-                           LIMIT 1;
-                           """;
-
-        return await QuerySingleOrDefaultAsync<string>(
-            connection,
-            sql,
-            0,
-            new
-            {
-                request.FileId,
-                request.PageNumber,
-                request.NoOcrServiceName
-            });
-    }
-
     public async Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();
@@ -208,7 +183,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                              AND ocr_service_name = @OcrServiceName
                              AND page_number = @PageNumber
                              AND image_number = @ImageNumber
-                           ORDER BY date_time_utc desc
                            LIMIT 1;
                            """;
 
@@ -1691,7 +1665,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             var result = await connection.QuerySingleOrDefaultAsync<T>(sql, param);
             var duration = DateTime.Now - dtStart;
 
-            if (duration.TotalSeconds > 1)
+            if (_showAllLogs || duration.TotalSeconds > 1)
             {
                 ConsoleHelper.WriteLine(
                     $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
@@ -1741,7 +1715,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             var result = await connection.QueryFirstOrDefaultAsync<T>(sql, param);
             var duration = DateTime.Now - dtStart;
 
-            if (duration.TotalSeconds > 1)
+            if (_showAllLogs || duration.TotalSeconds > 1)
             {
                 ConsoleHelper.WriteLine(
                     $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
@@ -1788,7 +1762,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             var result = await connection.QueryAsync<T>(sql, param);
             var duration = DateTime.Now - dtStart;
 
-            if (duration.TotalSeconds > 1)
+            if (_showAllLogs || duration.TotalSeconds > 1)
             {
                 ConsoleHelper.WriteLine(
                     $"WARNING - {nameof(PostgresReadService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
@@ -1826,7 +1800,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         var conn = dataSourceProvider.DataSource.CreateConnection();
         var duration = DateTime.Now - dtStart;
 
-        if (duration.TotalSeconds > 1)
+        if (_showAllLogs || duration.TotalSeconds > 1)
         {
             ConsoleHelper.WriteLine(
                 $"WARNING - {nameof(PostgresReadService)} - CreateConnection took {duration.TotalMilliseconds}ms");
@@ -1847,4 +1821,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
             }
         };
+
+    private readonly bool _showAllLogs = false;
 }

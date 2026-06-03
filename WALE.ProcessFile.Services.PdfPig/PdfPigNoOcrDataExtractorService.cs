@@ -29,12 +29,23 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         LookupConfiguration configuration,
         int processRunId)
     {
+        var dtStart = DateTime.Now;
         var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
+        var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
+        var debug = false;
 
+        if (debug)
+        {
+            ConsoleHelper.WriteLine(
+                $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Attempting to get pdf document from cache (API)" +
+                $" took {durationMs}ms - {pdfFileName}");
+        }
+        
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,
             metadata != null,
+            metadata?.SizeBytes ?? -1,
             outputService,
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
@@ -57,6 +68,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
             return pdfDocument;
         }
+        
+        await pdfDocument.OpenInternalDocumentAsync();
 
         await PopulateImageDataAndDocumentLinesAsync(
             pdfDocument,
@@ -265,19 +278,52 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         var dtProcessPagesStart = DateTime.Now;
         
-        var processPageTasks = pages
-            .Select(page => ProcessPageAsync(
-                pdfDocument,
-                page,
-                cacheService,
-                outputService,
-                processRunId,
-                pagesMetadata)) // Careful - this is being updated - TODO redesign
-            .ToList();
+        var processPageTasks = new List<Task<IReadOnlyList<DocumentLine>>>();
+        const int maxSimultaneousToProcess = 3;
+        
+        foreach (var page in pages)
+        {
+            processPageTasks.Add(
+                ProcessPageAsync(
+                    pdfDocument,
+                    page,
+                    cacheService,
+                    outputService,
+                    processRunId,
+                    pagesMetadata)); // Careful - this is being updated - TODO redesign);
+            
+            if (processPageTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (processPageTasks.Count >= maxSimultaneousToProcess)
+            {
+                await Task.WhenAny(processPageTasks);
+                var toRemoveList = new List<Task<IReadOnlyList<DocumentLine>>>();
+                
+                foreach (var processPageTask in processPageTasks)
+                {
+                    if (!processPageTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    documentLines.AddRange(processPageTask.Result); 
+                    toRemoveList.Add(processPageTask);
+                }
 
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    processPageTasks.Remove(toRemoveItem);
+                }
+            }
+        }
+        
         foreach (var processPageTask in processPageTasks)
         {
-            documentLines.AddRange(await processPageTask);
+            var lines = await processPageTask;
+            documentLines.AddRange(lines);
         }
         
         var processPagesDuration = DateTime.Now - dtProcessPagesStart;
@@ -394,6 +440,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             ICacheService cacheService)
     {
         var imagesMetadata = new ImageMetadata();
+
+        const int maxSimultaneousToProcess = 3;
         var pageTasks = new List<Task<ImageMetadataPage>>();    
         
         foreach (var page in pdfDocument.Pages)
@@ -404,11 +452,39 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 outputService,
                 cacheService,
                 processRunId));
-        }
 
+            if (pageTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (pageTasks.Count >= maxSimultaneousToProcess)
+            {
+                await Task.WhenAny(pageTasks);
+                var toRemoveList = new List<Task<ImageMetadataPage>>();
+                
+                foreach (var pageTask in pageTasks)
+                {
+                    if (!pageTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    imagesMetadata.Pages.Add(await pageTask);
+                    toRemoveList.Add(pageTask);
+                }
+
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    pageTasks.Remove(toRemoveItem);
+                }
+            }
+        }
+        
         foreach (var pageTask in pageTasks)
         {
-            imagesMetadata.Pages.Add(await pageTask);
+            var page = await pageTask;
+            imagesMetadata.Pages.Add(page);
         }
 
         return imagesMetadata;
@@ -436,27 +512,69 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 })
                 .ToList()
         };
-        
-        var imageSaveTasks = (await pageImageService.GetImagesAsync())
-            .Select((image, idx) => image.SaveImageBytesAsync(
-                pdfDocument.FileId,
-                idx + 1,
-                page.Number,
-                cacheService,
-                processRunId))
-            .ToList();
-        
-        foreach (var imageSaveTask in imageSaveTasks)
-        {
-            var (fileExtension, imageNumber) = await imageSaveTask;
 
+        var images = await pageImageService.GetImagesAsync();
+        var imageSaveTasks = new List<Task<(string Extension, int ImageNumber)>>();
+        
+        const int maxSimultaneousToProcess = 3;
+        var idx = 1;
+        
+        foreach (var image in images)
+        {
+            imageSaveTasks.Add(
+                image.SaveImageBytesAsync(
+                    pdfDocument.FileId,
+                    idx++,
+                    page.Number,
+                    cacheService,
+                    processRunId));
+            
+            if (imageSaveTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (imageSaveTasks.Count >= maxSimultaneousToProcess)
+            {
+                await Task.WhenAny(imageSaveTasks);
+                var toRemoveList = new List<Task<(string Extension, int ImageNumber)>>();
+                
+                foreach (var imageSaveTask in imageSaveTasks)
+                {
+                    if (!imageSaveTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    var (fileExtension, imageNumber) = await imageSaveTask;
+                    var imageReference = await cacheService.GetImageReferenceAsync(
+                        page.Number,
+                        imageNumber,
+                        pdfDocument.FileId,
+                        fileExtension,
+                        Name);
+                
+                    metadataPage.Images.Add(imageReference);
+                    toRemoveList.Add(imageSaveTask);
+                }
+
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    imageSaveTasks.Remove(toRemoveItem);
+                }
+            }
+        }
+        
+        foreach (var imageTask in imageSaveTasks)
+        {
+            var (fileExtension, imageNumber) = await imageTask;
             var imageReference = await cacheService.GetImageReferenceAsync(
                 page.Number,
                 imageNumber,
                 pdfDocument.FileId,
                 fileExtension,
                 Name);
-                
+            
             metadataPage.Images.Add(imageReference);
         }
         

@@ -104,6 +104,7 @@ public static class GenerateLicenceReaderExtract
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
+        ConsoleHelper.WriteLine("Started getting nald licence status");
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         
         const int take = 10_000;
@@ -120,6 +121,8 @@ public static class GenerateLicenceReaderExtract
         var allNaldDataPartial = new NaldDataCollection();
         var loopIdx = 0;
 
+        ConsoleHelper.WriteLine("Started getting all nald data");
+        
         while (loopIdx == 0
             || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
             || allNaldDataPartial.AbstractionLicencePoints!.Count == take
@@ -129,6 +132,7 @@ public static class GenerateLicenceReaderExtract
             || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
         {
             var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting nald data - starting at {skip}");
             
             allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
             allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
@@ -138,6 +142,8 @@ public static class GenerateLicenceReaderExtract
             allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
             allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
         }
+        
+        ConsoleHelper.WriteLine("Finished getting all nald data");
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -156,6 +162,8 @@ public static class GenerateLicenceReaderExtract
         }
         
         var naldLicenceStatusData = await naldLicenceStatusDataTask;
+        ConsoleHelper.WriteLine("Finished getting nald licence status");
+        
         var naldLiveLicenceDataByLowercasePermitNumber = new Dictionary<string, NaldAbstractionLicenceDataLine>();
         
         foreach (var licenceNumber in naldLicenceStatusData.LiveLicences)
@@ -182,7 +190,9 @@ public static class GenerateLicenceReaderExtract
             naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
         }
 
-        var maxConcurrentScrapers = 10;
+        var maxConcurrentScrapers = 6;
+        //var maxConcurrentScrapers = 10;
+        
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         
         // Create a list of PdfDataExtractorService instances for parallel processing
@@ -205,6 +215,8 @@ public static class GenerateLicenceReaderExtract
             _ => new LocalFileService("TODO")
         };
 
+        ConsoleHelper.WriteLine("Started getting dms extracts");
+        
         var dmsExtractInfoRaw = new List<DmsExtract>();
 
         List<DmsExtract> dmsExtractPartial = [];
@@ -213,10 +225,13 @@ public static class GenerateLicenceReaderExtract
         while (loopIdx == 0 || dmsExtractPartial.Count == take)
         {
             var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting dms extracts - starting at {skip}");
             
             dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
             dmsExtractInfoRaw.AddRange(dmsExtractPartial);
         }
+        
+        ConsoleHelper.WriteLine("Finished getting dms extracts");
         
         var dmsExtractInfo = new Dictionary<string, List<DmsExtract>>();
 
@@ -233,6 +248,8 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
         }
         
+        ConsoleHelper.WriteLine("Started GetAndSaveLicenceReaderDataAsync");
+        
         var outputLines = await GetAndSaveLicenceReaderDataAsync(
             pdfDataExtractors,
             fileService,
@@ -242,6 +259,8 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo,
             includeVersionMatch);
 
+        ConsoleHelper.WriteLine("Finished GetAndSaveLicenceReaderDataAsync");        
+        
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
             outputLines,
@@ -415,14 +434,13 @@ public static class GenerateLicenceReaderExtract
         var filenameIdx = 1;
         
         var scrapingTasks = new List<Task<DmsFileReaderResult?>>();
-        var minimumToFreeUp = maxConcurrentScrapers / 3;
         
         var returnList = new List<DmsFileReaderResult>();
         var extractorLock = new Lock();
 
         var templateService = new TemplateTypeIdentifierService("TODO");
         var fileTypeService = new FileTypeIdentifierService();
-            
+        
         foreach (var fileToProcess in filesToProcessRaw)
         {
             var lowercasePermitNumber = fileToProcess.PermitNumber!.ToLower();
@@ -437,8 +455,8 @@ public static class GenerateLicenceReaderExtract
             
             configuration.RegionId = naldData?.FgacRegionCode ?? -1;
             
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
-                $" (File {filenameIdx++} of {filesToProcessRaw.Count})");
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - *** Starting file: {fileToProcess.FileName}" +
+                $" (File {filenameIdx++} of {filesToProcessRaw.Count}) ***");
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -456,18 +474,9 @@ public static class GenerateLicenceReaderExtract
                 continue;
             }
 
-            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
-                var finishedTask = await Task.WhenAny(scrapingTasks);
-                var result = await finishedTask;
-
-                if (result != null)
-                {
-                    returnList.Add(result);    
-                }
-                
-                scrapingTasks.Remove(finishedTask);
-
+                await Task.WhenAny(scrapingTasks);
                 var toRemoveList = new List<Task<DmsFileReaderResult?>>();
                 
                 // Check the others see if any completed (this might be superflous)
@@ -477,8 +486,14 @@ public static class GenerateLicenceReaderExtract
                     {
                         continue;
                     }
-                    
-                    returnList.Add(scrapingTask.Result!); 
+
+                    var result = scrapingTask.Result;
+
+                    if (result != null)
+                    {
+                        returnList.Add(result);
+                    }
+
                     toRemoveList.Add(scrapingTask);
                 }
 

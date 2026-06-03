@@ -29,7 +29,6 @@ public class MetadataController(ICacheService cacheService) : Controller
         
         var metadataFileText = await metadataFileTextTask;
         var metadataImagesText = await metadataImagesTextTask;
-        var allDocumentLines = await allDocumentLinesTask;
 
         if (string.IsNullOrEmpty(metadataFileText)
             || string.IsNullOrEmpty(metadataImagesText))
@@ -48,7 +47,7 @@ public class MetadataController(ICacheService cacheService) : Controller
         return Ok(new MetadataCollection
         {
             PagesMetadata = pagesTextMetadata,
-            AllDocumentLines = allDocumentLines,
+            AllDocumentLines = await allDocumentLinesTask,
             ImageMetadata = imagesMetaData
         });
     }

@@ -48,7 +48,7 @@ public static class ConsoleHelper
         }
         catch
         {
-            
+            // Swallow exception
         }
         finally
         {

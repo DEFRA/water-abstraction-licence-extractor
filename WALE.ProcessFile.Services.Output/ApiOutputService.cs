@@ -232,8 +232,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
 
         var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
-        ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
-        
+
+        if (_showAllLogs)
+        {
+            ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
+        }
+
         return bytes.Length;
     }
 
@@ -374,4 +378,6 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    private static bool _showAllLogs = false;
 }

@@ -301,7 +301,7 @@ public static class GenerateLicenceReaderExtract
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
-        existingResults.Clear();
+        //existingResults.Clear();
 
         var redos = new List<Guid>();
         
@@ -407,12 +407,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        filesToProcessRaw = filesToProcessRaw
+        /*filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
             //.Skip(10)
             .Take(10)
-            .ToList();
+            .ToList();*/
         
         await SetRunDateAsync(cacheService);
         

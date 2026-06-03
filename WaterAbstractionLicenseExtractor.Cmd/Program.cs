@@ -135,19 +135,32 @@ async Task ProgramAsync()
                 continue;
             }
 
-            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers - minimumToFreeUp)
             {
-                var licenceSetsTask = await Task.WhenAny(scrapingTasks);
-                scrapingTasks.Remove(licenceSetsTask);
-
-                var scrapeResultLicenceSets = await licenceSetsTask;
-
-                if (scrapeResultLicenceSets.Count == 0)
+                await Task.WhenAny(scrapingTasks);
+                var toRemoveList = new List<Task<List<LicenceSet>>>();
+                
+                foreach (var scrapingTask in scrapingTasks)
                 {
-                    continue;
+                    if (!scrapingTask.IsCompleted)
+                    {
+                        continue;
+                    }
+
+                    var scrapeResultLicenceSets = scrapingTask.Result;
+
+                    if (scrapeResultLicenceSets.Count != 0)
+                    {
+                        licenceSetGroups.Add(scrapeResultLicenceSets);
+                    }
+                    
+                    toRemoveList.Add(scrapingTask);
                 }
 
-                licenceSetGroups.Add(scrapeResultLicenceSets);
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    scrapingTasks.Remove(toRemoveItem);
+                }
             }
         }
 

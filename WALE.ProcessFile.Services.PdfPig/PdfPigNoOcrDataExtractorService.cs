@@ -293,12 +293,26 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 continue;
             }
             
-            while (processPageTasks.Count > maxSimultaneousToProcess)
+            while (processPageTasks.Count >= maxSimultaneousToProcess)
             {
-                var processPageTask = await Task.WhenAny(processPageTasks);
-                processPageTasks.Remove(processPageTask);
+                await Task.WhenAny(processPageTasks);
+                var toRemoveList = new List<Task<IReadOnlyList<DocumentLine>>>();
+                
+                foreach (var processPageTask in processPageTasks)
+                {
+                    if (!processPageTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    documentLines.AddRange(processPageTask.Result); 
+                    toRemoveList.Add(processPageTask);
+                }
 
-                documentLines.AddRange(await processPageTask);
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    processPageTasks.Remove(toRemoveItem);
+                }
             }
         }
         
@@ -440,12 +454,26 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 continue;
             }
             
-            while (pageTasks.Count > maxSimultaneousToProcess)
+            while (pageTasks.Count >= maxSimultaneousToProcess)
             {
-                var pageTask = await Task.WhenAny(pageTasks);
-                pageTasks.Remove(pageTask);
+                await Task.WhenAny(pageTasks);
+                var toRemoveList = new List<Task<ImageMetadataPage>>();
+                
+                foreach (var pageTask in pageTasks)
+                {
+                    if (!pageTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    imagesMetadata.Pages.Add(await pageTask);
+                    toRemoveList.Add(pageTask);
+                }
 
-                imagesMetadata.Pages.Add(await pageTask);
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    pageTasks.Remove(toRemoveItem);
+                }
             }
         }
         
@@ -489,34 +517,47 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         foreach (var image in images)
         {
-            var imageSaveTask = image.SaveImageBytesAsync(
-                pdfDocument.FileId,
-                idx++,
-                page.Number,
-                cacheService,
-                processRunId);
-            
-            imageSaveTasks.Add(imageSaveTask);
+            imageSaveTasks.Add(
+                image.SaveImageBytesAsync(
+                    pdfDocument.FileId,
+                    idx++,
+                    page.Number,
+                    cacheService,
+                    processRunId));
             
             if (imageSaveTasks.Count != maxSimultaneousToProcess)
             {
                 continue;
             }
             
-            while (imageSaveTasks.Count > maxSimultaneousToProcess)
+            while (imageSaveTasks.Count >= maxSimultaneousToProcess)
             {
-                var imageTask = await Task.WhenAny(imageSaveTasks);
-                imageSaveTasks.Remove(imageTask);
-
-                var (fileExtension, imageNumber) = await imageSaveTask;
-                var imageReference = await cacheService.GetImageReferenceAsync(
-                    page.Number,
-                    imageNumber,
-                    pdfDocument.FileId,
-                    fileExtension,
-                    Name);
+                await Task.WhenAny(imageSaveTasks);
+                var toRemoveList = new List<Task<(string Extension, int ImageNumber)>>();
                 
-                metadataPage.Images.Add(imageReference);
+                foreach (var imageSaveTask in imageSaveTasks)
+                {
+                    if (!imageSaveTask.IsCompleted)
+                    {
+                        continue;
+                    }
+                    
+                    var (fileExtension, imageNumber) = await imageSaveTask;
+                    var imageReference = await cacheService.GetImageReferenceAsync(
+                        page.Number,
+                        imageNumber,
+                        pdfDocument.FileId,
+                        fileExtension,
+                        Name);
+                
+                    metadataPage.Images.Add(imageReference);
+                    toRemoveList.Add(imageSaveTask);
+                }
+
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    imageSaveTasks.Remove(toRemoveItem);
+                }
             }
         }
         

@@ -411,7 +411,7 @@ public static class GenerateLicenceReaderExtract
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
             //.Skip(10)
-            .Take(1)
+            .Take(10)
             .ToList();
         
         await SetRunDateAsync(cacheService);
@@ -434,7 +434,6 @@ public static class GenerateLicenceReaderExtract
         var filenameIdx = 1;
         
         var scrapingTasks = new List<Task<DmsFileReaderResult?>>();
-        var minimumToFreeUp = maxConcurrentScrapers / 3;
         
         var returnList = new List<DmsFileReaderResult>();
         var extractorLock = new Lock();
@@ -475,18 +474,9 @@ public static class GenerateLicenceReaderExtract
                 continue;
             }
 
-            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
-                var finishedTask = await Task.WhenAny(scrapingTasks);
-                var result = await finishedTask;
-
-                if (result != null)
-                {
-                    returnList.Add(result);    
-                }
-                
-                scrapingTasks.Remove(finishedTask);
-
+                await Task.WhenAny(scrapingTasks);
                 var toRemoveList = new List<Task<DmsFileReaderResult?>>();
                 
                 // Check the others see if any completed (this might be superflous)
@@ -496,8 +486,14 @@ public static class GenerateLicenceReaderExtract
                     {
                         continue;
                     }
-                    
-                    returnList.Add(scrapingTask.Result!); 
+
+                    var result = scrapingTask.Result;
+
+                    if (result != null)
+                    {
+                        returnList.Add(result);
+                    }
+
                     toRemoveList.Add(scrapingTask);
                 }
 

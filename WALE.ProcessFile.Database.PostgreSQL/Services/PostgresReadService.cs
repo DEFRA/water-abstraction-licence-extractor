@@ -1822,5 +1822,5 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             }
         };
 
-    private readonly bool _showAllLogs = true;
+    private readonly bool _showAllLogs = false;
 }

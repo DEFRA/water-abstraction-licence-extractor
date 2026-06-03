@@ -63,12 +63,14 @@ public class TesseractOcrDataExtractorService(
             
             // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
             // crash Tesseract and take our process down with it
-            var runTesseractInsideThisProcess = true; 
+            var runTesseractInsideThisProcess = false; 
 
             if (runTesseractInsideThisProcess)
             {
                 try
                 {
+                    ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}) - Tesseract in-process called");
+                    
                     var inprocessTesseractService = new InternalTesseractOcrDataExtractorService(
                         outputService,
                         cacheService,

@@ -2,77 +2,58 @@ using SkiaSharp;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Exceptions;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 
-public class PdfDocument
+public class PdfDocument(
+    string pdfFilename,
+    Guid fileId,
+    bool fromCache,
+    long sizeBytes,
+    IOutputService outputService,
+    INoOcrPdfDocumentService noOcrPdfDocumentService,
+    INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
+    LookupConfiguration configuration)
 {
-    public bool FromCache { get; }
-    public string PdfFilename { get; }
-    
-    public Guid FileId { get; set; }
-    
-    public string PdfFilenameNoExtension { get; }
-    
-    public IFileService FileService { get; }
-    
+    public bool FromCache { get; } = fromCache;
+    public long SizeBytes { get; set; } = sizeBytes;
+    public string PdfFilename { get; } = pdfFilename;
+
+    public Guid FileId { get; set; } = fileId;
+
+    private IFileService FileService { get; } = configuration.FileService;
+
     private IInternalPdfDocument? InternalDocument { get; set; }
     
     private IAlternativeImageProvider? AlternativeImageProvider { get; set; }
     
-    private IOutputService OutputService { get; set; }
-    
-    INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; }
-    
-    INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; }
-    
-    int SkipFileIfMoreThenPages { get; set; }
+    private IOutputService OutputService { get; set; } = outputService;
+
+    INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; } = noOcrPdfDocumentService;
+
+    INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; } = noOcrAlternativePdfDocumentService;
+
+    int SkipFileIfMoreThenPages { get; set; } = configuration.SkipFileWhenMoreThenPages;
 
     public static int SkipFileIfMoreThenImages { get; set; } = 50;
-    
-    public PdfDocument(
-        string pdfFilename,
-        Guid fileId,
-        bool fromCache,
-        IOutputService outputService,
-        INoOcrPdfDocumentService noOcrPdfDocumentService,
-        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
-        LookupConfiguration configuration)
-    {
-        PdfFilename = pdfFilename;
-        FileId = fileId;
-        PdfFilenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename)!;
-        FileService = configuration.FileService;
-        FromCache = fromCache;
-        OutputService = outputService;
-        NoOcrPdfDocumentService = noOcrPdfDocumentService;
-        NoOcrAlternativePdfDocumentService = noOcrAlternativePdfDocumentService;
-        SkipFileIfMoreThenPages = configuration.SkipFileWhenMoreThenPages;
-            
-        if (fromCache)
-        {
-            return;
-        }
-        
-        OpenInternalDocument();
-    }
 
-    private void OpenInternalDocument()
+    public async Task OpenInternalDocumentAsync()
     {
         if (InternalDocument != null)
         {
             return;
         }
 
-        InternalDocument = NoOcrPdfDocumentService.GetPdfDocument(FileService, PdfFilename);
-        if (InternalDocument.GetPages().Count > SkipFileIfMoreThenPages)
+        InternalDocument = await NoOcrPdfDocumentService.GetPdfDocumentAsync(FileService, PdfFilename);
+        SizeBytes = InternalDocument.SizeBytes;
+        
+        if (Pages.Count > SkipFileIfMoreThenPages)
         {
             throw new TooManyPagesException(
                 "Too many pages in this file - it is being skipped",
-                InternalDocument.GetPages().Count);
+                Pages.Count);
         }
         
         AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
@@ -91,7 +72,7 @@ public class PdfDocument
             
             if (FromCache && InternalDocument == null)
             {
-                OpenInternalDocument();
+                throw new Exception("PdfDocument not initialized correctly");
             }
             
             _pages = InternalDocument!.GetPages()
@@ -100,9 +81,9 @@ public class PdfDocument
                     if (page.NumberOfImages > SkipFileIfMoreThenImages)
                     {
                         throw new TooManyImagesException(
-                            "Too many images in this file - it is being skipped",
+                            "Too many images on this page (in this file) - it is being skipped",
                             page.NumberOfImages,
-                            InternalDocument.GetPages().Count);
+                            page.NumberOfImages);
                     }
                     
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
@@ -143,10 +124,10 @@ public class PdfDocument
     {
         if (FromCache && InternalDocument == null)
         {
-            OpenInternalDocument();
+            await OpenInternalDocumentAsync();
         }
 
-        var pdfPigBitmap = InternalDocument!.GetPageAsSKBitmap(
+        var pdfPigBitmap = InternalDocument!.GetPageAsSkBitmap(
             pageNumber,
             3F);
 

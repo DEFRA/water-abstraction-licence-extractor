@@ -382,9 +382,16 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
 
-        return !string.IsNullOrEmpty(content)
+        var metadata = !string.IsNullOrEmpty(content)
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
+
+        if (metadata != null)
+        {
+            metadata.SizeBytes = content.Length;
+        }
+        
+        return metadata;
     }
 
     public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()

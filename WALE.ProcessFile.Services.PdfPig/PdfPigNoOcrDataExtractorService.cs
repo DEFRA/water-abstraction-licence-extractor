@@ -35,6 +35,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pdfFileName,
             fileId,
             metadata != null,
+            metadata?.SizeBytes ?? -1,
             outputService,
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
@@ -57,6 +58,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
             return pdfDocument;
         }
+        
+        await pdfDocument.OpenInternalDocumentAsync();
 
         await PopulateImageDataAndDocumentLinesAsync(
             pdfDocument,
@@ -265,19 +268,38 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         var dtProcessPagesStart = DateTime.Now;
         
-        var processPageTasks = pages
-            .Select(page => ProcessPageAsync(
-                pdfDocument,
-                page,
-                cacheService,
-                outputService,
-                processRunId,
-                pagesMetadata)) // Careful - this is being updated - TODO redesign
-            .ToList();
+        var processPageTasks = new List<Task<IReadOnlyList<DocumentLine>>>();
+        const int maxSimultaneousToProcess = 3;
+        
+        foreach (var page in pages)
+        {
+            processPageTasks.Add(
+                ProcessPageAsync(
+                    pdfDocument,
+                    page,
+                    cacheService,
+                    outputService,
+                    processRunId,
+                    pagesMetadata)); // Careful - this is being updated - TODO redesign);
+            
+            if (processPageTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (processPageTasks.Count > maxSimultaneousToProcess)
+            {
+                var processPageTask = await Task.WhenAny(processPageTasks);
+                processPageTasks.Remove(processPageTask);
 
+                documentLines.AddRange(await processPageTask);
+            }
+        }
+        
         foreach (var processPageTask in processPageTasks)
         {
-            documentLines.AddRange(await processPageTask);
+            var lines = await processPageTask;
+            documentLines.AddRange(lines);
         }
         
         var processPagesDuration = DateTime.Now - dtProcessPagesStart;
@@ -394,6 +416,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             ICacheService cacheService)
     {
         var imagesMetadata = new ImageMetadata();
+
+        const int maxSimultaneousToProcess = 3;
         var pageTasks = new List<Task<ImageMetadataPage>>();    
         
         foreach (var page in pdfDocument.Pages)
@@ -404,11 +428,25 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 outputService,
                 cacheService,
                 processRunId));
-        }
 
+            if (pageTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (pageTasks.Count > maxSimultaneousToProcess)
+            {
+                var pageTask = await Task.WhenAny(pageTasks);
+                pageTasks.Remove(pageTask);
+
+                imagesMetadata.Pages.Add(await pageTask);
+            }
+        }
+        
         foreach (var pageTask in pageTasks)
         {
-            imagesMetadata.Pages.Add(await pageTask);
+            var page = await pageTask;
+            imagesMetadata.Pages.Add(page);
         }
 
         return imagesMetadata;
@@ -436,27 +474,56 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 })
                 .ToList()
         };
+
+        var images = await pageImageService.GetImagesAsync();
+        var imageSaveTasks = new List<Task<(string Extension, int ImageNumber)>>();
         
-        var imageSaveTasks = (await pageImageService.GetImagesAsync())
-            .Select((image, idx) => image.SaveImageBytesAsync(
+        const int maxSimultaneousToProcess = 3;
+        var idx = 1;
+        
+        foreach (var image in images)
+        {
+            var imageSaveTask = image.SaveImageBytesAsync(
                 pdfDocument.FileId,
-                idx + 1,
+                idx++,
                 page.Number,
                 cacheService,
-                processRunId))
-            .ToList();
-        
-        foreach (var imageSaveTask in imageSaveTasks)
-        {
-            var (fileExtension, imageNumber) = await imageSaveTask;
+                processRunId);
+            
+            imageSaveTasks.Add(imageSaveTask);
+            
+            if (imageSaveTasks.Count != maxSimultaneousToProcess)
+            {
+                continue;
+            }
+            
+            while (imageSaveTasks.Count > maxSimultaneousToProcess)
+            {
+                var imageTask = await Task.WhenAny(imageSaveTasks);
+                imageSaveTasks.Remove(imageTask);
 
+                var (fileExtension, imageNumber) = await imageSaveTask;
+                var imageReference = await cacheService.GetImageReferenceAsync(
+                    page.Number,
+                    imageNumber,
+                    pdfDocument.FileId,
+                    fileExtension,
+                    Name);
+                
+                metadataPage.Images.Add(imageReference);
+            }
+        }
+        
+        foreach (var imageTask in imageSaveTasks)
+        {
+            var (fileExtension, imageNumber) = await imageTask;
             var imageReference = await cacheService.GetImageReferenceAsync(
                 page.Number,
                 imageNumber,
                 pdfDocument.FileId,
                 fileExtension,
                 Name);
-                
+            
             metadataPage.Images.Add(imageReference);
         }
         

@@ -45,9 +45,12 @@ public static class ConsoleHelper
             Console.SetCursorPosition(0, _writeCount);
             Console.Write(Enumerable.Repeat(' ', Console.BufferWidth).ToArray());
             Console.SetCursorPosition(0, _writeCount);
-
         }
         catch
+        {
+            
+        }
+        finally
         {
             // Need to do the following for the cursor not to lose its place
             Console.CursorVisible = false;

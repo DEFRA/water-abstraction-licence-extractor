@@ -564,6 +564,7 @@ public static class TestsForAiPrompts
             "[NOT_USED]",
             Guid.NewGuid(),
             true,
+            -1,
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,

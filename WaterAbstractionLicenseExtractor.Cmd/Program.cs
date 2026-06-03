@@ -114,7 +114,7 @@ async Task ProgramAsync()
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
-            await Task.Delay(1000);
+            await Task.Delay(2000);
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -151,19 +151,16 @@ async Task ProgramAsync()
             }
         }
 
-        if (scrapingTasks.Count != 0)
+        foreach (var scrapingTask in scrapingTasks)
         {
-            foreach (var scrapingTask in scrapingTasks)
+            var scrapeResultLicenceSets = await scrapingTask;
+
+            if (scrapeResultLicenceSets.Count == 0)
             {
-                var scrapeResultLicenceSets = await scrapingTask;
-
-                if (scrapeResultLicenceSets.Count == 0)
-                {
-                    continue;
-                }
-
-                licenceSetGroups.Add(scrapeResultLicenceSets);
+                continue;
             }
+
+            licenceSetGroups.Add(scrapeResultLicenceSets);
         }
 
         foreach (var pdfDataExtractor in pdfDataExtractors)
@@ -634,24 +631,15 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         if (matchesFull.Matches != null)
         {
-            // TODO move this to one batch save - do this in the morning to get 15 calls down to 1
-            var saveTasks = matchesFull.Matches
-                .Select(match => outputService.SaveMatchAsync(
-                    matchResultId,
-                    match.MatchedLabel?.Name,
-                    match.LabelGroupName,
-                    match))
+            var matches = matchesFull.Matches
+                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
                 .ToList();
 
-            await Task.WhenAll(saveTasks);
+            await outputService.SaveMatchesAsync(matches);
 
             var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
-
-            if (saveDuration >= 1000)
-            {
-                ConsoleHelper.WriteLine(
-                    $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            }
+            ConsoleHelper.WriteLine(
+                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         }
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
@@ -725,7 +713,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
         //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
         .Where(x => x.Value.RegionId == 3) // North east
         //.Skip(155)
-        .Take(5)
+        //.Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
     return filesAndMapping;

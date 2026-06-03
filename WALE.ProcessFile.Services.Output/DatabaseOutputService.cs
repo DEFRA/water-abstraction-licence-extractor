@@ -116,7 +116,7 @@ public class DatabaseOutputService(
         
         return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, licence.DmsFileId!.Value, processRunId);
     }
-    
+
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
@@ -127,6 +127,25 @@ public class DatabaseOutputService(
             licence.DmsFileId,
             licence.DmsPermitNumber,
             processRunId);
+    }
+    
+    public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    {
+        var tasks = new List<Task>();
+        
+        foreach (var match in matches)
+        {
+            tasks.Add(SaveMatchAsync(match.matchesResultId, match.labelName, match.labelGroupName, match.data));
+                
+            if (tasks.Count == 5)
+            {
+                await Task.WhenAll(tasks);
+                tasks.Clear();
+            }
+        }
+        
+        await Task.WhenAll(tasks);
+        tasks.Clear();
     }
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)

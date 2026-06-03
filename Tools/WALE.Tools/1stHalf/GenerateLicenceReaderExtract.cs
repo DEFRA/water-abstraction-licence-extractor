@@ -104,6 +104,7 @@ public static class GenerateLicenceReaderExtract
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
+        ConsoleHelper.WriteLine("Started getting nald licence status");
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         
         const int take = 10_000;
@@ -120,6 +121,8 @@ public static class GenerateLicenceReaderExtract
         var allNaldDataPartial = new NaldDataCollection();
         var loopIdx = 0;
 
+        ConsoleHelper.WriteLine("Started getting all nald data");
+        
         while (loopIdx == 0
             || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
             || allNaldDataPartial.AbstractionLicencePoints!.Count == take
@@ -129,6 +132,7 @@ public static class GenerateLicenceReaderExtract
             || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
         {
             var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting nald data - starting at {skip}");
             
             allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
             allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
@@ -138,6 +142,8 @@ public static class GenerateLicenceReaderExtract
             allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
             allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
         }
+        
+        ConsoleHelper.WriteLine("Finished getting all nald data");
         
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -156,6 +162,8 @@ public static class GenerateLicenceReaderExtract
         }
         
         var naldLicenceStatusData = await naldLicenceStatusDataTask;
+        ConsoleHelper.WriteLine("Finished getting nald licence status");
+        
         var naldLiveLicenceDataByLowercasePermitNumber = new Dictionary<string, NaldAbstractionLicenceDataLine>();
         
         foreach (var licenceNumber in naldLicenceStatusData.LiveLicences)
@@ -182,7 +190,9 @@ public static class GenerateLicenceReaderExtract
             naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
         }
 
-        var maxConcurrentScrapers = 10;
+        var maxConcurrentScrapers = 6;
+        //var maxConcurrentScrapers = 10;
+        
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         
         // Create a list of PdfDataExtractorService instances for parallel processing
@@ -205,6 +215,8 @@ public static class GenerateLicenceReaderExtract
             _ => new LocalFileService("TODO")
         };
 
+        ConsoleHelper.WriteLine("Started getting dms extracts");
+        
         var dmsExtractInfoRaw = new List<DmsExtract>();
 
         List<DmsExtract> dmsExtractPartial = [];
@@ -213,10 +225,13 @@ public static class GenerateLicenceReaderExtract
         while (loopIdx == 0 || dmsExtractPartial.Count == take)
         {
             var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting dms extracts - starting at {skip}");
             
             dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
             dmsExtractInfoRaw.AddRange(dmsExtractPartial);
         }
+        
+        ConsoleHelper.WriteLine("Finished getting dms extracts");
         
         var dmsExtractInfo = new Dictionary<string, List<DmsExtract>>();
 
@@ -233,6 +248,8 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
         }
         
+        ConsoleHelper.WriteLine("Started GetAndSaveLicenceReaderDataAsync");
+        
         var outputLines = await GetAndSaveLicenceReaderDataAsync(
             pdfDataExtractors,
             fileService,
@@ -242,6 +259,8 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo,
             includeVersionMatch);
 
+        ConsoleHelper.WriteLine("Finished GetAndSaveLicenceReaderDataAsync");        
+        
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
             outputLines,
@@ -282,7 +301,7 @@ public static class GenerateLicenceReaderExtract
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
-        //existingResults.Clear();
+        existingResults.Clear();
 
         var redos = new List<Guid>();
         
@@ -388,12 +407,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        /*filesToProcessRaw = filesToProcessRaw
+        filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
             //.Skip(10)
-            .Take(10)
-            .ToList();*/
+            .Take(1)
+            .ToList();
         
         await SetRunDateAsync(cacheService);
         
@@ -422,7 +441,7 @@ public static class GenerateLicenceReaderExtract
 
         var templateService = new TemplateTypeIdentifierService("TODO");
         var fileTypeService = new FileTypeIdentifierService();
-            
+        
         foreach (var fileToProcess in filesToProcessRaw)
         {
             var lowercasePermitNumber = fileToProcess.PermitNumber!.ToLower();
@@ -437,8 +456,8 @@ public static class GenerateLicenceReaderExtract
             
             configuration.RegionId = naldData?.FgacRegionCode ?? -1;
             
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {fileToProcess.FileName}" +
-                $" (File {filenameIdx++} of {filesToProcessRaw.Count})");
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - *** Starting file: {fileToProcess.FileName}" +
+                $" (File {filenameIdx++} of {filesToProcessRaw.Count}) ***");
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(

@@ -20,7 +20,7 @@ export interface ILicenceSectionBody {
 
 export interface LicenceSectionBodyProps {
     onDataChanged?: (data: any) => void;
-    onItemVerificationRequested?: (itemId: string, type: 'Confirm' | 'Remove' | 'Edit' | 'Added') => void;
+    onItemVerificationRequested?: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone', itemId?: string) => void;
     onVerificationCancelled?: () => void;
 }
 
@@ -55,14 +55,17 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
     const confirmVerification = async () => {
         if (!pendingVerificationType) return;
         
+        const isConfirmNone = pendingVerificationType === 'ConfirmNone';
+        
         if (bodyRef.current) {
-            const data = bodyRef.current.getData(pendingVerificationItemId);
-            const scrapedData = bodyRef.current.getScrapedData(pendingVerificationItemId);
+            const data = isConfirmNone ? undefined : bodyRef.current.getData(pendingVerificationItemId);
+            const scrapedData = isConfirmNone ? undefined : bodyRef.current.getScrapedData(pendingVerificationItemId);
             
             // Map the pending verification type to the required verificationType string
-            let verificationType = '';
+            let verificationType: string;
             switch (pendingVerificationType) {
                 case 'Confirm':
+                case 'ConfirmNone':
                     verificationType = 'Confirmed';
                     break;
                 case 'Remove':
@@ -85,8 +88,8 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionScrapedValue: verificationType === 'Added' ? undefined : JSON.stringify(scrapedData),
-                    licenceSectionOverrideValue: (verificationType === 'Edited' || verificationType === 'Added') ? JSON.stringify(data) : undefined,
+                    licenceSectionScrapedValue: (verificationType === 'Added' || isConfirmNone) ? undefined : JSON.stringify(scrapedData),
+                    licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone) ? JSON.stringify(data) : undefined,
                     verificationType: verificationType,
                     licenceSectionItemId: pendingVerificationItemId,
                     notes: verificationNotes
@@ -133,7 +136,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     {cloneElement(children, { 
                         ref: bodyRef,
                         key: resetKey,
-                        onItemVerificationRequested: (itemId: string, type: 'Confirm' | 'Remove' | 'Edit' | 'Added') => handleVerification(type, itemId),
+                        onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone', itemId?: string) => handleVerification(type, itemId),
                         onVerificationCancelled: () => {
                             setPendingVerificationType(null);
                             setPendingVerificationItemId(undefined);
@@ -165,8 +168,14 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     }}>
                         <h4 style={{ marginTop: 0 }}>Verification Confirmation</h4>
                         <p>
-                            Are you sure you want to {pendingVerificationType === 'Edit' ? 'save changes for' : pendingVerificationType === 'Added' ? 'add' : pendingVerificationType?.toLowerCase()} 
-                            {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
+                            {pendingVerificationType === 'ConfirmNone' ? (
+                                `Are you sure you want to confirm there are no ${title.toLowerCase()} for this licence?`
+                            ) : (
+                                <>
+                                    Are you sure you want to {pendingVerificationType === 'Edit' ? 'save changes for' : pendingVerificationType === 'Added' ? 'add' : pendingVerificationType?.toLowerCase()} 
+                                    {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
+                                </>
+                            )}
                         </p>
                         <div style={{ marginBottom: '15px' }}>
                             <label htmlFor="verificationNotes" style={{ display: 'block', marginBottom: '5px' }}>Notes:</label>

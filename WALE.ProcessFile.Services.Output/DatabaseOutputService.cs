@@ -29,6 +29,14 @@ public class DatabaseOutputService(
         return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, fileId);
     }
 
+    public Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    {
+        return databaseReadService.GetPageScreenshotThumbnailAsync(
+            pageNumber,
+            fileId,
+            pdfServiceName);
+    }
+
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
         var bytes1 = await databaseReadService.GetPageScreenshotAsync(
@@ -281,6 +289,16 @@ public class DatabaseOutputService(
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {
         return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);
+    }
+
+    public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    {
+        return databaseWriteService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId,
+            thumbnail,
+            processRunId);
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId)

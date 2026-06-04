@@ -161,4 +161,38 @@ public class ImagesController(
 
         return Ok();
     }
+    
+    [HttpPost]
+    public async Task<ActionResult> SavePageScreenshotThumbnailAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int processRunId)
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
+        
+        await outputService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            noOcrServiceName!,
+            fileId,
+            data,
+            processRunId);
+
+        return Ok();
+    }
 }

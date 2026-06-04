@@ -1,4 +1,7 @@
 using System.Net;
+using Microsoft.Extensions.Http;
+using Polly;
+using Polly.Extensions.Http;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
@@ -12,6 +15,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -85,19 +89,8 @@ public static class GenerateLicenceReaderExtract
     public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
     {
         var dtStart = DateTime.Now;
-
-        #pragma warning disable SYSLIB0014
-        ServicePointManager.DefaultConnectionLimit = 100;
-        #pragma warning restore SYSLIB0014
-    
-        var clientHandler = new HttpClientHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-    
-        var httpClient = new HttpClient(clientHandler);
-        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
-    
+        
+        var httpClient = HttpHelper.GetResilientHttpClient(KeyConfig.ApiBaseUrl);
         var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         
@@ -301,7 +294,7 @@ public static class GenerateLicenceReaderExtract
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
-        //existingResults.Clear();
+        existingResults.Clear();
 
         var redos = new List<Guid>();
         
@@ -407,12 +400,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        /*filesToProcessRaw = filesToProcessRaw
+        filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
-                //fileMetadata.FileId == Guid.Parse("1b7180e5-9949-40f4-92ee-d0171b05a8b7"))
+            //    fileMetadata.FileId == Guid.Parse("c03a636d-41fd-ce6b-0af2-8a9f8c0811a0"))
             //.Skip(10)
-            .Take(10)
-            .ToList();*/
+            .Take(100)
+            .ToList();
         
         await SetRunDateAsync(cacheService);
         

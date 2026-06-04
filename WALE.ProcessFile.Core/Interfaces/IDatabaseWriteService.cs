@@ -89,4 +89,6 @@ public interface IDatabaseWriteService
     Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
+   
+    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
 }

@@ -23,7 +23,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var path = $"/Extractor/Cache/ClearSingle?fileId={fileId}";
        
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        
         response.EnsureSuccessStatusCode();
     }
 
@@ -32,7 +34,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var path = "/Extractor/Cache/ClearAll";
        
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        
         response.EnsureSuccessStatusCode();
     }
 
@@ -48,7 +52,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
            + $"&imageNumber={imageNumber}&pageNumber={pageNumber}"
            + $"&processRunId={processRunId}&extension={extension}&serviceName={serviceName}";
         
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadAsByteArrayAsync();
@@ -66,10 +71,11 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var path = $"/Extractor/Images/GetImage?pageNumber={request.PageNumber}"
            + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
            + $"&noOcrServiceName={request.NoOcrServiceName}&extension={request.Extension}";
-        
-        var response = await httpClient.GetAsync(path);
-        response.EnsureSuccessStatusCode();
 
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
+        response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync();
     }
 
@@ -78,7 +84,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = $"/Extractor/Images/GetAll?fileId={request.FileId}&noOcrServiceName={request.NoOcrServiceName}";
         
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -118,8 +126,11 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         return content;
     }
@@ -130,7 +141,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
            + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
         var content = await response.Content.ReadAsStringAsync();
 
         return content;
@@ -142,7 +155,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
         var content = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
 
@@ -155,7 +170,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             + $"&fileId={request.FileId}"
             + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
         var content = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
 
@@ -173,7 +190,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         string extension,
         int processRunId)
     {
-        var dtStart = DateTime.UtcNow;
+        //var dtStart = DateTime.UtcNow;
         var path = $"/Extractor/Images/SaveImageOnPage?width={width}&height={height}&fileId={fileId}" +
             $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
             $"&extension={extension}&processRunId={processRunId}";
@@ -187,14 +204,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
         form.Add(imageContent, "image", $"image.{extension}");
 
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
-        ConsoleHelper.WriteLine(
-            $"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
+        //var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+        //ConsoleHelper.WriteLine(
+        //    $"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
 
         return int.Parse(content);
     }
@@ -215,7 +233,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
         return request;
@@ -234,7 +253,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -254,7 +274,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
         return request;
@@ -275,7 +296,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -294,7 +316,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -313,7 +336,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -332,7 +356,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -353,7 +378,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -373,7 +399,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -381,7 +408,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = $"/Extractor/Metadata/Get?fileId={fileId}&noOcrServiceName={noOcrServiceName}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         var content = await response.Content.ReadAsStringAsync();
 
         var metadata = !string.IsNullOrEmpty(content)
@@ -400,7 +428,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/LinkedLicence/GetMap";
         
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -427,7 +456,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             path += "&allVersions=true";
         }
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -445,7 +475,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             path += $"?regionCode={regionCode}";
         }
         
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -469,7 +500,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/Dms/GetFileIds";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -484,7 +516,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var json = JsonSerializer.Serialize(newDmsFileIdInformation, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -493,7 +526,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var path = $"/Extractor/NaldData/GetCurrentIncrementNumber?permitNumber={permitNumber}" +
             $"&issueNumber={issueNumber}";
         
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -504,7 +538,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -519,7 +554,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var json = JsonSerializer.Serialize(dmsFileReaderResult, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -527,7 +563,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/Dms/GetDmsFileReaderResults";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -545,7 +582,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -553,7 +591,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/Import/GetDate";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadAsStringAsync();
@@ -563,7 +602,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/LicenceFinder/GetResults";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -581,7 +621,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -590,7 +631,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var path = "/Extractor/LicenceFinder/ClearResults";
         
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -598,7 +640,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/VersionFiles/GetToDownload";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -616,7 +659,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -624,7 +668,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/VersionFiles/GetAll";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -642,7 +687,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 }

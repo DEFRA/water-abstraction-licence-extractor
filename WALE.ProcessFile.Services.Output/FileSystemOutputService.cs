@@ -26,6 +26,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return GetPageScreenshotPaths(pageNumber, pdfServiceName, fileId);
     }
 
+    public Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
         int pageNumber,
         string pdfServiceName,
@@ -294,5 +299,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {
         return Task.FromResult(0);
+    }
+
+    public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    {
+        throw new NotImplementedException();
     }
 }

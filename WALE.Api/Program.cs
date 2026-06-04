@@ -35,6 +35,8 @@ return;
 static void ConfigureServices(IServiceCollection services, IConfigurationRoot config)
 {
     services.AddControllers();
+    services.AddResponseCaching();
+    
     services.AddOpenApi();
     services.AddHealthChecks();
 

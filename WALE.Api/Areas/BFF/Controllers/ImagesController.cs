@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -12,22 +13,45 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class ImagesController(IOutputService outputService, ICacheService cacheService) : Controller
 {
     [HttpGet]
+    [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]
     public async Task<ActionResult> Thumbnail(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] string serviceName)
     {
+        var thumbnail = await outputService.GetPageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId);
+
+        if (thumbnail != null)
+        {
+            return File(thumbnail, "image/jpeg");
+        }
+        
         var data = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             serviceName,
             fileId);
 
-        if (data.Count == 0)
-        {
-            throw new Exception($"Cannot find screenshot for {fileId} - {serviceName} - {pageNumber}");
-        }
+        var originalResImage = SKImage.FromEncodedData(data[0]);
+        var originalRegBitmap = SKBitmap.FromImage(originalResImage);
+        var resizedBitmap = originalRegBitmap.Resize(
+            new SKSizeI(120, 160),
+            SKSamplingOptions.Default);
 
-        return File(data[0], "image/jpeg");
+        var resizedImage = SKImage.FromBitmap(resizedBitmap);
+        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 60);
+
+        thumbnail = resizedJpg.AsSpan().ToArray();
+        await outputService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId,
+            thumbnail,
+            -1);
+
+        return File(thumbnail, "image/jpeg");
     }
 
     [HttpGet]

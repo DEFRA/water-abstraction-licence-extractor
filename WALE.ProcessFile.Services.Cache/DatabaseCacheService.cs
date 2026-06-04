@@ -126,11 +126,17 @@ public class DatabaseCacheService(
     public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var text = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
-        var linesAndWords =  JsonSerializer.Deserialize<List<LineAndWords>>(text!, JsonHelper.GetSerializerOptions())!;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new Exception("No temporary OCR image text found");
+        }
+        
+        var linesAndWords =  JsonSerializer.Deserialize<List<LineAndWords>>(text, JsonHelper.GetSerializerOptions())!;
         
         await databaseWriteService.SaveOcrImageTextAsync(
             request,
-            text!,
+            text,
             request.ProcessRunId);
 
         await databaseWriteService.DeleteTemporaryOcrImageTextAsync(request);
@@ -140,11 +146,17 @@ public class DatabaseCacheService(
     public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var text = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
-        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(text!, JsonHelper.GetSerializerOptions())!;
+        
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new Exception("No temporary OCR screenshot text found");
+        }
+        
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(text, JsonHelper.GetSerializerOptions())!;
 
         await databaseWriteService.SaveOcrScreenshotTextAsync(
             request,
-            text!,
+            text,
             request.ProcessRunId);
         
         await databaseWriteService.DeleteTemporaryOcrScreenshotTextAsync(request);

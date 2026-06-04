@@ -13,6 +13,11 @@ public interface IOutputService
         int pageNumber,
         string pdfServiceName,
         Guid fileId);
+
+    public Task<byte[]?> GetPageScreenshotThumbnailAsync(
+        int pageNumber,
+        string pdfServiceName,
+        Guid fileId);
     
     public Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
@@ -78,4 +83,6 @@ public interface IOutputService
     Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
+    
+    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
 }

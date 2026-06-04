@@ -59,14 +59,38 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public async Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data
+                           FROM page_screenshot_thumbnail
+                           WHERE file_id = @FileId
+                               AND no_ocr_service_name = @NoOcrServiceName
+                               AND page_number = @PageNumber
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<byte[]>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                NoOcrServiceName = noOcrServiceName,
+                PageNumber = pageNumber
+            });
+    }
+    
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
-                           FROM page_screenshot 
-                           WHERE file_id = @FileId 
-                               AND no_ocr_service_name = @NoOcrServiceName 
+                           SELECT data
+                           FROM page_screenshot
+                           WHERE file_id = @FileId
+                               AND no_ocr_service_name = @NoOcrServiceName
                                AND page_number = @PageNumber
                            LIMIT 1;
                            """;

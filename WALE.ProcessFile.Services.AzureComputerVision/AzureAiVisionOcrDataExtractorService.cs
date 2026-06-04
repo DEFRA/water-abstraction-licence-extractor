@@ -141,7 +141,7 @@ public class AzureAiVisionOcrDataExtractorService(
         string imageReference,
         OcrServiceImageTextCacheRequest request)
     {
-        var dtStart = DateTime.Now;
+        var dtStart = DateTime.UtcNow;
         
         ReadInStreamHeaders? textHeaders;
         ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Calling for P{request.PageNumber}, I{request.ImageNumber}, {request.FileId}");
@@ -266,7 +266,7 @@ public class AzureAiVisionOcrDataExtractorService(
             returnLines.AddRange(pageLines);
         }
 
-        var tsDuration = (dtStart - DateTime.UtcNow).TotalSeconds.ToString("0.0");
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds.ToString("0.0");
         
         ConsoleHelper.WriteLine($"INFO - {nameof(AzureAiVisionOcrDataExtractorService)} - Received response in {tsDuration} seconds - {request.FileId}");
         return returnLines;

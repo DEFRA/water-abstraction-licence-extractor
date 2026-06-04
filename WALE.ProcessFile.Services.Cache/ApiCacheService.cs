@@ -173,7 +173,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         string extension,
         int processRunId)
     {
-        var dtStart = DateTime.UtcNow;
+        //var dtStart = DateTime.UtcNow;
         var path = $"/Extractor/Images/SaveImageOnPage?width={width}&height={height}&fileId={fileId}" +
             $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
             $"&extension={extension}&processRunId={processRunId}";
@@ -192,9 +192,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
-        ConsoleHelper.WriteLine(
-            $"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
+        //var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+        //ConsoleHelper.WriteLine(
+        //    $"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
 
         return int.Parse(content);
     }

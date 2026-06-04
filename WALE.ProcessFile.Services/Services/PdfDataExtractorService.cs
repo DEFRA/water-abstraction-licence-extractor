@@ -355,10 +355,11 @@ public class PdfDataExtractorService(
                     }
                     catch (Exception ex)
                     {
-                        ConsoleHelper.WriteLine($"ERROR - {ocrService.Name} - {ex}");
+                        ConsoleHelper.WriteLine($"ERROR - {ocrService.Name} - {ex} - {imageReference}");
                         // TODO proper logging somewhere
                         
                         // Don't rethrow - just carry on with the other providers and pages
+                        continue;
                     }
                     
                     // No lines found, no point processing that with the other services

@@ -69,6 +69,7 @@ public class TesseractOcrDataExtractorService(
             {
                 try
                 {
+                    var dtStart = DateTime.UtcNow;
                     ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}) - Tesseract in-process called");
                     
                     var inprocessTesseractService = new InternalTesseractOcrDataExtractorService(
@@ -85,6 +86,9 @@ public class TesseractOcrDataExtractorService(
                         imageReference,
                         pdfDocument.FileId,
                         processRunId);
+                    
+                    var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds.ToString("0.0");
+                    ConsoleHelper.WriteLine($"INFO - {Name} - (P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}) - Received response in {tsDuration} seconds");
                 }
                 catch (Exception ex)
                 {

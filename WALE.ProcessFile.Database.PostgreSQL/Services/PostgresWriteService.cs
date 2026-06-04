@@ -705,6 +705,34 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public async Task SavePageScreenshotThumbnailAsync(
+        int pageNumber,
+        string serviceName,
+        Guid fileId,
+        byte[] thumbnail,
+        int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO page_screenshot_thumbnail (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
+                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
+                           """;
+        
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                PageNumber = pageNumber,
+                NoOcrServiceName = serviceName,
+                Data = thumbnail,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
+    }
+
     private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
     {
         await using var connection = GetPostgresConnection();

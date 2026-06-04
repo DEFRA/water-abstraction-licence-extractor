@@ -97,5 +97,8 @@ public interface IDatabaseReadService
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
     
     Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+    
     Task<List<VersionFile>> GetVersionFilesAsync();
+    
+    Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
 }

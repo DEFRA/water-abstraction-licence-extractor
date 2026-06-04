@@ -456,18 +456,8 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
-
-    #pragma warning disable SYSLIB0014
-    ServicePointManager.DefaultConnectionLimit = 100;
-    #pragma warning restore SYSLIB0014
     
-    var clientHandler = new HttpClientHandler
-    {
-        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-    };
-    
-    var httpClient = new HttpClient(clientHandler);
-    httpClient.BaseAddress = new Uri(apiBaseUrl);
+    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl);
     
     var fileServiceType = "api";
     IFileService fileService;

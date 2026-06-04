@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -177,15 +178,24 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
             $"&extension={extension}&processRunId={processRunId}";
 
-        var httpContent = new ByteArrayContent(bytes, 0, bytes.Length);
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
-        response.EnsureSuccessStatusCode();
+        var contentType = extension.Equals("png", StringComparison.InvariantCultureIgnoreCase)
+            ? "image/png"
+            : "image/jpeg";
         
+        using var form = new MultipartFormDataContent();
+        var imageContent = new ByteArrayContent(bytes, 0, bytes.Length);
+        imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+        form.Add(imageContent, "image", $"image.{extension}");
+
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form);
+        response.EnsureSuccessStatusCode();
+
         var content = await response.Content.ReadAsStringAsync();
 
         var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
-        ConsoleHelper.WriteLine($"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
-        
+        ConsoleHelper.WriteLine(
+            $"SaveImageOnPageAsync API call (P{pageNumber}, {noOcrServiceName}) took {tsDuration}ms");
+
         return int.Parse(content);
     }
 

@@ -97,9 +97,22 @@ public class ImagesController(
         [FromQuery] string? extension,
         [FromQuery] int processRunId)
     {
-        var ms = new MemoryStream();
-        await Request.Body.CopyToAsync(ms);
-        var data = ms.ToArray();
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
         
         await cacheService.SaveImageOnPageAsync(
             data,
@@ -122,9 +135,22 @@ public class ImagesController(
         [FromQuery] string? noOcrServiceName,
         [FromQuery] int processRunId)
     {
-        var ms = new MemoryStream();
-        await Request.Body.CopyToAsync(ms);
-        var data = ms.ToArray();
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
         
         await outputService.SavePageScreenshotInternalAsync(
             pageNumber,

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Helpers;
@@ -226,9 +227,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var dtStart = DateTime.UtcNow;
         var path = $"/Extractor/Images/SavePageScreenshot?pageNumber={pageNumber}&noOcrServiceName={providerName}" +
             $"&fileId={fileId}&processRunId={processRunId}";
-
-        var httpContent = new ByteArrayContent(bytes, 0, bytes.Length);
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        
+        using var form = new MultipartFormDataContent();
+        var imageContent = new ByteArrayContent(bytes, 0, bytes.Length);
+        imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+        form.Add(imageContent, "image", "image.jpg");
+        
+        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form);
         response.EnsureSuccessStatusCode();
 
         var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");

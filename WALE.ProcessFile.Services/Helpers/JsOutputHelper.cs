@@ -7,7 +7,6 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Strategies;
 
 namespace WALE.ProcessFile.Services.Helpers;
@@ -118,14 +117,9 @@ public static class JsOutputHelper
 
         var listData = new List<OutputListDataItem>();
 
-        var scrapedDataComparisonStrategies = new List<IScrapedDataComparisonStrategy>
+        var verificationOutputStrategies = new List<IVerificationOutputStrategy>
         {
-            new LinkedLicencesScrapedDataComparisonStrategy()
-        }.ToDictionary(s => s.SectionName);
-
-        var mergeOverrideStrategies = new List<IMergeOverrideStrategy>
-        {
-            new LinkedLicencesMergeOverrideStrategy()
+            new LinkedLicencesVerificationOutputStrategy()
         }.ToDictionary(s => s.SectionName);
 
         var verificationsByFileId = latestLicenceSectionVerifications?
@@ -194,26 +188,27 @@ public static class JsOutputHelper
                     .ToArray() ?? [],
                 latestLicenceSectionVerifications = outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
                                                     verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value,
-                                                        out var verifications)
-                    ? verifications
+                                                        out var fileVerifications)
+                    ? fileVerifications
                     : null
             };
 
             if (listRow.latestLicenceSectionVerifications != null)
             {
-                foreach (var verification in listRow.latestLicenceSectionVerifications.Where(verification =>
-                             verification.ProcessRunId <= processRun.ProcessRunId &&
-                             verification.LicenceSectionName != null))
-                {
-                    if (verification.ProcessRunId != processRun.ProcessRunId &&
-                        scrapedDataComparisonStrategies.TryGetValue(verification.LicenceSectionName!, out var strategy))
-                    {
-                        verification.ScrapedDataIsDifferent = strategy.ScrapedDataIsDifferent(verification, listRow);
-                    }
+                var groupedVerifications = listRow.latestLicenceSectionVerifications
+                    .Where(verification =>
+                        verification.ProcessRunId <= processRun.ProcessRunId &&
+                        verification.LicenceSectionName != null)
+                    .GroupBy(v => v.LicenceSectionName!);
 
-                    if (mergeOverrideStrategies.TryGetValue(verification.LicenceSectionName!, out var mergeStrategy))
+                foreach (var group in groupedVerifications)
+                {
+                    var sectionName = group.Key;
+                    var sectionVerifications = group.ToList();
+
+                    if (verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
                     {
-                        mergeStrategy.Merge(verification, listRow);
+                        strategy.HandleVerifications(sectionVerifications, listRow);
                     }
                 }
             }

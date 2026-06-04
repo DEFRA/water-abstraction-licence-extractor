@@ -231,8 +231,16 @@ public class PdfDataExtractorService(
                 {
                     imageNumber = imageNumberIndex + 1;
                     var image = allImagesInDocument
-                        .First(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
+                        .FirstOrDefault(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
 
+                    if (image == null)
+                    {
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not" +
+                            $" found, P{page} I{imageNumber} {dmsDataForFile.FileId}");
+                        
+                        continue;
+                    }
+                    
                     if (!IsPageScan(image.width, image.height))
                     {
                         continue;

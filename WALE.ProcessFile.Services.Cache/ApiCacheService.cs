@@ -120,6 +120,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var response = await httpClient.GetAsync(path);
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         return content;
     }

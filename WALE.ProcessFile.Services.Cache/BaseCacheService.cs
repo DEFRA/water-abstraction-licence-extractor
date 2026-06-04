@@ -42,6 +42,19 @@ public class BaseCacheService
         var imagesMetaData = JsonSerializer.Deserialize<ImageMetadata>(
             metadataImagesText,
             JsonHelper.GetSerializerOptions())!;
+        
+        imagesMetaData.Pages = imagesMetaData.Pages
+            .OrderBy(p => p.Number)
+            .ToList();
+
+        foreach (var page in imagesMetaData.Pages)
+        {
+            page.Images = page.Images
+                .OrderBy(im => im
+                    .Replace("-jpg-", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace("-png-", string.Empty, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
         return new MetadataCollection
         {

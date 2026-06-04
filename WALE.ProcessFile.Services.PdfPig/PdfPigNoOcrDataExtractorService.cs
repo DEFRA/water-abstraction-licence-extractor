@@ -487,6 +487,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             imagesMetadata.Pages.Add(page);
         }
 
+        imagesMetadata.Pages = imagesMetadata.Pages
+            .OrderBy(p => p.Number)
+            .ToList();
+        
         return imagesMetadata;
     }
 
@@ -577,6 +581,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             metadataPage.Images.Add(imageReference);
         }
+        
+        metadataPage.Images = metadataPage.Images
+            .OrderBy(im => im
+                .Replace("-jpg-", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("-png-", string.Empty, StringComparison.OrdinalIgnoreCase))
+            .ToList();
         
         return metadataPage;
     }

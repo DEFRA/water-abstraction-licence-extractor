@@ -189,9 +189,6 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        int pageNumber;
-        int imageNumber;
-        
         var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
@@ -222,14 +219,13 @@ public class PdfDataExtractorService(
                 maxPagesToLookAt = maxPagesToDetermineIfScan;
             }
 
-            for (var pageNumberIndex = 0; pageNumberIndex < maxPagesToLookAt; pageNumberIndex++)
+            for (var pageNumber = 1; pageNumber <= maxPagesToLookAt; pageNumber++)
             {
-                var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
-                pageNumber = pageNumberIndex + 1;
+                var page = pdfDocument.ImagesMetadata.Pages
+                    .Single(p => p.Number == pageNumber);
                 
-                for (var imageNumberIndex = 0; imageNumberIndex < page.Images.Count; imageNumberIndex++)
+                for (var imageNumber = 1; imageNumber <= page.Images.Count; imageNumber++)
                 {
-                    imageNumber = imageNumberIndex + 1;
                     var image = allImagesInDocument
                         .FirstOrDefault(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
 
@@ -284,15 +280,15 @@ public class PdfDataExtractorService(
 
         var documentLines = new List<DocumentLine>();
         
-        for (var pageNumberIndex = 0; pageNumberIndex < totalPagesToProcess; pageNumberIndex++)
+        for (var pageNumber = 1; pageNumber <= totalPagesToProcess; pageNumber++)
         {
             dtStart = DateTime.Now;
             
-            var page = pdfDocument.ImagesMetadata.Pages[pageNumberIndex];
-            pageNumber = pageNumberIndex + 1;
+            var page = pdfDocument.ImagesMetadata.Pages
+                .Single(p => p.Number == pageNumber);
            
             var breakPageLoop = false;
-            
+
             var pageImages = page.Images.ToList();
             var servicesUsed = new List<string>();
             
@@ -320,17 +316,15 @@ public class PdfDataExtractorService(
                 }
             }
 
-            for (var imageNumberIndex = 0; imageNumberIndex < pageImages.Count; imageNumberIndex++)
+            for (var imageNumber = 1; imageNumber <= pageImages.Count; imageNumber++)
             {
-                var imageReference = pageImages[imageNumberIndex];
+                var imageReference = pageImages[imageNumber - 1];
 
                 if (imageReference.Contains("-error-", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Skipping missing image {imageReference}");
                     continue;
                 }
-                
-                imageNumber = imageNumberIndex + 1;
                 
                 var breakImageLoop = false;
 

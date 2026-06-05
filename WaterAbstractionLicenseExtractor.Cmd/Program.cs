@@ -461,7 +461,7 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
     var delayPerProcessMs = 1000;
-    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 20);
+    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 30);
     
     var fileServiceType = "api";
     IFileService fileService;

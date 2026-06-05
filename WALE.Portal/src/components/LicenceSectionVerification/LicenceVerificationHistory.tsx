@@ -75,6 +75,7 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
                 <LicenceSectionVerificationHistory
                     key={verification.licenceSectionVerificationId || index}
                     verification={verification}
+                    initialOpen={index === 0}
                 >
                     {renderVerificationContent(verification)}
                 </LicenceSectionVerificationHistory>

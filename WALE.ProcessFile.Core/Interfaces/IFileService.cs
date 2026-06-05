@@ -8,7 +8,7 @@ public interface IFileService
     
     public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take);
     
-    public Task<Stream> GetFileAsStreamAsync(string filename);
+    public Task<Stream?> GetFileAsStreamAsync(string filename);
 
     public Task<byte[]> GetFileAsBytesAsync(string filename);
     

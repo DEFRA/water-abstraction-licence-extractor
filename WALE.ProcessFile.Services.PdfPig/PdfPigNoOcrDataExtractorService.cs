@@ -19,7 +19,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     public string Name => "PdfPig";
     private const int LineHeight = 9;
     
-    public async Task<PdfDocument> GetPdfDocumentAsync(
+    public async Task<PdfDocument?> GetPdfDocumentAsync(
         string pdfFileName,
         Guid fileId,
         IOutputService outputService,
@@ -68,8 +68,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
             return pdfDocument;
         }
-        
-        await pdfDocument.OpenInternalDocumentAsync();
+
+        if (!await pdfDocument.OpenInternalDocumentAsync())
+        {
+            return null;
+        }
 
         await PopulateImageDataAndDocumentLinesAsync(
             pdfDocument,

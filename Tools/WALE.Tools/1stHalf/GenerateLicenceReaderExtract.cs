@@ -93,8 +93,8 @@ public static class GenerateLicenceReaderExtract
 
         var delayPerProcessMs = 500;
         
-        var maxConcurrentScrapers = 6;
-        //var maxConcurrentScrapers = 10;
+        //var maxConcurrentScrapers = 6;
+        var maxConcurrentScrapers = 10;
         
         var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
@@ -314,7 +314,7 @@ public static class GenerateLicenceReaderExtract
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
-        existingResults.Clear();
+        //existingResults.Clear();
 
         var redos = new List<Guid>();
         
@@ -420,12 +420,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        filesToProcessRaw = filesToProcessRaw
+        /*filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
             //    fileMetadata.FileId == Guid.Parse("c876c780-7a8a-404d-9ba5-1d91f2829c17"))
             //.Skip(10)
-            .Take(200)
-            .ToList();
+            .Take(500)
+            .ToList();*/
         
         await SetRunDateAsync(cacheService);
         

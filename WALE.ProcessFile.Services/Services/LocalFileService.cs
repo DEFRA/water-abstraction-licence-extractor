@@ -29,9 +29,9 @@ public class LocalFileService(string folderPath) : IFileService
             .ToList());
     }
 
-    public Task<Stream> GetFileAsStreamAsync(string filename)
+    public Task<Stream?> GetFileAsStreamAsync(string filename)
     {
-        return Task.FromResult<Stream>(
+        return Task.FromResult<Stream?>(
             File.Open(
                 $"{FolderPath}{filename}",
                 FileMode.Open,

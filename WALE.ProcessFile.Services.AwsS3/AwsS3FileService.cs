@@ -107,11 +107,16 @@ public class AwsS3FileService(
     {
         var stream = await GetFileAsStreamAsync(filename);
 
+        if (stream == null)
+        {
+            throw new Exception("Stream is null");
+        }
+        
         using var binaryReader = new BinaryReader(stream);
         return binaryReader.ReadBytes((int)stream.Length);
     }
     
-    public async Task<Stream> GetFileAsStreamAsync(string filename)
+    public async Task<Stream?> GetFileAsStreamAsync(string filename)
     {
         var client = GetS3Client();
         var file = await client.GetObjectAsync(

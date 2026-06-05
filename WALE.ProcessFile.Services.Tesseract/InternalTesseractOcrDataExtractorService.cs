@@ -32,14 +32,15 @@ public class InternalTesseractOcrDataExtractorService(
         }
         else
         {
-            var imageBytes = await cacheService.GetImageBytesAsync(new OcrServiceImageDataCacheRequest
-            {
-                PageNumber = pageNumber,
-                ImageNumber = imageNumber,
-                FileId = fileId,
-                NoOcrServiceName = noOcrServiceName,
-                Extension = FileHelper.GetImageExtension(imageReference)
-            });
+            var imageBytes = await cacheService.GetImageBytesAsync(
+                new OcrServiceImageDataCacheRequest
+                {
+                    PageNumber = pageNumber,
+                    ImageNumber = imageNumber,
+                    FileId = fileId,
+                    NoOcrServiceName = noOcrServiceName,
+                    Extension = FileHelper.GetImageExtension(imageReference)
+                });
         
             bytesList =
             [
@@ -60,6 +61,12 @@ public class InternalTesseractOcrDataExtractorService(
         {
             try
             {
+                if (bytes.Length == 0)
+                {
+                    ConsoleHelper.WriteLine($"WARNING - TesseractInternal - Couldn't process as bytes length was zero - {fileId}");
+                    continue;
+                }
+                
                 var returnList = await GetDataFromTesseractAsync(bytes);
                 var numberOfWords = returnList.Sum(line => line.Words?.Count ?? 0);
 
@@ -80,7 +87,7 @@ public class InternalTesseractOcrDataExtractorService(
             }
             catch (Exception e)
             {
-                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - {e}");
+                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - {e} - {fileId}");
                 // TODO log
             }
         }

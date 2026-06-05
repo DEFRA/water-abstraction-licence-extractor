@@ -123,7 +123,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
         }
         catch (Exception exception)
         {
-            ConsoleHelper.WriteLine($"ERROR (IMPORTANT) - {nameof(PdfPigNoOcrImageService)} - SaveImageBytesAsync, " + exception);
+            ConsoleHelper.WriteLine($"ERROR (IMPORTANT) - {nameof(PdfPigNoOcrImageService)} - SaveImageBytesAsync, {exception} - {fileId}");
 
             // Write an empty entry into the table
             await cacheService.SaveImageOnPageAsync(

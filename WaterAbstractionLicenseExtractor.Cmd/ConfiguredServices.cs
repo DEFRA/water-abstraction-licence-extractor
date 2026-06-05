@@ -38,5 +38,7 @@ public class ConfiguredServices
     
     public string? DmsReportPath { get; init; }
     
-    public bool RefreshCache{ get; init; }
+    public bool RefreshCache { get; init; }
+
+    public int DelayPerProcessMs { get; set; }
 }

@@ -114,8 +114,11 @@ async Task ProgramAsync()
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
-            await Task.Delay(2000);
-            
+            if (services.DelayPerProcessMs > 0)
+            {
+                await Task.Delay(services.DelayPerProcessMs);
+            }
+
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
@@ -456,8 +459,9 @@ ConfiguredServices ConfigureServices()
                          ?? throw new NullReferenceException("TESSDATA_PREFIX");
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
-    
-    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl);
+
+    var delayPerProcessMs = 1000;
+    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 20);
     
     var fileServiceType = "api";
     IFileService fileService;
@@ -578,7 +582,8 @@ ConfiguredServices ConfigureServices()
         ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
-        DmsReportPath = fileMappingPath
+        DmsReportPath = fileMappingPath,
+        DelayPerProcessMs = delayPerProcessMs
     };
 }
 

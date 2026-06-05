@@ -1,5 +1,5 @@
 import {type ReactElement, useState, useRef, cloneElement} from 'react';
-import { LicenceSectionVerification } from '../../api/generated/apiClient';
+import { LicenceSectionVerification, OutputListDataItem } from '../../api/generated/apiClient';
 import { waleApiClient } from '../../api/apiClient';
 
 /**
@@ -22,6 +22,7 @@ export interface LicenceSectionBodyProps {
     onDataChanged?: (data: any) => void;
     onItemVerificationRequested?: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone', itemId?: string) => void;
     onVerificationCancelled?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 interface LicenceSectionProps {
@@ -33,9 +34,10 @@ interface LicenceSectionProps {
     processRunId: number;
     onRefresh?: () => void;
     onVerified?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
-export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified }: LicenceSectionProps) {
+export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
@@ -141,7 +143,8 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             setPendingVerificationType(null);
                             setPendingVerificationItemId(undefined);
                             setShowVerificationPrompt(false);
-                        }
+                        },
+                        outputListDataItem: outputListDataItem
                     } as any)}
                 </div>
             )}

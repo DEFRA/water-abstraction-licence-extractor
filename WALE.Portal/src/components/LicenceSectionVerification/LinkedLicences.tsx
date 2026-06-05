@@ -10,7 +10,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, onJumpToPage, onItemVerificationRequested }, ref) => {
+    ({ licence, onJumpToPage, onItemVerificationRequested, outputListDataItem }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [isLoading, setIsLoading] = useState(false);
@@ -157,6 +157,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     setIsWaitingForVerification(false);
                                 }
                             }}
+                            outputListDataItem={outputListDataItem}
                         />
                     ))}
                 </div>

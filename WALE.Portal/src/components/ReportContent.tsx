@@ -6,7 +6,7 @@ import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
 import {getImageUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
-import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";
+import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
 
 interface ReportContentProps {
@@ -15,11 +15,12 @@ interface ReportContentProps {
     //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
     onRefresh?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -256,6 +257,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
                                     onRefresh={onRefresh}
+                                    outputListDataItem={outputListDataItem}
                                 />
                             </div>
                         )}

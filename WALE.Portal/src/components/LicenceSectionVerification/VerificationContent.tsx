@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type {Licence, LicenceSectionVerification} from "../../api/generated/apiClient.ts";
+import type {Licence, LicenceSectionVerification, OutputListDataItem} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
@@ -10,11 +10,12 @@ interface VerificationContentProps {
     processRunId: number;
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 type SubTabType = 'verify' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('verify');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -86,10 +87,12 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         onRefresh={onRefresh}
                         onVerified={handleVerified}
                         initialOpen={true}
+                        outputListDataItem={outputListDataItem}
                     >
                         <LinkedLicences 
                             licence={licence} 
                             onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
                         />
                     </LicenceSection>
                 </div>

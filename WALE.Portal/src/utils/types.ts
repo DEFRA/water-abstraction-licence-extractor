@@ -34,4 +34,5 @@ export interface ReportModal {
     processRunId: number;
     position: { top: number; left: number };
     size: { width: string; height: string };
+    outputListDataItem?: OutputListDataItem;
 }

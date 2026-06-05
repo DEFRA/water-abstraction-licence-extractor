@@ -1,7 +1,3 @@
-using System.Net;
-using Microsoft.Extensions.Http;
-using Polly;
-using Polly.Extensions.Http;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
@@ -90,7 +86,16 @@ public static class GenerateLicenceReaderExtract
     {
         var dtStart = DateTime.Now;
         
-        var httpClient = HttpHelper.GetResilientHttpClient(KeyConfig.ApiBaseUrl);
+        var httpClient = HttpHelper.GetResilientHttpClient(
+            KeyConfig.ApiBaseUrl,
+            100,
+            30);
+
+        var delayPerProcessMs = 500;
+        
+        var maxConcurrentScrapers = 6;
+        //var maxConcurrentScrapers = 10;
+        
         var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         
@@ -101,40 +106,9 @@ public static class GenerateLicenceReaderExtract
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         
         const int take = 10_000;
-        var allNaldData = new NaldDataCollection
-        {
-            AbstractionAndImpoundmentLicences = [],
-            AbstractionLicencePoints = [],
-            AbstractionLicencePurposes = [],
-            AbstractionLicenceQuantities = [],
-            AbstractionLicences = [],
-            AbstractionLicenceVersions = []
-        };
 
-        var allNaldDataPartial = new NaldDataCollection();
-        var loopIdx = 0;
-
-        ConsoleHelper.WriteLine("Started getting all nald data");
-        
-        while (loopIdx == 0
-            || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
-            || allNaldDataPartial.AbstractionLicencePoints!.Count == take
-            || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
-            || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
-            || allNaldDataPartial.AbstractionLicences!.Count == take
-            || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
-        {
-            var skip = take * loopIdx++;
-            ConsoleHelper.WriteLine($"Getting nald data - starting at {skip}");
-            
-            allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
-            allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
-            allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
-            allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
-            allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
-            allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
-            allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
-        }
+        var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, take);
+        var allNaldData = await GetAllNaldDataAsync(cacheService, take);
         
         ConsoleHelper.WriteLine("Finished getting all nald data");
         
@@ -182,9 +156,6 @@ public static class GenerateLicenceReaderExtract
             var dmsStylePermitNumber = FormattingHelper.CleanPermitNumber(fullLicence.LicenceNo!).ToLower();
             naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
         }
-
-        var maxConcurrentScrapers = 6;
-        //var maxConcurrentScrapers = 10;
         
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         
@@ -207,13 +178,86 @@ public static class GenerateLicenceReaderExtract
             "api" => new ApiFileService(httpClient),
             _ => new LocalFileService("TODO")
         };
+        
+        ConsoleHelper.WriteLine("Started GetAndSaveLicenceReaderDataAsync");
+        
+        var outputLines = await GetAndSaveLicenceReaderDataAsync(
+            pdfDataExtractors,
+            fileService,
+            cacheService,
+            maxConcurrentScrapers,
+            naldLiveLicenceDataByLowercasePermitNumber,
+            await dmsExtractInfoTask,
+            includeVersionMatch,
+            delayPerProcessMs);
 
+        ConsoleHelper.WriteLine("Finished GetAndSaveLicenceReaderDataAsync");        
+        
+        // Generate CSV report
+        await ToolHelper.GenerateCsvReportWithSummaryAsync(
+            outputLines,
+            "LicenceReader",
+            "Output",
+            line => line.LicenceNumber ?? "No Licence Number scraped",
+            "licence records",
+            "Licence Processing Summary");
+        
+        var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
+
+        return 1;
+    }
+
+    private static async Task<NaldDataCollection> GetAllNaldDataAsync(ICacheService cacheService, int take)
+    {
+        var allNaldData = new NaldDataCollection
+        {
+            AbstractionAndImpoundmentLicences = [],
+            AbstractionLicencePoints = [],
+            AbstractionLicencePurposes = [],
+            AbstractionLicenceQuantities = [],
+            AbstractionLicences = [],
+            AbstractionLicenceVersions = []
+        };
+
+        var allNaldDataPartial = new NaldDataCollection();
+        var loopIdx = 0;
+
+        ConsoleHelper.WriteLine("Started getting all nald data");
+        
+        while (loopIdx == 0
+               || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
+               || allNaldDataPartial.AbstractionLicencePoints!.Count == take
+               || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
+               || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
+               || allNaldDataPartial.AbstractionLicences!.Count == take
+               || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+        {
+            var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting nald data - starting at {skip}");
+            
+            allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
+            allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
+            allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
+            allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
+            allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
+            allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
+            allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+        }
+        
+        return allNaldData;
+    }
+    
+    private static async Task<Dictionary<string, List<DmsExtract>>> GetDmsExtractInfoAsync(
+        ICacheService cacheService,
+        int take)
+    {
         ConsoleHelper.WriteLine("Started getting dms extracts");
         
         var dmsExtractInfoRaw = new List<DmsExtract>();
 
         List<DmsExtract> dmsExtractPartial = [];
-        loopIdx = 0;
+        var loopIdx = 0;
 
         while (loopIdx == 0 || dmsExtractPartial.Count == take)
         {
@@ -241,32 +285,7 @@ public static class GenerateLicenceReaderExtract
             dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
         }
         
-        ConsoleHelper.WriteLine("Started GetAndSaveLicenceReaderDataAsync");
-        
-        var outputLines = await GetAndSaveLicenceReaderDataAsync(
-            pdfDataExtractors,
-            fileService,
-            cacheService,
-            maxConcurrentScrapers,
-            naldLiveLicenceDataByLowercasePermitNumber,
-            dmsExtractInfo,
-            includeVersionMatch);
-
-        ConsoleHelper.WriteLine("Finished GetAndSaveLicenceReaderDataAsync");        
-        
-        // Generate CSV report
-        await ToolHelper.GenerateCsvReportWithSummaryAsync(
-            outputLines,
-            "LicenceReader",
-            "Output",
-            line => line.LicenceNumber ?? "No Licence Number scraped",
-            "licence records",
-            "Licence Processing Summary");
-        
-        var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
-
-        return 1;
+        return dmsExtractInfo;
     }
 
     private static Task<MatchesResult> GetMatchesAsync(
@@ -289,7 +308,8 @@ public static class GenerateLicenceReaderExtract
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
-        bool includeVersionMatch)
+        bool includeVersionMatch,
+        int delayPerProcessMs)
     {
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
@@ -402,9 +422,9 @@ public static class GenerateLicenceReaderExtract
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
         filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
-            //    fileMetadata.FileId == Guid.Parse("c03a636d-41fd-ce6b-0af2-8a9f8c0811a0"))
+            //    fileMetadata.FileId == Guid.Parse("c876c780-7a8a-404d-9ba5-1d91f2829c17"))
             //.Skip(10)
-            .Take(100)
+            .Take(200)
             .ToList();
         
         await SetRunDateAsync(cacheService);
@@ -436,6 +456,11 @@ public static class GenerateLicenceReaderExtract
         
         foreach (var fileToProcess in filesToProcessRaw)
         {
+            if (delayPerProcessMs > 0)
+            {
+                await Task.Delay(delayPerProcessMs);
+            }
+            
             var lowercasePermitNumber = fileToProcess.PermitNumber!.ToLower();
             
             var configuration = originalConfiguration.Clone();
@@ -648,7 +673,7 @@ public static class GenerateLicenceReaderExtract
             var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
             var ruleResult = templateService.IdentifyTemplateType(internalJson);
             
-            ConsoleHelper.WriteLine($"Template identification completed for {fileMetadata.FileName}");
+            ConsoleHelper.WriteLine($"INFO - GenerateLicenceReaderExtract - Template identification completed for {fileMetadata.FileName}");
             const string unknownKey = "Unknown";
             
             var fileType = fileTypeService.IdentifyFileType(internalJson, originalFileName ?? fileMetadata.FileName!);

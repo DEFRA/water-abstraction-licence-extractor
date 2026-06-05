@@ -503,14 +503,13 @@ public class PdfDataExtractorService(
                 unmatchedOrMoreWantedLabelLookups,
                 labelGroupMatches,
                 true);
-
+            
+            ProfilePage(dtStart, pageNumber, pageImages.Count, pdfDocument, servicesUsed);
+            
             if (breakPageLoop || labelsNotMatchedAtAll3.Count == 0)
             {
-                ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument, servicesUsed);
                 break;
             }
-            
-            ProfilePageIfSlow(dtStart, pageNumber, pageImages.Count, pdfDocument, servicesUsed);
         }
         
         noOcrDataExtractorService.Release(pdfDocument);
@@ -521,7 +520,7 @@ public class PdfDataExtractorService(
         return returnResult;
     }
 
-    private static void ProfilePageIfSlow(
+    private static void ProfilePage(
         DateTime dtStart,
         int pageNumber,
         int numberOfImages,
@@ -529,11 +528,6 @@ public class PdfDataExtractorService(
         List<string> servicesUsed)
     {
         var duration = DateTime.Now - dtStart;
-
-        if (400 > duration.TotalMilliseconds)
-        {
-            return;
-        }
         
         ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
             $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilename}");

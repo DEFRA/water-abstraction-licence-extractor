@@ -63,7 +63,7 @@ public class TesseractOcrDataExtractorService(
             
             // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
             // crash Tesseract and take our process down with it
-            var runTesseractInsideThisProcess = false; 
+            var runTesseractInsideThisProcess = true; 
 
             if (runTesseractInsideThisProcess)
             {

@@ -587,6 +587,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         metadataPage.Images = metadataPage.Images
             .OrderBy(im => im
+                .Replace("-error-", string.Empty, StringComparison.OrdinalIgnoreCase)
                 .Replace("-jpg-", string.Empty, StringComparison.OrdinalIgnoreCase)
                 .Replace("-png-", string.Empty, StringComparison.OrdinalIgnoreCase))
             .ToList();

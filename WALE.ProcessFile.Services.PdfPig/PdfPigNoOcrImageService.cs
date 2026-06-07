@@ -23,13 +23,13 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
         Pix? pix;
         const string deflateNeededErrorText = "Failed to load image from memory.";
-        
+
         try
         {
             if (imageData.TryGetPng(out bytes))
             {
                 returnExtension = pngExtension;
-                
+
                 try
                 {
                     ConsoleHelper.WriteToBuffer = true;
@@ -38,21 +38,21 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 catch (Exception ex)
                 {
                     ConsoleHelper.TryRemoveLastLine();
-                    
+
                     if (!ex.Message.Contains(deflateNeededErrorText))
                     {
                         throw;
                     }
 
                     ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
-                    
+
                     returnExtension = jpgExtension;
                     bytes = ImageHelper.Deflate(bytes!);
                     pix = Pix.LoadFromMemory(bytes);
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;                    
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
             else if (imageData.TryGetBytesAsMemory(out var bytesMemory))
@@ -68,12 +68,12 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 catch (Exception ex)
                 {
                     ConsoleHelper.TryRemoveLastLine();
-                    
+
                     if (!ex.Message.Contains(deflateNeededErrorText))
                     {
                         throw;
                     }
-                    
+
                     ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
 
                     returnExtension = jpgExtension;
@@ -82,7 +82,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;                    
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
             else
@@ -109,7 +109,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                     {
                         throw;
                     }
-                    
+
                     ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
 
                     bytes = ImageHelper.Deflate(bytes);
@@ -117,9 +117,35 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;                    
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
+        }
+        catch (InvalidDataException ide)
+        {
+            const string unsupportedCompresionText =
+                "The archive entry was compressed using an unsupported compression method";
+
+            if (!ide.Message.Contains(unsupportedCompresionText))
+            {
+                throw;
+            }
+            
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PdfPigNoOcrImageService)} - SaveImageBytesAsync, unupported compression method - saving empty array - {fileId}");
+            
+            // Write an empty entry into the table
+            await cacheService.SaveImageOnPageAsync(
+                [],
+                -1,
+                -1,
+                fileId,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                imageNumber,
+                pageNumber,
+                "error",
+                processRunId);
+
+            return ("error", imageNumber);
         }
         catch (Exception exception)
         {

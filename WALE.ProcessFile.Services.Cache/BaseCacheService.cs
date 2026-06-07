@@ -51,7 +51,8 @@ public class BaseCacheService
         {
             page.Images = page.Images
                 .OrderBy(im => im
-                    .Replace("-jpg-", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace("-error-", string.Empty, StringComparison.OrdinalIgnoreCase)
+                    .Replace("-jpg-", string.Empty, StringComparison.OrdinalIgnoreCase)                    
                     .Replace("-png-", string.Empty, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }

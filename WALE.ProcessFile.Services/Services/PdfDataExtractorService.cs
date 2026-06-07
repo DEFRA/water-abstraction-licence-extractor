@@ -299,7 +299,7 @@ public class PdfDataExtractorService(
            
             var breakPageLoop = false;
 
-            var pageImages = page.Images.ToList();
+            var pageImages = page.Images.ToList(); // They are ordered earlier
             var servicesUsed = new List<string>();
             
             if (pageImages.Count > 10)

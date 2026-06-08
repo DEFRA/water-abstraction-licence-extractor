@@ -1,5 +1,5 @@
 import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, OutputListDataItem } from "../../api/generated/apiClient.ts";
-import { getVerificationTypeColor } from "../../utils/verificationUtils.ts";
+import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -263,25 +263,7 @@ export const LinkedLicenceItem = ({
                         
                         if (!latestVerification) return null;
                         
-                        return (
-                            <div style={{ marginRight: 'auto', fontSize: '0.75rem', color: '#666', fontStyle: 'italic' }}>
-                                <span style={{ 
-                                    fontSize: '0.85rem', 
-                                    color: getVerificationTypeColor(latestVerification.verificationType || ''), 
-                                    fontWeight: 'bold',
-                                    fontStyle: 'normal'
-                                }}>
-                                    {latestVerification.verificationType}
-                                </span>
-                                <br/>{new Date(latestVerification.createdDateTimeUtc!).toLocaleString()}
-                                <br/>Process run {latestVerification.processRunId}
-                                {latestVerification.notes && (
-                                    <>
-                                        <br/>Notes: {latestVerification.notes}
-                                    </>
-                                )}
-                            </div>
-                        );
+                        return <LicenceSectionVerificationInfo verification={latestVerification} />;
                     })()}
                     <button 
                         onClick={onVerify}

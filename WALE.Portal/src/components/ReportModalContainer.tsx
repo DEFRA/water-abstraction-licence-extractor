@@ -2,7 +2,6 @@ import {ReportContent} from './ReportContent';
 import {LicenceSetReportContent} from './LicenceSetReportContent';
 import {DraggableModal} from "./DraggableModal";
 import type {ReportModal} from "../utils/types.ts";
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
 
 interface ReportModalContainerProps {
     modals: ReportModal[];

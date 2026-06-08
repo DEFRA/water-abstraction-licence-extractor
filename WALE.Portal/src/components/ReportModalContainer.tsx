@@ -2,6 +2,7 @@ import {ReportContent} from './ReportContent';
 import {LicenceSetReportContent} from './LicenceSetReportContent';
 import {DraggableModal} from "./DraggableModal";
 import type {ReportModal} from "../utils/types.ts";
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
 
 interface ReportModalContainerProps {
     modals: ReportModal[];
@@ -20,7 +21,7 @@ export function ReportModalContainer({
         onMinimize,
         onPositionChange,
         onRefresh/*,
-        onOpenLinkedLicence*/
+        onOpenLinkedLicence*/,
     }: ReportModalContainerProps) {
     return (
         <>
@@ -41,6 +42,7 @@ export function ReportModalContainer({
                             /*onOpenLinkedLicence={onOpenLinkedLicence}*/
                             processRunId={modal.processRunId}
                             onRefresh={onRefresh}
+                            outputListDataItem={modal.outputListDataItem}
                         />
                     ) : (
                         <LicenceSetReportContent

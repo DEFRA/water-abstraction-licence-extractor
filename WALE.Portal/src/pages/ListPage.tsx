@@ -62,16 +62,28 @@ function ListPage() {
         closeModal,
         updateModalPosition,
         maximizeModal,
-        minimizeModal
+        minimizeModal,
+        updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string) => {
-        openReport(fileId, parseInt(processRunId ?? '0'));
+    const openReportWithId = useCallback((fileId: string, item?: OutputListDataItem) => {
+        openReport(fileId, parseInt(processRunId ?? '0'), item);
     }, [openReport, processRunId]);
 
     const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
         openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
+
+    useEffect(() => {
+        modals.forEach(modal => {
+            if (modal.type === 'report') {
+                const updatedItem = outputList.find(item => item.fileId === modal.fileId);
+                if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(modal.outputListDataItem)) {
+                    updateModalOutputItem(modal.fileId, updatedItem);
+                }
+            }
+        });
+    }, [outputList, modals, updateModalOutputItem]);
     
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
@@ -132,7 +144,7 @@ function ListPage() {
                                 key={index} 
                                 data={filteredData} 
                                 oddRow={index % 2 === 0}
-                                onOpenReport={openReportWithId}
+                                onOpenReport={(fileId) => openReportWithId(fileId, item)}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />

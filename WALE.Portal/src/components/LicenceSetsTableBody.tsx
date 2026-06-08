@@ -5,7 +5,7 @@ import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsTableBodyProps {
     data: OutputListDataItem[];
-    onOpenReport: (fileId: string) => void;
+    onOpenReport: (fileId: string, item: OutputListDataItem) => void;
     onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     onTotalsCalculated?: (totals: LicenceSetsTotals) => void;
 }
@@ -153,7 +153,7 @@ function renderListRow(
     rows: ReactNode[],
     dataSorted: OutputListDataItem[],
     indentLevel: number,
-    onOpenReport: (fileId: string) => void,
+    onOpenReport: (fileId: string, item: OutputListDataItem) => void,
     onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void
 ) {
     const oddRow = i % 2 === 0;
@@ -199,7 +199,7 @@ function renderListRow(
                 {firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenReport(firstLicenceInSet.fileId!);
+                        onOpenReport(firstLicenceInSet.fileId!, firstLicenceInSet);
                     }} className='filenameSet'>
                         {firstLicenceInSet.filename}
                     </a>
@@ -219,7 +219,7 @@ function renderListRow(
                     {licenceInSet.filename !== '--' ? (
                         <a href='#' onClick={(e) => {
                             e.preventDefault();
-                            onOpenReport(licenceInSet.fileId!);
+                            onOpenReport(licenceInSet.fileId!, licenceInSet);
                         }} className='filenameSet'>
                             {licenceInSet.filename}
                         </a>

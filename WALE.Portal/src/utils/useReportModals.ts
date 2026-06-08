@@ -1,18 +1,20 @@
 import { useState, useCallback } from 'react';
 import type {ReportModal} from "./types.ts";
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
 
 export function useReportModals() {
     const [modals, setModals] = useState<ReportModal[]>([]);
     const [modalCounter, setModalCounter] = useState(0);
 
-    const openReport = useCallback((fileId: string, processRunId: number) => {
+    const openReport = useCallback((fileId: string, processRunId: number, item?: OutputListDataItem) => {
         const newModal: ReportModal = {
             id: modalCounter,
             type: 'report',
             fileId,
             processRunId,
             position: { top: 40, left: 350 },
-            size: { width: 'calc(100% - 370px)', height: 'calc(100% - 60px)' }
+            size: { width: 'calc(100% - 370px)', height: 'calc(100% - 60px)' },
+            outputListDataItem: item
         };
 
         setModals(prev => [...prev, newModal]);
@@ -68,6 +70,14 @@ export function useReportModals() {
         ));
     }, []);
 
+    const updateModalOutputItem = useCallback((fileId: string, item: OutputListDataItem) => {
+        setModals(prev => prev.map(modal =>
+            (modal.type === 'report' && modal.fileId === fileId)
+                ? { ...modal, outputListDataItem: item }
+                : modal
+        ));
+    }, []);
+
     return {
         modals,
         openReport,
@@ -75,6 +85,7 @@ export function useReportModals() {
         closeModal,
         updateModalPosition,
         maximizeModal,
-        minimizeModal
+        minimizeModal,
+        updateModalOutputItem
     };
 }

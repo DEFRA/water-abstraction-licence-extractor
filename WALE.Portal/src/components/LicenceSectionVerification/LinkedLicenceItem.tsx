@@ -1,4 +1,5 @@
-import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection } from "../../api/generated/apiClient.ts";
+import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, OutputListDataItem } from "../../api/generated/apiClient.ts";
+import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -11,6 +12,7 @@ interface LinkedLicenceItemProps {
     onVerify?: () => void;
     onReject?: () => void;
     onOverride?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 export const LinkedLicenceItem = ({ 
@@ -22,7 +24,8 @@ export const LinkedLicenceItem = ({
     onJumpToPage,
     onVerify,
     onReject,
-    onOverride
+    onOverride,
+    outputListDataItem
 }: LinkedLicenceItemProps) => {
     const linkedLicence = linkedLicenceProp;
 
@@ -249,7 +252,19 @@ export const LinkedLicenceItem = ({
                 </div>
             )}
             {(onVerify || onReject || onOverride) && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    {(() => {
+                        const licenceNumber = linkedLicence.licenceNumber;
+                        if (!licenceNumber || isEditing) return null;
+                        
+                        const latestVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(v => 
+                            v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber
+                        );
+                        
+                        if (!latestVerification) return null;
+                        
+                        return <LicenceSectionVerificationInfo verification={latestVerification} />;
+                    })()}
                     <button 
                         onClick={onVerify}
                         style={{ padding: '4px 12px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}

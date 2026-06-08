@@ -63,6 +63,9 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
         
         return (
             <div>
+                {verification.licenceSectionName === 'Linked Licences' && verification.licenceSectionItemId === 'None Outgoing' && (
+                    <label>No outgoing linked licences</label>
+                )}
                 {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
                 {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
             </div>

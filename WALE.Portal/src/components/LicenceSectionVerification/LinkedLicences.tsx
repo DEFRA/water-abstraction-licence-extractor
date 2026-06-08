@@ -3,6 +3,7 @@ import { type Licence, LinkedLicence } from "../../api/generated/apiClient.ts";
 import { waleApiClient } from "../../api/apiClient.ts";
 import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./LicenceSection";
 import { LinkedLicenceItem } from "./LinkedLicenceItem";
+import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -10,9 +11,14 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, onJumpToPage, onItemVerificationRequested }, ref) => {
+    ({ licence, onJumpToPage, onItemVerificationRequested, outputListDataItem }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
+
+        const noneOutgoingVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(
+            v => v.licenceSectionItemId === 'None Outgoing'
+        );
+
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -116,22 +122,31 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     {error && <p style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</p>}
                     {!isLoading && !error && linkedLicences.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '20px' }}>
-                            <p style={{ color: '#888', marginBottom: '16px' }}>No linked licences found.</p>
-                            <button 
-                                onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                style={{ 
-                                    padding: '6px 20px', 
-                                    backgroundColor: '#52c41a', 
-                                    color: 'white', 
-                                    border: 'none', 
-                                    borderRadius: '4px', 
-                                    cursor: 'pointer', 
-                                    fontWeight: '600',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Confirm No Outgoing Linked Licences
-                            </button>
+                            <p style={{ color: '#888', marginBottom: '16px' }}>No outgoing linked licences found.</p>
+                            {noneOutgoingVerification ? (
+                                <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
+                            ) : (
+                                <button 
+                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                    style={{ 
+                                        padding: '6px 20px', 
+                                        backgroundColor: '#52c41a', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '4px', 
+                                        cursor: 'pointer', 
+                                        fontWeight: '600',
+                                        fontSize: '0.85rem'
+                                    }}
+                                >
+                                    Confirm No Outgoing Linked Licences
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (
+                        <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                            <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
                         </div>
                     )}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
@@ -157,6 +172,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     setIsWaitingForVerification(false);
                                 }
                             }}
+                            outputListDataItem={outputListDataItem}
                         />
                     ))}
                 </div>

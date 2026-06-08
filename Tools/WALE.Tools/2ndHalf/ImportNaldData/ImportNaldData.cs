@@ -68,7 +68,7 @@ public static class ImportNaldData
 
     public static async Task<int> ImportAsync()
     {
-        ConsoleHelper.WriteLine("Starting NALD data import...");
+        ConsoleHelper.WriteLine($"Starting NALD data import to {KeyConfig.PostgresHost}...");
         var fileSource = "s3";
 
         var files = new List<string>();

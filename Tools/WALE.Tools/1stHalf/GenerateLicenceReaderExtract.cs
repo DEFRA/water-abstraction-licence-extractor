@@ -420,12 +420,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        filesToProcessRaw = filesToProcessRaw
+        /*filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
                 //fileMetadata.FileId == Guid.Parse("907bb5a8-b735-440a-a9e9-0d49872d0ddd"))
             //.Skip(10)
             .Take(50)
-            .ToList();
+            .ToList();*/
         
         await SetRunDateAsync(cacheService);
         

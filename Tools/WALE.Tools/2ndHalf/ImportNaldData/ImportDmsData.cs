@@ -12,7 +12,7 @@ public static class ImportDmsData
 {
     public static async Task<int> ImportAsync()
     {
-        ConsoleHelper.WriteLine("Starting DMS data import...");
+        ConsoleHelper.WriteLine($"Starting DMS data import into {KeyConfig.PostgresHost}...");
 
         var dmsRecords = GetDmsExtractsFromResourcesFolder();
 
@@ -180,6 +180,9 @@ public static class ImportDmsData
     {
         var allDmsRecords = new Dictionary<string, List<DmsExtract>>(StringComparer.OrdinalIgnoreCase);
         var filepaths = FindFilesByPattern("Consolidated");
+        
+        Console.WriteLine($"Found {filepaths.Count} extracts - First is {filepaths.FirstOrDefault()}");
+        
         var fileProcessor = new LicenceFileProcessor();
         
         foreach (var filepath in filepaths)

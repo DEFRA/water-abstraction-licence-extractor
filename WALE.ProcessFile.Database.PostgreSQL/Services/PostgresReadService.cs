@@ -789,19 +789,26 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               "LIC_NO" AS LicenceNumber,
-                               "FGAC_REGION_CODE" AS RegionCode,
-                               "ID" AS Id,
-                               0 AS Type
-                           FROM nald."NALD_ABS_LICENCES"
-                           UNION ALL
-                           SELECT 
-                               "LIC_NO" AS LicenceNumber,
-                               "FGAC_REGION_CODE" AS RegionCode,
-                               "ID" AS Id,
-                               1 AS Type
-                           FROM nald."NALD_IMP_LICENCES"
+                           (
+                               SELECT 
+                                   "LIC_NO" AS LicenceNumber,
+                                   "FGAC_REGION_CODE" AS RegionCode,
+                                   "ID" AS Id,
+                                   0 AS Type
+                               FROM nald."NALD_ABS_LICENCES"
+                               
+                               UNION ALL
+                               
+                               SELECT 
+                                   "LIC_NO" AS LicenceNumber,
+                                   "FGAC_REGION_CODE" AS RegionCode,
+                                   "ID" AS Id,
+                                   1 AS Type
+                               FROM nald."NALD_IMP_LICENCES"
+                            )
+                           ORDER BY
+                                LicenceNumber,
+                                RegionCode
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1093,6 +1100,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LICENCES"
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
+                           ORDER BY
+                               "ID",
+                               "FGAC_REGION_CODE"
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1170,6 +1180,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             
         sql += """
             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN')
+            ORDER BY
+                "AABL_ID",
+                "ISSUE_NO",
+                "INCR_NO"
             LIMIT @take
             OFFSET @skip;
         """;
@@ -1229,6 +1243,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            JOIN nald."NALD_PURP_USES" pu
                                ON p."APUR_APUS_CODE" = pu."CODE"
                            WHERE @RegionCode is null or p."FGAC_REGION_CODE" = @RegionCode
+                           ORDER BY
+                                p."ID"
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1298,6 +1314,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ON pp."AAIP_ID" = p."ID"
                                AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
                            WHERE @RegionCode is null or pp."FGAC_REGION_CODE" = @RegionCode
+                           ORDER BY
+                                pp."AABP_ID",
+                                pp."AAIP_ID"
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1331,6 +1350,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
+                           ORDER BY
+                                "ID"
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1502,6 +1523,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                modified_date,
                                file_id
                            FROM public.dms_extract
+                           ORDER BY
+                               site_collection,
+                               library_name,
+                               permit_number,
+                               file_name
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -1579,7 +1605,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return result;
     }
 
-    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1616,12 +1642,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                seen_in_dms_extract,
                                we_have_downloaded
                            FROM public.licence_finder_result
+                           ORDER BY
+                               permit_number,
+                               file_url,
+                               rule_used
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         var results = await QueryAsync<LicenceFinderResult>(
             connection,
             sql,
-            0);
+            0,
+            new { Skip = skip, Take = take });
 
         return results.ToList();
     }

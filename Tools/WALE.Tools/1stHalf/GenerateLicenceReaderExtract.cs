@@ -93,8 +93,8 @@ public static class GenerateLicenceReaderExtract
 
         var delayPerProcessMs = 500;
         
-        var maxConcurrentScrapers = 6;
-        //var maxConcurrentScrapers = 10;
+        //var maxConcurrentScrapers = 6;
+        var maxConcurrentScrapers = 10;
         
         var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
@@ -314,7 +314,7 @@ public static class GenerateLicenceReaderExtract
         var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
-        existingResults.Clear();
+        //existingResults.Clear();
 
         var redos = new List<Guid>();
         
@@ -330,7 +330,7 @@ public static class GenerateLicenceReaderExtract
 
         // TODO - Need to implement paging above
         
-        var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync();
+        var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
         foreach (var licenceFinderResult in licenceFinderResultsRaw)
@@ -420,12 +420,12 @@ public static class GenerateLicenceReaderExtract
         }
         
         // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        filesToProcessRaw = filesToProcessRaw
+        /*filesToProcessRaw = filesToProcessRaw
             //.Where(fileMetadata =>
-            //    fileMetadata.FileId == Guid.Parse("c876c780-7a8a-404d-9ba5-1d91f2829c17"))
+                //fileMetadata.FileId == Guid.Parse("907bb5a8-b735-440a-a9e9-0d49872d0ddd"))
             //.Skip(10)
-            .Take(200)
-            .ToList();
+            .Take(50)
+            .ToList();*/
         
         await SetRunDateAsync(cacheService);
         

@@ -32,7 +32,6 @@ public class DmsController(ICacheService cacheService) : Controller
         [FromQuery] int take = int.MaxValue)
     {
         var dmsExtract = await cacheService.GetDmsExtractAsync(skip, take);
-        
         return Ok(dmsExtract);
     }
     

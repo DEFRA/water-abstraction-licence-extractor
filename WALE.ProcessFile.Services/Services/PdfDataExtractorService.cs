@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -52,12 +53,13 @@ public class PdfDataExtractorService(
         try
         {
             var lockWaitDuration = DateTime.Now.Subtract(dtStart);
-            
+
             if (lockWaitDuration.TotalMilliseconds > 1000)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
             }
-            
+
             return await GetMatchesInternalAsync(
                 pdfFileName,
                 dmsDataForFile,
@@ -85,6 +87,17 @@ public class PdfDataExtractorService(
             throw new Exception("FileId is empty");
         }
         
+        var returnResult = new MatchesResult
+        {
+            Filename = pdfFileName,
+            RegionCode = configuration.RegionId,
+            ServicesUsed =
+            [
+                noOcrDataExtractorService.Name,
+                GeneralConstants.DocnetExtractorServiceName
+            ] // TODO, tidy this up
+        };
+        
         var dtStart = DateTime.Now;
         var additionalInformationStore = new Dictionary<string, object?>();
         
@@ -98,6 +111,12 @@ public class PdfDataExtractorService(
             configuration,
             processRunId);
 
+        if (pdfDocument == null)
+        {
+            returnResult.ErrorMessage = "Could not open pdf document";
+            return returnResult;
+        }
+        
         var sizeKb = (pdfDocument.SizeBytes / 1024.0).ToString("0.0");
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
         
@@ -127,18 +146,9 @@ public class PdfDataExtractorService(
         }
         
         dtStart = DateTime.Now;
-        
-        var returnResult = new MatchesResult
-        {
-            Filename = pdfFileName,
-            NumberOfPages = pdfDocument.Pages.Count,
-            Pages = pdfDocument.Pages,
-            RegionCode = configuration.RegionId,
-            ServicesUsed = [
-                noOcrDataExtractorService.Name,
-                GeneralConstants.DocnetExtractorServiceName
-            ] // TODO, tidy this up
-        };
+
+        returnResult.NumberOfPages = pdfDocument.Pages.Count;
+        returnResult.Pages = pdfDocument.Pages;
         
         var isOcr = false;
         
@@ -289,7 +299,7 @@ public class PdfDataExtractorService(
            
             var breakPageLoop = false;
 
-            var pageImages = page.Images.ToList();
+            var pageImages = page.Images.ToList(); // They are ordered earlier
             var servicesUsed = new List<string>();
             
             if (pageImages.Count > 10)

@@ -8,9 +8,15 @@ namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
 {
-    public async Task<IInternalPdfDocument> GetPdfDocumentAsync(IFileService fileService, string filename)
+    public async Task<IInternalPdfDocument?> GetPdfDocumentAsync(IFileService fileService, string filename)
     {
         var fileStream = await fileService.GetFileAsStreamAsync(filename);
+
+        if (fileStream == null)
+        {
+            return null;
+        }
+        
         var sizeBytes = fileStream.Length;
         
         var document = PdfDocument.Open(

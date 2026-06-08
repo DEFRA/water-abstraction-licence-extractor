@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -40,18 +41,33 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<Stream> GetFileAsStreamAsync(string filename)
+    public async Task<Stream?> GetFileAsStreamAsync(string filename)
     {
-        var path = $"/Extractor/Files/Get?filename={filename}";
-        
-        var response = await HttpHelper.RateLimiter.Enqueue(() =>
-            httpClient.GetAsync(path));
-        
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var path = $"/Extractor/Files/Get?filename={filename}";
 
-        return await response.Content.ReadAsStreamAsync();
+            var response = await HttpHelper.RateLimiter.Enqueue(() =>
+                httpClient.GetAsync(path));
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStreamAsync();
+        }
+        catch (HttpRequestException hrex)
+        {
+            if (hrex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+            {
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PdfDataExtractorService)} - File was too large, skipping - {filename}");
+                
+                return null;
+            }
+
+            throw;
+        }
     }
-
+    
     public async Task<byte[]> GetFileAsBytesAsync(string filename)
     {
         var path = $"/Extractor/Files/Get?filename={filename}";

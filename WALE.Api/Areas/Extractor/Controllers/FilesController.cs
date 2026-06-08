@@ -12,6 +12,12 @@ public class FilesController(IFileService fileService) : Controller
     public async Task<ActionResult> GetAsync([FromQuery] string filename)
     {
         var data = await fileService.GetFileAsStreamAsync(filename);
+
+        if (data == null)
+        {
+            throw new Exception("Stream is null");
+        }
+        
         return File(data, "application/pdf");
     }
     

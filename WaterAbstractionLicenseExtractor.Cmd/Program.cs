@@ -737,7 +737,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
     var allDestinationFilenames = await fileService.GetAllFilesAsync();
 
     var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
-    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync();
+    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
 
     foreach (var licenceFinderResult in licenceFinderResults)
     {

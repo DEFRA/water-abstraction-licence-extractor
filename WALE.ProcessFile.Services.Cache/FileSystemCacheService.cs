@@ -533,7 +533,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         throw new NotImplementedException();
     }

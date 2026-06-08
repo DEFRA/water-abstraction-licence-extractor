@@ -344,9 +344,9 @@ public class DatabaseCacheService(
         return databaseReadService.GetImportRunDateAsync(dataSource);
     }
 
-    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
-        return databaseReadService.GetLicenceFinderResultsAsync();
+        return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
     }
 
     public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)

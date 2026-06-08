@@ -598,9 +598,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return await response.Content.ReadAsStringAsync();
     }
 
-    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
-        var path = "/Extractor/LicenceFinder/GetResults";
+        var path = $"/Extractor/LicenceFinder/GetResults?skip={skip}&take={take}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

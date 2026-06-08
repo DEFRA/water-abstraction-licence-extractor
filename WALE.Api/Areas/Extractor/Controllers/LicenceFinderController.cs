@@ -10,9 +10,11 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class LicenceFinderController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult> GetResultsAsync()
+    public async Task<ActionResult> GetResultsAsync(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
     {
-        var date = await cacheService.GetLicenceFinderResultsAsync();
+        var date = await cacheService.GetLicenceFinderResultsAsync(skip, take);
         return Ok(date);
     }
     

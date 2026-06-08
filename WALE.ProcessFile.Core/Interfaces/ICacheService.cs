@@ -135,7 +135,7 @@ public interface ICacheService
 
     Task<string?> GetImportRunDateAsync(string dataSource);
     
-    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 

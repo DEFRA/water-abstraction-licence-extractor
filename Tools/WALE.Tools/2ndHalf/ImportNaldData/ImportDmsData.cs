@@ -43,6 +43,10 @@ public static class ImportDmsData
         foreach (var dmsRecord in dmsRecords.SelectMany(
             dmsFiles => dmsFiles.Value))
         {
+            dmsRecord.DocumentDate = ConvertExcelEpochToDateTimeString(dmsRecord.DocumentDate);
+            dmsRecord.ModifiedDate = ConvertExcelEpochToDateTimeString(dmsRecord.ModifiedDate);
+            dmsRecord.DocumentDate = ConvertExcelEpochToDateTimeString(dmsRecord.DocumentDate);
+            
             tasks.Add(InsertDmsRow(dataSource, dmsRecord));
             loopIndex++;
                 
@@ -65,6 +69,22 @@ public static class ImportDmsData
         ConsoleHelper.WriteLine("DMS extract import done");
 
         return 1;
+    }
+
+    private static string ConvertExcelEpochToDateTimeString(string excelEpoch)
+    {
+        if (string.IsNullOrEmpty(excelEpoch))
+        {
+            return excelEpoch;
+        }
+
+        if (excelEpoch.Contains('.') || excelEpoch.Contains('/') || excelEpoch.Contains(':'))
+        {
+            return excelEpoch;
+        }
+        
+        var excelEpochInt = int.Parse(excelEpoch);
+        return DateTime.FromOADate(excelEpochInt).ToString("yyyy-MM-dd HH:mm:ss");
     }
     
     private static async Task InsertDmsRow(NpgsqlDataSource dataSource, DmsExtract dmsRecord)

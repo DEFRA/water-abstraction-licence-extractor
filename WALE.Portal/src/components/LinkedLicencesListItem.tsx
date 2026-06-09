@@ -1,4 +1,4 @@
-import type {LinkedLicence, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {LinkedLicence, LinkedLicenceDirection, OutputListDataItem} from "../api/generated/apiClient.ts";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -8,7 +8,7 @@ interface LinkedLicencesListItemProps {
 
 export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: LinkedLicencesListItemProps) {
     let licenceNumber = linkedLicence.licenceNumber;
-    let backLink = linkedLicence.containedIn?.length === 1 && linkedLicence.containedIn[0].sectionName!.indexOf("ImplicitBackLink") > -1;
+    let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === LinkedLicenceDirection.Incoming);
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;

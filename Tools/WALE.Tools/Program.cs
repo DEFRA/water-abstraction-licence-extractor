@@ -7,10 +7,10 @@ string workflow;
 //workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
 //workflow = "ImportNaldData";
-workflow = "ImportDmsData";
+//workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 
 const int processRunId = 1707;
@@ -27,7 +27,7 @@ switch (workflow)
         // - Fetch number of pages
         // Addendum / schedule
 
-        var includeVersionMatch = false;
+        var includeVersionMatch = true;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
     
     case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs (from FME S3) into the DB

@@ -38,4 +38,18 @@ public class VersionFilesController(ICacheService cacheService) : Controller
         await cacheService.SaveVersionFilesAsync(request.results!);
         return Ok();
     }
+    
+    [HttpDelete]
+    public async Task<ActionResult> ClearDownloadFilesAsync()
+    {
+        await cacheService.ClearVersionFilesToDownloadAsync();
+        return Ok();
+    }
+    
+    [HttpDelete]
+    public async Task<ActionResult> ClearAllFilesAsync()
+    {
+        await cacheService.ClearVersionFilesAsync();
+        return Ok();
+    }
 }

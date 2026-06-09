@@ -81,6 +81,10 @@ public interface IDatabaseWriteService
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
     Task ClearLicenceFinderResultsAsync();
+
+    Task ClearVersionFilesAsync();
+
+    Task ClearVersionFilesToDownloadAsync();
     
     Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
 

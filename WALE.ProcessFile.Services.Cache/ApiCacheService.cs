@@ -691,4 +691,24 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task ClearVersionFilesAsync()
+    {
+        var path = "/Extractor/VersionFiles/ClearAllFiles";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
+        
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task ClearVersionFilesToDownloadAsync()
+    {
+        var path = "/Extractor/VersionFiles/ClearDownloadFiles";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
+        
+        response.EnsureSuccessStatusCode();
+    }
 }

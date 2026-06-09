@@ -117,6 +117,13 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             <div id="leftCol">
                 <div id="left-cell">
                     <div className="leftDetails">
+                        {reportData2?.licenceNumber?.value && (
+                            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
+                                    Licence Number {reportData2.licenceNumber.value}
+                                </span>
+                            </div>
+                        )}
                         {/* Tab Navigation */}
                         <ul className="ul-links">
                             <li>

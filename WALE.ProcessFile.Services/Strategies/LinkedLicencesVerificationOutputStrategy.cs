@@ -69,7 +69,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
                 verification.ScrapedDataIsDifferent = verification.VerificationType switch
                 {
-                    "Confirmed" or "AutoPass" or "Removed" or "Edited" => !wasScrapedThisRun,
+                    "Confirmed" or "AutoConfirm" or "Removed" or "Edited" => !wasScrapedThisRun,
                     "Added" => wasScrapedThisRun,
                     _ => false
                 };
@@ -87,7 +87,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
-                    case "AutoPass":
+                    case "AutoConfirm":
                         if (existingLinkedLicence == null)
                         {
                             outgoingLinkedLicences.Add(overrideLicence!);

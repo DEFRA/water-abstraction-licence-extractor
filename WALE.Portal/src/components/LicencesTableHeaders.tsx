@@ -259,7 +259,7 @@ export function LicencesTableHeaders({
                             { value: 'all', label: 'All' },
                             { value: 'populated', label: 'Not empty' },
                             { value: 'empty', label: 'No verifications' },
-                            { value: 'AutoPass', label: 'AutoPass' },
+                            { value: 'AutoConfirm', label: 'AutoConfirm' },
                             { value: 'AutoWarn', label: 'AutoWarn' },
                             { value: 'AutoFail', label: 'AutoFail' },
                             { value: 'Confirmed', label: 'Confirmed' },

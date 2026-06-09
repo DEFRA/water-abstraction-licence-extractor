@@ -71,7 +71,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                             <UnorderedListOfStrings items={verifications!.map(v => {
                                 let color = 'inherit';
                                 if (v.verificationType === 'Confirmed') color = 'green';
-                                else if (v.verificationType === 'AutoPass') color = 'green';
+                                else if (v.verificationType === 'AutoConfirm') color = 'green';
                                 else if (v.verificationType === 'Removed') color = 'red';
                                 else if (v.verificationType === 'Edited') color = 'darkorange';
                                 else if (v.verificationType === 'Added') color = 'blue';

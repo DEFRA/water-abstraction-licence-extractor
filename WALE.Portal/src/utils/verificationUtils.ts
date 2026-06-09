@@ -1,7 +1,7 @@
 export const getVerificationTypeColor = (type: string): string => {
     switch (type) {
         case 'Confirmed':
-        case 'AutoPass':
+        case 'AutoConfirm':
             return 'green';
         case 'Removed':
         case 'AutoFail':

@@ -640,8 +640,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
     public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
     {
-        await ClearVersionFilesToDownloadAsync();
-        
         foreach (var result in results)
         {
             await SaveVersionFileToDownloadAsync(result);
@@ -650,8 +648,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
     public async Task SaveVersionFilesAsync(List<VersionFile> results)
     {
-        await ClearVersionFilesAsync();
-        
         foreach (var result in results)
         {
             await SaveVersionFileAsync(result);
@@ -787,7 +783,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             result);
     }
 
-    private async Task ClearVersionFilesToDownloadAsync()
+    public async Task ClearVersionFilesToDownloadAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -800,7 +796,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0);
     }
     
-    private async Task ClearVersionFilesAsync()
+    public async Task ClearVersionFilesAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

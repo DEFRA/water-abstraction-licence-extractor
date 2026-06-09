@@ -378,4 +378,14 @@ public class DatabaseCacheService(
     {
         return databaseWriteService.SaveVersionFilesAsync(results);
     }
+
+    public Task ClearVersionFilesAsync()
+    {
+        return databaseWriteService.ClearVersionFilesAsync();
+    }
+
+    public Task ClearVersionFilesToDownloadAsync()
+    {
+        return databaseWriteService.ClearVersionFilesToDownloadAsync();
+    }
 }

@@ -568,6 +568,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task ClearVersionFilesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ClearVersionFilesToDownloadAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

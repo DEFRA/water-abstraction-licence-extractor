@@ -148,4 +148,8 @@ public interface ICacheService
     Task<List<VersionFile>> GetVersionFilesAsync();
     
     Task SaveVersionFilesAsync(List<VersionFile> results);
+    
+    Task ClearVersionFilesAsync();
+
+    Task ClearVersionFilesToDownloadAsync();
 }

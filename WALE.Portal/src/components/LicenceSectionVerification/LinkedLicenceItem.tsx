@@ -1,4 +1,4 @@
-import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, OutputListDataItem } from "../../api/generated/apiClient.ts";
+import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, LinkedLicenceSource, OutputListDataItem } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
 
 interface LinkedLicenceItemProps {
@@ -50,6 +50,7 @@ export const LinkedLicenceItem = ({
     const handleAddSection = () => {
         if (onUpdate) {
             const newSection = new LinkedLicenceSection({
+                source: LinkedLicenceSource.Document,
                 direction: LinkedLicenceDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
@@ -121,7 +122,16 @@ export const LinkedLicenceItem = ({
                             .filter(s => s.direction === LinkedLicenceDirection.Outgoing)
                             .map((section, idx) => (
                             <li key={idx} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: 'white' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', alignItems: 'end' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Source:</label>
+                                        <input 
+                                            type="text" 
+                                            value={section.source || ''} 
+                                            readOnly
+                                            style={{ width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: '#f0f0f0' }}
+                                        />
+                                    </div>
                                     <div>
                                         <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '600' }}>Section Name:</label>
                                         <input 
@@ -140,40 +150,42 @@ export const LinkedLicenceItem = ({
                                             style={{ width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box' }}
                                         />
                                     </div>
-                                    <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={!!section.isBecauseOfAggregate} 
-                                                    onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
-                                                    style={{ marginRight: '6px' }}
-                                                />
-                                                Because of Aggregate
-                                            </label>
-                                            {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onJumpToPage && onJumpToPage(section.pageNumber!);
-                                                    }}
-                                                    title={`Jump to page ${section.pageNumber}`}
-                                                    style={{ 
-                                                        background: '#f0f0f0', 
-                                                        border: '1px solid #d9d9d9', 
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer', 
-                                                        fontSize: '1rem',
-                                                        padding: '2px 6px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px'
-                                                    }}
-                                                >
-                                                    📄 <span style={{ fontSize: '0.7rem' }}>Page {section.pageNumber}</span>
-                                                </button>
-                                            )}
+                                    <div style={{ paddingBottom: '6px' }}>
+                                        <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={!!section.isBecauseOfAggregate} 
+                                                onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
+                                                style={{ marginRight: '6px' }}
+                                            />
+                                            Because of Aggregate
+                                        </label>
+                                    </div>
+                                    {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
+                                        <div style={{ paddingBottom: '2px' }}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onJumpToPage && onJumpToPage(section.pageNumber!);
+                                                }}
+                                                title={`Jump to page ${section.pageNumber}`}
+                                                style={{ 
+                                                    background: '#f0f0f0', 
+                                                    border: '1px solid #d9d9d9', 
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer', 
+                                                    fontSize: '1rem',
+                                                    padding: '2px 6px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                            >
+                                                📄 <span style={{ fontSize: '0.7rem' }}>Page {section.pageNumber}</span>
+                                            </button>
                                         </div>
+                                    )}
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'end' }}>
                                         <button 
                                             onClick={() => handleRemoveSection(idx)}
                                             style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
@@ -218,11 +230,10 @@ export const LinkedLicenceItem = ({
                             .filter(s => s.direction === LinkedLicenceDirection.Outgoing)
                             .map((section, idx) => (
                             <li key={idx} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '4px' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }}>
+                                    <div><strong>Source:</strong> {section.source || 'N/A'}</div>
                                     <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                     <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div><strong>Because of Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                     {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                         <button

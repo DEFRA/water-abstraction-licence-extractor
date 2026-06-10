@@ -301,9 +301,9 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
-        var licences = await databaseReadService.GetLicencesAsync(processRunId);
+        var licences = await databaseReadService.GetLicencesAsync(processRunId, skip, take);
 
         foreach (var licence in licences)
         {
@@ -316,10 +316,15 @@ public class DatabaseOutputService(
 
     public async Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)
     {
-        var licenceSets = await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
-        var allLicenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(processRunId);
-        var allLicenceSetTypes = await databaseReadService.GetLicenceSetTypesForProcessRun(processRunId);
-        var allAggregateSets = await databaseReadService.GetAggregateSetsForProcessRun(processRunId);
+        var licenceSetsTask = databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
+        var allLicenceSetLicencesTask = databaseReadService.GetLicenceSetLicencesAsync(processRunId);
+        var allLicenceSetTypesTask = databaseReadService.GetLicenceSetTypesForProcessRun(processRunId);
+        var allAggregateSetsTask = databaseReadService.GetAggregateSetsForProcessRun(processRunId);
+
+        var licenceSets = await licenceSetsTask;
+        var allLicenceSetLicences = await allLicenceSetLicencesTask;
+        var allLicenceSetTypes = await allLicenceSetTypesTask;
+        var allAggregateSets = await allAggregateSetsTask;
         
         var returnList = new Dictionary<string, LicenceSet>();
         

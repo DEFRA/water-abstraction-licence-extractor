@@ -85,6 +85,7 @@ public static class GenerateLicenceReaderExtract
     public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
     {
         var dtStart = DateTime.Now;
+        ConsoleHelper.WriteLine($"API is {KeyConfig.ApiBaseUrl}");
         
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
@@ -451,7 +452,18 @@ public static class GenerateLicenceReaderExtract
         var returnList = new List<DmsFileReaderResult>();
         var extractorLock = new Lock();
 
-        var templateService = new TemplateTypeIdentifierService("TODO");
+        var templateDict = new Dictionary<int, TemplateTypeIdentifierService>
+        {
+            { 1, new TemplateTypeIdentifierService("Anglian") },
+            { 2, new TemplateTypeIdentifierService("Midlands") },
+            { 3, new TemplateTypeIdentifierService("NE") },
+            { 4, new TemplateTypeIdentifierService("NW") },
+            { 5, new TemplateTypeIdentifierService("South West") },
+            { 6, new TemplateTypeIdentifierService("Southern") },
+            { 7, new TemplateTypeIdentifierService("Thames") },
+            { 8, new TemplateTypeIdentifierService("Wales") },
+        };
+        
         var fileTypeService = new FileTypeIdentifierService();
         
         foreach (var fileToProcess in filesToProcessRaw)
@@ -482,7 +494,7 @@ public static class GenerateLicenceReaderExtract
                     configuration,
                     pdfDataExtractors,
                     extractorLock,
-                    templateService,
+                    templateDict[configuration.RegionId],
                     fileTypeService,
                     dmsExtractInfo,
                     cacheService));

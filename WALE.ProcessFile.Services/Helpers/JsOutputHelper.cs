@@ -92,60 +92,63 @@ public static class JsOutputHelper
         };
     }
 
-    public static async Task<IReadOnlyList<OutputListDataItem>> SaveListDataAsync(
+    public static async Task<IReadOnlyList<OutputListDataItem>> ToListDataAsync(
         List<IntermediateOutputLicence> outputLines,
-        string outputFolder,
         IOutputService outputService,
-        bool regenerateMappingJson,
         ProcessRun processRun,
-        bool saveToFile,
-        List<LicenceSectionVerification>? latestLicenceSectionVerifications = null)
+        bool save,
+        List<LicenceSectionVerification> allLatestLicenceSectionVerifications)
     {
-        var resultFileStringBuilder = new StringBuilder(
-            "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
-            "MatchedLabelPosition,LicenceNumber,LimitsFound,LinkedLicenceNumbers,LinkedLicenceNumbersExistInDataset");
-
-        var mappingFileStringBuilder = new StringBuilder(
-            "Filename,LicenceNumber");
-
-        var filenameToLicenceNumberMap = new Dictionary<string, string>();
-        var licenceNumberToFilenameMap = new Dictionary<string, string>();
-
-        var nodeIndex = 1;
-        var nodesDictionaries = new List<Dictionary<string, object>>();
-        var linksDictionaries = new List<Dictionary<string, object>>();
-
         var listData = new List<OutputListDataItem>();
 
-        var verificationOutputStrategies = new List<IVerificationOutputStrategy>
-        {
-            new LinkedLicencesVerificationOutputStrategy()
-        }.ToDictionary(s => s.SectionName);
+        var verificationOutputStrategies =
+            new List<IVerificationOutputStrategy>
+            {
+                new LinkedLicencesVerificationOutputStrategy()
+            }.ToDictionary(s => s.SectionName);
 
-        var verificationsByFileId = latestLicenceSectionVerifications?
-            .GroupBy(x => x.LicenceFileId)
+        var verificationsByFileId = allLatestLicenceSectionVerifications
+            .GroupBy(lsv => lsv.LicenceFileId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
+        foreach (var outputLine in outputLines.OrderBy(ol => ol.Filename))
         {
-            var anyLinkedLicenceNumbers = outputLine.LinkedLicences?
-                .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln.LicenceNumber) > 0);
-
-            Log(
-                $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
-                $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
-                $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
-                $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
-                $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
-                resultFileStringBuilder);
-
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
+            var licenceSets = outputLine.LicenceSetReferences?
+                .Select(lsr => {
+                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+
+                    if (ls == null)
+                    {
+                        return new OutputListDataItemLicenceSet
+                        {
+                            LicenceSetId = "ERROR",
+                            ShortLicenceSetId = "ERROR"
+                        };
+                    }
+
+                    var licenceSetType = lsr.LicenceSetType;
+
+                    return new OutputListDataItemLicenceSet
+                    {
+                        LicenceSetId = ls.LicenceSetId,
+                        ShortLicenceSetId = ls.ShortLicenceSetId,
+                        LicenceSetTypes = ls.LicenceSetTypes,
+                        LicenceSetType = licenceSetType
+                    };
+                })
+                .ToArray() ?? [];
+
+            var latestLicenceSectionVerifications =
+                outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
+                    verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value, out var fileVerifications)
+                ? fileVerifications
+                : null;
+            
             var listRow = new OutputListDataItem
             {
                 processRunId = processRun.ProcessRunId,
-                imagePath =
-                    $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
                 licenceNumber =
@@ -161,36 +164,9 @@ public static class JsOutputHelper
                 issuer = outputLine.Issuer,
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
-                linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
-                licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
-                    {
-                        var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
-
-                        if (ls == null)
-                        {
-                            return new OutputListDataItemLicenceSet
-                            {
-                                LicenceSetId = "ERROR",
-                                ShortLicenceSetId = "ERROR"
-                            };
-                        }
-
-                        var licenceSetType = lsr.LicenceSetType;
-
-                        return new OutputListDataItemLicenceSet
-                        {
-                            LicenceSetId = ls.LicenceSetId,
-                            ShortLicenceSetId = ls.ShortLicenceSetId,
-                            LicenceSetTypes = ls.LicenceSetTypes,
-                            LicenceSetType = licenceSetType
-                        };
-                    })
-                    .ToArray() ?? [],
-                latestLicenceSectionVerifications = outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
-                                                    verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value,
-                                                        out var fileVerifications)
-                    ? fileVerifications
-                    : null
+                linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
+                licenceSets = licenceSets,
+                latestLicenceSectionVerifications = latestLicenceSectionVerifications
             };
 
             if (listRow.latestLicenceSectionVerifications != null)
@@ -199,111 +175,31 @@ public static class JsOutputHelper
                     .Where(verification =>
                         verification.ProcessRunId <= processRun.ProcessRunId &&
                         verification.LicenceSectionName != null)
-                    .GroupBy(v => v.LicenceSectionName!);
+                    .GroupBy(verification => verification.LicenceSectionName!);
 
                 foreach (var group in groupedVerifications)
                 {
                     var sectionName = group.Key;
-                    var sectionVerifications = group.ToList();
 
-                    if (verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
+                    if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
                     {
-                        strategy.HandleVerifications(sectionVerifications, listRow);
+                        continue;
                     }
+                    
+                    var sectionVerifications = group.ToList();
+                    strategy.HandleVerifications(sectionVerifications, listRow);
                 }
             }
 
             listData.Add(listRow);
-
-            if (outputLine is { LicenceNumber: not null, Filename: not null })
-            {
-                filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
-                licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);
-            }
-
-            outputLine.NodeId = nodeIndex++;
-            var nodeName = outputLine.Filename!;
-
-            if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != string.Empty)
-            {
-                nodeName = outputLine.LicenceNumber;
-            }
-
-            nodesDictionaries.Add(new Dictionary<string, object>
-            {
-                { "id", outputLine.NodeId },
-                { "name", nodeName }
-            });
-
-            Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
         }
 
-        foreach (var outputLine in outputLines)
-        {
-            if (outputLine.LinkedLicences == null)
-            {
-                continue;
-            }
-
-            foreach (var linkedLicence in outputLine.LinkedLicences)
-            {
-                var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
-
-                if (linkedOutputLine != null)
-                {
-                    linksDictionaries.Add(new Dictionary<string, object>
-                    {
-                        { "source", outputLine.NodeId },
-                        { "target", linkedOutputLine.NodeId }
-                    });
-                }
-            }
-        }
-
-        if (!saveToFile)
+        if (!save)
         {
             return listData;
         }
-
-        Directory.CreateDirectory($"{outputFolder}Additional");
-
-        var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
-        await File.WriteAllTextAsync(resultFile, resultFileStringBuilder.ToString());
-
-        if (regenerateMappingJson)
-        {
-            var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
-            await File.WriteAllTextAsync(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
-
-            var licenceFilenameMapJsonFile = $"{outputFolder}Additional/licence-number-filename-map.jsonp";
-            var licenceFilenameMapDictionary = new Dictionary<string, object>
-            {
-                { "filenameToLicenceNumber", filenameToLicenceNumberMap },
-                { "licenceNumberToFilename", licenceNumberToFilenameMap }
-            };
-
-            await File.WriteAllTextAsync(licenceFilenameMapJsonFile,
-                $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, JsonHelper.GetSerializerOptions())};");
-        }
-
+        
         await outputService.SaveListDataAsync(listData, processRun.ProcessRunId);
-
-        var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
-        {
-            {
-                "nodes",
-                nodesDictionaries
-            },
-            {
-                "links",
-                linksDictionaries
-            }
-        };
-
-        var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
-        await File.WriteAllTextAsync(nodeGraphDataFile,
-            $"var data = {JsonSerializer.Serialize(nodeGraphData, JsonHelper.GetSerializerOptions())};");
-
         return listData;
     }
 

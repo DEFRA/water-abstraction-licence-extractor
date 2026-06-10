@@ -4,7 +4,6 @@ using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
 string workflow;
-//workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
 //workflow = "ImportNaldData";
 //workflow = "ImportDmsData";

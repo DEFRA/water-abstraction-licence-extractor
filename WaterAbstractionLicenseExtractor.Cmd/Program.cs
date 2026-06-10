@@ -321,21 +321,6 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    var saveListsToFile = false;
-
-    if (saveListsToFile)
-    {
-        // The following is just for some reports and charts - saves to filestream
-        await JsOutputHelper.SaveListDataAsync(
-            outputLines,
-            outputFolder,
-            outputService,
-            services.RegenerateMappingJson,
-            processRun,
-            saveListsToFile);
-    }
-
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     await outputService.FinishProcessRunAsync(processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -711,19 +696,20 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
             cacheService);
     }
     
-    /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
-        .Where(filePath => filePath.Key.Contains("22722086"))
-        .ToDictionary(filePath => filePath.Key, k => k.Value);*/
-
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
-        //.Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-        //.Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
-        .Where(x => x.Value.RegionId == 3) // North east
-        //.Skip(155)
-        //.Take(5)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
+    // For debugging uncheck sections of the following
+    
+    /*filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
+    .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
+    .Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
+    .Where(x => x.Value.RegionId == 3) // North east
+    .Skip(155)
+    .Take(5)
+    .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);*/
+    
     return filesAndMapping;
 }
 

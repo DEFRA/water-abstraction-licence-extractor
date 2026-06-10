@@ -15,7 +15,7 @@ public class LicenceController(IOutputService outputService) : Controller
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] int processRunId)
     {
-        var licences = await outputService.GetLicencesAsync(processRunId);
+        var licences = await outputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
         return Ok(licences);
     }
     

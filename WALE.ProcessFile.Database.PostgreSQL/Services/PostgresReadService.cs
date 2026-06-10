@@ -404,13 +404,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT data, licence_id 
                            FROM licence 
                            WHERE process_run_id = @ProcessRunId
+                           LIMIT @take
+                           OFFSET @skip;
                            """;
 
         var results = await QueryAsync<(string Data, int LicenceId)>(
@@ -419,7 +421,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                ProcessRunId = processRunId
+                ProcessRunId = processRunId,
+                Skip = skip,
+                Take = take
             });
 
         return results.Select(r =>

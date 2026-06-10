@@ -38,7 +38,7 @@ public static class GenerateAggregatesCsvForTesting
     static async Task<List<AggregatesCsvLine>> GetDataAsync(int processRunId)
     {
         var returnList = new List<AggregatesCsvLine>();
-        var licences = await OutputService.GetLicencesAsync(processRunId);
+        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
 
         foreach (var licence in licences)
         {

@@ -19,15 +19,21 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun([FromRoute] int processRunId)
+    public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun(
+        [FromRoute] int processRunId,
+        [FromRoute] int skip = 0,
+        [FromRoute] int take = int.MaxValue)
     {
         var completeNumber = 1;
         var fileNumber = 1;
 
-        var licences = await outputService.GetLicencesAsync(processRunId);
+        var allLatestLicenceSectionVerificationsTask =
+            outputService.GetLatestLicenceSectionVerificationsAsync();
+        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
-        var latestLicenceSectionVerifications = await outputService.GetLatestLicenceSectionVerificationsAsync();
-
+        var allLatestLicenceSectionVerifications =
+            (await allLatestLicenceSectionVerificationsTask).ToList();
+        
         var outputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
@@ -37,18 +43,16 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 fileNumber++,
                 licenceSets))
             .ToList();
-
-        var listData = await JsOutputHelper.SaveListDataAsync(
+        
+        var listData = await JsOutputHelper.ToListDataAsync(
             outputLines,
-            string.Empty, // Not used
-            outputService, // Not used
-            false, // Not used
+            outputService,
             new ProcessRun
             {
                 ProcessRunId = processRunId
-            }, // Not used
+            },
             false,
-            latestLicenceSectionVerifications.ToList());
+            allLatestLicenceSectionVerifications);
 
         return Ok(listData);
     }

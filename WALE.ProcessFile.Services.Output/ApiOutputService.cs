@@ -445,7 +445,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             
         if (string.IsNullOrEmpty(content))
         {
-            throw new NullReferenceException("Page screenshot data returned null");
+            throw new NullReferenceException("Total licence count returned null");
         }
 
         return JsonSerializer.Deserialize<int>(content, JsonHelper.GetSerializerOptions())!;

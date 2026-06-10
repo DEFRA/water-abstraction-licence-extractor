@@ -19,16 +19,20 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun([FromRoute] int processRunId)
+    public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun(
+        [FromRoute] int processRunId,
+        [FromRoute] int skip = 0,
+        [FromRoute] int take = int.MaxValue)
     {
         var completeNumber = 1;
         var fileNumber = 1;
 
-        var licences = await outputService.GetLicencesAsync(processRunId);
-        var licenceSetsTasks = outputService.GetLicenceSetsAsync(processRunId, licences);
+        var allLatestLicenceSectionVerificationsTask =
+            outputService.GetLatestLicenceSectionVerificationsAsync();
+        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
+        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
         var allLatestLicenceSectionVerifications =
-            (await outputService.GetLatestLicenceSectionVerificationsAsync()).ToList();
-        var licenceSets = await licenceSetsTasks;
+            (await allLatestLicenceSectionVerificationsTask).ToList();
         
         var outputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
@@ -39,8 +43,6 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 fileNumber++,
                 licenceSets))
             .ToList();
-
-        // TODO look into the speed tommorrow
         
         var listData = await JsOutputHelper.ToListDataAsync(
             outputLines,

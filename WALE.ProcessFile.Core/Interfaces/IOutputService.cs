@@ -66,7 +66,7 @@ public interface IOutputService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
-    Task<List<Licence>> GetLicencesAsync(int processRunId);
+    Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
 
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
     

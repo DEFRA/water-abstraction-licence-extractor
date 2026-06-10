@@ -354,9 +354,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
-        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}";
+        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

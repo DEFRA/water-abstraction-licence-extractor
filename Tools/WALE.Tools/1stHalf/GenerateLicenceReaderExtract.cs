@@ -1,4 +1,3 @@
-using Google.Protobuf.WellKnownTypes;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;

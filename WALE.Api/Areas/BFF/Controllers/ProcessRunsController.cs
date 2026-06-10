@@ -21,8 +21,8 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun(
         [FromRoute] int processRunId,
-        [FromRoute] int skip = 0,
-        [FromRoute] int take = int.MaxValue)
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
     {
         var completeNumber = 1;
         var fileNumber = 1;

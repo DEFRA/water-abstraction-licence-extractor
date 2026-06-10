@@ -41,7 +41,7 @@ function ListPage() {
 
     const fetchOutputList = useCallback(async () => {
         try {
-            const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
+            const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'), 0, 10);
             setOutputList(listDataItems);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
@@ -152,6 +152,8 @@ function ListPage() {
                         </tbody>
                         <tfoot><LicencesTableFooters totals={totals}/></tfoot>
                     </table>
+                    
+                    1 2 3 4
                 </div>
             )}
 

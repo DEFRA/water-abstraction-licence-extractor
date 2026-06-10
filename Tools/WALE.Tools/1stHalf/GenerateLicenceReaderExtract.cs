@@ -454,8 +454,14 @@ public static class GenerateLicenceReaderExtract
 
         var templateDict = new Dictionary<int, TemplateTypeIdentifierService>
         {
-            { 1, new TemplateTypeIdentifierService("TODO1") },
-            { 2, new TemplateTypeIdentifierService("TODO2") }
+            { 1, new TemplateTypeIdentifierService("Anglian") },
+            { 2, new TemplateTypeIdentifierService("Midlands") },
+            { 3, new TemplateTypeIdentifierService("NE") },
+            { 4, new TemplateTypeIdentifierService("NW") },
+            { 5, new TemplateTypeIdentifierService("South West") },
+            { 6, new TemplateTypeIdentifierService("Southern") },
+            { 7, new TemplateTypeIdentifierService("Thames") },
+            { 8, new TemplateTypeIdentifierService("Wales") },
         };
         
         var fileTypeService = new FileTypeIdentifierService();

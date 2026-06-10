@@ -3117,19 +3117,23 @@ export class Client {
     }
 
     /**
+     * @param skip (optional) 
+     * @param take (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, skip: number, take: number): Promise<OutputListDataItem[]> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?take={take}&skip={skip}"; // NOTE - This is hand edited
+    getProcessRun(processRunId: number, skip: number | undefined, take: number | undefined): Promise<OutputListDataItem[]> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
         url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        if (skip === undefined || skip === null)
-            throw new globalThis.Error("The parameter 'skip' must be defined.");
-        url_ = url_.replace("{skip}", encodeURIComponent("" + skip));
-        if (take === undefined || take === null)
-            throw new globalThis.Error("The parameter 'take' must be defined.");
-        url_ = url_.replace("{take}", encodeURIComponent("" + take));
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

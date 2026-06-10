@@ -61,7 +61,6 @@ public class LicenceSet
         }
     }
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceSetType[] LicenceSetTypes { get; set; } = [];
     
     public AggregateSet[]? AggregateSets { get; set; } = [];

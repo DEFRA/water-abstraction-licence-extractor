@@ -435,5 +435,21 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }
     }
 
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+            
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Page screenshot data returned null");
+        }
+
+        return JsonSerializer.Deserialize<int>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
     private static bool _showAllLogs = false;
 }

@@ -85,4 +85,6 @@ public interface IOutputService
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
     
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
+   
+    Task<int> GetTotalLicenceCountAsync(int processRunId);
 }

@@ -301,6 +301,11 @@ public class DatabaseOutputService(
             processRunId);
     }
 
+    public Task<int> GetTotalLicenceCountAsync(int processRunId)
+    {
+        return databaseReadService.GetTotalLicenceCountAsync(processRunId);
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var licences = await databaseReadService.GetLicencesAsync(processRunId, skip, take);

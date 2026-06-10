@@ -101,4 +101,6 @@ public interface IDatabaseReadService
     Task<List<VersionFile>> GetVersionFilesAsync();
     
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
+  
+    Task<int> GetTotalLicenceCountAsync(int processRunId);
 }

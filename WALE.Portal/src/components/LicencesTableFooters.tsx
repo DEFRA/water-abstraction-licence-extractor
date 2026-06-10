@@ -7,7 +7,7 @@ interface LicencesTableFootersProps {
 export function LicencesTableFooters({ totals }: LicencesTableFootersProps) {
     return (
         <>
-            <tr style={{fontWeight: 'bold'}}>
+            <tr style={{fontWeight: 'bold', display: "none"}}>
                 <td>Total</td>
                 <td>{totals.licenceNumber}</td>
                 <td className="default-hidden">{totals.licenceHolder}</td>

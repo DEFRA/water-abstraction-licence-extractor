@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -19,7 +20,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<IReadOnlyList<OutputListDataItem>>> GetProcessRun(
+    public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue)
@@ -27,6 +28,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         var completeNumber = 1;
         var fileNumber = 1;
 
+        var totalLicenceCountTask = outputService.GetTotalLicenceCountAsync(processRunId);
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
         var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
@@ -54,6 +56,19 @@ public class ProcessRunsController(IOutputService outputService) : Controller
             false,
             allLatestLicenceSectionVerifications);
 
-        return Ok(listData);
+        var processRun = new ProcessRunResponse
+        {
+            TotalRecords = await totalLicenceCountTask,
+            Records = listData
+        };
+        
+        return Ok(processRun);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
+    {
+        var total = await outputService.GetTotalLicenceCountAsync(processRunId);
+        return Ok(total);
     }
 }

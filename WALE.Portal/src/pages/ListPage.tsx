@@ -38,24 +38,36 @@ function ListPage() {
     } = useFiltering(outputList);
 
     const totals = useTotals(filteredData);
-    let pageNumber = 1;
-    let pageSize = 10;
 
+    const [pageNumber, setPageNumber] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const pageSize = 100;
+    const requests: number[] = [];
+    
     const fetchOutputList = useCallback(async () => {
         try {
-            const listDataItems = await waleApiClient.getProcessRun(
-                parseInt(processRunId ?? '0'),
-                ((pageNumber - 1) * pageSize),
-                pageSize);
-            
-            setOutputList(listDataItems);
+            // Next line stops repeat requests
+            if (requests.length === 0 || requests[requests.length - 1] !== pageNumber) {
+                requests.push(pageNumber);
+                
+                let listDataItems = await waleApiClient.getProcessRun(
+                    parseInt(processRunId ?? '0'),
+                    ((pageNumber - 1) * pageSize),
+                    pageSize);
+
+                setOutputList(listDataItems.records);
+
+                let totalRecords = listDataItems.totalRecords;
+                setTotalPages(Math.ceil(totalRecords / pageSize));   
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
             console.error('Error fetching process runs:', err);
         } finally {
             setLoading(false);
         }
-    }, [processRunId]);
+    }, [processRunId, pageNumber]);
 
     useEffect(() => {
         fetchOutputList();
@@ -133,6 +145,19 @@ function ListPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
+                    <div style={{marginTop: '-20px', marginLeft: '250px'}}>
+                        Page {pageNumber} of {totalPages}&nbsp;&nbsp;&nbsp;
+                        {pageNumber > 1 && (<><a href="#" onClick={(e) => {
+                            e.preventDefault();
+                            setPageNumber(pageNumber - 1);
+                        }}>Prev {pageSize}</a> | </>)}
+    
+                        {totalPages > pageNumber && (<a href="#" onClick={(e) => {
+                            e.preventDefault();
+                            setPageNumber(pageNumber + 1);
+                        }}>Next {pageSize}</a>)}
+                    </div>
+                        
                     <table id="licencesTable">
                         <thead><LicencesTableHeaders
                             data={outputList}
@@ -158,8 +183,6 @@ function ListPage() {
                         </tbody>
                         <tfoot><LicencesTableFooters totals={totals}/></tfoot>
                     </table>
-                    
-                    Page {pageNumber} - {pageNumber > 1 && (<><a href=''>Prev</a> | </>)} <a href=''>Next</a> 
                 </div>
             )}
 

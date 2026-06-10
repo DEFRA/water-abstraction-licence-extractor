@@ -305,4 +305,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<int> GetTotalLicenceCountAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 }

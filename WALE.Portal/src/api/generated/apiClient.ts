@@ -3121,7 +3121,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, skip: number | undefined, take: number | undefined): Promise<OutputListDataItem[]> {
+    getProcessRun(processRunId: number, skip: number | undefined, take: number | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -3148,21 +3148,14 @@ export class Client {
         });
     }
 
-    protected processGetProcessRun(response: Response): Promise<OutputListDataItem[]> {
+    protected processGetProcessRun(response: Response): Promise<ProcessRunResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(OutputListDataItem.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
+            result200 = ProcessRunResponse.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -3170,7 +3163,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<OutputListDataItem[]>(null as any);
+        return Promise.resolve<ProcessRunResponse>(null as any);
     }
 }
 
@@ -7230,6 +7223,69 @@ export class ProcessRunEndRequest implements IProcessRunEndRequest {
 
 export interface IProcessRunEndRequest {
     processRunId?: number;
+
+    [key: string]: any;
+}
+
+export class ProcessRunResponse implements IProcessRunResponse {
+    totalRecords!: number;
+    records!: OutputListDataItem[];
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.records = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.totalRecords = _data["totalRecords"];
+            if (Array.isArray(_data["records"])) {
+                this.records = [] as any;
+                for (let item of _data["records"])
+                    this.records!.push(OutputListDataItem.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ProcessRunResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["totalRecords"] = this.totalRecords;
+        if (Array.isArray(this.records)) {
+            data["records"] = [];
+            for (let item of this.records)
+                data["records"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IProcessRunResponse {
+    totalRecords: number;
+    records: OutputListDataItem[];
 
     [key: string]: any;
 }

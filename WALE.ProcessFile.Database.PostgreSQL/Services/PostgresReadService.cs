@@ -82,7 +82,26 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 PageNumber = pageNumber
             });
     }
-    
+
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT count(1)
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                           """;
+
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+    }
+
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
@@ -411,6 +430,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT data, licence_id 
                            FROM licence 
                            WHERE process_run_id = @ProcessRunId
+                           ORDER BY licence_id
                            LIMIT @take
                            OFFSET @skip;
                            """;

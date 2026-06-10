@@ -1,3 +1,4 @@
+using Google.Protobuf.WellKnownTypes;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
@@ -85,6 +86,7 @@ public static class GenerateLicenceReaderExtract
     public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
     {
         var dtStart = DateTime.Now;
+        ConsoleHelper.WriteLine($"API is {KeyConfig.ApiBaseUrl}");
         
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
@@ -451,7 +453,12 @@ public static class GenerateLicenceReaderExtract
         var returnList = new List<DmsFileReaderResult>();
         var extractorLock = new Lock();
 
-        var templateService = new TemplateTypeIdentifierService("TODO");
+        var templateDict = new Dictionary<int, TemplateTypeIdentifierService>
+        {
+            { 1, new TemplateTypeIdentifierService("TODO1") },
+            { 2, new TemplateTypeIdentifierService("TODO2") }
+        };
+        
         var fileTypeService = new FileTypeIdentifierService();
         
         foreach (var fileToProcess in filesToProcessRaw)
@@ -482,7 +489,7 @@ public static class GenerateLicenceReaderExtract
                     configuration,
                     pdfDataExtractors,
                     extractorLock,
-                    templateService,
+                    templateDict[configuration.RegionId],
                     fileTypeService,
                     dmsExtractInfo,
                     cacheService));

@@ -25,9 +25,11 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         var fileNumber = 1;
 
         var licences = await outputService.GetLicencesAsync(processRunId);
-        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
-        var latestLicenceSectionVerifications = await outputService.GetLatestLicenceSectionVerificationsAsync();
-
+        var licenceSetsTasks = outputService.GetLicenceSetsAsync(processRunId, licences);
+        var allLatestLicenceSectionVerifications =
+            (await outputService.GetLatestLicenceSectionVerificationsAsync()).ToList();
+        var licenceSets = await licenceSetsTasks;
+        
         var outputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
@@ -38,17 +40,17 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 licenceSets))
             .ToList();
 
-        var listData = await JsOutputHelper.SaveListDataAsync(
+        // TODO look into the speed tommorrow
+        
+        var listData = await JsOutputHelper.ToListDataAsync(
             outputLines,
-            string.Empty, // Not used
-            outputService, // Not used
-            false, // Not used
+            outputService,
             new ProcessRun
             {
                 ProcessRunId = processRunId
-            }, // Not used
+            },
             false,
-            latestLicenceSectionVerifications.ToList());
+            allLatestLicenceSectionVerifications);
 
         return Ok(listData);
     }

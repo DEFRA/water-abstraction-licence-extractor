@@ -4,13 +4,12 @@ using WALE.Tools._2ndHalf.ImportNaldData;
 using WALE.Tools.Config;
 
 string workflow;
-//workflow = "GenerateLicenceReaderExtract";//"GenerateAggregatesCsvForTesting";//"GenerateLinkedLicencesCsv";//" "OverrideAddIncrements";//""GenerateLicenceReaderExtract";
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
 //workflow = "ImportNaldData";
-workflow = "ImportDmsData";
+//workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 
 const int processRunId = 1707;

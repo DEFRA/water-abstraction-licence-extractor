@@ -19,4 +19,6 @@ public class PdfPage
     
     [JsonIgnore]
     public IInternalPdfDocumentPage? InternalPage { get; set; }
+
+    public bool LikelyMapPage { get; set; }
 }

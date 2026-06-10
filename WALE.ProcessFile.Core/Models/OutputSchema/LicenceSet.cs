@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 
@@ -60,6 +61,7 @@ public class LicenceSet
         }
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceSetType[] LicenceSetTypes { get; set; } = [];
     
     public AggregateSet[]? AggregateSets { get; set; } = [];

@@ -380,17 +380,9 @@ public class PdfDataExtractorService(
                         break;
                     }
 
-                    if (DataHelper.LikelyMapPage(serviceImageLines, pageImages.Count))
-                    {
-                        serviceImageLines = [];
-                        break;
-                    }
-                    
-                    var allLinesSoFar = documentLines.ToList();
-                    allLinesSoFar.AddRange(serviceImageLines);
-
-                    var providers = returnResult.Pages
-                        .Single(p => p.Number == page.Number).Providers;
+                    var outputPage = returnResult.Pages
+                        .Single(p => p.Number == page.Number);
+                    var providers = outputPage.Providers;
 
                     if (providers.All(p => p.Provider != ocrService.Name))
                     {
@@ -399,7 +391,18 @@ public class PdfDataExtractorService(
                             Provider = ocrService.Name,
                             Text = serviceImageLines.Select(l => l.Text).ToList()
                         });
-                    }                    
+                    }
+                    
+                    if (DataHelper.LikelyMapPage(serviceImageLines, pageImages.Count))
+                    {
+                        outputPage.LikelyMapPage = true;
+                        serviceImageLines = [];
+
+                        break;
+                    }
+                    
+                    var allLinesSoFar = documentLines.ToList();
+                    allLinesSoFar.AddRange(serviceImageLines);
                     
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,

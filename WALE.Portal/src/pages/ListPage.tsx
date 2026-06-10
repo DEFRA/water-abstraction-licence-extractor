@@ -38,10 +38,16 @@ function ListPage() {
     } = useFiltering(outputList);
 
     const totals = useTotals(filteredData);
+    let pageNumber = 1;
+    let pageSize = 10;
 
     const fetchOutputList = useCallback(async () => {
         try {
-            const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'), 0, 10);
+            const listDataItems = await waleApiClient.getProcessRun(
+                parseInt(processRunId ?? '0'),
+                ((pageNumber - 1) * pageSize),
+                pageSize);
+            
             setOutputList(listDataItems);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
@@ -153,7 +159,7 @@ function ListPage() {
                         <tfoot><LicencesTableFooters totals={totals}/></tfoot>
                     </table>
                     
-                    1 2 3 4
+                    Page {pageNumber} - {pageNumber > 1 && (<><a href=''>Prev</a> | </>)} <a href=''>Next</a> 
                 </div>
             )}
 

@@ -4,7 +4,7 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
-import {getImageUrl} from "../utils/images.ts";
+import {getImageUrl, getPdfUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
@@ -282,7 +282,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                         <h1>
                             <a
                                 id="filename"
-                                href={`/pdfs/${reportData.filename}`}
+                                href={`${getPdfUrl(reportData.filename)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >

@@ -41,7 +41,11 @@ function ListPage() {
 
     const fetchOutputList = useCallback(async () => {
         try {
-            const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
+            const listDataItems = await waleApiClient.getProcessRun(
+                parseInt(processRunId ?? '0'),
+                0,
+                Number.MAX_SAFE_INTEGER);
+            
             setOutputList(listDataItems);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');

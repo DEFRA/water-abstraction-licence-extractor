@@ -28,6 +28,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [reportData, setReportData] = useState<MatchesResult | null>(null);
     const [reportData2, setReportData2] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
+    const [licenceString, setLicenceString] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
     // const [textData, setTextData] = useState<string>('');
 
@@ -43,15 +44,18 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                 setLoading(true);
                 
                 // Load data using API client
-                const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([
+                const [matchesResult, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                     waleApiClient.matchesResult(fileId),
                     waleApiClient.licence(fileId, processRunId),
-                    waleApiClient.licenceSets(fileId)
+                    waleApiClient.licenceSets(fileId),
+                    waleApiClient.licenceString(fileId, processRunId),
                 ]);
 
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
                 if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
                 if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+                if (licenceStringResult.status === 'fulfilled') setLicenceString(
+                    JSON.parse(licenceStringResult.value));
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -213,9 +217,9 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                         </ul>
 
                         {/* Tab Content */}
-                        {activeTab === 'json-new' && reportData2 && (
+                        {activeTab === 'json-new' && licenceString && (
                             <div id="jsonNewPath">
-                                <JsonView src={reportData2} collapsed={1} theme="default"/>
+                                <JsonView src={licenceString} collapsed={1} theme="default"/>
                             </div>
                         )}
 

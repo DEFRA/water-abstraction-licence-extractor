@@ -186,7 +186,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     Internal data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'text' ? 'selectedTab' : ''}

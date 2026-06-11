@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
@@ -17,6 +19,14 @@ public class FileDataController(IOutputService outputService) : Controller
         return Ok(result);
     }
     
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
+    {
+        var result = await outputService.GetMatchesResult(fileId);
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+    
     [HttpGet]
     public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId, [FromQuery] int processRunId)
     {
@@ -24,11 +34,27 @@ public class FileDataController(IOutputService outputService) : Controller
         return Ok(result);
     }
     
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> LicenceStringAsync([FromQuery] Guid fileId, [FromQuery] int processRunId)
+    {
+        var result = await outputService.GetLicenceAsync(fileId, processRunId);
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSets([FromQuery] Guid fileId)
     {
         var results = await outputService.GetLicenceSetsAsync(fileId);
         return Ok(results);
+    }
+    
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> LicenceSetsStringAsync([FromQuery] Guid fileId)
+    {
+        var results = await outputService.GetLicenceSetsAsync(fileId);
+        return Ok(JsonSerializer.Serialize(results, JsonHelper.GetSerializerOptions()));
     }
 
     [HttpGet]

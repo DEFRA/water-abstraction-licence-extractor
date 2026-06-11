@@ -2,6 +2,7 @@
     display: flex;
     height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 #leftCol {
@@ -190,7 +191,6 @@ h1 {
     border-left: 3px solid #EEE;
     float: none;
     overflow: hidden;
-    overscroll-behavior: none;
 }
 
 #rightPdf {

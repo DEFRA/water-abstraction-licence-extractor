@@ -147,7 +147,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json-new');
                                     }}
                                 >
-                                    JSON
+                                    Licence data
                                 </a>
                             </li>
                             <li>
@@ -159,10 +159,10 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json-set');
                                     }}
                                 >
-                                    JSON (set)
+                                    Licence set data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'json-ai' ? 'selectedTab' : ''}
@@ -183,7 +183,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json');
                                     }}
                                 >
-                                    JSON (int.)
+                                    Internal data
                                 </a>
                             </li>
                             <li>
@@ -195,7 +195,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('text');
                                     }}
                                 >
-                                    Text
+                                    Digital text
                                 </a>
                             </li>
                             <li>
@@ -243,11 +243,11 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
 
                         {activeTab === 'text' && (
                             <div id="text">
-                <span
-                    // dangerouslySetInnerHTML={{
-                    //     __html: textData.replaceAll('\n', '<br/>\n')
-                    // }}
-                />
+                                <span
+                                    // dangerouslySetInnerHTML={{
+                                    //     __html: textData.replaceAll('\n', '<br/>\n')
+                                    // }}
+                                />
                             </div>
                         )}
                         

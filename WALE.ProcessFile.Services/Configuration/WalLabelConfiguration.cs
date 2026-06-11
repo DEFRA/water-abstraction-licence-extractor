@@ -1744,6 +1744,7 @@ public static class WalLabelConfiguration
                             new("condition "),
                             new("conditions "),
                             new("purposes specified in "),
+                            new("purposes of "),
                         ],
                         TextEnd =
                         [
@@ -1772,6 +1773,8 @@ public static class WalLabelConfiguration
                             "(2)",
                             "(3)",
                             "(4)",
+                            "spray irrigation",
+                            "trickle irrigation"
                         ],
                         SubLabels =
                         [

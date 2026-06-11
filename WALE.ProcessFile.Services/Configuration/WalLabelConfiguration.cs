@@ -57,7 +57,7 @@ public static class WalLabelConfiguration
                     new("10. Further conditions"),
                     new("10. Further provisions"),
                     new("10 Further provisions") { LineMustStartWith = true },                 
-                    new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Further Conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
@@ -206,7 +206,8 @@ public static class WalLabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
-                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]"),
+                    new("The following changes to the licence have taken place:"),
                     new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),

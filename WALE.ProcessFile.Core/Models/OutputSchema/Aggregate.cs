@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
@@ -53,8 +54,10 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? LicenceVersionId { get; init; }
     
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public PrimaryType PrimaryType { get; init; }
     
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public SubType? SubType { get; set; }
     
     public string? NaldType { get; set; }

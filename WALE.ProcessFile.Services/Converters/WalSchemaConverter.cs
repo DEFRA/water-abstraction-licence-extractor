@@ -2566,12 +2566,16 @@ public static partial class WalSchemaConverter
                 pointConditionSub.Select(pcs =>
                     new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
                 : null;
+
+            var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
+                .Select(l => l.Text) ?? []);
             
-            var textSuggestsIsAggregate = abstractionLimitPointSub.Text?
-                .Any(t => t.Text.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
-                    || t.Text.Contains("The quantities detailed below are in aggregate", StringComparison.InvariantCultureIgnoreCase)
-                    || t.Text.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
-                    || t.Text.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase)) == true;
+            var textSuggestsIsAggregate = 
+                (abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
+                    && !abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase))
+                || abstractionLimitPointSubText.Contains("The quantities detailed below are in aggregate", StringComparison.InvariantCultureIgnoreCase)
+                || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
+                || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase);
 
             var datePurposes = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
@@ -2696,7 +2700,7 @@ public static partial class WalSchemaConverter
                         sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
                 .ToList();
 
-            var bestResult = allDuplicates
+                var bestResult = allDuplicates
                     .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
                     .First();
 
@@ -2756,14 +2760,20 @@ public static partial class WalSchemaConverter
                     var limitedByPoints = anyPointsSpecified
                         && abstractionLimit.Points!.Length != allPoints.Length;
 
-                    var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
-                    var limitedByPurpose = anyPurposesSpecified
+                    var multiplePurposesSpecified = abstractionLimit.Purposes?.Length > 1;
+                    var thisLimitedByPurpose = multiplePurposesSpecified
                         && abstractionLimit.Purposes!.Length != allPurposes.Length;
-
-                    var containsUnderThisLicenceText = abstractionLimitPointSub.Text?
-                        .Any(t => t.Text.Contains("under this licence")) == true;
                     
-                    isAggregate = limitedByPoints || limitedByPurpose || containsUnderThisLicenceText;
+                    var othersLimitedByPurpose = allIndividualGroups.Any(g =>
+                        g.Purposes?.Length > 0
+                        && g.Purposes.Length != allPurposes.Length);
+
+                    var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
+                    
+                    isAggregate = limitedByPoints
+                        || thisLimitedByPurpose
+                        || (multiplePurposesSpecified && othersLimitedByPurpose)
+                        || containsUnderThisLicenceText;
                 }
                 
                 if (isAggregate)

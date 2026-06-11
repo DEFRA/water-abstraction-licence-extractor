@@ -312,11 +312,15 @@ public static class TextToFindIsBetweenLabels
 
                     if (returnList.Count == 0 || line.Columns.Count == 1)
                     {
-                        var i = line.Text.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
+                        var combinedText = !string.IsNullOrEmpty(nextLine?.Text)
+                            ? $"{line.Text} {nextLine.Text}"
+                            : line.Text;
+                        
+                        var i = combinedText.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
                         if (i > -1)
                         {
-                            var t = line.Text[..i];
+                            var t = combinedText[..i];
                             var ct = FormattingHelper.TrimFormatting(t, !doNotTrimLines, !doNotTrimLines);
 
                             var isOneDigitNumber = ct?.Length == 1 && int.TryParse(ct, out _);
@@ -327,6 +331,11 @@ public static class TextToFindIsBetweenLabels
                                 var ctWords = line.Columns
                                     .SelectMany(c => c.Words)
                                     .ToList();
+
+                                if (nextLine != null)
+                                {
+                                    ctWords.AddRange(nextLine.Columns.SelectMany(c => c.Words));
+                                }
                                 
                                 ctWords = DocumentLineColumn.FilterWordsFromText(ctWords, ct!);
                                 

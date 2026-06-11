@@ -4,7 +4,7 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
-import {getImageUrl} from "../utils/images.ts";
+import {getImageUrl, getPdfUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
@@ -28,6 +28,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [reportData, setReportData] = useState<MatchesResult | null>(null);
     const [reportData2, setReportData2] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
+    const [licenceString, setLicenceString] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
     // const [textData, setTextData] = useState<string>('');
 
@@ -43,15 +44,18 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                 setLoading(true);
                 
                 // Load data using API client
-                const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([
+                const [matchesResult, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                     waleApiClient.matchesResult(fileId),
                     waleApiClient.licence(fileId, processRunId),
-                    waleApiClient.licenceSets(fileId)
+                    waleApiClient.licenceSets(fileId),
+                    waleApiClient.licenceString(fileId, processRunId),
                 ]);
 
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
                 if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
                 if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+                if (licenceStringResult.status === 'fulfilled') setLicenceString(
+                    JSON.parse(licenceStringResult.value));
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -147,7 +151,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json-new');
                                     }}
                                 >
-                                    JSON
+                                    Licence data
                                 </a>
                             </li>
                             <li>
@@ -159,10 +163,10 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json-set');
                                     }}
                                 >
-                                    JSON (set)
+                                    Licence set data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'json-ai' ? 'selectedTab' : ''}
@@ -183,10 +187,10 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('json');
                                     }}
                                 >
-                                    JSON (int.)
+                                    Internal data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'text' ? 'selectedTab' : ''}
@@ -195,7 +199,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                         setActiveTab('text');
                                     }}
                                 >
-                                    Text
+                                    Digital text
                                 </a>
                             </li>
                             <li>
@@ -213,9 +217,9 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                         </ul>
 
                         {/* Tab Content */}
-                        {activeTab === 'json-new' && reportData2 && (
+                        {activeTab === 'json-new' && licenceString && (
                             <div id="jsonNewPath">
-                                <JsonView src={reportData2} collapsed={1} theme="default"/>
+                                <JsonView src={licenceString} collapsed={1} theme="default"/>
                             </div>
                         )}
 
@@ -243,11 +247,11 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
 
                         {activeTab === 'text' && (
                             <div id="text">
-                <span
-                    // dangerouslySetInnerHTML={{
-                    //     __html: textData.replaceAll('\n', '<br/>\n')
-                    // }}
-                />
+                                <span
+                                    // dangerouslySetInnerHTML={{
+                                    //     __html: textData.replaceAll('\n', '<br/>\n')
+                                    // }}
+                                />
                             </div>
                         )}
                         
@@ -282,7 +286,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                         <h1>
                             <a
                                 id="filename"
-                                href={`/pdfs/${reportData.filename}`}
+                                href={`${getPdfUrl(reportData.filename)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >

@@ -1745,6 +1745,7 @@ public static class WalLabelConfiguration
                             new("conditions "),
                             new("purposes specified in "),
                             new("purposes of "),
+                            new("purpose of "),
                         ],
                         TextEnd =
                         [

@@ -2696,7 +2696,7 @@ public static partial class WalSchemaConverter
                         sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
                 .ToList();
 
-            var bestResult = allDuplicates
+                var bestResult = allDuplicates
                     .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
                     .First();
 
@@ -2756,14 +2756,21 @@ public static partial class WalSchemaConverter
                     var limitedByPoints = anyPointsSpecified
                         && abstractionLimit.Points!.Length != allPoints.Length;
 
-                    var anyPurposesSpecified = abstractionLimit.Purposes?.Length > 1;
-                    var limitedByPurpose = anyPurposesSpecified
+                    var multiplePurposesSpecified = abstractionLimit.Purposes?.Length > 1;
+                    var thisLimitedByPurpose = multiplePurposesSpecified
                         && abstractionLimit.Purposes!.Length != allPurposes.Length;
-
+                    
+                    var othersLimitedByPurpose = allIndividualGroups.Any(g =>
+                        g.Purposes?.Length > 0
+                        && g.Purposes.Length != allPurposes.Length);
+                    
                     var containsUnderThisLicenceText = abstractionLimitPointSub.Text?
                         .Any(t => t.Text.Contains("under this licence")) == true;
                     
-                    isAggregate = limitedByPoints || limitedByPurpose || containsUnderThisLicenceText;
+                    isAggregate = limitedByPoints
+                        || thisLimitedByPurpose
+                        || (multiplePurposesSpecified && othersLimitedByPurpose)
+                        || containsUnderThisLicenceText;
                 }
                 
                 if (isAggregate)

@@ -301,6 +301,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
         try
         {
+            await SaveOcrImageTextAsync(request, content);
             return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
         }
         catch
@@ -324,6 +325,8 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
         
         var content = await File.ReadAllTextAsync(outputFilename);
+        await SaveOcrScreenshotTextAsync(request, content);
+        
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 

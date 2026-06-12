@@ -931,7 +931,7 @@ public class PdfDataExtractorService(
         }
 
         var lines = StandardiseLines(documentLines);
-        var wrappedLines = WrapLines(lines);
+        var wrappedLines = WrapLines(lines, false);
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -1790,7 +1790,7 @@ public class PdfDataExtractorService(
         
         if (label.SubLabels?.Count > 0)
         {
-            var wrappedLines = WrapLines(lines);
+            var wrappedLines = WrapLines(lines, true);
             
             foreach (var subLabel in label.SubLabels)
             {
@@ -2121,12 +2121,12 @@ public class PdfDataExtractorService(
         return newLines;
     }
     
-    private static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines, bool clone)
     {
         return lines
             .Select((line, index) => new DocumentLineWrapped
             {
-                Line = line,
+                Line = line.Clone(),
                 Index = index
             })
             .ToList();

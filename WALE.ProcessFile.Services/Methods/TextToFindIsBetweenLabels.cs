@@ -48,19 +48,19 @@ public static class TextToFindIsBetweenLabels
 
         linesToUse.AddRange(request.nextLines!);
 
-        var lineBeforeText = DataHelper.GetTextBeforeAtAndAfterLabelAsSingleString(
+        var relevantLineText = DataHelper.GetTextBeforeAtAndAfterLabelAsSingleString(
             request.textBeforeAtAndAfterLabel,
-            false);
+            false); // We will re-add start label text later if needed
         
         var beforeTextContainsLabel = request.label.Text?.Any(labelText =>
-            ((!labelText.LineMustStartWith && !labelText.ColumnMustStartWith)
-                && lineBeforeText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
+            (labelText is { LineMustStartWith: false, ColumnMustStartWith: false }
+             && relevantLineText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
-                    && lineBeforeText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
+                    && relevantLineText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
 
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
-            lineBeforeText,
+            relevantLineText,
             linesToUse,
             request.lineNumber,
             request.line!,

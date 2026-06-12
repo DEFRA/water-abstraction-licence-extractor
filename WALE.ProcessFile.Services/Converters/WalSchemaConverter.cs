@@ -2574,10 +2574,16 @@ public static partial class WalSchemaConverter
 
             var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
                 .Select(l => l.Text) ?? []);
+
+            var wordedAsAggregateButAllPurposes = abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
+                && abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase)
+                || (abstractionLimitPointSubText.Contains("for the purposes of", StringComparison.InvariantCultureIgnoreCase)
+                    && allPurposes.Length > 1
+                    && limitPurposes?.Count == allPurposes.Length);
             
             var textSuggestsIsAggregate = 
                 (abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
-                    && !abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase))
+                    && !wordedAsAggregateButAllPurposes)
                 || abstractionLimitPointSubText.Contains("The quantities detailed below are in aggregate", StringComparison.InvariantCultureIgnoreCase)
                 || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
                 || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase);

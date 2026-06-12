@@ -1682,6 +1682,24 @@ public static class WalLabelConfiguration
                 {
                     new()
                     {
+                        Name = "DocumentIdentifier",
+                        Possibilities = [
+                            "6.1",
+                            "6.2",
+                            "6.3",
+                            "6.4",
+                            "6.5",
+                            "6.6",
+                            "6.7",
+                            "6.8"
+                        ],
+                        Position = LabelPosition.ApplicableToMost,
+                        Format = "Number",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
+                    },
+                    new()
+                    {
                         Name = "DateOnly",
                         Text =
                         [

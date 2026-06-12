@@ -2471,9 +2471,13 @@ public static partial class WalSchemaConverter
             {
                 noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
             }
-            
-            var documentIdentifier = string.Empty;
 
+            var documentIdentifier = abstractionLimitPointSub.SubResults
+                .FirstOrDefault(x => x.MatchedLabel?.Name == "DocumentIdentifier")?
+                .Text?
+                .FirstOrDefault()?
+                .Text;
+            
             if (limitPointTable != null)
             {
                 var tableLines = limitPointTable.Text!;
@@ -2602,7 +2606,7 @@ public static partial class WalSchemaConverter
                     Limits = [],
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray(),
-                    DocumentIdentifier = documentIdentifier,
+                    DocumentIdentifier = documentIdentifier
                 });
 
                 foreach (var datePurpose in datePurposes)

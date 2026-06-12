@@ -77,7 +77,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = null
+                DestinationFileName = null,
+                RegionId = 1
             }
         }
     };
@@ -299,7 +300,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldData,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            _fileLicenceMapping["28_39_28_312"]);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

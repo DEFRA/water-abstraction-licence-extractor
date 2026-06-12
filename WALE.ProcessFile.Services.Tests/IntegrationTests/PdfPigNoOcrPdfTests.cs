@@ -70,7 +70,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -79,7 +80,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -88,7 +90,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -97,7 +100,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             }
         };
@@ -111,7 +115,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -120,7 +125,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -129,7 +135,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             }
         };

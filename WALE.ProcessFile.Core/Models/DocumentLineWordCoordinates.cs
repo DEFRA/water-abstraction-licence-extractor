@@ -29,4 +29,11 @@ public class DocumentLineWordCoordinates(double top, double right, double bottom
             NotKnownCoordinate,
             NotKnownCoordinate);
     }
+    
+    public DocumentLineWordCoordinates Clone()
+    {
+        // TODO replace with a source generator
+
+        return new DocumentLineWordCoordinates(Top, Right, Bottom, Left);
+    }
 }

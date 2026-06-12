@@ -78,7 +78,7 @@ public class DocumentLine(
     
     public DocumentLine Clone()
     {
-        // TODO replace with a source generator        
+        // TODO replace with a source generator
         
         return new DocumentLine
         {

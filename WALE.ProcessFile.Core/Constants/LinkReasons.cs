@@ -27,4 +27,5 @@ public static class LinkReasons
     public const string ResidualFlow = "ResidualFlow";
     public const string LapsedLicence = "LapsedLicence";
     public const string Revocation = "Revocation";
+    public const string InAnEmergency = "InAnEmergency";
 }

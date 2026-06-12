@@ -1202,7 +1202,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal("(1)", pointName);
         
-        Assert.Equal(2, section1Sub1.Text?.Count);
+        Assert.Equal(3, section1Sub1.Text?.Count);
         Assert.Equal(5, section1Sub1.SubResults.Count);
 
         var units1 = section1Sub1.SubResults[1];

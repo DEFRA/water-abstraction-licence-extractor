@@ -70,7 +70,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -79,7 +80,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -88,7 +90,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -97,7 +100,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             }
         };
@@ -111,7 +115,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -120,7 +125,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             },
             {
@@ -129,7 +135,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
+                    DmsPath = "Something to look for",
+                    RegionId = 1
                 }
             }
         };
@@ -487,7 +494,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
         
-        Assert.Equal(5, section2Sub1.SubResults.Count);  
+        Assert.Equal(6, section2Sub1.SubResults.Count);  
         
         var perYear1 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -615,7 +622,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(39, additionalInformation.Text!.Count);
+        Assert.Equal(41, additionalInformation.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -640,7 +647,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(15, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
         Assert.Equal(143, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
@@ -701,7 +708,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
-        Assert.Equal(11, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(13, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -842,7 +849,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(10, records.Text!.Count);
+        Assert.Equal(12, records.Text!.Count);
         
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
@@ -871,7 +878,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(11, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(12, abstractionLimitsSection.Text!.Count);
         Assert.Equal(122, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
@@ -948,7 +955,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
-        Assert.Equal(7, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(8, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -1030,7 +1037,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(11, records.Text!.Count);
+        Assert.Equal(13, records.Text!.Count);
         
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
@@ -1054,7 +1061,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(48, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(49, abstractionLimitsSection.Text!.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
@@ -1275,7 +1282,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection7.SubResults);
 
         var section7Sub1 = abstractionLimitsSection7.SubResults[0];
-        Assert.Equal(4, section7Sub1.SubResults.Count);
+        Assert.Equal(5, section7Sub1.SubResults.Count);
         
         var perDay = section7Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1302,13 +1309,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("cubic metres", perYearUnits);                                
         
         var abstractionLimitsSection8 = abstractionLimitsSection.SubResults[7];
-        Assert.Equal(5, abstractionLimitsSection8.Text!.Count);
+        Assert.Equal(7, abstractionLimitsSection8.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection8.SubResults);
         Assert.Single(abstractionLimitsSection8.SubResults);
 
         var section8Sub1 = abstractionLimitsSection8.SubResults[0];
-        Assert.Equal(9, section8Sub1.SubResults.Count);
+        Assert.Equal(7, section8Sub1.SubResults.Count);
         
         perHour = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1475,7 +1482,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(purposeResult.IsOcr);
 
         var allText = string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!);
-        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Trickle irrigation. 4.2 Filling a reservoir for subsequent trickle irrigation.", allText);
+        Assert.Equal("4. PURPOSES OF ABSTRACTION 4.1 Trickle irrigation. 4.2 Filling a reservoir for subsequent trickle irrigation.  Licence Serial No: AN/033/0051/004", allText); // TODO licence serial number bit shouldnt be here
 
         Assert.Equal(["PURPOSES OF ABSTRACTION"], purposeResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.TextToFindIsBetweenLabels, purposeResult.MatchedLabel.Position);
@@ -1493,8 +1500,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             string.Join(' ', purpose1.Text?.Select(x => x.Text).ToArray()!));
 
         var purpose2 = purposePointGroupSubResults[1];
-        Assert.Equal("4.2 Filling a reservoir for subsequent trickle irrigation.",
-            string.Join(' ', purpose2.Text?.Select(x => x.Text).ToArray()!));
+        Assert.Equal("4.2 Filling a reservoir for subsequent trickle irrigation.  Licence Serial No: AN/033/0051/004",
+            string.Join(' ', purpose2.Text?.Select(x => x.Text).ToArray()!)); // TODO licence serial number bit shouldnt be here
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -2998,7 +3005,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(9, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3209,7 +3216,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(9, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3308,7 +3315,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint1.SubResults);
 
         var point1Sub1 = abstractionLimitsPoint1.SubResults[0];
-        Assert.Equal(6, point1Sub1.SubResults.Count);
+        Assert.Equal(7, point1Sub1.SubResults.Count);
         
         Assert.Equal("14", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"

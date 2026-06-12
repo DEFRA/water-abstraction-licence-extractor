@@ -12,19 +12,7 @@ namespace WALE.ProcessFile.RuleEngine.Tests.Services;
 
 public class FileTypeIdentifierServiceTests
 {
-    private readonly FileTypeIdentifierService _service;
-
-    public FileTypeIdentifierServiceTests()
-    {
-        _service = new FileTypeIdentifierService();
-    }
-
-    [Fact]
-    public void Constructor_WithNullPdfExtractor_ShouldThrowArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new FileTypeIdentifierService());
-    }
+    private readonly FileTypeIdentifierService _service = new();
 
     [Fact(Skip = "Needs investigation and fixing")]
     public void IdentifyFileType_WithLicenseContent_ShouldReturnLicenseType()

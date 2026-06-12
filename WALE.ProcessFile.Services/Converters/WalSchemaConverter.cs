@@ -2466,6 +2466,8 @@ public static partial class WalSchemaConverter
             {
                 noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
             }
+            
+            var documentIdentifier = string.Empty;
 
             if (limitPointTable != null)
             {
@@ -2499,6 +2501,7 @@ public static partial class WalSchemaConverter
                     {
                         Points = points,
                         Purposes = null,
+                        DocumentIdentifier = documentIdentifier,
                         Limits =
                         [
                             new()
@@ -2587,7 +2590,8 @@ public static partial class WalSchemaConverter
                 {
                     Limits = [],
                     Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
+                    Purposes = limitPurposes?.ToArray(),
+                    DocumentIdentifier = documentIdentifier,
                 });
 
                 foreach (var datePurpose in datePurposes)
@@ -2595,6 +2599,7 @@ public static partial class WalSchemaConverter
                     individualGroups.Add(new AbstractionLimitGroup
                     {
                         TimePeriod = GetTimePeriod(datePurpose),
+                        DocumentIdentifier = documentIdentifier,
                         Limits = [],
                         Points = limitPoints?.ToArray(),
                         Purposes = limitPurposes?.ToArray()
@@ -2607,6 +2612,7 @@ public static partial class WalSchemaConverter
                 individualGroups.Add(new AbstractionLimitGroup
                 {
                     Limits = [],
+                    DocumentIdentifier = documentIdentifier,
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray()
                 });
@@ -2823,7 +2829,8 @@ public static partial class WalSchemaConverter
                         {
                             Points = abstractionLimit.Points,
                             Purposes = abstractionLimit.Purposes,
-                            Limits = []
+                            Limits = [],
+                            DocumentIdentifier = documentIdentifier,
                         };
 
                         individualGroups.Add(individualGroup);
@@ -2864,7 +2871,8 @@ public static partial class WalSchemaConverter
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],
                 TimeCutoff = timeCutoff,
-                TimePeriod = timePeriod
+                TimePeriod = timePeriod,
+                DocumentIdentifier = documentIdentifier
             };
 
             // If there are no points, purposes or licences specified, then it

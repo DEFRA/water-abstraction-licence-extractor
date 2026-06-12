@@ -85,6 +85,7 @@ public class Aggregate : AbstractionLimitGroup
         LicenceNumber = null,
         LicenceVersionId = null,
         Limits = [AbstractionLimit.Template],
+        DocumentIdentifier = null,
         LinkedLicences = []
     };
 }

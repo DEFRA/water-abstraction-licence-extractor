@@ -2,6 +2,7 @@ using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -1893,50 +1894,24 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     }
     
     [Fact]
-    public async Task FileWithImageWithSmallDimensions()
+    public async Task FileWithImageWithSmallDimensions_ThrowsTooManyImagesException()
     {
         // Arrange
         await SetupLicenceNumbersAsync(1);
         const string filename = "12202043__Licence - Signed Addendum 6431587.pdf";
 
+        var throwTooManyImagesException = false;
+        
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, 4);
-        var resultList = resultFull.Matches!;
+        try
+        {
+            await GetMatchesAsync(filename, 1, 4);
+        }
+        catch (TooManyImagesException e)
+        {
+            throwTooManyImagesException = true;
+        }
         
-        // Assert
-        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
-        
-        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
-        Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
-        
-        var dateOfIssue = resultFull.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("20 April 2011", dateOfIssue.Text?.FirstOrDefault()?.Text);
-        
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("1/22/02/043", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
-            resultFull,
-            _naldLicenceStatusData,
-            _naldData,
-            _pdfDataExtractorCombined1,
-            0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
-        
-        Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12202043-LV20110419", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("043", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
-        
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.True(throwTooManyImagesException);
     }
 }

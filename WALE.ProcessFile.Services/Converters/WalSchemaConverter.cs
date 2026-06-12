@@ -2375,6 +2375,11 @@ public static partial class WalSchemaConverter
             return LinkReasons.AggregateCondition;
         }
 
+        if (text.Contains("in an emergency", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.InAnEmergency;
+        }
+        
         if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
         {
             return LinkReasons.ShallNotExceed;

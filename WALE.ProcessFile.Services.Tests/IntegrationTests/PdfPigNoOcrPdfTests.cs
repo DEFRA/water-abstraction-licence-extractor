@@ -279,12 +279,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(4, point1Sub1.Text!.Count);
 
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(5, point1Sub1.SubResults.Count);
+        Assert.Equal(6, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(109, perDay.LineNumber);
@@ -293,19 +293,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         var perYear = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("33182", perYear);
         
         var perYearUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
@@ -457,12 +457,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Single(abstractionLimitsSection1.SubResults);
         var section1Sub1 = abstractionLimitsSection1.SubResults[0];
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
 
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(112, perDay.LineNumber);
@@ -471,19 +471,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perHour = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("41", perHour);
         
         var perHourUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
@@ -494,30 +494,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
         
-        Assert.Equal(6, section2Sub1.SubResults.Count);  
+        Assert.Equal(7, section2Sub1.SubResults.Count);  
         
         var perYear1 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("6138", perYear1);
         
         var perYearUnits1 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits1);
         
         var perYear2 = section2Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("6138", perYear2);
         
         var perYearUnits2 = section2Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits2);        
 
         var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
@@ -663,24 +663,24 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var section1Sub1 = abstractionLimitsSection1.SubResults[0];
         
-        Assert.Equal(8, section1Sub1.SubResults.Count);
+        Assert.Equal(9, section1Sub1.SubResults.Count);
         
         var perHour = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("39.5", perHour);
         
         var perHourUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(144, perDay.LineNumber);
@@ -689,13 +689,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perYear = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
         Assert.Equal(145, perYear.LineNumber);
@@ -704,7 +704,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
@@ -714,24 +714,24 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(12, section2Sub1.SubResults.Count);
+        Assert.Equal(13, section2Sub1.SubResults.Count);
             
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("39.5", perHour);
         
         perHourUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         perDay = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(152, perDay.LineNumber);
@@ -740,13 +740,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perYearList = section2Sub1.SubResults
             .Where(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)
             .ToList();
         
        var perYear2 = perYearList.FirstOrDefault()?.Text?.FirstOrDefault()?.Text;
@@ -758,19 +758,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYearUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var perSecond = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("10.97", perSecond);
         
         var perSecondUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
 
         var linkedLicences = section2Sub1.SubResults
@@ -895,24 +895,24 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(4, section1Sub1.Text!.Count);
 
         Assert.NotNull(section1Sub1.SubResults);
-        Assert.Equal(8, section1Sub1.SubResults.Count);
+        Assert.Equal(9, section1Sub1.SubResults.Count);
         
         var perHour = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("55", perHour);
         
         var perHourUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(123, perDay.LineNumber);
@@ -921,13 +921,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perYear = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
         Assert.Equal(124, perYear.LineNumber);
@@ -936,13 +936,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perYearUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
 
         var perSecond = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per second")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
         Assert.Equal(125, perSecond.LineNumber);
@@ -951,7 +951,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perSecondUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
@@ -965,13 +965,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perYear2 = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("22730", perYear2);
         
         perYearUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var linkedLicenceNumber = section2Sub1.SubResults
@@ -1083,25 +1083,25 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perHour = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("46", perHour);
         
         var perHourUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         var perSecond = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("12.7", perSecond);
         
         var perSecondUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
 
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
@@ -1112,7 +1112,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
             
         Assert.NotNull(section2Sub1.SubResults);            
-        Assert.Equal(5, section2Sub1.SubResults.Count);
+        Assert.Equal(6, section2Sub1.SubResults.Count);
         
         abstractionPoint = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1122,25 +1122,25 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("46", perHour);
         
         perHourUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         perSecond = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("19.2", perSecond);
         
         perSecondUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection3 = abstractionLimitsSection.SubResults[2];
@@ -1150,30 +1150,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection3.SubResults);
         
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
-        Assert.Equal(4, section3Sub1.SubResults.Count);
+        Assert.Equal(5, section3Sub1.SubResults.Count);
         
         perHour = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("69", perHour);
         
         perHourUnits = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         perSecond = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("19.2", perSecond);
         
         perSecondUnits = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
 
         var abstractionLimitsSection4 = abstractionLimitsSection.SubResults[3];
@@ -1183,30 +1183,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection4.SubResults);
 
         var section4Sub1 = abstractionLimitsSection4.SubResults[0];
-        Assert.Equal(4, section4Sub1.SubResults.Count);
+        Assert.Equal(5, section4Sub1.SubResults.Count);
         
         perHour = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("137", perHour);
         
         perHourUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         perSecond = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("38.1", perSecond);
         
         perSecondUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
 
         var abstractionLimitsSection5 = abstractionLimitsSection.SubResults[4];
@@ -1216,30 +1216,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection5.SubResults);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        Assert.Equal(4, section5Sub1.SubResults.Count);
+        Assert.Equal(5, section5Sub1.SubResults.Count);
         
         perHour = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("69", perHour);
         
         perHourUnits = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         perSecond = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("19.2", perSecond);
         
         perSecondUnits = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection6 = abstractionLimitsSection.SubResults[5];
@@ -1249,30 +1249,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection6.SubResults);
 
         var section6Sub1 = abstractionLimitsSection6.SubResults[0];
-        Assert.Equal(4, section6Sub1.SubResults.Count);
+        Assert.Equal(5, section6Sub1.SubResults.Count);
         
         perHour = section6Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("91", perHour);
         
         perHourUnits = section6Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
 
         perSecond = section6Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("25.3", perSecond);
         
         perSecondUnits = section6Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
 
         var abstractionLimitsSection7 = abstractionLimitsSection.SubResults[6];
@@ -1282,30 +1282,30 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection7.SubResults);
 
         var section7Sub1 = abstractionLimitsSection7.SubResults[0];
-        Assert.Equal(5, section7Sub1.SubResults.Count);
+        Assert.Equal(6, section7Sub1.SubResults.Count);
         
         var perDay = section7Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("1440", perDay);
         
         var perDayUnits = section7Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         var perYear = section7Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("22862", perYear);
         
         var perYearUnits = section7Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);                                
         
         var abstractionLimitsSection8 = abstractionLimitsSection.SubResults[7];
@@ -1315,42 +1315,42 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection8.SubResults);
 
         var section8Sub1 = abstractionLimitsSection8.SubResults[0];
-        Assert.Equal(7, section8Sub1.SubResults.Count);
+        Assert.Equal(8, section8Sub1.SubResults.Count);
         
         perHour = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("251", perHour);
         
         perHourUnits = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         perDay = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("4091", perDay);
         
         perDayUnits = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         perYear = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("190000", perYear);
         
         perYearUnits = section8Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var linkedLicenceNumber = section8Sub1.SubResults
@@ -1370,49 +1370,49 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perHour = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("46", perHour);
         
         perHourUnits = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         perDay = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("1091", perDay);
         
         perDayUnits = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         perYear = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("40900", perYear);
         
         perYearUnits = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         perYear = section9Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("40900", perYear);
         
         perYearUnits = section9Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         linkedLicenceNumber = section9Sub1.SubResults
@@ -1427,42 +1427,42 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection10.SubResults);
 
         var section10Sub1 = abstractionLimitsSection10.SubResults[0];
-        Assert.Equal(9, section10Sub1.SubResults.Count);
+        Assert.Equal(10, section10Sub1.SubResults.Count);
         
         perHour = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("205", perHour);
         
         perHourUnits = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         perDay = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("3000", perDay);
         
         perDayUnits = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         perYear = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("190000", perYear);
         
         perYearUnits = section10Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);                
         
         linkedLicenceNumber = section10Sub1.SubResults
@@ -1623,12 +1623,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(section1Point1.SubResults);
         
         var point1Sub1 = section1Point1.SubResults[0];
-        Assert.Equal(6, point1Sub1.SubResults.Count);
+        Assert.Equal(7, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(165, perDay.LineNumber);
@@ -1637,25 +1637,25 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perHour = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("83", perHour);
         
         var perHourUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         var perSecond = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per second")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
         Assert.Equal(166, perSecond.LineNumber);
@@ -1664,7 +1664,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perSecondUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
@@ -1674,12 +1674,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(2, section2Sub1.SubResults.Count);
+        Assert.Equal(3, section2Sub1.SubResults.Count);
         
         var perYear = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
         Assert.Equal(169, perYear.LineNumber);
@@ -1688,7 +1688,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perYearUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection3 = abstractionLimitsSection.SubResults[2];
@@ -1698,12 +1698,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection3.SubResults);
 
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
-        Assert.Equal(2, section3Sub1.SubResults.Count);
+        Assert.Equal(3, section3Sub1.SubResults.Count);
         
         perYear = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
         Assert.Equal(173, perYear.LineNumber);
@@ -1712,7 +1712,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYearUnits = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection4 = abstractionLimitsSection.SubResults[3];
@@ -1722,24 +1722,24 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection4.SubResults);
 
         var section4Sub1 = abstractionLimitsSection4.SubResults[0];
-        Assert.Equal(8, section4Sub1.SubResults.Count);
+        Assert.Equal(9, section4Sub1.SubResults.Count);
 
         perHour = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("219", perHour);
         
         perHourUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);
         
         var perYearList = section4Sub1.SubResults
             .Where(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")))
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true)
             .ToList();
 
         perYear = perYearList.FirstOrDefault();
@@ -1762,13 +1762,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYearUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);   
         
         perDay = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(176, perDay.LineNumber);
@@ -1777,7 +1777,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var abstractionLimitsSection5 = abstractionLimitsSection.SubResults[4];
@@ -1787,12 +1787,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection5.SubResults);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        Assert.Equal(10, section5Sub1.SubResults.Count);
+        Assert.Equal(11, section5Sub1.SubResults.Count);
 
         perYearList = section5Sub1.SubResults
             .Where(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per year")))
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true)
             .ToList();
 
         perYear = perYearList.FirstOrDefault();
@@ -1810,25 +1810,25 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYearUnits = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits);
         
         perHour = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("219", perHour);
         
         perHourUnits = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per hour")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per hour")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perHourUnits);                        
         
         perDay = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(184, perDay.LineNumber);
@@ -1837,7 +1837,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var linkedLicenceNumber = section5Sub1.SubResults
@@ -2156,7 +2156,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(155, perDay.LineNumber);
@@ -2165,19 +2165,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDayUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         var perSecond = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("29", perSecond);
         
         var perSecondUnits = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
@@ -2187,12 +2187,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(4, section2Sub1.SubResults.Count);
+        Assert.Equal(5, section2Sub1.SubResults.Count);
         
         perDay = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(158, perDay.LineNumber);
@@ -2201,19 +2201,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         perSecond = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("57.9", perSecond);
         
         perSecondUnits = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection3 = abstractionLimitsSection.SubResults[2];
@@ -2223,12 +2223,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection3.SubResults);
 
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
-        Assert.Equal(4, section3Sub1.SubResults.Count);
+        Assert.Equal(5, section3Sub1.SubResults.Count);
 
         perDay = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(161, perDay.LineNumber);
@@ -2237,19 +2237,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         perSecond = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("57.9", perSecond);
         
         perSecondUnits = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection4 = abstractionLimitsSection.SubResults[1];
@@ -2259,12 +2259,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection4.SubResults);
 
         var section4Sub1 = abstractionLimitsSection4.SubResults[0];
-        Assert.Equal(4, section4Sub1.SubResults.Count);
+        Assert.Equal(5, section4Sub1.SubResults.Count);
         
         perDay = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(158, perDay.LineNumber);
@@ -2273,19 +2273,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perDayUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
         
         perSecond = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("57.9", perSecond); // TODO there is also 61.3
         
         perSecondUnits = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per second")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);
         
         // TODO 4 more sections
@@ -2365,7 +2365,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint1.SubResults);
 
         var sectionPoint1Sub1 = sectionPoint1.SubResults[0];
-        Assert.Equal(8, sectionPoint1Sub1.SubResults.Count);
+        Assert.Equal(9, sectionPoint1Sub1.SubResults.Count);
         Assert.Single(sectionPoint1Sub1.SubResults[0].Text!);
         
         var sectionPoint2 = abstractionLimitsSection.SubResults[1];
@@ -2373,7 +2373,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint2.SubResults);
 
         var sectionPoint2Sub1 = sectionPoint2.SubResults[0];
-        Assert.Equal(8, sectionPoint2Sub1.SubResults.Count);
+        Assert.Equal(9, sectionPoint2Sub1.SubResults.Count);
         Assert.Single(sectionPoint2Sub1.SubResults[0].Text!);
         
         var sectionPoint3 = abstractionLimitsSection.SubResults[2];
@@ -2381,7 +2381,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint3.SubResults);
 
         var sectionPoint3Sub1 = sectionPoint3.SubResults[0];
-        Assert.Equal(8, sectionPoint3Sub1.SubResults.Count);
+        Assert.Equal(9, sectionPoint3Sub1.SubResults.Count);
         Assert.Single(sectionPoint3Sub1.SubResults[0].Text!);
         
         var sectionPoint4 = abstractionLimitsSection.SubResults[3];
@@ -2389,7 +2389,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint4.SubResults);
 
         var sectionPoint4Sub1 = sectionPoint4.SubResults[0];
-        Assert.Equal(8, sectionPoint4Sub1.SubResults.Count);
+        Assert.Equal(9, sectionPoint4Sub1.SubResults.Count);
         Assert.Single(sectionPoint4Sub1.SubResults[0].Text!);
         
         // TODO expand this section + add others
@@ -2458,34 +2458,34 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("120", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("2600", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text); 
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("33.3", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         
         // TODO
         
@@ -2590,22 +2590,22 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("20", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("475", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-            && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+            && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("173453", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", abstractionLimitPointSub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-            && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+            && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
 
         var abstractionLimitPointSub2 = abstractionLimitsPoint.SubResults[1];
         
@@ -2831,32 +2831,32 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint1.SubResults);
         
         var sectionPoint1Sub1 = sectionPoint1.SubResults[0];
-        Assert.Equal(8, sectionPoint1Sub1.SubResults.Count);
+        Assert.Equal(9, sectionPoint1Sub1.SubResults.Count);
 
         Assert.Equal("32", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("231", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("4623", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per month") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per month") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per month") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per month") == true)?.Text!.First().Text);
         Assert.Equal("13870", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", sectionPoint1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");        
         
@@ -2922,32 +2922,32 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint.SubResults);
         
         var point1Sub1 = abstractionLimitsPoint.SubResults[0];
-        Assert.Equal(9, point1Sub1.SubResults.Count);
+        Assert.Equal(10, point1Sub1.SubResults.Count);
 
         Assert.Equal("2", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
         Assert.Equal("30", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("11000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
         Assert.Equal("0.6", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);                
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3012,32 +3012,32 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint1.SubResults);
 
         var point1Sub1 = sectionPoint1.SubResults[0];
-        Assert.Equal(9, point1Sub1.SubResults.Count);
+        Assert.Equal(10, point1Sub1.SubResults.Count);
 
         Assert.Equal("43.2", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);                
         Assert.Equal("1037", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);        
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);        
         Assert.Equal("37000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);                
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);        
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);        
         Assert.Equal("12", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);                
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);                
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);        
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);        
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3104,7 +3104,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(point1.SubResults);
 
         var point1Sub1 = point1.SubResults[0];
-        Assert.Equal(9, point1Sub1.SubResults.Count);
+        Assert.Equal(10, point1Sub1.SubResults.Count);
 
         var pointName = point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -3113,32 +3113,32 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("90", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-            && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+            && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
         Assert.Equal("2160", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);   
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);   
         Assert.Equal("113650", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("25.3", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);           
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);           
 
         // TODO add a test for the futher conditions 90,923
         
-        Assert.Equal("25.3", point1Sub1.SubResults[8].Text!.First().Text);
+        Assert.Equal("25.3", point1Sub1.SubResults[9].Text!.First().Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3223,32 +3223,32 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint1.SubResults);
 
         var point1Sub1 = abstractionLimitsPoint1.SubResults[0];
-        Assert.Equal(9, point1Sub1.SubResults.Count);
+        Assert.Equal(10, point1Sub1.SubResults.Count);
         
         Assert.Equal("3.5", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("30", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("8300", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("0.97", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3315,26 +3315,26 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint1.SubResults);
 
         var point1Sub1 = abstractionLimitsPoint1.SubResults[0];
-        Assert.Equal(7, point1Sub1.SubResults.Count);
+        Assert.Equal(8, point1Sub1.SubResults.Count);
         
         Assert.Equal("14", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("112", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("22731", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         
         // TODO, 3 other points
         
@@ -3412,44 +3412,44 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint1.SubResults);
 
         var point1Sub1 = abstractionLimitsPoint1.SubResults[0];
-        Assert.Equal(9, point1Sub1.SubResults.Count);
+        Assert.Equal(10, point1Sub1.SubResults.Count);
 
-        Assert.Equal("6.1 Up to and including 31 March 2025", point1Sub1.SubResults
+        Assert.Equal("Up to and including 31 March 2025", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Date"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("Up to and including ") == true)?.Text![0].Text);
         
         Assert.Equal("215", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text![0].Text);
         Assert.Equal("4550", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text![0].Text);
         Assert.Equal("1460000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text![0].Text);
         Assert.Equal("59.7", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
+                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text![0].Text);
         
         var abstractionLimitsPoint2 = abstractionLimitsSection.SubResults[1];
         Assert.Single(abstractionLimitsPoint2.SubResults);
         
         var point2Sub1 = abstractionLimitsPoint2.SubResults[0];
-        Assert.Equal(9, point2Sub1.SubResults.Count);
+        Assert.Equal(10, point2Sub1.SubResults.Count);
 
-        Assert.Equal("6.2 From 01 April 2025", point2Sub1.SubResults
+        Assert.Equal("From 01 April 2025", point2Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Date"
                 && x.MatchedLabel.Text!.FirstOrDefault()?.Text.Contains("From ") == true)?.Text![0].Text);
         
@@ -3457,7 +3457,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsPoint3.SubResults);
         
         var point3Sub1 = abstractionLimitsPoint3.SubResults[0];
-        Assert.Equal(7, point3Sub1.SubResults.Count);
+        Assert.Equal(8, point3Sub1.SubResults.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -3700,27 +3700,28 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsSection1.SubResults);
         Assert.Single(abstractionLimitsSection1.SubResults);
         var section1Sub1 = abstractionLimitsSection1.SubResults[0];
-        Assert.Equal(8, section1Sub1.SubResults.Count);
+        Assert.Equal(9, section1Sub1.SubResults.Count);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
         Assert.Equal(4, abstractionLimitsSection2.Text!.Count);
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(8, section2Sub1.SubResults.Count);
+        Assert.Equal(9, section2Sub1.SubResults.Count);
         
         var abstractionLimitsSection3 = abstractionLimitsResult.SubResults[2];
         Assert.Equal(7, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
-        Assert.Equal(5, section3Sub1.SubResults.Count);
+        Assert.Equal(6, section3Sub1.SubResults.Count);
 
-        Assert.Equal("cubic metres", section3Sub1.SubResults[0].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("6.3", section3Sub1.SubResults[0].Text!.FirstOrDefault()!.Text);
         Assert.Equal("cubic metres", section3Sub1.SubResults[1].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("15", section3Sub1.SubResults[2].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("360", section3Sub1.SubResults[3].Text!.FirstOrDefault()!.Text);
-        Assert.Equal("1 January and ending on 31 December", section3Sub1.SubResults[4].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("cubic metres", section3Sub1.SubResults[2].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("15", section3Sub1.SubResults[3].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("360", section3Sub1.SubResults[4].Text!.FirstOrDefault()!.Text);
+        Assert.Equal("1 January and ending on 31 December", section3Sub1.SubResults[5].Text!.FirstOrDefault()!.Text);
         
         var points = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Equal(2, points!.Text!.Count);

@@ -4,6 +4,6 @@ public enum CutoffType
 {
     Unknown,
     NotApplicable,
-    Upto,
+    Upto, // Or Until
     From
 }

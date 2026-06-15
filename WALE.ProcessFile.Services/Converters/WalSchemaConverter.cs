@@ -1507,28 +1507,89 @@ public static partial class WalSchemaConverter
         return returnLicences;
     }
 
-    private static TimePeriod? GetTimePeriod(LabelGroupResult? datePurpose)
+    private static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
     {
-        if (datePurpose == null)
+        if (match == null)
         {
             return null;
         }
 
-        var value = datePurpose.Text?.FirstOrDefault()?.Text;
+        var value = match.Text?.FirstOrDefault()?.Text;
         if (string.IsNullOrWhiteSpace(value))
         {
             return null;
         }
 
-        var parts = value
-            .Replace(" and ending on ", " to ")
-            .Split(" to ");
-        var startDate = parts[0]
-            .Replace("beginning on ", string.Empty);
+        var isFrom = value.Contains("From ", StringComparison.InvariantCultureIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
+        
+        if (!isFrom && !isUntil)
+        {
+            return null;
+        }
 
+        var parts = value
+            .Replace("From", "~", StringComparison.InvariantCultureIgnoreCase)
+            .Replace("Until", "~", StringComparison.InvariantCultureIgnoreCase)
+            .Split('~');
+
+        var datePart = parts.Length >= 2 ? parts[1] : null;
+
+        if (datePart == null)
+        {
+            return null;
+        }
+        
+        return new TimeCutoff
+        {
+            CutoffType = isFrom ? CutoffType.From : CutoffType.Upto,
+            Date = datePart.Trim()
+        };
+    }
+    
+    private static TimePeriod? GetTimePeriod(LabelGroupResult? match)
+    {
+        if (match == null)
+        {
+            return null;
+        }
+
+        var value = match.Text?.FirstOrDefault()?.Text;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        value = value.Replace(" and ending on ", " to ");
+        
+        var isFrom = value.Contains("From ", StringComparison.InvariantCultureIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
+        
+        if (isFrom || isUntil)
+        {
+            return null;
+        }
+        
+        var hasTo = value.Contains(" to ", StringComparison.InvariantCultureIgnoreCase);
+        var hasBeginningOn = value.Contains("beginning on ", StringComparison.InvariantCultureIgnoreCase);
+
+        if (!hasTo && !hasBeginningOn)
+        {
+            return null;
+        }
+        
+        var parts = value
+            .Replace("beginning on ", string.Empty)
+            .Split(" to ");
+
+        if (parts.Length == 1)
+        {
+            return null;
+        }
+        
         return new TimePeriod
         {
-            StartDate = startDate,
+            StartDate = parts[0],
             EndDate = parts.Length > 1 ? parts[1] : null,
             PeriodType = AbstractionPeriodType.SetPeriod,
             Inclusive = true
@@ -2472,6 +2533,12 @@ public static partial class WalSchemaConverter
                 noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
             }
 
+            var documentIdentifier = abstractionLimitPointSub.SubResults
+                .FirstOrDefault(sr => sr.MatchedLabel?.Name == "DocumentIdentifier")?
+                .Text?
+                .FirstOrDefault()?
+                .Text;
+            
             if (limitPointTable != null)
             {
                 var tableLines = limitPointTable.Text!;
@@ -2504,6 +2571,7 @@ public static partial class WalSchemaConverter
                     {
                         Points = points,
                         Purposes = null,
+                        DocumentIdentifier = documentIdentifier,
                         Limits =
                         [
                             new()
@@ -2588,44 +2656,12 @@ public static partial class WalSchemaConverter
                 || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
                 || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase);
 
-            var datePurposes = siblings
+            var datePurposesTimePeriods = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
                 .ToList(); // E.g. Jan, Feb etc..
             
-            if (datePurposes.Count >= 1)
-            {
-                individualGroups.Add(new AbstractionLimitGroup
-                {
-                    Limits = [],
-                    Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
-                });
-
-                foreach (var datePurpose in datePurposes)
-                {
-                    individualGroups.Add(new AbstractionLimitGroup
-                    {
-                        TimePeriod = GetTimePeriod(datePurpose),
-                        Limits = [],
-                        Points = limitPoints?.ToArray(),
-                        Purposes = limitPurposes?.ToArray()
-                    });
-                }
-            }
-            else if (allIndividualGroups.Count == 0 && individualGroups.Count == 0)
-            {
-                // Add a group
-                individualGroups.Add(new AbstractionLimitGroup
-                {
-                    Limits = [],
-                    Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
-                });
-            }
-            else if (individualGroups.Count == 0)
-            {
-                individualGroups.Add(allIndividualGroups[0]);
-            }
+            var timeCutoff = GetTimeCutoff(
+                siblings.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
 
             var valueResults = siblings
                 .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
@@ -2686,15 +2722,90 @@ public static partial class WalSchemaConverter
                 .ToList();
 
             linkedLicenceNumbers = linkedLicenceNumbers
-
-            .Where(linkedLicence =>
+                .Where(linkedLicence =>
                     FormattingHelper.IsValidLicenceNumber(
                         linkedLicence.LicenceNumber!,
                         regionCode) != false)
                 .ToList();
             
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
+            var isAggregate = false;
 
+            if (hasLinkedLicenceNumber)
+            {
+                isAggregate = hasLinkedLicenceNumber;
+            }
+            else if (textSuggestsIsAggregate)
+            {
+                var anyPointsSpecified = limitPoints?.Count > 1;
+                var limitedByPoints = anyPointsSpecified
+                                      && limitPoints!.Count != allPoints.Length;
+
+                var multiplePurposesSpecified = limitPurposes?.Count > 1;
+                var thisLimitedByPurpose = multiplePurposesSpecified
+                                           && limitPurposes!.Count != allPurposes.Length;
+                    
+                var othersLimitedByPurpose = allIndividualGroups.Any(g =>
+                    g.Purposes?.Length > 0
+                    && g.Purposes.Length != allPurposes.Length);
+
+                var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
+                    
+                isAggregate = limitedByPoints
+                    || thisLimitedByPurpose
+                    || (multiplePurposesSpecified && othersLimitedByPurpose)
+                    || containsUnderThisLicenceText;
+            }
+            
+            if (timeCutoff != null && !isAggregate)
+            {
+                individualGroups.Add(new AbstractionLimitGroup
+                {
+                    TimeCutoff = timeCutoff,
+                    DocumentIdentifier = documentIdentifier,
+                    Limits = [],
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray()
+                });
+            }
+            else if (datePurposesTimePeriods.Count >= 1)
+            {
+                individualGroups.Add(new AbstractionLimitGroup
+                {
+                    Limits = [],
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray(),
+                    DocumentIdentifier = documentIdentifier
+                });
+
+                foreach (var datePurpose in datePurposesTimePeriods)
+                {
+                    individualGroups.Add(new AbstractionLimitGroup
+                    {
+                        TimePeriod = GetTimePeriod(datePurpose),
+                        DocumentIdentifier = documentIdentifier,
+                        Limits = [],
+                        Points = limitPoints?.ToArray(),
+                        Purposes = limitPurposes?.ToArray()
+                    });
+                }
+            }
+            else if (allIndividualGroups.Count == 0 && individualGroups.Count == 0)
+            {
+                // Add a group
+                individualGroups.Add(new AbstractionLimitGroup
+                {
+                    Limits = [],
+                    DocumentIdentifier = documentIdentifier,
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray()
+                });
+            }
+            else if (individualGroups.Count == 0)
+            {
+                individualGroups.Add(allIndividualGroups[0]);
+            }
+            
             var relatedNamesDict = new Dictionary<string, int>();
             var aggregateAbstractionLimits = new List<AbstractionLimit>();
 
@@ -2722,6 +2833,7 @@ public static partial class WalSchemaConverter
             }
 
             valueResults = newValueResults;
+            
             foreach (var valueResult in valueResults)
             {
                 if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
@@ -2758,34 +2870,6 @@ public static partial class WalSchemaConverter
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray()
                 };
-
-                var isAggregate = false;
-
-                if (hasLinkedLicenceNumber)
-                {
-                    isAggregate = hasLinkedLicenceNumber;
-                }
-                else if (textSuggestsIsAggregate)
-                {
-                    var anyPointsSpecified = abstractionLimit.Points?.Length > 1;
-                    var limitedByPoints = anyPointsSpecified
-                        && abstractionLimit.Points!.Length != allPoints.Length;
-
-                    var multiplePurposesSpecified = abstractionLimit.Purposes?.Length > 1;
-                    var thisLimitedByPurpose = multiplePurposesSpecified
-                        && abstractionLimit.Purposes!.Length != allPurposes.Length;
-                    
-                    var othersLimitedByPurpose = allIndividualGroups.Any(g =>
-                        g.Purposes?.Length > 0
-                        && g.Purposes.Length != allPurposes.Length);
-
-                    var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
-                    
-                    isAggregate = limitedByPoints
-                        || thisLimitedByPurpose
-                        || (multiplePurposesSpecified && othersLimitedByPurpose)
-                        || containsUnderThisLicenceText;
-                }
                 
                 if (isAggregate)
                 {
@@ -2793,7 +2877,7 @@ public static partial class WalSchemaConverter
                     continue;
                 }
                 
-                var pos = GetPositionRelativeToDateLines(datePurposes, valueResult);
+                var pos = GetPositionRelativeToDateLines(datePurposesTimePeriods, valueResult);
                 var individualGroup = individualGroups[pos];
                 
                 var groupPointsStr = individualGroup.Points?.Length > 0
@@ -2834,7 +2918,8 @@ public static partial class WalSchemaConverter
                         {
                             Points = abstractionLimit.Points,
                             Purposes = abstractionLimit.Purposes,
-                            Limits = []
+                            Limits = [],
+                            DocumentIdentifier = documentIdentifier,
                         };
 
                         individualGroups.Add(individualGroup);
@@ -2857,7 +2942,6 @@ public static partial class WalSchemaConverter
 
             var pointsLoop = aggregateAbstractionLimits.First().Points;
             var purposesLoop = aggregateAbstractionLimits.First().Purposes;
-            var timeCutoff = (TimeCutoff?)null; // TODO
             var timePeriod = GetTimePeriod(
                 siblings?.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
 
@@ -2875,7 +2959,8 @@ public static partial class WalSchemaConverter
                 Points = pointsLoop?.ToArray() ?? [],
                 Purposes = purposesLoop?.ToArray() ?? [],
                 TimeCutoff = timeCutoff,
-                TimePeriod = timePeriod
+                TimePeriod = timePeriod,
+                DocumentIdentifier = documentIdentifier
             };
 
             // If there are no points, purposes or licences specified, then it

@@ -1682,16 +1682,45 @@ public static class WalLabelConfiguration
                 {
                     new()
                     {
+                        Name = "DocumentIdentifier",
+                        Possibilities = [
+                            "6.1",
+                            "6.2",
+                            "6.3",
+                            "6.4",
+                            "6.5",
+                            "6.6",
+                            "6.7",
+                            "6.8"
+                        ],
+                        Position = LabelPosition.ApplicableToMost,
+                        Format = "Number",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
+                    },
+                    new()
+                    {
                         Name = "DateOnly",
                         Text =
                         [
                             new("Up to and including "),
                             new("From "),
+                            new("Until "),                            
                             new("aggregate quantity of water authorised")
                         ],
                         IgnoreBlockIfContains =
                         [
                             "Note:"
+                        ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
@@ -1729,6 +1758,16 @@ public static class WalLabelConfiguration
                             new("October[END_OF_COLUMN]"),
                             new("November[END_OF_COLUMN]"),
                             new("December[END_OF_COLUMN]")
+                        ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
                         ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,

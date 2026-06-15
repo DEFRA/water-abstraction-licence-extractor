@@ -195,12 +195,12 @@ public class NoOcrDatabaseTests
         Assert.Equal(4, point1Sub1.Text!.Count);
 
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(5, point1Sub1.SubResults.Count);
+        Assert.Equal(6, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(109, perDay.LineNumber);
@@ -216,7 +216,7 @@ public class NoOcrDatabaseTests
         var perYear = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()
             ?.Text;
         Assert.Equal("33182", perYear);
 

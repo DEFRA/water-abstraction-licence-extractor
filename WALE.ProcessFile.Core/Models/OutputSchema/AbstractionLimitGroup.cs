@@ -4,7 +4,11 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class AbstractionLimitGroup : PeriodAndPointRestricted
 {
+    public string? DocumentIdentifier { get; init; }
+    
     public TimePeriod? TimePeriod { get; set; }
+    
+    public TimeCutoff? TimeCutoff { get; set; }
     
     public List<AbstractionLimit> Limits { get; init; } = [];
     

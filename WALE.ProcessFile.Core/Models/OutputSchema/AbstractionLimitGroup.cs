@@ -8,6 +8,8 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     
     public TimePeriod? TimePeriod { get; set; }
     
+    public TimeCutoff? TimeCutoff { get; set; }
+    
     public List<AbstractionLimit> Limits { get; init; } = [];
     
     public static AbstractionLimitGroup Template => new()

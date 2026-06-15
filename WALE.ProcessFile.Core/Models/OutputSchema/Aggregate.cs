@@ -61,8 +61,6 @@ public class Aggregate : AbstractionLimitGroup
     public SubType? SubType { get; set; }
     
     public string? NaldType { get; set; }
-
-    public TimeCutoff? TimeCutoff { get; set; }
     
     public LinkedLicence[]? LinkedLicences { get; init; } = [];
 

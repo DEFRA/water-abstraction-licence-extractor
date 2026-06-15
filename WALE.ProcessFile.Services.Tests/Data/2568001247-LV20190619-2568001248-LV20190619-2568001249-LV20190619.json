@@ -26,7 +26,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -46,7 +46,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -89,7 +89,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -107,7 +107,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -150,7 +150,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -168,7 +168,7 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
@@ -286,7 +286,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -306,7 +306,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -345,7 +345,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -354,7 +354,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -373,7 +373,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -382,7 +382,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -533,7 +533,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -551,7 +551,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -590,7 +590,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -599,7 +599,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -617,7 +617,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -626,7 +626,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -777,7 +777,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -795,7 +795,7 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
@@ -834,7 +834,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -843,7 +843,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
@@ -861,7 +861,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -870,7 +870,7 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }

@@ -1391,11 +1391,21 @@ public class PdfDataExtractorService(
                             request,
                             partialLine!,
                             singleValueWanted);
-                     
+
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             ConsoleHelper.WriteLine(
                                 $"INFO - {nameof(PdfDataExtractorService)} - ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+                        }
+                        
+                        var itsAFailedSplitAndWeHaveSucessfullySplitAlready =
+                            label.Position == LabelPosition.SplitAtLabel
+                            && result.Results.Count == 1
+                            && returnList.Count > 1;
+
+                        if (itsAFailedSplitAndWeHaveSucessfullySplitAlready)
+                        {
+                            break;
                         }
                         
                         if (request.label.FindMultipleOnSingleLine

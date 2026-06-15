@@ -195,7 +195,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(4, point1Sub1.Text!.Count);
 
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(5, point1Sub1.SubResults.Count);
+        Assert.Equal(6, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>

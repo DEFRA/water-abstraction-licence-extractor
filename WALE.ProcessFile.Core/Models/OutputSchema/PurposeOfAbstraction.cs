@@ -6,7 +6,7 @@ public class PurposeOfAbstraction : Purpose
 {
     public NaldPurposeData? NaldData { get; set; }
     
-    public string[]? PointIds { get; set; } = [];
+    public string[]? PointIds { get; set; }
     
     public TimeCutoff? TimeCutoff { get; set; }
     

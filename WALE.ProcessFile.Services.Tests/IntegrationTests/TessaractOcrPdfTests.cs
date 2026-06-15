@@ -1909,7 +1909,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         {
             await GetMatchesAsync(filename, 1, 4);
         }
-        catch (TooManyImagesException e)
+        catch (TooManyImagesException)
         {
             throwTooManyImagesException = true;
         }

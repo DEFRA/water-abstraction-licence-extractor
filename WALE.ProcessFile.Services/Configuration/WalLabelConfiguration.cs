@@ -1712,6 +1712,16 @@ public static class WalLabelConfiguration
                         [
                             "Note:"
                         ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
+                        ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
                         IncludeStartLabelText = true,

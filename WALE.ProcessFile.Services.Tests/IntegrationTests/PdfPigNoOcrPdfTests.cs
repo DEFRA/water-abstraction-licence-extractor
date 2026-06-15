@@ -888,7 +888,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(sectionPoint1.SubResults);
         
         var section1Sub1 = sectionPoint1.SubResults[0];
-        Assert.Equal(8, section1Sub1.SubResults.Count);
+        Assert.Equal(9, section1Sub1.SubResults.Count);
         Assert.Equal(122, section1Sub1.LineNumber);
         
         //var abstractionLimitsSection1 = section1Sub1.SubResults[0];
@@ -1073,7 +1073,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var point1Sub1 = point1.SubResults[0];
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(5, point1Sub1.SubResults.Count);
+        Assert.Equal(6, point1Sub1.SubResults.Count);
 
         var abstractionPoint = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -2151,7 +2151,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var point1Sub1 = point1.SubResults[0];
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(4, point1Sub1.SubResults.Count);
+        Assert.Equal(5, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>

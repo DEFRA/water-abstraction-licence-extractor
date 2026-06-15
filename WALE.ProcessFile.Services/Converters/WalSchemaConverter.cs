@@ -1560,15 +1560,36 @@ public static partial class WalSchemaConverter
             return null;
         }
 
-        var parts = value
-            .Replace(" and ending on ", " to ")
-            .Split(" to ");
-        var startDate = parts[0]
-            .Replace("beginning on ", string.Empty);
+        value = value.Replace(" and ending on ", " to ");
+        
+        var isFrom = value.Contains("From ", StringComparison.InvariantCultureIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
+        
+        if (isFrom || isUntil)
+        {
+            return null;
+        }
+        
+        var hasTo = value.Contains(" to ", StringComparison.InvariantCultureIgnoreCase);
+        var hasBeginningOn = value.Contains("beginning on ", StringComparison.InvariantCultureIgnoreCase);
 
+        if (!hasTo && !hasBeginningOn)
+        {
+            return null;
+        }
+        
+        var parts = value
+            .Replace("beginning on ", string.Empty)
+            .Split(" to ");
+
+        if (parts.Length == 1)
+        {
+            return null;
+        }
+        
         return new TimePeriod
         {
-            StartDate = startDate,
+            StartDate = parts[0],
             EndDate = parts.Length > 1 ? parts[1] : null,
             PeriodType = AbstractionPeriodType.SetPeriod,
             Inclusive = true

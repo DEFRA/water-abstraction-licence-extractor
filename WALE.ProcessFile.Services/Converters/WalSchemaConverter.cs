@@ -2765,7 +2765,9 @@ public static partial class WalSchemaConverter
 
             var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
                     
-            var meetsAggregateConditions = limitedByPoints
+            var meetsAggregateConditions = 
+                // textSuggestsIsAggregate
+                limitedByPoints
                 || thisLimitedByPurpose
                 || (multiplePurposesSpecified && othersLimitedByPurpose)
                 || containsUnderThisLicenceText;

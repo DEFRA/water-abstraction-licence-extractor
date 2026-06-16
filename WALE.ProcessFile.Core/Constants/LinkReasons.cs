@@ -28,4 +28,5 @@ public static class LinkReasons
     public const string LapsedLicence = "LapsedLicence";
     public const string Revocation = "Revocation";
     public const string InAnEmergency = "InAnEmergency";
+    public const string AuthorisedBy = "AuthorisedBy";
 }

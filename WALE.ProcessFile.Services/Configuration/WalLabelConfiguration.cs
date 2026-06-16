@@ -200,7 +200,9 @@ public static class WalLabelConfiguration
                 Name = "OtherConditionsAll",
                 TextStart =
                 [
-                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true }
+                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true },
+                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("7. OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true }
                 ],
                 TextEnd =
                 [

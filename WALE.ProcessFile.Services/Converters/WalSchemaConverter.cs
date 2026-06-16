@@ -2556,6 +2556,11 @@ public static partial class WalSchemaConverter
         {
             return LinkReasons.ResidualFlow;
         }
+        
+        if (text.Contains("authorised by", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReasons.AuthorisedBy;
+        }
 
         return null;
     }

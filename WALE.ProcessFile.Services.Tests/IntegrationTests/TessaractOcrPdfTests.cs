@@ -455,7 +455,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Licence number gets OCR-ed too scrambled to be read
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Licence number gets OCR-ed too scrambled to be read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -908,7 +908,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // The document is printed out of alignment and has ghosting
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // The document is printed out of alignment and has ghosting
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

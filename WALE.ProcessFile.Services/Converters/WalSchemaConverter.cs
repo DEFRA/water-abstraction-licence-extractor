@@ -2766,11 +2766,11 @@ public static partial class WalSchemaConverter
             var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
                     
             var meetsAggregateConditions = 
-                // textSuggestsIsAggregate
-                limitedByPoints
-                || thisLimitedByPurpose
-                || (multiplePurposesSpecified && othersLimitedByPurpose)
-                || containsUnderThisLicenceText;
+                textSuggestsIsAggregate
+                && (limitedByPoints
+                    || thisLimitedByPurpose
+                    || (multiplePurposesSpecified && othersLimitedByPurpose)
+                    || containsUnderThisLicenceText);
             
             var linkedLicenceNumbers = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")

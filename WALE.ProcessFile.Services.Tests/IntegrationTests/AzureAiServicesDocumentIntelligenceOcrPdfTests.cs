@@ -494,7 +494,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

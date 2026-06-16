@@ -784,7 +784,8 @@ public static class WalLabelConfiguration
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply and place of abstraction") { IfMultiplePreferLast = true },
                     new("Source(s) of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
-                    new("Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
+                    new("Source of supply[END_OF_COLUMN]") { ColumnMustStartWith = true, IfMultiplePreferLast = true },
+                    new("1. Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
                 ],

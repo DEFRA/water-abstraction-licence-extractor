@@ -209,7 +209,7 @@ public class CompareOcrPdfTests
         // Number of matches
 
         Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
-        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
@@ -757,11 +757,11 @@ public class CompareOcrPdfTests
             1)).Matches!;
         
         // Counts
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
         
         // Issuer
         var issuerResultTesseractSparseTextOsd = resultListTesseractSparseTextOsd.FirstOrDefault(result => result.LabelGroupName == "Issuer");
@@ -932,9 +932,9 @@ public class CompareOcrPdfTests
         #pragma warning disable xUnit2013
         Assert.Equal(1, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
         Assert.Equal(1, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
-        Assert.Equal(4, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
-        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
-        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
+        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
         #pragma warning restore xUnit2013
         
         // Issuer

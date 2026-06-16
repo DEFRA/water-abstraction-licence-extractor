@@ -24,7 +24,70 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             .Where(x => x.ContainedIn != null &&
                         x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing))
             .ToList();
-        
+
+        ProcessOutgoingVerifications(verifications, listRow, incomingOnlyLinkedLicences, outgoingLinkedLicences);
+        ProcessIncomingVerifications(invertedVerifications, incomingOnlyLinkedLicences);
+
+        listRow.linkedLicences = incomingOnlyLinkedLicences.Union(outgoingLinkedLicences).ToArray();
+    }
+
+    private static void ProcessIncomingVerifications(IEnumerable<InvertedLicenceSectionVerification> invertedVerifications, List<LinkedLicence> incomingOnlyLinkedLicences)
+    {
+        foreach (var invertedVerification in invertedVerifications.OrderByDescending(v => v.Verification.CreatedDateTimeUtc))
+        {
+            try
+            {
+                var verification = invertedVerification.Verification;
+                var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
+                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    JsonHelper.GetSerializerOptions());
+
+                overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
+                    .Select(x => x with { Direction = LinkedLicenceDirection.Incoming }).ToArray();
+                
+                overrideLicence.LicenceNumber = invertedVerification.SourceLicenceNumber;
+
+                var existingLinkedLicence =
+                    incomingOnlyLinkedLicences.FirstOrDefault(x => x.LicenceNumber == invertedVerification.SourceLicenceNumber);
+
+                switch (verification.VerificationType)
+                {
+                    case "Confirmed":
+                    case "AutoConfirm":
+                        if (existingLinkedLicence == null)
+                        {
+                            incomingOnlyLinkedLicences.Add(overrideLicence!);
+                        }
+
+                        break;
+                    case "Removed":
+                        if (existingLinkedLicence != null)
+                        {
+                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        break;
+                    case "Edited":
+                    case "Added":
+                        if (existingLinkedLicence != null)
+                        {
+                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        incomingOnlyLinkedLicences.Add(overrideLicence!);
+                        break;
+                }
+            }
+            catch
+            {
+                // If deserialization fails, don't apply the override
+            }
+        }
+    }
+
+    private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow,
+        List<LinkedLicence> incomingOnlyLinkedLicences, List<LinkedLicence> outgoingLinkedLicences)
+    {
         var orderedVerifications = verifications
             .OrderByDescending(v => v.CreatedDateTimeUtc)
             .ToList();
@@ -41,14 +104,13 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 listRow.latestLicenceSectionVerifications!.Remove(verification);
             }
-            
-            listRow.linkedLicences = incomingOnlyLinkedLicences.ToArray();
 
             if (firstVerification.ProcessRunId < listRow.processRunId && outgoingLinkedLicences.Count > 0)
             {
                 firstVerification.ScrapedDataIsDifferent = true;
             }
             
+            outgoingLinkedLicences.Clear();
             return;
         }
 
@@ -122,7 +184,5 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 // If deserialization fails, don't apply the override
             }
         }
-
-        listRow.linkedLicences = incomingOnlyLinkedLicences.Union(outgoingLinkedLicences).ToArray();
     }
 }

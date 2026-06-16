@@ -3,7 +3,7 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public class LinkedLicenceSection
+public record LinkedLicenceSection
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LinkedLicenceSource Source { get; init; }

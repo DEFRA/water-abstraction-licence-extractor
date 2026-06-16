@@ -13,7 +13,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     
     public string SectionName => "Linked Licences";
 
-    public void HandleVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow)
+    public void HandleVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow, IEnumerable<InvertedLicenceSectionVerification> invertedVerifications)
     {
         var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
             .Where(x => x.ContainedIn != null &&

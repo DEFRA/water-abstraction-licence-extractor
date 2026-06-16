@@ -110,6 +110,19 @@ public static class JsOutputHelper
         var verificationsByFileId = allLatestLicenceSectionVerifications
             .GroupBy(lsv => lsv.LicenceFileId)
             .ToDictionary(g => g.Key, g => g.ToList());
+        
+        var invertedVerificationsByItemId = allLatestLicenceSectionVerifications
+            .Where(lsv => lsv.LicenceSectionItemId != null)
+            .Join(outputLines,
+                lsv => lsv.LicenceFileId,
+                ol => ol.DmsFileId,
+                (lsv, ol) => new InvertedLicenceSectionVerification
+                {
+                    Verification = lsv,
+                    SourceLicenceNumber = ol.LicenceNumber
+                })
+            .GroupBy(x => x.Verification.LicenceSectionItemId!)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var outputLine in outputLines.OrderBy(ol => ol.Filename))
         {
@@ -146,6 +159,12 @@ public static class JsOutputHelper
                 ? fileVerifications
                 : null;
             
+            var invertedLatestLicenceSectionVerifications =
+                outputLine.LicenceNumber != null && invertedVerificationsByItemId != null &&
+                    invertedVerificationsByItemId.TryGetValue(outputLine.LicenceNumber, out var invertedItemVerifications)
+                ? invertedItemVerifications
+                : null;
+            
             var listRow = new OutputListDataItem
             {
                 processRunId = processRun.ProcessRunId,
@@ -169,26 +188,32 @@ public static class JsOutputHelper
                 latestLicenceSectionVerifications = latestLicenceSectionVerifications
             };
 
-            if (listRow.latestLicenceSectionVerifications != null)
+            var groupedVerifications = (listRow.latestLicenceSectionVerifications ?? [])
+                .Where(verification =>
+                    verification.ProcessRunId <= processRun.ProcessRunId &&
+                    verification.LicenceSectionName != null)
+                .GroupBy(verification => verification.LicenceSectionName!)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var groupedInvertedVerifications = (invertedLatestLicenceSectionVerifications ?? [])
+                .Where(x =>
+                    x.Verification.ProcessRunId <= processRun.ProcessRunId &&
+                    x.Verification.LicenceSectionName != null)
+                .GroupBy(x => x.Verification.LicenceSectionName!)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var allSectionNames = groupedVerifications.Keys.Union(groupedInvertedVerifications.Keys);
+
+            foreach (var sectionName in allSectionNames)
             {
-                var groupedVerifications = listRow.latestLicenceSectionVerifications
-                    .Where(verification =>
-                        verification.ProcessRunId <= processRun.ProcessRunId &&
-                        verification.LicenceSectionName != null)
-                    .GroupBy(verification => verification.LicenceSectionName!);
-
-                foreach (var group in groupedVerifications)
+                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
                 {
-                    var sectionName = group.Key;
-
-                    if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
-                    {
-                        continue;
-                    }
-                    
-                    var sectionVerifications = group.ToList();
-                    strategy.HandleVerifications(sectionVerifications, listRow);
+                    continue;
                 }
+
+                var sectionVerifications = groupedVerifications.GetValueOrDefault(sectionName) ?? [];
+                var sectionInvertedVerifications = groupedInvertedVerifications.GetValueOrDefault(sectionName) ?? [];
+                strategy.HandleVerifications(sectionVerifications, listRow, sectionInvertedVerifications);
             }
 
             listData.Add(listRow);

@@ -2673,22 +2673,22 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal(LinkedLicenceDirection.Outgoing, primaryLicence.LinkedLicences[0].ContainedIn![0].Direction);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
-        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal(LinkedLicenceSource.Document, primaryLicence.LinkedLicences[0].ContainedIn![0].Source);
         Assert.Equal(LinkedLicenceDirection.Incoming, primaryLicence.LinkedLicences[0].ContainedIn![1].Direction);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal(LinkedLicenceSource.OtherDocument, primaryLicence.LinkedLicences[0].ContainedIn![1].Source);
         
         Assert.Equal("25/68/001/248", primaryLicence.LinkedLicences[1].LicenceNumber);
         Assert.Equal(2, primaryLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal(LinkedLicenceDirection.Outgoing, primaryLicence.LinkedLicences[1].ContainedIn![0].Direction);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[1].ContainedIn![0].SectionName);
-        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal(LinkedLicenceSource.Document, primaryLicence.LinkedLicences[1].ContainedIn![0].Source);
         Assert.Equal(LinkedLicenceDirection.Incoming, primaryLicence.LinkedLicences[1].ContainedIn![1].Direction);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[1].ContainedIn![1].SectionName);
-        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[1].ContainedIn![1].LinkReason);      
+        Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[1].ContainedIn![1].LinkReason);      
         Assert.Equal(LinkedLicenceSource.OtherDocument, primaryLicence.LinkedLicences[1].ContainedIn![1].Source);
         
         Assert.Equal(filename, primaryLicence.Filename);

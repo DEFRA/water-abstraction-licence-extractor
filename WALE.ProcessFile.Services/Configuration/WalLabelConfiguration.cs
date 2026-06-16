@@ -1741,7 +1741,10 @@ public static class WalLabelConfiguration
             new()
             {
                 Name = "AbstractionLimitPointSub",
-                Text = [new("and licence")],
+                Text = [
+                    new("and licence"),
+                    new("so that no more")                    
+                ],
                 Position = LabelPosition.SplitAtLabel,
                 MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                 PreviousLinesToFetch = 20,

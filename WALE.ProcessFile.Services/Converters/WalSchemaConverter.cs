@@ -266,6 +266,14 @@ public static partial class WalSchemaConverter
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData));
+        
+        linkedLicences.AddRange(GetOtherConditionsLinkedLicences(
+            matches,
+            naldLicenceStatusData,
+            naldData,
+            licenceNumbersMapping,
+            matchesResult.RegionCode,
+            noneSchemaData));
 
         var licenceHistory = GetLicenceHistoryLinkedLicences(
             matches,
@@ -1741,6 +1749,79 @@ public static partial class WalSchemaConverter
             })
             .ToList();
     }
+    
+    private static List<LinkedLicence> GetOtherConditionsLinkedLicences(
+        List<LabelGroupResult> matches,
+        NaldLicenceStatusData naldLicenceStatusData,
+        Dictionary<string, List<NaldData>> naldData,
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        int regionCode,
+        Dictionary<string, object?> noneSchemaData)
+    {
+        var otherConditions = matches
+            .FirstOrDefault(result => result.LabelGroupName == "OtherConditions");
+
+        if (otherConditions == null)
+        {
+            return [];
+        }
+
+        var count = 0;
+        
+        return otherConditions
+            .SubResults
+            .SelectMany(point => point.SubResults)
+            .Where(linkedLicenceNumber =>
+                linkedLicenceNumber.MatchedLabel?.Name == "OtherConditionsLinkedLicenceNumber")
+            .Select(linkedLicenceNumber =>
+            {
+                var naldLicenceNumber =
+                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
+
+                var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
+                
+                var (naldStatus, licenceType) = GetLicenceStatusAndType(
+                    naldLicenceNumber,
+                    naldLicenceStatusData,
+                    naldDataLine,
+                    regionCode);
+
+                FormattingHelper.GetDmsFileData(
+                    licenceNumber,
+                    regionCode,
+                    licenceNumbersMapping,
+                    out var dmsFileData);
+
+                noneSchemaData.Add($"Confidence:LinkedLicence_OtherConditions_{count++}", linkedLicenceNumber.Confidence);
+                
+                return new LinkedLicence
+                {
+                    LicenceNumber = licenceNumber,
+                    RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
+                    RawScrapedLicenceNumber = licenceNumber,
+                    PermitNumber = dmsFileData?.PermitNumber,
+                    Filename = dmsFileData?.DestinationFileName,
+                    DmsPath = dmsFileData?.DmsPath,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
+                    ContainedIn =
+                    [
+                        new LinkedLicenceSection
+                        {
+                            Source = LinkedLicenceSource.Document,
+                            SectionName = LinkedLicenceSectionNames.OtherConditions,
+                            LinkReason = GetLinkReason(
+                                [GetParent(otherConditions, linkedLicenceNumber)],
+                                linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                            LineNumber = linkedLicenceNumber.LineNumber,
+                            PageNumber = linkedLicenceNumber.PageNumber
+                        }
+                    ]
+                };
+            })
+            .ToList();
+    }
 
     private static LabelGroupResult GetParent(LabelGroupResult root, LabelGroupResult child)
     {
@@ -2667,6 +2748,23 @@ public static partial class WalSchemaConverter
                 .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
                 .ToList();
 
+            var anyPointsSpecified = limitPoints?.Count > 1;
+            var limitedByPoints = anyPointsSpecified && limitPoints!.Count != allPoints.Length;
+
+            var multiplePurposesSpecified = limitPurposes?.Count > 1;
+            var thisLimitedByPurpose = multiplePurposesSpecified && limitPurposes!.Count != allPurposes.Length;
+                    
+            var othersLimitedByPurpose = allIndividualGroups.Any(g =>
+                g.Purposes?.Length > 0
+                && g.Purposes.Length != allPurposes.Length);
+
+            var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
+                    
+            var meetsAggregateConditions = limitedByPoints
+                || thisLimitedByPurpose
+                || (multiplePurposesSpecified && othersLimitedByPurpose)
+                || containsUnderThisLicenceText;
+            
             var linkedLicenceNumbers = siblings
                 .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
                 .Select(linkedLicenceNumber =>
@@ -2710,7 +2808,7 @@ public static partial class WalSchemaConverter
                             {
                                 Source = LinkedLicenceSource.Document,
                                 SectionName = LinkedLicenceSectionNames.AbstractionLimits,
-                                IsBecauseOfAggregate = textSuggestsIsAggregate,
+                                IsBecauseOfAggregate = meetsAggregateConditions,
                                 LinkReason = GetLinkReason([abstractionLimitPointSub],
                                     linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                                 LineNumber = linkedLicenceNumber.LineNumber,
@@ -2729,33 +2827,7 @@ public static partial class WalSchemaConverter
                 .ToList();
             
             var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
-            var isAggregate = false;
-
-            if (hasLinkedLicenceNumber)
-            {
-                isAggregate = hasLinkedLicenceNumber;
-            }
-            else if (textSuggestsIsAggregate)
-            {
-                var anyPointsSpecified = limitPoints?.Count > 1;
-                var limitedByPoints = anyPointsSpecified
-                                      && limitPoints!.Count != allPoints.Length;
-
-                var multiplePurposesSpecified = limitPurposes?.Count > 1;
-                var thisLimitedByPurpose = multiplePurposesSpecified
-                                           && limitPurposes!.Count != allPurposes.Length;
-                    
-                var othersLimitedByPurpose = allIndividualGroups.Any(g =>
-                    g.Purposes?.Length > 0
-                    && g.Purposes.Length != allPurposes.Length);
-
-                var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
-                    
-                isAggregate = limitedByPoints
-                    || thisLimitedByPurpose
-                    || (multiplePurposesSpecified && othersLimitedByPurpose)
-                    || containsUnderThisLicenceText;
-            }
+            var isAggregate = hasLinkedLicenceNumber || meetsAggregateConditions;
             
             if (timeCutoff != null && !isAggregate)
             {

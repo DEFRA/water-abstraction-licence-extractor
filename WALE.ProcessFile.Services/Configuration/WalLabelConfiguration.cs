@@ -27,6 +27,7 @@ public static class WalLabelConfiguration
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
             ("ReasonsForConditions", GetReasonsForConditions()),
+            ("OtherConditions", GetOtherConditions()),            
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
@@ -121,7 +122,7 @@ public static class WalLabelConfiguration
         ];
     }
 
-        private static List<LabelToMatch> GetReasonsForConditions()
+    private static List<LabelToMatch> GetReasonsForConditions()
     {
         return
         [
@@ -183,6 +184,73 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber")
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetOtherConditions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "OtherConditionsAll",
+                TextStart =
+                [
+                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "OtherConditionsPoint",
+                        TextStart = [
+                            new("1.") { LineMustStartWith = true },
+                            new("2.") { LineMustStartWith = true },
+                            new("3.") { LineMustStartWith = true },
+                            new("4.") { LineMustStartWith = true },
+                            new("5.") { LineMustStartWith = true },
+                            new("6.") { LineMustStartWith = true },
+                            new("7.") { LineMustStartWith = true },
+                            new("8.") { LineMustStartWith = true }
+                        ],
+                        TextEnd = [
+                            new("2.") { LineMustStartWith = true },
+                            new("3.") { LineMustStartWith = true },
+                            new("4.") { LineMustStartWith = true },
+                            new("5.") { LineMustStartWith = true },
+                            new("6.") { LineMustStartWith = true },
+                            new("7.") { LineMustStartWith = true },
+                            new("8.") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber")
                         ]
                     }
                 ]

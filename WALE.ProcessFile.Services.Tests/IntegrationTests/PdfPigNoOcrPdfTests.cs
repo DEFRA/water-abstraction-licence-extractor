@@ -4057,7 +4057,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(21, agreedSchemaLicence.Points.Length);
         
         var point = agreedSchemaLicence.Points[1];
-        Assert.Null(point.Id);
+        Assert.Equal("A", point.Id);
         Assert.StartsWith("SE 066 152", point.Description);
         Assert.Equal(10, point.Description!.Length);
         
@@ -4402,13 +4402,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
         Assert.Equal("A", agreedSchemaLicence.Points[0].Id);
-        Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
+        Assert.Equal("SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
         Assert.Equal("B", agreedSchemaLicence.Points[1].Id);
-        Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
+        Assert.Equal("SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
         Assert.Equal("D", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
         Assert.Equal("E", agreedSchemaLicence.Points[3].Id);
-        Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
+        Assert.Equal("SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
         Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());

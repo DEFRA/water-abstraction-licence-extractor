@@ -989,14 +989,14 @@ public static class WalLabelConfiguration
                                             "(2)",
                                             "(3)",
                                             "(4)",
-                                            /*"A ",
+                                            "A ",
                                             "B ",
                                             "C ",
                                             "D ",
                                             "E ",
                                             "F ",
                                             "G ",
-                                            "H "*/
+                                            "H "
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",

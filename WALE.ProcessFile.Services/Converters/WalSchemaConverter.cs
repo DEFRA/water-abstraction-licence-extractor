@@ -3537,7 +3537,7 @@ public static partial class WalSchemaConverter
                     Id = pointNumber,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description) // TODO needs to get the correct point
+                    NaldData = GetNaldPointData(naldDataLine, description)
                 });
             }
         }
@@ -3577,7 +3577,7 @@ public static partial class WalSchemaConverter
         }
 
         var points = naldDataLine.Points;
-        NaldDataPoint point;
+        NaldDataPoint? point;
 
         if (points.Count == 1)
         {
@@ -3585,10 +3585,16 @@ public static partial class WalSchemaConverter
         }
         else
         {
-            // TODO - Work out which point matches the description
-
+            var relevantDescription = description.Split(" at ")[0];
+            
             point = points
-                .First(p => p.PointId != 0);
+                .FirstOrDefault(p =>
+                    p.PointName?.Equals(relevantDescription, StringComparison.InvariantCultureIgnoreCase) == true);
+        }
+
+        if (point is null)
+        {
+            return null;
         }
 
         return new NaldPointData

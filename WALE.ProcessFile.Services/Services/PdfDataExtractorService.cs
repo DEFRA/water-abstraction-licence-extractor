@@ -1376,11 +1376,6 @@ public class PdfDataExtractorService(
                         }
                     }
                     
-                    if (label.Name == "PointPointNumber")
-                    {
-                        
-                    }
-                    
                     textBeforeAtAndAfterLabel.AddRange(
                         GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
                     

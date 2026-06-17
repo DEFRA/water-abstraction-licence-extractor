@@ -3531,8 +3531,22 @@ public static partial class WalSchemaConverter
                     description = description[2..];
                 }
 
+                var parts = description.Split(" at ");
+                var name = parts[0];
+                var gridRef = parts.Length >= 2 ? parts[1] : null;
+
+                if (parts.Length == 1 && description.Contains("National Grid Reference"))
+                {
+                    parts = description.Split("National Grid Reference");
+
+                    name = null;
+                    gridRef = parts[1].Trim();
+                }
+
                 returnList.Add(new PointOfAbstraction
                 {
+                    Name = name,
+                    GridRef = gridRef,
                     Description = description,
                     Id = pointNumber,
                     PurposeIds = purposeIds,

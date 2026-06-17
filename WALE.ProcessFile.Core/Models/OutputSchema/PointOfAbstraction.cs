@@ -8,6 +8,10 @@ public class PointOfAbstraction : Point
 
     public string[]? PurposeIds { get; init; }
     
+    public string? Name { get; init; }
+    
+    public string? GridRef { get; init; }
+    
     public TimeCutoff? TimeCutoff { get; set; }
     
     public static PointOfAbstraction Template => new()

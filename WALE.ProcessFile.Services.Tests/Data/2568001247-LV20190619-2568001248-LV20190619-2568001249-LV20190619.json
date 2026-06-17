@@ -217,6 +217,7 @@
       },
       "points": [
         {
+          "gridRef": "SJ 5179 4988",
           "id": "2.1",
           "description": "At National Grid Reference SJ 5179 4988"
         }
@@ -464,6 +465,7 @@
       },
       "points": [
         {
+          "gridRef": "SJ 5158 5029",
           "id": "2.1",
           "description": "At National Grid Reference SJ 5158 5029"
         }
@@ -708,6 +710,7 @@
       },
       "points": [
         {
+          "gridRef": "SJ 5168 5015",
           "id": "2.1",
           "description": "At National Grid Reference SJ 5168 5015"
         }

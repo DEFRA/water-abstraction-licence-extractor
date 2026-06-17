@@ -1483,12 +1483,18 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![0].Text);
         Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![1].Text);
 
-        var pointPurposeGroup = points.SubResults.Single();
+        Assert.Equal(2, points.SubResults.Count);
+        
+        var pointPurposeGroup = points.SubResults.First();
         Assert.NotNull(pointPurposeGroup);
 
         var pointsSubs = pointPurposeGroup.SubResults;
+        Assert.Single(pointsSubs);
         
-        Assert.Equal(2, pointsSubs.Count);
+        pointPurposeGroup = points.SubResults.Last();
+        Assert.NotNull(pointPurposeGroup);
+
+        pointsSubs = pointPurposeGroup.SubResults;
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);

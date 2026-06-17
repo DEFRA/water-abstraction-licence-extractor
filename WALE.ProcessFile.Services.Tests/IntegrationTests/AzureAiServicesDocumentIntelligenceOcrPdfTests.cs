@@ -1474,12 +1474,20 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![0].Text);
         Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![1].Text);
 
-        var pointPurposeGroup = points.SubResults.Single();
+        Assert.Equal(2, points.SubResults.Count);
+
+        var pointPurposeGroup = points.SubResults.First();
         Assert.NotNull(pointPurposeGroup);
 
         var pointsSubs = pointPurposeGroup.SubResults;
+        Assert.Single(pointsSubs);
+
+        pointPurposeGroup = points.SubResults.Last();
+        Assert.NotNull(pointPurposeGroup);
+
+        pointsSubs = pointPurposeGroup.SubResults;
         
-        Assert.Equal(2, pointsSubs.Count);
+        Assert.Single(pointsSubs);
         
         var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
         Assert.NotNull(purpose);

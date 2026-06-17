@@ -1265,7 +1265,7 @@ public class PdfDataExtractorService(
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
 
-                    var labelTextLookingForSingleLine = label.TextToMatch?
+                    var labelTextLookingForSingleLine = label.Text?
                         .Where(t => t.SingleLinePerItem)
                         .ToList();
                     

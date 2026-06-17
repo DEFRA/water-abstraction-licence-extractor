@@ -834,9 +834,6 @@ public static class WalLabelConfiguration
                             new("1. SOURCE OF SUPPLY"),
                             new("SOURCE OF SUPPLY")
                         ],
-                        /*SkipLineWhenContains = [
-                            "SOURCE OF SUPPLY"
-                        ],*/
                         SubLabels =
                         [
                             new()

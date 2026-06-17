@@ -4401,13 +4401,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(LinkedLicenceSource.Document, agreedSchemaLicence.LinkedLicences[2].ContainedIn![1].Source);
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
-        Assert.Equal("2.1 A", agreedSchemaLicence.Points[0].Id);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].Id);
         Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
-        Assert.Equal("2.1 B", agreedSchemaLicence.Points[1].Id);
+        Assert.Equal("B", agreedSchemaLicence.Points[1].Id);
         Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
-        Assert.Equal("2.1 D", agreedSchemaLicence.Points[2].Id);
+        Assert.Equal("D", agreedSchemaLicence.Points[2].Id);
         Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
-        Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].Id);
+        Assert.Equal("E", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
         Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);

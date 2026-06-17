@@ -2651,7 +2651,13 @@ public static partial class WalSchemaConverter
                         continue;
                     }
                     
-                    var points = new Point[] { new() { Id = abstractionPoint }};
+                    var points = new Point[]
+                    {
+                        new()
+                        {
+                            Id = abstractionPoint
+                        }
+                    };
                     
                     var lineAbstractionLimitGroup = new AbstractionLimitGroup
                     {
@@ -2723,7 +2729,10 @@ public static partial class WalSchemaConverter
                     
             var limitPoints = pointConditionSub?.Count > 0 ?
                 pointConditionSub.Select(pcs =>
-                    new Point { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
+                    new Point
+                    {
+                        Id = pcs.Text!.FirstOrDefault()?.Text
+                    }).ToList()
                 : null;
 
             var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?

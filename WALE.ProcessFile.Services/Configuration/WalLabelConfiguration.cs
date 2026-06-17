@@ -832,7 +832,8 @@ public static class WalLabelConfiguration
                             new("2. POINT(S) OF ABSTRACTION"),
                             new("2. POINTS OF ABSTRACTION"),
                             new("1. SOURCE OF SUPPLY"),
-                            new("SOURCE OF SUPPLY")
+                            new("SOURCE OF SUPPLY"),
+                            new("Point Reference")
                         ],
                         SubLabels =
                         [
@@ -987,12 +988,21 @@ public static class WalLabelConfiguration
                                             "(1)",
                                             "(2)",
                                             "(3)",
-                                            "(4)"
+                                            "(4)",
+                                            /*"A ",
+                                            "B ",
+                                            "C ",
+                                            "D ",
+                                            "E ",
+                                            "F ",
+                                            "G ",
+                                            "H "*/
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number",
+                                        Format = "Text",
                                         PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 0,                        
+                                        NextLinesToFetch = 0,
+                                        IncludeStartLabelText = true
                                     },
                                     new()
                                     {
@@ -1026,7 +1036,7 @@ public static class WalLabelConfiguration
                                             new("2.7") { ColumnMustStartWith = true },
                                             new("2.8") { ColumnMustStartWith = true },
                                             new("2.9") { ColumnMustStartWith = true },
-                                            new("2.10") { ColumnMustStartWith = true },  
+                                            new("2.10") { ColumnMustStartWith = true },
                                             new("(1)"),
                                             new("(2)"),
                                             new("(3)"),
@@ -1037,7 +1047,17 @@ public static class WalLabelConfiguration
                                             new("For Purpose 4.4") { RemoveWholeLine = true },
                                             new("Map 1"),
                                             new("Map 2"),
-                                            new("Map 3")
+                                            new("Map 3"),
+                                            new("A ") { ColumnMustStartWith = true },
+                                            new("B ") { ColumnMustStartWith = true },
+                                            new("C ") { ColumnMustStartWith = true },
+                                            new("D ") { ColumnMustStartWith = true },
+                                            new("E ") { ColumnMustStartWith = true },
+                                            new("F ") { ColumnMustStartWith = true },
+                                            new("G ") { ColumnMustStartWith = true },
+                                            new("H ") { ColumnMustStartWith = true },
+                                            new("I ") { ColumnMustStartWith = true },
+                                            new("J ") { ColumnMustStartWith = true },                                            
                                         ],
                                         Text = [
                                             new("marked") // TODO ' marked ' doesn't work, change so it does

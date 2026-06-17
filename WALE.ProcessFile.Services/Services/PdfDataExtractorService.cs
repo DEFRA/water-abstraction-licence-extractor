@@ -1284,7 +1284,8 @@ public class PdfDataExtractorService(
                             && !string.IsNullOrEmpty(nextLine?.Text)
                             && char.IsUpper(nextLine.Text[0]);
 
-                        var lineIsNotWrapping = partialLine.Text.Length < 40;
+                        const int maxNoneWrappedLineLength = 60;
+                        var lineIsNotWrapping = partialLine.Text.Length <= maxNoneWrappedLineLength;
                         
                         var matchesRule = thisLineStartsWithCapital
                             && lineIsNotWrapping
@@ -1373,6 +1374,11 @@ public class PdfDataExtractorService(
                         {
                             matchedLabel.Text = [matchedStartText];
                         }
+                    }
+                    
+                    if (label.Name == "PointPointNumber")
+                    {
+                        
                     }
                     
                     textBeforeAtAndAfterLabel.AddRange(

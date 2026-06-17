@@ -6,7 +6,19 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class LabelToMatch
 {
-    public IReadOnlyList<TextToMatch>? TextStart { get; set; }
+    private IReadOnlyList<TextToMatch>? _textStart;
+    
+    public IReadOnlyList<TextToMatch>? TextStart
+    {
+        get => _textStart;
+        set
+        {
+            _textStart = value;
+            TextToMatch = value?
+                .Where(t => !t.SingleLinePerItem)
+                .ToList();
+        }
+    }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public IReadOnlyList<TextToMatch>? Text
@@ -14,7 +26,10 @@ public class LabelToMatch
         get => TextStart;
         set => TextStart = value;
     }
-    
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public IReadOnlyList<TextToMatch>? TextToMatch { get; private set; }
+
     public bool MatchAllText { get; init; }
     public IReadOnlyList<string>? IgnoreBlockIfContains { get; init; }
     public IReadOnlyList<string>? IgnoreMatchIfContains { get; init; }

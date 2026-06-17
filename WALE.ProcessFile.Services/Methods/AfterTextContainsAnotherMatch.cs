@@ -30,7 +30,7 @@ public static class AfterTextContainsAnotherMatch
         var originalText = request.line.Text;
         request.line?.Columns.Clear();
 
-        if (request.label.Text == null || request.label.Text.Count == 0)
+        if (request.label.TextToMatch == null || request.label.TextToMatch.Count == 0)
         {
             return returnListTop;
         }
@@ -52,7 +52,7 @@ public static class AfterTextContainsAnotherMatch
             asLine,
             nextLine,
             asLine,
-            request.label.Text,
+            request.label.TextToMatch,
             request.label.Position,
             0,
             PositionConstants.UnknownLinesTotal,
@@ -73,7 +73,7 @@ public static class AfterTextContainsAnotherMatch
                 StringComparison.InvariantCultureIgnoreCase);
             var valueInAfterTextPosition = afterText.IndexOf(result.Text!.First().Text,
                 StringComparison.InvariantCultureIgnoreCase);
-            var labelInAfterTextPosition = afterText.IndexOf(result.MatchedLabel!.Text!.First().Text,
+            var labelInAfterTextPosition = afterText.IndexOf(result.MatchedLabel!.TextToMatch!.First().Text,
                 StringComparison.InvariantCultureIgnoreCase);
             
             result.CharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;

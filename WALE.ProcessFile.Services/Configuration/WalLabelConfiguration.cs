@@ -814,6 +814,7 @@ public static class WalLabelConfiguration
                         Name = "PointPurposeGroup",
                         TextStart = [
                             new("For Purpose "),
+                            new(string.Empty) { SingleLinePerItem = true },
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -829,8 +830,13 @@ public static class WalLabelConfiguration
                         Remove = [
                             new("2. POINT OF ABSTRACTION"),
                             new("2. POINT(S) OF ABSTRACTION"),
-                            new("2. POINTS OF ABSTRACTION")
+                            new("2. POINTS OF ABSTRACTION"),
+                            new("1. SOURCE OF SUPPLY"),
+                            new("SOURCE OF SUPPLY")
                         ],
+                        /*SkipLineWhenContains = [
+                            "SOURCE OF SUPPLY"
+                        ],*/
                         SubLabels =
                         [
                             new()

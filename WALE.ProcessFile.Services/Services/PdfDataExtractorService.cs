@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Net;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -427,8 +426,8 @@ public class PdfDataExtractorService(
                     foreach (var ocrResult in serviceMatches)
                     {
                         var matchedLabel = ocrResult.MatchedLabel!;
-                        var ifMultiplePreferLast = matchedLabel.Text!.First().IfMultiplePreferLast;
-                        var ifMultiplePreferLongest = matchedLabel.Text!.First().IfMultiplePreferLongest;
+                        var ifMultiplePreferLast = matchedLabel.TextToMatch!.First().IfMultiplePreferLast;
+                        var ifMultiplePreferLongest = matchedLabel.TextToMatch!.First().IfMultiplePreferLongest;
 
                         if (ifMultiplePreferLast || ifMultiplePreferLongest)
                         {
@@ -897,8 +896,8 @@ public class PdfDataExtractorService(
                     lgm.MatchedLabel != null
                     && labelLookup.Labels.Any(l => l.Name == lgm.MatchedLabel.Name))?.MatchedLabel;
 
-                var ifMultiplePreferLast = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
-                var ifMultiplePreferLongest = fullLabel?.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
+                var ifMultiplePreferLast = fullLabel?.TextToMatch?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+                var ifMultiplePreferLongest = fullLabel?.TextToMatch?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;                
                 var canGoOverPageBoundary = fullLabel?.CanGoOverPageBoundary ?? false;
                 var lookingForMultiple = fullLabel?.MultipleMatchBehaviour
                     is MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel
@@ -942,7 +941,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                var isRegularExpression = label.Text?.Any(text => text.IsRegularExpression) == true;
+                var isRegularExpression = label.TextToMatch?.Any(text => text.IsRegularExpression) == true;
                 
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
@@ -1061,7 +1060,7 @@ public class PdfDataExtractorService(
             
             var relatedFileMatches = await GetMatchesAsync(
                 relatedFileName,
-                linkedDmsFileData!,
+                linkedDmsFileData,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
@@ -1095,7 +1094,7 @@ public class PdfDataExtractorService(
     {
         var matchedAll = true;
                     
-        foreach (var labelText in label.Text!)
+        foreach (var labelText in label.TextToMatch!)
         {
             var nextLineTemp = nextLines.FirstOrDefault();
             
@@ -1255,7 +1254,7 @@ public class PdfDataExtractorService(
                     }
 
                     if (FormattingHelper.IsLineEmpty(partialLine)
-                        && label.Text?.Any(text =>
+                        && label.TextToMatch?.Any(text =>
                             text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
                         && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
                     {
@@ -1265,8 +1264,57 @@ public class PdfDataExtractorService(
 
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
+
+                    var labelTextLookingForSingleLine = label.TextToMatch?
+                        .Where(t => t.SingleLinePerItem)
+                        .ToList();
                     
-                    if (label.Text?.Any() == true)
+                    var lookingForSingleLine = labelTextLookingForSingleLine?.Count >= 1;
+                    var rulePassed = false;
+                    
+                    if (lookingForSingleLine)
+                    {
+                        nextLines ??= line.NextLines(lines, label);
+                        var nextLine = nextLines.FirstOrDefault();
+                        
+                        var thisLineStartsWithCapital = char.IsUpper(partialLine.Text[0]);
+                        var thisIsLastLine = nextLine == null;
+                        var nextLineStartsWithCapital = !thisIsLastLine
+                            && nextLines.Count >= 1
+                            && !string.IsNullOrEmpty(nextLine?.Text)
+                            && char.IsUpper(nextLine.Text[0]);
+
+                        var lineIsNotWrapping = partialLine.Text.Length < 40;
+                        
+                        var matchesRule = thisLineStartsWithCapital
+                            && lineIsNotWrapping
+                            && (nextLineStartsWithCapital || thisIsLastLine);
+
+                        if (matchesRule)
+                        {
+                            rulePassed = true;
+                            
+                            // Clear out the next lines, as we are doing it in isolation
+                            nextLines = [];
+                        }
+                        else
+                        {
+                            var anyNotLookingForSingleLine = label.TextToMatch?.Count >= 1;
+
+                            if (!anyNotLookingForSingleLine)
+                            {
+                                partialLine = null;
+                                continue;
+                            }
+
+                        }
+                    }
+                    
+                    if (rulePassed)
+                    {
+                        // Skip through to the next step
+                    }
+                    else if (label.TextToMatch?.Any() == true)
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
@@ -1275,7 +1323,7 @@ public class PdfDataExtractorService(
                             partialLine,
                             nextLine,
                             fullLine!,
-                            label.Text,
+                            label.TextToMatch,
                             label.Position,
                             lineCount,
                             totalLineCount,
@@ -1532,12 +1580,12 @@ public class PdfDataExtractorService(
             .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?
                 $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
                 : $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
-            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
+            .Select(x => x.OrderByDescending(y => y.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
             .ToList();
         
-        var ifMultiplePreferLast = label!.Text?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
+        var ifMultiplePreferLast = label!.TextToMatch?.FirstOrDefault()?.IfMultiplePreferLast ?? false;
         var ifMultiplePreferLongest =
-            label.Text?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
+            label.TextToMatch?.FirstOrDefault()?.IfMultiplePreferLongest ?? false;
 
         // TOOD there should only be one below - not 2 or more
         if (!ifMultiplePreferLast && !ifMultiplePreferLongest) return returnList;
@@ -1840,15 +1888,15 @@ public class PdfDataExtractorService(
             foreach (var group in groups)
             {
                 var anyDidntStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
+                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
                 
                 var anyDidStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
+                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
 
                 if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
                 {
                     subResults = subResults
-                        .Where(subResult => subResult.MatchedLabel?.Text?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
+                        .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
                         .ToList();
                 }                
             }
@@ -1866,10 +1914,10 @@ public class PdfDataExtractorService(
         var lineColumns = line.Columns.Select(c => c.Text).ToList();
         var lineText = line.Text;
         
-        var isStartOfBlock = label.Text?.FirstOrDefault()?.Text
+        var isStartOfBlock = label.TextToMatch?.FirstOrDefault()?.Text
             .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
 
-        if (label.Text == null || isStartOfBlock)
+        if (label.TextToMatch == null || isStartOfBlock)
         {
             returnItems.Add(new TextAndLabel
             {
@@ -1880,16 +1928,16 @@ public class PdfDataExtractorService(
             return returnItems;
         }
 
-        if (label.Text?.FirstOrDefault()?.IsRegularExpression == true &&
+        if (label.TextToMatch?.FirstOrDefault()?.IsRegularExpression == true &&
             label.Position == LabelPosition.LabelIsActuallyResult)
         {
-            var options = label.Text.First().RegularExpressionIsCaseInsensitive
+            var options = label.TextToMatch.First().RegularExpressionIsCaseInsensitive
                 ? RegexOptions.IgnoreCase
                 : RegexOptions.None;
 
             var matches = Regex.Matches(
                 lineText,
-                label.Text!.FirstOrDefault()!.Text,
+                label.TextToMatch!.FirstOrDefault()!.Text,
                 options);
 
             foreach (var match in matches.AsQueryable())
@@ -2024,7 +2072,7 @@ public class PdfDataExtractorService(
         var labelTextPositionIndex = PositionConstants.PositionNotFound;
         string? matchedLabelText = null;
 
-        foreach (var labelText in label.Text!)
+        foreach (var labelText in label.TextToMatch!)
         {
             var index = lineText.IndexOf(
                 labelText.Text,
@@ -2146,7 +2194,7 @@ public class PdfDataExtractorService(
         LabelToMatch label,
         IReadOnlyList<DocumentLine> lines)
     {
-        var labelText = label.Text!
+        var labelText = label.TextToMatch!
             .Select(labelTextMatch => labelTextMatch.Text
                 .Replace(PositionConstants.EndOfLineMarker, string.Empty)
                 .Replace(PositionConstants.EndOfColumnMarker, string.Empty))

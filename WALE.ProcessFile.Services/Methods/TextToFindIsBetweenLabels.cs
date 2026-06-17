@@ -15,7 +15,6 @@ public static class TextToFindIsBetweenLabels
         ArgumentNullException.ThrowIfNull(request.label);
         
         var labelGroupResult = request.labelGroupResult;
-        
         var linesToUse = new List<DocumentLine>();
 
         if (request.label.LeewayBefore >= 1
@@ -30,7 +29,7 @@ public static class TextToFindIsBetweenLabels
             request.line!,
             nextLine,
             request.line!,
-            request.label.Text,
+            request.label.TextToMatch,
             request.label.Position,
             0,
             0,
@@ -38,7 +37,7 @@ public static class TextToFindIsBetweenLabels
             out _);
         
         var labelLineAlreadyIncluded = false;
-        var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.Text?.FirstOrDefault()?.Text;
+        var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.TextToMatch?.FirstOrDefault()?.Text;
         
         if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
         {
@@ -52,7 +51,7 @@ public static class TextToFindIsBetweenLabels
             request.textBeforeAtAndAfterLabel,
             false); // We will re-add start label text later if needed
         
-        var beforeTextContainsLabel = request.label.Text?.Any(labelText =>
+        var beforeTextContainsLabel = request.label.TextToMatch?.Any(labelText =>
             (labelText is { LineMustStartWith: false, ColumnMustStartWith: false }
              && relevantLineText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
@@ -277,7 +276,7 @@ public static class TextToFindIsBetweenLabels
                 line,
                 nextLine,
                 line,
-                label.Text,
+                label.TextToMatch,
                 label.Position,
                 lineCount++,
                 totalLines,

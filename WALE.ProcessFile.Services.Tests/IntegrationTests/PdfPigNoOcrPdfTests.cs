@@ -164,7 +164,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 [
                     new NaldData
                     {
-                        AsrcCode = "G"
+                        AsrcCode = "G",
+                        LicenceNumber = "25/68/001/247"
                     }
                 ]
             },
@@ -173,7 +174,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 [
                     new NaldData
                     {
-                        AsrcCode = "S"
+                        AsrcCode = "S",
+                        LicenceNumber = "25/68/001/248"
                     }
                 ]
             },
@@ -182,7 +184,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 [
                     new NaldData
                     {
-                        AsrcCode = "S"
+                        AsrcCode = "S",
+                        LicenceNumber = "25/68/001/249"
                     }
                 ]
             }
@@ -2767,7 +2770,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("25/68/001/249", secondLinkedLicence.LinkedLicences[1].LicenceNumber);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
-        Assert.Single(agreedSchemaLicenceGroup.AggregateSets); // TODO this test is failing - should it be 3 or 1?
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);

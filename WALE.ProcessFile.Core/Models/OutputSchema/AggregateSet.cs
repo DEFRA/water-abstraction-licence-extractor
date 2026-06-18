@@ -8,7 +8,13 @@ public class AggregateSet
     public void SetAggregateSetId(IReadOnlyList<Licence> allLicences)
     {
         var groupedAggregates = Aggregates
-            .GroupBy(aggregate => aggregate.AggregateSetId)
+            .GroupBy(aggregate =>
+            {
+                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
+                
+                return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
+            })
             .Select(group => group.First());
 
         var licencesDict = new Dictionary<string, string>();
@@ -66,7 +72,21 @@ public class AggregateSet
         AggregateSetId = outputSb.ToString();
     }
 
-    public string? AggregateSetId { get; set; }
+    private string? _aggregateSetId;
+    
+    public string? AggregateSetId
+    {
+        get => _aggregateSetId;
+        private set
+        {
+            _aggregateSetId = value;
+            
+            foreach (var aggregate in Aggregates)
+            {
+                aggregate.AggregateSetId = value;
+            }
+        }
+    }
     
     /*public string? VersionNumber { get; set; }*/
 

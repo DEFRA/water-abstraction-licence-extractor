@@ -1258,7 +1258,13 @@ public static partial class WalSchemaConverter
         }
 
         var aggregatesGroupedByLicencesList = aggregates
-            .GroupBy(aggregate => string.Join(',', (aggregate.LinkedLicences ?? []).OrderBy(lln => lln)))
+            .GroupBy(aggregate =>
+            {
+                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
+                
+                return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
+            })
             .ToList();
 
         var aggregateSets = new List<AggregateSet>();
@@ -2925,7 +2931,7 @@ public static partial class WalSchemaConverter
 
                 return new LinkedLicence
                 {
-                    LicenceNumber = scrapedLicenceNumber,
+                    LicenceNumber = naldDataLine2?.LicenceNumber ?? scrapedLicenceNumber,
                     RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                     RawScrapedLicenceNumber = scrapedLicenceNumber,
                     PermitNumber = dmsFileData?.PermitNumber,

@@ -92,7 +92,7 @@ public static partial class WalSchemaConverter
             naldDataLine,
             ref noneSchemaData);
 
-        var (aggregates, individual) = GetAbstractionLimits(
+        var (aggregates, individual, aggregateLinkedLicences) = GetAbstractionLimits(
             matches,
             licenceNumber,
             licenceVersion.LicenceVersionId,
@@ -220,9 +220,7 @@ public static partial class WalSchemaConverter
             }
         }
 
-        linkedLicences.AddRange(aggregates
-            .Where(x => x.LinkedLicences?.Length >= 1)
-            .SelectMany(x => x.LinkedLicences!));
+        linkedLicences.AddRange(aggregateLinkedLicences);
 
         linkedLicences.AddRange(GetRecordsLinkedLicences(
             matches,
@@ -1223,7 +1221,7 @@ public static partial class WalSchemaConverter
             {
                 var aggregateSet = new AggregateSet
                 {
-                    Aggregates = [aggregate]
+                    Aggregates = [AggregateWithContext.FromAggregate(aggregate)]
                 };
 
                 aggregateSet.SetAggregateSetId(allLicences);
@@ -1252,7 +1250,7 @@ public static partial class WalSchemaConverter
                     .Where(agg => agg.LinkedLicences == null
                         || agg.LinkedLicences.Length == 0
                         || agg.LinkedLicences.All(
-                            ll => licences.Any(l => l.LicenceNumber?.Value == ll.LicenceNumber)))
+                            lln => licences.Any(l => l.LicenceNumber?.Value == lln)))
                     .ToArray();
             }
 
@@ -1260,7 +1258,7 @@ public static partial class WalSchemaConverter
         }
 
         var aggregatesGroupedByLicencesList = aggregates
-            .GroupBy(aggregate => string.Join(',', (aggregate.LinkedLicences ?? []).OrderBy(y => y.LicenceNumber)))
+            .GroupBy(aggregate => string.Join(',', (aggregate.LinkedLicences ?? []).OrderBy(lln => lln)))
             .ToList();
 
         var aggregateSets = new List<AggregateSet>();
@@ -1269,7 +1267,9 @@ public static partial class WalSchemaConverter
         {
             var aggregateSet = new AggregateSet
             {
-                Aggregates = aggregatesGroupedByLicences.ToArray()
+                Aggregates = aggregatesGroupedByLicences
+                    .Select(AggregateWithContext.FromAggregate)
+                    .ToArray()
             };
 
             aggregateSet.SetAggregateSetId(allLicences);
@@ -1783,7 +1783,7 @@ public static partial class WalSchemaConverter
         
         var otherConditionPoints = otherConditions.SubResults;
         
-        var linkedLicences = new List<LinkedLicence>();
+        var aggregateLinkedLicences = new List<LinkedLicence>();
         var abstractionLimits = new List<AbstractionLimitGroup>();
         var aggregates = new List<Aggregate>();
         
@@ -1812,6 +1812,7 @@ public static partial class WalSchemaConverter
                     DocumentSectionNames.OtherConditions,
                     ref abstractionLimits,
                     ref aggregates,
+                    ref aggregateLinkedLicences,
                     ref noneSchemaData);
             }
 
@@ -1869,10 +1870,10 @@ public static partial class WalSchemaConverter
                 })
                 .ToList();
 
-            linkedLicences.AddRange(linkedLicenceNumbers);
+            aggregateLinkedLicences.AddRange(linkedLicenceNumbers);
         }
 
-        return (linkedLicences, abstractionLimits, aggregates);
+        return (aggregateLinkedLicences, abstractionLimits, aggregates);
     }
 
     private static LabelGroupResult GetParent(LabelGroupResult root, LabelGroupResult child)
@@ -2617,18 +2618,19 @@ public static partial class WalSchemaConverter
         return null;
     }
 
-    private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal) GetAbstractionLimits(
-        List<LabelGroupResult> matches,
-        string? licenceNumber,
-        string? licenceVersionId,
-        PointOfAbstraction[] allPoints,
-        PurposeOfAbstraction[] allPurposes,
-        NaldData? naldDataLine,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        int regionCode,
-        ref Dictionary<string, object?> noneSchemaData)
+    private static (Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal, LinkedLicence[] linkedLicences)
+        GetAbstractionLimits(
+            List<LabelGroupResult> matches,
+            string? licenceNumber,
+            string? licenceVersionId,
+            PointOfAbstraction[] allPoints,
+            PurposeOfAbstraction[] allPurposes,
+            NaldData? naldDataLine,
+            Dictionary<string, DmsFileData> licenceNumbersMapping,
+            NaldLicenceStatusData naldLicenceStatusData,
+            Dictionary<string, List<NaldData>> naldData,
+            int regionCode,
+            ref Dictionary<string, object?> noneSchemaData)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -2645,9 +2647,10 @@ public static partial class WalSchemaConverter
 
         if (abstractionLimitPointSubs == null)
         {
-            return ([], []);
+            return ([], [], []);
         }
 
+        var allAggregateLinkedLicences = new List<LinkedLicence>();
         var allAggregates = new List<Aggregate>();
         var allIndividualGroups = new List<AbstractionLimitGroup>();
 
@@ -2667,6 +2670,7 @@ public static partial class WalSchemaConverter
                 DocumentSectionNames.AbstractionLimits,
                 ref allIndividualGroups,
                 ref allAggregates,
+                ref allAggregateLinkedLicences,
                 ref noneSchemaData);
         }
 
@@ -2674,8 +2678,11 @@ public static partial class WalSchemaConverter
         {
             allIndividualGroups.Clear();
         }
-
-        return (allAggregates.ToArray(), allIndividualGroups.ToArray());
+        
+        return (
+            allAggregates.ToArray(),
+            allIndividualGroups.ToArray(),
+            allAggregateLinkedLicences.ToArray());
     }
     
     private static void GetAbstractionLimitsFromSection(
@@ -2691,7 +2698,8 @@ public static partial class WalSchemaConverter
         int regionCode,
         string sectionName,
         ref List<AbstractionLimitGroup> allIndividualGroups,
-        ref List<Aggregate> allAggregates,        
+        ref List<Aggregate> allAggregates,
+        ref List<LinkedLicence> aggregateLinkedLicences,
         ref Dictionary<string, object?> noneSchemaData)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
@@ -3163,7 +3171,9 @@ public static partial class WalSchemaConverter
                 : PrimaryType.InLicence,
             NaldType = GetNaldType(naldDataLine),
             AggregateSetId = PositionConstants.ReplacementMarker,
-            LinkedLicences = linkedLicenceNumbers.Count > 0 ? linkedLicenceNumbers.ToArray() : null,
+            LinkedLicences = linkedLicenceNumbers.Count > 0
+                ? linkedLicenceNumbers.Select(lln => lln.LicenceNumber!).ToArray()
+                : null,
             Limits = aggregateAbstractionLimits,
             Points = pointsLoop?.ToArray() ?? [],
             Purposes = purposesLoop?.ToArray() ?? [],
@@ -3217,6 +3227,7 @@ public static partial class WalSchemaConverter
         }
 
         allAggregates.Add(aggregate);
+        aggregateLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
     private static int GetPositionRelativeToDateLines(

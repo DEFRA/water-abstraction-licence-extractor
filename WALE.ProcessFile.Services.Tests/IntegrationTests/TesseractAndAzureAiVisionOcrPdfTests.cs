@@ -113,6 +113,222 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             0);
     }
     
+        [Fact]
+    public async Task WhenOldEaFile_ThenGetAbstractionLimitsFromOtherConditionsCorrectly()
+    {
+        // Arrange
+        var regionCode = 5;
+        await SetupLicenceNumbersAsync((short)regionCode);
+        const string filename = "12301001__1 23 01 001 Hallington - Licence Document.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        
+        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
+        Assert.NotNull(issuerResult);
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+        
+        var dateOfIssue = resultFull.Matches!
+            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
+        Assert.NotNull(dateOfIssue);
+        Assert.StartsWith("7 March 2007", dateOfIssue.Text?.FirstOrDefault()?.Text);
+        
+        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
+        Assert.NotNull(nameResult);
+        Assert.Equal("Northumbrian Water Ltd", nameResult.Text?.First().Text);
+        
+        var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        Assert.NotNull(abstractionLimitsResult);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        
+        var abstractionLimitsSections = abstractionLimitsResult.SubResults;
+        Assert.NotNull(abstractionLimitsSections);
+        Assert.Single(abstractionLimitsSections);
+        
+        var abstractionLimitsSection = abstractionLimitsSections[0];
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.NotNull(abstractionLimitsSection.SubResults);
+        
+        Assert.Single(abstractionLimitsSection.SubResults);
+        var section1Sub1 = abstractionLimitsSection.SubResults[0];
+        
+        Assert.Equal(9, section1Sub1.SubResults!.Count);
+
+        var pointName = section1Sub1.SubResults
+            .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
+        
+        Assert.Null(pointName);
+        
+        var perYearUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("thousand cubic metres", perYearUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perYearValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("66363570", perYearValue?.Text?.FirstOrDefault()?.Text);
+        
+        var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("cubic metres", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perDayValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("181818", perDayValue?.Text?.FirstOrDefault()?.Text);
+
+        var perHourUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
+        Assert.Equal("cubic metres", perHourUnits?.Text?.FirstOrDefault()?.Text);
+
+        var perHourValue = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
+        Assert.Equal("7575", perHourValue?.Text?.FirstOrDefault()?.Text);
+        
+        perYearUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
+        Assert.Equal("thousand cubic metres", perYearUnits?.Text?.FirstOrDefault()?.Text);
+
+        perYearValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
+        Assert.Equal("66363570", perYearValue?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        
+        perDayUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
+        Assert.Equal("cubic metres", perDayUnits?.Text?.FirstOrDefault()?.Text);
+
+        perDayValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
+        Assert.Equal("181818", perDayValue?.Text?.FirstOrDefault()?.Text); 
+
+        var otherConditionsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "OtherConditions");
+        Assert.NotNull(otherConditionsResult);
+        Assert.Equal(23, otherConditionsResult.Text?.Count);
+        
+        Assert.Equal(8, otherConditionsResult.SubResults.Count);
+
+        // 1st
+        var otherConditionsPoint = otherConditionsResult.SubResults[0];
+        Assert.Equal(2, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("1. That the abstraction from Catcleugh Reservoir shall not exceed 63,645 cubic", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Single(otherConditionsPoint.SubResults);
+        var otherConditionsPointSub = otherConditionsPoint.SubResults[0];
+        Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
+        Assert.Equal("1. That the abstraction from Catcleugh Reservoir shall not exceed 63,645 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("63645", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        
+        // 2nd
+        otherConditionsPoint = otherConditionsResult.SubResults[1];
+        Assert.Equal(2, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("2. There shall be a continuous compensation flow of not less than 571 cubic", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Single(otherConditionsPoint.SubResults);
+        otherConditionsPointSub = otherConditionsPoint.SubResults[0];
+        Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
+        Assert.Equal("2. There shall be a continuous compensation flow of not less than 571 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("571", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+
+        // 3rd
+        otherConditionsPoint = otherConditionsResult.SubResults[2];
+        Assert.Equal(2, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("3. That the abstraction from Colt Crag Reservoir and Little Swinburn Reservoir", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Single(otherConditionsPoint.SubResults);
+        otherConditionsPointSub = otherConditionsPoint.SubResults[0];
+        Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
+        Assert.Equal("3. That the abstraction from Colt Crag Reservoir and Little Swinburn Reservoir", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("90922", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        
+        // 4th
+        otherConditionsPoint = otherConditionsResult.SubResults[3];
+        Assert.Equal(2, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("4. There shall be a continuous compensation flow of not less than 38 cubic", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Single(otherConditionsPoint.SubResults);
+        otherConditionsPointSub = otherConditionsPoint.SubResults[0];
+        Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
+        Assert.Equal("4. There shall be a continuous compensation flow of not less than 38 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("38", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        
+        // 5th
+        otherConditionsPoint = otherConditionsResult.SubResults[4];
+        Assert.Equal(4, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("5. To enable the compensation flow from the reservoirs to be measured,", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Empty(otherConditionsPoint.SubResults);
+        
+        // 6th
+        otherConditionsPoint = otherConditionsResult.SubResults[5];
+        Assert.Equal(7, otherConditionsPoint.Text?.Count);
+        Assert.Equal("OtherConditionsPoint", otherConditionsPoint.MatchedLabel?.Name);
+        Assert.Equal("6. Neither the total abstraction from East and West Hallington Reservoirs nor the", otherConditionsPoint.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(2, otherConditionsPoint.SubResults.Count);
+        
+        var otherConditionsLinkedLicenceNumber = otherConditionsPoint.SubResults[0];
+        Assert.Equal("OtherConditionsLinkedLicenceNumber", otherConditionsLinkedLicenceNumber.MatchedLabel?.Name);
+        Assert.Equal("1/23/01/159", otherConditionsLinkedLicenceNumber.Text?.FirstOrDefault()?.Text);
+        
+        otherConditionsPointSub = otherConditionsPoint.SubResults[1];
+        Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
+        Assert.Equal("6. Neither the total abstraction from East and West Hallington Reservoirs nor the", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("LinkedLicenceNumber", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("1/23/01/159", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("181818", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
+        
+        // TODO Check the licence schema doesnt have them
+        
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+        
+        Assert.NotNull(licenceNumberResult);
+        Assert.True(licenceNumberResult.IsOcr);
+        Assert.Equal("1/23/01/001", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+        
+        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _naldLicenceStatusData,
+            _naldData,
+            _pdfDataExtractor,
+            0,
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
+        
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
+        Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+    }
+    
     [Fact]
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {

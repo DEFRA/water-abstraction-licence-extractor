@@ -33,15 +33,15 @@ public class AggregateSet
             {
                 foreach (var linkedLicence in licence.LinkedLicences)
                 {
-                    if (licencesDict.ContainsKey(linkedLicence.LicenceNumber!))
+                    if (licencesDict.ContainsKey(linkedLicence))
                     {
                         continue;
                     }
 
                     var lookedUpLicence = allLicences.FirstOrDefault(
-                        al => al.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+                        al => al.LicenceNumber?.Value == linkedLicence);
 
-                    licencesDict.Add(linkedLicence.LicenceNumber!,
+                    licencesDict.Add(linkedLicence,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
                 }
             }
@@ -70,5 +70,5 @@ public class AggregateSet
     
     /*public string? VersionNumber { get; set; }*/
 
-    public Aggregate[] Aggregates { get; init; } = [];
+    public AggregateWithContext[] Aggregates { get; init; } = [];
 }

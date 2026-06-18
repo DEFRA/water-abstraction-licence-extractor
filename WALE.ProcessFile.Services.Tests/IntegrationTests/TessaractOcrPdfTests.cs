@@ -629,7 +629,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal(LinkedLicenceSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);       
+        Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);       
     }
     
     [Fact]

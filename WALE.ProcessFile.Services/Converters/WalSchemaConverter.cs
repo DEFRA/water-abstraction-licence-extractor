@@ -152,6 +152,11 @@ public static partial class WalSchemaConverter
             naldData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
+            licenceNumber,
+            licenceVersion.LicenceVersionId,
+            points,
+            purposes,
+            naldDataLine,
             noneSchemaData);
         
         var linkedLicences = new List<LinkedLicence>();
@@ -197,12 +202,12 @@ public static partial class WalSchemaConverter
                     LicenceType = outputLicenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Nald,
+                            Source = InformationSource.Nald,
                             Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
-                                ? LinkedLicenceDirection.Incoming
-                                : LinkedLicenceDirection.Outgoing,
+                                ? InformationDirection.Incoming
+                                : InformationDirection.Outgoing,
                             LinkReason = GetLinkReason(
                                 naldLinkedLicence.FromFieldText,
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
@@ -442,7 +447,7 @@ public static partial class WalSchemaConverter
                 linkedLicence.RegionId!.Value))
             .Select(linkedLicencesGroup =>
             {
-                var containedIn = new List<LinkedLicenceSection>();
+                var containedIn = new List<ContainedInInformation>();
 
                 foreach (var linkedLicence in linkedLicencesGroup)
                 {
@@ -464,7 +469,7 @@ public static partial class WalSchemaConverter
                         // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
                         // in documents
                         if (containedIn.Any(fs => 
-                            sectionItem.Source != LinkedLicenceSource.Nald
+                            sectionItem.Source != InformationSource.Nald
                                 && fs.LineNumber == sectionItem.LineNumber
                                 && fs.PageNumber == sectionItem.PageNumber
                                 && fs.Direction == sectionItem.Direction))
@@ -715,7 +720,7 @@ public static partial class WalSchemaConverter
         string? linkedLicencePermitNumber,
         string? filename,
         Condition? condition,
-        LinkedLicenceSection[] containedIn,
+        ContainedInInformation[] containedIn,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
@@ -826,8 +831,8 @@ public static partial class WalSchemaConverter
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
                 linkedLicence.ContainedIn?.Any(ci =>
-                    ci.SectionName == LinkedLicenceSectionNames.AbstractionLimits
-                    && ci.Direction == LinkedLicenceDirection.Outgoing) == true)
+                    ci.SectionName == DocumentSectionNames.AbstractionLimits
+                    && ci.Direction == InformationDirection.Outgoing) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
             .Where(ln => ln != null)
@@ -1045,16 +1050,16 @@ public static partial class WalSchemaConverter
                         // If already output, don't add again
                         if (licence.LinkedLicences.Any(ll =>
                             ll.LicenceNumber == incomingLink.LicenceNumber &&
-                            ll.ContainedIn?.Any(ci => ci.Direction == LinkedLicenceDirection.Incoming) == true))
+                            ll.ContainedIn?.Any(ci => ci.Direction == InformationDirection.Incoming) == true))
                         {
                             continue;
                         }
 
                         var newSections = incomingLink.Sections
-                            .Select(section => new LinkedLicenceSection
+                            .Select(section => new ContainedInInformation
                             {
-                                Source = LinkedLicenceSource.OtherDocument,
-                                Direction = LinkedLicenceDirection.Incoming,
+                                Source = InformationSource.OtherDocument,
+                                Direction = InformationDirection.Incoming,
                                 SectionName = section.SectionName,
                                 LinkReason = section.LinkReason,
                                 LineNumber = section.LineNumber,
@@ -1162,10 +1167,10 @@ public static partial class WalSchemaConverter
         string LicenceNumber,
         string ScrapedLicenceNumber,
         string? Filename,
-        List<LinkedLicenceSection> Sections)>
+        List<ContainedInInformation> Sections)>
         GetLicencesReferencingLicenceInDocument(IEnumerable<Licence> licences, string licenceNumber)
     {
-        var returnList = new List<(string, string, string?, List<LinkedLicenceSection>)>();
+        var returnList = new List<(string, string, string?, List<ContainedInInformation>)>();
 
         foreach (var licence in licences)
         {
@@ -1178,8 +1183,8 @@ public static partial class WalSchemaConverter
                 .Where(
                     lll => lll.LicenceNumber == licenceNumber
                         && lll.ContainedIn!.Any(ci => ci is {
-                            Source: LinkedLicenceSource.Document,
-                            Direction: LinkedLicenceDirection.Outgoing
+                            Source: InformationSource.Document,
+                            Direction: InformationDirection.Outgoing
                         })
                     )
                 .ToList();
@@ -1194,8 +1199,8 @@ public static partial class WalSchemaConverter
                 .SelectMany(oll => oll.ContainedIn!)
                 .Where(ci => ci is
                     {
-                        Source: LinkedLicenceSource.Document,
-                        Direction: LinkedLicenceDirection.Outgoing
+                        Source: InformationSource.Document,
+                        Direction: InformationDirection.Outgoing
                     })
                 .ToList();
             
@@ -1663,10 +1668,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.AdditionalInformation,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.AdditionalInformation,
                             LinkReason = GetLinkReason(
                                 [GetParent(additional, linkedLicenceNumber)],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -1736,10 +1741,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.ReasonsForConditions,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.ReasonsForConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(reasonsForConditions, linkedLicenceNumber)],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -1761,6 +1766,11 @@ public static partial class WalSchemaConverter
             Dictionary<string, List<NaldData>> naldData,
             Dictionary<string, DmsFileData> licenceNumbersMapping,
             int regionCode,
+            string? licenceNumber,
+            string? licenceVersionId,
+            PointOfAbstraction[] allPoints,
+            PurposeOfAbstraction[] allPurposes,
+            NaldData? naldDataLine,
             Dictionary<string, object?> noneSchemaData)
     {
         var otherConditions = matches
@@ -1781,13 +1791,30 @@ public static partial class WalSchemaConverter
 
         foreach (var otherConditionPoint in otherConditionPoints)
         {
-            var abstractionLimitPointSub = otherConditionPoint.SubResults
+            var abstractionLimitPointSubs = otherConditionPoint.SubResults
                 .Where(linkedLicenceNumber =>
                     linkedLicenceNumber.MatchedLabel?.Name == "AbstractionLimitPointSub")
                 .ToList();
-            
-            // TODO get abstraction limits and aggregates from the above
-            
+
+            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
+            {
+                GetAbstractionLimitsFromSection(
+                    abstractionLimitPointSub,
+                    licenceNumber,
+                    licenceVersionId,
+                    allPoints,
+                    allPurposes,
+                    naldDataLine,
+                    licenceNumbersMapping,
+                    naldLicenceStatusData,
+                    naldData,
+                    regionCode,
+                    DocumentSectionNames.OtherConditions,
+                    ref abstractionLimits,
+                    ref aggregates,
+                    ref noneSchemaData);
+            }
+
             var linkedLicenceNumbers = otherConditionPoint.SubResults
                 .Where(linkedLicenceNumber =>
                     linkedLicenceNumber.MatchedLabel?.Name == "OtherConditionsLinkedLicenceNumber")
@@ -1827,10 +1854,10 @@ public static partial class WalSchemaConverter
                         LicenceType = licenceType,
                         ContainedIn =
                         [
-                            new LinkedLicenceSection
+                            new ContainedInInformation
                             {
-                                Source = LinkedLicenceSource.Document,
-                                SectionName = LinkedLicenceSectionNames.OtherConditions,
+                                Source = InformationSource.Document,
+                                SectionName = DocumentSectionNames.OtherConditions,
                                 LinkReason = GetLinkReason(
                                     [GetParent(otherConditions, linkedLicenceNumber)],
                                     linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -1925,9 +1952,9 @@ public static partial class WalSchemaConverter
                 LicenceType = licenceType,
                 ContainedIn =
                 [
-                    new LinkedLicenceSection
+                    new ContainedInInformation
                     {
-                        Source = LinkedLicenceSource.Document,
+                        Source = InformationSource.Document,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.PageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LineNumber,
@@ -1944,16 +1971,16 @@ public static partial class WalSchemaConverter
     {
         return pageNumber switch
         {
-            1 => LinkedLicenceSectionNames.UnknownPage1,
-            2 => LinkedLicenceSectionNames.UnknownPage2,
-            3 => LinkedLicenceSectionNames.UnknownPage3,
-            4 => LinkedLicenceSectionNames.UnknownPage4,
-            5 => LinkedLicenceSectionNames.UnknownPage5,
-            6 => LinkedLicenceSectionNames.UnknownPage6,
-            7 => LinkedLicenceSectionNames.UnknownPage7,
-            8 => LinkedLicenceSectionNames.UnknownPage8,
-            9 => LinkedLicenceSectionNames.UnknownPage9,
-            _ => LinkedLicenceSectionNames.Unknown
+            1 => DocumentSectionNames.UnknownPage1,
+            2 => DocumentSectionNames.UnknownPage2,
+            3 => DocumentSectionNames.UnknownPage3,
+            4 => DocumentSectionNames.UnknownPage4,
+            5 => DocumentSectionNames.UnknownPage5,
+            6 => DocumentSectionNames.UnknownPage6,
+            7 => DocumentSectionNames.UnknownPage7,
+            8 => DocumentSectionNames.UnknownPage8,
+            9 => DocumentSectionNames.UnknownPage9,
+            _ => DocumentSectionNames.Unknown
         };
     }
 
@@ -2015,10 +2042,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.LicenceHistory,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.LicenceHistory,
                             LinkReason =
                                 GetLinkReason([licenceHistorySection],
                                     lln), // We haven't split licence history into sections like the others
@@ -2098,10 +2125,10 @@ public static partial class WalSchemaConverter
                             LicenceType = licenceType,
                             ContainedIn =
                             [
-                                new LinkedLicenceSection
+                                new ContainedInInformation
                                 {
-                                    Source = LinkedLicenceSource.Document,
-                                    SectionName = LinkedLicenceSectionNames.Purposes,
+                                    Source = InformationSource.Document,
+                                    SectionName = DocumentSectionNames.Purposes,
                                     LinkReason = GetLinkReason(
                                         [GetParent(purposePointGroup, linkedLicenceNumber)],
                                         linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2184,10 +2211,10 @@ public static partial class WalSchemaConverter
                             LicenceType = licenceType,
                             ContainedIn =
                             [
-                                new LinkedLicenceSection
+                                new ContainedInInformation
                                 {
-                                    Source = LinkedLicenceSource.Document,
-                                    SectionName = LinkedLicenceSectionNames.Points,
+                                    Source = InformationSource.Document,
+                                    SectionName = DocumentSectionNames.Points,
                                     LinkReason = GetLinkReason(
                                         [GetParent(pointPurposeGroup, linkedLicenceNumber)],
                                         linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2261,10 +2288,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.Records,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.Records,
                             LinkReason = GetLinkReason(
                                 [GetParent(records, linkedLicenceNumber)],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2334,10 +2361,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.FurtherConditions,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.FurtherConditions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherConditions, linkedLicenceNumber)],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2408,10 +2435,10 @@ public static partial class WalSchemaConverter
                     LicenceType = licenceType,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.FurtherProvisions,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.FurtherProvisions,
                             LinkReason = GetLinkReason(
                                 [GetParent(furtherProvisions, linkedLicenceNumber)],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2424,12 +2451,12 @@ public static partial class WalSchemaConverter
             .ToList();
     }
 
-    private static string? GetLinkReason(List<LabelGroupResult> sections, string? linkedLicenceNumber)
+    private static string? GetLinkReason(List<LabelGroupResult> sections, string? textToFind)
     {
         foreach (var section in sections)
         {
             var text = string.Join('\n', section.Text!.Select(t => t.Text));
-            var result = GetLinkReason(text, linkedLicenceNumber);
+            var result = GetLinkReason(text, textToFind);
 
             if (!string.IsNullOrEmpty(result))
             {
@@ -2440,11 +2467,11 @@ public static partial class WalSchemaConverter
         return null;
     }
 
-    private static string? GetLinkReason(string? text, string? linkedLicenceNumber)
+    private static string? GetLinkReason(string? text, string? textToFind)
     {
-        if (string.IsNullOrEmpty(linkedLicenceNumber)
+        if (string.IsNullOrEmpty(textToFind)
             || string.IsNullOrEmpty(text)
-            || !text.Contains(linkedLicenceNumber))
+            || !text.Contains(textToFind))
         {
             return null;
         }
@@ -2637,6 +2664,7 @@ public static partial class WalSchemaConverter
                 naldLicenceStatusData,
                 naldData,
                 regionCode,
+                DocumentSectionNames.AbstractionLimits,
                 ref allIndividualGroups,
                 ref allAggregates,
                 ref noneSchemaData);
@@ -2661,6 +2689,7 @@ public static partial class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         int regionCode,
+        string sectionName,
         ref List<AbstractionLimitGroup> allIndividualGroups,
         ref List<Aggregate> allAggregates,        
         ref Dictionary<string, object?> noneSchemaData)
@@ -2683,6 +2712,20 @@ public static partial class WalSchemaConverter
             noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
         }
 
+        var containedIn = new List<ContainedInInformation>
+        {
+            new()
+            {
+                Source = InformationSource.Document,
+                Direction = InformationDirection.Outgoing,
+                IsBecauseOfAggregate = false,
+                SectionName = sectionName,
+                LinkReason = GetLinkReason([abstractionLimitPointSub], "cubic metres"),
+                PageNumber = abstractionLimitPointSub.PageNumber,
+                LineNumber = abstractionLimitPointSub.LineNumber
+            }
+        }.ToArray();
+        
         var documentIdentifier = abstractionLimitPointSub.SubResults
             .FirstOrDefault(sr => sr.MatchedLabel?.Name == "DocumentIdentifier")?
             .Text?
@@ -2728,6 +2771,7 @@ public static partial class WalSchemaConverter
                     Points = points,
                     Purposes = null,
                     DocumentIdentifier = documentIdentifier,
+                    ContainedIn = containedIn,
                     Limits =
                     [
                         new()
@@ -2884,10 +2928,10 @@ public static partial class WalSchemaConverter
                     Condition = condition,
                     ContainedIn =
                     [
-                        new LinkedLicenceSection
+                        new ContainedInInformation
                         {
-                            Source = LinkedLicenceSource.Document,
-                            SectionName = LinkedLicenceSectionNames.AbstractionLimits,
+                            Source = InformationSource.Document,
+                            SectionName = DocumentSectionNames.AbstractionLimits,
                             IsBecauseOfAggregate = meetsAggregateConditions,
                             LinkReason = GetLinkReason([abstractionLimitPointSub],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2915,6 +2959,7 @@ public static partial class WalSchemaConverter
             {
                 TimeCutoff = timeCutoff,
                 DocumentIdentifier = documentIdentifier,
+                ContainedIn = containedIn,
                 Limits = [],
                 Points = limitPoints?.ToArray(),
                 Purposes = limitPurposes?.ToArray()
@@ -2927,7 +2972,8 @@ public static partial class WalSchemaConverter
                 Limits = [],
                 Points = limitPoints?.ToArray(),
                 Purposes = limitPurposes?.ToArray(),
-                DocumentIdentifier = documentIdentifier
+                DocumentIdentifier = documentIdentifier,
+                ContainedIn = containedIn
             });
 
             foreach (var datePurpose in datePurposesTimePeriods)
@@ -2936,6 +2982,7 @@ public static partial class WalSchemaConverter
                 {
                     TimePeriod = GetTimePeriod(datePurpose),
                     DocumentIdentifier = documentIdentifier,
+                    ContainedIn = containedIn,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray()
@@ -2949,6 +2996,7 @@ public static partial class WalSchemaConverter
             {
                 Limits = [],
                 DocumentIdentifier = documentIdentifier,
+                ContainedIn = containedIn,
                 Points = limitPoints?.ToArray(),
                 Purposes = limitPurposes?.ToArray()
             });
@@ -3072,6 +3120,7 @@ public static partial class WalSchemaConverter
                         Purposes = abstractionLimit.Purposes,
                         Limits = [],
                         DocumentIdentifier = documentIdentifier,
+                        ContainedIn = containedIn
                     };
 
                     individualGroups.Add(individualGroup);
@@ -3120,7 +3169,8 @@ public static partial class WalSchemaConverter
             Purposes = purposesLoop?.ToArray() ?? [],
             TimeCutoff = timeCutoff,
             TimePeriod = timePeriod,
-            DocumentIdentifier = documentIdentifier
+            DocumentIdentifier = documentIdentifier,
+            ContainedIn = containedIn
         };
 
         // If there are no points, purposes or licences specified, then it
@@ -4360,7 +4410,7 @@ public static partial class WalSchemaConverter
             var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
                 .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
                   || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                          ci.Direction == LinkedLicenceDirection.Incoming) != true)
+                          ci.Direction == InformationDirection.Incoming) != true)
                       .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
 
             var type = licenceSetForLicence.LicenceSetTypes[0];

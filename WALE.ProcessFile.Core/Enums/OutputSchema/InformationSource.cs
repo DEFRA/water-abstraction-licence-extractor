@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Enums.OutputSchema;
 
-public enum LinkedLicenceSource
+public enum InformationSource
 {
     Unknown,
     Nald,

@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Enums.OutputSchema;
 
-public enum LinkedLicenceDirection
+public enum InformationDirection
 {
     Unknown,
     Incoming,

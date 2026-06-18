@@ -113,19 +113,19 @@ public static class GenerateLinkedLicencesCsv
                 outputLineCloned.LinkedLicenceDmsPath = linkedLicence.DmsPath!;
 
                 outputLineCloned.LinkedLicenceDocumentIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci.Source == LinkedLicenceSource.OtherDocument)
+                    .Where(ci => ci.Source == InformationSource.OtherDocument)
                     .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceDocumentOutgoing = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci.Source == LinkedLicenceSource.Document)
+                    .Where(ci => ci.Source == InformationSource.Document)
                     .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldIncoming = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Incoming })
+                    .Where(ci => ci is { Source: InformationSource.Nald, Direction: InformationDirection.Incoming })
                     .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceNaldOutgoing = GetContainedInText(linkedLicence.ContainedIn!
-                    .Where(ci => ci is { Source: LinkedLicenceSource.Nald, Direction: LinkedLicenceDirection.Outgoing })
+                    .Where(ci => ci is { Source: InformationSource.Nald, Direction: InformationDirection.Outgoing })
                     .ToArray(), linkedLicence.LicenceType);
                 
                 outputLineCloned.LinkedLicenceFoundInList = linkedLicenceIsFound;
@@ -143,7 +143,7 @@ public static class GenerateLinkedLicencesCsv
     }
 
     private static string? GetContainedInText(
-        LinkedLicenceSection[] containedIn,
+        ContainedInInformation[] containedIn,
         LicenceType licenceType)
     {
         if (containedIn.Length == 0)
@@ -163,7 +163,7 @@ public static class GenerateLinkedLicencesCsv
                 }
 
                 // Page and line numbers not relevant for NALD
-                if (ci.Source == LinkedLicenceSource.Nald)
+                if (ci.Source == InformationSource.Nald)
                 {
                     return $"{ci.SectionName ?? "UNKNOWN"}-{ci.LinkReason ?? "UNKNOWN"}{licenceTypeSuffix}";                    
                 }

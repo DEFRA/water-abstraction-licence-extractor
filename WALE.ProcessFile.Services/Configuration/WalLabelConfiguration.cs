@@ -252,7 +252,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]

@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Constants;
 
-public static class LinkReasons
+public static class LinkReason
 {
     public const string DischargeAndReabstractionCondition = "DischargeAndReabstractionCondition";
     public const string SimultaneousDischargeCondition = "SimultaneousDischargeCondition";
@@ -29,4 +29,5 @@ public static class LinkReasons
     public const string Revocation = "Revocation";
     public const string InAnEmergency = "InAnEmergency";
     public const string AuthorisedBy = "AuthorisedBy";
+    public const string CompensationFlow = "CompensationFlow";
 }

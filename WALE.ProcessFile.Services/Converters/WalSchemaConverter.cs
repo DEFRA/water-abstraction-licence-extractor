@@ -386,6 +386,14 @@ public static partial class WalSchemaConverter
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
+
+        var combinedAggregates = new List<Aggregate>(aggregates);
+        combinedAggregates.AddRange(otherConditions.Aggregates);
+        aggregates = combinedAggregates.ToArray();
+        
+        var combinedIndividual = new List<AbstractionLimitGroup>(individual);
+        combinedIndividual.AddRange(otherConditions.AbstractionLimits);
+        individual = combinedIndividual.ToArray();
         
         if (aggregates.Length == 0)
         {
@@ -2492,140 +2500,145 @@ public static partial class WalSchemaConverter
 
         if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.LapsedLicence;
+            return LinkReason.LapsedLicence;
         }
 
         if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.DischargeAndReabstractionCondition;
+            return LinkReason.DischargeAndReabstractionCondition;
         }
 
         if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.SimultaneousDischargeCondition;
+            return LinkReason.SimultaneousDischargeCondition;
         }
 
         if (text.Contains("simultaneous abstraction", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.SimultaneousAbstractionCondition;
+            return LinkReason.SimultaneousAbstractionCondition;
         }
 
         if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.SimultaneousCompensatoryDischargeCondition;
+            return LinkReason.SimultaneousCompensatoryDischargeCondition;
         }
 
         if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.CompensatoryDischargeCondition;
+            return LinkReason.CompensatoryDischargeCondition;
+        }
+        
+        if (text.Contains("compensation flow", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReason.CompensationFlow;
         }
 
         if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ReadInConjunction;
+            return LinkReason.ReadInConjunction;
         }
 
         if (text.Contains("The donor licence was", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.DonorLicence;
+            return LinkReason.DonorLicence;
         }
 
         if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
             || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
         {
-            return LinkReasons.UsedInConjunction;
+            return LinkReason.UsedInConjunction;
         }
 
         if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.Revocation;
+            return LinkReason.Revocation;
         }            
         
         if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.AggregateConditions;
+            return LinkReason.AggregateConditions;
         }
 
         if (text.Contains("emergency circumstances", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.EmergencyCircumstances;
+            return LinkReason.EmergencyCircumstances;
         }
 
         if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.DewateringDischargeCondition;
+            return LinkReason.DewateringDischargeCondition;
         }
 
         if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.WhenAddedTo;
+            return LinkReason.WhenAddedTo;
         }
 
         if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.SubsequentAbstraction;
+            return LinkReason.SubsequentAbstraction;
         }
 
         if (text.Contains("re-abstraction", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ReAbstraction;
+            return LinkReason.ReAbstraction;
         }
 
         if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
             && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
             && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ReadingsDischargedAugmentationCondition;
+            return LinkReason.ReadingsDischargedAugmentationCondition;
         }
 
         if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.AggregateCondition;
+            return LinkReason.AggregateCondition;
         }
 
         if (text.Contains("in an emergency", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.InAnEmergency;
+            return LinkReason.InAnEmergency;
         }
         
         if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ShallNotExceed;
+            return LinkReason.ShallNotExceed;
         }
 
         if (text.Contains("supporting", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.Supporting;
+            return LinkReason.Supporting;
         }
 
         if (text.Contains("original licence", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.OriginalLicence;
+            return LinkReason.OriginalLicence;
         }
 
         if (text.Contains("transferred to this", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.TransferredToThis;
+            return LinkReason.TransferredToThis;
         }
 
         if (text.Contains("coincident", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.Coincident;
+            return LinkReason.Coincident;
         }
 
         if (text.Contains("shall be supported", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ShallBeSupported;
+            return LinkReason.ShallBeSupported;
         }
 
         if (text.Contains("residual flow", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.ResidualFlow;
+            return LinkReason.ResidualFlow;
         }
         
         if (text.Contains("authorised by", StringComparison.InvariantCultureIgnoreCase))
         {
-            return LinkReasons.AuthorisedBy;
+            return LinkReason.AuthorisedBy;
         }
 
         return null;
@@ -2733,7 +2746,7 @@ public static partial class WalSchemaConverter
             noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
         }
 
-        var containedIn = new List<ContainedInInformation>
+        var containedIn = new ContainedInInformation[]
         {
             new()
             {
@@ -2741,11 +2754,17 @@ public static partial class WalSchemaConverter
                 Direction = InformationDirection.Outgoing,
                 IsBecauseOfAggregate = false,
                 SectionName = sectionName,
-                LinkReason = GetLinkReason([abstractionLimitPointSub], "cubic metres"),
+                LinkReason =
+                    GetLinkReason([abstractionLimitPointSub], " "), // Text to find being a space is a bit of a hack,
                 PageNumber = abstractionLimitPointSub.PageNumber,
                 LineNumber = abstractionLimitPointSub.LineNumber
             }
-        }.ToArray();
+        };
+
+        if (containedIn[0].LinkReason == LinkReason.CompensationFlow)
+        {
+            return;
+        }
         
         var documentIdentifier = abstractionLimitPointSub.SubResults
             .FirstOrDefault(sr => sr.MatchedLabel?.Name == "DocumentIdentifier")?

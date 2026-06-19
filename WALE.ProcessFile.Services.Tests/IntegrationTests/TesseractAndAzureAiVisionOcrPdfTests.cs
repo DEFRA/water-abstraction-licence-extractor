@@ -113,7 +113,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             0);
     }
     
-        [Fact]
+    [Fact]
     public async Task WhenOldEaFile_ThenGetAbstractionLimitsFromOtherConditionsCorrectly()
     {
         // Arrange
@@ -305,8 +305,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
         Assert.Equal("181818", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
         
-        // TODO Check the licence schema doesnt have them
-        
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
         Assert.NotNull(licenceNumberResult);
@@ -324,7 +322,41 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences[0];
+        
+        Assert.Equal("1/23/01/001", agreedSchemaLicence.LicenceNumber!.Value);
+
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Units);
+        Assert.Equal(181818, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Value);
+        Assert.Equal("OtherConditions", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].SectionName);
+        Assert.Equal("AuthorisedBy", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].LinkReason);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
+        Assert.Equal("1/23/01/159", agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences![0]);
+        
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual?.Length); // TODO should be 3
+        
+        // Abstraction limits section
+        Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Units);
+        Assert.Equal(7575, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[1].Units);
+        Assert.Equal(181818, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[1].Value);
+        Assert.Equal("thousand cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[2].Units);
+        Assert.Equal(66363570, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[2].Value);
+        Assert.Equal("litres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[3].Units);
+        Assert.Equal(2.1, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[3].Value);        
+        
+        // Other conditions (TODO should be 2 sections)
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![1].Limits.Count);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Units);
+        Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Value);
+        //TODO Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Points!);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[1].Units);
+        Assert.Equal(90922, agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[1].Value);
+        //TODO Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[1].Points!);
+        
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }

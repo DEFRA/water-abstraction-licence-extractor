@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -12,7 +11,7 @@ using Date = WALE.ProcessFile.Services.Formats.Date;
 
 namespace WALE.ProcessFile.Services.Converters;
 
-public static partial class WalSchemaConverter
+public static class WalSchemaConverter
 {
     private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
@@ -1984,54 +1983,16 @@ public static partial class WalSchemaConverter
                     .Where(linkedLicenceNumber =>
                         linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
                     .Select(linkedLicenceNumber =>
-                    {
-                        var naldLicenceNumber =
-                            (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
-                            null;
-                        
-                        var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-                        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                        
-                        var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                            naldLicenceNumber,
+                        LabelResultToLinkedLicence(
+                            linkedLicenceNumber,
+                            purpose,
+                            DocumentSectionNames.Purposes,
+                            naldData,
                             naldLicenceStatusData,
-                            naldDataLine,
-                            regionCode);
-
-                        FormattingHelper.GetDmsFileData(
-                            licenceNumber,
                             regionCode,
+                            count++,
                             licenceNumbersMapping,
-                            out var dmsFileData);
-
-                        noneSchemaData.Add($"Confidence:LinkedLicence_Purposes_{count++}", linkedLicenceNumber.Confidence);
-                        
-                        return new LinkedLicence
-                        {
-                            PermitNumber = dmsFileData?.PermitNumber,
-                            RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                            RawScrapedLicenceNumber = licenceNumber,
-                            LicenceNumber = licenceNumber,
-                            Filename = dmsFileData?.DestinationFileName,
-                            DmsPath = dmsFileData?.DmsPath,
-                            NaldStatus = naldStatus,
-                            LicenceType = licenceType,
-                            ContainedIn =
-                            [
-                                new ContainedInInformation
-                                {
-                                    Source = InformationSource.Document,
-                                    SectionName = DocumentSectionNames.Purposes,
-                                    LinkReason = GetLinkReason(
-                                        [GetParent(purposePointGroup, linkedLicenceNumber)],
-                                        linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                                    LineNumber = linkedLicenceNumber.LineNumber,
-                                    PageNumber = linkedLicenceNumber.PageNumber
-                                }
-                            ]
-                        };
-                    })
-                    .ToList());
+                            noneSchemaData)));
             }
         }
 
@@ -2069,55 +2030,16 @@ public static partial class WalSchemaConverter
                     .Where(linkedLicenceNumber =>
                         linkedLicenceNumber.MatchedLabel?.Name == "LinkedLicenceNumber")
                     .Select(linkedLicenceNumber =>
-                    {
-                        var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-                        var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                        
-                        var naldLicenceNumber =
-                            (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
-                            null;
-
-                        var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                            naldLicenceNumber,
+                        LabelResultToLinkedLicence(
+                            linkedLicenceNumber,
+                            point,
+                            DocumentSectionNames.Points,
+                            naldData,
                             naldLicenceStatusData,
-                            naldDataLine,
-                            regionCode);
-
-                        FormattingHelper.GetDmsFileData(
-                            licenceNumber,
                             regionCode,
+                            count++,
                             licenceNumbersMapping,
-                            out var dmsFileData);
-
-                        noneSchemaData.Add($"Confidence:LinkedLicence_Points_{count++}", linkedLicenceNumber.Confidence);
-                        
-                        return new LinkedLicence
-                        {
-                            LicenceNumber = licenceNumber,
-                            RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                            RawScrapedLicenceNumber = licenceNumber,
-                            PermitNumber = dmsFileData?.PermitNumber,
-                            Filename = dmsFileData?.DestinationFileName,
-                            DmsPath = dmsFileData?.DmsPath,
-                            NaldStatus = naldStatus,
-                            LicenceType = licenceType,
-                            ContainedIn =
-                            [
-                                new ContainedInInformation
-                                {
-                                    Source = InformationSource.Document,
-                                    SectionName = DocumentSectionNames.Points,
-                                    LinkReason = GetLinkReason(
-                                        [GetParent(pointPurposeGroup, linkedLicenceNumber)],
-                                        linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                                    LineNumber = linkedLicenceNumber.LineNumber,
-                                    PageNumber = linkedLicenceNumber.PageNumber
-                                }
-                            ]
-                        };
-                    })
-                    .ToList());
+                            noneSchemaData)));
             }
         }
 
@@ -4185,7 +4107,4 @@ public static partial class WalSchemaConverter
 
         return diff.Count;
     }
-
-    [GeneratedRegex("(13|14|15|16|17|18|19|20)\\d\\d")]
-    private static partial Regex FourDigitYearRegex();
 }

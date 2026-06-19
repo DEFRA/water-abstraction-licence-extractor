@@ -195,6 +195,26 @@
                 "pageNumber": 4
               }
             ]
+          },
+          {
+            "limits": [
+              {
+                "periodType": "PerDay",
+                "value": 91,
+                "units": "cubic metres",
+                "isAverage": false
+              }
+            ],
+            "containedIn": [
+              {
+                "source": "Document",
+                "direction": "Outgoing",
+                "sectionName": "FurtherConditions",
+                "isBecauseOfAggregate": false,
+                "lineNumber": 141,
+                "pageNumber": 5
+              }
+            ]
           }
         ],
         "aggregates": [
@@ -425,6 +445,26 @@
                 "pageNumber": 4
               }
             ]
+          },
+          {
+            "limits": [
+              {
+                "periodType": "PerDay",
+                "value": 91,
+                "units": "cubic metres",
+                "isAverage": false
+              }
+            ],
+            "containedIn": [
+              {
+                "source": "Document",
+                "direction": "Outgoing",
+                "sectionName": "FurtherConditions",
+                "isBecauseOfAggregate": false,
+                "lineNumber": 141,
+                "pageNumber": 5
+              }
+            ]
           }
         ],
         "aggregates": [
@@ -652,6 +692,26 @@
                 "isBecauseOfAggregate": false,
                 "lineNumber": 107,
                 "pageNumber": 4
+              }
+            ]
+          },
+          {
+            "limits": [
+              {
+                "periodType": "PerDay",
+                "value": 91,
+                "units": "cubic metres",
+                "isAverage": false
+              }
+            ],
+            "containedIn": [
+              {
+                "source": "Document",
+                "direction": "Outgoing",
+                "sectionName": "FurtherConditions",
+                "isBecauseOfAggregate": false,
+                "lineNumber": 141,
+                "pageNumber": 5
               }
             ]
           }

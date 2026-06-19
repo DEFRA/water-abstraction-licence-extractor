@@ -4389,13 +4389,16 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
 
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].Source);
         Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
         Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].Source);
+        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].SectionName);
+        Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].LinkReason);
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].Source);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
@@ -4687,15 +4690,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var expectedLicenceSetId =
             "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN";
         Assert.Equal(expectedLicenceSetId, licenceSets[1].LicenceSetId);
-        Assert.Equal([LicenceSetType.AllLicencesExplicitlyReferencedAnywhere, LicenceSetType.AllLicencesExplicitlyReferencedInLimits], licenceSets[1].LicenceSetTypes);
+        Assert.Equal([LicenceSetType.AllLicencesExplicitlyReferencedAnywhere], licenceSets[1].LicenceSetTypes);
 
         var agreedSchemaLicenceGroup = licenceSets[1];
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets!.Length); // TODO check this is right
+        Assert.Equal(2, agreedSchemaLicenceGroup.AggregateSets!.Length); // TODO check this is right
         Assert.Equal("NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
         Assert.Equal("NE0260034052-LV2019121120270331", agreedSchemaLicenceGroup.AggregateSets![1].AggregateSetId);
-        Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN", agreedSchemaLicenceGroup.AggregateSets![2].AggregateSetId);
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length); // TODO should have a /056 back link ideally
         

@@ -1,5 +1,6 @@
 import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, LinkedLicenceSource, OutputListDataItem } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
+import NaldStatusTag from "../NaldStatusTag.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -92,8 +93,9 @@ export const LinkedLicenceItem = ({
                             value={linkedLicence.licenceNumber || ''} 
                             onChange={(e) => handleChange('licenceNumber', e.target.value)}
                             readOnly={!isAddingNew}
-                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: !isAddingNew ? '#f0f0f0' : 'white' }}
+                            style={{ width: '80%', padding: '6px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: !isAddingNew ? '#f0f0f0' : 'white' }}
                         />
+                        <NaldStatusTag status={linkedLicence.naldStatus} />
                     </div>
                     <div style={{ flex: 1 }}>
                         <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>Permit Number:</label>
@@ -222,7 +224,7 @@ export const LinkedLicenceItem = ({
     return (
         <div className="linked-licence-item" style={{ padding: '12px', borderBottom: '1px solid #eee' }}>
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                <p style={{ margin: 0 }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}</p>
+                <p style={{ margin: 0 }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}<NaldStatusTag status={linkedLicence.naldStatus} /></p>
                 <p style={{ margin: 0 }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
             </div>
             {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === LinkedLicenceDirection.Outgoing).length > 0 && (

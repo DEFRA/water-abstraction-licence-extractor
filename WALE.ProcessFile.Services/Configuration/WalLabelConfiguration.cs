@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
@@ -15,7 +16,7 @@ public static class WalLabelConfiguration
             ("LicenceNumber", SharedLabels.GetLicenceNumberLabels()),
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
-            ("AbstractionLimits", GetAbstractionLimitsLabels()),
+            (DocumentSectionNames.AbstractionLimits, GetAbstractionLimitsLabels()),
             ("Purpose", GetPurposeLabels()),
             ("Points", GetPointsLabels()),
             ("DateOfIssue", SharedLabels.GetDateOfIssueLabels()),
@@ -115,7 +116,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("RecordsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -623,7 +625,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]

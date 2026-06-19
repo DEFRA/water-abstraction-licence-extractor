@@ -1309,7 +1309,7 @@ public static class WalSchemaConverter
         var returnLicences = new List<Licence>();
 
         var abstractionLimits = matchesResult.Matches?
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
 
         var abstractionLimitsPoints = abstractionLimits?.SubResults;
 
@@ -2232,7 +2232,7 @@ public static class WalSchemaConverter
             ref Dictionary<string, object?> noneSchemaData)
     {
         var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults
@@ -2565,7 +2565,7 @@ public static class WalSchemaConverter
                         new ContainedInInformation
                         {
                             Source = InformationSource.Document,
-                            SectionName = DocumentSectionNames.AbstractionLimits,
+                            SectionName = sectionName,
                             IsBecauseOfAggregate = meetsAggregateConditions,
                             LinkReason = GetLinkReason([abstractionLimitPointSub],
                                 linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -2890,7 +2890,7 @@ public static class WalSchemaConverter
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
     {
         var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults

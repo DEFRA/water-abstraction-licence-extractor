@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class AggregateSet
 {
-    public void SetAggregateSetId(IReadOnlyList<Licence> allLicences)
+    public string SetAggregateSetId(IReadOnlyList<Licence> allLicences)
     {
         var groupedAggregates = Aggregates
             .GroupBy(aggregate =>
@@ -70,6 +70,7 @@ public class AggregateSet
         }
 
         AggregateSetId = outputSb.ToString();
+        return AggregateSetId;
     }
 
     private string? _aggregateSetId;

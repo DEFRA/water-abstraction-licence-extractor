@@ -1224,8 +1224,8 @@ public static partial class WalSchemaConverter
                     Aggregates = [AggregateWithContext.FromAggregate(aggregate)]
                 };
 
-                aggregateSet.SetAggregateSetId(allLicences);
-                aggregate.AggregateSetId = aggregateSet.AggregateSetId;
+                // Need to do this as the version in the aggregate set is a clone
+                aggregate.AggregateSetId = aggregateSet.SetAggregateSetId(allLicences);
             });
     }
 
@@ -1278,7 +1278,14 @@ public static partial class WalSchemaConverter
                     .ToArray()
             };
 
-            aggregateSet.SetAggregateSetId(allLicences);
+            var aggregateSetId = aggregateSet.SetAggregateSetId(allLicences);
+
+            // Need to do this as the version in the aggregate set is a clone
+            foreach (var aggregate in aggregatesGroupedByLicences)
+            {
+                aggregate.AggregateSetId = aggregateSetId;
+            }
+            
             aggregateSets.Add(aggregateSet);
         }
 

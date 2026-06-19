@@ -1985,7 +1985,7 @@ public static class WalSchemaConverter
                     .Select(linkedLicenceNumber =>
                         LabelResultToLinkedLicence(
                             linkedLicenceNumber,
-                            purpose,
+                            purposePointGroup,
                             DocumentSectionNames.Purposes,
                             naldData,
                             naldLicenceStatusData,
@@ -2032,7 +2032,7 @@ public static class WalSchemaConverter
                     .Select(linkedLicenceNumber =>
                         LabelResultToLinkedLicence(
                             linkedLicenceNumber,
-                            point,
+                            pointPurposeGroup,
                             DocumentSectionNames.Points,
                             naldData,
                             naldLicenceStatusData,

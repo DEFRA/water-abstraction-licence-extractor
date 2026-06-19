@@ -2875,6 +2875,9 @@ public static partial class WalSchemaConverter
             .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
             .ToList();
                 
+        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
+            .Select(l => l.Text) ?? []);
+        
         var limitPoints = pointConditionSub?.Count > 0 ?
             pointConditionSub.Select(pcs =>
                 new Point
@@ -2883,9 +2886,27 @@ public static partial class WalSchemaConverter
                 }).ToList()
             : null;
 
-        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
-            .Select(l => l.Text) ?? []);
+        foreach (var documentPoint in allPoints)
+        {
+            var documentPointNameSet = !string.IsNullOrEmpty(documentPoint.Name);
+            
+            var textContainsPointName = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    documentPoint.Name!,
+                    StringComparison.InvariantCultureIgnoreCase);
 
+            if (!textContainsPointName || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
+            {
+                continue;
+            }
+            
+            limitPoints ??= [];
+            limitPoints.Add(new Point
+            {
+                Id = documentPoint.Name
+            });
+        }
+        
         var wordedAsAggregateButAllPurposes = abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
             && abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase)
             || (abstractionLimitPointSubText.Contains("for the purposes of", StringComparison.InvariantCultureIgnoreCase)

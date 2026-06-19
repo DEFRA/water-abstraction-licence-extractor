@@ -157,7 +157,11 @@ public static partial class WalSchemaConverter
         var sectionsToLookAt = new List<string>
         {
             DocumentSectionNames.OtherConditions,
-            DocumentSectionNames.Records
+            DocumentSectionNames.Records,
+            DocumentSectionNames.FurtherConditions,
+            DocumentSectionNames.FurtherProvisions,
+            DocumentSectionNames.Additional,
+            DocumentSectionNames.ReasonsForConditions
         };
 
         foreach (var sectionToLookAt in sectionsToLookAt)
@@ -242,30 +246,6 @@ public static partial class WalSchemaConverter
 
         linkedLicences.AddRange(aggregateLinkedLicences);
         
-        linkedLicences.AddRange(GetFurtherConditionsLinkedLicences(
-            matches,
-            naldLicenceStatusData,
-            naldData,
-            licenceNumbersMapping,
-            matchesResult.RegionCode,
-            noneSchemaData));
-        
-        linkedLicences.AddRange(GetFurtherProvisionsLinkedLicences(
-            matches,
-            naldLicenceStatusData,
-            naldData,
-            licenceNumbersMapping,
-            matchesResult.RegionCode,
-            noneSchemaData));
-        
-        linkedLicences.AddRange(GetAdditionalInformationLinkedLicences(
-            matches,
-            naldLicenceStatusData,
-            naldData,
-            licenceNumbersMapping,
-            matchesResult.RegionCode,
-            noneSchemaData));
-        
         linkedLicences.AddRange(GetPurposesLinkedLicences(
             matches,
             naldLicenceStatusData,
@@ -282,14 +262,6 @@ public static partial class WalSchemaConverter
             matchesResult.RegionCode,
             noneSchemaData));
         
-        linkedLicences.AddRange(GetReasonsForConditionsLinkedLicences(
-            matches,
-            naldLicenceStatusData,
-            naldData,
-            licenceNumbersMapping,
-            matchesResult.RegionCode,
-            noneSchemaData));
-
         foreach (var (_, (list, _, _)) in sectionDataDict)
         {
             linkedLicences.AddRange(list);   
@@ -1656,152 +1628,6 @@ public static partial class WalSchemaConverter
             Inclusive = true
         };
     }
-
-    private static List<LinkedLicence> GetAdditionalInformationLinkedLicences(
-        List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode,
-        Dictionary<string, object?> noneSchemaData)
-    {
-        var additional = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Additional");
-
-        if (additional == null)
-        {
-            return [];
-        }
-
-        var count = 0;
-
-        return additional
-            .SubResults
-            .SelectMany(point => point.SubResults)
-            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "AdditionalLinkedLicenceNumber")
-            .Select(linkedLicenceNumber =>
-            {
-                var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
-
-                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                
-                var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                    naldLicenceNumber,
-                    naldLicenceStatusData,
-                    naldDataLine,
-                    regionCode);
-
-                FormattingHelper.GetDmsFileData(
-                    licenceNumber,
-                    regionCode,
-                    licenceNumbersMapping,
-                    out var dmsFileData);
-
-                noneSchemaData.Add($"Confidence:LinkedLicence_AdditionalInformation_{count++}", linkedLicenceNumber.Confidence);
-                
-                return new LinkedLicence
-                {
-                    LicenceNumber = licenceNumber,
-                    RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                    RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
-                    Filename = dmsFileData?.DestinationFileName,
-                    DmsPath = dmsFileData?.DmsPath,
-                    NaldStatus = naldStatus,
-                    LicenceType = licenceType,
-                    ContainedIn =
-                    [
-                        new ContainedInInformation
-                        {
-                            Source = InformationSource.Document,
-                            SectionName = DocumentSectionNames.AdditionalInformation,
-                            LinkReason = GetLinkReason(
-                                [GetParent(additional, linkedLicenceNumber)],
-                                linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                            LineNumber = linkedLicenceNumber.LineNumber,
-                            PageNumber = linkedLicenceNumber.PageNumber
-                        }
-                    ]
-                };
-            })
-            .ToList();
-    }
-
-    private static List<LinkedLicence> GetReasonsForConditionsLinkedLicences(
-        List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode,
-        Dictionary<string, object?> noneSchemaData)
-    {
-        var reasonsForConditions = matches
-            .FirstOrDefault(result => result.LabelGroupName == "ReasonsForConditions");
-
-        if (reasonsForConditions == null)
-        {
-            return [];
-        }
-
-        var count = 0;
-        
-        return reasonsForConditions
-            .SubResults
-            .SelectMany(point => point.SubResults)
-            .Where(linkedLicenceNumber =>
-                linkedLicenceNumber.MatchedLabel?.Name == "ReasonsForConditionsLinkedLicenceNumber")
-            .Select(linkedLicenceNumber =>
-            {
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
-
-                var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                
-                var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                    naldLicenceNumber,
-                    naldLicenceStatusData,
-                    naldDataLine,
-                    regionCode);
-
-                FormattingHelper.GetDmsFileData(
-                    licenceNumber,
-                    regionCode,
-                    licenceNumbersMapping,
-                    out var dmsFileData);
-
-                noneSchemaData.Add($"Confidence:LinkedLicence_ReasonsForConditions_{count++}", linkedLicenceNumber.Confidence);
-                
-                return new LinkedLicence
-                {
-                    LicenceNumber = licenceNumber,
-                    RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                    RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
-                    Filename = dmsFileData?.DestinationFileName,
-                    DmsPath = dmsFileData?.DmsPath,
-                    NaldStatus = naldStatus,
-                    LicenceType = licenceType,
-                    ContainedIn =
-                    [
-                        new ContainedInInformation
-                        {
-                            Source = InformationSource.Document,
-                            SectionName = DocumentSectionNames.ReasonsForConditions,
-                            LinkReason = GetLinkReason(
-                                [GetParent(reasonsForConditions, linkedLicenceNumber)],
-                                linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                            LineNumber = linkedLicenceNumber.LineNumber,
-                            PageNumber = linkedLicenceNumber.PageNumber
-                        }
-                    ]
-                };
-            })
-            .ToList();
-    }
     
     private static (
         List<LinkedLicence> LinkedLicences,
@@ -1866,55 +1692,17 @@ public static partial class WalSchemaConverter
             var linkedLicenceNumbers = sectionPoint.SubResults
                 .Where(linkedLicenceNumber =>
                     linkedLicenceNumber.MatchedLabel?.Name == $"{sectionName}LinkedLicenceNumber")
-                .Select(linkedLicenceNumber =>
-                {
-                    var naldLicenceNumber =
-                        (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
-                        null;
-
-                    var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-                    var naldDataLineLoop = GetNaldDataLine(naldData, licenceNumberLoop, regionCode);
-
-                    var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                        naldLicenceNumber,
+                .Select(linkedLicenceNumber => 
+                    LabelResultToLinkedLicence(
+                        linkedLicenceNumber,
+                        section,
+                        sectionName,
+                        naldData,
                         naldLicenceStatusData,
-                        naldDataLineLoop,
-                        regionCode);
-
-                    FormattingHelper.GetDmsFileData(
-                        licenceNumberLoop,
                         regionCode,
+                        count++,
                         licenceNumbersMapping,
-                        out var dmsFileData);
-
-                    noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count++}",
-                        linkedLicenceNumber.Confidence);
-
-                    return new LinkedLicence
-                    {
-                        LicenceNumber = licenceNumberLoop,
-                        RegionId = dmsFileData?.RegionId ?? naldDataLineLoop?.FgacRegionCode ?? regionCode,
-                        RawScrapedLicenceNumber = licenceNumberLoop,
-                        PermitNumber = dmsFileData?.PermitNumber,
-                        Filename = dmsFileData?.DestinationFileName,
-                        DmsPath = dmsFileData?.DmsPath,
-                        NaldStatus = naldStatus,
-                        LicenceType = licenceType,
-                        ContainedIn =
-                        [
-                            new ContainedInInformation
-                            {
-                                Source = InformationSource.Document,
-                                SectionName = sectionName,
-                                LinkReason = GetLinkReason(
-                                    [GetParent(section, linkedLicenceNumber)],
-                                    linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                                LineNumber = linkedLicenceNumber.LineNumber,
-                                PageNumber = linkedLicenceNumber.PageNumber
-                            }
-                        ]
-                    };
-                })
+                        noneSchemaData))
                 .ToList();
 
             aggregateLinkedLicences.AddRange(linkedLicenceNumbers);
@@ -1923,6 +1711,65 @@ public static partial class WalSchemaConverter
         return (aggregateLinkedLicences, abstractionLimits, aggregates);
     }
 
+    private static LinkedLicence LabelResultToLinkedLicence(
+        LabelGroupResult linkedLicenceNumber,
+        LabelGroupResult section,
+        string sectionName,
+        Dictionary<string, List<NaldData>> naldData,
+        NaldLicenceStatusData naldLicenceStatusData,
+        int regionCode,
+        int count,
+        Dictionary<string, DmsFileData> licenceNumbersMapping,
+        Dictionary<string, object?> noneSchemaData)
+    {
+        var naldLicenceNumber =
+            (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
+            null;
+
+        var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+        var naldDataLineLoop = GetNaldDataLine(naldData, licenceNumberLoop, regionCode);
+
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(
+            naldLicenceNumber,
+            naldLicenceStatusData,
+            naldDataLineLoop,
+            regionCode);
+
+        FormattingHelper.GetDmsFileData(
+            licenceNumberLoop,
+            regionCode,
+            licenceNumbersMapping,
+            out var dmsFileData);
+
+        noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
+            linkedLicenceNumber.Confidence);
+
+        return new LinkedLicence
+        {
+            LicenceNumber = licenceNumberLoop,
+            RegionId = dmsFileData?.RegionId ?? naldDataLineLoop?.FgacRegionCode ?? regionCode,
+            RawScrapedLicenceNumber = licenceNumberLoop,
+            PermitNumber = dmsFileData?.PermitNumber,
+            Filename = dmsFileData?.DestinationFileName,
+            DmsPath = dmsFileData?.DmsPath,
+            NaldStatus = naldStatus,
+            LicenceType = licenceType,
+            ContainedIn =
+            [
+                new ContainedInInformation
+                {
+                    Source = InformationSource.Document,
+                    SectionName = sectionName,
+                    LinkReason = GetLinkReason(
+                        [GetParent(section, linkedLicenceNumber)],
+                        linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
+                    LineNumber = linkedLicenceNumber.LineNumber,
+                    PageNumber = linkedLicenceNumber.PageNumber
+                }
+            ]
+        };
+    }
+    
     private static LabelGroupResult GetParent(LabelGroupResult root, LabelGroupResult child)
     {
         foreach (var item1 in root.SubResults)
@@ -1944,8 +1791,6 @@ public static partial class WalSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData)
     {
-        // TODO make these repeated methods more generic
-        
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
             .ToList();
@@ -2277,153 +2122,6 @@ public static partial class WalSchemaConverter
         }
 
         return returnList;
-    }
-
-    private static List<LinkedLicence> GetFurtherConditionsLinkedLicences(
-        List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode,
-        Dictionary<string, object?> noneSchemaData)
-    {
-        var furtherConditions = matches
-            .FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
-
-        if (furtherConditions == null)
-        {
-            return [];
-        }
-
-        var count = 0;
-        
-        return furtherConditions
-            .SubResults
-            .SelectMany(subResult => subResult.SubResults)
-            .Where(linkedLicenceNumber => linkedLicenceNumber.MatchedLabel?.Name == "FCLinkedLicenceNumber")
-            .Select(linkedLicenceNumber =>
-            {
-                var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
-
-                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                
-                var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                    naldLicenceNumber,
-                    naldLicenceStatusData,
-                    naldDataLine,
-                    regionCode);
-
-                FormattingHelper.GetDmsFileData(
-                    licenceNumber,
-                    regionCode,
-                    licenceNumbersMapping,
-                    out var dmsFileData);
-
-                noneSchemaData.Add($"Confidence:LinkedLicence_FurtherConditions_{count++}", linkedLicenceNumber.Confidence);
-                
-                return new LinkedLicence
-                {
-                    LicenceNumber = licenceNumber,
-                    RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                    RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
-                    Filename = dmsFileData?.DestinationFileName,
-                    DmsPath = dmsFileData?.DmsPath,
-                    NaldStatus = naldStatus,
-                    LicenceType = licenceType,
-                    ContainedIn =
-                    [
-                        new ContainedInInformation
-                        {
-                            Source = InformationSource.Document,
-                            SectionName = DocumentSectionNames.FurtherConditions,
-                            LinkReason = GetLinkReason(
-                                [GetParent(furtherConditions, linkedLicenceNumber)],
-                                linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                            LineNumber = linkedLicenceNumber.LineNumber,
-                            PageNumber = linkedLicenceNumber.PageNumber
-                        }
-                    ]
-                };
-            })
-            .ToList();
-    }
-
-    private static List<LinkedLicence> GetFurtherProvisionsLinkedLicences(
-        List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> licenceNumbersMapping,
-        int regionCode,
-        Dictionary<string, object?> noneSchemaData)
-    {
-        var furtherProvisions = matches
-            .FirstOrDefault(result => result.LabelGroupName == "FurtherProvisions");
-
-        if (furtherProvisions == null)
-        {
-            return [];
-        }
-        
-        var count = 0;
-
-        return furtherProvisions
-            .SubResults
-            .SelectMany(subResult => subResult.SubResults)
-            .Where(linkedLicenceNumber =>
-                linkedLicenceNumber.MatchedLabel?.Name == "FurtherProvisionsLinkedLicenceNumber")
-            .Select(linkedLicenceNumber =>
-            {
-                var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-                var naldLicenceNumber =
-                    (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
-
-                var naldDataLine = GetNaldDataLine(naldData, licenceNumber, regionCode);
-                
-                var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                    naldLicenceNumber,
-                    naldLicenceStatusData,
-                    naldDataLine,
-                    regionCode);
-
-                FormattingHelper.GetDmsFileData(
-                    licenceNumber,
-                    regionCode,
-                    licenceNumbersMapping,
-                    out var dmsFileData);
-                
-                noneSchemaData.Add($"Confidence:LinkedLicence_FurtherProvisions_{count++}", linkedLicenceNumber.Confidence);
-                
-                return new LinkedLicence
-                {
-                    LicenceNumber = licenceNumber,
-                    RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
-                    RawScrapedLicenceNumber = licenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
-                    Filename = dmsFileData?.DestinationFileName,
-                    DmsPath = dmsFileData?.DmsPath,
-                    NaldStatus = naldStatus,
-                    LicenceType = licenceType,
-                    ContainedIn =
-                    [
-                        new ContainedInInformation
-                        {
-                            Source = InformationSource.Document,
-                            SectionName = DocumentSectionNames.FurtherProvisions,
-                            LinkReason = GetLinkReason(
-                                [GetParent(furtherProvisions, linkedLicenceNumber)],
-                                linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                            LineNumber = linkedLicenceNumber.LineNumber,
-                            PageNumber = linkedLicenceNumber.PageNumber
-                        }
-                    ]
-                };
-            })
-            .ToList();
     }
 
     private static string? GetLinkReason(List<LabelGroupResult> sections, string? textToFind)

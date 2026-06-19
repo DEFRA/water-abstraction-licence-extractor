@@ -80,7 +80,7 @@ public static class WalLabelConfiguration
                 [
                     new()
                     {
-                      Name = "RecordPoint",
+                      Name = "RecordsPoint",
                         TextStart = [
                             new("8.1"),
                             new("8.2"),
@@ -622,7 +622,7 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("FCLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber")
                         ]
                     }
                 ]

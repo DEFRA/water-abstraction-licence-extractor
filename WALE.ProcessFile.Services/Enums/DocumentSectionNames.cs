@@ -10,7 +10,7 @@ public static class DocumentSectionNames
     
     public static readonly string AbstractionLimits = "AbstractionLimits";
 
-    public static readonly string AdditionalInformation = "AdditionalInformation";
+    public static readonly string Additional = "Additional";
     
     public static readonly string ReasonsForConditions = "ReasonsForConditions";
     

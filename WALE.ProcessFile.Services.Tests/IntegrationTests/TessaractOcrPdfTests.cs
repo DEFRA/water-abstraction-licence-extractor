@@ -644,11 +644,11 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(19, records.Text!.Count);
+        Assert.Equal(7, records.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

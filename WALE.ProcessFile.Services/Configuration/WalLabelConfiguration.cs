@@ -56,6 +56,7 @@ public static class WalLabelConfiguration
                     new("9. Further conditions"),
                     new("9. Further provisions"),
                     new("10. Further conditions"),
+                    new("10 Further conditions") { LineMustStartWith = true },  
                     new("10. Further provisions"),
                     new("10 Further provisions") { LineMustStartWith = true },                 
                     new("Further Conditions[END_OF_LINE]") { ColumnMustStartWith = true },

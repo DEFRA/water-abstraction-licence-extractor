@@ -2125,7 +2125,7 @@ public static class WalSchemaConverter
         if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
         {
             return LinkReason.Revocation;
-        }            
+        }
         
         if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -2165,6 +2165,11 @@ public static class WalSchemaConverter
         }
 
         if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return LinkReason.AggregateCondition;
+        }
+        
+        if (text.Contains("in total between", StringComparison.InvariantCultureIgnoreCase))
         {
             return LinkReason.AggregateCondition;
         }

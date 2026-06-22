@@ -77,7 +77,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = null,
+                DestinationFileName = "something",
                 RegionId = 1
             }
         }

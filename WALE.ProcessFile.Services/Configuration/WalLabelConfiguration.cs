@@ -186,7 +186,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -337,7 +338,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -552,7 +554,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]

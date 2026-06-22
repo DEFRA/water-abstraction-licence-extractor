@@ -28,7 +28,7 @@ public static class WalLabelConfiguration
             ("FurtherConditions", GetFurtherConditions()),
             ("Additional", GetAdditional()),
             ("ReasonsForConditions", GetReasonsForConditions()),
-            ("OtherConditions", GetOtherConditions()),            
+            (DocumentSectionNames.OtherConditions, GetOtherConditions()),            
             ("LicenceHistory", GetLicenceHistory()),
             ("FurtherProvisions", GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),

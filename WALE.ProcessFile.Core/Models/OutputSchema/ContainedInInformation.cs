@@ -3,13 +3,13 @@ using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
-public record LinkedLicenceSection
+public record ContainedInInformation
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public LinkedLicenceSource Source { get; init; }
+    public InformationSource Source { get; init; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public LinkedLicenceDirection Direction { get; init; } = LinkedLicenceDirection.Outgoing;
+    public InformationDirection Direction { get; init; } = InformationDirection.Outgoing;
     
     public string? SectionName { get; init; }
     

@@ -12,8 +12,11 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     
     public List<AbstractionLimit> Limits { get; init; } = [];
     
+    public ContainedInInformation[]? ContainedIn { get; set; }
+    
     public static AbstractionLimitGroup Template => new()
     {
+        DocumentIdentifier = null,
         TimePeriod = new TimePeriod
         {
             StartDate = null,
@@ -21,6 +24,12 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
             Inclusive = true,
             PeriodType = AbstractionPeriodType.SetPeriod
         },
+        TimeCutoff = new TimeCutoff
+        {
+            CutoffType = CutoffType.From,
+            Date = null
+        },
         Limits = [AbstractionLimit.Template],
+        ContainedIn = []
     };
 }

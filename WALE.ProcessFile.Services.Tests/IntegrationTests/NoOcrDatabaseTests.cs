@@ -234,7 +234,7 @@ public class NoOcrDatabaseTests
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(53, licenceNumberResult.LineNumber);
 
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -250,7 +250,7 @@ public class NoOcrDatabaseTests
         var firstPurposePointGroup = purposeResult.SubResults.First();
         var firstPurpose = firstPurposePointGroup.SubResults[0];
 
-        Assert.Equal("Purpose", firstPurpose.MatchedLabel!.Name);
+        Assert.Equal("Purposes", firstPurpose.MatchedLabel!.Name);
         Assert.Equal("4.1 Private Water Supply.", firstPurpose.Text!.First().Text);
         Assert.Equal(2, firstPurpose.SubResults.Count);
 

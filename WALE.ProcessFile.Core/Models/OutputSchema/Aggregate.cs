@@ -36,7 +36,7 @@ public class Aggregate : AbstractionLimitGroup
             {
                 foreach (var linkedLicence in LinkedLicences)
                 {
-                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                    var linkedLicenceNumber = linkedLicence
                         .Replace("/", string.Empty)
                         .Replace(" ", string.Empty);
 
@@ -50,9 +50,11 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? AggregateSetId { get; set; }
     
-    public string? LicenceNumber { get; init; }
+    [JsonIgnore]
+    public string? LicenceNumber { get; set; }
     
-    public string? LicenceVersionId { get; init; }
+    [JsonIgnore]
+    public string? LicenceVersionId { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PrimaryType PrimaryType { get; init; }
@@ -62,7 +64,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? NaldType { get; set; }
     
-    public LinkedLicence[]? LinkedLicences { get; init; } = [];
+    public string[]? LinkedLicences { get; init; } = [];
 
     public new static Aggregate Template => new()
     {

@@ -123,7 +123,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         var periods2 = period.SubResults[1];
         Assert.Equal("September", periods2.Text!.First().Text);
         
-        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
         Assert.Equal("Spray irrigation", purpose.Text!.First().Text);
         
@@ -232,7 +232,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         // Assert
         Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
-        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
         Assert.Equal(2, purpose.Text!.Count);
         Assert.Equal("Spray Irrigation", purpose.Text!.First().Text);
@@ -263,7 +263,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         // Assert
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
-        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
         Assert.Equal(3, purpose.Text!.Count);
         Assert.Equal("4.1 Spray irrigation.", purpose.Text[1].Text);
@@ -501,7 +501,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1181,7 +1181,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal("TA 0678 3508 &", pointsSubs[2].Text!.LastOrDefault()!.Text);
         Assert.Equal("(4) TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\"", pointsSubs[3].Text!.FirstOrDefault()!.Text);
         
-        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
         
         Assert.Equal(2, purpose.Text!.Count);
@@ -1483,14 +1483,20 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal("NZ 886 088 River Esk at Ruswarp", points.Text![0].Text);
         Assert.Equal("NZ 873 082 River Esk at Briggswath", points.Text![1].Text);
 
-        var pointPurposeGroup = points.SubResults.Single();
+        Assert.Equal(2, points.SubResults.Count);
+        
+        var pointPurposeGroup = points.SubResults.First();
         Assert.NotNull(pointPurposeGroup);
 
         var pointsSubs = pointPurposeGroup.SubResults;
+        Assert.Single(pointsSubs);
         
-        Assert.Equal(2, pointsSubs.Count);
+        pointPurposeGroup = points.SubResults.Last();
+        Assert.NotNull(pointPurposeGroup);
+
+        pointsSubs = pointPurposeGroup.SubResults;
         
-        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purpose = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
         
         Assert.Equal(2, purpose.Text!.Count);

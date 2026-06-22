@@ -210,10 +210,7 @@ public static partial class DataHelper
 
                     if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        returnStr = returnStr.Replace(
-                            textToMatch.Text,
-                            string.Empty,
-                            StringComparison.InvariantCultureIgnoreCase);
+                        returnStr = ReplaceFirst(returnStr, textToMatch.Text, string.Empty);
                     }
 
                     removesUsedList.Add(textToMatch.Text);

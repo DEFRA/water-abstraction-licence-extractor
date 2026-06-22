@@ -36,7 +36,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         }
 
         var filtered = linkedLicences
-            .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == LinkedLicenceDirection.Incoming));
+            .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == InformationDirection.Incoming));
         
         return Ok(filtered);
     }
@@ -53,7 +53,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         }
         
         var filtered = linkedLicences
-            .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == LinkedLicenceDirection.Outgoing));
+            .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == InformationDirection.Outgoing));
         
         return Ok(filtered);
     }

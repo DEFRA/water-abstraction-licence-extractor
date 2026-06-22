@@ -23,6 +23,8 @@ public class TextToMatch(string text)
     public bool RegularExpressionIsCaseInsensitive { get; init; }
 
     public bool ExceptWhenInsideWord { get; set; }
+    
+    public bool SingleLinePerItem { get; set; }
 
     public TextToMatch Clone(string textToSet)
     {
@@ -36,7 +38,9 @@ public class TextToMatch(string text)
             RemoveWholeLine = RemoveWholeLine,
             InstanceNumber = InstanceNumber,
             IsRegularExpression = IsRegularExpression,
-            RegularExpressionIsCaseInsensitive = RegularExpressionIsCaseInsensitive
+            RegularExpressionIsCaseInsensitive = RegularExpressionIsCaseInsensitive,
+            ExceptWhenInsideWord = ExceptWhenInsideWord,
+            SingleLinePerItem = SingleLinePerItem
         };
     }
 }

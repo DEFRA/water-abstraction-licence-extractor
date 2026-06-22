@@ -1,14 +1,16 @@
 namespace WALE.ProcessFile.Services.Enums;
 
-public static class LinkedLicenceSectionNames
+public static class DocumentSectionNames
 {
     public static readonly string FurtherConditions = "FurtherConditions";
+    
+    public static readonly string OtherConditions = "OtherConditions";
     
     public static readonly string FurtherProvisions = "FurtherProvisions";    
     
     public static readonly string AbstractionLimits = "AbstractionLimits";
 
-    public static readonly string AdditionalInformation = "AdditionalInformation";
+    public static readonly string Additional = "Additional";
     
     public static readonly string ReasonsForConditions = "ReasonsForConditions";
     

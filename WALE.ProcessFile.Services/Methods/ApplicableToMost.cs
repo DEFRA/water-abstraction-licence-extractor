@@ -27,12 +27,12 @@ public static class ApplicableToMost
         }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
-            && request.line?.Text.Equals(request.label.Text?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
+            && request.line?.Text.Equals(request.label.TextToMatch?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
         {
             request.textBeforeAtAndAfterLabel = [
                 new()
                 {
-                    ColumnsText = [request.label.Text?.FirstOrDefault()?.Text!],
+                    ColumnsText = [request.label.TextToMatch?.FirstOrDefault()?.Text!],
                     Label = request.label
                 }
             ]!;
@@ -66,7 +66,7 @@ public static class ApplicableToMost
             labelGroupResult.MatchedLabel = matchedLabel;
             
             var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
-            var labelText = matchedLabel.Text?.FirstOrDefault()?.Text;
+            var labelText = matchedLabel.TextToMatch?.FirstOrDefault()?.Text;
 
             var columnTextOnly = matchedLabel.Name == "CompanyName"; // TODO make it a flag in config
             
@@ -540,7 +540,7 @@ public static class ApplicableToMost
 
             if (!string.IsNullOrWhiteSpace(outputText))
             {
-                if (request.label?.Text?.FirstOrDefault()?.Text == null)
+                if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)
                 {
                     var coords = documentLine
                         .Columns

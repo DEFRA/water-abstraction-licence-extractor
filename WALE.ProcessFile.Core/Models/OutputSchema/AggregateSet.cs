@@ -78,7 +78,8 @@ public class AggregateSet
     public string? AggregateSetId
     {
         get => _aggregateSetId;
-        private set
+        // ReSharper disable once MemberCanBePrivate.Global - can't make private as used in serialisation
+        set
         {
             _aggregateSetId = value;
             
@@ -89,7 +90,5 @@ public class AggregateSet
         }
     }
     
-    /*public string? VersionNumber { get; set; }*/
-
     public AggregateWithContext[] Aggregates { get; init; } = [];
 }

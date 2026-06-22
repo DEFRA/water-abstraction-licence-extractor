@@ -17,7 +17,7 @@ public static class WalLabelConfiguration
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
             (DocumentSectionNames.AbstractionLimits, GetAbstractionLimitsLabels()),
-            ("Purpose", GetPurposeLabels()),
+            (DocumentSectionNames.Purposes, GetPurposeLabels()),
             (DocumentSectionNames.Points, GetPointsLabels()),
             ("DateOfIssue", SharedLabels.GetDateOfIssueLabels()),
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
@@ -1194,7 +1194,7 @@ public static class WalLabelConfiguration
                             },
                             new()
                             {
-                                Name = "Purpose",
+                                Name = "Purposes",
                                 TextStart = [
                                     new("4.1"),
                                     new("4.2"),

@@ -1961,7 +1961,7 @@ public static class WalSchemaConverter
         Dictionary<string, object?> noneSchemaData)
     {
         var purposeSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "Purpose");
+            .FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
         if (purposeSection == null)
         {
@@ -1974,7 +1974,7 @@ public static class WalSchemaConverter
         foreach (var purposePointGroup in purposeSection.SubResults)
         {
             var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purpose")
+                .Where(x => x.MatchedLabel!.Name == "Purposes")
                 .ToList();
 
             foreach (var purpose in purposes)
@@ -3462,7 +3462,7 @@ public static class WalSchemaConverter
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
         
-        var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResults = matches.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         var returnList = new List<PurposeOfAbstraction>();
 
         if (purposeResults == null)
@@ -3488,7 +3488,7 @@ public static class WalSchemaConverter
                 .ToArray();
 
             var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purpose")
+                .Where(x => x.MatchedLabel!.Name == "Purposes")
                 .ToList();
 
             foreach (var purpose in purposes)

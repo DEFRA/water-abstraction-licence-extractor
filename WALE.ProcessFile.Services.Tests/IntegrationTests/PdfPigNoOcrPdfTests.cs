@@ -318,7 +318,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(53, licenceNumberResult.LineNumber);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -333,7 +333,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var firstPurposePointGroup = purposeResult.SubResults.First();
         var firstPurpose = firstPurposePointGroup.SubResults[0];
         
-        Assert.Equal("Purpose", firstPurpose.MatchedLabel!.Name);
+        Assert.Equal("Purposes", firstPurpose.MatchedLabel!.Name);
         Assert.Equal("4.1 Private Water Supply.", firstPurpose.Text!.First().Text);
         Assert.Equal(2, firstPurpose.SubResults.Count);
         
@@ -526,7 +526,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var pointsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Equal(4, pointsResult?.Text!.Count);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -789,7 +789,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var linkedLicenceNumber2 = linkedLicences[1].Text?[0].Text;
         Assert.Equal("NW/069/0025/007/R01", linkedLicenceNumber2);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -982,7 +982,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 subResult.MatchedLabel!.Name == "LinkedLicenceNumber")?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("4/30/12/*G/0214", linkedLicenceNumber);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -1479,7 +1479,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("AN/033/0051/004", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -1848,7 +1848,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 subResult.MatchedLabel!.Name == "LinkedLicenceNumber")?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("AN/033/0047/018", linkedLicenceNumber);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");  
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");  
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -1886,7 +1886,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("2.1", purposeGroup1PointGroupName.Text?.FirstOrDefault()?.Text);
         
         var purpose1 = purposePointGroup1.SubResults[1];
-        Assert.Equal("Purpose", purpose1.MatchedLabel!.Name);
+        Assert.Equal("Purposes", purpose1.MatchedLabel!.Name);
         Assert.Equal(4, purpose1.Text!.Count);
         
         var purpose1AllText = string.Join(' ', purpose1.Text?.Select(x => x.Text).ToArray()!);
@@ -1912,7 +1912,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             + " condition 2.1 of licence AN/033/0047/018", purpose1TextOnly);
         
         var purpose2 = purposePointGroup1.SubResults[2];
-        Assert.Equal("Purpose", purpose2.MatchedLabel!.Name);
+        Assert.Equal("Purposes", purpose2.MatchedLabel!.Name);
         Assert.Single(purpose2.Text!);
         
         var purpose2AllText = purpose2.Text?.Select(x => x.Text).ToArray()!;
@@ -1943,7 +1943,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("2.2", purposeGroup2PointGroupName.Text![0].Text);
         
         var purpose3 = purposePointGroup2.SubResults[1];
-        Assert.Equal("Purpose", purpose3.MatchedLabel!.Name);
+        Assert.Equal("Purposes", purpose3.MatchedLabel!.Name);
        
         Assert.Equal("4.3 From Point 2.2 Spray Irrigation.", string.Join(' ', purpose3.Text?.Select(x => x.Text).ToArray()!));
         
@@ -2333,7 +2333,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "MeansOfAbstraction"));
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction"));
-        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose"));
+        Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes"));
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "Points"));
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue"));       
         Assert.NotNull(resultList.FirstOrDefault(result => result.LabelGroupName == "DateOfOriginalIssue"));
@@ -2538,7 +2538,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);        
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -3385,7 +3385,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -3550,7 +3550,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per second")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("litres", perSecondUnits);   
         
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -3812,14 +3812,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(10, points.Text!.Count);
         Assert.StartsWith("2.1 Winscar Reservoir at National Grid Re", points.Text![0].Text);
         
-        var purposes = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposes = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purposes);
 
         var purposesSub = purposes.SubResults;
         Assert.Single(purposesSub);
         
         Assert.Equal(2, purposesSub[0].SubResults
-            .Where(sr => sr.MatchedLabel?.Name == "Purpose")
+            .Where(sr => sr.MatchedLabel?.Name == "Purposes")
             .ToList()
             .Count);
         
@@ -4243,7 +4243,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
             
-        var purposeResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purpose");    
+        var purposeResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Purposes");    
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);

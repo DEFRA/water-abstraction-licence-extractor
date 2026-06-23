@@ -2498,6 +2498,14 @@ public static class WalSchemaConverter
             || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
             || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase);
 
+        var textIsMisleadinglyWordedAsAggregate =
+            abstractionLimitPointSubText.Contains("In aggregate from both sources", StringComparison.InvariantCultureIgnoreCase);
+
+        if (textIsMisleadinglyWordedAsAggregate)
+        {
+            textSuggestsIsAggregate = false;
+        }
+        
         var datePurposesTimePeriods = siblings
             .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
@@ -2797,6 +2805,32 @@ public static class WalSchemaConverter
             return;
         }
 
+        const string noneDigitAggregateKey = "Plus a quantity equal to the";
+        var containsVagueValue = abstractionLimitPointSubText.Contains(
+            noneDigitAggregateKey,
+            StringComparison.InvariantCultureIgnoreCase);
+
+        if (containsVagueValue)
+        {
+            var abstractionLimitPointSubTemp = abstractionLimitPointSubText.Replace(
+                noneDigitAggregateKey,
+                "±",
+                StringComparison.InvariantCultureIgnoreCase);
+            
+            var parts = abstractionLimitPointSubTemp.Split('±');
+
+            if (parts.Length >= 2)
+            {
+                var untilDot = parts[1].Split('.')[0];
+                var fullLine = $"{noneDigitAggregateKey} {untilDot}";
+
+                foreach (var limit in aggregateAbstractionLimits)
+                {
+                    limit.ValueAdditionalText = fullLine;
+                }
+            }
+        }
+        
         var pointsLoop = aggregateAbstractionLimits.First().Points;
         var purposesLoop = aggregateAbstractionLimits.First().Purposes;
         var timePeriod = GetTimePeriod(

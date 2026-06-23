@@ -26,7 +26,7 @@ public class Aggregate : AbstractionLimitGroup
                 _ => string.Empty
             };
 
-            var licenceNumber = LicenceNumber?
+            var licenceNumber = SourceLicenceNumber?
                 .Replace("/", string.Empty)
                 .Replace(" ", string.Empty);
 
@@ -44,17 +44,17 @@ public class Aggregate : AbstractionLimitGroup
                 }
             }
 
-            return $"{licenceNumber}-{LicenceVersionId}-{primaryType}{subType}{outputSb}";
+            return $"{licenceNumber}-{SourceLicenceVersionId}-{primaryType}{subType}{outputSb}";
         }
     }
     
     public string? AggregateSetId { get; set; }
     
-    [JsonIgnore]
-    public string? LicenceNumber { get; set; }
+    public string? SourceLicenceNumber { get; set; }
     
-    [JsonIgnore]
-    public string? LicenceVersionId { get; set; }
+    public string? SourceLicenceVersionId { get; set; }
+    
+    public int? IsExplicitlyAggregate { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PrimaryType PrimaryType { get; init; }
@@ -82,8 +82,8 @@ public class Aggregate : AbstractionLimitGroup
             StartDate = null,
             EndDate = null
         },
-        LicenceNumber = null,
-        LicenceVersionId = null,
+        SourceLicenceNumber = null,
+        SourceLicenceVersionId = null,
         Limits = [AbstractionLimit.Template],
         DocumentIdentifier = null,
         LinkedLicences = []

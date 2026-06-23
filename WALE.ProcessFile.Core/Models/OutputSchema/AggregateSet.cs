@@ -10,7 +10,7 @@ public class AggregateSet
         var groupedAggregates = Aggregates
             .GroupBy(aggregate =>
             {
-                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
                 allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
                 return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
@@ -21,19 +21,19 @@ public class AggregateSet
         
         foreach (var licence in groupedAggregates)
         {
-            if (licence.LicenceNumber == null)
+            if (licence.SourceLicenceNumber == null)
             {
                 // Shouldn't get here ideally
                 Console.WriteLine("WARNING - AggregateSet - LicenceNumber is null");
                 continue;
             }
             
-            if (licencesDict.ContainsKey(licence.LicenceNumber))
+            if (licencesDict.ContainsKey(licence.SourceLicenceNumber))
             {
                 continue;
             }
             
-            licencesDict.Add(licence.LicenceNumber!, licence.LicenceVersionId!);
+            licencesDict.Add(licence.SourceLicenceNumber!, licence.SourceLicenceVersionId!);
 
             if (licence.LinkedLicences != null)
             {

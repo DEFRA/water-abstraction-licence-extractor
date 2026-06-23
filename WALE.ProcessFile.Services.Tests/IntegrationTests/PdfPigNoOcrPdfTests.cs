@@ -3659,7 +3659,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020",
             agreedSchemaLicence.AbstractionLimits.Aggregates![0].Id);
         Assert.Equal("LV2023020720380331",
-            agreedSchemaLicence.AbstractionLimits.Aggregates[0].LicenceVersionId);
+            agreedSchemaLicence.AbstractionLimits.Aggregates[0].SourceLicenceVersionId);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits);
         Assert.Equal(148000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerDay, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);

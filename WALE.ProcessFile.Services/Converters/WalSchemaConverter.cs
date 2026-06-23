@@ -1264,7 +1264,7 @@ public static class WalSchemaConverter
         var aggregatesGroupedByLicencesList = aggregates
             .GroupBy(aggregate =>
             {
-                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
                 allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
                 return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
@@ -2795,8 +2795,8 @@ public static class WalSchemaConverter
 
         var aggregate = new Aggregate
         {
-            LicenceNumber = licenceNumber,
-            LicenceVersionId = licenceVersionId,
+            SourceLicenceNumber = licenceNumber,
+            SourceLicenceVersionId = licenceVersionId,
             PrimaryType = linkedLicenceNumbers.Count >= 1
                 ? PrimaryType.LicenceToLicence
                 : PrimaryType.InLicence,

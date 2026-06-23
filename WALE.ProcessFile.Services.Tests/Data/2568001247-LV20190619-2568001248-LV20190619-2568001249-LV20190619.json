@@ -12,6 +12,8 @@
         {
           "id": "2568001249-LV20190619-LL-2568001247-2568001248",
           "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "sourceLicenceNumber": "25/68/001/249",
+          "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
           "linkedLicences": [
             "25/68/001/247",
@@ -46,6 +48,8 @@
         {
           "id": "2568001247-LV20190619-LL-2568001248-2568001249",
           "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "sourceLicenceNumber": "25/68/001/247",
+          "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
           "linkedLicences": [
             "25/68/001/248",
@@ -80,6 +84,8 @@
         {
           "id": "2568001248-LV20190619-LL-2568001247-2568001249",
           "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "sourceLicenceNumber": "25/68/001/248",
+          "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
           "linkedLicences": [
             "25/68/001/247",
@@ -221,6 +227,8 @@
           {
             "id": "2568001249-LV20190619-LL-2568001247-2568001248",
             "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "sourceLicenceNumber": "25/68/001/249",
+            "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/247",
@@ -471,6 +479,8 @@
           {
             "id": "2568001247-LV20190619-LL-2568001248-2568001249",
             "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "sourceLicenceNumber": "25/68/001/247",
+            "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/248",
@@ -720,6 +730,8 @@
           {
             "id": "2568001248-LV20190619-LL-2568001247-2568001249",
             "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "sourceLicenceNumber": "25/68/001/248",
+            "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/247",

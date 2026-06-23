@@ -2527,6 +2527,15 @@ public static class WalSchemaConverter
                 || thisLimitedByPurpose
                 || (multiplePurposesSpecified && othersLimitedByPurpose)
                 || containsUnderThisLicenceText);
+
+        // We are limited by points - its an aggregated
+        if (!meetsAggregateConditions)
+        {
+            if (limitPoints?.Count > 1 && limitPoints.Count < allPoints.Length)
+            {
+                meetsAggregateConditions = true;
+            }
+        }
         
         var linkedLicenceNumbers = siblings
             .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")

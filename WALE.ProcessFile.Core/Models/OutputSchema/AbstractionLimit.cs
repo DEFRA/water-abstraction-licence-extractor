@@ -8,7 +8,7 @@ public class AbstractionLimit : PeriodAndPointRestricted
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LimitPeriodType PeriodType { get; init; }
     
-    public double? Value { get; init; }
+    public double? Value { get; set; }
     
     public string? Units { get; init; }
     

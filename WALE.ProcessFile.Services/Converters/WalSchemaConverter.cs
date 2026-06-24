@@ -2200,7 +2200,7 @@ public static class WalSchemaConverter
             }
         };
 
-        if (containedIn[0].LinkReason == LinkReason.CompensationFlow)
+        if (containedIn[0].LinkReason is LinkReason.CompensationFlow or LinkReason.SimultaneousDischargeCondition)
         {
             return;
         }

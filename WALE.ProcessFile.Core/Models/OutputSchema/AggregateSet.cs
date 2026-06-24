@@ -54,7 +54,7 @@ public class AggregateSet
         }
             
         var licencesAlphabetical = licencesDict
-            .OrderBy(licence => $"{licence.Key}-{licence.Value}");
+            .OrderBy(licence => $"{FormattingHelper.RemoveSeperators(licence.Key)}-{licence.Value}");
 
         var outputSb = new StringBuilder();
         

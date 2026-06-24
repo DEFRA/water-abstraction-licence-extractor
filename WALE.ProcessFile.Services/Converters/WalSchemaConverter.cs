@@ -788,7 +788,7 @@ public static class WalSchemaConverter
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
             lookupConfiguration,
             processRunId);
-        
+
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
         var linkedLicences = await GetLinkedLicencesAsync(
@@ -1352,9 +1352,11 @@ public static class WalSchemaConverter
             if (missingDmsData || missingFileId || missingFilename)
             {
                 var status = LicenceStatus.NotFound;
-                if (missingFileId) status = LicenceStatus.FileIdMissing;
+                
+                if (missingDmsData) {}
                 else if (missingFilename) status = LicenceStatus.PathMissing;
-                      
+                else if (missingFileId) status = LicenceStatus.FileIdMissing;
+                
                 returnLicences.Add(new Licence
                 {
                     LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),

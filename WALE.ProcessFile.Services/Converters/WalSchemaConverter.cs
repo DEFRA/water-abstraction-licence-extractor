@@ -788,11 +788,10 @@ public static class WalSchemaConverter
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
             lookupConfiguration,
             processRunId);
-
+        
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
 
         var linkedLicences = await GetLinkedLicencesAsync(
-            matchesResult,
             primaryLicence,
             naldLicenceStatusData,
             naldData,
@@ -1033,7 +1032,7 @@ public static class WalSchemaConverter
             {
                 foreach (var licence in licenceSet.Licences)
                 {
-                    if (licence.Status == LicenceStatus.NotFound)
+                    if (licence.Status != LicenceStatus.Ok)
                     {
                         continue;
                     }
@@ -1297,7 +1296,6 @@ public static class WalSchemaConverter
     }
 
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
-        MatchesResult matchesResult,
         Licence primaryLicence,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
@@ -1307,131 +1305,7 @@ public static class WalSchemaConverter
         LookupConfiguration lookupConfiguration)
     {
         var returnLicences = new List<Licence>();
-
-        var abstractionLimits = matchesResult.Matches?
-            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
-
-        var abstractionLimitsPoints = abstractionLimits?.SubResults;
-
-        if (abstractionLimitsPoints != null)
-        {
-            foreach (var abstractionLimitsPoint in abstractionLimitsPoints)
-            {
-                var abstractionLimitPointSubs = abstractionLimitsPoint.SubResults;
-
-                foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
-                {
-                    var linkedLicencesData = abstractionLimitPointSub.SubResults
-                        .Where(subResult =>
-                            subResult.MatchedLabel!.Format == Formats.LinkedLicence.Constant)
-                        .ToList();
-
-                    foreach (var linkedLicenceData in linkedLicencesData)
-                    {
-                        var matches = ToMatchesResult(linkedLicenceData);
-                        var (licenceNumber, _, _, _) = GetLicenceNumber(matches);
-                        
-                        FormattingHelper.GetDmsFileData(
-                            licenceNumber,
-                            matchesResult.RegionCode,
-                            lookupConfiguration.AllDmsData,
-                            out var dmsFileData);
-                        
-                        var linkedLicence = await ToLicenceAsync(
-                            matches,
-                            naldLicenceStatusData,
-                            dmsFileData,
-                            lookupConfiguration.AllDmsData,
-                            naldData,
-                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
-                            lookupConfiguration,
-                            processRunId);
-
-                        returnLicences.Add(linkedLicence);
-                    }
-
-                    var linkedLicenceNumbers = abstractionLimitPointSub.SubResults
-                        .Where(subResult =>
-                            subResult.MatchedLabel!.Name == "LinkedLicenceNumber")
-                        .ToList();
-
-                    foreach (var linkedLicencesNumberResult in linkedLicenceNumbers)
-                    {
-                        var licenceNumber = linkedLicencesNumberResult.Text?.FirstOrDefault()?.Text;
-
-                        var licenceNumberTransformed =
-                            FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode);
-
-                        // Don't process ones we've already found
-                        if (licenceNumberTransformed == primaryLicence.LicenceNumber?.Value
-                            || returnLicences.Any(licence => licence.LicenceNumber?.Value == licenceNumberTransformed))
-                        {
-                            continue;
-                        }
-
-                        var foundDmsData = FormattingHelper.GetDmsFileData(
-                            licenceNumber,
-                            matchesResult.RegionCode,
-                            lookupConfiguration.AllDmsData,
-                            out var dmsFileData);
-                        
-                        if (!foundDmsData)
-                        {
-                            returnLicences.Add(new Licence
-                            {
-                                LicenceNumber = !string.IsNullOrEmpty(licenceNumber) 
-                                    ? new ValueWithConfidence<string>(licenceNumber, -1, -1) // TODO
-                                    : null,
-                                Status = LicenceStatus.NotFound,
-                                RegionId = matchesResult.RegionCode
-                            });
-
-                            continue;
-                        }
-
-                        var destinationFileName = dmsFileData!.DestinationFileName!;
-
-                        var clonedConfig = lookupConfiguration.Clone();
-                        clonedConfig.AllDmsData = lookupConfiguration.AllDmsData;
-                        clonedConfig.RegionId = matchesResult.RegionCode;
-                        
-                        FormattingHelper.GetDmsFileData(
-                            licenceNumber,
-                            matchesResult.RegionCode,
-                            lookupConfiguration.AllDmsData,
-                            out var linkedDmsFileData);
-                        
-                        if (linkedDmsFileData == null)
-                        {
-                            ConsoleHelper.WriteLine(
-                                $"INFO - {nameof(WalSchemaConverter)} - ProcessLinkedLicenceAsync - excluding file as doesn't have file id set");
-                
-                            break;
-                        }
-                        
-                        var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                            destinationFileName,
-                            linkedDmsFileData,
-                            clonedConfig,
-                            previouslyParsedFiles,
-                            processRunId);
-
-                        var licence = await ToLicenceAsync(
-                            relatedFileMatches,
-                            naldLicenceStatusData,
-                            dmsFileData,
-                            lookupConfiguration.AllDmsData,
-                            naldData,
-                            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
-                            lookupConfiguration,
-                            processRunId);
-
-                        returnLicences.Add(licence);
-                    }
-                }
-            }
-        }
-
+        
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
             var strippedLlNumbers = FormattingHelper.StripForComparisonMultipleOptions(
@@ -1462,56 +1336,41 @@ public static class WalSchemaConverter
                 continue;
             }
 
-            var found = FormattingHelper.GetDmsFileData(
+            var foundDmsData = FormattingHelper.GetDmsFileData(
                 linkedLicence.LicenceNumber,
-                matchesResult.RegionCode,
+                primaryLicence.RegionId!.Value,
                 lookupConfiguration.AllDmsData,
                 out var dmsFileData);
+
+            var destinationFileId = dmsFileData?.FileId;
+            var destinationFileName = dmsFileData?.DestinationFileName;
             
-            if (!found)
+            var missingDmsData = !foundDmsData;
+            var missingFileId = destinationFileId == Guid.Empty;
+            var missingFilename = string.IsNullOrEmpty(destinationFileName);
+                        
+            if (missingDmsData || missingFileId || missingFilename)
             {
+                var status = LicenceStatus.NotFound;
+                if (missingFileId) status = LicenceStatus.FileIdMissing;
+                else if (missingFilename) status = LicenceStatus.PathMissing;
+                      
                 returnLicences.Add(new Licence
                 {
                     LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
-                    Status = LicenceStatus.NotFound,
-                    RegionId = matchesResult.RegionCode
+                    Status = status,
+                    RegionId = primaryLicence.RegionId!.Value,
                 });
-
-                continue;
-            }
-
-            var destinationFileName = dmsFileData!.DestinationFileName!;
-            if (string.IsNullOrEmpty(destinationFileName))
-            {
-                returnLicences.Add(new Licence
-                {
-                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
-                    Status = LicenceStatus.PathMissing,
-                    RegionId = matchesResult.RegionCode
-                });
-
-                continue;
-            }
-            
-            var destinationFileId = dmsFileData.FileId;
-            if (destinationFileId == Guid.Empty)
-            {
-                returnLicences.Add(new Licence
-                {
-                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
-                    Status = LicenceStatus.FileIdMissing,
-                    RegionId = matchesResult.RegionCode
-                });
-
+                
                 continue;
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.RegionId = matchesResult.RegionCode;
+            clonedConfig.RegionId = primaryLicence.RegionId!.Value;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                destinationFileName,
-                dmsFileData,
+                destinationFileName!,
+                dmsFileData!,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);

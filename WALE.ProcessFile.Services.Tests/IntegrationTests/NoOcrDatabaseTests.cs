@@ -195,12 +195,12 @@ public class NoOcrDatabaseTests
         Assert.Equal(4, point1Sub1.Text!.Count);
 
         Assert.NotNull(point1Sub1.SubResults);
-        Assert.Equal(5, point1Sub1.SubResults.Count);
+        Assert.Equal(6, point1Sub1.SubResults.Count);
 
         var perDay = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel?.Format == "Number"
-                && subResult.MatchedLabel.Text!.Any(text => text.Text.Contains("per day")));
+                && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
         Assert.Equal(109, perDay.LineNumber);
@@ -216,7 +216,7 @@ public class NoOcrDatabaseTests
         var perYear = point1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()
             ?.Text;
         Assert.Equal("33182", perYear);
 
@@ -234,7 +234,7 @@ public class NoOcrDatabaseTests
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(53, licenceNumberResult.LineNumber);
 
-        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purpose");
+        var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
         Assert.NotNull(purposeResult);
         Assert.False(purposeResult.IsOcr);
@@ -250,7 +250,7 @@ public class NoOcrDatabaseTests
         var firstPurposePointGroup = purposeResult.SubResults.First();
         var firstPurpose = firstPurposePointGroup.SubResults[0];
 
-        Assert.Equal("Purpose", firstPurpose.MatchedLabel!.Name);
+        Assert.Equal("Purposes", firstPurpose.MatchedLabel!.Name);
         Assert.Equal("4.1 Private Water Supply.", firstPurpose.Text!.First().Text);
         Assert.Equal(2, firstPurpose.SubResults.Count);
 

@@ -16,7 +16,7 @@ public static class Split
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         
-        if (request.label.Text == null || request.label.Text.Count == 0)
+        if (request.label.TextToMatch == null || request.label.TextToMatch.Count == 0)
         {
             throw new Exception("Incorrect configuration - if position is Split, Text must be set");
         }
@@ -29,7 +29,7 @@ public static class Split
             request.line!,
             nextLine,
             request.lineForPosition!,
-            request.label.Text,
+            request.label.TextToMatch,
             LabelPosition.SplitAtLabel,
             UnknownLinesTotal,
             int.MaxValue,
@@ -49,7 +49,7 @@ public static class Split
                     line,
                     null,
                     line,
-                    request.label.Text,
+                    request.label.TextToMatch,
                     LabelPosition.SplitAtLabel,
                     UnknownLinesTotal,
                     int.MaxValue,
@@ -81,7 +81,7 @@ public static class Split
             {
                 var splitPhrase = string.Join(
                     PositionConstants.SpaceChar,
-                    request.label.Text.Select(x => x.Text));
+                    request.label.TextToMatch.Select(x => x.Text));
                 
                 var separateParts = request.line!.Text.Split(splitPhrase);
                 var leftPart = separateParts[0].Trim();
@@ -126,14 +126,6 @@ public static class Split
             else
             {
                 rightPartLines.Insert(0, request.line!);
-
-                if (leftPartLines.Count > 0)
-                {
-                    var lastLeftLine = leftPartLines.Last();
-                    
-                    rightPartLines.Insert(0, lastLeftLine);
-                    leftPartLines.Remove(lastLeftLine);
-                }
             }
         }
         

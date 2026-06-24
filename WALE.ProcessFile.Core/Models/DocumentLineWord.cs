@@ -48,7 +48,9 @@ public class DocumentLineWord
     
     public DocumentLineWord Clone()
     {
-        var cloned = new DocumentLineWord(Text, OcrConfidence, Coordinates, HandwrittenOrTyped)
+        // TODO replace with a source generator
+        
+        var cloned = new DocumentLineWord(Text, OcrConfidence, Coordinates.Clone(), HandwrittenOrTyped)
         {
             Autocorrected = Autocorrected
         };

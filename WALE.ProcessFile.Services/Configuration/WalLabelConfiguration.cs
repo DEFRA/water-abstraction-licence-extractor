@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Enums;
 using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
@@ -15,20 +16,21 @@ public static class WalLabelConfiguration
             ("LicenceNumber", SharedLabels.GetLicenceNumberLabels()),
             ("MeansOfAbstraction", GetMeansOfAbstractionLabels()),
             ("PeriodsOfAbstraction", GetPeriodsOfAbstractionLabels()),
-            ("AbstractionLimits", GetAbstractionLimitsLabels()),
-            ("Purpose", GetPurposeLabels()),
-            ("Points", GetPointsLabels()),
+            (DocumentSectionNames.AbstractionLimits, GetAbstractionLimitsLabels()),
+            (DocumentSectionNames.Purposes, GetPurposeLabels()),
+            (DocumentSectionNames.Points, GetPointsLabels()),
             ("DateOfIssue", SharedLabels.GetDateOfIssueLabels()),
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
             ("DateEffective", GetDateEffectiveLabels()),
             ("DateOfExpiry", GetDateOfExpiryLabels()),
             ("Issuer", GetIssuerLabels()),
-            ("Records", GetRecords()),
-            ("FurtherConditions", GetFurtherConditions()),
-            ("Additional", GetAdditional()),
-            ("ReasonsForConditions", GetReasonsForConditions()),
-            ("LicenceHistory", GetLicenceHistory()),
-            ("FurtherProvisions", GetFurtherProvisions()),
+            (DocumentSectionNames.Records, GetRecords()),
+            (DocumentSectionNames.FurtherConditions, GetFurtherConditions()),
+            (DocumentSectionNames.Additional, GetAdditional()),
+            (DocumentSectionNames.ReasonsForConditions, GetReasonsForConditions()),
+            (DocumentSectionNames.OtherConditions, GetOtherConditions()),            
+            (DocumentSectionNames.LicenceHistory, GetLicenceHistory()),
+            (DocumentSectionNames.FurtherProvisions, GetFurtherProvisions()),
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
             
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
@@ -55,9 +57,10 @@ public static class WalLabelConfiguration
                     new("9. Further conditions"),
                     new("9. Further provisions"),
                     new("10. Further conditions"),
+                    new("10 Further conditions") { LineMustStartWith = true },  
                     new("10. Further provisions"),
                     new("10 Further provisions") { LineMustStartWith = true },                 
-                    new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Further Conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
@@ -79,7 +82,7 @@ public static class WalLabelConfiguration
                 [
                     new()
                     {
-                      Name = "RecordPoint",
+                      Name = "RecordsPoint",
                         TextStart = [
                             new("8.1"),
                             new("8.2"),
@@ -113,7 +116,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("RecordsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("RecordsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -121,7 +125,7 @@ public static class WalLabelConfiguration
         ];
     }
 
-        private static List<LabelToMatch> GetReasonsForConditions()
+    private static List<LabelToMatch> GetReasonsForConditions()
     {
         return
         [
@@ -182,7 +186,78 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
+                        ]
+                    }
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetOtherConditions()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "OtherConditionsAll",
+                TextStart =
+                [
+                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true },
+                    new("OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("7. OTHER CONDITIONS SUBJECT TO WHICH ABSTRACTION IS AUTHORISED[END_OF_LINE]") { LineMustStartWith = true }
+                ],
+                TextEnd =
+                [
+                    new("REASONS FOR CONDITIONS[END_OF_LINE]") { LineMustStartWith = true },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                MultipleServiceMatchBehaviour =
+                    MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
+                IncludeWholeLine = true,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = 
+                [
+                    new()
+                    {
+                        Name = "OtherConditionsPoint",
+                        TextStart = [
+                            new("1.") { LineMustStartWith = true },
+                            new("2.") { LineMustStartWith = true },
+                            new("3.") { LineMustStartWith = true },
+                            new("4.") { LineMustStartWith = true },
+                            new("5.") { LineMustStartWith = true },
+                            new("6.") { LineMustStartWith = true },
+                            new("7.") { LineMustStartWith = true },
+                            new("8.") { LineMustStartWith = true }
+                        ],
+                        TextEnd = [
+                            new("2.") { LineMustStartWith = true },
+                            new("3.") { LineMustStartWith = true },
+                            new("4.") { LineMustStartWith = true },
+                            new("5.") { LineMustStartWith = true },
+                            new("6.") { LineMustStartWith = true },
+                            new("7.") { LineMustStartWith = true },
+                            new("8.") { LineMustStartWith = true },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 30,
+                        IncludeStartLabelText = true,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        SubLabels = [
+                            GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -206,7 +281,8 @@ public static class WalLabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
-                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]"),
+                    new("The following changes to the licence have taken place:"),
                     new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
@@ -262,7 +338,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -477,7 +554,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -550,7 +628,8 @@ public static class WalLabelConfiguration
                         IncludeStartLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
-                            GetLinkedLicenceNumber("FCLinkedLicenceNumber")
+                            GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber"),
+                            ..GetLimitLineSubLabels()
                         ]
                     }
                 ]
@@ -713,7 +792,8 @@ public static class WalLabelConfiguration
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply and place of abstraction") { IfMultiplePreferLast = true },
                     new("Source(s) of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
-                    new("Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
+                    new("Source of supply[END_OF_COLUMN]") { ColumnMustStartWith = true, IfMultiplePreferLast = true },
+                    new("1. Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
                 ],
@@ -742,6 +822,7 @@ public static class WalLabelConfiguration
                         Name = "PointPurposeGroup",
                         TextStart = [
                             new("For Purpose "),
+                            new(string.Empty) { SingleLinePerItem = true },
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -757,7 +838,10 @@ public static class WalLabelConfiguration
                         Remove = [
                             new("2. POINT OF ABSTRACTION"),
                             new("2. POINT(S) OF ABSTRACTION"),
-                            new("2. POINTS OF ABSTRACTION")
+                            new("2. POINTS OF ABSTRACTION"),
+                            new("1. SOURCE OF SUPPLY"),
+                            new("SOURCE OF SUPPLY"),
+                            new("Point Reference")
                         ],
                         SubLabels =
                         [
@@ -912,12 +996,21 @@ public static class WalLabelConfiguration
                                             "(1)",
                                             "(2)",
                                             "(3)",
-                                            "(4)"
+                                            "(4)",
+                                            "A ",
+                                            "B ",
+                                            "C ",
+                                            "D ",
+                                            "E ",
+                                            "F ",
+                                            "G ",
+                                            "H "
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number",
+                                        Format = "Text",
                                         PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 0,                        
+                                        NextLinesToFetch = 0,
+                                        IncludeStartLabelText = true
                                     },
                                     new()
                                     {
@@ -951,7 +1044,7 @@ public static class WalLabelConfiguration
                                             new("2.7") { ColumnMustStartWith = true },
                                             new("2.8") { ColumnMustStartWith = true },
                                             new("2.9") { ColumnMustStartWith = true },
-                                            new("2.10") { ColumnMustStartWith = true },  
+                                            new("2.10") { ColumnMustStartWith = true },
                                             new("(1)"),
                                             new("(2)"),
                                             new("(3)"),
@@ -962,7 +1055,17 @@ public static class WalLabelConfiguration
                                             new("For Purpose 4.4") { RemoveWholeLine = true },
                                             new("Map 1"),
                                             new("Map 2"),
-                                            new("Map 3")
+                                            new("Map 3"),
+                                            new("A ") { ColumnMustStartWith = true },
+                                            new("B ") { ColumnMustStartWith = true },
+                                            new("C ") { ColumnMustStartWith = true },
+                                            new("D ") { ColumnMustStartWith = true },
+                                            new("E ") { ColumnMustStartWith = true },
+                                            new("F ") { ColumnMustStartWith = true },
+                                            new("G ") { ColumnMustStartWith = true },
+                                            new("H ") { ColumnMustStartWith = true },
+                                            new("I ") { ColumnMustStartWith = true },
+                                            new("J ") { ColumnMustStartWith = true },                                            
                                         ],
                                         Text = [
                                             new("marked") // TODO ' marked ' doesn't work, change so it does
@@ -1091,7 +1194,7 @@ public static class WalLabelConfiguration
                             },
                             new()
                             {
-                                Name = "Purpose",
+                                Name = "Purposes",
                                 TextStart = [
                                     new("4.1"),
                                     new("4.2"),
@@ -1670,7 +1773,10 @@ public static class WalLabelConfiguration
             new()
             {
                 Name = "AbstractionLimitPointSub",
-                Text = [new("and licence")],
+                Text = [
+                    new("and licence"),
+                    new("so that no more")                    
+                ],
                 Position = LabelPosition.SplitAtLabel,
                 MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                 PreviousLinesToFetch = 20,
@@ -1681,16 +1787,45 @@ public static class WalLabelConfiguration
                 {
                     new()
                     {
+                        Name = "DocumentIdentifier",
+                        Possibilities = [
+                            "6.1",
+                            "6.2",
+                            "6.3",
+                            "6.4",
+                            "6.5",
+                            "6.6",
+                            "6.7",
+                            "6.8"
+                        ],
+                        Position = LabelPosition.ApplicableToMost,
+                        Format = "Number",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
+                    },
+                    new()
+                    {
                         Name = "DateOnly",
                         Text =
                         [
                             new("Up to and including "),
                             new("From "),
+                            new("Until "),                            
                             new("aggregate quantity of water authorised")
                         ],
                         IgnoreBlockIfContains =
                         [
                             "Note:"
+                        ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
@@ -1729,6 +1864,16 @@ public static class WalLabelConfiguration
                             new("November[END_OF_COLUMN]"),
                             new("December[END_OF_COLUMN]")
                         ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
+                        ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1744,6 +1889,8 @@ public static class WalLabelConfiguration
                             new("condition "),
                             new("conditions "),
                             new("purposes specified in "),
+                            new("purposes of "),
+                            new("purpose of "),
                         ],
                         TextEnd =
                         [
@@ -1772,6 +1919,8 @@ public static class WalLabelConfiguration
                             "(2)",
                             "(3)",
                             "(4)",
+                            "spray irrigation",
+                            "trickle irrigation"
                         ],
                         SubLabels =
                         [

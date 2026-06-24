@@ -6,7 +6,11 @@ public class PointOfAbstraction : Point
 {
     public NaldPointData? NaldData { get; set; }
 
-    public string[]? PurposeIds { get; init; } = [];
+    public string[]? PurposeIds { get; init; }
+    
+    public string? Name { get; init; }
+    
+    public string? GridRef { get; init; }
     
     public TimeCutoff? TimeCutoff { get; set; }
     

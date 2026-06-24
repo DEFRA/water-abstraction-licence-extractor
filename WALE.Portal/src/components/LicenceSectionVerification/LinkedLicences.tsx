@@ -123,25 +123,25 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     {!isLoading && !error && linkedLicences.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '20px' }}>
                             <p style={{ color: '#888', marginBottom: '16px' }}>No outgoing linked licences found.</p>
-                            {noneOutgoingVerification ? (
+                            {noneOutgoingVerification && (
                                 <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
-                            ) : (
-                                <button 
-                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                    style={{ 
-                                        padding: '6px 20px', 
-                                        backgroundColor: '#52c41a', 
-                                        color: 'white', 
-                                        border: 'none', 
-                                        borderRadius: '4px', 
-                                        cursor: 'pointer', 
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem'
-                                    }}
-                                >
-                                    Confirm No Outgoing Linked Licences
-                                </button>
                             )}
+                            <button 
+                                onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                style={{ 
+                                    padding: '6px 20px', 
+                                    backgroundColor: '#52c41a', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    borderRadius: '4px', 
+                                    cursor: 'pointer', 
+                                    fontWeight: '600',
+                                    fontSize: '0.85rem',
+                                    marginTop: noneOutgoingVerification ? '12px' : '0'
+                                }}
+                            >
+                                Confirm No Outgoing Linked Licences
+                            </button>
                         </div>
                     )}
                     {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (

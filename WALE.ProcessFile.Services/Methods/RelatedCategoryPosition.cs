@@ -86,9 +86,9 @@ public static class RelatedCategoryPosition
                 continue;
             }
 
-            if (categoryItem.MatchedLabel?.Text != null)
+            if (categoryItem.MatchedLabel?.TextToMatch != null)
             {
-                foreach (var t in categoryItem.MatchedLabel.Text!)
+                foreach (var t in categoryItem.MatchedLabel.TextToMatch!)
                 {
                     lineStartsWithLabel = modifiedLine?.Text?.StartsWith(t.Text, StringComparison.OrdinalIgnoreCase) == true;
 
@@ -141,7 +141,7 @@ public static class RelatedCategoryPosition
                     var lineText = line.Text;
                     if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
                     
-                    var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
+                    var labelText = request.label.TextToMatch?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                     
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
                     var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);
@@ -163,7 +163,7 @@ public static class RelatedCategoryPosition
                     var lineText = line.Text;
                     if (lineText.Contains(',')) lineText = lineText.Replace(",", string.Empty);
                     
-                    var labelText = request.label.Text?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
+                    var labelText = request.label.TextToMatch?.FirstOrDefault()?.Text ?? "[EMPTY_LABEL]";
                 
                     var matchIndexEnd = lineText.IndexOf(match.Text, StringComparison.Ordinal) + match.Text.Length;
                     var labelIndexStart = lineText.IndexOf(labelText, StringComparison.Ordinal);

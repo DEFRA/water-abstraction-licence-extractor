@@ -12,9 +12,9 @@ public class PeriodOfAbstraction : TimePeriod
     
     public string? NaldPeriodEnd { get; set; }
     
-    public string[]? PointIds { get; set; } = [];
+    public string[]? PointIds { get; set; }
     
-    public string[]? PurposeIds { get; set; } = [];
+    public string[]? PurposeIds { get; set; }
     
     public TimeCutoff? TimeCutoff { get; set; }
     

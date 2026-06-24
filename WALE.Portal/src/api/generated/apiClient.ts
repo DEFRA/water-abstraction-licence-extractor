@@ -2461,6 +2461,49 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @return OK
+     */
+    matchesResultString(fileId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/MatchesResultString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMatchesResultString(_response);
+        });
+    }
+
+    protected processMatchesResultString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
@@ -2504,6 +2547,54 @@ export class Client {
             });
         }
         return Promise.resolve<Licence>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    licenceString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/LicenceString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLicenceString(_response);
+        });
+    }
+
+    protected processLicenceString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
     }
 
     /**
@@ -2553,6 +2644,49 @@ export class Client {
             });
         }
         return Promise.resolve<LicenceSet[]>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @return OK
+     */
+    licenceSetsString(fileId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/LicenceSetsString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLicenceSetsString(_response);
+        });
+    }
+
+    protected processLicenceSetsString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
     }
 
     /**
@@ -3117,28 +3251,19 @@ export class Client {
     }
 
     /**
-     * @param searchTerm (optional) 
-     * @param skip (optional) 
-     * @param take (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunResponse> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
+    getProcessRun(processRunId: number, skip: number, take: number): Promise<OutputListDataItem[]> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
         url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        if (searchTerm === null)
-            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
-        else if (searchTerm !== undefined)
-            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
-        if (skip === null)
-            throw new globalThis.Error("The parameter 'skip' cannot be null.");
-        else if (skip !== undefined)
-            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
-        if (take === null)
-            throw new globalThis.Error("The parameter 'take' cannot be null.");
-        else if (take !== undefined)
-            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        if (skip === undefined || skip === null)
+            throw new globalThis.Error("The parameter 'skip' must be defined.");
+        url_ = url_.replace("{skip}", encodeURIComponent("" + skip));
+        if (take === undefined || take === null)
+            throw new globalThis.Error("The parameter 'take' must be defined.");
+        url_ = url_.replace("{take}", encodeURIComponent("" + take));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3153,57 +3278,21 @@ export class Client {
         });
     }
 
-    protected processGetProcessRun(response: Response): Promise<ProcessRunResponse> {
+    protected processGetProcessRun(response: Response): Promise<OutputListDataItem[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ProcessRunResponse.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ProcessRunResponse>(null as any);
-    }
-
-    /**
-     * @param processRunId (optional) 
-     * @return OK
-     */
-    getTotalLicenceCount(processRunId: number | undefined): Promise<number> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetTotalLicenceCount?";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(OutputListDataItem.fromJS(item));
             }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetTotalLicenceCount(_response);
-        });
-    }
-
-    protected processGetTotalLicenceCount(response: Response): Promise<number> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
+            else {
+                result200 = null as any;
+            }
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -3211,12 +3300,12 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<number>(null as any);
+        return Promise.resolve<OutputListDataItem[]>(null as any);
     }
 }
 
 export class AbstractionLimit implements IAbstractionLimit {
-    periodType?: number;
+    periodType?: LimitPeriodType;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
@@ -3295,7 +3384,7 @@ export class AbstractionLimit implements IAbstractionLimit {
 }
 
 export interface IAbstractionLimit {
-    periodType?: number;
+    periodType?: LimitPeriodType;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
@@ -3308,7 +3397,7 @@ export interface IAbstractionLimit {
 }
 
 export class AbstractionLimit2 implements IAbstractionLimit2 {
-    periodType?: number;
+    periodType?: LimitPeriodType;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
@@ -3387,7 +3476,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
 }
 
 export interface IAbstractionLimit2 {
-    periodType?: number;
+    periodType?: LimitPeriodType;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
@@ -3556,8 +3645,8 @@ export class Aggregate implements IAggregate {
     aggregateSetId?: string | undefined;
     licenceNumber?: string | undefined;
     licenceVersionId?: string | undefined;
-    primaryType?: number;
-    subType?: number | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
@@ -3666,8 +3755,8 @@ export interface IAggregate {
     aggregateSetId?: string | undefined;
     licenceNumber?: string | undefined;
     licenceVersionId?: string | undefined;
-    primaryType?: number;
-    subType?: number | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
@@ -5528,7 +5617,7 @@ export interface ILicenceSet {
 
 export class LicenceSetReference implements ILicenceSetReference {
     licenceSetId?: string | undefined;
-    licenceSetType?: number;
+    licenceSetType?: LicenceSetType;
 
     [key: string]: any;
 
@@ -5573,9 +5662,19 @@ export class LicenceSetReference implements ILicenceSetReference {
 
 export interface ILicenceSetReference {
     licenceSetId?: string | undefined;
-    licenceSetType?: number;
+    licenceSetType?: LicenceSetType;
 
     [key: string]: any;
+}
+
+export enum LicenceSetType {
+    SingleLicenceOnly = "SingleLicenceOnly",
+    AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
+    AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
+    AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
+    AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
+    FullyEncompassedIn = "FullyEncompassedIn",
+    PartiallyEncompassedIn = "PartiallyEncompassedIn",
 }
 
 export enum LicenceStatus {
@@ -5711,6 +5810,20 @@ export interface ILicenceVersion {
     dmsFileIdStatusDateUtc?: Date | undefined;
 
     [key: string]: any;
+}
+
+export enum LimitPeriodType {
+    Unknown = "Unknown",
+    NotApplicable = "NotApplicable",
+    PerSecond = "PerSecond",
+    PerMinute = "PerMinute",
+    PerHour = "PerHour",
+    PerDay = "PerDay",
+    PerWeek = "PerWeek",
+    PerMonth = "PerMonth",
+    PerYear = "PerYear",
+    Per5Years = "Per5Years",
+    InTotal = "InTotal",
 }
 
 export class LinkedLicence implements ILinkedLicence {
@@ -6459,6 +6572,19 @@ export interface INaldPurposeData {
     [key: string]: any;
 }
 
+export enum NullableOfCutoffType {
+    Unknown = "Unknown",
+    NotApplicable = "NotApplicable",
+    Upto = "Upto",
+    From = "From",
+}
+
+export enum NullableOfSubType {
+    NotSet = "NotSet",
+    PurposeToPurpose = "PurposeToPurpose",
+    PointToPoint = "PointToPoint",
+}
+
 export class OutputListDataItem implements IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
@@ -6752,6 +6878,7 @@ export class PdfPage implements IPdfPage {
     numberOfImages?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
+    likelyMapPage?: boolean;
 
     [key: string]: any;
 
@@ -6782,6 +6909,7 @@ export class PdfPage implements IPdfPage {
                 for (let item of _data["providers"])
                     this.providers!.push(PdfPageProvider.fromJS(item));
             }
+            this.likelyMapPage = _data["likelyMapPage"];
         }
     }
 
@@ -6810,6 +6938,7 @@ export class PdfPage implements IPdfPage {
             for (let item of this.providers)
                 data["providers"].push(item ? item.toJSON() : undefined as any);
         }
+        data["likelyMapPage"] = this.likelyMapPage;
         return data;
     }
 }
@@ -6819,6 +6948,7 @@ export interface IPdfPage {
     numberOfImages?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
+    likelyMapPage?: boolean;
 
     [key: string]: any;
 }
@@ -7111,6 +7241,12 @@ export interface IPointOfAbstraction {
     [key: string]: any;
 }
 
+export enum PrimaryType {
+    NotSet = "NotSet",
+    InLicence = "InLicence",
+    LicenceToLicence = "LicenceToLicence",
+}
+
 export class ProcessRun implements IProcessRun {
     processRunId?: number;
     description?: string | undefined;
@@ -7271,69 +7407,6 @@ export class ProcessRunEndRequest implements IProcessRunEndRequest {
 
 export interface IProcessRunEndRequest {
     processRunId?: number;
-
-    [key: string]: any;
-}
-
-export class ProcessRunResponse implements IProcessRunResponse {
-    totalRecords!: number;
-    records!: OutputListDataItem[];
-
-    [key: string]: any;
-
-    constructor(data?: IProcessRunResponse) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.records = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.totalRecords = _data["totalRecords"];
-            if (Array.isArray(_data["records"])) {
-                this.records = [] as any;
-                for (let item of _data["records"])
-                    this.records!.push(OutputListDataItem.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ProcessRunResponse {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProcessRunResponse();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["totalRecords"] = this.totalRecords;
-        if (Array.isArray(this.records)) {
-            data["records"] = [];
-            for (let item of this.records)
-                data["records"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IProcessRunResponse {
-    totalRecords: number;
-    records: OutputListDataItem[];
 
     [key: string]: any;
 }
@@ -8255,7 +8328,7 @@ export interface ITextToMatch {
 }
 
 export class TimeCutoff implements ITimeCutoff {
-    cutoffType?: number | undefined;
+    cutoffType?: NullableOfCutoffType | undefined;
     date?: string | undefined;
 
     [key: string]: any;
@@ -8300,7 +8373,7 @@ export class TimeCutoff implements ITimeCutoff {
 }
 
 export interface ITimeCutoff {
-    cutoffType?: number | undefined;
+    cutoffType?: NullableOfCutoffType | undefined;
     date?: string | undefined;
 
     [key: string]: any;

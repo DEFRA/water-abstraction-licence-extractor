@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 

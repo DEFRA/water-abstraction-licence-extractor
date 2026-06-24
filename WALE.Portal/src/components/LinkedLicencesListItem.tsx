@@ -1,4 +1,9 @@
-import {LinkedLicence, LinkedLicenceDirection, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {
+    LinkedLicence,
+    LinkedLicenceDirection,
+    OutputListDataItem
+} from "../api/generated/apiClient.ts";
+import {NaldStatusTag} from "./NaldStatusTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -35,12 +40,14 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
                        onOpenReport(linkedFilename);
                    }}>{styledLicenceNumber}
                 </a>
+                <NaldStatusTag status={linkedLicence.naldStatus} />
             </li>
         );
     } else {
         return (
             <li title={text} style={{color}}>
                 {styledLicenceNumber}
+                <NaldStatusTag status={linkedLicence.naldStatus} />
             </li>
         );
     }

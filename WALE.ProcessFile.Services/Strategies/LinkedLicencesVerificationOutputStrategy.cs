@@ -13,18 +13,81 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     
     public string SectionName => "Linked Licences";
 
-    public void HandleVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow)
+    public void HandleVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow, IEnumerable<InvertedLicenceSectionVerification> invertedVerifications)
     {
         var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
             .Where(x => x.ContainedIn != null &&
-                        x.ContainedIn.All(c => c.Direction != LinkedLicenceDirection.Outgoing))
+                        x.ContainedIn.All(c => c.Direction != InformationDirection.Outgoing))
             .ToList();
 
         var outgoingLinkedLicences = (listRow.linkedLicences ?? [])
             .Where(x => x.ContainedIn != null &&
-                        x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing))
+                        x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing))
             .ToList();
-        
+
+        ProcessOutgoingVerifications(verifications, listRow, incomingOnlyLinkedLicences, outgoingLinkedLicences);
+        ProcessIncomingVerifications(invertedVerifications, incomingOnlyLinkedLicences);
+
+        listRow.linkedLicences = incomingOnlyLinkedLicences.Union(outgoingLinkedLicences).ToArray();
+    }
+
+    private static void ProcessIncomingVerifications(IEnumerable<InvertedLicenceSectionVerification> invertedVerifications, List<LinkedLicence> incomingOnlyLinkedLicences)
+    {
+        foreach (var invertedVerification in invertedVerifications.OrderByDescending(v => v.Verification.CreatedDateTimeUtc))
+        {
+            try
+            {
+                var verification = invertedVerification.Verification;
+                var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
+                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    JsonHelper.GetSerializerOptions());
+
+                overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
+                    .Select(x => x with { Direction = InformationDirection.Incoming }).ToArray();
+                
+                overrideLicence.LicenceNumber = invertedVerification.SourceLicenceNumber;
+
+                var existingLinkedLicence =
+                    incomingOnlyLinkedLicences.FirstOrDefault(x => x.LicenceNumber == invertedVerification.SourceLicenceNumber);
+
+                switch (verification.VerificationType)
+                {
+                    case "Confirmed":
+                    case "AutoConfirm":
+                        if (existingLinkedLicence == null)
+                        {
+                            incomingOnlyLinkedLicences.Add(overrideLicence!);
+                        }
+
+                        break;
+                    case "Removed":
+                        if (existingLinkedLicence != null)
+                        {
+                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        break;
+                    case "Edited":
+                    case "Added":
+                        if (existingLinkedLicence != null)
+                        {
+                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        incomingOnlyLinkedLicences.Add(overrideLicence!);
+                        break;
+                }
+            }
+            catch
+            {
+                // If deserialization fails, don't apply the override
+            }
+        }
+    }
+
+    private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow,
+        List<LinkedLicence> incomingOnlyLinkedLicences, List<LinkedLicence> outgoingLinkedLicences)
+    {
         var orderedVerifications = verifications
             .OrderByDescending(v => v.CreatedDateTimeUtc)
             .ToList();
@@ -41,14 +104,13 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 listRow.latestLicenceSectionVerifications!.Remove(verification);
             }
-            
-            listRow.linkedLicences = incomingOnlyLinkedLicences.ToArray();
 
             if (firstVerification.ProcessRunId < listRow.processRunId && outgoingLinkedLicences.Count > 0)
             {
                 firstVerification.ScrapedDataIsDifferent = true;
             }
             
+            outgoingLinkedLicences.Clear();
             return;
         }
 
@@ -65,7 +127,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 var wasScrapedThisRun = (listRow.linkedLicences ?? [])
                     .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
                               && x.ContainedIn != null
-                              && x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing));
+                              && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
 
                 verification.ScrapedDataIsDifferent = verification.VerificationType switch
                 {
@@ -122,7 +184,5 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 // If deserialization fails, don't apply the override
             }
         }
-
-        listRow.linkedLicences = incomingOnlyLinkedLicences.Union(outgoingLinkedLicences).ToArray();
     }
 }

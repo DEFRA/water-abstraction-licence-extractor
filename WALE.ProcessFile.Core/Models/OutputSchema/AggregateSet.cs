@@ -5,10 +5,16 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class AggregateSet
 {
-    public void SetAggregateSetId(IReadOnlyList<Licence> allLicences)
+    public string SetAggregateSetId(IReadOnlyList<Licence> allLicences)
     {
         var groupedAggregates = Aggregates
-            .GroupBy(aggregate => aggregate.AggregateSetId)
+            .GroupBy(aggregate =>
+            {
+                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
+                
+                return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
+            })
             .Select(group => group.First());
 
         var licencesDict = new Dictionary<string, string>();
@@ -33,15 +39,15 @@ public class AggregateSet
             {
                 foreach (var linkedLicence in licence.LinkedLicences)
                 {
-                    if (licencesDict.ContainsKey(linkedLicence.LicenceNumber!))
+                    if (licencesDict.ContainsKey(linkedLicence))
                     {
                         continue;
                     }
 
                     var lookedUpLicence = allLicences.FirstOrDefault(
-                        al => al.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+                        al => al.LicenceNumber?.Value == linkedLicence);
 
-                    licencesDict.Add(linkedLicence.LicenceNumber!,
+                    licencesDict.Add(linkedLicence,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
                 }
             }
@@ -64,11 +70,25 @@ public class AggregateSet
         }
 
         AggregateSetId = outputSb.ToString();
+        return AggregateSetId;
     }
 
-    public string? AggregateSetId { get; set; }
+    private string? _aggregateSetId;
     
-    /*public string? VersionNumber { get; set; }*/
-
-    public Aggregate[] Aggregates { get; init; } = [];
+    public string? AggregateSetId
+    {
+        get => _aggregateSetId;
+        // ReSharper disable once MemberCanBePrivate.Global - can't make private as used in serialisation
+        set
+        {
+            _aggregateSetId = value;
+            
+            foreach (var aggregate in Aggregates)
+            {
+                aggregate.AggregateSetId = value;
+            }
+        }
+    }
+    
+    public AggregateWithContext[] Aggregates { get; init; } = [];
 }

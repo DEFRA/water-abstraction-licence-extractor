@@ -80,7 +80,7 @@ function ListPage() {
         } finally {
             setLoading(false);
         }
-    }, [processRunId, pageNumber, pageSize, searchTerm]);
+    }, [processRunId]);
 
     useEffect(() => {
         fetchOutputList();
@@ -158,17 +158,6 @@ function ListPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
-                    <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
-                        <Paging
-                            pageNumber={pageNumber}
-                            totalPages={totalPages}
-                            pageSize={pageSize}
-                            searchTerm={searchTerm}
-                            setPageNumber={setPageNumber}
-                            setPageSize={setPageSize}
-                            setSearchTerm={setSearchTerm}
-                        />
-                    </div>
                     <table id="licencesTable">
                         <thead><LicencesTableHeaders
                             data={outputList}

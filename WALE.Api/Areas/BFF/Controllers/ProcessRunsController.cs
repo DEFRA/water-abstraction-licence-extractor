@@ -22,16 +22,16 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
+        [FromQuery] string searchTerm,
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue)
     {
         var completeNumber = 1;
         var fileNumber = 1;
-
-        var totalLicenceCountTask = outputService.GetTotalLicenceCountAsync(processRunId);
+        var totalLicenceCountTask = outputService.GetTotalLicenceCountAsync(processRunId, searchTerm.Equals("N/A") ? string.Empty : searchTerm);
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
-        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
+        var licences = await outputService.GetLicencesSearchAsync(processRunId,  searchTerm.Equals("N/A") ? string.Empty : searchTerm, skip, take);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
@@ -68,7 +68,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     [HttpGet]
     public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
     {
-        var total = await outputService.GetTotalLicenceCountAsync(processRunId);
+        var total = await outputService.GetTotalLicenceCountAsync(processRunId, null);
         return Ok(total);
     }
 }

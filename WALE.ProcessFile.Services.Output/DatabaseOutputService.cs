@@ -301,9 +301,9 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public Task<int> GetTotalLicenceCountAsync(int processRunId)
+    public Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
     {
-        return databaseReadService.GetTotalLicenceCountAsync(processRunId);
+        return databaseReadService.GetTotalLicenceCountAsync(processRunId, searchTerm);
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
@@ -317,6 +317,11 @@ public class DatabaseOutputService(
         }
         
         return licences;
+    }
+
+    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        return await databaseReadService.GetLicencesSearchAsync(processRunId, searchTerm, skip, take);
     }
 
     public async Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)

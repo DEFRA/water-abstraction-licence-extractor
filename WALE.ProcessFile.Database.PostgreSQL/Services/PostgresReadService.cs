@@ -83,13 +83,22 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<int> GetTotalLicenceCountAsync(int processRunId)
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT count(1)
                            FROM licence
                            WHERE process_run_id = @ProcessRunId
+                           AND data::jsonb ->> 'status' = 'Ok'
+                           AND (
+                               @searchTerm IS NULL
+                               OR trim(@searchTerm) = ''
+                               OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                           )
                            """;
 
         return await QuerySingleOrDefaultAsync<int>(
@@ -98,7 +107,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                ProcessRunId = processRunId
+                ProcessRunId = processRunId,
+                searchTerm
             });
     }
 
@@ -421,6 +431,48 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 FileId = fileId
             });
+    }
+
+    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data, licence_id
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                             AND data::jsonb ->> 'status' = 'Ok'
+                             AND (
+                                 @searchTerm IS NULL
+                                 OR trim(@searchTerm) = ''
+                                 OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                             )
+                           ORDER BY licence_id
+                           LIMIT @take
+                           OFFSET @skip;
+                           """;
+
+        var results = await QueryAsync<(string Data, int LicenceId)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Skip = skip,
+                Take = take,
+                searchTerm
+            });
+
+        return results.Select(r =>
+        {
+            var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+            licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+
+            return licence;
+        }).ToList();
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)

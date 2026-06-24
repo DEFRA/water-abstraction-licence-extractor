@@ -370,6 +370,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
+    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(
         int processRunId,
         List<Licence> licences)
@@ -435,7 +440,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }
     }
 
-    public async Task<int> GetTotalLicenceCountAsync(int processRunId)
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
     {
         var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";
 

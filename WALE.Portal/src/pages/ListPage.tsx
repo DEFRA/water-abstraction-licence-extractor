@@ -14,11 +14,14 @@ import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
+import Paging from "../components/Paging.tsx";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(1000);
     const processRunId = searchParams.get('processRunId');
-
+    const [searchTerm, setSearchTerm] = useState('');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,10 +42,8 @@ function ListPage() {
 
     const totals = useTotals(filteredData);
 
-    const [pageNumber, setPageNumber] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
-    const pageSize = 100;
+    
     const requests: number[] = [];
     
     const fetchOutputList = useCallback(async () => {
@@ -51,15 +52,27 @@ function ListPage() {
             if (requests.length === 0 || requests[requests.length - 1] !== pageNumber) {
                 requests.push(pageNumber);
                 
+               let searchTermValue = searchTerm === "" ? "N/A" : searchTerm;
+                
                 let listDataItems = await waleApiClient.getProcessRun(
                     parseInt(processRunId ?? '0'),
+                    searchTermValue,
                     ((pageNumber - 1) * pageSize),
                     pageSize);
 
                 setOutputList(listDataItems.records);
 
                 let totalRecords = listDataItems.totalRecords;
-                setTotalPages(Math.ceil(totalRecords / pageSize));   
+                
+                if (totalRecords > 0)
+                {
+                    setTotalPages(Math.ceil(totalRecords / pageSize));
+                }
+                else
+                {
+                    setTotalPages(0);
+                }
+                 
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
@@ -67,7 +80,7 @@ function ListPage() {
         } finally {
             setLoading(false);
         }
-    }, [processRunId, pageNumber]);
+    }, [processRunId, pageNumber, pageSize, searchTerm]);
 
     useEffect(() => {
         fetchOutputList();
@@ -145,19 +158,17 @@ function ListPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
-                    <div style={{marginTop: '-20px', marginLeft: '250px'}}>
-                        Page {pageNumber} of {totalPages}&nbsp;&nbsp;&nbsp;
-                        {pageNumber > 1 && (<><a href="#" onClick={(e) => {
-                            e.preventDefault();
-                            setPageNumber(pageNumber - 1);
-                        }}>Prev {pageSize}</a> | </>)}
-    
-                        {totalPages > pageNumber && (<a href="#" onClick={(e) => {
-                            e.preventDefault();
-                            setPageNumber(pageNumber + 1);
-                        }}>Next {pageSize}</a>)}
+                    <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
+                        <Paging
+                            pageNumber={pageNumber}
+                            totalPages={totalPages}
+                            pageSize={pageSize}
+                            searchTerm={searchTerm}
+                            setPageNumber={setPageNumber}
+                            setPageSize={setPageSize}
+                            setSearchTerm={setSearchTerm}
+                        />
                     </div>
-                        
                     <table id="licencesTable">
                         <thead><LicencesTableHeaders
                             data={outputList}

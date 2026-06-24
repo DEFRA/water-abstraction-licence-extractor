@@ -3251,19 +3251,28 @@ export class Client {
     }
 
     /**
+     * @param searchTerm (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, skip: number, take: number): Promise<OutputListDataItem[]> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}";
+    getProcessRun(processRunId: number, searchTerm: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunResponse> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
         url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        if (skip === undefined || skip === null)
-            throw new globalThis.Error("The parameter 'skip' must be defined.");
-        url_ = url_.replace("{skip}", encodeURIComponent("" + skip));
-        if (take === undefined || take === null)
-            throw new globalThis.Error("The parameter 'take' must be defined.");
-        url_ = url_.replace("{take}", encodeURIComponent("" + take));
+        if (searchTerm === null)
+            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
+        else if (searchTerm !== undefined)
+            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3278,21 +3287,14 @@ export class Client {
         });
     }
 
-    protected processGetProcessRun(response: Response): Promise<OutputListDataItem[]> {
+    protected processGetProcessRun(response: Response): Promise<ProcessRunResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(OutputListDataItem.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
+            result200 = ProcessRunResponse.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -3300,7 +3302,50 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<OutputListDataItem[]>(null as any);
+        return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getTotalLicenceCount(processRunId: number | undefined): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetTotalLicenceCount?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTotalLicenceCount(_response);
+        });
+    }
+
+    protected processGetTotalLicenceCount(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
     }
 }
 
@@ -3489,8 +3534,11 @@ export interface IAbstractionLimit2 {
 }
 
 export class AbstractionLimitGroup implements IAbstractionLimitGroup {
+    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
+    containedIn?: ContainedInInformation[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -3511,11 +3559,18 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
+            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
                     this.limits!.push(AbstractionLimit2.fromJS(item));
+            }
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(ContainedInInformation.fromJS(item));
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -3543,11 +3598,18 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
+        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
                 data["limits"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -3564,8 +3626,11 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
 }
 
 export interface IAbstractionLimitGroup {
+    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
+    containedIn?: ContainedInInformation[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -3643,15 +3708,15 @@ export interface IAbstractionLimits {
 export class Aggregate implements IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
-    licenceNumber?: string | undefined;
-    licenceVersionId?: string | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    linkedLicences?: LinkedLicence[] | undefined;
+    linkedLicences?: string[] | undefined;
+    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -3674,22 +3739,26 @@ export class Aggregate implements IAggregate {
             }
             this.id = _data["id"];
             this.aggregateSetId = _data["aggregateSetId"];
-            this.licenceNumber = _data["licenceNumber"];
-            this.licenceVersionId = _data["licenceVersionId"];
             this.primaryType = _data["primaryType"];
             this.subType = _data["subType"];
             this.naldType = _data["naldType"];
-            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(LinkedLicence.fromJS(item));
+                    this.linkedLicences!.push(item);
             }
+            this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
+            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
                     this.limits!.push(item);
+            }
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -3719,22 +3788,26 @@ export class Aggregate implements IAggregate {
         }
         data["id"] = this.id;
         data["aggregateSetId"] = this.aggregateSetId;
-        data["licenceNumber"] = this.licenceNumber;
-        data["licenceVersionId"] = this.licenceVersionId;
         data["primaryType"] = this.primaryType;
         data["subType"] = this.subType;
         data["naldType"] = this.naldType;
-        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item ? item.toJSON() : undefined as any);
+                data["linkedLicences"].push(item);
         }
+        data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
+        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
                 data["limits"].push(item);
+        }
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -3753,15 +3826,15 @@ export class Aggregate implements IAggregate {
 export interface IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
-    licenceNumber?: string | undefined;
-    licenceVersionId?: string | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    linkedLicences?: LinkedLicence[] | undefined;
+    linkedLicences?: string[] | undefined;
+    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -3770,7 +3843,7 @@ export interface IAggregate {
 
 export class AggregateSet implements IAggregateSet {
     aggregateSetId?: string | undefined;
-    aggregates?: Aggregate[];
+    aggregates?: AggregateWithContext[];
 
     [key: string]: any;
 
@@ -3793,7 +3866,7 @@ export class AggregateSet implements IAggregateSet {
             if (Array.isArray(_data["aggregates"])) {
                 this.aggregates = [] as any;
                 for (let item of _data["aggregates"])
-                    this.aggregates!.push(Aggregate.fromJS(item));
+                    this.aggregates!.push(AggregateWithContext.fromJS(item));
             }
         }
     }
@@ -3823,7 +3896,143 @@ export class AggregateSet implements IAggregateSet {
 
 export interface IAggregateSet {
     aggregateSetId?: string | undefined;
-    aggregates?: Aggregate[];
+    aggregates?: AggregateWithContext[];
+
+    [key: string]: any;
+}
+
+export class AggregateWithContext implements IAggregateWithContext {
+    id?: string | undefined;
+    aggregateSetId?: string | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
+    naldType?: string | undefined;
+    linkedLicences?: string[] | undefined;
+    documentIdentifier?: string | undefined;
+    timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
+    limits?: AbstractionLimit2[];
+    containedIn?: ContainedInInformation[] | undefined;
+    points?: any[] | undefined;
+    purposes?: any[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAggregateWithContext) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.id = _data["id"];
+            this.aggregateSetId = _data["aggregateSetId"];
+            this.primaryType = _data["primaryType"];
+            this.subType = _data["subType"];
+            this.naldType = _data["naldType"];
+            if (Array.isArray(_data["linkedLicences"])) {
+                this.linkedLicences = [] as any;
+                for (let item of _data["linkedLicences"])
+                    this.linkedLicences!.push(item);
+            }
+            this.documentIdentifier = _data["documentIdentifier"];
+            this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
+            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
+            if (Array.isArray(_data["limits"])) {
+                this.limits = [] as any;
+                for (let item of _data["limits"])
+                    this.limits!.push(AbstractionLimit2.fromJS(item));
+            }
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+            }
+            if (Array.isArray(_data["points"])) {
+                this.points = [] as any;
+                for (let item of _data["points"])
+                    this.points!.push(item);
+            }
+            if (Array.isArray(_data["purposes"])) {
+                this.purposes = [] as any;
+                for (let item of _data["purposes"])
+                    this.purposes!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AggregateWithContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AggregateWithContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["id"] = this.id;
+        data["aggregateSetId"] = this.aggregateSetId;
+        data["primaryType"] = this.primaryType;
+        data["subType"] = this.subType;
+        data["naldType"] = this.naldType;
+        if (Array.isArray(this.linkedLicences)) {
+            data["linkedLicences"] = [];
+            for (let item of this.linkedLicences)
+                data["linkedLicences"].push(item);
+        }
+        data["documentIdentifier"] = this.documentIdentifier;
+        data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
+        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
+        if (Array.isArray(this.limits)) {
+            data["limits"] = [];
+            for (let item of this.limits)
+                data["limits"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.points)) {
+            data["points"] = [];
+            for (let item of this.points)
+                data["points"].push(item);
+        }
+        if (Array.isArray(this.purposes)) {
+            data["purposes"] = [];
+            for (let item of this.purposes)
+                data["purposes"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAggregateWithContext {
+    id?: string | undefined;
+    aggregateSetId?: string | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
+    naldType?: string | undefined;
+    linkedLicences?: string[] | undefined;
+    documentIdentifier?: string | undefined;
+    timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
+    limits?: AbstractionLimit2[];
+    containedIn?: ContainedInInformation[] | undefined;
+    points?: any[] | undefined;
+    purposes?: any[] | undefined;
 
     [key: string]: any;
 }
@@ -3887,6 +4096,78 @@ export enum ConfidenceType {
     OcrConfidenceMultipliedMinusNPerLine = "OcrConfidenceMultipliedMinusNPerLine",
     OcrConfidencePassthroughMinusNPerLine = "OcrConfidencePassthroughMinusNPerLine",
     Static = "Static",
+}
+
+export class ContainedInInformation implements IContainedInInformation {
+    source?: InformationSource;
+    direction?: InformationDirection;
+    sectionName?: string | undefined;
+    linkReason?: string | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
+    lineNumber?: number | undefined;
+    pageNumber?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IContainedInInformation) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.source = _data["source"];
+            this.direction = _data["direction"];
+            this.sectionName = _data["sectionName"];
+            this.linkReason = _data["linkReason"];
+            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
+            this.lineNumber = _data["lineNumber"];
+            this.pageNumber = _data["pageNumber"];
+        }
+    }
+
+    static fromJS(data: any): ContainedInInformation {
+        data = typeof data === 'object' ? data : {};
+        let result = new ContainedInInformation();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["source"] = this.source;
+        data["direction"] = this.direction;
+        data["sectionName"] = this.sectionName;
+        data["linkReason"] = this.linkReason;
+        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
+        data["lineNumber"] = this.lineNumber;
+        data["pageNumber"] = this.pageNumber;
+        return data;
+    }
+}
+
+export interface IContainedInInformation {
+    source?: InformationSource;
+    direction?: InformationDirection;
+    sectionName?: string | undefined;
+    linkReason?: string | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
+    lineNumber?: number | undefined;
+    pageNumber?: number | undefined;
+
+    [key: string]: any;
 }
 
 export class DmsFileIdInformation implements IDmsFileIdInformation {
@@ -4387,6 +4668,19 @@ export interface IFileMetadata {
     modifiedTime: Date;
 
     [key: string]: any;
+}
+
+export enum InformationDirection {
+    Unknown = "Unknown",
+    Incoming = "Incoming",
+    Outgoing = "Outgoing",
+}
+
+export enum InformationSource {
+    Unknown = "Unknown",
+    Nald = "Nald",
+    Document = "Document",
+    OtherDocument = "OtherDocument",
 }
 
 export class LabelGroupResult implements ILabelGroupResult {
@@ -5057,7 +5351,7 @@ export class Licence implements ILicence {
     meansOfAbstraction?: MeanOfAbstraction[];
     abstractionLimits?: AbstractionLimits;
     definitionOfYear?: TimePeriod | undefined;
-    linkedLicences?: any[];
+    linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
     regionId?: number | undefined;
@@ -5115,7 +5409,7 @@ export class Licence implements ILicence {
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(item);
+                    this.linkedLicences!.push(LinkedLicence.fromJS(item));
             }
             if (Array.isArray(_data["licenceSets"])) {
                 this.licenceSets = [] as any;
@@ -5176,7 +5470,7 @@ export class Licence implements ILicence {
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item);
+                data["linkedLicences"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.licenceSets)) {
             data["licenceSets"] = [];
@@ -5207,7 +5501,7 @@ export interface ILicence {
     meansOfAbstraction?: MeanOfAbstraction[];
     abstractionLimits?: AbstractionLimits;
     definitionOfYear?: TimePeriod | undefined;
-    linkedLicences?: any[];
+    linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
     regionId?: number | undefined;
@@ -5833,7 +6127,7 @@ export class LinkedLicence implements ILinkedLicence {
     filename?: string | undefined;
     dmsPath?: string | undefined;
     condition?: Condition | undefined;
-    containedIn?: LinkedLicenceSection[] | undefined;
+    containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     regionId?: number | undefined;
@@ -5864,7 +6158,7 @@ export class LinkedLicence implements ILinkedLicence {
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
-                    this.containedIn!.push(LinkedLicenceSection.fromJS(item));
+                    this.containedIn!.push(ContainedInInformation.fromJS(item));
             }
             this.naldStatus = _data["naldStatus"];
             this.licenceType = _data["licenceType"];
@@ -5910,97 +6204,12 @@ export interface ILinkedLicence {
     filename?: string | undefined;
     dmsPath?: string | undefined;
     condition?: Condition | undefined;
-    containedIn?: LinkedLicenceSection[] | undefined;
+    containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     regionId?: number | undefined;
 
     [key: string]: any;
-}
-
-export enum LinkedLicenceDirection {
-    Unknown = "Unknown",
-    Incoming = "Incoming",
-    Outgoing = "Outgoing",
-}
-
-export class LinkedLicenceSection implements ILinkedLicenceSection {
-    source?: LinkedLicenceSource;
-    direction?: LinkedLicenceDirection;
-    sectionName?: string | undefined;
-    linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
-    lineNumber?: number | undefined;
-    pageNumber?: number | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: ILinkedLicenceSection) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.source = _data["source"];
-            this.direction = _data["direction"];
-            this.sectionName = _data["sectionName"];
-            this.linkReason = _data["linkReason"];
-            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
-            this.lineNumber = _data["lineNumber"];
-            this.pageNumber = _data["pageNumber"];
-        }
-    }
-
-    static fromJS(data: any): LinkedLicenceSection {
-        data = typeof data === 'object' ? data : {};
-        let result = new LinkedLicenceSection();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["source"] = this.source;
-        data["direction"] = this.direction;
-        data["sectionName"] = this.sectionName;
-        data["linkReason"] = this.linkReason;
-        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
-        data["lineNumber"] = this.lineNumber;
-        data["pageNumber"] = this.pageNumber;
-        return data;
-    }
-}
-
-export interface ILinkedLicenceSection {
-    source?: LinkedLicenceSource;
-    direction?: LinkedLicenceDirection;
-    sectionName?: string | undefined;
-    linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
-    lineNumber?: number | undefined;
-    pageNumber?: number | undefined;
-
-    [key: string]: any;
-}
-
-export enum LinkedLicenceSource {
-    Unknown = "Unknown",
-    Nald = "Nald",
-    Document = "Document",
-    OtherDocument = "OtherDocument",
 }
 
 export enum MatchedPosition {
@@ -7172,6 +7381,8 @@ export interface IPoint {
 export class PointOfAbstraction implements IPointOfAbstraction {
     naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
+    name?: string | undefined;
+    gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
@@ -7199,6 +7410,8 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 for (let item of _data["purposeIds"])
                     this.purposeIds!.push(item);
             }
+            this.name = _data["name"];
+            this.gridRef = _data["gridRef"];
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             this.id = _data["id"];
             this.description = _data["description"];
@@ -7224,6 +7437,8 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             for (let item of this.purposeIds)
                 data["purposeIds"].push(item);
         }
+        data["name"] = this.name;
+        data["gridRef"] = this.gridRef;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         data["id"] = this.id;
         data["description"] = this.description;
@@ -7234,6 +7449,8 @@ export class PointOfAbstraction implements IPointOfAbstraction {
 export interface IPointOfAbstraction {
     naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
+    name?: string | undefined;
+    gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
@@ -7407,6 +7624,69 @@ export class ProcessRunEndRequest implements IProcessRunEndRequest {
 
 export interface IProcessRunEndRequest {
     processRunId?: number;
+
+    [key: string]: any;
+}
+
+export class ProcessRunResponse implements IProcessRunResponse {
+    totalRecords!: number;
+    records!: OutputListDataItem[];
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.records = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.totalRecords = _data["totalRecords"];
+            if (Array.isArray(_data["records"])) {
+                this.records = [] as any;
+                for (let item of _data["records"])
+                    this.records!.push(OutputListDataItem.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ProcessRunResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["totalRecords"] = this.totalRecords;
+        if (Array.isArray(this.records)) {
+            data["records"] = [];
+            for (let item of this.records)
+                data["records"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IProcessRunResponse {
+    totalRecords: number;
+    records: OutputListDataItem[];
 
     [key: string]: any;
 }
@@ -8251,6 +8531,7 @@ export class TextToMatch implements ITextToMatch {
     isRegularExpression?: boolean;
     regularExpressionIsCaseInsensitive?: boolean;
     exceptWhenInsideWord?: boolean;
+    singleLinePerItem?: boolean;
 
     [key: string]: any;
 
@@ -8280,6 +8561,7 @@ export class TextToMatch implements ITextToMatch {
             this.isRegularExpression = _data["isRegularExpression"];
             this.regularExpressionIsCaseInsensitive = _data["regularExpressionIsCaseInsensitive"];
             this.exceptWhenInsideWord = _data["exceptWhenInsideWord"];
+            this.singleLinePerItem = _data["singleLinePerItem"];
         }
     }
 
@@ -8307,6 +8589,7 @@ export class TextToMatch implements ITextToMatch {
         data["isRegularExpression"] = this.isRegularExpression;
         data["regularExpressionIsCaseInsensitive"] = this.regularExpressionIsCaseInsensitive;
         data["exceptWhenInsideWord"] = this.exceptWhenInsideWord;
+        data["singleLinePerItem"] = this.singleLinePerItem;
         return data;
     }
 }
@@ -8323,6 +8606,7 @@ export interface ITextToMatch {
     isRegularExpression?: boolean;
     regularExpressionIsCaseInsensitive?: boolean;
     exceptWhenInsideWord?: boolean;
+    singleLinePerItem?: boolean;
 
     [key: string]: any;
 }

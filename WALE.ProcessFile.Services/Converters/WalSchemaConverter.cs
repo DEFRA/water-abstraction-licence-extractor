@@ -1368,11 +1368,11 @@ public static class WalSchemaConverter
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.RegionId = primaryLicence.RegionId!.Value;
+            clonedConfig.RegionId = dmsFileData!.RegionId;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName!,
-                dmsFileData!,
+                dmsFileData,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);

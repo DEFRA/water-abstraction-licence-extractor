@@ -2647,7 +2647,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             NaldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
+            new DmsFileData { RegionId = 1})).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);

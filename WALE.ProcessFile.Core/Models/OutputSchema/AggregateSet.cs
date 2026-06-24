@@ -28,16 +28,19 @@ public class AggregateSet
                 continue;
             }
             
-            if (licencesDict.ContainsKey(licence.SourceLicenceNumber))
+            var sourceLicenceNumber = FormattingHelper.RemoveSeperators(licence.SourceLicenceNumber)!;
+            
+            if (licencesDict.ContainsKey(sourceLicenceNumber))
             {
                 continue;
             }
             
-            licencesDict.Add(licence.SourceLicenceNumber!, licence.SourceLicenceVersionId!);
+            licencesDict.Add(sourceLicenceNumber, licence.SourceLicenceVersionId!);
 
             if (licence.LinkedLicences != null)
             {
-                foreach (var linkedLicence in licence.LinkedLicences)
+                foreach (var linkedLicence in licence.LinkedLicences
+                    .Select(ll => FormattingHelper.RemoveSeperators(ll)!))
                 {
                     if (licencesDict.ContainsKey(linkedLicence))
                     {
@@ -45,7 +48,7 @@ public class AggregateSet
                     }
 
                     var lookedUpLicence = allLicences.FirstOrDefault(
-                        al => al.LicenceNumber?.Value == linkedLicence);
+                        al => FormattingHelper.RemoveSeperators(al.LicenceNumber?.Value) == linkedLicence);
 
                     licencesDict.Add(linkedLicence,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);

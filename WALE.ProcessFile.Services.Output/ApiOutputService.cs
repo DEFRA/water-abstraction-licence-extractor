@@ -52,7 +52,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
         var content = await response.Content.ReadAsStringAsync();
-
+            
         if (string.IsNullOrEmpty(content))
         {
             throw new NullReferenceException("Page screenshot data returned null");
@@ -422,7 +422,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var json = JsonSerializer.Serialize(new
         {
-            processRun.ProcessRunId,
+            processRun.ProcessRunId
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -476,7 +476,14 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
+    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(
+        int processRunId,
+        List<Licence> licences)
     {
         throw new NotImplementedException();
     }
@@ -567,6 +574,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         {
             ConsoleHelper.WriteLine($"SavePageScreenshotThumbnailAsync API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
         }
+    }
+
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
+    {
+        var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+            
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Total licence count returned null");
+        }
+
+        return JsonSerializer.Deserialize<int>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     private static bool _showAllLogs = false;

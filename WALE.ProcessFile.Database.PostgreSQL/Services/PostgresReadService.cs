@@ -82,7 +82,36 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 PageNumber = pageNumber
             });
     }
-    
+
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT count(1)
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                           AND data::jsonb ->> 'status' = 'Ok'
+                           AND (
+                               @searchTerm IS NULL
+                               OR trim(@searchTerm) = ''
+                               OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
+                               OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                           )
+                           """;
+
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                searchTerm
+            });
+    }
+
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
@@ -196,54 +225,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 request.NoOcrServiceName
             });
     }
-
-    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT
-                               permit_number,
-                               file_url,
-                               rule_used,
-                               change_audit_action,
-                               license_number,
-                               document_date,
-                               signature_date,
-                               date_of_issue,
-                               other_reference,
-                               file_size,
-                               disclosure_status,
-                               region,
-                               nald_id,
-                               nald_issue_no,
-                               nald_increment_no,
-                               primary_template,
-                               secondary_template,
-                               number_of_pages,
-                               doi_signature_date_match,
-                               included_in_version_match,
-                               single_licence_in_version_match,
-                               version_match_file_url,
-                               duplicate_licence_in_version_match_result,
-                               nald_issue,
-                               file_id,
-                               file_id_status,
-                               file_id_status_change_date,
-                               is_water_company,
-                               folder_name_auto_correct,
-                               seen_in_dms_extract,
-                               we_have_downloaded
-                           FROM public.licence_finder_result
-                           """;
-
-        var results = await QueryAsync<LicenceFinderResult>(
-            connection,
-            sql,
-            0);
-
-        return results.ToList();
-    }
-
 
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
@@ -423,25 +404,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0)).ToList();
     }
-    
-    public async Task<List<ProcessRun>> GetAllProcessRunsAsync()
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               number_of_files
-                           FROM process_run
-                           """;
-
-        return (await QueryAsync<ProcessRun>(
-            connection,
-            sql,
-            0)).ToList();
-    }
 
     public async Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId)
     {
@@ -470,7 +432,48 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId
             });
     }
-    
+
+    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data, licence_id
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                             AND data::jsonb ->> 'status' = 'Ok'
+                             AND (
+                                 @searchTerm IS NULL
+                                 OR trim(@searchTerm) = ''
+                                 OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
+                                 OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                             )
+                           ORDER BY licence_id
+                           LIMIT @take
+                           OFFSET @skip;
+                           """;
+
+        var results = await QueryAsync<(string Data, int LicenceId)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Skip = skip,
+                Take = take,
+                searchTerm
+            });
+
+        return results.Select(r =>
+        {
+            var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+            licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+
+            return licence;
+        }).ToList();
+    }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
@@ -479,6 +482,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT data, licence_id 
                            FROM licence 
                            WHERE process_run_id = @ProcessRunId
+                           ORDER BY licence_id
                            LIMIT @take
                            OFFSET @skip;
                            """;
@@ -522,29 +526,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId
-            })).ToList();
-    }
-
-    public async Task<List<LicenceSetTable>> GetProcessRunLicenceSetsAsync(int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT DISTINCT
-                               ls.licence_set_id as LicenceSetTable,
-                               ls.short_licence_set_id as SchemaLicenceSetId, 
-                               ls.schema_licence_set_id as SchemaLicenceSetId,
-                           FROM licence_set ls
-                           WHERE
-                               ls.process_run_id = @ProcessRunId
-                           """;
-
-        return (await QueryAsync<LicenceSetTable>(
-            connection,
-            sql,
-            0,
-            new
-            {
-                ProcessRunId = processRunId,
             })).ToList();
     }
 

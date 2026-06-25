@@ -9,22 +9,24 @@ import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
 import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
 import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
 import FilesList from "../components/FilesList";
-import ScrapeDocuments from "../components/ScrapeDocuments";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
+import Paging from "../components/Paging.tsx";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(1000);
     const processRunId = searchParams.get('processRunId');
-
+    const [searchTerm, setSearchTerm] = useState('');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'startScrape'  >('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -40,14 +42,38 @@ function ListPage() {
 
     const totals = useTotals(filteredData);
 
+    const [totalPages, setTotalPages] = useState(1);
+    
+    const requests: number[] = [];
+    
     const fetchOutputList = useCallback(async () => {
         try {
-            const listDataItems = await waleApiClient.getProcessRun(
-                parseInt(processRunId ?? '0'),
-                0,
-                Number.MAX_SAFE_INTEGER);
-            
-            setOutputList(listDataItems);
+            // Next line stops repeat requests
+            if (requests.length === 0 || requests[requests.length - 1] !== pageNumber) {
+                requests.push(pageNumber);
+                
+               let searchTermValue = searchTerm === "" ? "N/A" : searchTerm;
+                
+                let listDataItems = await waleApiClient.getProcessRun(
+                    parseInt(processRunId ?? '0'),
+                    searchTermValue,
+                    ((pageNumber - 1) * pageSize),
+                    pageSize);
+
+                setOutputList(listDataItems.records);
+
+                let totalRecords = listDataItems.totalRecords;
+                
+                if (totalRecords > 0)
+                {
+                    setTotalPages(Math.ceil(totalRecords / pageSize));
+                }
+                else
+                {
+                    setTotalPages(0);
+                }
+                 
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
             console.error('Error fetching process runs:', err);
@@ -128,17 +154,6 @@ function ListPage() {
                     }}>
                     Files
                 </a>
-                {' | '}
-                <a
-                    href="#"
-                    id="scrapeLink"
-                    className={activeTab === 'startScrape' ? 'selected' : ''}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setActiveTab('startScrape');
-                    }}>
-                    Start Document Scraping
-                </a>
             </h1>
 
             {activeTab === 'licences' && (
@@ -190,12 +205,6 @@ function ListPage() {
             {activeTab === 'files' && (
                 <div id="files">
                     <FilesList/>
-                </div>
-            )}
-
-            {activeTab === 'startScrape' && (
-                <div id="startScrape">
-                    <ScrapeDocuments/>
                 </div>
             )}
 

@@ -26,7 +26,7 @@ public class Aggregate : AbstractionLimitGroup
                 _ => string.Empty
             };
 
-            var licenceNumber = LicenceNumber?
+            var licenceNumber = SourceLicenceNumber?
                 .Replace("/", string.Empty)
                 .Replace(" ", string.Empty);
 
@@ -36,7 +36,7 @@ public class Aggregate : AbstractionLimitGroup
             {
                 foreach (var linkedLicence in LinkedLicences)
                 {
-                    var linkedLicenceNumber = linkedLicence.LicenceNumber?
+                    var linkedLicenceNumber = linkedLicence
                         .Replace("/", string.Empty)
                         .Replace(" ", string.Empty);
 
@@ -44,15 +44,17 @@ public class Aggregate : AbstractionLimitGroup
                 }
             }
 
-            return $"{licenceNumber}-{LicenceVersionId}-{primaryType}{subType}{outputSb}";
+            return $"{licenceNumber}-{SourceLicenceVersionId}-{primaryType}{subType}{outputSb}";
         }
     }
     
     public string? AggregateSetId { get; set; }
     
-    public string? LicenceNumber { get; init; }
+    public string? SourceLicenceNumber { get; set; }
     
-    public string? LicenceVersionId { get; init; }
+    public string? SourceLicenceVersionId { get; set; }
+    
+    public int? IsExplicitlyAggregate { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PrimaryType PrimaryType { get; init; }
@@ -62,7 +64,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? NaldType { get; set; }
     
-    public LinkedLicence[]? LinkedLicences { get; init; } = [];
+    public string[]? LinkedLicences { get; init; } = [];
 
     public new static Aggregate Template => new()
     {
@@ -80,8 +82,8 @@ public class Aggregate : AbstractionLimitGroup
             StartDate = null,
             EndDate = null
         },
-        LicenceNumber = null,
-        LicenceVersionId = null,
+        SourceLicenceNumber = null,
+        SourceLicenceVersionId = null,
         Limits = [AbstractionLimit.Template],
         DocumentIdentifier = null,
         LinkedLicences = []

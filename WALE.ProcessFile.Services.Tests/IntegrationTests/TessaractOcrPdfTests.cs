@@ -77,7 +77,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = null,
+                DestinationFileName = "something",
                 RegionId = 1
             }
         }
@@ -455,7 +455,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(4, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Licence number gets OCR-ed too scrambled to be read
+        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Licence number gets OCR-ed too scrambled to be read
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -629,7 +629,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal(LinkedLicenceSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);       
+        Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);       
     }
     
     [Fact]
@@ -644,11 +644,11 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(19, records.Text!.Count);
+        Assert.Equal(7, records.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -696,7 +696,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("25/68/002/177", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
-        Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);      
     }
 
@@ -908,7 +908,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // The document is printed out of alignment and has ghosting
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // The document is printed out of alignment and has ghosting
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

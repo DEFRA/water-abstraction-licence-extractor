@@ -39,6 +39,8 @@ public interface IDatabaseReadService
     
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
+    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take);
+    
     Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
@@ -105,4 +107,6 @@ public interface IDatabaseReadService
     Task<List<VersionFile>> GetVersionFilesAsync();
     
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
+  
+    Task<int> GetTotalLicenceCountAsync(int processRunId,  string? searchTerm);
 }

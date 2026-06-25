@@ -17,12 +17,12 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     {
         var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
             .Where(x => x.ContainedIn != null &&
-                        x.ContainedIn.All(c => c.Direction != LinkedLicenceDirection.Outgoing))
+                        x.ContainedIn.All(c => c.Direction != InformationDirection.Outgoing))
             .ToList();
 
         var outgoingLinkedLicences = (listRow.linkedLicences ?? [])
             .Where(x => x.ContainedIn != null &&
-                        x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing))
+                        x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing))
             .ToList();
 
         ProcessOutgoingVerifications(verifications, listRow, incomingOnlyLinkedLicences, outgoingLinkedLicences);
@@ -43,7 +43,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     JsonHelper.GetSerializerOptions());
 
                 overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
-                    .Select(x => x with { Direction = LinkedLicenceDirection.Incoming }).ToArray();
+                    .Select(x => x with { Direction = InformationDirection.Incoming }).ToArray();
                 
                 overrideLicence.LicenceNumber = invertedVerification.SourceLicenceNumber;
 
@@ -127,7 +127,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 var wasScrapedThisRun = (listRow.linkedLicences ?? [])
                     .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
                               && x.ContainedIn != null
-                              && x.ContainedIn.Any(c => c.Direction == LinkedLicenceDirection.Outgoing));
+                              && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
 
                 verification.ScrapedDataIsDifferent = verification.VerificationType switch
                 {

@@ -17,7 +17,7 @@ public class LinkedLicence
     
     public Condition? Condition { get; set; }
     
-    public LinkedLicenceSection[]? ContainedIn { get; set; }
+    public ContainedInInformation[]? ContainedIn { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public NaldLicenceStatus NaldStatus { get; set; }

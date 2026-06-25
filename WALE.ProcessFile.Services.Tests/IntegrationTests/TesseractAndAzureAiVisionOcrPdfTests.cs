@@ -341,7 +341,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("OtherConditions", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].SectionName);
         Assert.Equal("AuthorisedBy", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].LinkReason);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences!);
-        Assert.Equal("1/23/01/159", agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences![0].LicenceNumber);
+        Assert.Equal("1/23/01/159", agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences![0]);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Points!);
         
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual?.Length);

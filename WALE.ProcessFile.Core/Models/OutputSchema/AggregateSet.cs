@@ -11,7 +11,7 @@ public class AggregateSet
             .GroupBy(aggregate =>
             {
                 var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
-                allLicenceNumbers.AddRange(aggregate.LinkedLicences.Select(x => x.LicenceNumber) ?? []);
+                allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
                 return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
             })
@@ -40,7 +40,7 @@ public class AggregateSet
             if (licence.LinkedLicences != null)
             {
                 foreach (var linkedLicence in licence.LinkedLicences
-                    .Select(ll => FormattingHelper.RemoveSeperators(ll.LicenceNumber)!))
+                    .Select(ll => FormattingHelper.RemoveSeperators(ll)!))
                 {
                     if (licencesDict.ContainsKey(linkedLicence))
                     {

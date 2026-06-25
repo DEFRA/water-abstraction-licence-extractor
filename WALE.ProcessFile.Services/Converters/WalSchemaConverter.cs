@@ -1251,9 +1251,9 @@ public static class WalSchemaConverter
             {
                 relevantAggregates = relevantAggregates
                     .Where(agg => agg.LinkedLicences == null
-                        || agg.LinkedLicences.Count == 0
+                        || agg.LinkedLicences.Length == 0
                         || agg.LinkedLicences.All(
-                            lln => licences.Any(l => l.LicenceNumber.Value == lln.LicenceNumber)))
+                            lln => licences.Any(l => l.LicenceNumber?.Value == lln)))
                     .ToArray();
             }
 
@@ -1264,7 +1264,7 @@ public static class WalSchemaConverter
             .GroupBy(aggregate =>
             {
                 var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
-                allLicenceNumbers.AddRange(aggregate.LinkedLicences.Select(x => x.LicenceNumber) ?? []);
+                allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
                 return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
             })
@@ -2715,7 +2715,7 @@ public static class WalSchemaConverter
             NaldType = GetNaldType(naldDataLine),
             AggregateSetId = PositionConstants.ReplacementMarker,
             LinkedLicences = abstractionLinkedLicences.Count > 0
-                ? abstractionLinkedLicences.Select(lln => lln!).ToList()
+                ? abstractionLinkedLicences.Select(lln => lln.LicenceNumber!).ToArray()
                 : null,
             Limits = aggregateAbstractionLimits,
             Points = pointsLoop?.ToArray() ?? [],

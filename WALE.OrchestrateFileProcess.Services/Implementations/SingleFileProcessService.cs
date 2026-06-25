@@ -536,7 +536,7 @@ public class SingleFileProcessService(
                 {
                     var filename = licenceLoop.Filename;
 
-                    if (licenceLoop.LicenceNumber != null
+                    if (licenceLoop.LicenceNumber?.Value != null
                         && (!savedLicenceNumbers.TryGetValue(
                                 licenceLoop.LicenceNumber.Value, out _)
                             || (licenceLoop.Status == LicenceStatus.Ok &&

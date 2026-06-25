@@ -823,61 +823,6 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
     );
 }
 
-async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
-        LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
-{
-    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
-    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
-
-    var allDestinationFilenames = await fileService.GetAllFilesAsync();
-
-    var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
-    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
-
-    foreach (var licenceFinderResult in licenceFinderResults)
-    {
-        if (licenceFinderResult.FileId == null)
-        {
-            continue;
-        }
-        
-        var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
-        
-        if (!lowercaseFilesInFolder.Contains(destinationFileName))
-        {
-            continue;
-        }
-
-        // Fix casing
-        destinationFileName = allDestinationFilenames.First(fname =>
-            fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
-        
-        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
-        
-        var dmsFileData = new DmsFileData
-        {
-            DestinationFileName = destinationFileName,
-            NaldLicenceRef = licenceFinderResult.LicenseNumber,
-            PermitNumber = licenceFinderResult.PermitNumber,
-            DmsPath = licenceFinderResult.FileUrl,
-            StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                licenceFinderResult.LicenseNumber,
-                regionId)!,
-            FileId = Guid.Parse(licenceFinderResult.FileId!),
-            RegionId = regionId
-        };
-
-        filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-        licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
-    }
-    
-    return (
-        filenamesWithLicenceNumbers,
-        licenceNumbersWithFilenames
-    );
-}
-
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
     GetFilesAndMappingFromExcelDownloadInfoFileAsync(
         IFileService fileService,

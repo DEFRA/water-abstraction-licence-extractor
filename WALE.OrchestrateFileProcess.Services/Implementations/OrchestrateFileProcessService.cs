@@ -38,7 +38,7 @@ public class OrchestrateFileProcessService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
-        const short regionCode = 3;
+        //const short regionCode = 3;
 
         var dtStartGetDms = DateTime.Now;
         ConsoleHelper.WriteLine("INFO - OrchestrateFileProcessService - Getting DMS files to process");

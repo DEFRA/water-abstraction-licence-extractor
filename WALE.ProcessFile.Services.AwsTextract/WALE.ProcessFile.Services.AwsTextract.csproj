@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AWSSDK.Textract" Version="4.0.3.4" />
+      <PackageReference Include="AWSSDK.Textract" Version="4.0.4.11" />
     </ItemGroup>
 
     <ItemGroup>

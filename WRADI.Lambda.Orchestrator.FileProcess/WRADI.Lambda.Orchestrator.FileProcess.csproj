@@ -17,14 +17,14 @@
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.5"/>
         <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.1" />
         <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
         <PackageReference Include="SkiaSharp" Version="3.119.4" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     </ItemGroup>
@@ -35,9 +35,6 @@
       <ProjectReference Include="..\WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Reference Include="Microsoft.Extensions.Hosting">
-        <HintPath>..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\9.0.14\Microsoft.Extensions.Hosting.dll</HintPath>
-      </Reference>
       <Reference Include="Microsoft.Extensions.Hosting.Abstractions" />
     </ItemGroup>
     <ItemGroup>

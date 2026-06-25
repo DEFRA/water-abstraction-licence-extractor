@@ -8,6 +8,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1"/>
+        <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
     
     <ItemGroup>

@@ -444,6 +444,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var content = await response.Content.ReadAsStringAsync();
 
         var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+
+        if (processRuns == null)
+        {
+            throw new FileNotFoundException("Could not load processRuns");
+        }
+        
         return processRuns;
     }
     
@@ -457,6 +463,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var content = await response.Content.ReadAsStringAsync();
 
         var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (processRuns == null)
+        {
+            throw new FileNotFoundException("Could not load processRuns");
+        }
+        
         return processRuns;
     }
 
@@ -499,6 +511,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var content = await response.Content.ReadAsStringAsync();
 
         var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSets == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSets");
+        }
+        
         return licenceSets;
     }
 
@@ -532,6 +550,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var content = await response.Content.ReadAsStringAsync();
 
         var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSectionVerifications == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSectionVerifications");
+        }
+        
         return licenceSectionVerifications;
     }
 
@@ -545,6 +569,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var content = await response.Content.ReadAsStringAsync();
 
         var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSectionVerifications == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSectionVerifications");
+        }
+        
         return licenceSectionVerifications;
     }
 

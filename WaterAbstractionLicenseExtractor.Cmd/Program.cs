@@ -215,7 +215,7 @@ async Task ProgramAsync()
 
         foreach (var aggregate in licence.AbstractionLimits.Aggregates)
         {
-            if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Length == 0)
+            if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Count == 0)
             {
                 continue;
             }
@@ -228,7 +228,7 @@ async Task ProgramAsync()
                 }
 
                 var otherLicence = allLicences
-                    .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0]);
+                    .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0].LicenceNumber);
 
                 if (otherLicence == null)
                 {

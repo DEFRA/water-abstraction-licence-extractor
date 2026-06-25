@@ -36,7 +36,7 @@ public class Aggregate : AbstractionLimitGroup
             {
                 foreach (var linkedLicence in LinkedLicences)
                 {
-                    var linkedLicenceNumber = linkedLicence
+                    var linkedLicenceNumber = linkedLicence.LicenceNumber
                         .Replace("/", string.Empty)
                         .Replace(" ", string.Empty);
 
@@ -64,7 +64,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? NaldType { get; set; }
     
-    public string[]? LinkedLicences { get; init; } = [];
+    public List<LinkedLicence>? LinkedLicences { get; init; } = [];
 
     public new static Aggregate Template => new()
     {

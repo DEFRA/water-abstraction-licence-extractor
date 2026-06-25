@@ -22,11 +22,6 @@ public class DatabaseCacheService(
         return Task.CompletedTask;
     }
     
-    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
-    {
-        return databaseReadService.GetLicenceFinderResultsAsync();
-    }
-
     public Task ClearCacheAsync()
     {
         return databaseWriteService.ClearCacheAsync();

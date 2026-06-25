@@ -276,6 +276,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();

@@ -19,8 +19,6 @@ public interface IDatabaseReadService
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     
-    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
-    
     Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);

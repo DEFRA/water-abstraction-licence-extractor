@@ -13,10 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services", "WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj", "{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.BlobTrigger", "WALE.ProcessFile.AzureFunction.BlobTrigger\WALE.ProcessFile.AzureFunction.BlobTrigger.csproj", "{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.ServiceBusTrigger", "WALE.ProcessFile.AzureFunction.ServiceBusTrigger\WALE.ProcessFile.AzureFunction.ServiceBusTrigger.csproj", "{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools", "Tools\WALE.Tools\WALE.Tools.csproj", "{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Core", "WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj", "{7DC0ACE6-AA96-4BB0-B5C0-BA15457B52AB}"
@@ -47,8 +43,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
 		.github\workflows\lambda-build-sonar-and-images.yaml = .github\workflows\lambda-build-sonar-and-images.yaml
 		.github\workflows\lambda-build-sonar-template.yaml = .github\workflows\lambda-build-sonar-template.yaml
-        .github\workflows\lambda-create-image-template.yaml = .github\workflows\lambda-create-image-template.yaml
-        .github\workflows\lambda-push-image-template.yaml = .github\workflows\lambda-push-image-template.yaml
+								.github\workflows\lambda-create-image-template.yaml = .github\workflows\lambda-create-image-template.yaml
+								.github\workflows\lambda-push-image-template.yaml = .github\workflows\lambda-push-image-template.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tesseract", "WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj", "{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}"
@@ -109,14 +105,6 @@ Global
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.ActiveCfg = Release|Any CPU

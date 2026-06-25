@@ -10,7 +10,7 @@ public class AggregateSet
         var groupedAggregates = Aggregates
             .GroupBy(aggregate =>
             {
-                var allLicenceNumbers = new List<string> { aggregate.LicenceNumber! };
+                var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
                 allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
                 return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
@@ -21,23 +21,26 @@ public class AggregateSet
         
         foreach (var licence in groupedAggregates)
         {
-            if (licence.LicenceNumber == null)
+            if (licence.SourceLicenceNumber == null)
             {
                 // Shouldn't get here ideally
                 Console.WriteLine("WARNING - AggregateSet - LicenceNumber is null");
                 continue;
             }
             
-            if (licencesDict.ContainsKey(licence.LicenceNumber))
+            var sourceLicenceNumber = FormattingHelper.RemoveSeperators(licence.SourceLicenceNumber)!;
+            
+            if (licencesDict.ContainsKey(sourceLicenceNumber))
             {
                 continue;
             }
             
-            licencesDict.Add(licence.LicenceNumber!, licence.LicenceVersionId!);
+            licencesDict.Add(sourceLicenceNumber, licence.SourceLicenceVersionId!);
 
             if (licence.LinkedLicences != null)
             {
-                foreach (var linkedLicence in licence.LinkedLicences)
+                foreach (var linkedLicence in licence.LinkedLicences
+                    .Select(ll => FormattingHelper.RemoveSeperators(ll)!))
                 {
                     if (licencesDict.ContainsKey(linkedLicence))
                     {
@@ -45,7 +48,7 @@ public class AggregateSet
                     }
 
                     var lookedUpLicence = allLicences.FirstOrDefault(
-                        al => al.LicenceNumber?.Value == linkedLicence);
+                        al => FormattingHelper.RemoveSeperators(al.LicenceNumber?.Value) == linkedLicence);
 
                     licencesDict.Add(linkedLicence,
                         lookedUpLicence?.LicenceVersion.LicenceVersionId ?? LicenceVersion.UnknownVersion);
@@ -54,7 +57,7 @@ public class AggregateSet
         }
             
         var licencesAlphabetical = licencesDict
-            .OrderBy(licence => $"{licence.Key}-{licence.Value}");
+            .OrderBy(licence => $"{FormattingHelper.RemoveSeperators(licence.Key)}-{licence.Value}");
 
         var outputSb = new StringBuilder();
         

@@ -8,7 +8,7 @@ public class AbstractionLimit : PeriodAndPointRestricted
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LimitPeriodType PeriodType { get; init; }
     
-    public double? Value { get; init; }
+    public double? Value { get; set; }
     
     public string? Units { get; init; }
     
@@ -17,6 +17,8 @@ public class AbstractionLimit : PeriodAndPointRestricted
     public bool IsAverage { get; set; }
     
     public int? AveragePeriod { get; set; }
+    
+    public string? ValueAdditionalText { get; set; }
 
     public AbstractionLimit Clone()
     {
@@ -26,6 +28,7 @@ public class AbstractionLimit : PeriodAndPointRestricted
         {
             PeriodType = PeriodType,
             Value = Value,
+            ValueAdditionalText = ValueAdditionalText,
             Units = Units,
             Points = Points,
             Purposes = Purposes,
@@ -38,6 +41,7 @@ public class AbstractionLimit : PeriodAndPointRestricted
     public static AbstractionLimit Template => new()
     {
         Value = 0,
+        ValueAdditionalText = "Something",
         ImplicitLimit = false,
         PeriodType = LimitPeriodType.NotApplicable,
         Points =

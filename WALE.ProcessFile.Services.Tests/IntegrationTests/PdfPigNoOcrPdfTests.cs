@@ -2777,6 +2777,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
 
         // Need to update these for comparison
+        agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[0].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[1].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[1].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[2].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        agreedSchemaLicenceGroup.Licences[2].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[2].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         

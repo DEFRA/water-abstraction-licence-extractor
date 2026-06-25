@@ -1516,7 +1516,7 @@ public static class WalSchemaConverter
         
         var sectionPoints = section.SubResults;
         
-        var aggregateLinkedLicences = new List<LinkedLicence>();
+        var sectionLinkedLicences = new List<LinkedLicence>();
         var abstractionLimits = new List<AbstractionLimitGroup>();
         var aggregates = new List<Aggregate>();
         
@@ -1545,7 +1545,7 @@ public static class WalSchemaConverter
                     sectionName,
                     ref abstractionLimits,
                     ref aggregates,
-                    ref aggregateLinkedLicences,
+                    ref sectionLinkedLicences,
                     ref noneSchemaData);
             }
 
@@ -1565,10 +1565,10 @@ public static class WalSchemaConverter
                         noneSchemaData))
                 .ToList();
 
-            aggregateLinkedLicences.AddRange(linkedLicenceNumbers);
+            sectionLinkedLicences.AddRange(linkedLicenceNumbers);
         }
 
-        return (aggregateLinkedLicences, abstractionLimits, aggregates);
+        return (sectionLinkedLicences, abstractionLimits, aggregates);
     }
 
     private static LinkedLicence LabelResultToLinkedLicence(
@@ -2164,7 +2164,7 @@ public static class WalSchemaConverter
         string sectionName,
         ref List<AbstractionLimitGroup> allIndividualGroups,
         ref List<Aggregate> allAggregates,
-        ref List<LinkedLicence> aggregateLinkedLicences,
+        ref List<LinkedLicence> sectionLinkedLicences,
         ref Dictionary<string, object?> noneSchemaData)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
@@ -2185,6 +2185,8 @@ public static class WalSchemaConverter
             noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
         }
 
+        var linkReason = GetLinkReason([abstractionLimitPointSub], " "); // Text to find being a space is a bit of a hack
+
         var containedIn = new ContainedInInformation[]
         {
             new()
@@ -2193,17 +2195,11 @@ public static class WalSchemaConverter
                 Direction = InformationDirection.Outgoing,
                 IsBecauseOfAggregate = false,
                 SectionName = sectionName,
-                LinkReason =
-                    GetLinkReason([abstractionLimitPointSub], " "), // Text to find being a space is a bit of a hack,
+                LinkReason = linkReason,
                 PageNumber = abstractionLimitPointSub.PageNumber,
                 LineNumber = abstractionLimitPointSub.LineNumber
             }
         };
-
-        if (containedIn[0].LinkReason is LinkReason.CompensationFlow or LinkReason.SimultaneousDischargeCondition)
-        {
-            return;
-        }
         
         var documentIdentifier = abstractionLimitPointSub.SubResults
             .FirstOrDefault(sr => sr.MatchedLabel?.Name == "DocumentIdentifier")?
@@ -2466,8 +2462,14 @@ public static class WalSchemaConverter
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
             .ToList();
+
+        var abstractionLinkedLicences = linkedLicenceNumbers
+            .Where(lln => lln.ContainedIn?.Any(ci =>
+                ci.LinkReason != LinkReason.CompensationFlow
+                && ci.LinkReason != LinkReason.SimultaneousDischargeCondition) == true)
+            .ToList();
         
-        var hasLinkedLicenceNumber = linkedLicenceNumbers.Count > 0;
+        var hasLinkedLicenceNumber = abstractionLinkedLicences.Count > 0;
         var isAggregate = hasLinkedLicenceNumber || meetsAggregateConditions;
         
         if (timeCutoff != null && !isAggregate)
@@ -2523,128 +2525,134 @@ public static class WalSchemaConverter
             individualGroups.Add(allIndividualGroups[0]);
         }
         
+        var isExcludedLinkReason = linkReason is LinkReason.SimultaneousDischargeCondition
+            or LinkReason.CompensationFlow;
+        
         var relatedNamesDict = new Dictionary<string, int>();
         var aggregateAbstractionLimits = new List<AbstractionLimit>();
 
         var newValueResults = new List<LabelGroupResult>();
 
-        // Work out the best match when a value found for multiple lines
-        foreach (var valueResult in valueResults)
+        if (!isExcludedLinkReason)
         {
-            var allDuplicates = valueResults
-                .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
-                    && vr.PageNumber == valueResult.PageNumber
-                    && vr.LineNumber == valueResult.LineNumber)
-                .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
-                    sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
-            .ToList();
-
-            var bestResult = allDuplicates
-                .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
-                .First();
-
-            if (!newValueResults.Contains(bestResult.vr))
+            // Work out the best match when a value found for multiple lines
+            foreach (var valueResult in valueResults)
             {
-                newValueResults.Add(bestResult.vr);                    
-            }
-        }
+                var allDuplicates = valueResults
+                    .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
+                                 && vr.PageNumber == valueResult.PageNumber
+                                 && vr.LineNumber == valueResult.LineNumber)
+                    .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
+                        sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
+                    .ToList();
 
-        valueResults = newValueResults;
-        
-        foreach (var valueResult in valueResults)
-        {
-            if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
-            {
-                continue;
-            }
+                var bestResult = allDuplicates
+                    .OrderBy(vrg => vrg.Item2?.LineNumber == vrg.vr.LineNumber ? 0 : 1)
+                    .First();
 
-            if (!relatedNamesDict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
-            {
-                relatedNamesDict[valueResult.MatchedLabel?.RelatedName!] += 1;
-            }
-
-            var allUnits = siblings?
-                .Where(sibling =>
-                    sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)
-                .ToList();
-
-            var unitPosition = relatedNamesDict[valueResult.MatchedLabel?.RelatedName!];
-
-            var units = allUnits!.Count > unitPosition
-                ? allUnits[unitPosition]
-                    .Text?
-                    .FirstOrDefault()?
-                    .Text
-                : null;
-
-            var text = valueResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text;
-
-            var abstractionLimit = new AbstractionLimit
-            {
-                PeriodType = ToLimitPeriodType(text),
-                Value = number,
-                Units = units,
-                Points = limitPoints?.ToArray(),
-                Purposes = limitPurposes?.ToArray()
-            };
-            
-            if (isAggregate)
-            {
-                aggregateAbstractionLimits.Add(abstractionLimit);
-                continue;
-            }
-            
-            var pos = GetPositionRelativeToDateLines(datePurposesTimePeriods, valueResult);
-            var individualGroup = individualGroups[pos];
-            
-            var groupPointsStr = individualGroup.Points?.Length > 0
-                ? string.Join(',', individualGroup.Points.Select(p => p.Id))
-                : string.Empty;
-            
-            var limitPointsStr = abstractionLimit.Points?.Length > 0
-                ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
-                : string.Empty;
-            
-            var groupPurposesStr = individualGroup.Purposes?.Length > 0
-                ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
-                : string.Empty;
-            
-            var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
-                ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
-                : string.Empty;
-
-            if (individualGroup.Limits.Count > 0
-                && (groupPointsStr != limitPointsStr || groupPurposesStr != limitPurposesStr))
-            {
-                individualGroup = individualGroups.FirstOrDefault(ig =>
+                if (!newValueResults.Contains(bestResult.vr))
                 {
-                    groupPointsStr = ig.Points?.Length > 0
-                        ? string.Join(',', ig.Points.Select(p => p.Id))
-                        : string.Empty;
-                    
-                    groupPurposesStr = ig.Purposes?.Length > 0
-                        ? string.Join(',', ig.Purposes.Select(p => p.Id))
-                        : string.Empty;
-
-                    return groupPointsStr == limitPointsStr && groupPurposesStr == limitPurposesStr;
-                });
-
-                if (individualGroup == null)
-                {
-                    individualGroup = new AbstractionLimitGroup
-                    {
-                        Points = abstractionLimit.Points,
-                        Purposes = abstractionLimit.Purposes,
-                        Limits = [],
-                        DocumentIdentifier = documentIdentifier,
-                        ContainedIn = containedIn
-                    };
-
-                    individualGroups.Add(individualGroup);
+                    newValueResults.Add(bestResult.vr);
                 }
             }
-            
-            individualGroup.Limits.Add(abstractionLimit);
+
+            valueResults = newValueResults;
+
+            foreach (var valueResult in valueResults)
+            {
+                if (!double.TryParse(valueResult.Text?.FirstOrDefault()?.Text, out var number))
+                {
+                    continue;
+                }
+
+                if (!relatedNamesDict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
+                {
+                    relatedNamesDict[valueResult.MatchedLabel?.RelatedName!] += 1;
+                }
+
+                var allUnits = siblings?
+                    .Where(sibling =>
+                        sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)
+                    .ToList();
+
+                var unitPosition = relatedNamesDict[valueResult.MatchedLabel?.RelatedName!];
+
+                var units = allUnits!.Count > unitPosition
+                    ? allUnits[unitPosition]
+                        .Text?
+                        .FirstOrDefault()?
+                        .Text
+                    : null;
+
+                var text = valueResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text;
+
+                var abstractionLimit = new AbstractionLimit
+                {
+                    PeriodType = ToLimitPeriodType(text),
+                    Value = number,
+                    Units = units,
+                    Points = limitPoints?.ToArray(),
+                    Purposes = limitPurposes?.ToArray()
+                };
+
+                if (isAggregate)
+                {
+                    aggregateAbstractionLimits.Add(abstractionLimit);
+                    continue;
+                }
+
+                var pos = GetPositionRelativeToDateLines(datePurposesTimePeriods, valueResult);
+                var individualGroup = individualGroups[pos];
+
+                var groupPointsStr = individualGroup.Points?.Length > 0
+                    ? string.Join(',', individualGroup.Points.Select(p => p.Id))
+                    : string.Empty;
+
+                var limitPointsStr = abstractionLimit.Points?.Length > 0
+                    ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
+                    : string.Empty;
+
+                var groupPurposesStr = individualGroup.Purposes?.Length > 0
+                    ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
+                    : string.Empty;
+
+                var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
+                    ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
+                    : string.Empty;
+
+                if (individualGroup.Limits.Count > 0
+                    && (groupPointsStr != limitPointsStr || groupPurposesStr != limitPurposesStr))
+                {
+                    individualGroup = individualGroups.FirstOrDefault(ig =>
+                    {
+                        groupPointsStr = ig.Points?.Length > 0
+                            ? string.Join(',', ig.Points.Select(p => p.Id))
+                            : string.Empty;
+
+                        groupPurposesStr = ig.Purposes?.Length > 0
+                            ? string.Join(',', ig.Purposes.Select(p => p.Id))
+                            : string.Empty;
+
+                        return groupPointsStr == limitPointsStr && groupPurposesStr == limitPurposesStr;
+                    });
+
+                    if (individualGroup == null)
+                    {
+                        individualGroup = new AbstractionLimitGroup
+                        {
+                            Points = abstractionLimit.Points,
+                            Purposes = abstractionLimit.Purposes,
+                            Limits = [],
+                            DocumentIdentifier = documentIdentifier,
+                            ContainedIn = containedIn
+                        };
+
+                        individualGroups.Add(individualGroup);
+                    }
+                }
+
+                individualGroup.Limits.Add(abstractionLimit);
+            }
         }
 
         var notIncludedList = new List<AbstractionLimitGroup>();
@@ -2658,8 +2666,11 @@ public static class WalSchemaConverter
             
             notIncludedList.Add(individualGroup);
         }
-        
-        allIndividualGroups.AddRange(notIncludedList);
+
+        if (!isExcludedLinkReason)
+        {
+            allIndividualGroups.AddRange(notIncludedList);
+        }
 
         if (aggregateAbstractionLimits.Count == 0)
         {
@@ -2701,13 +2712,13 @@ public static class WalSchemaConverter
         {
             SourceLicenceNumber = licenceNumber,
             SourceLicenceVersionId = licenceVersionId,
-            PrimaryType = linkedLicenceNumbers.Count >= 1
+            PrimaryType = abstractionLinkedLicences.Count >= 1
                 ? PrimaryType.LicenceToLicence
                 : PrimaryType.InLicence,
             NaldType = GetNaldType(naldDataLine),
             AggregateSetId = PositionConstants.ReplacementMarker,
-            LinkedLicences = linkedLicenceNumbers.Count > 0
-                ? linkedLicenceNumbers.Select(lln => lln.LicenceNumber!).ToArray()
+            LinkedLicences = abstractionLinkedLicences.Count > 0
+                ? abstractionLinkedLicences.Select(lln => lln.LicenceNumber!).ToArray()
                 : null,
             Limits = aggregateAbstractionLimits,
             Points = pointsLoop?.ToArray() ?? [],
@@ -2722,7 +2733,7 @@ public static class WalSchemaConverter
         // must mean it's relevant to all points and purposes
         if (aggregate.Points.Length == 0
             && aggregate.Purposes.Length == 0
-            && linkedLicenceNumbers.Count == 0)
+            && abstractionLinkedLicences.Count == 0)
         {
             aggregate.Points = allPoints.Select(Point (p) => p).ToArray();
             aggregate.Purposes = allPurposes.Select(Purpose (p) => p).ToArray();
@@ -2761,8 +2772,12 @@ public static class WalSchemaConverter
             aggregate.Points = null;
         }
 
-        allAggregates.Add(aggregate);
-        aggregateLinkedLicences.AddRange(linkedLicenceNumbers);
+        if (!isExcludedLinkReason)
+        {
+            allAggregates.Add(aggregate);
+        }
+
+        sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
     private static int GetPositionRelativeToDateLines(

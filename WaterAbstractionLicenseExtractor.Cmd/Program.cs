@@ -192,11 +192,13 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         naldLicenceStatusData,
         naldData,
-        allDmsData);
+        allDmsData,
+        lookupConfig,
+        processRun.ProcessRunId);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
@@ -756,8 +758,8 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     // For debugging uncheck sections of the following
     
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-        .Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
-            || x.Key.Contains("22722210", StringComparison.InvariantCultureIgnoreCase))
+        .Where(x => x.Key.Contains("NE0270018009", StringComparison.InvariantCultureIgnoreCase)
+            || x.Key.Contains("1asdssdds", StringComparison.InvariantCultureIgnoreCase))
         //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
         .Where(x => x.Value.RegionId == 3) // North east
         //.Skip(155)

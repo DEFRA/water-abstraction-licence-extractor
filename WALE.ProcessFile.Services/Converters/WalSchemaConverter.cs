@@ -2464,9 +2464,7 @@ public static class WalSchemaConverter
             .ToList();
 
         var abstractionLinkedLicences = linkedLicenceNumbers
-            .Where(lln => lln.ContainedIn?.Any(ci =>
-                ci.LinkReason != LinkReason.CompensationFlow
-                && ci.LinkReason != LinkReason.SimultaneousDischargeCondition) == true)
+            .Where(lln => lln.ContainedIn?.Any(ci => !IsExcludedLinkReason(ci.LinkReason)) == true)
             .ToList();
         
         var hasLinkedLicenceNumber = abstractionLinkedLicences.Count > 0;
@@ -2524,9 +2522,8 @@ public static class WalSchemaConverter
         {
             individualGroups.Add(allIndividualGroups[0]);
         }
-        
-        var isExcludedLinkReason = linkReason is LinkReason.SimultaneousDischargeCondition
-            or LinkReason.CompensationFlow;
+
+        var isExcludedLinkReason = IsExcludedLinkReason(linkReason);
         
         var relatedNamesDict = new Dictionary<string, int>();
         var aggregateAbstractionLimits = new List<AbstractionLimit>();
@@ -2809,6 +2806,12 @@ public static class WalSchemaConverter
             .First();
 
         return dateLines.IndexOf(match) + 1;
+    }
+
+    private static bool IsExcludedLinkReason(string? linkReason)
+    {
+        return linkReason is LinkReason.SimultaneousDischargeCondition
+            or LinkReason.CompensationFlow;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)

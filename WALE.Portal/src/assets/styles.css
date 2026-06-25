@@ -228,3 +228,24 @@ dl a {
     font-size: 8px;
   }
 }
+
+.paging {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.paging button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.paging button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.paging button.active {
+  font-weight: bold;
+  border: 2px solid black;
+}

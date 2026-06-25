@@ -2342,11 +2342,17 @@ public static class WalSchemaConverter
             });
         }
         
+        var othersLimitedByPurpose = allIndividualGroups.Any(g =>
+            g.Purposes?.Length > 0
+            && g.Purposes.Length != allPurposes.Length);
+        
+        // Some licences word something as an aggregate but it actually is just a limit
         var wordedAsAggregateButAllPurposes = abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
             && abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase)
             || (abstractionLimitPointSubText.Contains("for the purposes of", StringComparison.InvariantCultureIgnoreCase)
                 && allPurposes.Length > 1
-                && limitPurposes?.Count == allPurposes.Length);
+                && limitPurposes?.Count == allPurposes.Length
+                && !othersLimitedByPurpose);
         
         var textSuggestsIsAggregate = 
             (abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
@@ -2379,10 +2385,6 @@ public static class WalSchemaConverter
 
         var multiplePurposesSpecified = limitPurposes?.Count > 1;
         var thisLimitedByPurpose = multiplePurposesSpecified && limitPurposes!.Count != allPurposes.Length;
-                
-        var othersLimitedByPurpose = allIndividualGroups.Any(g =>
-            g.Purposes?.Length > 0
-            && g.Purposes.Length != allPurposes.Length);
 
         var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
                 

@@ -29,6 +29,10 @@ appsettings.Development.json
 # Documentation
 *.xml
 
+**/*.xls
+**/*.xlsx
+**/*.csv
+
 # Project-specific
 licence-number-filename-map.csv
 

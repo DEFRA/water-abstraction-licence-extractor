@@ -3356,6 +3356,7 @@ export class AbstractionLimit implements IAbstractionLimit {
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
+    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -3382,6 +3383,7 @@ export class AbstractionLimit implements IAbstractionLimit {
             this.implicitLimit = _data["implicitLimit"];
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
+            this.valueAdditionalText = _data["valueAdditionalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -3414,6 +3416,7 @@ export class AbstractionLimit implements IAbstractionLimit {
         data["implicitLimit"] = this.implicitLimit;
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
+        data["valueAdditionalText"] = this.valueAdditionalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -3435,6 +3438,7 @@ export interface IAbstractionLimit {
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
+    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -3448,6 +3452,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
+    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -3474,6 +3479,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
             this.implicitLimit = _data["implicitLimit"];
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
+            this.valueAdditionalText = _data["valueAdditionalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -3506,6 +3512,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
         data["implicitLimit"] = this.implicitLimit;
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
+        data["valueAdditionalText"] = this.valueAdditionalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -3527,6 +3534,7 @@ export interface IAbstractionLimit2 {
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
+    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -3708,6 +3716,9 @@ export interface IAbstractionLimits {
 export class Aggregate implements IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: number | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -3739,6 +3750,9 @@ export class Aggregate implements IAggregate {
             }
             this.id = _data["id"];
             this.aggregateSetId = _data["aggregateSetId"];
+            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
+            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
+            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
             this.primaryType = _data["primaryType"];
             this.subType = _data["subType"];
             this.naldType = _data["naldType"];
@@ -3788,6 +3802,9 @@ export class Aggregate implements IAggregate {
         }
         data["id"] = this.id;
         data["aggregateSetId"] = this.aggregateSetId;
+        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
+        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
+        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
         data["primaryType"] = this.primaryType;
         data["subType"] = this.subType;
         data["naldType"] = this.naldType;
@@ -3826,6 +3843,9 @@ export class Aggregate implements IAggregate {
 export interface IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: number | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -3904,6 +3924,9 @@ export interface IAggregateSet {
 export class AggregateWithContext implements IAggregateWithContext {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: number | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -3935,6 +3958,9 @@ export class AggregateWithContext implements IAggregateWithContext {
             }
             this.id = _data["id"];
             this.aggregateSetId = _data["aggregateSetId"];
+            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
+            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
+            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
             this.primaryType = _data["primaryType"];
             this.subType = _data["subType"];
             this.naldType = _data["naldType"];
@@ -3984,6 +4010,9 @@ export class AggregateWithContext implements IAggregateWithContext {
         }
         data["id"] = this.id;
         data["aggregateSetId"] = this.aggregateSetId;
+        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
+        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
+        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
         data["primaryType"] = this.primaryType;
         data["subType"] = this.subType;
         data["naldType"] = this.naldType;
@@ -4022,6 +4051,9 @@ export class AggregateWithContext implements IAggregateWithContext {
 export interface IAggregateWithContext {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: number | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;

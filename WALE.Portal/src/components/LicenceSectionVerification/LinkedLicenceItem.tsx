@@ -1,4 +1,4 @@
-import { LinkedLicence, LinkedLicenceDirection, LinkedLicenceSection, LinkedLicenceSource, OutputListDataItem } from "../../api/generated/apiClient.ts";
+import { LinkedLicence, InformationDirection, ContainedInInformation, InformationSource, OutputListDataItem } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
 import NaldStatusTag from "../NaldStatusTag.tsx";
 
@@ -40,19 +40,19 @@ export const LinkedLicenceItem = ({
         }
     };
 
-    const handleSectionChange = (index: number, field: keyof LinkedLicenceSection, value: any) => {
+    const handleSectionChange = (index: number, field: keyof ContainedInInformation, value: any) => {
         if (onUpdate && linkedLicence.containedIn) {
             const newSections = [...linkedLicence.containedIn];
-            newSections[index] = new LinkedLicenceSection({ ...newSections[index], [field]: value });
+            newSections[index] = new ContainedInInformation({ ...newSections[index], [field]: value });
             onUpdate(new LinkedLicence({ ...linkedLicence, containedIn: newSections }));
         }
     };
 
     const handleAddSection = () => {
         if (onUpdate) {
-            const newSection = new LinkedLicenceSection({
-                source: LinkedLicenceSource.Document,
-                direction: LinkedLicenceDirection.Outgoing,
+            const newSection = new ContainedInInformation({
+                source: InformationSource.Document,
+                direction: InformationDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
                 isBecauseOfAggregate: false
@@ -121,7 +121,7 @@ export const LinkedLicenceItem = ({
                     </div>
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                         {(linkedLicence.containedIn || []).map((section, idx) => {
-                            if (section.direction !== LinkedLicenceDirection.Outgoing) {
+                            if (section.direction !== InformationDirection.Outgoing) {
                                 return null;
                             }
                             return (
@@ -227,12 +227,12 @@ export const LinkedLicenceItem = ({
                 <p style={{ margin: 0 }}><strong>Linked Licence Number:</strong> {linkedLicence.licenceNumber || 'N/A'}<NaldStatusTag status={linkedLicence.naldStatus} /></p>
                 <p style={{ margin: 0 }}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
             </div>
-            {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === LinkedLicenceDirection.Outgoing).length > 0 && (
+            {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === InformationDirection.Outgoing).length > 0 && (
                 <div style={{ marginTop: '12px', fontSize: '0.9rem' }}>
                     <strong style={{ display: 'block', marginBottom: '8px' }}>Contained In:</strong>
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                         {linkedLicence.containedIn.map((section, idx) => {
-                            if (section.direction !== LinkedLicenceDirection.Outgoing) {
+                            if (section.direction !== InformationDirection.Outgoing) {
                                 return null;
                             }
                             return (

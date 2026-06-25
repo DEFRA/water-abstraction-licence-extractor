@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
-using System.Net;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
@@ -52,11 +51,12 @@ async Task ProgramAsync()
 
     var naldDataTask = GetNaldDataAsync(null, cacheService);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
+
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
+
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
 
     var dtStartGetDms = DateTime.Now;
-    ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
         await GetDmsFilesAndMappingAsync(
@@ -200,14 +200,67 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var outputLines = new List<IntermediateOutputLicence>();
+    var allLicences = allLicenceSets
+        .SelectMany(ls => ls.Licences)
+        .GroupBy(l => l.Id)
+        .Select(l => l.First())
+        .ToList();
 
-    var fileNumber = 1;
-    var completeNumber = 1;
+    foreach (var licence in allLicences)
+    {
+        if (licence.AbstractionLimits.Aggregates == null)
+        {
+            continue;
+        }
 
+        foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+        {
+            if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Length == 0)
+            {
+                continue;
+            }
+                
+            foreach (var limit in aggregate.Limits)
+            {
+                if (string.IsNullOrEmpty(limit.ValueAdditionalText))
+                {
+                    continue;
+                }
+
+                var otherLicence = allLicences
+                    .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0]);
+
+                if (otherLicence == null)
+                {
+                    continue;
+                }
+                
+                var otherLicenceLimits = new List<AbstractionLimit>();
+
+                if (otherLicence.AbstractionLimits.Aggregates != null)
+                {
+                    otherLicenceLimits.AddRange(
+                        otherLicence.AbstractionLimits.Aggregates!.SelectMany(a => a.Limits));
+                }
+                
+                if (otherLicence.AbstractionLimits.Individual != null)
+                {
+                    otherLicenceLimits.AddRange(
+                        otherLicence.AbstractionLimits.Individual!.SelectMany(i => i.Limits));
+                }
+
+                var otherLicenceLimit = otherLicenceLimits.First();
+                var combinedAmount = limit.Value + otherLicenceLimit.Value;
+
+                limit.Value = combinedAmount;
+                limit.ValueAdditionalText = null;
+            }
+        }
+    }
+    
     var savedLicenceNumbers = new Dictionary<string, int>();
     var savedLicenceFilenames = new Dictionary<string, int>();
-    var notFoundSavedLicenceNumbers = new Dictionary<string, int>();
+    var savedNotFoundLicences = new Dictionary<string, int>();
 
     var savedLicenceSetIds = new HashSet<string>();
 
@@ -225,18 +278,30 @@ async Task ProgramAsync()
             foreach (var licenceLoop in licenceSetLoop.Licences)
             {
                 var filename = licenceLoop.Filename;
+                var licenceFound = licenceLoop.Status == LicenceStatus.Ok;
+                var licenceNumber = licenceLoop.LicenceNumber?.Value;
+                var isLicenceNumberNull = string.IsNullOrEmpty(licenceNumber);
+                var existingLicenceId = -1;
+                
+                var previouslySavedAsNotFound = !isLicenceNumberNull
+                    && savedNotFoundLicences.TryGetValue(licenceNumber!, out existingLicenceId);
 
-                if (licenceLoop.LicenceNumber != null
-                    && (!savedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out _)
-                        || (licenceLoop.Status == LicenceStatus.Ok &&
-                            notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out _))))
+                var foundButPreviouslySavedAsNotFound = previouslySavedAsNotFound && licenceFound;
+                var licenceNumberPresentNotYetSaved = !isLicenceNumberNull
+                    && !savedLicenceNumbers.TryGetValue(licenceNumber!, out _);
+
+                var notYetSavedByFilename = isLicenceNumberNull
+                    && !string.IsNullOrEmpty(filename)
+                    && !savedLicenceFilenames.TryGetValue(filename, out _);
+                
+                if (licenceNumberPresentNotYetSaved || foundButPreviouslySavedAsNotFound)
                 {
                     int loopLicenceId;
-                    var savedVersionIsStatusNotFound =
-                        notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber?.Value!, out var existingLicenceId);
 
-                    if (savedVersionIsStatusNotFound && licenceLoop.Status == LicenceStatus.Ok)
+                    if (foundButPreviouslySavedAsNotFound)
                     {
+                        // TODO this appears to never happen - look into it
+                        
                         await outputService.UpdateLicenceAsync(
                             licenceLoop,
                             existingLicenceId,
@@ -251,33 +316,31 @@ async Task ProgramAsync()
                             processRun.ProcessRunId);
                     }
 
-                    savedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber?.Value!, loopLicenceId);
+                    savedLicenceNumbers.TryAdd(licenceNumber!, loopLicenceId);
 
                     if (!string.IsNullOrWhiteSpace(filename))
                     {
                         savedLicenceFilenames.TryAdd(filename, loopLicenceId);
                     }
 
-                    if (licenceLoop.Status == LicenceStatus.NotFound)
+                    if (!licenceFound)
                     {
-                        notFoundSavedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber?.Value!, loopLicenceId);
+                        savedNotFoundLicences.TryAdd(licenceNumber!, loopLicenceId);
                     }
                     else
                     {
-                        notFoundSavedLicenceNumbers.Remove(licenceLoop.LicenceNumber?.Value!);
+                        savedNotFoundLicences.Remove(licenceNumber!);
                     }
 
                     licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
                 }
-                else if (licenceLoop.LicenceNumber == null
-                     && !string.IsNullOrEmpty(filename)
-                     && !savedLicenceFilenames.TryGetValue(filename, out _))
+                else if (notYetSavedByFilename)
                 {
                     var loopLicenceId = await outputService.SaveLicenceAsync(
                         licenceLoop,
                         processRun.ProcessRunId);
 
-                    savedLicenceFilenames.Add(filename, loopLicenceId);
+                    savedLicenceFilenames.Add(filename!, loopLicenceId);
                     licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
                 }
 
@@ -303,21 +366,6 @@ async Task ProgramAsync()
                 }
             }
         }
-
-        var licence = licenceSetGroup[0].Licences.First();
-        
-        var licenceSets = GetLicenceSetsForLicenceSetIds(
-            licence.LicenceSets,
-            allLicenceSets);
-
-        var outputLine = JsOutputHelper.ToOutputLine(
-            licence,
-            DateTime.Now,
-            completeNumber++,
-            fileNumber++,
-            licenceSets);
-
-        outputLines.Add(outputLine);
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -330,6 +378,9 @@ async Task ProgramAsync()
 
 async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, ICacheService cacheService)
 {
+    var dtStart = DateTime.Now;
+    ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started getting NALD data");
+    
     const int take = 10_000;
     var allNaldData = new NaldDataCollection
     {
@@ -363,6 +414,8 @@ async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, ICacheService
         allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
     }
     
+    var saveDuration = (DateTime.Now - dtStart).TotalMilliseconds;
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished getting NALD data in {saveDuration}ms");
     return allNaldData;
 }
 
@@ -660,9 +713,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
         return [];
     }
-    catch (Exception)
+    catch (Exception ex)
     {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error");
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
         return [];
     }
     finally
@@ -702,13 +755,14 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
 
     // For debugging uncheck sections of the following
     
-    /*filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-    .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
-    .Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
-    .Where(x => x.Value.RegionId == 3) // North east
-    .Skip(155)
-    .Take(5)
-    .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);*/
+    filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
+        .Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
+            || x.Key.Contains("22722210", StringComparison.InvariantCultureIgnoreCase))
+        //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
+        .Where(x => x.Value.RegionId == 3) // North east
+        //.Skip(155)
+        //.Take(20)
+        .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
     return filesAndMapping;
 }

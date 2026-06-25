@@ -7,7 +7,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Models;
-using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Strategies;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
@@ -21,14 +21,17 @@ public static class JsOutputHelper
         Dictionary<string, LicenceSet> licenceSetsFull)
     {
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
-        var licenceHolderOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
-        var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData,"ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData,"servicesUsed", GeneralConstants.PdfPigDataExtractorServiceName);
+        var licenceHolderOcrConfidence =
+            GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
+        var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData, "ocr", "--");
+        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData, "servicesUsed",
+            GeneralConstants.PdfPigDataExtractorServiceName);
 
         var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
         var licenceNumber = licence.LicenceNumber;
-        var licenceNumberOcrConfidence = GetValueOrDefault<double, double?>(licence.NoneSchemaData,"licenceNumberConfidence", null);
+        var licenceNumberOcrConfidence =
+            GetValueOrDefault<double, double?>(licence.NoneSchemaData, "licenceNumberConfidence", null);
 
         var meansFound = licence.MeansOfAbstraction.Length > 0;
         var status = "Not Found";
@@ -47,7 +50,7 @@ public static class JsOutputHelper
         {
             status = "Impound";
         }
-        
+
         var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
         var issuer = licence.LicenceVersion.Issuer;
 
@@ -55,7 +58,7 @@ public static class JsOutputHelper
             .Where(ls => licenceSetsFull.ContainsKey(ls.LicenceSetId!))
             .Select(ls => licenceSetsFull[ls.LicenceSetId!])
             .ToList();
-        
+
         return new IntermediateOutputLicence
         {
             LineNumber = completeNumber,
@@ -70,8 +73,10 @@ public static class JsOutputHelper
             Certainty = GetValueOrDefault<int, int>(licence.NoneSchemaData, "issuedToCertainty", -1),
             MatchType = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchType", "N/A"),
             Duration = durationInMSeconds,
-            MatchedLabelText = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
-            MatchedLabelPosition = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
+            MatchedLabelText =
+                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
+            MatchedLabelPosition =
+                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
             LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
@@ -86,57 +91,87 @@ public static class JsOutputHelper
             DmsFileId = licence.DmsFileId
         };
     }
-    
-    public static async Task<IReadOnlyList<OutputListDataItem>> SaveListDataAsync(
+
+    public static async Task<IReadOnlyList<OutputListDataItem>> ToListDataAsync(
         List<IntermediateOutputLicence> outputLines,
-        string outputFolder,
         IOutputService outputService,
-        bool regenerateMappingJson,
         ProcessRun processRun,
-        bool saveToFile,
-        List<LicenceVerificationSummary>? licenceVerificationSummaries = null)
+        bool save,
+        List<LicenceSectionVerification> allLatestLicenceSectionVerifications)
     {
-        var resultFileStringBuilder = new StringBuilder(
-            "LineNumber,StartNumber,Filename,Text,OCR,ServiceName,Certainty,MatchType,Duration,MatchedLabelText," +
-            "MatchedLabelPosition,LicenceNumber,LimitsFound,LinkedLicenceNumbers,LinkedLicenceNumbersExistInDataset");
-
-        var mappingFileStringBuilder = new StringBuilder(
-            "Filename,LicenceNumber");
-
-        var filenameToLicenceNumberMap = new Dictionary<string, string>();
-        var licenceNumberToFilenameMap = new Dictionary<string, string>();
-
-        var nodeIndex = 1;
-        var nodesDictionaries = new List<Dictionary<string, object>>();
-        var linksDictionaries = new List<Dictionary<string, object>>();
-
         var listData = new List<OutputListDataItem>();
 
-        var summariesByFileId = licenceVerificationSummaries?
-            .GroupBy(x => x.LicenceFileId)
+        var verificationOutputStrategies =
+            new List<IVerificationOutputStrategy>
+            {
+                new LinkedLicencesVerificationOutputStrategy()
+            }.ToDictionary(s => s.SectionName);
+
+        var verificationsByFileId = allLatestLicenceSectionVerifications
+            .GroupBy(lsv => lsv.LicenceFileId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        
+        var invertedVerificationsByItemId = allLatestLicenceSectionVerifications
+            .Where(lsv => lsv.LicenceSectionItemId != null)
+            .Join(outputLines,
+                lsv => lsv.LicenceFileId,
+                ol => ol.DmsFileId,
+                (lsv, ol) => new InvertedLicenceSectionVerification
+                {
+                    Verification = lsv,
+                    SourceLicenceNumber = ol.LicenceNumber
+                })
+            .GroupBy(x => x.Verification.LicenceSectionItemId!)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        foreach (var outputLine in outputLines.OrderBy(x => x.Filename))
+        foreach (var outputLine in outputLines.OrderBy(ol => ol.Filename))
         {
-            var anyLinkedLicenceNumbers = outputLine.LinkedLicences?
-                .Any(lln => outputLines.Count(ol => ol.LicenceNumber == lln.LicenceNumber) > 0);
-
-            Log(
-                $"\n{outputLine.LineNumber},{outputLine.StartNumber},{outputLine.Filename}," +
-                $"\"{outputLine.LicenceHolder}\",{outputLine.Ocr},{outputLine.ServiceName},{outputLine.Certainty}," +
-                $"{outputLine.MatchType},{outputLine.Duration},{outputLine.MatchedLabelText}," +
-                $"{outputLine.MatchedLabelPosition},{outputLine.LicenceNumber},{outputLine.LimitsCount}," +
-                $"{outputLine.LinkedLicences},{anyLinkedLicenceNumbers}",
-                resultFileStringBuilder);
-
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
+            var licenceSets = outputLine.LicenceSetReferences?
+                .Select(lsr => {
+                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
+
+                    if (ls == null)
+                    {
+                        return new OutputListDataItemLicenceSet
+                        {
+                            LicenceSetId = "ERROR",
+                            ShortLicenceSetId = "ERROR"
+                        };
+                    }
+
+                    var licenceSetType = lsr.LicenceSetType;
+
+                    return new OutputListDataItemLicenceSet
+                    {
+                        LicenceSetId = ls.LicenceSetId,
+                        ShortLicenceSetId = ls.ShortLicenceSetId,
+                        LicenceSetTypes = ls.LicenceSetTypes,
+                        LicenceSetType = licenceSetType
+                    };
+                })
+                .ToArray() ?? [];
+
+            var latestLicenceSectionVerifications =
+                outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
+                    verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value, out var fileVerifications)
+                ? fileVerifications
+                : null;
+            
+            var invertedLatestLicenceSectionVerifications =
+                outputLine.LicenceNumber != null && invertedVerificationsByItemId != null &&
+                    invertedVerificationsByItemId.TryGetValue(outputLine.LicenceNumber, out var invertedItemVerifications)
+                ? invertedItemVerifications
+                : null;
+            
             var listRow = new OutputListDataItem
             {
-                imagePath = $"{filenameNoExtension}/{GeneralConstants.PdfPigDataExtractorServiceName}/Images/page-1.jpg",
+                processRunId = processRun.ProcessRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
-                licenceNumber = $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
+                licenceNumber =
+                    $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
                     $"{outputLine.LicenceHolder?.Replace("\"", "\\\"")}{ToPercent(outputLine.LicenceHolderOcrConfidence, outputLine.Ocr)}",
                 purposes = outputLine.Purposes,
@@ -148,138 +183,58 @@ public static class JsOutputHelper
                 issuer = outputLine.Issuer,
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
-                linkedLicences = outputLine.LinkedLicences?.OrderBy(x => x.LicenceNumber).ToArray() ?? [],
-                licenceSets = outputLine.LicenceSetReferences?.Select(lsr =>
-                {
-                    var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
-
-                    if (ls == null)
-                    {
-                        return new OutputListDataItemLicenceSet
-                        {
-                            LicenceSetId = "ERROR",
-                            ShortLicenceSetId = "ERROR"
-                        };
-                    }
-                    
-                    var licenceSetType = lsr.LicenceSetType;
-
-                    return new OutputListDataItemLicenceSet
-                    {
-                        LicenceSetId = ls.LicenceSetId,
-                        ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = ls.LicenceSetTypes,
-                        LicenceSetType = licenceSetType
-
-                    };
-                })
-                .ToArray() ?? [],
-                licenceVerificationSummary = outputLine.DmsFileId.HasValue && summariesByFileId != null && summariesByFileId.TryGetValue(outputLine.DmsFileId.Value, out var summaries)
-                    ? summaries
-                    : null
+                linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
+                licenceSets = licenceSets,
+                latestLicenceSectionVerifications = latestLicenceSectionVerifications
             };
 
-            listData.Add(listRow);
+            var groupedVerifications = (listRow.latestLicenceSectionVerifications ?? [])
+                .Where(verification =>
+                    verification.ProcessRunId <= processRun.ProcessRunId &&
+                    verification.LicenceSectionName != null)
+                .GroupBy(verification => verification.LicenceSectionName!)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-            if (outputLine is { LicenceNumber: not null, Filename: not null })
+            var groupedInvertedVerifications = (invertedLatestLicenceSectionVerifications ?? [])
+                .Where(x =>
+                    x.Verification.ProcessRunId <= processRun.ProcessRunId &&
+                    x.Verification.LicenceSectionName != null)
+                .GroupBy(x => x.Verification.LicenceSectionName!)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var allSectionNames = groupedVerifications.Keys.Union(groupedInvertedVerifications.Keys);
+
+            foreach (var sectionName in allSectionNames)
             {
-                filenameToLicenceNumberMap.TryAdd(outputLine.Filename!, outputLine.LicenceNumber);
-                licenceNumberToFilenameMap.TryAdd(outputLine.LicenceNumber, outputLine.Filename!);
-            }
-
-            outputLine.NodeId = nodeIndex++;
-            var nodeName = outputLine.Filename!;
-
-            if (!string.IsNullOrEmpty(outputLine.LicenceNumber) && outputLine.LicenceNumber != string.Empty)
-            {
-                nodeName = outputLine.LicenceNumber;
-            }
-
-            nodesDictionaries.Add(new Dictionary<string, object>
-            {
-                { "id", outputLine.NodeId },
-                { "name", nodeName }
-            });
-
-            Log($"\n{outputLine.Filename},{outputLine.LicenceNumber}", mappingFileStringBuilder);
-        }
-
-        foreach (var outputLine in outputLines)
-        {
-            if (outputLine.LinkedLicences == null)
-            {
-                continue;
-            }
-            
-            foreach (var linkedLicence in outputLine.LinkedLicences)
-            {
-                var linkedOutputLine = outputLines.FirstOrDefault(x => x.LicenceNumber == linkedLicence.LicenceNumber);
-
-                if (linkedOutputLine != null)
+                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
                 {
-                    linksDictionaries.Add(new Dictionary<string, object>
-                    {
-                        { "source", outputLine.NodeId },
-                        { "target", linkedOutputLine.NodeId }
-                    });
+                    continue;
                 }
+
+                var sectionVerifications = groupedVerifications.GetValueOrDefault(sectionName) ?? [];
+                var sectionInvertedVerifications = groupedInvertedVerifications.GetValueOrDefault(sectionName) ?? [];
+                strategy.HandleVerifications(sectionVerifications, listRow, sectionInvertedVerifications);
             }
+
+            listData.Add(listRow);
         }
 
-        if (!saveToFile)
+        if (!save)
         {
             return listData;
         }
         
-        Directory.CreateDirectory($"{outputFolder}Additional");
-
-        var resultFile = $"{outputFolder}Additional/{DateTime.Today:yyyyMMdd}-result.csv";
-        await File.WriteAllTextAsync(resultFile, resultFileStringBuilder.ToString());
-
-        if (regenerateMappingJson)
-        {
-            var licenceFilenameMapFile = $"{outputFolder}Additional/licence-number-filename-map.csv";
-            await File.WriteAllTextAsync(licenceFilenameMapFile, mappingFileStringBuilder.ToString());
-
-            var licenceFilenameMapJsonFile = $"{outputFolder}Additional/licence-number-filename-map.jsonp";
-            var licenceFilenameMapDictionary = new Dictionary<string, object>
-            {
-                { "filenameToLicenceNumber", filenameToLicenceNumberMap },
-                { "licenceNumberToFilename", licenceNumberToFilenameMap }
-            };
-
-            await File.WriteAllTextAsync(licenceFilenameMapJsonFile,
-                $"var mapData = {JsonSerializer.Serialize(licenceFilenameMapDictionary, JsonHelper.GetSerializerOptions())};");
-        }
-
         await outputService.SaveListDataAsync(listData, processRun.ProcessRunId);
-
-        var nodeGraphData = new Dictionary<string, List<Dictionary<string, object>>>
-        {
-            {
-                "nodes",
-                nodesDictionaries
-            },
-            {
-                "links",
-                linksDictionaries
-            }
-        };
-
-        var nodeGraphDataFile = $"{outputFolder}Additional/node-graph-data.jsonp";
-        await File.WriteAllTextAsync(nodeGraphDataFile,
-            $"var data = {JsonSerializer.Serialize(nodeGraphData, JsonHelper.GetSerializerOptions())};");
-        
         return listData;
     }
-    
+
     private static string ToPercent(double? value, string? ocr)
     {
         if (ocr != "OCR")
         {
             return string.Empty;
         }
-    
+
         if (value == null)
         {
             return string.Empty;
@@ -287,7 +242,7 @@ public static class JsOutputHelper
 
         return " (" + Math.Round(value.Value, 1) + "%)";
     }
-    
+
     private static void Log(string message, StringBuilder outputStringBuilder)
     {
         outputStringBuilder.Append(message);
@@ -312,10 +267,10 @@ public static class JsOutputHelper
 
                 return jsonElement.Value.GetDouble();
         }
-        
+
         throw new NotImplementedException();
     }
-    
+
     private static T2? GetValueOrDefault<T, T2>(
         Dictionary<string, object?> data,
         string fieldName,
@@ -334,24 +289,24 @@ public static class JsOutputHelper
             {
                 var ary = (JsonElement[])value;
                 var firstElement = ary.Length >= 1 ? ary.FirstOrDefault() : (JsonElement?)null;
-                
+
                 return (T2?)(GetValue(firstElement, typeof(T2)) ?? defaultValue);
             }
-            
+
             if (value.GetType() == typeof(string[]))
             {
                 var ary = (string[])value;
                 return (T2?)(ary.FirstOrDefault() ?? (object?)defaultValue);
             }
-            
+
             if (value.GetType() == typeof(List<JsonElement>))
             {
                 var list = (List<JsonElement>)value;
                 var firstElement = list.Count >= 1 ? list.FirstOrDefault() : (JsonElement?)null;
-                
+
                 return (T2?)(GetValue(firstElement, typeof(T2)) ?? (object?)defaultValue);
             }
-            
+
             if (value.GetType() == typeof(List<string>))
             {
                 var list = (List<string>)value;
@@ -367,7 +322,7 @@ public static class JsOutputHelper
             {
                 return (T2)value;
             }
-            
+
             var targetType = typeof(T2);
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -385,19 +340,22 @@ public static class JsOutputHelper
 
             return (T2)value;
         }
-        
+
         if (typeof(T) == typeof(string))
         {
             return (T2)(object)element.GetString()!;
         }
+
         if (typeof(T) == typeof(double))
         {
             return (T2)(object)element.GetDouble();
         }
+
         if (typeof(T) == typeof(int))
         {
             return (T2)(object)element.GetInt32();
         }
+
         if (typeof(T) == typeof(string[]))
         {
             var v = element.GetRawText();
@@ -405,7 +363,7 @@ public static class JsOutputHelper
 
             return (T2)(object)ary.FirstOrDefault()!;
         }
-        
+
         throw new NotSupportedException($"{typeof(T).Name} is not supported");
     }
 }

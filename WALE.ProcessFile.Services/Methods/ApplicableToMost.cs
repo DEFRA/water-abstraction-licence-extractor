@@ -89,6 +89,7 @@ public static class ApplicableToMost
                 t,
                 true,
                 false,
+                null,
                 out var removedLines);
             
             if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
@@ -98,6 +99,18 @@ public static class ApplicableToMost
 
             var lineWords = request.line!.Columns
                 .SelectMany(c => c.Words)
+                .Select((w, idx) =>
+                {
+                    w.Text = DataHelper.RemoveExcludes(
+                        matchedLabel,
+                        w.Text,
+                        idx == 0,
+                        false,
+                        idx,
+                        out _);
+
+                    return w;
+                })
                 .ToList();
 
             lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);

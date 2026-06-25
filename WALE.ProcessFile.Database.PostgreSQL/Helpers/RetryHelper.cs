@@ -4,7 +4,7 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class RetryHelper
 {
-    public const int MaxRetries = 5;
+    public const int MaxRetries = 0;
 
     public static async Task WaitWithMessageAsync(int retryNumber, string serviceName)
     {

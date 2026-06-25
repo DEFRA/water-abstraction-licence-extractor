@@ -6,6 +6,8 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Tesseract;
 
+string? imageReference = null;
+
 try
 {
     var configuration = GetConfiguration();
@@ -23,14 +25,21 @@ try
 
     if (args.Length < 11)
     {
-        throw new Exception("Not enough arguments provided");
+        await WriteLogFileIfDebugModeAsync(
+            "Error.txt",
+            "Not enough arguments provided",
+            true,
+            true,
+            true);
+
+        return;
     }
 
     var pageSegMode = Enum.Parse<WALE.ProcessFile.Core.Enums.PageSegMode>(args[0]);
     var bytesMode = args[1];
     var pageNumber = int.Parse(args[2]);
     var imageNumber = int.Parse(args[3]);
-    var imageReference = args[4];
+    imageReference = args[4];
     var fileId = Guid.Parse(args[5]);
     var isPageScreenshot = bool.Parse(args[6]);
     var processRunId = int.Parse(args[7]);
@@ -66,11 +75,10 @@ catch (Exception ex)
 {
     await WriteLogFileIfDebugModeAsync(
         "Error.txt",
-         "ERROR - " + ex,
+         $"{ex} - {imageReference}",
+        true,
         true,
         true);
-
-    throw;
 }
 
 return;
@@ -126,11 +134,17 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
         pageSegMode);
 }
 
-static async Task WriteLogFileIfDebugModeAsync(string filename, string content, bool shouldConsoleWrite, bool shouldWriteFile)
+static async Task WriteLogFileIfDebugModeAsync(
+    string filename,
+    string content,
+    bool shouldConsoleWrite,
+    bool shouldWriteFile,
+    bool isError = false)
 {
     if (shouldConsoleWrite)
     {
-        ConsoleHelper.WriteLine($"UNKNOWN - TesseractExe - {content}");
+        var type = isError ? "ERROR" : "INFO";
+        ConsoleHelper.WriteLine($"{type} - TesseractExe - {content}");
     }
 
     if (!shouldWriteFile)

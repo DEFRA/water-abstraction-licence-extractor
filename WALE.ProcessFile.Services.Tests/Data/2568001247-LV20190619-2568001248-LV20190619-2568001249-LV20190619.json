@@ -14,7 +14,7 @@
           "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
           "licenceNumber": "25/68/001/249",
           "licenceVersionId": "LV20190619",
-          "primaryType": "licenceToLicence",
+          "primaryType": "LicenceToLicence",
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
@@ -26,14 +26,15 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Live",
-              "licenceType": "GroundWaterAbstraction"
+              "licenceType": "GroundWaterAbstraction",
+              "regionId": 1
             },
             {
               "licenceNumber": "25 68 001 248",
@@ -45,25 +46,26 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "licenceType": "Unknown",
+              "regionId": 1
             }
           ],
           "limits": [
             {
-              "periodType": "perDay",
+              "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
               "isAverage": false
             },
             {
-              "periodType": "perYear",
+              "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
               "isAverage": false
@@ -75,7 +77,7 @@
           "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
           "licenceNumber": "25/68/001/247",
           "licenceVersionId": "LV20190619",
-          "primaryType": "licenceToLicence",
+          "primaryType": "LicenceToLicence",
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 248",
@@ -87,14 +89,15 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Unknown",
-              "licenceType": "Unknown"
+              "licenceType": "Unknown",
+              "regionId": 1
             },
             {
               "licenceNumber": "25 68 001 249",
@@ -104,25 +107,26 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Live",
-              "licenceType": "SurfaceWaterAbstraction"
+              "licenceType": "SurfaceWaterAbstraction",
+              "regionId": 0
             }
           ],
           "limits": [
             {
-              "periodType": "perDay",
+              "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
               "isAverage": false
             },
             {
-              "periodType": "perYear",
+              "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
               "isAverage": false
@@ -134,7 +138,7 @@
           "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
           "licenceNumber": "25/68/001/248",
           "licenceVersionId": "LV20190619",
-          "primaryType": "licenceToLicence",
+          "primaryType": "LicenceToLicence",
           "linkedLicences": [
             {
               "licenceNumber": "25 68 001 247",
@@ -146,14 +150,15 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Live",
-              "licenceType": "GroundWaterAbstraction"
+              "licenceType": "GroundWaterAbstraction",
+              "regionId": 1
             },
             {
               "licenceNumber": "25 68 001 249",
@@ -163,25 +168,26 @@
                   "source": "Document",
                   "direction": "Outgoing",
                   "sectionName": "AbstractionLimits",
-                  "linkReason": "AggregateCondition",
+                  "linkReason": "ShallNotExceed",
                   "isBecauseOfAggregate": false,
                   "lineNumber": 111,
                   "pageNumber": 4
                 }
               ],
               "naldStatus": "Live",
-              "licenceType": "SurfaceWaterAbstraction"
+              "licenceType": "SurfaceWaterAbstraction",
+              "regionId": 0
             }
           ],
           "limits": [
             {
-              "periodType": "perDay",
+              "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
               "isAverage": false
             },
             {
-              "periodType": "perYear",
+              "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
               "isAverage": false
@@ -239,21 +245,22 @@
       "abstractionLimits": {
         "individual": [
           {
+            "documentIdentifier": "6.1",
             "limits": [
               {
-                "periodType": "perHour",
+                "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -267,7 +274,7 @@
             "aggregateSetId": "2568001247-LVUNKNOWN-2568001248-LVUNKNOWN-2568001249-LV20190619",
             "licenceNumber": "25/68/001/249",
             "licenceVersionId": "LV20190619",
-            "primaryType": "licenceToLicence",
+            "primaryType": "LicenceToLicence",
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
@@ -279,14 +286,15 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Live",
-                "licenceType": "GroundWaterAbstraction"
+                "licenceType": "GroundWaterAbstraction",
+                "regionId": 1
               },
               {
                 "licenceNumber": "25 68 001 248",
@@ -298,25 +306,26 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "licenceType": "Unknown",
+                "regionId": 1
               }
             ],
             "limits": [
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -336,7 +345,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -345,13 +354,14 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "GroundWaterAbstraction"
+          "licenceType": "GroundWaterAbstraction",
+          "regionId": 1
         },
         {
           "licenceNumber": "25/68/001/248",
@@ -363,7 +373,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -372,27 +382,28 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "licenceType": "Unknown",
+          "regionId": 1
         }
       ],
       "licenceSets": [
         {
           "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "singleLicenceOnly"
+          "licenceSetType": "SingleLicenceOnly"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
         }
       ],
       "noneSchemaData": {
@@ -427,7 +438,8 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      }
+      },
+      "regionId": 0
     },
     {
       "id": "2568001247-LV20190619",
@@ -480,21 +492,22 @@
       "abstractionLimits": {
         "individual": [
           {
+            "documentIdentifier": "6.1",
             "limits": [
               {
-                "periodType": "perHour",
+                "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -508,7 +521,7 @@
             "aggregateSetId": "2568001248-LVUNKNOWN-2568001249-LVUNKNOWN-2568001247-LV20190619",
             "licenceNumber": "25/68/001/247",
             "licenceVersionId": "LV20190619",
-            "primaryType": "licenceToLicence",
+            "primaryType": "LicenceToLicence",
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 248",
@@ -520,14 +533,15 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Unknown",
-                "licenceType": "Unknown"
+                "licenceType": "Unknown",
+                "regionId": 1
               },
               {
                 "licenceNumber": "25 68 001 249",
@@ -537,25 +551,26 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Live",
-                "licenceType": "SurfaceWaterAbstraction"
+                "licenceType": "SurfaceWaterAbstraction",
+                "regionId": 0
               }
             ],
             "limits": [
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -575,7 +590,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -584,13 +599,14 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Unknown",
-          "licenceType": "Unknown"
+          "licenceType": "Unknown",
+          "regionId": 1
         },
         {
           "licenceNumber": "25/68/001/249",
@@ -601,7 +617,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -610,27 +626,28 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "SurfaceWaterAbstraction"
+          "licenceType": "Abstraction",
+          "regionId": 0
         }
       ],
       "licenceSets": [
         {
           "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "singleLicenceOnly"
+          "licenceSetType": "SingleLicenceOnly"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
         }
       ],
       "noneSchemaData": {
@@ -665,7 +682,8 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      }
+      },
+      "regionId": 1
     },
     {
       "id": "2568001248-LV20190619",
@@ -718,21 +736,22 @@
       "abstractionLimits": {
         "individual": [
           {
+            "documentIdentifier": "6.1",
             "limits": [
               {
-                "periodType": "perHour",
+                "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -746,7 +765,7 @@
             "aggregateSetId": "2568001247-LVUNKNOWN-2568001249-LVUNKNOWN-2568001248-LV20190619",
             "licenceNumber": "25/68/001/248",
             "licenceVersionId": "LV20190619",
-            "primaryType": "licenceToLicence",
+            "primaryType": "LicenceToLicence",
             "linkedLicences": [
               {
                 "licenceNumber": "25 68 001 247",
@@ -758,14 +777,15 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Live",
-                "licenceType": "GroundWaterAbstraction"
+                "licenceType": "GroundWaterAbstraction",
+                "regionId": 1
               },
               {
                 "licenceNumber": "25 68 001 249",
@@ -775,25 +795,26 @@
                     "source": "Document",
                     "direction": "Outgoing",
                     "sectionName": "AbstractionLimits",
-                    "linkReason": "AggregateCondition",
+                    "linkReason": "ShallNotExceed",
                     "isBecauseOfAggregate": false,
                     "lineNumber": 111,
                     "pageNumber": 4
                   }
                 ],
                 "naldStatus": "Live",
-                "licenceType": "SurfaceWaterAbstraction"
+                "licenceType": "SurfaceWaterAbstraction",
+                "regionId": 0
               }
             ],
             "limits": [
               {
-                "periodType": "perDay",
+                "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
                 "isAverage": false
               },
               {
-                "periodType": "perYear",
+                "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
                 "isAverage": false
@@ -813,7 +834,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -822,13 +843,14 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "GroundWaterAbstraction"
+          "licenceType": "GroundWaterAbstraction",
+          "regionId": 1
         },
         {
           "licenceNumber": "25/68/001/249",
@@ -839,7 +861,7 @@
               "source": "Document",
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
               "lineNumber": 111,
               "pageNumber": 4
@@ -848,27 +870,28 @@
               "source": "OtherDocument",
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
-              "linkReason": "AggregateCondition",
+              "linkReason": "ShallNotExceed",
               "lineNumber": 111,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "SurfaceWaterAbstraction"
+          "licenceType": "Abstraction",
+          "regionId": 0
         }
       ],
       "licenceSets": [
         {
           "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "singleLicenceOnly"
+          "licenceSetType": "SingleLicenceOnly"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedAnywhere"
+          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
         },
         {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "allLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
         }
       ],
       "noneSchemaData": {
@@ -903,7 +926,8 @@
         ],
         "Confidence:LinkedLicence_SomewhereInDocument_0": null,
         "Confidence:LinkedLicence_SomewhereInDocument_1": null
-      }
+      },
+      "regionId": 1
     }
   ]
 }

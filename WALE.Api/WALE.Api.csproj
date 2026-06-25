@@ -1,14 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>cd328d80-b028-4189-84ec-bce4921e3f8a</UserSecretsId>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Amazon.Sqs" Version="0.34.0" />
+        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.32" />
+        <PackageReference Include="AWSSDK.SQS" Version="4.0.2.24" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11"/>
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.11" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.11.6" />
@@ -23,5 +26,6 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Database.PostgreSQL\WALE.ProcessFile.Database.PostgreSQL.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+      <ProjectReference Include="..\WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj" />
     </ItemGroup>
 </Project>

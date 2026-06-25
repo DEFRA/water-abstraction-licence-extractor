@@ -231,7 +231,7 @@ export function LicencesTableHeaders({
                             { value: 'Records', label: 'In Records' },
                             { value: 'ImplicitBackLink', label: 'Implicit back link' },
                             { value: 'Populated', label: 'Not empty' },
-                            { value: 'Empty', label: '--' }
+                            { value: 'Empty', label: 'No Linked Licences' }
                         ]}
                     />
                 </td>
@@ -250,15 +250,22 @@ export function LicencesTableHeaders({
                 <td>
                     <FilterSelect
                         id="verified-filter"
-                        field="licenceVerificationSummary"
-                        type="EmptyOrNotArray"
-                        value={filters['licenceVerificationSummary']?.value ?? 'all'}
+                        field="latestLicenceSectionVerifications"
+                        type="LicenceVerification"
+                        value={filters['latestLicenceSectionVerifications']?.value ?? 'all'}
                         onChange={onFilterChange}
-                        onReset={() => onResetFilters('licenceVerificationSummary')}
+                        onReset={() => onResetFilters('latestLicenceSectionVerifications')}
                         options={[
                             { value: 'all', label: 'All' },
                             { value: 'populated', label: 'Not empty' },
-                            { value: 'empty', label: '--' }
+                            { value: 'empty', label: 'No verifications' },
+                            { value: 'AutoConfirm', label: 'AutoConfirm' },
+                            { value: 'AutoWarn', label: 'AutoWarn' },
+                            { value: 'AutoFail', label: 'AutoFail' },
+                            { value: 'Confirmed', label: 'Confirmed' },
+                            { value: 'Removed', label: 'Removed' },
+                            { value: 'Edited', label: 'Edited' },
+                            { value: 'Added', label: 'Added' },
                         ]}
                     />
                 </td>
@@ -302,7 +309,7 @@ export function LicencesTableHeaders({
                     Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '10%'}}>
-                    Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceVerificationSummary'); }}>&#8693;</a>
+                    Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('latestLicenceSectionVerifications'); }}>&#8693;</a>
                 </td>
             </tr>
         </>

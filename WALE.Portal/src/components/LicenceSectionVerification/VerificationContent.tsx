@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import type {Licence, LicenceSectionVerification} from "../../api/generated/apiClient.ts";
+import { useState, useEffect, useCallback } from "react";
+import type {Licence, LicenceSectionVerification, OutputListDataItem} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
@@ -9,17 +9,20 @@ interface VerificationContentProps {
     licence: Licence;
     processRunId: number;
     onJumpToPage: (pageNumber: number) => void;
+    onRefresh?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 type SubTabType = 'verify' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('verify');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [verifyResetKey, setVerifyResetKey] = useState(0);
 
-    useEffect(() => {
-        if (activeSubTab === 'history' && licence.dmsFileId) {
+    const fetchHistory = useCallback(() => {
+        if (licence.dmsFileId) {
             setIsLoadingHistory(true);
             waleApiClient.licenceSectionVerifications(licence.dmsFileId)
                 .then((data) => {
@@ -32,7 +35,18 @@ export function VerificationContent({ licence, processRunId, onJumpToPage }: Ver
                     setIsLoadingHistory(false);
                 });
         }
-    }, [activeSubTab, licence.dmsFileId]);
+    }, [licence.dmsFileId]);
+
+    const handleVerified = () => {
+        fetchHistory();
+        setVerifyResetKey(prev => prev + 1);
+    };
+
+    useEffect(() => {
+        if (activeSubTab === 'history') {
+            fetchHistory();
+        }
+    }, [activeSubTab, fetchHistory]);
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
@@ -64,17 +78,24 @@ export function VerificationContent({ licence, processRunId, onJumpToPage }: Ver
             </ul>
 
             {activeSubTab === 'verify' && (
-                <LicenceSection 
-                    title="Linked Licences" 
-                    licenceFileId={licence.dmsFileId!} 
-                    processRunId={processRunId}
-                >
-                    <LinkedLicences 
-                        licence={licence} 
-                        isEditing={false} // This will be overridden by LicenceSection's React.cloneElement
-                        onJumpToPage={onJumpToPage}
-                    />
-                </LicenceSection>
+                <div key={verifyResetKey}>
+                    <LicenceSection 
+                        title="Linked Licences" 
+                        itemType="linked licence"
+                        licenceFileId={licence.dmsFileId!} 
+                        processRunId={processRunId}
+                        onRefresh={onRefresh}
+                        onVerified={handleVerified}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                    >
+                        <LinkedLicences 
+                            licence={licence} 
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                        />
+                    </LicenceSection>
+                </div>
             )}
 
             {activeSubTab === 'history' && (

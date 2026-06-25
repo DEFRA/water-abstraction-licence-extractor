@@ -8,9 +8,16 @@ namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
 {
-    public IInternalPdfDocument GetPdfDocument(IFileService fileService, string filename)
+    public async Task<IInternalPdfDocument?> GetPdfDocumentAsync(IFileService fileService, string filename)
     {
-        var fileStream = Task.Run(() => fileService.GetFileAsStreamAsync(filename)).Result;
+        var fileStream = await fileService.GetFileAsStreamAsync(filename);
+
+        if (fileStream == null)
+        {
+            return null;
+        }
+        
+        var sizeBytes = fileStream.Length;
         
         var document = PdfDocument.Open(
             fileStream,
@@ -22,7 +29,7 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
             });
 
         document.AddSkiaPageFactory();
-        return new PdfPigInternalPdfDocument(document);
+        return new PdfPigInternalPdfDocument(document, sizeBytes);
     }
 
     public string? Name { get; set; } = GeneralConstants.PdfPigDataExtractorServiceName;

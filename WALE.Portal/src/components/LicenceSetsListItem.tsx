@@ -2,12 +2,12 @@ import type {LicenceSet} from "../api/generated/apiClient.ts";
 import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListItemProps {
-    filename: string | undefined;
+    fileId: string | undefined;
     licenceSet: LicenceSet;
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
 }
 
-export function LicenceSetsListItem({filename, licenceSet, onOpenLicenceSetReport}: LicenceSetsListItemProps) {
+export function LicenceSetsListItem({fileId, licenceSet, onOpenLicenceSetReport}: LicenceSetsListItemProps) {
     let licenceSetId = licenceSet.licenceSetId;
     let shortLicenceSetId = licenceSet.shortLicenceSetId;
 
@@ -45,7 +45,7 @@ export function LicenceSetsListItem({filename, licenceSet, onOpenLicenceSetRepor
                     href="#"
                     onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(filename!, licenceSetId!);
+                        onOpenLicenceSetReport(fileId!, licenceSetId!);
                     }}>
                     {shortLicenceSetId}
                 </a>

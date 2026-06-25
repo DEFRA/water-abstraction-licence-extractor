@@ -38,7 +38,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
         var returnList = new List<UnknownSectionLinkedLicencesCsvLine>();
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await OutputService.GetLicencesAsync(processRunId);
+        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
         
         foreach (var licence in licences)
         {

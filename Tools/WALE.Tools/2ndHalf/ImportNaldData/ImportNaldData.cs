@@ -66,9 +66,9 @@ public static class ImportNaldData
         }
     }
 
-    public static async Task ImportAsync()
+    public static async Task<int> ImportAsync()
     {
-        ConsoleHelper.WriteLine("Starting NALD data import...");
+        ConsoleHelper.WriteLine($"Starting NALD data import to {KeyConfig.PostgresHost}...");
         var fileSource = "s3";
 
         var files = new List<string>();
@@ -80,7 +80,7 @@ public static class ImportNaldData
             if (!Directory.Exists(dumpFolder))
             {
                 ConsoleHelper.WriteLine($"Error: NALD dump folder not found at {dumpFolder}");
-                return;
+                return 1;
             }
 
             files.AddRange(Directory.GetFiles(dumpFolder, "NALD_*.txt"));
@@ -142,6 +142,8 @@ public static class ImportNaldData
 
         await using var dataSource = npgsqlDataSourceProvider.DataSource;
 
+        await SetNaldImportDateAsync(dataSource);
+        
         // Cache the schema information once
         await LoadSchemaAsync(dataSource);
 
@@ -184,8 +186,24 @@ public static class ImportNaldData
         await RecreateForeignKeysAsync(dataSource);
 
         ConsoleHelper.WriteLine("NALD data import completed.");
+        return 1;
     }
 
+    private static async Task SetNaldImportDateAsync(NpgsqlDataSource dataSource)
+    {
+        var sql = @"
+            INSERT INTO public.import_dates (data_source, date_time)
+            VALUES (@DataSource, @DateTime)";
+
+        await using var connection = await dataSource.OpenConnectionAsync();
+
+        await connection.ExecuteAsync(sql, new
+        {
+            DataSource = "Nald",
+            DateTime = DateTime.Now
+        });
+    }
+    
     private static async Task LoadSchemaAsync(NpgsqlDataSource dataSource)
     {
         _schemaCache = new Dictionary<string, Dictionary<string, NpgsqlTypes.NpgsqlDbType>>();

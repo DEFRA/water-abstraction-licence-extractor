@@ -15,8 +15,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO process_run (description, start_date_time_utc, number_of_files) 
-                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles) 
+                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status) 
+                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status) 
                            RETURNING process_run_id
                            """;
 
@@ -28,10 +28,132 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 processRun.Description,
                 processRun.StartDateTimeUtc,
-                processRun.NumberOfFiles
+                processRun.NumberOfFiles,
+                processRun.Status
             });
 
         return processRun;
+    }
+
+    public async Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run pr
+                           SET status = 'Completed',
+                               end_date_time_utc = now()
+                           WHERE pr.process_run_id = @ProcessRunId
+                             AND pr.status <> 'Completed'
+                             AND pr.number_of_files = (
+                                 SELECT COUNT(*)
+                                 FROM process_run_file prf
+                                 WHERE prf.process_run_id = pr.process_run_id
+                             )
+                             AND NOT EXISTS (
+                                 SELECT 1
+                                 FROM process_run_file prf
+                                 WHERE prf.process_run_id = pr.process_run_id
+                                   AND prf.end_date_time_utc IS NULL
+                             )
+                           RETURNING pr.end_date_time_utc;
+                           """;
+
+      processRun.EndDateTimeUtc =  await ExecuteDateTimeScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRun.ProcessRunId,
+            });
+        
+        return processRun;
+    }
+
+    public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO public.process_run_file 
+                           (
+                               process_run_id, 
+                               file_name, 
+                               start_date_time_utc
+                           )
+                           VALUES 
+                           (
+                               @ProcessRunId, 
+                               @FileName, 
+                               @UTCStartDateTime
+                           )
+                           ON CONFLICT (process_run_id, file_name) DO NOTHING
+                           RETURNING process_run__file_id;
+                           """;
+
+        processRunFile.ProcessRunFileId = await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.ProcessRunId,
+                processRunFile.FileName,
+                UTCStartDateTime = DateTime.UtcNow
+            });
+
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run_file
+                           SET
+                               end_date_time_utc = @UTCEndDateTime
+                           WHERE
+                                process_run__file_id = @ProcessRunFileId
+                           AND file_name = @FileName     
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.FileName,
+                processRunFile.ProcessRunFileId,
+                UTCEndDateTime = DateTime.UtcNow
+            });
+
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run_file
+                           SET
+                               error_message = @ErrorMessage
+                           WHERE
+                                process_run__file_id = @ProcessRunFileId
+                           AND file_name = @FileName     
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.FileName,
+                processRunFile.ProcessRunFileId,
+                processRunFile.ErrorMessage
+            });
+
+        return processRunFile;
     }
 
     public async Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId)
@@ -463,7 +585,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            UPDATE process_run 
-                           SET end_date_time_utc = @EndDateTimeUtc 
+                           SET end_date_time_utc = @EndDateTimeUtc, Status = 'Completed',  success_count = @SuccessCount
                            WHERE process_run_id = @ProcessRunId
                            """;
 
@@ -473,8 +595,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
+                processRun.SuccessCount,
                 processRun.ProcessRunId,
-                EndDateTimeUtc = DateTime.UtcNow
+                EndDateTimeUtc = DateTime.UtcNow,
+                
             });
     }
 
@@ -545,6 +669,359 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 LicenceSetType = licenceSetType
             });
     }
+    
+    public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        await using var connection = GetPostgresConnection();
+        
+        const string sql = @"
+            INSERT INTO public.dms_file_reader (
+                status,
+                error_message,
+                licence_number,
+                permit_number,
+                file_name,
+                original_file_name,
+                file_id,
+                date_of_issue,
+                number_of_pages,
+                primary_type,
+                secondary_type,
+                file_type,
+                confidence,
+                identified_by_rule,
+                matched_terms,
+                file_size)
+            VALUES (
+                @Status,
+                @ErrorMessage,
+                @LicenceNumber,
+                @PermitNumber,
+                @FileName,
+                @OriginalFileName,
+                @FileId,
+                @DateOfIssue,
+                @NumberOfPages,
+                @PrimaryType,
+                @SecondaryType,
+                @FileType,
+                @Confidence,
+                @IdentifiedByRule,
+                @MatchedTerms,
+                @FileSize)";
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+        {
+            dmsFileReaderResult.Status,
+            dmsFileReaderResult.ErrorMessage,
+            dmsFileReaderResult.LicenceNumber,
+            dmsFileReaderResult.PermitNumber,
+            dmsFileReaderResult.FileName,
+            dmsFileReaderResult.OriginalFileName,
+            dmsFileReaderResult.FileId,
+            dmsFileReaderResult.DateOfIssue,
+            dmsFileReaderResult.NumberOfPages,
+            dmsFileReaderResult.PrimaryType,
+            dmsFileReaderResult.SecondaryType,
+            dmsFileReaderResult.FileType,
+            dmsFileReaderResult.Confidence,
+            dmsFileReaderResult.IdentifiedByRule,
+            dmsFileReaderResult.MatchedTerms,
+            dmsFileReaderResult.FileSize
+        });
+    }
+
+    public async Task SaveImportRunDateAsync(string dataSource)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO import_dates (data_source, date_time)
+                           VALUES (@DataSource, @DateTime)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                DataSource = dataSource,
+                DateTime = DateTime.Now
+            });
+    }
+
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        foreach (var result in results)
+        {
+            await SaveLicenceFinderResultAsync(result);
+        }
+    }
+
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        foreach (var result in results)
+        {
+            await SaveVersionFileToDownloadAsync(result);
+        }
+    }
+
+    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        foreach (var result in results)
+        {
+            await SaveVersionFileAsync(result);
+        }
+    }
+
+    public async Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM ocr_temporary_image_text_cache
+                           WHERE file_id = @FileId
+                               AND ocr_service_name = @OcrServiceName 
+                               AND page_number = @PageNumber 
+                               AND image_number = @ImageNumber;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                request.FileId,
+                request.OcrServiceName,
+                request.ImageNumber,
+                request.PageNumber
+            });
+    }
+
+    public async Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM ocr_temporary_screenshot_text_cache
+                           WHERE
+                                file_id = @FileId
+                                AND ocr_service_name = @OcrServiceName
+                                AND page_number = @PageNumber
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                request.FileId,
+                request.OcrServiceName,
+                request.PageNumber
+            });
+    }
+
+    public async Task SavePageScreenshotThumbnailAsync(
+        int pageNumber,
+        string serviceName,
+        Guid fileId,
+        byte[] thumbnail,
+        int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO page_screenshot_thumbnail (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
+                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
+                           """;
+        
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                PageNumber = pageNumber,
+                NoOcrServiceName = serviceName,
+                Data = thumbnail,
+                DateTimeUtc = DateTime.UtcNow,
+                ProcessRunId = processRunId
+            });
+    }
+
+    private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO version_files_to_download (
+                                    permit_number,
+                                    full_path,
+                                    site_path,
+                                    library_and_file_path)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FullPath,
+                                    @SitePath,
+                                    @LibraryAndFilePath)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
+    }
+    
+    private async Task SaveVersionFileAsync(VersionFile result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO version_files (
+                                    permit_number,
+                                    full_path,
+                                    site_path,
+                                    library_and_file_path,
+                                    region_id,
+                                    file_name,
+                                    file_id,
+                                    file_size)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FullPath,
+                                    @SitePath,
+                                    @LibraryAndFilePath,
+                                    @RegionId,
+                                    @FileName,
+                                    @FileId,
+                                    @FileSize)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
+    }
+
+    public async Task ClearVersionFilesToDownloadAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM version_files_to_download;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
+    
+    public async Task ClearVersionFilesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM version_files;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
+    
+    public async Task ClearLicenceFinderResultsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           DELETE FROM licence_finder_result;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0);
+    }
+    
+    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO licence_finder_result (
+                                    permit_number,
+                                    file_url,
+                                    rule_used,
+                                    change_audit_action,
+                                    license_number,
+                                    document_date,
+                                    signature_date,
+                                    date_of_issue,
+                                    other_reference,
+                                    file_size,
+                                    disclosure_status,
+                                    region,
+                                    nald_id,
+                                    nald_issue_no,
+                                    nald_increment_no,
+                                    primary_template,
+                                    secondary_template,
+                                    number_of_pages,
+                                    doi_signature_date_match,
+                                    included_in_version_match,
+                                    single_licence_in_version_match,
+                                    version_match_file_url,
+                                    duplicate_licence_in_version_match_result,
+                                    nald_issue,
+                                    file_id,
+                                    file_id_status,
+                                    file_id_status_change_date,
+                                    is_water_company,
+                                    folder_name_auto_correct,
+                                    seen_in_dms_extract,
+                                    we_have_downloaded)
+                               VALUES (
+                                    @PermitNumber,
+                                    @FileUrl,
+                                    @RuleUsed,
+                                    @ChangeAuditAction,
+                                    @LicenseNumber,
+                                    @DocumentDate,
+                                    @SignatureDate,
+                                    @DateOfIssue,
+                                    @OtherReference,
+                                    @FileSize,
+                                    @DisclosureStatus,
+                                    @Region,
+                                    @NaldId,
+                                    @NaldIssueNo,
+                                    @NaldIncrementNo,
+                                    @PrimaryTemplate,
+                                    @SecondaryTemplate,
+                                    @NumberOfPages,
+                                    @DoiSignatureDateMatch,
+                                    @IncludedInVersionMatch,
+                                    @SingleLicenceInVersionMatch,
+                                    @VersionMatchFileUrl,
+                                    @DuplicateLicenceInVersionMatchResult,
+                                    @NaldIssue,
+                                    @FileId,
+                                    @FileIdStatus,
+                                    @FileIdStatusChangeDate,
+                                    @IsWaterCompany,
+                                    @FolderNameAutoCorrect,
+                                    @SeenInDmsExtract,
+                                    @WeHaveDownloaded)
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            result);
+    }
 
     public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
     {
@@ -595,8 +1072,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_value, verification_type, created_date_time_utc)
-                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionValue AS jsonb), @VerificationType, @CreatedDateTimeUtc)
+                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_override_value, verification_type, licence_section_item_id, notes, created_date_time_utc)
+                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @LicenceSectionItemId, @Notes, @CreatedDateTimeUtc)
                            RETURNING licence_section_verification_id
                            """;
 
@@ -609,20 +1086,67 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 verification.LicenceFileId,
                 verification.ProcessRunId,
                 verification.LicenceSectionName,
-                verification.LicenceSectionValue,
+                verification.LicenceSectionScrapedValue,
+                verification.LicenceSectionOverrideValue,
                 verification.VerificationType,
+                verification.LicenceSectionItemId,
+                verification.Notes,
                 CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
+    
+    private async Task<DateTime> ExecuteDateTimeScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
 
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
+            var result = await connection.ExecuteScalarAsync<DateTime>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+            
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteScalarAsync retrying");
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresWriteService));
+            return await ExecuteDateTimeScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
     private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             var result = await connection.ExecuteScalarAsync<int>(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -658,8 +1182,12 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         {
             var dtStart = DateTime.Now;
             var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
-            NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
-            
+
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
             await connection.ExecuteAsync(sql, param);
             var duration =  DateTime.Now - dtStart;
 
@@ -688,5 +1216,18 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     }
     
     private NpgsqlConnection GetPostgresConnection()
-        => dataSourceProvider.DataSource.CreateConnection();
+    {
+        var dtStart = DateTime.Now;
+
+        var conn = dataSourceProvider.DataSource.CreateConnection();
+        var duration = DateTime.Now - dtStart;
+
+        if (duration.TotalSeconds > 1)
+        {
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(PostgresReadService)} - CreateConnection took {duration.TotalMilliseconds}ms");
+        }
+
+        return conn;
+    }
 }

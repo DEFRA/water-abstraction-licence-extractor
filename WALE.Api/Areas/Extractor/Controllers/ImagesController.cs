@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -89,32 +88,110 @@ public class ImagesController(
     
     [HttpPost]
     public async Task<ActionResult> SaveImageOnPageAsync(
-        [FromBody] SaveImageOnPageRequest request)
+        [FromQuery] Guid fileId,
+        [FromQuery] int width,
+        [FromQuery] int height,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int imageNumber,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? extension,
+        [FromQuery] int processRunId)
     {
-        await cacheService.SaveImageOnPageAsync(
-            request.bytes,
-            request.width,
-            request.height,
-            request.fileId,
-            request.noOcrServiceName!,
-            request.imageNumber,
-            request.pageNumber,
-            request.extension!,
-            request.processRunId);
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
 
-        return Ok(request.bytes.Length);
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
+        
+        await cacheService.SaveImageOnPageAsync(
+            data,
+            width,
+            height,
+            fileId,
+            noOcrServiceName!,
+            imageNumber,
+            pageNumber,
+            extension!,
+            processRunId);
+
+        return Ok(data.Length);
     }
     
     [HttpPost]
     public async Task<ActionResult> SavePageScreenshotAsync(
-        [FromBody] SavePageScreenshotRequest request)
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int processRunId)
     {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
+        
         await outputService.SavePageScreenshotInternalAsync(
-            request.pageNumber,
-            request.noOcrServiceName!,
-            request.fileId,
-            request.data,
-            request.processRunId);
+            pageNumber,
+            noOcrServiceName!,
+            fileId,
+            data,
+            processRunId);
+
+        return Ok();
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult> SavePageScreenshotThumbnailAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string? noOcrServiceName,
+        [FromQuery] int processRunId)
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+        
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest();
+        }
+         
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        var data = stream.ToArray();
+        
+        await outputService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            noOcrServiceName!,
+            fileId,
+            data,
+            processRunId);
 
         return Ok();
     }

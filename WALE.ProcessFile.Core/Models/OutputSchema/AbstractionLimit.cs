@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class AbstractionLimit : PeriodAndPointRestricted
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LimitPeriodType PeriodType { get; init; }
     
     public double? Value { get; init; }

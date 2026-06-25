@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.8" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
         <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     </ItemGroup>
@@ -22,50 +23,6 @@
         <None Remove="Data\first-names.csv"/>
         <Content Include="Data\first-names.csv">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\report-template.html" />
-        <Content Include="Templates\report-template.html">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\LOCAL_report-template.html">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\jsonpath-0.8.0.js" />
-        <None Remove="Templates\settings.js" />
-        <None Remove="Templates\styles.css" />
-        <None Remove="Templates\report.js" />
-        <None Remove="Templates\jsonview.js" />
-        <Content Update="Templates\Assets\jsonpath-0.8.0.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\jsonview.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\report.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\settings.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\styles.css">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\list-template.html" />
-        <Content Include="Templates\list-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <None Remove="Templates\Assets\report.js" />
-        <Content Include="Templates\Assets\report.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\licence-set-report-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\Assets\licencesetreport.js">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Update="Templates\process-runs-template.html">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Update="configs">
             <!-- Exclude the file from analysis -->

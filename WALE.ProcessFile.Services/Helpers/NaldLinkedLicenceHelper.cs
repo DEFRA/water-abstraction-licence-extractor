@@ -7,24 +7,20 @@ namespace WALE.ProcessFile.Services.Helpers;
 public class NaldLinkedLicenceHelper
 {
     private readonly Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> _linkedLicenceMap;
-    private readonly short _processingRegionCode;
 
-    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> linkedLicenceMap,
-        short processingRegionCode)
+    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> linkedLicenceMap)
     {
         _linkedLicenceMap = linkedLicenceMap;
-        _processingRegionCode = processingRegionCode;
     }
 
     public static async Task<NaldLinkedLicenceHelper> CreateAsync(
-        ICacheService cacheService,
-        short processingRegionCode)
+        ICacheService cacheService)
     {
         var rawData =
-            await cacheService.GetNaldLinkedLicenceRawDataAsync(processingRegionCode);
+            await cacheService.GetNaldLinkedLicenceRawDataAsync();
         
-        var map = BuildLinkedLicenceMap(rawData, processingRegionCode);
-        return new NaldLinkedLicenceHelper(map, processingRegionCode);
+        var map = BuildLinkedLicenceMap(rawData);
+        return new NaldLinkedLicenceHelper(map);
     }
 
     public List<NaldLinkedLicence> GetLinkedLicences(string? licenceNumber)
@@ -34,7 +30,7 @@ public class NaldLinkedLicenceHelper
             return [];
         }
 
-        var naldLicences = LicenceNumber.GetNaldLicences(licenceNumber, _processingRegionCode);
+        var naldLicences = LicenceNumber.GetNaldLicences(licenceNumber);
         var candidateLicenceNumbers = naldLicences
             .Select(l => l.LicenceNumber)
             .ToList();
@@ -54,18 +50,12 @@ public class NaldLinkedLicenceHelper
     }
 
     private static Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> BuildLinkedLicenceMap(
-        List<NaldLinkedLicenceRawData> naldRawData,
-        short processingRegionCode)
+        List<NaldLinkedLicenceRawData> naldRawData)
     {
         var map = new Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>>();
 
         foreach (var naldRawDataItem in naldRawData)
         {
-            if (naldRawDataItem.RegionCode != processingRegionCode)
-            {
-                continue;
-            }
-
             var forwardLinkKey = naldRawDataItem.LicenceNumber;
             
             if (string.IsNullOrEmpty(forwardLinkKey))
@@ -88,8 +78,7 @@ public class NaldLinkedLicenceHelper
 
                 foreach (var linkCandidate in linkCandidates)
                 {
-                    if (forwardLinkKey == linkCandidate.LicenceNumber
-                        && linkCandidate.RegionCode == processingRegionCode)
+                    if (forwardLinkKey == linkCandidate.LicenceNumber)
                     {
                         continue;
                     }

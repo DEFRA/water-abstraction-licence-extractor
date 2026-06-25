@@ -126,14 +126,6 @@ public static class Split
             else
             {
                 rightPartLines.Insert(0, request.line!);
-
-                if (leftPartLines.Count > 0)
-                {
-                    var lastLeftLine = leftPartLines.Last();
-                    
-                    rightPartLines.Insert(0, lastLeftLine);
-                    leftPartLines.Remove(lastLeftLine);
-                }
             }
         }
         

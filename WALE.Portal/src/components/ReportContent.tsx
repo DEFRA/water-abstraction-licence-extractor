@@ -4,21 +4,23 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
-import {getImageUrl} from "../utils/images.ts";
+import {getImageUrl, getPdfUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
-import {Licence, LicenceSet, type MatchesResult} from "../api/generated/apiClient.ts";
+import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
 
 interface ReportContentProps {
-    filename: string;
+    fileId: string;
     hideBackLink?: boolean;
-    //onOpenLinkedLicence: (filename: string) => void;
+    //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
+    onRefresh?: () => void;
+    outputListDataItem?: OutputListDataItem;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +28,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
     const [reportData, setReportData] = useState<MatchesResult | null>(null);
     const [reportData2, setReportData2] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
+    const [licenceString, setLicenceString] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
     // const [textData, setTextData] = useState<string>('');
 
@@ -39,17 +42,20 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
         const loadAllData = async () => {
             try {
                 setLoading(true);
-
+                
                 // Load data using API client
-                const [matchesResult, licenceResult, licenceSetsResult] = await Promise.allSettled([
-                    waleApiClient.matchesResult(filename),
-                    waleApiClient.licence(filename),
-                    waleApiClient.licenceSets(filename)
+                const [matchesResult, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+                    waleApiClient.matchesResult(fileId),
+                    waleApiClient.licence(fileId, processRunId),
+                    waleApiClient.licenceSets(fileId),
+                    waleApiClient.licenceString(fileId, processRunId),
                 ]);
 
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
                 if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
                 if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+                if (licenceStringResult.status === 'fulfilled') setLicenceString(
+                    JSON.parse(licenceStringResult.value));
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -60,7 +66,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
         };
 
         loadAllData();
-    }, [filename]);
+    }, [fileId]);
 
     // Helper functions (converted from report.js)
     /*const getText = (dataToUse: any, path: string): string | null => {
@@ -115,6 +121,13 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
             <div id="leftCol">
                 <div id="left-cell">
                     <div className="leftDetails">
+                        {reportData2?.licenceNumber?.value && (
+                            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
+                                    Licence Number {reportData2.licenceNumber.value}
+                                </span>
+                            </div>
+                        )}
                         {/* Tab Navigation */}
                         <ul className="ul-links">
                             <li>
@@ -138,7 +151,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         setActiveTab('json-new');
                                     }}
                                 >
-                                    JSON
+                                    Licence data
                                 </a>
                             </li>
                             <li>
@@ -150,10 +163,10 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         setActiveTab('json-set');
                                     }}
                                 >
-                                    JSON (set)
+                                    Licence set data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'json-ai' ? 'selectedTab' : ''}
@@ -174,10 +187,10 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         setActiveTab('json');
                                     }}
                                 >
-                                    JSON (int.)
+                                    Internal data
                                 </a>
                             </li>
-                            <li>
+                            <li style={{display: 'none'}}>
                                 <a
                                     href="#"
                                     className={activeTab === 'text' ? 'selectedTab' : ''}
@@ -186,7 +199,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         setActiveTab('text');
                                     }}
                                 >
-                                    Text
+                                    Digital text
                                 </a>
                             </li>
                             <li>
@@ -204,9 +217,9 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                         </ul>
 
                         {/* Tab Content */}
-                        {activeTab === 'json-new' && reportData2 && (
+                        {activeTab === 'json-new' && licenceString && (
                             <div id="jsonNewPath">
-                                <JsonView src={reportData2} collapsed={1} theme="default"/>
+                                <JsonView src={licenceString} collapsed={1} theme="default"/>
                             </div>
                         )}
 
@@ -234,17 +247,17 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
 
                         {activeTab === 'text' && (
                             <div id="text">
-                <span
-                    // dangerouslySetInnerHTML={{
-                    //     __html: textData.replaceAll('\n', '<br/>\n')
-                    // }}
-                />
+                                <span
+                                    // dangerouslySetInnerHTML={{
+                                    //     __html: textData.replaceAll('\n', '<br/>\n')
+                                    // }}
+                                />
                             </div>
                         )}
                         
                         {activeTab === 'images' && (
                             <div id="images">
-                                <LicenceImages filename={filename} />
+                                <LicenceImages fileId={fileId} />
                             </div>
                         )}
 
@@ -254,6 +267,8 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                     licence={reportData2}
                                     processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
+                                    onRefresh={onRefresh}
+                                    outputListDataItem={outputListDataItem}
                                 />
                             </div>
                         )}
@@ -271,11 +286,11 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                         <h1>
                             <a
                                 id="filename"
-                                href={`/pdfs/${reportData.filename}`}
+                                href={`${getPdfUrl(reportData.filename)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                {filename}
+                                {reportData.filename}
                             </a>
                         </h1>
 
@@ -286,7 +301,7 @@ export function ReportContent({filename, hideBackLink = true, /*onOpenLinkedLice
                                         <img
                                             key={pageNum}
                                             id={`page${pageNum}`}
-                                            src={getImageUrl(`${filename}/PdfPig/Images/page-${pageNum}.jpg`)}
+                                            src={getImageUrl(`${fileId}`, `${pageNum}`, `PdfPig`)}
                                             alt="JPEG image (text not available)"
                                             onError={(e) => {
                                                 e.currentTarget.style.display = 'none';

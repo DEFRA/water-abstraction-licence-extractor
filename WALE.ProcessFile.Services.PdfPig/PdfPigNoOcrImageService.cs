@@ -7,7 +7,12 @@ namespace WALE.ProcessFile.Services.PdfPig;
 
 public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfImageService
 {
-    public async Task<string?> SaveImageBytesAsync(Guid fileId, int imageNumber, int pageNumber, ICacheService cacheService, int processRunId)
+    public async Task<(string Extension, int ImageNumber)> SaveImageBytesAsync(
+        Guid fileId,
+        int imageNumber,
+        int pageNumber,
+        ICacheService cacheService,
+        int processRunId)
     {
         const string pngExtension = "png";
         const string bmpExtension = "bmp";
@@ -17,27 +22,37 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
         byte[]? bytes;
 
         Pix? pix;
+        const string deflateNeededErrorText = "Failed to load image from memory.";
 
         try
         {
             if (imageData.TryGetPng(out bytes))
             {
                 returnExtension = pngExtension;
-                
+
                 try
                 {
+                    ConsoleHelper.WriteToBuffer = true;
                     pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
-                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    ConsoleHelper.TryRemoveLastLine();
+
+                    if (!ex.Message.Contains(deflateNeededErrorText))
                     {
                         throw;
                     }
 
+                    ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
+
                     returnExtension = jpgExtension;
                     bytes = ImageHelper.Deflate(bytes!);
                     pix = Pix.LoadFromMemory(bytes);
+                }
+                finally
+                {
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
             else if (imageData.TryGetBytesAsMemory(out var bytesMemory))
@@ -47,18 +62,27 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                 try
                 {
+                    ConsoleHelper.WriteToBuffer = true;
                     pix = Pix.LoadFromMemory(bytes);
                 }
                 catch (Exception ex)
                 {
-                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    ConsoleHelper.TryRemoveLastLine();
+
+                    if (!ex.Message.Contains(deflateNeededErrorText))
                     {
                         throw;
                     }
 
+                    ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
+
                     returnExtension = jpgExtension;
                     bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
+                }
+                finally
+                {
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
             else
@@ -79,28 +103,67 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 catch (Exception ex)
                 {
-                    ConsoleHelper.RemoveLastLine();
+                    ConsoleHelper.TryRemoveLastLine();
 
-                    if (!ex.Message.Contains("Failed to load image from memory."))
+                    if (!ex.Message.Contains(deflateNeededErrorText))
                     {
-                        Console.WriteLine($"ERROR - {nameof(PdfPigNoOcrImageService)} - {ex}");
                         throw;
                     }
+
+                    ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
 
                     bytes = ImageHelper.Deflate(bytes);
                     pix = Pix.LoadFromMemory(bytes);
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;                    
+                    ConsoleHelper.WriteToBuffer = false;
                 }
             }
         }
+        catch (InvalidDataException ide)
+        {
+            const string unsupportedCompresionText =
+                "The archive entry was compressed using an unsupported compression method";
+
+            if (!ide.Message.Contains(unsupportedCompresionText))
+            {
+                throw;
+            }
+            
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PdfPigNoOcrImageService)} - SaveImageBytesAsync, unupported compression method - saving empty array - {fileId}");
+            
+            // Write an empty entry into the table
+            await cacheService.SaveImageOnPageAsync(
+                [],
+                -1,
+                -1,
+                fileId,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                imageNumber,
+                pageNumber,
+                "error",
+                processRunId);
+
+            return ("error", imageNumber);
+        }
         catch (Exception exception)
         {
-            // TODO - throw?
-            ConsoleHelper.WriteLine("ERROR - " + exception);
-            return null;
+            ConsoleHelper.WriteLine($"ERROR (IMPORTANT) - {nameof(PdfPigNoOcrImageService)} - SaveImageBytesAsync, {exception} - {fileId}");
+
+            // Write an empty entry into the table
+            await cacheService.SaveImageOnPageAsync(
+                [],
+                -1,
+                -1,
+                fileId,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                imageNumber,
+                pageNumber,
+                "error",
+                processRunId);
+
+            return ("error", imageNumber);
         }
         
         var size = await cacheService.SaveImageOnPageAsync(
@@ -115,9 +178,8 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             processRunId);
         
         var roundedSizeKb = (size / 1024.0).ToString("0.0");
-        
         ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} ({roundedSizeKb}kb) - {fileId}");
         
-        return returnExtension;
+        return (returnExtension, imageNumber);
     }
 }

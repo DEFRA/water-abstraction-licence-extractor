@@ -1,4 +1,5 @@
 using Docnet.Core.Models;
+using Docnet.Core.Readers;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Interfaces;
 
@@ -6,6 +7,9 @@ namespace WALE.ProcessFile.Services.Docnet;
 
 public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
+    private IDocReader? _docReader;
+    private readonly SemaphoreSlim _docReaderLock = new(1, 1);
+    
     public async Task<SKBitmap> GetPageAsSkBitmapAsync(
         IFileService fileService,
         string pdfFilename,
@@ -13,14 +17,26 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
         int pageDimensionHeight,
         int pageNumber)
     {
-        var docLibInstance = new DocLibInstance();
-        
-        using var docReader = await docLibInstance.GetDocReaderAsync(
-            fileService,
-            pdfFilename,
-            new PageDimensions(pageDimensionWidth, pageDimensionHeight));
+        await _docReaderLock.WaitAsync();
 
-        using var pageReader = docReader.GetPageReader(pageNumber - 1);
+        try
+        {
+            if (_docReader == null)
+            {
+                var docLibInstance = new DocLibInstance();
+
+                _docReader = await docLibInstance.GetDocReaderAsync(
+                    fileService,
+                    pdfFilename,
+                    new PageDimensions(pageDimensionWidth, pageDimensionHeight));
+            }
+        }
+        finally
+        {
+            _docReaderLock.Release();            
+        }
+
+        using var pageReader = _docReader.GetPageReader(pageNumber - 1);
         var rawBytes = pageReader.GetImage();
 
         for (var i = 0; i < rawBytes.Length / 4; i++)

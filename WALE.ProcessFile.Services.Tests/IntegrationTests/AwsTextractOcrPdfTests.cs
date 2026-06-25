@@ -251,7 +251,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, 5);
-        Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,

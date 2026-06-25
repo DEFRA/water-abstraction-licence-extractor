@@ -11,8 +11,9 @@ public class LookupConfiguration(
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     ICacheService cacheService,
-    int regionCode,
+    int regionId,
     int maxPagesToProcessWhenOcrNeeded = 20,
+    int skipFileIfMoreThenPages = 30,
     object? naldLinkedLicenceHelper = null)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
@@ -27,9 +28,11 @@ public class LookupConfiguration(
     
     public ICacheService CacheService { get; set; } = cacheService;
 
-    public int RegionCode { get; set; } = regionCode;
+    public int RegionId { get; set; } = regionId;
 
     public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
+    
+    public readonly int SkipFileWhenMoreThenPages = skipFileIfMoreThenPages;
 
     public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
     
@@ -42,8 +45,9 @@ public class LookupConfiguration(
             ValidLowercaseFirstNames,
             FileService,
             CacheService,
-            RegionCode,
+            RegionId,
             MaxPagesToProcessWhenOcrNeeded,
+            SkipFileWhenMoreThenPages,
             NaldLinkedLicenceHelper);
     }
 }

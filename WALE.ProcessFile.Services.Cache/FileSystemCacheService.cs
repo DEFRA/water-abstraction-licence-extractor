@@ -252,19 +252,6 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
     
-    public async Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        var outputFilename = await GetNoOcrPageReferenceAsync(request);
-        var existsInCache = File.Exists(outputFilename);
-
-        if (!existsInCache)
-        {
-            return null;
-        }
-        
-        return await File.ReadAllTextAsync(outputFilename);
-    }
-
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);
@@ -297,7 +284,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return await File.ReadAllTextAsync(outputFilename);
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
@@ -314,6 +301,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
 
         try
         {
+            await SaveOcrImageTextAsync(request, content);
             return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
         }
         catch
@@ -323,7 +311,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
     }
     
-    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);
         var folder = $"{fileCacheFolder}/{request.OcrServiceName}/Text";
@@ -337,6 +325,8 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         }
         
         var content = await File.ReadAllTextAsync(outputFilename);
+        await SaveOcrScreenshotTextAsync(request, content);
+        
         return JsonSerializer.Deserialize<List<LineAndWords>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
@@ -477,17 +467,21 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
             processRunId);
     }
 
-    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
         throw new NotImplementedException();
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
     }
@@ -513,6 +507,76 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     }
 
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveImportRunDateAsync(string dataSource)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> GetImportRunDateAsync(string dataSource)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ClearLicenceFinderResultsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ClearVersionFilesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ClearVersionFilesToDownloadAsync()
     {
         throw new NotImplementedException();
     }

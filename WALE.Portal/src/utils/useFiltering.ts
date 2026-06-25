@@ -115,9 +115,9 @@ function filterData(
             }
 
             case 'EmptyOrNotArray': {
-                if (!Array.isArray(fieldValue)) return false;
-                if (value === 'populated') return fieldValue.length > 0;
-                if (value === 'empty') return fieldValue.length === 0;
+                const arrayValue = Array.isArray(fieldValue) ? fieldValue : [];
+                if (value === 'populated') return arrayValue.length > 0;
+                if (value === 'empty') return arrayValue.length === 0;
                 return true;
             }
 
@@ -127,22 +127,32 @@ function filterData(
             }
 
             case 'ArrayValueMapped': {
-                if (!Array.isArray(fieldValue) || !subField) return false;
+                const arrayValue = Array.isArray(fieldValue) ? fieldValue : [];
+                if (!subField) return false;
                 if (value === 'NoneSingle') {
-                    return fieldValue.length >= 2;
+                    return arrayValue.length >= 2;
                 }
-                return fieldValue.some((item: any) => item[subField] === value);
+                return arrayValue.some((item: any) => item[subField] === value);
             }
 
             case 'ArrayValueArrayValueMapped': {
-                if (!Array.isArray(fieldValue) || !subField) return false;
-                if (value === 'Populated') return fieldValue.length > 0;
-                if (value === 'Empty') return fieldValue.length === 0;
+                const arrayValue = Array.isArray(fieldValue) ? fieldValue : [];
+                if (!subField) return false;
+                if (value === 'Populated') return arrayValue.length > 0;
+                if (value === 'Empty') return arrayValue.length === 0;
 
-                return fieldValue.some((item: any) => {
+                return arrayValue.some((item: any) => {
                     const subArray = item[subField];
                     return Array.isArray(subArray) && subArray.includes(value);
                 });
+            }
+
+            case 'LicenceVerification': {
+                const arrayValue = Array.isArray(fieldValue) ? fieldValue : [];
+                if (value === 'populated') return arrayValue.length > 0;
+                if (value === 'empty') return arrayValue.length === 0;
+                
+                return arrayValue.some((v: any) => v.verificationType === value);
             }
 
             case 'Values':

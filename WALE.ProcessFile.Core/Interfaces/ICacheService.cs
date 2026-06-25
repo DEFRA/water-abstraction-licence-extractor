@@ -39,16 +39,14 @@ public interface ICacheService
 
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
-    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
-
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
     
-    Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(
+    Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(
         OcrServiceImageTextCacheRequest request);
     
-    Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(
+    Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(
         OcrServiceImageTextCacheRequest request);
 
     public Task<int> SaveImageOnPageAsync(
@@ -103,11 +101,15 @@ public interface ICacheService
         string noOcrServiceName,
         int processRunId);
     
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode);
+    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<NaldDataCollection> GetNaldDataAsync(short? regionCode);
+    Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take);
     
-    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode);
+    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
     
     Task<(
             HashSet<(string, int)> Live,
@@ -118,7 +120,36 @@ public interface ICacheService
         GetNaldLicenceNumbersAsync(short? regionCode);
 
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
+    
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
+
+    Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
+
+    Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
+
+    Task SaveImportRunDateAsync(string dataSource);
+
+    Task<string?> GetImportRunDateAsync(string dataSource);
+    
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
+    
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+
+    Task ClearLicenceFinderResultsAsync();
+    
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+
+    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
+    
+    Task<List<VersionFile>> GetVersionFilesAsync();
+    
+    Task SaveVersionFilesAsync(List<VersionFile> results);
+    
+    Task ClearVersionFilesAsync();
+
+    Task ClearVersionFilesToDownloadAsync();
 }

@@ -6,6 +6,13 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IDatabaseWriteService
 {
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
+    
+    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun);
+    
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
+
+    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile);
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
@@ -73,4 +80,26 @@ public interface IDatabaseWriteService
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
+
+    Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
+    
+    Task SaveImportRunDateAsync(string dataSource);
+
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+
+    Task ClearLicenceFinderResultsAsync();
+
+    Task ClearVersionFilesAsync();
+
+    Task ClearVersionFilesToDownloadAsync();
+    
+    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
+
+    Task SaveVersionFilesAsync(List<VersionFile> results);
+
+    Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
+
+    Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
+   
+    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
 }

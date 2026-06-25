@@ -1,12 +1,11 @@
 using SkiaSharp;
 using UglyToad.PdfPig.Rendering.Skia;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 using PdfDocument = UglyToad.PdfPig.PdfDocument;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 
-public class PdfPigInternalPdfDocument(PdfDocument pdfDocument) : IInternalPdfDocument
+public class PdfPigInternalPdfDocument(PdfDocument pdfDocument, long sizeBytes) : IInternalPdfDocument
 {
     public List<IInternalPdfDocumentPage> GetPages()
     {
@@ -21,10 +20,12 @@ public class PdfPigInternalPdfDocument(PdfDocument pdfDocument) : IInternalPdfDo
             .ToList();
     }
 
-    public SKBitmap GetPageAsSKBitmap(int pageNumber, float scale)
+    public SKBitmap GetPageAsSkBitmap(int pageNumber, float scale)
     {
         return pdfDocument.GetPageAsSKBitmap(pageNumber, scale);
     }
+
+    public long SizeBytes { get; } = sizeBytes;
 
     public void Dispose()
     {

@@ -25,4 +25,28 @@ public class DmsController(ICacheService cacheService) : Controller
         await cacheService.AddDmsFileIdInformationAsync(request);
         return Ok();
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetExtractAsync(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
+    {
+        var dmsExtract = await cacheService.GetDmsExtractAsync(skip, take);
+        return Ok(dmsExtract);
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult> SaveDmsFileReaderResultAsync(
+        [FromBody] DmsFileReaderResult request)
+    {
+        await cacheService.SaveDmsFileReaderResultAsync(request);
+        return Ok();
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult> GetDmsFileReaderResultsAsync()
+    {
+        var dmsFileReaderResults = await cacheService.GetDmsFileReaderResultsAsync();
+        return Ok(dmsFileReaderResults);
+    }
 }

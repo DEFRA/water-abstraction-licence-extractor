@@ -7,8 +7,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E7FA29C6-FC0A-4459-ACFA-C9D846A7F582}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		licence-number-filename-map.csv = licence-number-filename-map.csv
-		licence-number-filename-map.csv.example.csv = licence-number-filename-map.csv.example.csv
 		README.md = README.md
 		.dockerignore = .dockerignore
 	EndProjectSection
@@ -47,6 +45,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\migrationrunner-push-image-template.yaml = .github\workflows\migrationrunner-push-image-template.yaml
 		.github\workflows\migrationrunner-create-rollout-image-version.yaml = .github\workflows\migrationrunner-create-rollout-image-version.yaml
 		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
+		.github\workflows\lambda-build-sonar-and-images.yaml = .github\workflows\lambda-build-sonar-and-images.yaml
+		.github\workflows\lambda-build-sonar-template.yaml = .github\workflows\lambda-build-sonar-template.yaml
+        .github\workflows\lambda-create-image-template.yaml = .github\workflows\lambda-create-image-template.yaml
+        .github\workflows\lambda-push-image-template.yaml = .github\workflows\lambda-push-image-template.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tesseract", "WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj", "{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}"
@@ -78,6 +80,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AwsS3", "WALE.ProcessFile.Services.AwsS3\WALE.ProcessFile.Services.AwsS3.csproj", "{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{44D373C2-0BC9-4123-B4E8-018BC3D493EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.OrchestrateFileProcess.Services", "WALE.OrchestrateFileProcess.Services\WALE.OrchestrateFileProcess.Services.csproj", "{458E22A1-3BFA-4D50-8319-177CF1170F8B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.QueueFileProcess.Cmd", "WRADI.QueueFileProcess.Cmd\WRADI.QueueFileProcess.Cmd.csproj", "{1436FC5D-D236-4395-8074-0450DDCC9094}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.EntryPointOrchestrator", "WRADI.Lambda.EntryPointOrchestrator\WRADI.Lambda.EntryPointOrchestrator.csproj", "{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.ProcessFile.DependInjection", "WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj", "{0133FF46-525A-4B18-827A-990726AEAA01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.Orchestrator.FileProcess", "WRADI.Lambda.Orchestrator.FileProcess\WRADI.Lambda.Orchestrator.FileProcess.csproj", "{5F2C235B-2F7B-4A77-BD59-2F345CC98384}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,6 +189,26 @@ Global
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{458E22A1-3BFA-4D50-8319-177CF1170F8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{458E22A1-3BFA-4D50-8319-177CF1170F8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{458E22A1-3BFA-4D50-8319-177CF1170F8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{458E22A1-3BFA-4D50-8319-177CF1170F8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C631FC59-822E-47BE-95FA-B873AF121613} = {FBF2F0B0-857B-4B50-97FE-99A582022CAD}
@@ -201,5 +233,6 @@ Global
 		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99} = {44D373C2-0BC9-4123-B4E8-018BC3D493EC}
 		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A} = {F3435563-37A5-4423-ABFF-D48AA9423AC9}
 		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14} = {44D373C2-0BC9-4123-B4E8-018BC3D493EC}
+		{458E22A1-3BFA-4D50-8319-177CF1170F8B} = {F3435563-37A5-4423-ABFF-D48AA9423AC9}
 	EndGlobalSection
 EndGlobal

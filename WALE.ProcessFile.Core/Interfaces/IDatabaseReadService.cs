@@ -13,13 +13,13 @@ public interface IDatabaseReadService
     
     Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName);
     
-    Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request);
-    
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
+    
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync();
     
     Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
@@ -35,12 +35,14 @@ public interface IDatabaseReadService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
+    Task<List<ProcessRun>> GetAllProcessRunsAsync();
+    
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
-    Task<List<Licence>> GetLicencesAsync(int processRunId);
+    Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
-    
+
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
@@ -55,7 +57,7 @@ public interface IDatabaseReadService
     
     Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
     
-    Task<Licence?> GetLicenceAsync(Guid fileId);
+    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
     Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
     
@@ -63,7 +65,7 @@ public interface IDatabaseReadService
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
-    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
+    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
 
     Task<(
         HashSet<(string, int)> Live,
@@ -72,15 +74,15 @@ public interface IDatabaseReadService
         HashSet<(string, int)> Revoked,
         HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
 
-    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode);
+    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode);
+    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take);
 
-    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode);
+    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode);
+    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode, int skip, int take);
 
-    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode);
+    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode, int skip, int take);
     
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
@@ -88,5 +90,19 @@ public interface IDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
-    Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
+
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
+
+    Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
+    
+    Task<string?> GetImportRunDateAsync(string dataSource);
+
+    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
+    
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+    
+    Task<List<VersionFile>> GetVersionFilesAsync();
+    
+    Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
 }

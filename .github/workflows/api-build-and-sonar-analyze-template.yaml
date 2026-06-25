@@ -61,7 +61,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner --version 11.1.0
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
       - name: Extract short SHA
         id: shortsha
@@ -83,27 +83,27 @@ jobs:
             echo "should_push=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Start Sonar Analysis
-        shell: pwsh
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          # take the input and convert to lowercase & hyphen
-          $solution_name = "${{ inputs.dotnet_application_solution_name }}"
-          $project_key = "DEFRA_water-abstraction-licence-extractor"
-          Write-Host "Using SonarQube Project Key: $project_key"
-          .\.sonar\scanner\dotnet-sonarscanner begin `
-            /k:"$project_key" `
-            /o:"defra" `
-            /d:sonar.token="$env:SONAR_TOKEN" `
-            /d:sonar.host.url="https://sonarcloud.io" `
-            /v:"${{ steps.shortsha.outputs.shortsha }}" `
-            /d:sonar.cs.opencover.reportsPaths="TestResults/*.coverage.opencover.xml" `
-            /d:sonar.cs.vstest.reportsPaths="TestResults/*.test_results.trx" `
-            /d:sonar.branch.name="${{ github.ref_name }}" `
-            /d:sonar.verbose=true `
-            /d:sonar.exclusions="**/wwwroot/**,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**" `
-            /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**"
+      #- name: Start Sonar Analysis
+      #  shell: pwsh
+      #  env:
+      #    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #  run: |
+      #    # take the input and convert to lowercase & hyphen
+      #    $solution_name = "${{ inputs.dotnet_application_solution_name }}"
+      #    $project_key = "DEFRA_water-abstraction-licence-extractor"
+      #    Write-Host "Using SonarQube Project Key: $project_key"
+      #    .\.sonar\scanner\dotnet-sonarscanner begin `
+      #      /k:"$project_key" `
+      #      /o:"defra" `
+      #      /d:sonar.token="$env:SONAR_TOKEN" `
+      #      /d:sonar.host.url="https://sonarcloud.io" `
+      #      /v:"${{ steps.shortsha.outputs.shortsha }}" `
+      #      /d:sonar.cs.opencover.reportsPaths="TestResults/*.coverage.opencover.xml" `
+      #      /d:sonar.cs.vstest.reportsPaths="TestResults/*.test_results.trx" `
+      #      /d:sonar.branch.name="${{ github.ref_name }}" `
+      #      /d:sonar.verbose=true `
+      #      /d:sonar.exclusions="**/wwwroot/**,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**" `
+      #      /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**"
 
       - name: Restore NuGet packages
         shell: pwsh
@@ -128,8 +128,8 @@ jobs:
       - name: List coverage files
         shell: pwsh
         run: Get-ChildItem -Recurse -Filter "*.coverage.opencover.xml"; Get-ChildItem -Recurse -Filter "*.test_results.trx"
-      - name: End Sonar Analysis
-        shell: pwsh
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+      #- name: End Sonar Analysis
+      #  shell: pwsh
+      #  env:
+      #    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #  run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"

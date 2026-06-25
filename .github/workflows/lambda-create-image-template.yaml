@@ -1,0 +1,93 @@
+name: Lambda - Create Docker Image Template
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile_path:
+        description: "Path to Dockerfile"
+        required: true
+        type: string
+
+      docker_build_context:
+        description: "Docker build context"
+        required: false
+        type: string
+        default: "."
+
+      image_name:
+        description: "Local Docker image name"
+        required: true
+        type: string
+
+      image_artifact_name:
+        description: "Artifact name for saved Docker image"
+        required: false
+        type: string
+        default: "lambda-docker-image"
+
+      environment:
+        description: "Optional GitHub environment name"
+        required: false
+        type: string
+
+    outputs:
+      image_tag:
+        description: "Generated image tag"
+        value: ${{ jobs.create-image.outputs.image_tag }}
+
+      image_artifact_name:
+        description: "Docker image artifact name"
+        value: ${{ jobs.create-image.outputs.image_artifact_name }}
+
+  workflow_dispatch:
+
+jobs:
+  create-image:
+    name: create-image
+    runs-on: ubuntu-latest
+
+    environment: ${{ inputs.environment || '' }}
+
+    permissions:
+      contents: read
+
+    outputs:
+      image_tag: ${{ steps.image_version.outputs.image_tag }}
+      image_artifact_name: ${{ inputs.image_artifact_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Create image version
+        id: image_version
+        run: |
+          SHORT_SHA="${GITHUB_SHA::8}"
+          IMAGE_TAG="${GITHUB_REF_NAME}-${SHORT_SHA}"
+
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "Image tag: $IMAGE_TAG"
+
+      - name: Build Docker image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -f "${{ inputs.dockerfile_path }}" \
+            -t "${{ inputs.image_name }}:${{ steps.image_version.outputs.image_tag }}" \
+            "${{ inputs.docker_build_context }}" \
+            --load
+
+      - name: Save Docker image
+        run: |
+          docker save \
+            "${{ inputs.image_name }}:${{ steps.image_version.outputs.image_tag }}" \
+            -o "${{ github.workspace }}/${{ inputs.image_artifact_name }}.tar"
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.image_artifact_name }}
+          path: ${{ inputs.image_artifact_name }}.tar

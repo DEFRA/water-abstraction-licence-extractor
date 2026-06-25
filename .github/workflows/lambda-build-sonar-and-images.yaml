@@ -1,0 +1,85 @@
+name: Lambda - Build Sonar and Image
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  build-sonar-entrypoint-orchestrator:
+    name: Build and Sonar - EntryPoint Orchestrator
+    uses: ./.github/workflows/lambda-build-sonar-template.yaml
+    with:
+      dotnet_application_solution_name: WALE
+      dotnet_application_project_path: WRADI.Lambda.EntryPointOrchestrator/WRADI.Lambda.EntryPointOrchestrator.csproj
+      sonar_project_key: DEFRA_water-abstraction-licence-extractor
+      sonar_organisation: defra
+      dotnet_version: "10.0.x"
+      environment: dev
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build-sonar-file-process:
+    name: Build and Sonar - File Process
+    uses: ./.github/workflows/lambda-build-sonar-template.yaml
+    with:
+      dotnet_application_solution_name: WALE
+      dotnet_application_project_path: WRADI.Lambda.Orchestrator.FileProcess/WRADI.Lambda.Orchestrator.FileProcess.csproj
+      sonar_project_key: DEFRA_water-abstraction-licence-extractor
+      sonar_organisation: defra
+      dotnet_version: "10.0.x"
+      environment: dev
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  create-entrypoint-orchestrator-image:
+    name: Create EntryPoint Orchestrator Docker Image
+    needs: build-sonar-entrypoint-orchestrator
+    uses: ./.github/workflows/lambda-create-image-template.yaml
+    with:
+      dockerfile_path: WRADI.Lambda.EntryPointOrchestrator/Dockerfile
+      docker_build_context: .
+      image_name: wradi-lambda-entrypoint-orchestrator
+      image_artifact_name: wradi-lambda-entrypoint-orchestrator-image
+      environment: dev
+
+  create-file-process-image:
+    name: Create File Process Docker Image
+    needs: build-sonar-file-process
+    uses: ./.github/workflows/lambda-create-image-template.yaml
+    with:
+      dockerfile_path: WRADI.Lambda.Orchestrator.FileProcess/Dockerfile
+      docker_build_context: .
+      image_name: wradi-lambda-file-process
+      image_artifact_name: wradi-lambda-file-process-image
+      environment: dev
+
+  push-entrypoint-orchestrator-image:
+    name: Push EntryPoint Orchestrator Docker Image
+    needs: create-entrypoint-orchestrator-image
+    uses: ./.github/workflows/lambda-push-image-template.yaml
+    with:
+      image_name: wradi-lambda-entrypoint-orchestrator
+      image_tag: ${{ needs.create-entrypoint-orchestrator-image.outputs.image_tag }}
+      image_artifact_name: ${{ needs.create-entrypoint-orchestrator-image.outputs.image_artifact_name }}
+      ecr_repository: your-entrypoint-orchestrator-ecr-repository-name
+      aws_region: eu-west-2
+      aws_role_to_assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/YOUR_GITHUB_ACTIONS_DEPLOY_ROLE
+      push_latest: true
+      environment: dev
+
+  push-file-process-image:
+    name: Push File Process Docker Image
+    needs: create-file-process-image
+    uses: ./.github/workflows/lambda-push-image-template.yaml
+    with:
+      image_name: wradi-lambda-file-process
+      image_tag: ${{ needs.create-file-process-image.outputs.image_tag }}
+      image_artifact_name: ${{ needs.create-file-process-image.outputs.image_artifact_name }}
+      ecr_repository: your-file-process-ecr-repository-name
+      aws_region: eu-west-2
+      aws_role_to_assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/YOUR_GITHUB_ACTIONS_DEPLOY_ROLE
+      push_latest: true
+      environment: dev

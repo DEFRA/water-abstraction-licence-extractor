@@ -13,4 +13,6 @@ public class DmsFileData
     public string? StrippedLicenceNumber { get; set; }
     
     public Guid FileId { get; set; }
+    
+    public int RegionId { get; set; }
 }

@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -16,9 +17,28 @@ public class FilesController(IFileService fileService) : Controller
         return Ok(result);
     }
     
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<FileMetadata>>> ListAllWithMetadataAsync(
+        [FromQuery] string? startAfter,
+        [FromQuery] int take)
+    {
+        var result = await fileService.GetAllFilesWithMetadataAsync(
+            startAfter ?? string.Empty,
+            take);
+        
+        return Ok(result);
+    }
+    
+    [HttpDelete]
+    public async Task<ActionResult<string>> DeleteAsync(string filename)
+    {
+        await fileService.DeleteAsync(filename);
+        return Ok();
+    }
+    
     [HttpPut]
     [DisableRequestSizeLimit]
-    [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600, ValueLengthLimit = 20_971_520)] // 100Mb for all files, 20Mb per file
+    [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000, ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
     public async Task<ActionResult<string>> UploadAsync()
     {
         if (!Request.Form.Files.Any())
@@ -35,9 +55,15 @@ public class FilesController(IFileService fileService) : Controller
                 continue;
             }
          
-            var fileExtension = Path.GetExtension(file.FileName);
+            var lowercaseFileName = file.FileName.ToLowerInvariant();
+            var fileExtension = Path.GetExtension(lowercaseFileName);
             
             if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            {
+                continue;
+            }
+            
+            if (await fileService.ExistsAsync(lowercaseFileName))
             {
                 continue;
             }
@@ -45,8 +71,8 @@ public class FilesController(IFileService fileService) : Controller
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
             
-            await fileService.UploadFileAsStreamAsync(file.FileName, stream);
-            resultSb.AppendLine($"File {file.FileName} has been uploaded.");
+            await fileService.UploadFileAsStreamAsync(lowercaseFileName, stream);
+            resultSb.AppendLine($"File {lowercaseFileName} has been uploaded.");
         }
 
         if (resultSb.Length == 0)
@@ -55,5 +81,36 @@ public class FilesController(IFileService fileService) : Controller
         }
         
         return Ok(resultSb.ToString());
+    }
+
+    [HttpPut]
+    [DisableRequestSizeLimit]
+    public async Task<ActionResult<string>> UploadChunkAsync([FromForm] string filename, [FromForm] int chunkIndex, [FromForm] int totalChunks, [FromForm] string? uploadId = null)
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest("No file in request.");
+        }
+
+        var file = Request.Form.Files[0];
+
+        if (!file.ContentType.Equals("application/octet-stream", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest("Expects binary stream.");
+        }
+
+        var fileExtension = Path.GetExtension(filename);
+        if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return BadRequest("Only PDF files are allowed.");
+        }
+
+        using MemoryStream stream = new();
+        await file.CopyToAsync(stream);
+        stream.Position = 0;
+
+        var resultUploadId = await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks, uploadId);
+
+        return Ok(resultUploadId ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
     }
 }

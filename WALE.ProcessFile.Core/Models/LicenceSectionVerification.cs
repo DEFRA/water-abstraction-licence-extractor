@@ -6,7 +6,11 @@ public class LicenceSectionVerification
     public Guid LicenceFileId { get; set; }
     public int ProcessRunId { get; set; }
     public string? LicenceSectionName { get; set; }
-    public string? LicenceSectionValue { get; set; }
+    public string? LicenceSectionScrapedValue { get; set; }
+    public string? LicenceSectionOverrideValue { get; set; }
     public string? VerificationType { get; set; }
+    public string? LicenceSectionItemId { get; set; }
+    public string? Notes { get; set; }
+    public bool ScrapedDataIsDifferent { get; set; }
     public DateTime CreatedDateTimeUtc { get; set; }
 }

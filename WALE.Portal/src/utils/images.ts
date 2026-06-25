@@ -5,7 +5,12 @@ export function getThumbnailUrl(fileId: string) : string {
     return `${routeUrl}?fileId=${fileId}&pageNumber=1&serviceName=PdfPig`;
 }
 
-export function getImageUrl(filename: string) : string {
+export function getImageUrl(fileId: string, pageNumber: string, serviceName: string) : string {
     const routeUrl = `${waleApiBaseUrl}/BFF/Images/Image`;
-    return `${routeUrl}?filename=${encodeURIComponent(filename)}`;
+    return `${routeUrl}?fileId=${fileId}&pageNumber=${pageNumber}&serviceName=${serviceName}`;
+}
+
+export function getPdfUrl(filename: string | undefined) : string {
+    const routeUrl = `${waleApiBaseUrl}/Extractor/Files/Get`;
+    return `${routeUrl}?filename=${filename}`;
 }

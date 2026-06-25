@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -13,9 +14,24 @@ public class LocalFileService(string folderPath) : IFileService
                 .ToList());
     }
 
-    public Task<Stream> GetFileAsStreamAsync(string filename)
+    public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)
     {
-        return Task.FromResult<Stream>(
+        var folder = new DirectoryInfo(FolderPath);
+        var filesInFolder = folder.GetFiles("*.*", SearchOption.AllDirectories);
+
+        return Task.FromResult(filesInFolder
+            .Select(f => new FileMetadata
+            {
+                Filename = f.Name,
+                Filesize = f.Length,
+                ModifiedTime = f.LastWriteTime
+            })
+            .ToList());
+    }
+
+    public Task<Stream?> GetFileAsStreamAsync(string filename)
+    {
+        return Task.FromResult<Stream?>(
             File.Open(
                 $"{FolderPath}{filename}",
                 FileMode.Open,
@@ -23,15 +39,38 @@ public class LocalFileService(string folderPath) : IFileService
                 FileShare.Read));
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string pdfFilename)
+    public Task<byte[]> GetFileAsBytesAsync(string filename)
     {
-        return File.ReadAllBytesAsync($"{FolderPath}{pdfFilename}");
+        return File.ReadAllBytesAsync($"{FolderPath}{filename}");
     }
 
-    public Task UploadFileAsStreamAsync(string pdfFilename, Stream stream)
+    public async Task UploadFileAsStreamAsync(string filename, Stream stream)
+    {
+        await Task.Delay(1000);
+        var filePath = Path.Combine(FolderPath, filename);
+        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await stream.CopyToAsync(fileStream);
+    }
+
+    public async Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null)
+    {
+        await Task.Delay(1000);
+        var filePath = Path.Combine(FolderPath, filename);
+        var mode = chunkIndex == 0 ? FileMode.Create : FileMode.Append;
+        await using var fileStream = new FileStream(filePath, mode, FileAccess.Write, FileShare.None);
+        await stream.CopyToAsync(fileStream);
+
+        return null;
+    }
+
+    public string FolderPath { get; set; } = folderPath;
+    public Task DeleteAsync(string filename)
     {
         throw new NotImplementedException();
     }
 
-    public string FolderPath { get; set; } = folderPath;
+    public Task<bool> ExistsAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
 }

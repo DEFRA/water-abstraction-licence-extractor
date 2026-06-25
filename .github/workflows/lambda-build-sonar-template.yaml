@@ -1,0 +1,156 @@
+name: Lambda - Build and Sonar Analyze Template
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_application_solution_name:
+        description: "Solution name without .sln"
+        required: true
+        type: string
+
+      dotnet_application_project_path:
+        description: "Path to the .csproj to build"
+        required: true
+        type: string
+
+      sonar_project_key:
+        description: "SonarCloud project key"
+        required: true
+        type: string
+
+      sonar_organisation:
+        description: "SonarCloud organisation"
+        required: false
+        type: string
+        default: "defra"
+
+      dotnet_version:
+        description: ".NET SDK version"
+        required: false
+        type: string
+        default: "10.0.x"
+
+      environment:
+        description: "Optional GitHub environment name"
+        required: false
+        type: string
+
+    secrets:
+      SONAR_TOKEN:
+        required: true
+
+jobs:
+  build-and-sonar-analyze:
+    name: build-and-sonar-analyze
+    runs-on: windows-latest
+
+    environment: ${{ inputs.environment || '' }}
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: zulu
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Delete tessdata files
+        shell: pwsh
+        run: |
+          if (Test-Path "WALE.ProcessFile.Services/tessdata") {
+            Remove-Item "WALE.ProcessFile.Services/tessdata/configs" -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item "WALE.ProcessFile.Services/tessdata/frk.traineddata" -Force -ErrorAction SilentlyContinue
+            Remove-Item "WALE.ProcessFile.Services/tessdata/pdf.ttf" -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Cache SonarQube Cloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~\sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache SonarQube Cloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: .\.sonar\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarQube Cloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -Path .\.sonar\scanner -ItemType Directory -Force
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+
+      - name: Extract short SHA
+        id: shortsha
+        shell: pwsh
+        run: |
+          "shortsha=$($env:GITHUB_SHA.Substring(0, 8))" >> $env:GITHUB_OUTPUT
+
+      - name: Start Sonar Analysis
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          .\.sonar\scanner\dotnet-sonarscanner begin `
+            /k:"${{ inputs.sonar_project_key }}" `
+            /o:"${{ inputs.sonar_organisation }}" `
+            /d:sonar.token="$env:SONAR_TOKEN" `
+            /d:sonar.host.url="https://sonarcloud.io" `
+            /v:"${{ steps.shortsha.outputs.shortsha }}" `
+            /d:sonar.cs.opencover.reportsPaths="TestResults/*.coverage.opencover.xml" `
+            /d:sonar.cs.vstest.reportsPaths="TestResults/*.test_results.trx" `
+            /d:sonar.branch.name="${{ github.ref_name }}" `
+            /d:sonar.verbose=true `
+            /d:sonar.exclusions="**/wwwroot/**,**/tessdata/**" `
+            /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs,**/tessdata/**"
+
+      - name: Restore NuGet packages
+        shell: pwsh
+        run: |
+          dotnet restore "${{ inputs.dotnet_application_solution_name }}.sln"
+
+      - name: Build Solution
+        shell: pwsh
+        run: |
+          dotnet build "${{ inputs.dotnet_application_solution_name }}.sln" `
+            --configuration Release `
+            --no-restore
+
+      - name: Run Unit Tests
+        shell: pwsh
+        run: |
+          dotnet test "${{ inputs.dotnet_application_solution_name }}.sln" `
+            --configuration Release `
+            --no-build `
+            --logger "trx;LogFileName=${{ inputs.dotnet_application_solution_name }}.test_results.trx"
+
+      - name: List coverage and test files
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter "*.coverage.opencover.xml"
+          Get-ChildItem -Recurse -Filter "*.test_results.trx"
+
+      - name: End Sonar Analysis
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"

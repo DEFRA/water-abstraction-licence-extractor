@@ -21,6 +21,11 @@ public class DatabaseCacheService(
         // Nothing to do in this case
         return Task.CompletedTask;
     }
+    
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        return databaseReadService.GetLicenceFinderResultsAsync();
+    }
 
     public Task ClearCacheAsync()
     {
@@ -108,11 +113,6 @@ public class DatabaseCacheService(
                 request.PageNumber));
     }
     
-    public Task<string?> GetNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request)
-    {
-        return databaseReadService.GetNoOcrPageTextLinesAsync(request);
-    }
-
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request)
     {
         return databaseReadService.GetNoOcrAllPagesTextLinesAsync(request);
@@ -128,16 +128,44 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrImageTextAsync(request);
     }
     
-    public async Task<List<LineAndWords>> GetTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var content = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
-        return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
+        var text = await databaseReadService.GetTemporaryOcrImageTextAsync(request);
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new Exception("No temporary OCR image text found");
+        }
+        
+        var linesAndWords =  JsonSerializer.Deserialize<List<LineAndWords>>(text, JsonHelper.GetSerializerOptions())!;
+        
+        await databaseWriteService.SaveOcrImageTextAsync(
+            request,
+            text,
+            request.ProcessRunId);
+
+        await databaseWriteService.DeleteTemporaryOcrImageTextAsync(request);
+        return linesAndWords;
     }
 
-    public async Task<List<LineAndWords>> GetTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
+    public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var content = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
-        return JsonSerializer.Deserialize<List<LineAndWords>>(content!, JsonHelper.GetSerializerOptions())!;
+        var text = await databaseReadService.GetTemporaryOcrScreenshotTextAsync(request);
+        
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new Exception("No temporary OCR screenshot text found");
+        }
+        
+        var linesAndWords = JsonSerializer.Deserialize<List<LineAndWords>>(text, JsonHelper.GetSerializerOptions())!;
+
+        await databaseWriteService.SaveOcrScreenshotTextAsync(
+            request,
+            text,
+            request.ProcessRunId);
+        
+        await databaseWriteService.DeleteTemporaryOcrScreenshotTextAsync(request);
+        return linesAndWords;
     }
 
     public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
@@ -236,23 +264,23 @@ public class DatabaseCacheService(
             processRunId);
     }
 
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync(int regionCode)
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
-        var data = await databaseReadService.GetNaldLinkedLicenceRawDataAsync();
- 
-        return data
-            .Where(dataLine => dataLine.RegionCode == regionCode)
-            .ToList();
+        return databaseReadService.GetNaldLinkedLicenceRawDataAsync();
     }
 
-    public async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+    public async Task<NaldDataCollection> GetNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
-        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode);
-        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
-        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode);
-        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode);
-        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
-        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        var licencesTask = databaseReadService.GetNaldAbsLicencesAsync(regionCode, skip, take);
+        var versionsTask = databaseReadService.GetNaldLicenceVersionsAsync(regionCode, allVersions, skip, take);
+        var purposesTask = databaseReadService.GetNaldLicencePurposesAsync(regionCode, skip, take);
+        var pointsTask = databaseReadService.GetNaldLicencePointsAsync(regionCode, skip, take);
+        var quantitiesTask = databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode, skip, take);
+        var allLicencesTask = databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(skip, take);
         
         return new NaldDataCollection
         {
@@ -265,7 +293,7 @@ public class DatabaseCacheService(
         };
     }
 
-    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode)
+    public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
     }
@@ -290,34 +318,79 @@ public class DatabaseCacheService(
     {
         return databaseWriteService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
     }
+    
+    public Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
+    {
+        return databaseWriteService.SaveDmsFileReaderResultAsync(dmsFileReaderResult);
+    }
 
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
     }
 
-    public Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short regionCode)
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
-        return databaseReadService.GetNaldAbsLicencesAsync(regionCode);
+        return databaseReadService.GetDmsExtractAsync(skip, take);
     }
 
-    public Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short regionCode)
+    public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
-        return databaseReadService.GetNaldLicenceVersionsAsync(regionCode);
+        return databaseReadService.GetDmsFileReaderResultsAsync();
     }
 
-    public Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short regionCode)
+    public Task SaveImportRunDateAsync(string dataSource)
     {
-        return databaseReadService.GetNaldLicencePurposesAsync(regionCode);
+        return databaseWriteService.SaveImportRunDateAsync(dataSource);
     }
 
-    public Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short regionCode)
+    public Task<string?> GetImportRunDateAsync(string dataSource)
     {
-        return databaseReadService.GetNaldLicencePointsAsync(regionCode);
+        return databaseReadService.GetImportRunDateAsync(dataSource);
     }
 
-    public Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short regionCode)
+    public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
-        return databaseReadService.GetNaldLicenceQuantitiesAsync(regionCode);
+        return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
+    }
+
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    {
+        return databaseWriteService.SaveLicenceFinderResultsAsync(results);
+    }
+
+    public Task ClearLicenceFinderResultsAsync()
+    {
+        return databaseWriteService.ClearLicenceFinderResultsAsync();
+    }
+
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    {
+        return databaseReadService.GetVersionFilesToDownloadAsync();
+    }
+
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    {
+        return databaseWriteService.SaveVersionFilesToDownloadAsync(results);
+    }
+
+    public Task<List<VersionFile>> GetVersionFilesAsync()
+    {
+        return databaseReadService.GetVersionFilesAsync();
+    }
+
+    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    {
+        return databaseWriteService.SaveVersionFilesAsync(results);
+    }
+
+    public Task ClearVersionFilesAsync()
+    {
+        return databaseWriteService.ClearVersionFilesAsync();
+    }
+
+    public Task ClearVersionFilesToDownloadAsync()
+    {
+        return databaseWriteService.ClearVersionFilesToDownloadAsync();
     }
 }

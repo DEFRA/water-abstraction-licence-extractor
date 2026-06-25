@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Helpers;
@@ -25,6 +26,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, fileId);
     }
 
+    public async Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    {
+        var path = $"/Extractor/Images/Thumbnail?fileId={fileId}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+            
+        if (string.IsNullOrEmpty(content))
+        {
+            throw new NullReferenceException("Page screenshot data returned null");
+        }
+
+        return JsonSerializer.Deserialize<byte[]?>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
@@ -32,7 +49,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         var path = $"/Extractor/Images/GetPageScreenshot?fileId={fileId}&serviceName={pdfServiceName}&pageNumber={pageNumber}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         var content = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrEmpty(content))
@@ -50,17 +68,103 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             processRun.Description,
-            processRun.NumberOfFiles
+            processRun.NumberOfFiles,
+            processRun.Status
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
 
         processRun.ProcessRunId = int.Parse(content);
         return processRun;
+    }
+
+    public async Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    {
+        var path = "/Extractor/ProcessRun/MarkProcessRunComplete";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRun.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<ProcessRun>(content, JsonHelper.GetSerializerOptions());
+        return result!;
+    }
+
+    public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/AddProcessRunFile";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/CompleteProcessRunFile";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.ProcessRunFileId,
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/ReportErrorProcessRunFile";
+      
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.ProcessRunFileId,
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
     }
 
     public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
@@ -80,7 +184,30 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
+    {
+        if (fileId == null)
+        {
+            return;
+        }
+        
+        var path = "/Extractor/Licence/SaveLicenceSet";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            fileId,
+            processRunId,
+            licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -96,7 +223,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
         
         var content = await response.Content.ReadAsStringAsync();
@@ -106,6 +234,21 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    {
+        var path = "/Extractor/Match/SaveMultiple";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            matches
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
@@ -121,7 +264,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
@@ -137,7 +281,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -156,7 +301,6 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         Guid fileId,
         int processRunId)
     {
-        var filenameNoExtension = pdfDocument.PdfFilenameNoExtension;
         var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
 
         var byteSize = 0;
@@ -188,21 +332,26 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         int processRunId)
     {
         var bytes = await GetAsJpegAsync(bitmap);
-            
-        const string path = "/Extractor/Images/SavePageScreenshot";
 
-        var json = JsonSerializer.Serialize(new
-        {
-            PageNumber = pageNumber,
-            NoOcrServiceName = providerName,
-            FileId = fileId,
-            Data = bytes,
-            ProcessRunId = processRunId
-        }, JsonHelper.GetSerializerOptions());
-            
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var dtStart = DateTime.UtcNow;
+        var path = $"/Extractor/Images/SavePageScreenshot?pageNumber={pageNumber}&noOcrServiceName={providerName}" +
+            $"&fileId={fileId}&processRunId={processRunId}";
+        
+        using var form = new MultipartFormDataContent();
+        var imageContent = new ByteArrayContent(bytes, 0, bytes.Length);
+        imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+        form.Add(imageContent, "image", "image.jpg");
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form));
         response.EnsureSuccessStatusCode();
+
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+
+        if (_showAllLogs)
+        {
+            ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
+        }
 
         return bytes.Length;
     }
@@ -262,38 +411,61 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
+    public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
 
         var json = JsonSerializer.Serialize(new
         {
             processRun.ProcessRunId,
-            regionCode = regionId
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
         processRun.EndDateTimeUtc = DateTime.Parse(content).ToUniversalTime();
     }
 
-    public Task<List<ProcessRun>> GetProcessRunsAsync()
+    public async Task<List<ProcessRun>> GetProcessRunsAsync()
     {
-        throw new NotImplementedException();
+        var path = "/BFF/ProcessRuns/GetProcessRuns";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        return processRuns;
+    }
+    
+    public async Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        var path = "/BFF/ProcessRuns/GetAllProcessRuns";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        return processRuns;
     }
 
-    public async Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
-        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}";
+        var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";
 
-        var response = await httpClient.GetAsync(path);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
         var content = await response.Content.ReadAsStringAsync();
 
         if (string.IsNullOrEmpty(content))
@@ -304,11 +476,23 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(
-        int processRunId,
-        List<Licence> licences)
+    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(
+        int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunLicenceSets?processRunId={processRunId}";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(content, JsonHelper.GetSerializerOptions());
+        return licenceSets;
     }
 
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
@@ -316,7 +500,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId)
+    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -331,18 +515,59 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        return licenceSectionVerifications;
     }
 
-    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/GetLatestLicenceSectionVerifications";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        return licenceSectionVerifications;
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {
         throw new NotImplementedException();
     }
+
+    public async Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    {
+        var dtStart = DateTime.UtcNow;
+        var path = $"/Extractor/Images/SavePageScreenshotThumbnail?pageNumber={pageNumber}&noOcrServiceName={serviceName}" +
+                   $"&fileId={fileId}&processRunId={processRunId}";
+        
+        using var form = new MultipartFormDataContent();
+        var imageContent = new ByteArrayContent(thumbnail, 0, thumbnail.Length);
+        imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+        form.Add(imageContent, "image", "image.jpg");
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), form));
+        response.EnsureSuccessStatusCode();
+
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalMilliseconds.ToString("0.0");
+
+        if (_showAllLogs)
+        {
+            ConsoleHelper.WriteLine($"SavePageScreenshotThumbnailAsync API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
+        }
+    }
+
+    private static bool _showAllLogs = false;
 }

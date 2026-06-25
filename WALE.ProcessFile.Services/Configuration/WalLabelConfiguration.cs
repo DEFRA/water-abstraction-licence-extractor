@@ -57,7 +57,7 @@ public static class WalLabelConfiguration
                     new("10. Further conditions"),
                     new("10. Further provisions"),
                     new("10 Further provisions") { LineMustStartWith = true },                 
-                    new("Further Conditions[END_OF_LINE]") { LineMustStartWith = true },
+                    new("Further Conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true },
                     new("Additional Information[END_OF_LINE]") { LineMustStartWith = true },
@@ -206,7 +206,8 @@ public static class WalLabelConfiguration
                 [
                     new("History of licence[END_OF_LINE]") { LineMustStartWith = true },
                     new("Licence History[END_OF_LINE]") { LineMustStartWith = true },
-                    new("Summary of Change[END_OF_LINE]") { ColumnMustStartWith = true },
+                    new("Summary of Change[END_OF_LINE]"),
+                    new("The following changes to the licence have taken place:"),
                     new("SCHEDULE OF LICENCES[END_OF_LINE]") { LineMustStartWith = true },
                     new("Would you like to find out") { LineMustStartWith = true },
                     new("Map accompanying licence number"),
@@ -1501,10 +1502,10 @@ public static class WalLabelConfiguration
                                 NextLinesToFetch = 1,
                                 Remove =
                                 [
-                                    new("3.1"),
-                                    new("3.2"),
-                                    new("3.3"),
-                                    new("3.4")
+                                    new("3.1") { ExceptWhenInsideWord = true },
+                                    new("3.2") { ExceptWhenInsideWord = true },
+                                    new("3.3") { ExceptWhenInsideWord = true },
+                                    new("3.4") { ExceptWhenInsideWord = true },
                                 ]
                             },
                             new()
@@ -1670,7 +1671,10 @@ public static class WalLabelConfiguration
             new()
             {
                 Name = "AbstractionLimitPointSub",
-                Text = [new("and licence")],
+                Text = [
+                    new("and licence"),
+                    new("so that no more")                    
+                ],
                 Position = LabelPosition.SplitAtLabel,
                 MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                 PreviousLinesToFetch = 20,
@@ -1681,16 +1685,45 @@ public static class WalLabelConfiguration
                 {
                     new()
                     {
+                        Name = "DocumentIdentifier",
+                        Possibilities = [
+                            "6.1",
+                            "6.2",
+                            "6.3",
+                            "6.4",
+                            "6.5",
+                            "6.6",
+                            "6.7",
+                            "6.8"
+                        ],
+                        Position = LabelPosition.ApplicableToMost,
+                        Format = "Number",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0
+                    },
+                    new()
+                    {
                         Name = "DateOnly",
                         Text =
                         [
                             new("Up to and including "),
                             new("From "),
+                            new("Until "),                            
                             new("aggregate quantity of water authorised")
                         ],
                         IgnoreBlockIfContains =
                         [
                             "Note:"
+                        ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
@@ -1729,6 +1762,16 @@ public static class WalLabelConfiguration
                             new("November[END_OF_COLUMN]"),
                             new("December[END_OF_COLUMN]")
                         ],
+                        Remove = [
+                            new ("6.1"),
+                            new ("6.2"),
+                            new ("6.3"),
+                            new ("6.4"),
+                            new ("6.5"),
+                            new ("6.6"),
+                            new ("6.7"),
+                            new ("6.8")
+                        ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1744,6 +1787,8 @@ public static class WalLabelConfiguration
                             new("condition "),
                             new("conditions "),
                             new("purposes specified in "),
+                            new("purposes of "),
+                            new("purpose of "),
                         ],
                         TextEnd =
                         [
@@ -1772,6 +1817,8 @@ public static class WalLabelConfiguration
                             "(2)",
                             "(3)",
                             "(4)",
+                            "spray irrigation",
+                            "trickle irrigation"
                         ],
                         SubLabels =
                         [
@@ -2104,9 +2151,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("1 ")
                             {
                                 LineMustStartWith = true,
@@ -2144,9 +2191,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2168,9 +2215,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2202,9 +2249,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2236,9 +2283,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2266,9 +2313,9 @@ public static class WalLabelConfiguration
                         Format = "Number",
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2303,9 +2350,9 @@ public static class WalLabelConfiguration
                         ],
                         Remove =
                         [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
+                            new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2") { ExceptWhenInsideWord = true },
+                            new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
                             new("(2)"),
                             new("(3)"),
@@ -2448,5 +2495,5 @@ public static class WalLabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
         new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberHeaderLine}{LicenceNumber.YorkshireRegexPatten}^/") { IsRegularExpression = true };
+        new($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/") { IsRegularExpression = true };
 }

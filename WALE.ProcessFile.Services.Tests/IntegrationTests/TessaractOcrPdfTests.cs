@@ -2,6 +2,7 @@ using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -51,19 +52,19 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         {
             new TesseractOcrDataExtractorService(
                 TestConfig.TesseractPath,
-                Core.Enums.PageSegMode.SparseTextOsd,
+                PageSegMode.SparseTextOsd,
                 CacheService, OutputService,
                 TestConfig.DotnetPath,
                 TestConfig.TesseractExeName,
                 TestConfig.TesseractExeDirectory),
             new TesseractOcrDataExtractorService(
                 TestConfig.TesseractPath,
-                Core.Enums.PageSegMode.Auto,
+                PageSegMode.Auto,
                 CacheService,
                 OutputService,
                 TestConfig.DotnetPath,
                 TestConfig.TesseractExeName,
-                TestConfig.TesseractExeDirectory),
+                TestConfig.TesseractExeDirectory)
         },
         CacheService,
         OutputService,
@@ -76,7 +77,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = null
+                DestinationFileName = null,
+                RegionId = 1
             }
         }
     };
@@ -199,37 +201,37 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var perDay = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("77", perDay);
 
         var perDayUnits = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per day")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per day")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perDayUnits);
 
         var perYear1 = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("5116", perYear1);
         
         var perYearUnits1 = section1Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits1);
         
         var perYear2 = section1Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("5116", perYear2);
         
         var perYearUnits2 = section1Sub1.SubResults
             .LastOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Units"
-                && subResult.MatchedLabel!.Text!.Any(text => text.Text.Contains("per year")))?.Text?.FirstOrDefault()?.Text;
+                && subResult.MatchedLabel!.Text?.Any(text => text.Text.Contains("per year")) == true)?.Text?.FirstOrDefault()?.Text;
         Assert.Equal("cubic metres", perYearUnits2);        
         
         // See notes RE licence
@@ -298,7 +300,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _naldData,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            _fileLicenceMapping["28_39_28_312"]);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -328,7 +331,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        //Assert.Equal(8, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var licenceNumber = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.Null(licenceNumber);
@@ -1893,50 +1896,24 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     }
     
     [Fact]
-    public async Task FileWithImageWithSmallDimensions()
+    public async Task FileWithImageWithSmallDimensions_ThrowsTooManyImagesException()
     {
         // Arrange
         await SetupLicenceNumbersAsync(1);
         const string filename = "12202043__Licence - Signed Addendum 6431587.pdf";
 
+        var throwTooManyImagesException = false;
+        
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, 4);
-        var resultList = resultFull.Matches!;
+        try
+        {
+            await GetMatchesAsync(filename, 1, 4);
+        }
+        catch (TooManyImagesException)
+        {
+            throwTooManyImagesException = true;
+        }
         
-        // Assert
-        Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
-        
-        var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
-        Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
-        
-        var dateOfIssue = resultFull.Matches!
-            .FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
-        Assert.NotNull(dateOfIssue);
-        Assert.StartsWith("20 April 2011", dateOfIssue.Text?.FirstOrDefault()?.Text);
-        
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-        
-        Assert.NotNull(licenceNumberResult);
-        Assert.True(licenceNumberResult.IsOcr);
-        Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
-        Assert.Equal("1/22/02/043", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
-            resultFull,
-            _naldLicenceStatusData,
-            _naldData,
-            _pdfDataExtractorCombined1,
-            0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
-        
-        Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12202043-LV20110419", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("043", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
-        
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.True(throwTooManyImagesException);
     }
 }

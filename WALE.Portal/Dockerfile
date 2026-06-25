@@ -20,10 +20,11 @@ FROM nginx:alpine AS production
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
 ADD DockerStart.sh /
 RUN chmod +x DockerStart.sh
 
-CMD sh DockerStart.sh
+CMD ["sh", "DockerStart.sh"]

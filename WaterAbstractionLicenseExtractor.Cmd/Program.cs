@@ -1,10 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
+using System.Net;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -47,37 +50,25 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    /*var moveReportHtmlFilesTask = MoveReportHtmlFilesAsync(
-        services.ReportTemplatePath!,
-        outputFolder,
-        services.LoadAiJs,
-        services.ListDataPath!,
-        services.ProcessRunsDataPath!,
-        services.InternalDataPath!,
-        services.LicenceDataPath!,
-        services.LicenceSetsDataPath!,
-        services.ThumbnailImageDataPath!,
-        services.FullImageDataPath!);*/
-
-    // Filter to Yorks/North region (hard-coded for now - this will need reconsidering
-    // when we want to handle more than one region)
-    const short regionCode = 3;
-
-    var naldDataTask = cacheService.GetNaldDataAsync(regionCode);
+    var naldDataTask = GetNaldDataAsync(null, cacheService);
     var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(regionCode);
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
 
     var dtStartGetDms = DateTime.Now;
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Getting DMS files to process");
     
     var (dmsFilesToProcess, allDmsData) =
-        await GetDmsFilesAndMappingAsync(services.FileService!, services.DmsReportPath!, regionCode);
+        await GetDmsFilesAndMappingAsync(
+            services.FileService!,
+            services.DmsReportPath!,
+            false,
+            cacheService);
 
     var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
     ConsoleHelper.WriteLine(
-        $"INFO - WALE.Cmd - Got DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        $"INFO - WALE.Cmd - Got {dmsFilesToProcess.Count} DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
     var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
     {
@@ -89,25 +80,29 @@ async Task ProgramAsync()
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
-    //await moveReportHtmlFilesTask;
 
     var allNaldData =  await naldDataTask;
     
     LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
-        cacheService,
-        regionCode);
-    
-    var naldData = ExternalDataHelper.TransformNaldData(
-        allNaldData,
-        allDmsData,
-        regionCode);
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
+    var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
-    
+
+    const int unsetRegionCode = GeneralConstants.GenericRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
+    
+    var lookupConfig = new LookupConfiguration(
+        WalLabelConfiguration.GetLabels(),
+        allDmsData,
+        dmsFileIdInformationDict,
+        firstNamesCsv,
+        services.FileService,
+        services.CacheService!,
+        unsetRegionCode,
+        naldLinkedLicenceHelper: naldLinkedLicenceHelper);
     
     try
     {
@@ -116,19 +111,14 @@ async Task ProgramAsync()
         var minimumToFreeUp = maxConcurrentScrapers / 3;
 
         var extractorLock = new Lock();
-
-        var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
-            allDmsData,
-            dmsFileIdInformationDict,
-            firstNamesCsv,
-            services.FileService,
-            services.CacheService!,
-            regionCode,
-            naldLinkedLicenceHelper: naldLinkedLicenceHelper);
         
         foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
         {
+            if (services.DelayPerProcessMs > 0)
+            {
+                await Task.Delay(services.DelayPerProcessMs);
+            }
+
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
@@ -148,37 +138,45 @@ async Task ProgramAsync()
                 continue;
             }
 
-            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers - minimumToFreeUp)
             {
-                var licenceSetsTask = await Task.WhenAny(scrapingTasks);
-                scrapingTasks.Remove(licenceSetsTask);
-
-                var scrapeResultLicenceSets = await licenceSetsTask;
-
-                if (scrapeResultLicenceSets.Count == 0)
+                await Task.WhenAny(scrapingTasks);
+                var toRemoveList = new List<Task<List<LicenceSet>>>();
+                
+                foreach (var scrapingTask in scrapingTasks)
                 {
-                    throw new Exception("An empty licence set was returned");
+                    if (!scrapingTask.IsCompleted)
+                    {
+                        continue;
+                    }
+
+                    var scrapeResultLicenceSets = scrapingTask.Result;
+
+                    if (scrapeResultLicenceSets.Count != 0)
+                    {
+                        licenceSetGroups.Add(scrapeResultLicenceSets);
+                    }
+                    
+                    toRemoveList.Add(scrapingTask);
                 }
 
-                licenceSetGroups.Add(scrapeResultLicenceSets);
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    scrapingTasks.Remove(toRemoveItem);
+                }
             }
         }
 
-        if (scrapingTasks.Count != 0)
+        foreach (var scrapingTask in scrapingTasks)
         {
-            await Task.WhenAll(scrapingTasks);
+            var scrapeResultLicenceSets = await scrapingTask;
 
-            foreach (var scrapingTask in scrapingTasks)
+            if (scrapeResultLicenceSets.Count == 0)
             {
-                var scrapeResultLicenceSets = await scrapingTask;
-
-                if (scrapeResultLicenceSets.Count == 0)
-                {
-                    throw new Exception("An empty licence set was returned");
-                }
-
-                licenceSetGroups.Add(scrapeResultLicenceSets);
+                continue;
             }
+
+            licenceSetGroups.Add(scrapeResultLicenceSets);
         }
 
         foreach (var pdfDataExtractor in pdfDataExtractors)
@@ -198,8 +196,7 @@ async Task ProgramAsync()
         licenceSetGroups,
         naldLicenceStatusData,
         naldData,
-        allDmsData,
-        regionCode);
+        allDmsData);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
@@ -218,7 +215,8 @@ async Task ProgramAsync()
     {
         if (licenceSetGroup.Count == 0)
         {
-            // TODO log this - it shouldn't happen
+            // This shouldn't happen
+            ConsoleHelper.WriteLine("WARNING - WALE.Cmd - Empty licence set group found");
             continue;
         }
 
@@ -294,11 +292,15 @@ async Task ProgramAsync()
                     newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
                     savedLicenceSetIds.Add(kvp.Key);
                 }
-                
-                await outputService.SaveLicenceSetsAsync(
-                    newLicenceSetsLoop,
-                    licenceLoop.DmsFileId,
-                    processRun.ProcessRunId);
+
+                foreach (var licenceSet in newLicenceSetsLoop)
+                {
+                    // Not batched as we get a 413 on the server
+                    await outputService.SaveLicenceSetAsync(
+                        licenceSet.Value,
+                        licenceLoop.DmsFileId,
+                        processRun.ProcessRunId);   
+                }
             }
         }
 
@@ -319,28 +321,49 @@ async Task ProgramAsync()
     }
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    var saveListsToFile = false;
-
-    if (saveListsToFile)
-    {
-        // The following is just for some reports and charts - saves to filestream
-        await JsOutputHelper.SaveListDataAsync(
-            outputLines,
-            outputFolder,
-            outputService,
-            services.RegenerateMappingJson,
-            processRun,
-            saveListsToFile);
-    }
-
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved list at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    await outputService.FinishProcessRunAsync(processRun, regionCode);
+    await outputService.FinishProcessRunAsync(processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+}
 
-    //ConsoleHelper.WriteLine(SchemaConverter.DiffCounter + " licence number tweaks");
+async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, ICacheService cacheService)
+{
+    const int take = 10_000;
+    var allNaldData = new NaldDataCollection
+    {
+        AbstractionAndImpoundmentLicences = [],
+        AbstractionLicencePoints = [],
+        AbstractionLicencePurposes = [],
+        AbstractionLicenceQuantities = [],
+        AbstractionLicences = [],
+        AbstractionLicenceVersions = []
+    };
+
+    var allNaldDataPartial = new NaldDataCollection();
+    var loopIdx = 0;
+
+    while (loopIdx == 0
+           || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
+           || allNaldDataPartial.AbstractionLicencePoints!.Count == take
+           || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
+           || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
+           || allNaldDataPartial.AbstractionLicences!.Count == take
+           || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+    {
+        var skip = take * loopIdx++;
+            
+        allNaldDataPartial = await cacheService.GetNaldDataAsync(regionCode, false, skip, take);
+        allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
+        allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
+        allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
+        allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
+        allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
+        allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+    }
+    
+    return allNaldData;
 }
 
 ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
@@ -422,42 +445,50 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var useS3 = false;//true;
+    var delayPerProcessMs = 1000;
+    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 30);
+    
+    var fileServiceType = "api";
     IFileService fileService;
 
-    if (useS3)
+    switch (fileServiceType)
     {
-        var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
-            ?? throw new NullReferenceException("AwsS3AccessKey");
-        var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
-            ?? throw new NullReferenceException("AwsS3SecretKey");
-        var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
-            ?? throw new NullReferenceException("AwsS3RegionName");
-        var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
-            ?? throw new NullReferenceException("AwsS3BucketName");
-        
-        fileService = new AwsS3FileService(
-            regionName,
-            bucketName,
-            accessKey,
-            secretKey,
-            null);
-    }
-    else
-    {
-        var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-            ?? throw new NullReferenceException("PdfFolderPath");
-        
-        if (!pdfFolderPath.EndsWith('/'))
+        case "api":
+            fileService = new ApiFileService(httpClient);
+            break;
+        case "s3":
         {
-            pdfFolderPath += "/";
-        }
+            var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
+                ?? throw new NullReferenceException("AwsS3AccessKey");
+            var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
+                ?? throw new NullReferenceException("AwsS3SecretKey");
+            var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
+                ?? throw new NullReferenceException("AwsS3RegionName");
+            var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
+                ?? throw new NullReferenceException("AwsS3BucketName");
         
-        fileService = new LocalFileService(pdfFolderPath);   
+            fileService = new AwsS3FileService(
+                regionName,
+                bucketName,
+                accessKey,
+                secretKey,
+                null);
+            break;
+        }
+        default:
+        {
+            var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
+                ?? throw new NullReferenceException("PdfFolderPath");
+        
+            if (!pdfFolderPath.EndsWith('/'))
+            {
+                pdfFolderPath += "/";
+            }
+        
+            fileService = new LocalFileService(pdfFolderPath);
+            break;
+        }
     }
-    
-    var httpClient = new HttpClient();
-    httpClient.BaseAddress = new Uri(apiBaseUrl);
     
     var cacheService = new ApiCacheService(httpClient);
     var outputService = new ApiOutputService(httpClient);
@@ -536,7 +567,8 @@ ConfiguredServices ConfigureServices()
         ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
-        DmsReportPath = fileMappingPath
+        DmsReportPath = fileMappingPath,
+        DelayPerProcessMs = delayPerProcessMs
     };
 }
 
@@ -572,7 +604,10 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
-        
+
+        lookupConfig = lookupConfig.Clone();
+        lookupConfig.RegionId = dmsDataForFile.RegionId;
+
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             dmsDataForFile,
@@ -586,31 +621,23 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
-        
+
         if (matchesFull.Matches != null)
         {
-            // TODO move this to one batch save
-            var saveTasks = matchesFull.Matches
-                .Select(match => outputService.SaveMatchAsync(
-                    matchResultId,
-                    match.MatchedLabel?.Name,
-                    match.LabelGroupName,
-                    match))
+            var matches = matchesFull.Matches
+                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
                 .ToList();
-            
-            await Task.WhenAll(saveTasks);
-            
-            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
 
-            if (saveDuration >= 1000)
-            {
-                ConsoleHelper.WriteLine(
-                    $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            }
+            await outputService.SaveMatchesAsync(matches);
+
+            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
+            ConsoleHelper.WriteLine(
+                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         }
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
@@ -618,9 +645,25 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             naldData,
             pdfDataExtractor,
             processRun.ProcessRunId,
-            lookupConfig);
+            lookupConfig,
+            dmsDataForFile);
 
         return licenceSets;
+    }
+    catch (TooManyPagesException)
+    {
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
+    }
+    catch (TooManyImagesException)
+    {
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
+    }
+    catch (Exception)
+    {
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error");
+        return [];
     }
     finally
     {
@@ -628,99 +671,111 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-/*async Task MoveReportHtmlFilesAsync(
-    string reportTemplatePath,
-    string outputFolder,
-    bool loadAiJs,
-    string listDataPath,
-    string processRunsPath,
-    string internalDataPath,
-    string licenceDataPath,
-    string licenceSetsDataPath,
-    string thumbnailImageDataPath,
-    string fullImageDataPath)
-{
-    Copy(reportTemplatePath, outputFolder);
-
-    var aiFiles = Directory.GetFiles("Data");
-
-    foreach (var aiFile in aiFiles)
-    {
-        if (!aiFile.EndsWith(".js"))
-        {
-            continue;
-        }
-
-        var aiFilePath = aiFile.Split('/').Last().Replace(".js", string.Empty);
-
-        Directory.CreateDirectory($"{outputFolder}{aiFilePath}");
-        File.Move(aiFile, $"{outputFolder}{aiFilePath}/ai-data.jsonp", true);
-    }
-
-    var reportPath = $"{outputFolder}report.html";
-    File.Move($"{outputFolder}report-template.html", reportPath, true);
-
-    var reportHtml = await File.ReadAllTextAsync(reportPath);
-    reportHtml = reportHtml.Replace("[INTERNAL_DATA_PATH]", internalDataPath);
-    reportHtml = reportHtml.Replace("[LICENCE_DATA_PATH]", licenceDataPath);
-    reportHtml = reportHtml.Replace("[FULL_IMAGE_DATA_PATH]", fullImageDataPath);
-    reportHtml = reportHtml.Replace("[LICENCE_SETS_DATA_PATH]", licenceSetsDataPath);
-
-    await File.WriteAllTextAsync(reportPath, reportHtml);
-
-    File.Move($"{outputFolder}licence-set-report-template.html", $"{outputFolder}licencesetreport.html", true);
-
-    var processRunSelectorPath = $"{outputFolder}index.html";
-    File.Move($"{outputFolder}process-runs-template.html", processRunSelectorPath, true);
-
-    var processRunsHtml = await File.ReadAllTextAsync(processRunSelectorPath);
-    processRunsHtml = processRunsHtml.Replace("[PROCESS_RUNS_DATA_PATH]", processRunsPath);
-
-    await File.WriteAllTextAsync(processRunSelectorPath, processRunsHtml);
-
-    var indexPath = $"{outputFolder}list.html";
-    File.Move($"{outputFolder}list-template.html", indexPath, true);
-
-    var indexHtml = await File.ReadAllTextAsync(indexPath);
-    indexHtml = indexHtml.Replace("[LOAD_AI_JS]", loadAiJs.ToString().ToLower());
-    indexHtml = indexHtml.Replace("[LIST_DATA_PATH]", listDataPath);
-    indexHtml = indexHtml.Replace("[THUMBNAIL_IMAGE_DATA_PATH]", thumbnailImageDataPath);
-
-    await File.WriteAllTextAsync(indexPath, indexHtml);
-}*/
-
 async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetDmsFilesAndMappingAsync(IFileService fileService, string dmsReportPath, int regionCode)
+    GetDmsFilesAndMappingAsync(
+        IFileService fileService,
+        string dmsReportPath,
+        bool getFromFile,
+        ICacheService cacheService)
 {
     //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-    var filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
-        fileService,
-        dmsReportPath,
-        regionCode);
-
-    /*filesAndMapping.FilepathsWithLicenceNumbers = filesAndMapping.FilepathsWithLicenceNumbers
-        .Where(filePath => filePath.Key.Contains("22722086"))
-        .ToDictionary(filePath => filePath.Key, k => k.Value);*/
-
+    (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
+        LicenceNumbersWithFilenames) filesAndMapping;
+    
+    if (getFromFile)
+    {
+        filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+            fileService,
+            dmsReportPath);
+    }
+    else
+    {
+        filesAndMapping = await GetFilesAndMappingFromLicenceFinderResultsAsync(
+            fileService,
+            cacheService);
+    }
+    
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .OrderBy(filePath => filePath.Key)
-        .Skip(0)
-//       .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
- //       .Where(x => /*x.Key.Contains("12100063") || */ x.Key.Contains("22728083"))
-        .Take(10)
         .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
+    // For debugging uncheck sections of the following
+    
+    /*filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
+    .Where(x => x.Key.Contains("12405035_")) // TODO This file is slow (3X slower then some others - work out why)
+    .Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
+    .Where(x => x.Value.RegionId == 3) // North east
+    .Skip(155)
+    .Take(5)
+    .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);*/
+    
     return filesAndMapping;
 }
 
-async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromExcelDownloadInfoFileAsync(IFileService fileService, string dmsReportPath, int regionCode)
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
+        LicenceNumbersWithFilenames)>
+    GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
 {
     var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
     var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
 
-    // Register encoding provider for ExcelDataReader
+    var allDestinationFilenames = await fileService.GetAllFilesAsync();
+
+    var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
+    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+
+    foreach (var licenceFinderResult in licenceFinderResults)
+    {
+        if (licenceFinderResult.FileId == null)
+        {
+            continue;
+        }
+        
+        var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
+        
+        if (!lowercaseFilesInFolder.Contains(destinationFileName))
+        {
+            continue;
+        }
+
+        // Fix casing
+        destinationFileName = allDestinationFilenames.First(fname =>
+            fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
+        
+        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
+        
+        var dmsFileData = new DmsFileData
+        {
+            DestinationFileName = destinationFileName,
+            NaldLicenceRef = licenceFinderResult.LicenseNumber,
+            PermitNumber = licenceFinderResult.PermitNumber,
+            DmsPath = licenceFinderResult.FileUrl,
+            StrippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                regionId)!,
+            FileId = Guid.Parse(licenceFinderResult.FileId!),
+            RegionId = regionId
+        };
+
+        filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
+        licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
+    }
+    
+    return (
+        filenamesWithLicenceNumbers,
+        licenceNumbersWithFilenames
+    );
+}
+
+async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+        IFileService fileService,
+        string dmsReportPath)
+{
+    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
+    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
+
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     var filesInFolder = await fileService.GetAllFilesAsync();
@@ -763,12 +818,32 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
                     permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
                 }
 
-                var dmsPath = (string)row["Definitive URL"];
+                string destinationFileName;
+                string dmsPath;
+                Guid fileId;
                 
-                //var dmsPathFilename = dmsPath.Split('/').Last();
-                //destinationFileName = $"{permitNumber}__{dmsPathFilename}";
-
-                var destinationFileName = (string)row[1];//"DestinationFilename"];/
+                if (dataTable.Columns.Contains("Definitive URL"))
+                {
+                    dmsPath = (string)row["Definitive URL"];
+                    destinationFileName = (string)row[1];
+                    
+                    var filenameParts = destinationFileName.Split("__");
+                    fileId = filenameParts.Length >= 2
+                        ? Guid.Parse(filenameParts[1])
+                        : throw new Exception("Filename format was incorrect");
+                }
+                else
+                {
+                    var fileIdColumn = row["File Id"] != DBNull.Value ? (string)row["File Id"] : null;
+                    
+                    if (!Guid.TryParse(fileIdColumn, out fileId))
+                    {
+                        continue;
+                    }
+                    
+                    dmsPath = (string)row["File URL"];
+                    destinationFileName = $"{permitNumber}_{fileId}.pdf";
+                }
                 
                 if (!filesInFolder.Contains(destinationFileName))
                 {
@@ -777,17 +852,15 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
 
                 var naldLicenceRef = (string)row["License Number"];
 
-                var filenameParts = destinationFileName.Split("__");
-                var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
-
                 var dmsFileData = new DmsFileData
                 {
                     DestinationFileName = destinationFileName,
                     NaldLicenceRef = naldLicenceRef,
                     PermitNumber = permitNumber,
                     DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!,
-                    FileId = fileId
+                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
+                    FileId = fileId,
+                    RegionId = GeneralConstants.GenericRegionCode
                 };
 
                 filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
@@ -800,19 +873,4 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Diction
         filenamesWithLicenceNumbers,
         licenceNumbersWithFilenames
     );
-}
-
-void Copy(string sourceDir, string targetDir)
-{
-    Directory.CreateDirectory(targetDir);
-
-    foreach (var file in Directory.GetFiles(sourceDir))
-    {
-        File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-
-    foreach (var directory in Directory.GetDirectories(sourceDir))
-    {
-        Copy(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
-    }
 }

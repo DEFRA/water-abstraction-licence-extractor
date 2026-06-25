@@ -1,9 +1,11 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Helpers;
+using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
@@ -22,10 +24,7 @@ namespace WALE.Tools._1stHalf;
 
 public static class GenerateLicenceReaderExtract
 {
-    private static readonly string OutputFolder = KeyConfig.OutputFolder;
     private static readonly Dictionary<string, DmsFileData> DmsFileData = [];
-    private static readonly string ResultsCsvFileName = "licence_reader_processing_results.csv";
-    private static readonly Lock CsvWriteLock = new();
 
     // Hard-coded list of files to exclude from processing
     private static readonly HashSet<string> ExcludedFiles = new(StringComparer.OrdinalIgnoreCase)
@@ -37,143 +36,12 @@ public static class GenerateLicenceReaderExtract
         "42901S0033R01__Application Transfer Issued Licence 18.12.24.pdf"
     };
 
-    private static string GetInProgressResultsCsvPath(IFileService fileService) => Path.Combine(fileService.FolderPath, ResultsCsvFileName);
-
-    private static List<LicenceReaderCsvLine> LoadExistingResults(IFileService fileService)
-    {
-        var csvPath = GetInProgressResultsCsvPath(fileService);
-        var results = new List<LicenceReaderCsvLine>();
-
-        if (!File.Exists(csvPath))
-        {
-            ConsoleHelper.WriteLine("No existing results CSV found. Starting fresh.");
-            return results;
-        }
-
-        try
-        {
-            var lines = File.ReadAllLines(csvPath);
-            
-            if (lines.Length <= 1)
-            {
-                ConsoleHelper.WriteLine("Results CSV exists but is empty or has only header.");
-                return results;
-            }
-
-            // Skip header line
-            for (var i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                
-                if (parts.Length >= 4)
-                {
-                    results.Add(new LicenceReaderCsvLine
-                    {
-                        FileName = parts[0].Trim('"'),
-                        PermitNumber = parts[1].Trim('"'),
-                        LicenceNumber = string.IsNullOrEmpty(parts[2]) || parts[2] == "\"\"" ? null : parts[2].Trim('"'),
-                        DateOfIssue = string.IsNullOrEmpty(parts[3]) || parts[3] == "\"\"" ? null : DateOnly.Parse(parts[3].Trim('"')),
-                        ProcessingStatus = parts[4].Trim('"'),
-                    });
-                }
-            }
-
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} Loaded {results.Count} existing results from CSV (including files that were processing when crashed).");
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - loading existing results CSV: {ex.Message}");
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting fresh.");
-        }
-
-        return results;
-    }
-
-    private static void MarkFileAsProcessingInCsv(string fileName, IFileService fileService)
-    {
-        var csvPath = GetInProgressResultsCsvPath(fileService);
-        
-        lock (CsvWriteLock)
-        {
-            try
-            {
-                var fileExists = File.Exists(csvPath);
-                using var writer = new StreamWriter(csvPath, true);
-
-                // Write header if file doesn't exist
-                if (!fileExists)
-                {
-                    writer.WriteLine("FileName,PermitNumber,LicenceNumber,DateOfIssue,ProcessingStatus");
-                }
-
-                // Write placeholder row for file being processed
-                writer.WriteLine($"\"{fileName}\",\"\",\"\",\"\",\"Processing\"");
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelper.WriteLine($"Error marking file as processing in CSV: {ex.Message}");
-            }
-        }
-    }
-
-    private static void UpdateInProgressFileResultsCsv(LicenceReaderCsvLine result, IFileService fileService, string status)
-    {
-        var csvPath = GetInProgressResultsCsvPath(fileService);
-        
-        lock (CsvWriteLock)
-        {
-            try
-            {
-                if (!File.Exists(csvPath))
-                {
-                    ConsoleHelper.WriteLine($"Warning: CSV file does not exist when trying to update {result.FileName}");
-                    return;
-                }
-
-                // Read all lines
-                var lines = File.ReadAllLines(csvPath).ToList();
-
-                // Find and update the row for this file
-                var updated = false;
-                
-                for (var i = 1; i < lines.Count; i++) // Start at 1 to skip header
-                {
-                    var line = lines[i];
-                    
-                    if (!line.StartsWith($"\"{result.FileName}\"", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                    
-                    lines[i] = $"\"{result.FileName}\",\"{result.PermitNumber}\",\"{result.LicenceNumber}\",\"{result.DateOfIssue}\",\"{status}\"";
-
-                    updated = true;
-                    break;
-                }
-
-                if (updated)
-                {
-                    File.WriteAllLines(csvPath, lines);
-                }
-                else
-                {
-                    ConsoleHelper.WriteLine($"Warning: Could not find row to update for {result.FileName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelper.WriteLine($"Error updating file result in CSV: {ex.Message}");
-            }
-        }
-    }
-
     private static PdfDataExtractorService CreatePdfDataExtractorService(
         int id,
         ICacheService cacheService,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
-        INoOcrAlternativePdfDocumentService alternativeDocumentService,
-        string pdfFolder)
+        INoOcrAlternativePdfDocumentService alternativeDocumentService)
     {
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
@@ -214,23 +82,82 @@ public static class GenerateLicenceReaderExtract
             alternativeDocumentService);
     }
 
-    public static async Task GenerateLicenceReaderExtractAsync(string pdfFolder, int regionCode)
+    public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
     {
         var dtStart = DateTime.Now;
+        ConsoleHelper.WriteLine($"API is {KeyConfig.ApiBaseUrl}");
         
-        var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
-    
+        var httpClient = HttpHelper.GetResilientHttpClient(
+            KeyConfig.ApiBaseUrl,
+            100,
+            30);
+
+        var delayPerProcessMs = 500;
+        
+        //var maxConcurrentScrapers = 6;
+        var maxConcurrentScrapers = 10;
+        
         var cacheService = new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
-        var allNaldData = await cacheService.GetNaldDataAsync((short)regionCode);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        ConsoleHelper.WriteLine("Started getting nald licence status");
+        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         
-        var maxConcurrentScrapers = 10;
+        const int take = 10_000;
+
+        var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, take);
+        var allNaldData = await GetAllNaldDataAsync(cacheService, take);
+        
+        ConsoleHelper.WriteLine("Finished getting all nald data");
+        
+        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+
+        var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
+
+        foreach (var naldLine in allNaldData.AbstractionLicences!)
+        {
+            var comparisonLicenceNumber = FormattingHelper.StripForComparison(
+                naldLine.LicenceNo,
+                naldLine.FgacRegionCode);
+
+            if (!comparableAbstractionLicences.TryAdd(comparisonLicenceNumber!, [naldLine]))
+            {
+                comparableAbstractionLicences[comparisonLicenceNumber!].Add(naldLine);
+            }
+        }
+        
+        var naldLicenceStatusData = await naldLicenceStatusDataTask;
+        ConsoleHelper.WriteLine("Finished getting nald licence status");
+        
+        var naldLiveLicenceDataByLowercasePermitNumber = new Dictionary<string, NaldAbstractionLicenceDataLine>();
+        
+        foreach (var licenceNumber in naldLicenceStatusData.LiveLicences)
+        {
+            var fullLicencePossibilities = comparableAbstractionLicences.SingleOrDefault(
+                x => x.Key == licenceNumber);
+
+            // If we didn't fetch data for the region, this could happen
+            if (fullLicencePossibilities.Key == null)
+            {
+                continue;
+            }
+            
+            var fullLicences = fullLicencePossibilities.Value
+                .Where(x =>
+                    (x.ExpiryDate == null || x.ExpiryDate > DateTime.Now)
+                    && (x.RevDate == null || x.RevDate > DateTime.Now)
+                    && (x.LapsedDate == null || x.LapsedDate > DateTime.Now));
+
+            // TODO WA/055/0018/031 + WA/055/0018/31 both get compared to be the same here
+            var fullLicence = fullLicences.First();
+            
+            var dmsStylePermitNumber = FormattingHelper.CleanPermitNumber(fullLicence.LicenceNo!).ToLower();
+            naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
+        }
+        
         var pdfDataExtractors = new List<PdfDataExtractorService>();
         
         // Create a list of PdfDataExtractorService instances for parallel processing
@@ -242,176 +169,385 @@ public static class GenerateLicenceReaderExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
-                    docnetAlternativeDocumentService,
-                    pdfFolder));
+                    docnetAlternativeDocumentService));
         }
 
-        var outputLines = await GetLicenceReaderDataAsync(
-            pdfDataExtractors,
-            new LocalFileService(pdfFolder),
-            cacheService,
-            regionCode,
-            maxConcurrentScrapers);
+        var fileServiceType = "api";
 
+        IFileService fileService = fileServiceType switch
+        {
+            "api" => new ApiFileService(httpClient),
+            _ => new LocalFileService("TODO")
+        };
+        
+        ConsoleHelper.WriteLine("Started GetAndSaveLicenceReaderDataAsync");
+        
+        var outputLines = await GetAndSaveLicenceReaderDataAsync(
+            pdfDataExtractors,
+            fileService,
+            cacheService,
+            maxConcurrentScrapers,
+            naldLiveLicenceDataByLowercasePermitNumber,
+            await dmsExtractInfoTask,
+            includeVersionMatch,
+            delayPerProcessMs);
+
+        ConsoleHelper.WriteLine("Finished GetAndSaveLicenceReaderDataAsync");        
+        
         // Generate CSV report
         await ToolHelper.GenerateCsvReportWithSummaryAsync(
             outputLines,
             "LicenceReader",
-            OutputFolder,
+            "Output",
             line => line.LicenceNumber ?? "No Licence Number scraped",
             "licence records",
             "Licence Processing Summary");
-
+        
         var tsDuration = (DateTime.Now - dtStart).TotalSeconds;
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Completed in {tsDuration} seconds");
+
+        return 1;
     }
 
-    private static async Task<MatchesResult> GetMatchesAsync(
-        string fileName,
+    private static async Task<NaldDataCollection> GetAllNaldDataAsync(ICacheService cacheService, int take)
+    {
+        var allNaldData = new NaldDataCollection
+        {
+            AbstractionAndImpoundmentLicences = [],
+            AbstractionLicencePoints = [],
+            AbstractionLicencePurposes = [],
+            AbstractionLicenceQuantities = [],
+            AbstractionLicences = [],
+            AbstractionLicenceVersions = []
+        };
+
+        var allNaldDataPartial = new NaldDataCollection();
+        var loopIdx = 0;
+
+        ConsoleHelper.WriteLine("Started getting all nald data");
+        
+        while (loopIdx == 0
+               || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
+               || allNaldDataPartial.AbstractionLicencePoints!.Count == take
+               || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
+               || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
+               || allNaldDataPartial.AbstractionLicences!.Count == take
+               || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+        {
+            var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting nald data - starting at {skip}");
+            
+            allNaldDataPartial = await cacheService.GetNaldDataAsync(null, false, skip, take);
+            allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
+            allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
+            allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
+            allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
+            allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
+            allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+        }
+        
+        return allNaldData;
+    }
+    
+    private static async Task<Dictionary<string, List<DmsExtract>>> GetDmsExtractInfoAsync(
+        ICacheService cacheService,
+        int take)
+    {
+        ConsoleHelper.WriteLine("Started getting dms extracts");
+        
+        var dmsExtractInfoRaw = new List<DmsExtract>();
+
+        List<DmsExtract> dmsExtractPartial = [];
+        var loopIdx = 0;
+
+        while (loopIdx == 0 || dmsExtractPartial.Count == take)
+        {
+            var skip = take * loopIdx++;
+            ConsoleHelper.WriteLine($"Getting dms extracts - starting at {skip}");
+            
+            dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
+            dmsExtractInfoRaw.AddRange(dmsExtractPartial);
+        }
+        
+        ConsoleHelper.WriteLine("Finished getting dms extracts");
+        
+        var dmsExtractInfo = new Dictionary<string, List<DmsExtract>>();
+
+        foreach (var dmsRow in dmsExtractInfoRaw)
+        {
+            var permitNumberKey = dmsRow.PermitNumber.ToLower();
+            
+            if (dmsExtractInfo.TryGetValue(permitNumberKey, out var value))
+            {
+                value.Add(dmsRow);
+                continue;
+            }
+            
+            dmsExtractInfo.Add(permitNumberKey, [dmsRow]);
+        }
+        
+        return dmsExtractInfo;
+    }
+
+    private static Task<MatchesResult> GetMatchesAsync(
+        TemplateFinderInput fileMetadata,
         IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
     {
-        try
-        {
-            var filenameParts = fileName.Split("__");
-            var fileId = filenameParts.Length >= 3 ? Guid.Parse(filenameParts[1]) : Guid.Empty;
-            
-            var result = await pdfDataExtractor.GetMatchesAsync(
-                fileName,
-                new DmsFileData { FileId = fileId },
-                configuration,
-                [fileName],
-                0);
-            
-            ConsoleHelper.WriteLine($"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileName} at {DateTime.Now}");
-            return result;
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelper.WriteLine($"Error in GetMatchesAsync for {fileName}:");
-            ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
-            ConsoleHelper.WriteLine($"  Message: {ex.Message}");
-            
-            throw;
-        }
+        return pdfDataExtractor.GetMatchesAsync(
+            fileMetadata.FileName!,
+            new DmsFileData { FileId = fileMetadata.FileId },
+            configuration,
+            [fileMetadata.FileName!],
+            0);
     }
 
-    private static async Task<List<LicenceReaderCsvLineWithoutStatus>> GetLicenceReaderDataAsync(
+    private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
-        int regionCode,
-        int maxConcurrentScrapers)
+        int maxConcurrentScrapers,
+        Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
+        Dictionary<string, List<DmsExtract>> dmsExtractInfo,
+        bool includeVersionMatch,
+        int delayPerProcessMs)
     {
-        // Load existing results (includes both completed and crashed files) - bookmarking system
-        var existingResults = LoadExistingResults(fileService);
+        var existingResults = await cacheService.GetDmsFileReaderResultsAsync();
         
         // NOTE - Next line for debugging only
         //existingResults.Clear();
+
+        var redos = new List<Guid>();
         
-        var completedResults = existingResults
-            .Where(er => er.ProcessingStatus == "Completed")
+        var processedFileIds = new HashSet<Guid>(
+            existingResults
+                .Where(existingResult => !redos.Contains(existingResult.FileId))
+                .Select(existingResult => existingResult.FileId));
+        
+        var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
+            .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToList();
-        
-        var processedFileNames = new HashSet<string>(
-            completedResults.Select(existingResult => existingResult.FileName)!,
-            StringComparer.OrdinalIgnoreCase);
 
-        var allPdfFileNames = (await fileService.GetAllFilesAsync())
-            .Where(filePath => filePath.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-            .Select(filePath => filePath.Split('/').Last())
-            .OrderBy(fileName => fileName)
-            .ToList();
+        // TODO - Need to implement paging above
         
-        // Filter out files already in CSV (completed or crashed) and hard-coded excluded files
-        var pdfFileNames = allPdfFileNames
-            .Where(fileName => !processedFileNames.Contains(fileName)
-                && !ExcludedFiles.Contains(fileName)) // Comment out this line if debugging a certain file
-            .ToList();
+        var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
-        // NOTE - Next line for debugging only - Filter to a subset of files if wanted
-        /*pdfFileNames = pdfFileNames
-            .Where(fileName =>
-                fileName.StartsWith("AN0370024013"))
-            .Take(100)
-            .ToList();*/
-        
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFileNames.Count} total PDF files at {DateTime.Now}");
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
-
-        var excludedCount = allPdfFileNames.Count(fileName => ExcludedFiles.Contains(fileName));
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
-
-        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process: {pdfFileNames.Count} files");
-
-        if (pdfFileNames.Count == 0)
+        foreach (var licenceFinderResult in licenceFinderResultsRaw)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
-            
-            return existingResults
-                .OrderBy(existingResult => existingResult.PermitNumber)
-                .Select(line => (LicenceReaderCsvLineWithoutStatus)line)
-                .ToList();
+            if (string.IsNullOrWhiteSpace(licenceFinderResult.FileId))
+            {
+                continue;
+            }
+
+            if (!Guid.TryParse(licenceFinderResult.FileId!, out var fileId))
+            {
+                continue;
+            }
+
+            if (!licenceFinderResultsByFileId.TryAdd(fileId, [licenceFinderResult]))
+            {
+                licenceFinderResultsByFileId[fileId].Add(licenceFinderResult);
+            }
         }
         
-        var configuration = new LookupConfiguration(
+        // Create file entries from PDF files and filter out already processed ones
+        var filesToProcessRaw = allPdfFilesInS3
+            .Select(fileMetadata =>
+            {
+                var permitNumber = ExtractPermitNumber(fileMetadata.Filename);
+
+                if (string.IsNullOrWhiteSpace(permitNumber))
+                {
+                    return null;
+                }
+                
+                var fileId = ExtractFileId(fileMetadata.Filename);
+                
+                if (fileId == null)
+                {
+                    return null;
+                }
+                
+                return new TemplateFinderInput
+                {
+                    FileName = fileMetadata.Filename,
+                    PermitNumber = permitNumber,
+                    FileId = fileId.Value,
+                    FileSize = fileMetadata.Filesize
+                };
+            })
+            .Where(templateFinderInputNullable => templateFinderInputNullable != null)
+            .Select(templateFinderInputNullable => templateFinderInputNullable!)
+            .Where(templateFinderInput => licenceFinderResultsByFileId.ContainsKey(templateFinderInput.FileId))
+            .ToList();
+
+        if (includeVersionMatch)
+        {
+            var versionFiles = await cacheService.GetVersionFilesAsync();
+
+            foreach (var versionFile in versionFiles)
+            {
+                filesToProcessRaw.Add(new TemplateFinderInput
+                { 
+                    FileName = $"{versionFile.PermitNumber!.ToLower()}__{versionFile.FileId}.pdf",
+                    PermitNumber = versionFile.PermitNumber,
+                    FileId = versionFile.FileId!.Value,
+                    FileSize = versionFile.FileSize!.Value
+                });
+            }
+        }
+        
+        filesToProcessRaw = filesToProcessRaw
+            .Where(templateFinderInput =>
+                !processedFileIds.Contains(templateFinderInput.FileId)
+                && !ExcludedFiles.Contains(templateFinderInput.FileName!)) // Comment out this line if debugging a certain file
+            .ToList();
+        
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
+
+        var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
+
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process (with correct filenames etc..): {filesToProcessRaw.Count} files");
+
+        if (filesToProcessRaw.Count == 0)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - All files have been processed. Returning existing results.");
+            return existingResults;
+        }
+        
+        // NOTE - Next line for debugging only - Filter to a subset of files if wanted
+        /*filesToProcessRaw = filesToProcessRaw
+            //.Where(fileMetadata =>
+                //fileMetadata.FileId == Guid.Parse("907bb5a8-b735-440a-a9e9-0d49872d0ddd"))
+            //.Skip(10)
+            .Take(50)
+            .ToList();*/
+        
+        await SetRunDateAsync(cacheService);
+        
+        var originalConfiguration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
             DmsFileData,
-            [], // TODO
+            [], // Don't need
             await CompanyName.GetFirstNamesCsvFromFileAsync(),
             fileService,
             cacheService,
-            regionCode);
+            -1,
+            skipFileIfMoreThenPages: 25);
         
-        ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {configuration.Labels.Count} label groups from configuration");
+        ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {originalConfiguration.Labels.Count} label groups from configuration");
 
-        ConsoleHelper.WriteLine($"\n=== Processing {pdfFileNames.Count} files ===");
+        ConsoleHelper.WriteLine($"\n=== Processing {filesToProcessRaw.Count} files ===");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Processing {maxConcurrentScrapers} documents at a time...\n");
         
         var filenameIdx = 1;
         
-        var scrapingTasks = new List<Task<LicenceReaderCsvLine>>();
-        var minimumToFreeUp = maxConcurrentScrapers / 3;
+        var scrapingTasks = new List<Task<DmsFileReaderResult?>>();
         
-        var returnList = new List<LicenceReaderCsvLine>();
+        var returnList = new List<DmsFileReaderResult>();
         var extractorLock = new Lock();
-        
-        foreach (var pdfFileName in pdfFileNames)
+
+        var templateDict = new Dictionary<int, TemplateTypeIdentifierService>
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Starting file: {pdfFileName}" +
-                $"(File {filenameIdx++} of {pdfFileNames.Count})");
+            { 1, new TemplateTypeIdentifierService("Anglian") },
+            { 2, new TemplateTypeIdentifierService("Midlands") },
+            { 3, new TemplateTypeIdentifierService("NE") },
+            { 4, new TemplateTypeIdentifierService("NW") },
+            { 5, new TemplateTypeIdentifierService("South West") },
+            { 6, new TemplateTypeIdentifierService("Southern") },
+            { 7, new TemplateTypeIdentifierService("Thames") },
+            { 8, new TemplateTypeIdentifierService("Wales") },
+        };
+        
+        var fileTypeService = new FileTypeIdentifierService();
+        
+        foreach (var fileToProcess in filesToProcessRaw)
+        {
+            if (delayPerProcessMs > 0)
+            {
+                await Task.Delay(delayPerProcessMs);
+            }
+            
+            var lowercasePermitNumber = fileToProcess.PermitNumber!.ToLower();
+            
+            var configuration = originalConfiguration.Clone();
+            var naldData = naldLiveLicenceDataByLowercasePermitNumber.GetValueOrDefault(lowercasePermitNumber);
+
+            if (naldData == null)
+            {
+                Console.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - No nald data found for {lowercasePermitNumber}");
+            }
+            
+            configuration.RegionId = naldData?.FgacRegionCode ?? -1;
+            
+            ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - *** Starting file: {fileToProcess.FileName}" +
+                $" (File {filenameIdx++} of {filesToProcessRaw.Count}) ***");
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
-                    pdfFileName,
-                    fileService,
+                    fileToProcess,
                     configuration,
                     pdfDataExtractors,
-                    extractorLock));
+                    extractorLock,
+                    templateDict[configuration.RegionId],
+                    fileTypeService,
+                    dmsExtractInfo,
+                    cacheService));
             
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
                 continue;
             }
 
-            while (scrapingTasks.Count > maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
-                var finishedTask = await Task.WhenAny(scrapingTasks);
+                await Task.WhenAny(scrapingTasks);
+                var toRemoveList = new List<Task<DmsFileReaderResult?>>();
                 
-                returnList.Add(await finishedTask);
-                scrapingTasks.Remove(finishedTask);
+                // Check the others see if any completed (this might be superflous)
+                foreach (var scrapingTask in scrapingTasks)
+                {
+                    if (!scrapingTask.IsCompleted)
+                    {
+                        continue;
+                    }
+
+                    var result = scrapingTask.Result;
+
+                    if (result != null)
+                    {
+                        returnList.Add(result);
+                    }
+
+                    toRemoveList.Add(scrapingTask);
+                }
+
+                foreach (var toRemoveItem in toRemoveList)
+                {
+                    scrapingTasks.Remove(toRemoveItem);
+                }
             }
         }
         
         // Finish any remaining
         foreach (var scrapingTask in scrapingTasks)
         {
-            returnList.Add(await scrapingTask);
+            var result = await scrapingTask;
+
+            if (result != null)
+            {
+                returnList.Add(result);                
+            }
         }
         
         scrapingTasks.Clear();
 
-        ConsoleHelper.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {pdfFileNames.Count} files.");
+        ConsoleHelper.WriteLine($"\nINFO - {nameof(GenerateLicenceReaderExtract)} - Completed processing all {filesToProcessRaw.Count} files.");
 
         // Combine existing results with newly processed results
         var allResults = existingResults
@@ -419,77 +555,166 @@ public static class GenerateLicenceReaderExtract
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Total results: {allResults.Count} (existing: {existingResults.Count}, new: {returnList.Count})");
-
-        return allResults
-            .OrderBy(line => line.PermitNumber)
-            .Select(line => (LicenceReaderCsvLineWithoutStatus)line)
-            .ToList();
+        return allResults;
     }
 
-    private static async Task<LicenceReaderCsvLine> ScrapeDocumentAsync(
-        string pdfFilename,
-        IFileService fileService,
+    private static Task SetRunDateAsync(ICacheService cacheService)
+    {
+        return cacheService.SaveImportRunDateAsync("LicenceReaderExtract");
+    }
+
+    private static async Task<DmsFileReaderResult?> ScrapeDocumentAsync(
+        TemplateFinderInput fileMetadata,
         LookupConfiguration configuration,
         List<PdfDataExtractorService> pdfDataExtractors,
-        Lock extractorLock)
+        Lock extractorLock,
+        TemplateTypeIdentifierService templateService,
+        FileTypeIdentifierService fileTypeService,
+        Dictionary<string, List<DmsExtract>> dmsExtractInfo,
+        ICacheService cacheService)
     {
         IPdfDataExtractorService? pdfDataExtractor = null;
         
         try
         {
+            var fileIdString = fileMetadata.FileId.ToString();
+            var lowercasePermitNumber = fileMetadata.PermitNumber!.ToLowerInvariant();
+            var dmsExtractHasPermitRow = dmsExtractInfo.ContainsKey(fileMetadata.PermitNumber!);
+            
+            var originalFileName = dmsExtractHasPermitRow
+                ? dmsExtractInfo[lowercasePermitNumber]
+                    .FirstOrDefault(dmsFile => dmsFile.FileId.Equals(fileIdString, StringComparison.InvariantCultureIgnoreCase))
+                    ?.FileName
+                : null;
+            
+            if (ExcludeBasedOnFilename(originalFileName))
+            {
+                return new DmsFileReaderResult
+                {
+                    Status = "OK",
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    OriginalFileName = originalFileName,
+                    FileId = fileMetadata.FileId,
+                    FileType = "Excluded",
+                    FileSize = fileMetadata.FileSize
+                };
+            }
+
             lock (extractorLock)
             {
                 pdfDataExtractor = pdfDataExtractors.First(x => !x.InUse);
                 pdfDataExtractor.InUse = true;
             }
             
-            // Mark file as processing in CSV BEFORE we start
-            // If Tesseract crashes, this file will be in CSV and skipped on restart
-            MarkFileAsProcessingInCsv(pdfFilename, fileService);
+            MatchesResult internalJson;
 
-            // Check if file exists
-            var fullPath = fileService.FolderPath + pdfFilename;
-            
-            if (!File.Exists(fullPath))
+            try
             {
-                throw new FileNotFoundException($"ERROR - {nameof(GenerateLicenceReaderExtract)} - PDF file not found: {fullPath}");
+                internalJson = await GetMatchesAsync(
+                    fileMetadata,
+                    pdfDataExtractor,
+                    configuration);
+
+                ConsoleHelper.WriteLine(
+                    $"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
+            }
+            catch (TooManyPagesException tex)
+            {
+                var tooManyPagesResult = new DmsFileReaderResult
+                {
+                    Status = "Skipped",
+                    ErrorMessage = tex.ToString(),
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    FileId = fileMetadata.FileId,
+                    NumberOfPages = tex.NumberOfPages
+                };
+
+                await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
+                return null;
+            }
+            catch (TooManyImagesException tex)
+            {
+                var tooManyPagesResult = new DmsFileReaderResult
+                {
+                    Status = "Skipped",
+                    ErrorMessage = tex.ToString(),
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    FileId = fileMetadata.FileId,
+                    NumberOfPages = tex.NumberOfPages
+                };
+
+                await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Scraping file {fileMetadata.FileName}:");
+                ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
+                ConsoleHelper.WriteLine($"  Message: {ex.Message}");
+                ConsoleHelper.WriteLine($"  Stack Trace: {ex.StackTrace}");
+
+                if (ex.InnerException != null)
+                {
+                    ConsoleHelper.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
+                    ConsoleHelper.WriteLine($"  Inner Message: {ex.InnerException.Message}");
+                }
+                
+                var failedResult = new DmsFileReaderResult
+                {
+                    Status = "Error",
+                    ErrorMessage = ex.ToString(),
+                    PermitNumber = fileMetadata.PermitNumber!,
+                    FileName = fileMetadata.FileName,
+                    FileId = fileMetadata.FileId
+                };
+
+                await cacheService.SaveDmsFileReaderResultAsync(failedResult);
+                return null;
             }
             
-            var internalJson = await GetMatchesAsync(
-                pdfFilename,
-                pdfDataExtractor,
-                configuration);
-
             // Extract licence number and date of issue from matches
             var licenceNumber = RuleSharedHelper.ExtractLicenceNumber(internalJson);
             var dateOfIssue = RuleSharedHelper.ExtractDateOfIssue(internalJson);
 
-            // Extract permit number from filename
-            var permitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilename);
-
             ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Extracted - " +
-                $"File: {pdfFilename}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {permitNumber}");
+                $"File: {fileMetadata.FileName}, Licence: {licenceNumber}, Date: {dateOfIssue}, Permit: {fileMetadata.PermitNumber}");
 
             var datetime = Date.GetDateOrNull(Date.DateFormatConsistent(dateOfIssue));
-            var dateOnly = datetime != null ? DateOnly.FromDateTime(datetime.Value) : (DateOnly?)null;
+            var ruleResult = templateService.IdentifyTemplateType(internalJson);
             
-            var result = new LicenceReaderCsvLine
+            ConsoleHelper.WriteLine($"INFO - GenerateLicenceReaderExtract - Template identification completed for {fileMetadata.FileName}");
+            const string unknownKey = "Unknown";
+            
+            var fileType = fileTypeService.IdentifyFileType(internalJson, originalFileName ?? fileMetadata.FileName!);
+            
+            var result = new DmsFileReaderResult
             {
+                Status = "OK",
                 LicenceNumber = licenceNumber,
-                PermitNumber = permitNumber,
-                DateOfIssue = dateOnly,
-                FileName = pdfFilename,
-                ProcessingStatus = "Completed"
+                PermitNumber = fileMetadata.PermitNumber!,
+                DateOfIssue = datetime,
+                FileName = fileMetadata.FileName,
+                OriginalFileName = originalFileName,
+                FileId = fileMetadata.FileId,
+                NumberOfPages = internalJson.NumberOfPages,
+                PrimaryType = !string.IsNullOrEmpty(ruleResult?.TemplateType) ? ruleResult.TemplateType : unknownKey,
+                SecondaryType = !string.IsNullOrEmpty(ruleResult?.Template) ? ruleResult.Template : unknownKey,
+                FileType = fileType?.FileType ?? "Unknown",
+                Confidence = fileType?.Confidence ?? 0.0,
+                IdentifiedByRule = fileType?.IdentifiedByRule ?? "N/A",
+                MatchedTerms = fileType?.MatchedTerms != null ? string.Join("; ", fileType.MatchedTerms) : string.Empty,
+                FileSize = fileMetadata.FileSize
             };
 
-            // Update the CSV row with actual results
-            UpdateInProgressFileResultsCsv(result, fileService, result.ProcessingStatus);
-
+            await cacheService.SaveDmsFileReaderResultAsync(result);
             return result;
         }
         catch (Exception ex)
         {
-            ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {pdfFilename}:");
+            ConsoleHelper.WriteLine($"ERROR - {nameof(GenerateLicenceReaderExtract)} - Processing file {fileMetadata.FileName}:");
             ConsoleHelper.WriteLine($"  Exception Type: {ex.GetType().Name}");
             ConsoleHelper.WriteLine($"  Message: {ex.Message}");
             ConsoleHelper.WriteLine($"  Stack Trace: {ex.StackTrace}");
@@ -499,20 +724,18 @@ public static class GenerateLicenceReaderExtract
                 ConsoleHelper.WriteLine($"  Inner Exception: {ex.InnerException.GetType().Name}");
                 ConsoleHelper.WriteLine($"  Inner Message: {ex.InnerException.Message}");
             }
-
-            // Add entry with filename but null values to track failed files
-            var failedResult = new LicenceReaderCsvLine
+            
+            var failedResult = new DmsFileReaderResult
             {
-                LicenceNumber = null,
-                PermitNumber = SharedHelper.ExtractPermitNumberFromFilename(pdfFilename),
-                DateOfIssue = null,
-                FileName = pdfFilename
+                Status = "Error",
+                ErrorMessage = ex.ToString(),
+                PermitNumber = fileMetadata.PermitNumber!,
+                FileName = fileMetadata.FileName,
+                FileId = fileMetadata.FileId
             };
 
-            // Update CSV with failed result
-            UpdateInProgressFileResultsCsv(failedResult, fileService, "Failed");
-            
-            return failedResult;
+            await cacheService.SaveDmsFileReaderResultAsync(failedResult);
+            return null;
         }
         finally
         {
@@ -521,5 +744,65 @@ public static class GenerateLicenceReaderExtract
                 pdfDataExtractor.InUse = false;
             }
         }
+    }
+
+    private static bool ExcludeBasedOnFilename(string? filename)
+    {
+        if (string.IsNullOrEmpty(filename))
+        {
+            return false;
+        }
+        
+        // Define terms to exclude
+        var fileTypeExcludeTerms = new[]
+        {
+            "letter", 
+            "WR51", 
+            "determination", 
+            "warning of further restrictions",
+            "Environment Act 2028 - Booklet",
+            "invoice",
+            "inspection report",
+            "technical report",
+            "tech report",
+            "83743S0057__8-37-43-S-0057Plans.pdf",
+            "73412s0067__Scanned licence file plans upto 2012 8977701.pdf",
+            "AN0330053090R01__Application Renewal Licence Issued - [Issued 18 10 2024] - 11 10 2024",
+            "43004s0022__4-30-04-S-0022 6084539.PDF"
+        };
+
+        return fileTypeExcludeTerms
+            .Any(term => filename.Contains(term, StringComparison.InvariantCultureIgnoreCase));;
+    }
+    
+    private static string? ExtractPermitNumber(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return string.Empty;
+        }
+
+        var underscoreIndex = fileName.IndexOf("__", StringComparison.Ordinal);
+        
+        return underscoreIndex >= 0 
+            ? fileName[..underscoreIndex].Trim() 
+            : null;
+    }
+    
+    private static Guid? ExtractFileId(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return null;
+        }
+
+        var filenameParts = fileName.Split("__");
+        var fileIdWithExtension = filenameParts.LastOrDefault()?.Trim();
+        
+        var fileIdString = fileIdWithExtension!.Split('.')[0];
+        
+        return Guid.TryParse(fileIdString, out var fileIdOut)
+            ? fileIdOut
+            : null;
     }
 }

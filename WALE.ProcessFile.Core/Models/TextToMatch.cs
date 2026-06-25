@@ -22,6 +22,8 @@ public class TextToMatch(string text)
     
     public bool RegularExpressionIsCaseInsensitive { get; init; }
 
+    public bool ExceptWhenInsideWord { get; set; }
+
     public TextToMatch Clone(string textToSet)
     {
         return new TextToMatch(textToSet)

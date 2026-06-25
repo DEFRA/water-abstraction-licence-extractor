@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface INoOcrDataExtractorService
 {
-    public Task<PdfDocument> GetPdfDocumentAsync(
+    public Task<PdfDocument?> GetPdfDocumentAsync(
         string pdfFileName,
         Guid fileId,
         IOutputService outputService,

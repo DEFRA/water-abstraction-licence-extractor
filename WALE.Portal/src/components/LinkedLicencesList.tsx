@@ -4,12 +4,12 @@ import LinkedLicencesListItem from "./LinkedLicencesListItem";
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
-    onOpenReport: (filename: string) => void;
+    onOpenReport: (fileId: string) => void;
 }
 
 export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesListProps) {
     if (!item.linkedLicences?.length) {
-        return '--';
+        return 'No Linked Licences';
     }
 
     return (<ul>

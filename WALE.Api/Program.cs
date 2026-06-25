@@ -1,9 +1,14 @@
+using Amazon;
+using Amazon.Runtime;
 using Scalar.AspNetCore;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
+using Amazon.SQS;
+using WALE.Api.Areas.BFF.Models;
+using WRADI.ProcessFile.DependInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
@@ -17,17 +22,16 @@ ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
-app.UseResponseCompression();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-app.UseCors("AllowPortal");
+app.UseCors();
+app.UseResponseCompression();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.Run();
@@ -36,21 +40,17 @@ return;
 static void ConfigureServices(IServiceCollection services, IConfigurationRoot config)
 {
     services.AddControllers();
+    services.AddResponseCaching();
+    
     services.AddOpenApi();
     services.AddHealthChecks();
 
     services.AddCors(options =>
     {
-        options.AddPolicy("AllowPortal", policy =>
+        options.AddDefaultPolicy(policy =>
         {
             policy
-                .SetIsOriginAllowed(origin => true)
-                /*.WithOrigins(
-                    "http://localhost:5173",  // Vite dev server
-                    "http://localhost:3000",   // Docker/production portal
-                    "http://localhost:8080",
-                    "http://localhost"
-                )*/
+                .SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -68,16 +68,13 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
-    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey")
-        ?? throw new NullReferenceException("AwsS3AccessKey");
-    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey")
-        ?? throw new NullReferenceException("AwsS3SecretKey");
     var s3RegionName = config.GetValue<string>("AwsS3RegionName")
         ?? throw new NullReferenceException("AwsS3RegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
-    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken")
-        ?? throw new NullReferenceException("AwsS3SessionToken");      
+    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey");
+    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey");
+    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken");
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
@@ -91,4 +88,16 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),
             sp.GetRequiredService<IDatabaseWriteService>()));
+    
+    services.AddSingleton<IAmazonSQS>(_ =>
+        new AmazonSQSClient(RegionEndpoint.EUNorth1));
+    
+    services
+        .AddOptions<AwsQueueConfig>()
+        .Bind(config.GetSection("AwsQueueConfig"))
+        .Validate(x => !string.IsNullOrWhiteSpace(x.OrchestratorQueue),
+            "AwsQueueConfig:OrchestratorQueue is required")
+        .Validate(x => !string.IsNullOrWhiteSpace(x.FileProcessQueue),
+            "AwsQueueConfig:FileProcessQueue is required")
+        .ValidateOnStart();
 }

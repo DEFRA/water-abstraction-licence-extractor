@@ -9,6 +9,7 @@ import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
 import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
 import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
 import FilesList from "../components/FilesList";
+import ScrapeDocuments from "../components/ScrapeDocuments";
 import '../assets/liststyles.css'
 import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
@@ -23,7 +24,7 @@ function ListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'startScrape'  >('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -39,21 +40,25 @@ function ListPage() {
 
     const totals = useTotals(filteredData);
 
-    useEffect(() => {
-        const fetchOutputList = async () => {
-            try {
-                const listDataItems = await waleApiClient.getProcessRun(parseInt(processRunId ?? '0'));
-                setOutputList(listDataItems);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
-                console.error('Error fetching process runs:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOutputList();
+    const fetchOutputList = useCallback(async () => {
+        try {
+            const listDataItems = await waleApiClient.getProcessRun(
+                parseInt(processRunId ?? '0'),
+                0,
+                Number.MAX_SAFE_INTEGER);
+            
+            setOutputList(listDataItems);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
+            console.error('Error fetching process runs:', err);
+        } finally {
+            setLoading(false);
+        }
     }, [processRunId]);
+
+    useEffect(() => {
+        fetchOutputList();
+    }, [fetchOutputList]);
 
     const {
         modals,
@@ -62,16 +67,28 @@ function ListPage() {
         closeModal,
         updateModalPosition,
         maximizeModal,
-        minimizeModal
+        minimizeModal,
+        updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((filename: string) => {
-        openReport(filename, parseInt(processRunId ?? '0'));
+    const openReportWithId = useCallback((fileId: string, item?: OutputListDataItem) => {
+        openReport(fileId, parseInt(processRunId ?? '0'), item);
     }, [openReport, processRunId]);
 
-    const openLicenceSetReportWithId = useCallback((filename: string, licenceSetId: string) => {
-        openLicenceSetReport(filename, licenceSetId, parseInt(processRunId ?? '0'));
+    const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
+        openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
+
+    useEffect(() => {
+        modals.forEach(modal => {
+            if (modal.type === 'report') {
+                const updatedItem = outputList.find(item => item.fileId === modal.fileId);
+                if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(modal.outputListDataItem)) {
+                    updateModalOutputItem(modal.fileId, updatedItem);
+                }
+            }
+        });
+    }, [outputList, modals, updateModalOutputItem]);
     
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
@@ -111,6 +128,17 @@ function ListPage() {
                     }}>
                     Files
                 </a>
+                {' | '}
+                <a
+                    href="#"
+                    id="scrapeLink"
+                    className={activeTab === 'startScrape' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('startScrape');
+                    }}>
+                    Start Document Scraping
+                </a>
             </h1>
 
             {activeTab === 'licences' && (
@@ -132,7 +160,7 @@ function ListPage() {
                                 key={index} 
                                 data={filteredData} 
                                 oddRow={index % 2 === 0}
-                                onOpenReport={openReportWithId}
+                                onOpenReport={(fileId) => openReportWithId(fileId, item)}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />
@@ -165,12 +193,19 @@ function ListPage() {
                 </div>
             )}
 
+            {activeTab === 'startScrape' && (
+                <div id="startScrape">
+                    <ScrapeDocuments/>
+                </div>
+            )}
+
             <ReportModalContainer
                 modals={modals}
                 onClose={closeModal}
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
+                onRefresh={fetchOutputList}
                 /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);

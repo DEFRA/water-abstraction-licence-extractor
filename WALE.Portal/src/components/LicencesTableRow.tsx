@@ -3,14 +3,13 @@ import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
-import {getThumbnailUrl} from "../utils/images.ts";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
     data: OutputListDataItem[];
     oddRow: boolean;
-    onOpenReport: (filename: string) => void;
-    onOpenLicenceSetReport: (filename: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
@@ -18,17 +17,13 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
-                <img
-                    src={getThumbnailUrl(item.fileId ?? "")}
-                    style={{height: '80px'}}
-                    alt='No image found'
-                    onError={(e) => e.currentTarget.style.display = 'none'}/>
+                .
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(item.filename!);
+                       onOpenReport(item.fileId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             </td>
@@ -56,16 +51,32 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>
-                {((item.licenceVerificationSummary?.length ?? 0) > 0 ?
-                    <UnorderedListOfStrings items={item.licenceVerificationSummary!.map(v => {
-                        let color = 'inherit';
-                        if (v.verificationType === 'Accept') color = 'green';
-                        else if (v.verificationType === 'Reject') color = 'red';
-                        else if (v.verificationType === 'Override') color = 'blue';
+                {((item.latestLicenceSectionVerifications?.length ?? 0) > 0 ?
+                    Object.entries(
+                        item.latestLicenceSectionVerifications!.reduce((acc, v) => {
+                            const key = v.licenceSectionName ?? "Unknown";
+                            if (!acc[key]) acc[key] = [];
+                            acc[key].push(v);
+                            return acc;
+                        }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
+                    ).map(([sectionName, verifications]) => (
+                        <div key={sectionName} style={{ marginBottom: '10px' }}>
+                            <strong>{sectionName}</strong>
+                            <UnorderedListOfStrings items={verifications!.map(v => {
+                                let color = 'inherit';
+                                if (v.verificationType === 'Confirmed') color = 'green';
+                                else if (v.verificationType === 'AutoConfirm') color = 'green';
+                                else if (v.verificationType === 'Removed') color = 'red';
+                                else if (v.verificationType === 'Edited') color = 'darkorange';
+                                else if (v.verificationType === 'Added') color = 'blue';
+                                else if (v.verificationType === 'AutoFail') color = 'red';
+                                else if (v.verificationType === 'AutoWarn') color = 'darkorange';
 
-                        return <span style={{color}}>{`${v.licenceSectionName}: ${v.verificationType}`}</span>;
-                    })}/>
-                    : '--')}
+                                return <span style={{color}}>{`${v.licenceSectionItemId} - ${v.verificationType}`}{v.scrapedDataIsDifferent && ' 🚩'}</span>;
+                            })}/>
+                        </div>
+                    ))
+                    : 'No verifications')}
             </td>
         </tr>
     );

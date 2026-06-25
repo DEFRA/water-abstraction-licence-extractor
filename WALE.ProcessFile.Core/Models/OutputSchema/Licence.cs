@@ -6,6 +6,8 @@ namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
 public class Licence
 {
+    public int? ProcessRunId { get; set; }
+    
     public string Id
     {
         get
@@ -53,4 +55,6 @@ public class Licence
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
+    
+    public int? RegionId { get; set; }
 }

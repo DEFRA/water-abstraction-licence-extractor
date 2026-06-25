@@ -1,5 +1,6 @@
 import {type ReactNode, useState } from 'react';
 import { LicenceSectionVerification } from "../../api/generated/apiClient.ts";
+import { getVerificationTypeColor } from "../../utils/verificationUtils.ts";
 
 interface LicenceSectionVerificationHistoryProps {
     verification: LicenceSectionVerification;
@@ -12,21 +13,9 @@ export function LicenceSectionVerificationHistory({ verification, children, init
 
     const sectionName = verification.licenceSectionName || 'N/A';
     const verificationType = verification.verificationType || 'N/A';
+    const notes = verification.notes;
     const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleDateString() : 'N/A';
     const dateTime = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
-
-    const getVerificationTypeColor = (type: string) => {
-        switch (type.toLowerCase()) {
-            case 'reject':
-                return 'red';
-            case 'accept':
-                return 'green';
-            case 'override':
-                return 'blue';
-            default:
-                return 'inherit';
-        }
-    };
 
     return (
         <div className="licence-section-verification-history" style={{ border: '1px solid #ccc', marginBottom: '10px', borderRadius: '4px' }}>
@@ -64,6 +53,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                                 textAlign: 'right'
                             }}
                         >
+                            {notes && (<span>Notes: {notes}<br/></span>)}
                             Verified at: {dateTime}<br/>
                             Verified against process run: {verification.processRunId}<br/>
                         </div>

@@ -16,7 +16,9 @@ public static class FormattingHelper
             .Replace("/", string.Empty);
     }
 
-    public static List<string> StripForComparisonMultipleOptions(string? formattedLicenceNumber, int regionCode)
+    public static List<string> StripForComparisonMultipleOptions(
+        string? formattedLicenceNumber,
+        int regionCode)
     {
         var stripped = StripForComparison(formattedLicenceNumber, regionCode);
 
@@ -58,8 +60,10 @@ public static class FormattingHelper
 
         return false;
     }
-    
-    public static string? StripForComparison(string? formattedLicenceNumber, int regionCode)
+
+    public static string? StripForComparison(
+        string? formattedLicenceNumber,
+        int regionCode)
     {
         if (string.IsNullOrEmpty(formattedLicenceNumber))
         {
@@ -1191,5 +1195,21 @@ public static class FormattingHelper
             .SkipWhile(x => string.IsNullOrWhiteSpace(x.Text))
             .Reverse()
             .ToList();
+    }
+
+    /// <summary>
+    /// Cleans a license number by removing forward slashes and asterisks
+    /// </summary>
+    /// <param name="licNo">The original license number (e.g., "6/33/03/*G/0038")</param>
+    /// <returns>Cleaned permit number (e.g., "633303G0038")</returns>
+    public static string CleanPermitNumber(string licNo)
+    {
+        if (string.IsNullOrWhiteSpace(licNo))
+        {
+            return string.Empty;
+        }
+
+        // Remove forward slashes and asterisks
+        return licNo.Replace("/", string.Empty).Replace("*", string.Empty);
     }
 }

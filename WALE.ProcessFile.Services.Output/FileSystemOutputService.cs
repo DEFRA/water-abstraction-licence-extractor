@@ -17,6 +17,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         Directory.CreateDirectory(outputFolder);
         return Task.CompletedTask;
     }
+    
+    public Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
@@ -24,6 +29,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         Guid fileId)
     {
         return GetPageScreenshotPaths(pageNumber, pdfServiceName, fileId);
+    }
+
+    public Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    {
+        throw new NotImplementedException();
     }
 
     private List<(string ProviderName, string? ImageReference)> GetPageScreenshotPaths(
@@ -55,6 +65,26 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(processRun);
     }
 
+    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+    
     public Task SaveLicenceSetsAsync(
         Dictionary<string, LicenceSet> licenceSets,
         Guid? fileId,
@@ -72,6 +102,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var licenceSets = {licenceSetsJson}");
     }
 
+    public Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         Directory.CreateDirectory($"{outputFolder}/{licence.DmsFileId}");
@@ -86,6 +121,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
     {
         throw new NotImplementedException();
     }
@@ -226,7 +266,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return returnList;
     }
 
-    public Task FinishProcessRunAsync(ProcessRun processRun, int regionId)
+    public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
     }
@@ -236,7 +276,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<Licence>> GetLicencesAsync(int processRunId)
+    public Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();
     }
@@ -256,7 +301,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId)
+    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -276,7 +321,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
 
-    public Task<IEnumerable<LicenceVerificationSummary>> GetLicenceVerificationSummariesAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
     {
         throw new NotImplementedException();
     }
@@ -284,5 +329,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
     {
         return Task.FromResult(0);
+    }
+
+    public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>f7f7f582-eade-4afc-b10f-f07e44e81c04</UserSecretsId>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.SQS" Version="4.0.2.25" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.Extensions.Hosting">
+            <HintPath>..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\9.0.14\Microsoft.Extensions.Hosting.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.OrchestrateFileProcess.Services\WALE.OrchestrateFileProcess.Services.csproj" />
+      <ProjectReference Include="..\WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj" />
+    </ItemGroup>
+
+</Project>

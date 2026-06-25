@@ -41,7 +41,7 @@ public static class GenerateLinkedLicencesCsv
         var returnList = new List<LinkedLicencesCsvLine>();
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await OutputService.GetLicencesAsync(processRunId);
+        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
         
         foreach (var licence in licences)
         {

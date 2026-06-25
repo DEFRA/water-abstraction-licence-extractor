@@ -72,7 +72,9 @@ public class DocumentLineColumn
     
     public DocumentLineColumn Clone()
     {
-        return new DocumentLineColumn(Words.ToList());
+        // TODO replace with a source generator
+        
+        return new DocumentLineColumn(Words.Select(w => w.Clone()).ToList());
     }
 
     public DocumentLine AsDocumentLine(DocumentLine line)
@@ -176,6 +178,7 @@ public class DocumentLineColumn
         System.Diagnostics.Debug.Assert(
             inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.InvariantCultureIgnoreCase),
             $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
+        
         return outputWords;
     }
 }

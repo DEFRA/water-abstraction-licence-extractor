@@ -20,7 +20,7 @@ public static class GenerateAggregatesCsvForTesting
 
     private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
     
-    public static async Task GenerateCsvForTestingAsync(int processRunId)
+    public static async Task<int> GenerateCsvForTestingAsync(int processRunId)
     {
         ConsoleHelper.WriteLine("Started generating aggregates csv");
         
@@ -32,12 +32,13 @@ public static class GenerateAggregatesCsvForTesting
         await csv.WriteRecordsAsync((IEnumerable)data);
         
         ConsoleHelper.WriteLine("Finished generating aggregates csv");
+        return 1;
     }
     
     static async Task<List<AggregatesCsvLine>> GetDataAsync(int processRunId)
     {
         var returnList = new List<AggregatesCsvLine>();
-        var licences = await OutputService.GetLicencesAsync(processRunId);
+        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
 
         foreach (var licence in licences)
         {

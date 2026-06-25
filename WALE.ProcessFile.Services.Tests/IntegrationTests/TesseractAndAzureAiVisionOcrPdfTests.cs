@@ -326,17 +326,25 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         Assert.Equal("1/23/01/001", agreedSchemaLicence.LicenceNumber!.Value);
 
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Units);
-        Assert.Equal(181818, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Value);
+        Assert.Equal(90922, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Value);
         Assert.Equal("OtherConditions", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].SectionName);
-        Assert.Equal("AuthorisedBy", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].LinkReason);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
-        Assert.Equal("1/23/01/159", agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences![0]);
+        Assert.Equal("ShallNotExceed", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].LinkReason);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!);
         
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual?.Length);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Units);
+        Assert.Equal(181818, agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Value);
+        Assert.Equal("OtherConditions", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].SectionName);
+        Assert.Equal("AuthorisedBy", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].LinkReason);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences!);
+        Assert.Equal("1/23/01/159", agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences![0]);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Points!);
+        
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual?.Length);
         
         // Abstraction limits section
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
@@ -356,13 +364,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Value);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Points!);
         Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![1].Limits[0].Points![0].Id);
-        
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![2].Limits);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![2].Limits[0].Units);
-        Assert.Equal(90922, agreedSchemaLicence.AbstractionLimits.Individual![2].Limits[0].Value);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![2].Limits[0].Points!.Length);
-        Assert.Equal("Colt Crag Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![2].Limits[0].Points![0].Id);
-        Assert.Equal("Little Swinburn Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![2].Limits[0].Points![1].Id);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

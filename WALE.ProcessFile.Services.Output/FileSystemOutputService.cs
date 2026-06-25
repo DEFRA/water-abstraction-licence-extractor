@@ -256,6 +256,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
     {
         throw new NotImplementedException();
@@ -302,6 +307,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
     {
         throw new NotImplementedException();
     }

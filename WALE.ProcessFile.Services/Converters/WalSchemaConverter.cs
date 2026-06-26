@@ -1673,7 +1673,7 @@ public static class WalSchemaConverter
 
             sectionLinkedLicences.AddRange(linkedLicenceNumbers);
         }
-        
+
         return (sectionLinkedLicences, abstractionLimits, aggregates);
     }
 

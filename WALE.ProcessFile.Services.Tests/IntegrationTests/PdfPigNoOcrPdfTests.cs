@@ -2648,13 +2648,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            new DmsFileData { RegionId = 1})).Last();
+            new DmsFileData { RegionId = 1, FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"), DmsPath = "main path"})).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
         
         Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
-        Assert.Null(agreedSchemaLicenceGroup.Licences[0].DmsPath);
+        Assert.Equal("main path", agreedSchemaLicenceGroup.Licences[0].DmsPath);
+        Assert.Equal("10000000-0000-0000-0000-000000000000", agreedSchemaLicenceGroup.Licences[0].DmsFileId.ToString());
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicenceGroup.Licences[0].Status);
         Assert.Equal(Core.Enums.OutputSchema.LicenceType.SurfaceWaterAbstraction, agreedSchemaLicenceGroup.Licences[0].LicenceType);
         Assert.Equal(NaldLicenceStatus.Live, agreedSchemaLicenceGroup.Licences[0].NaldStatus);
@@ -2777,18 +2778,31 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
 
         // Need to update these for comparison
+        agreedSchemaLicenceGroup.Licences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[0].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        
+        agreedSchemaLicenceGroup.Licences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[1].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[1].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
+        
+        agreedSchemaLicenceGroup.Licences[2].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[2].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
         agreedSchemaLicenceGroup.Licences[2].LinkedLicences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
-        agreedSchemaLicenceGroup.Licences[1].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
-        agreedSchemaLicenceGroup.Licences[2].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);
-        
+
         var actualJson = JsonSerializer.Serialize(agreedSchemaLicenceGroup, JsonHelper.GetSerializerOptions());
         var expectedJson =
             await File.ReadAllTextAsync("Data/2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619.json");
+
+        Assert.Equal("25/68/001/249", agreedSchemaLicenceGroup.Licences[0].LicenceNumber.Value);
+        Assert.Equal("10000000-0000-0000-0000-000000000000", agreedSchemaLicenceGroup.Licences[0].DmsFileId.ToString());
+        Assert.Equal("FirstSeen", agreedSchemaLicenceGroup.Licences[0].LicenceVersion.DmsFileIdStatus);
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences[0].LicenceVersion.DmsFileIdStatusDateUtc);
+        
+        Assert.Equal("25/68/001/247", agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].LicenceNumber);
+        Assert.Equal("fc901013-3c0e-008d-117a-b48fa58d8feb", agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].DmsFileId?.ToString());
+        Assert.Equal("FirstSeen", agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].LicenceVersion.DmsFileIdStatus);
+        Assert.NotNull(agreedSchemaLicenceGroup.Licences[0].LinkedLicences[0].LicenceVersion.DmsFileIdStatusDateUtc);
         
         Assert.Equal(
             expectedJson.Replace(" ", string.Empty).Replace("\n", string.Empty),

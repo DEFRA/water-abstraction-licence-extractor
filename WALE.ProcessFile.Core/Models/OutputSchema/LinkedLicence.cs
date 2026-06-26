@@ -17,7 +17,7 @@ public class LinkedLicence
     
     public string? Filename { get; set; }
     
-    public LicenceVersion LicenceVersion { get; init; } = new();
+    public LicenceVersion LicenceVersion { get; set; } = new();
     
     public Condition? Condition { get; set; }
     

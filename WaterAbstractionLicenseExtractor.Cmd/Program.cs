@@ -192,13 +192,11 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
         licenceSetGroups,
         naldLicenceStatusData,
         naldData,
-        allDmsData,
-        lookupConfig,
-        processRun.ProcessRunId);
+        allDmsData);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 

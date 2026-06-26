@@ -220,7 +220,7 @@ public static class WalSchemaConverter
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     RegionId = naldLinkedLicence.NaldLicence.RegionCode,
-                    PermitNumber = thisDmsFileData?.PermitNumber,
+                    DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
                     ContainedIn =
@@ -499,8 +499,8 @@ public static class WalSchemaConverter
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
                         .RawScrapedLicenceNumber,
                     linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
-                        .PermitNumber,
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.DmsPermitNumber))?
+                        .DmsPermitNumber,
                     linkedLicencesGroup
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
                         .Filename,
@@ -511,6 +511,9 @@ public static class WalSchemaConverter
                     naldLicenceStatusData,
                     naldData,
                     licenceNumbersMapping,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.LicenceVersion.DmsFileIdStatus != null)?
+                        .LicenceVersion.Clone() ?? new LicenceVersion(),
                     regionId), regionId);
             })
             .Where(linkedLicence => !LicenceNumberContainsOther(
@@ -726,6 +729,7 @@ public static class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
+        LicenceVersion licenceVersion,
         int? regionId)
     {
         var permitOrLicenceNumber = linkedLicencePermitNumber;
@@ -758,13 +762,15 @@ public static class WalSchemaConverter
             LicenceNumber = linkedLicenceNumber,
             RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionId,
             RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
-            PermitNumber = dmsFileData?.PermitNumber,
+            DmsPermitNumber = dmsFileData?.PermitNumber,
+            DmsFileId = dmsFileData?.FileId,
+            DmsPath = dmsFileData?.DmsPath,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
             NaldStatus = naldStatus,
             LicenceType = licenceType,
-            DmsPath = dmsFileData?.DmsPath
+            LicenceVersion = licenceVersion
         };
     }
 
@@ -1078,6 +1084,7 @@ public static class WalSchemaConverter
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
+                            new LicenceVersion(),
                             licence.RegionId);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
@@ -1390,6 +1397,30 @@ public static class WalSchemaConverter
             returnLicences.Add(licence);
         }
 
+        var allLicences = new List<Licence>
+        {
+            primaryLicence
+        };
+        
+        allLicences.AddRange(returnLicences);
+        
+        foreach (var licence in allLicences)
+        {
+            foreach (var linkedLicence in licence.LinkedLicences)
+            {
+                var linkedLicenceFull = allLicences
+                    .FirstOrDefault(l => l.LicenceNumber!.Value == linkedLicence.LicenceNumber);
+
+                if (linkedLicenceFull != null)
+                {
+                    linkedLicence.LicenceVersion = linkedLicenceFull.LicenceVersion.Clone();
+                }
+                
+                linkedLicence.DmsFileId = linkedLicenceFull?.DmsFileId;
+                linkedLicence.DmsPath = linkedLicenceFull?.DmsPath;
+            }
+        }
+
         returnLicences = returnLicences
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(
@@ -1609,7 +1640,7 @@ public static class WalSchemaConverter
             LicenceNumber = licenceNumberLoop,
             RegionId = dmsFileData?.RegionId ?? naldDataLineLoop?.FgacRegionCode ?? regionCode,
             RawScrapedLicenceNumber = licenceNumberLoop,
-            PermitNumber = dmsFileData?.PermitNumber,
+            DmsPermitNumber = dmsFileData?.PermitNumber,
             Filename = dmsFileData?.DestinationFileName,
             DmsPath = dmsFileData?.DmsPath,
             NaldStatus = naldStatus,
@@ -1698,7 +1729,7 @@ public static class WalSchemaConverter
                 LicenceNumber = linkedLicenceNumber,
                 RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                 RawScrapedLicenceNumber = linkedLicenceNumber,
-                PermitNumber = dmsFileData?.PermitNumber,
+                DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
                 NaldStatus = naldStatus,
@@ -1788,7 +1819,7 @@ public static class WalSchemaConverter
                     LicenceNumber = lln,
                     RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                     RawScrapedLicenceNumber = lln,
-                    PermitNumber = dmsFileData?.PermitNumber,
+                    DmsPermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -2433,7 +2464,7 @@ public static class WalSchemaConverter
                     LicenceNumber = naldDataLine2?.LicenceNumber ?? scrapedLicenceNumber,
                     RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                     RawScrapedLicenceNumber = scrapedLicenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
+                    DmsPermitNumber = dmsFileData?.PermitNumber,
                     DmsPath = dmsFileData?.DmsPath,
                     Filename = dmsFileData?.DestinationFileName,
                     NaldStatus = naldStatus,

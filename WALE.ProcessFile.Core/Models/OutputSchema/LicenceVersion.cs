@@ -62,6 +62,28 @@ public class LicenceVersion
     
     public DateTime? DmsFileIdStatusDateUtc { get; set; }
 
+    public LicenceVersion Clone() => new()
+    {
+        Issuer = Issuer,
+        EffectiveDate = EffectiveDate,
+        ExpiryDate = ExpiryDate,
+        IssueDate = IssueDate,
+        OriginalIssueDate = OriginalIssueDate,
+        NaldEffectiveStartDate = NaldEffectiveStartDate,
+        NaldEffectiveEndDate = NaldEffectiveEndDate,
+        NaldExpiryDate = NaldExpiryDate,
+        NaldIssueNumber = NaldIssueNumber,
+        NaldIncrementNumber = NaldIncrementNumber,
+        NaldOrigEffectiveDate = NaldOrigEffectiveDate,
+        NaldOrigSignatureDate = NaldOrigSignatureDate,
+        NaldRevocationDate = NaldRevocationDate,
+        NaldStatus = NaldStatus,
+        NaldSignatureDate = NaldSignatureDate,
+        NaldUpdateReason = NaldUpdateReason,
+        DmsFileIdStatus = DmsFileIdStatus,
+        DmsFileIdStatusDateUtc = DmsFileIdStatusDateUtc
+    };
+    
     public static LicenceVersion Template => new()
     {
         NaldRevocationDate = null,

@@ -1673,10 +1673,6 @@ public static class WalSchemaConverter
 
             sectionLinkedLicences.AddRange(linkedLicenceNumbers);
         }
-
-        abstractionLimits = abstractionLimits
-            .Where(x => x.Limits.Count > 0)
-            .ToList();
         
         return (sectionLinkedLicences, abstractionLimits, aggregates);
     }
@@ -2776,7 +2772,7 @@ public static class WalSchemaConverter
 
         if (!isExcludedLinkReason)
         {
-            allIndividualGroups.AddRange(notIncludedList);
+            allIndividualGroups.AddRange(notIncludedList.Where(grp => grp.Limits.Count > 0));
         }
 
         if (aggregateAbstractionLimits.Count == 0)

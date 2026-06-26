@@ -390,7 +390,15 @@ public static class WalSchemaConverter
         }
         
         individual = combinedIndividual.ToArray();
-        
+
+        (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
+            individual,
+            aggregates,
+            points,
+            licenceNumber,
+            licenceVersion.LicenceVersionId,
+            naldDataLine);
+
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -432,6 +440,73 @@ public static class WalSchemaConverter
             LicenceType = licenceType,
             RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode
         };
+    }
+
+    private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
+        PromoteAnyIndividualLimitsThatShouldBeAggregates(
+            AbstractionLimitGroup[] individuals,
+            Aggregate[] aggregates,
+            PointOfAbstraction[] points,
+            string? licenceNumber,
+            string? licenceVersionId,
+            NaldData? naldDataLine)
+    {
+        var multiplePointsInDocument = points.Length > 1;
+
+        if (!multiplePointsInDocument)
+        {
+            return (individuals, aggregates);
+        }
+        
+        var anyMultiplePointAggregate = aggregates.Any(a => a.Points?.Length > 1);
+
+        if (!anyMultiplePointAggregate)
+        {
+            return (individuals, aggregates);
+        }
+
+        var newIndividuals = new List<AbstractionLimitGroup>();
+        var newAggregates = new List<Aggregate>();
+        
+        foreach (var individual in individuals)
+        {
+            var isAllPoints = individual.Points == null || individual.Points.Length == 0;
+            
+            if (isAllPoints || individual.Points!.Length == points.Length)
+            {
+                var pointsLoop = individual.Points;
+
+                if (isAllPoints)
+                {
+                    pointsLoop = points
+                        .Select(Point (p) => p)
+                        .ToArray();
+                }
+                
+                newAggregates.Add(new Aggregate
+                {
+                    Points = pointsLoop,
+                    Purposes = individual.Purposes,
+                    TimePeriod = individual.TimePeriod,
+                    TimeCutoff = individual.TimeCutoff,
+                    DocumentIdentifier = individual.DocumentIdentifier,
+                    Limits = individual.Limits,
+                    ContainedIn = individual.ContainedIn,
+                    SourceLicenceNumber = licenceNumber,
+                    SourceLicenceVersionId = licenceVersionId,
+                    PrimaryType = PrimaryType.InLicence,
+                    NaldType = GetNaldType(naldDataLine),
+                    AggregateSetId = PositionConstants.ReplacementMarker
+                });
+                
+                continue;
+            }
+            
+            newIndividuals.Add(individual);
+        }
+
+        newAggregates.AddRange(aggregates);
+        return (newIndividuals.ToArray(), newAggregates.ToArray());
     }
 
     private static List<LinkedLicence> ConsolidateLinkedLicences(
@@ -1409,7 +1484,7 @@ public static class WalSchemaConverter
             foreach (var linkedLicence in licence.LinkedLicences)
             {
                 var linkedLicenceFull = allLicences
-                    .FirstOrDefault(l => l.LicenceNumber!.Value == linkedLicence.LicenceNumber);
+                    .FirstOrDefault(l => l.LicenceNumber?.Value == linkedLicence.LicenceNumber);
 
                 if (linkedLicenceFull != null)
                 {
@@ -2697,7 +2772,7 @@ public static class WalSchemaConverter
 
         if (!isExcludedLinkReason)
         {
-            allIndividualGroups.AddRange(notIncludedList);
+            allIndividualGroups.AddRange(notIncludedList.Where(grp => grp.Limits.Count > 0));
         }
 
         if (aggregateAbstractionLimits.Count == 0)

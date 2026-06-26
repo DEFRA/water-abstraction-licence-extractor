@@ -1153,7 +1153,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection3.SubResults);
         
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
-        Assert.Equal(5, section3Sub1.SubResults.Count);
+        Assert.Equal(6, section3Sub1.SubResults.Count);
         
         perHour = section3Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1186,7 +1186,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection4.SubResults);
 
         var section4Sub1 = abstractionLimitsSection4.SubResults[0];
-        Assert.Equal(5, section4Sub1.SubResults.Count);
+        Assert.Equal(6, section4Sub1.SubResults.Count);
         
         perHour = section4Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1219,7 +1219,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection5.SubResults);
 
         var section5Sub1 = abstractionLimitsSection5.SubResults[0];
-        Assert.Equal(5, section5Sub1.SubResults.Count);
+        Assert.Equal(6, section5Sub1.SubResults.Count);
         
         perHour = section5Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -1252,7 +1252,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection6.SubResults);
 
         var section6Sub1 = abstractionLimitsSection6.SubResults[0];
-        Assert.Equal(5, section6Sub1.SubResults.Count);
+        Assert.Equal(6, section6Sub1.SubResults.Count);
         
         perHour = section6Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -4437,7 +4437,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("E", agreedSchemaLicence.Points[3].Id);
         Assert.Equal("SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
@@ -4573,7 +4573,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
@@ -4762,7 +4762,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(LicenceStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
         Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         

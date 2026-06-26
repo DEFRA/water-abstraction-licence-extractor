@@ -117,7 +117,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("RecordsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(8)
                         ]
                     }
                 ]
@@ -187,7 +187,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -257,7 +257,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -339,7 +339,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -555,7 +555,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -629,7 +629,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(9)
                         ]
                     }
                 ]
@@ -1759,14 +1759,14 @@ public static class WalLabelConfiguration
                         PreviousLinesToFetch = 3,
                         NextLinesToFetch = 20,
                         MinimumSubMatches = 1,
-                        SubLabels = GetLimitLineSubLabels()
+                        SubLabels = GetLimitLineSubLabels(6)
                     }
                 }
             }
         ];
     }
 
-    private static List<LabelToMatch> GetLimitLineSubLabels()
+    private static List<LabelToMatch> GetLimitLineSubLabels(int? documentIdentifierPrefix)
     {
         return
         [
@@ -1788,16 +1788,16 @@ public static class WalLabelConfiguration
                     new()
                     {
                         Name = "DocumentIdentifier",
-                        Possibilities = [
-                            "6.1",
-                            "6.2",
-                            "6.3",
-                            "6.4",
-                            "6.5",
-                            "6.6",
-                            "6.7",
-                            "6.8"
-                        ],
+                        Possibilities = documentIdentifierPrefix != null ? [
+                            $"{documentIdentifierPrefix}.1",
+                            $"{documentIdentifierPrefix}.2",
+                            $"{documentIdentifierPrefix}.3",
+                            $"{documentIdentifierPrefix}.4",
+                            $"{documentIdentifierPrefix}.5",
+                            $"{documentIdentifierPrefix}.6",
+                            $"{documentIdentifierPrefix}.7",
+                            $"{documentIdentifierPrefix}.8"
+                        ] : [],
                         Position = LabelPosition.ApplicableToMost,
                         Format = "Number",
                         PreviousLinesToFetch = 0,

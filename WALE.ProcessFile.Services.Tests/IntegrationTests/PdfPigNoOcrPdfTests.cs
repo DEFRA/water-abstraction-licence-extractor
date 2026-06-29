@@ -2967,7 +2967,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.Equal(2, primaryLicence.AbstractionLimits.Individual.Length);
         Assert.Equal("6.1", primaryLicence.AbstractionLimits.Individual[0].DocumentIdentifier);
-        Assert.Equal("9.4", primaryLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
+
+        Assert.Single(primaryLicence.AbstractionLimits.Individual[1].ContainedIn);
+        Assert.Equal("FurtherConditions", primaryLicence.AbstractionLimits.Individual[1].ContainedIn[0].SectionName);
+        Assert.Equal("9.3", primaryLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
         
         Assert.Equal(2, primaryLicence.AbstractionLimits.Aggregates.Length);
         Assert.Equal("6.2", primaryLicence.AbstractionLimits.Aggregates[0].DocumentIdentifier);

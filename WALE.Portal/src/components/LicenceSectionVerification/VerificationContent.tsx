@@ -13,13 +13,13 @@ interface VerificationContentProps {
     outputListDataItem?: OutputListDataItem;
 }
 
-type SubTabType = 'verify' | 'history';
+type SubTabType = 'scraped' | 'current' | 'history';
 
 export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem }: VerificationContentProps) {
-    const [activeSubTab, setActiveSubTab] = useState<SubTabType>('verify');
+    const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-    const [verifyResetKey, setVerifyResetKey] = useState(0);
+    const [scrapedResetKey, setScrapedResetKey] = useState(0);
 
     const fetchHistory = useCallback(() => {
         if (licence.dmsFileId) {
@@ -39,7 +39,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
 
     const handleVerified = () => {
         fetchHistory();
-        setVerifyResetKey(prev => prev + 1);
+        setScrapedResetKey(prev => prev + 1);
     };
 
     useEffect(() => {
@@ -54,13 +54,25 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                 <li>
                     <a
                         href="#"
-                        className={activeSubTab === 'verify' ? 'selectedTab' : ''}
+                        className={activeSubTab === 'current' ? 'selectedTab' : ''}
                         onClick={(e) => {
                             e.preventDefault();
-                            setActiveSubTab('verify');
+                            setActiveSubTab('current');
                         }}
                     >
-                        Verify
+                        Current
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="#"
+                        className={activeSubTab === 'scraped' ? 'selectedTab' : ''}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setActiveSubTab('scraped');
+                        }}
+                    >
+                        Scraped
                     </a>
                 </li>
                 <li>
@@ -77,8 +89,29 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                 </li>
             </ul>
 
-            {activeSubTab === 'verify' && (
-                <div key={verifyResetKey}>
+            {activeSubTab === 'current' && (
+                <div key={scrapedResetKey}>
+                    <LicenceSection 
+                        title="Linked Licences" 
+                        itemType="linked licence"
+                        licenceFileId={licence.dmsFileId!} 
+                        processRunId={processRunId}
+                        onRefresh={onRefresh}
+                        onVerified={handleVerified}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                    >
+                        <LinkedLicences 
+                            licence={licence} 
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                        />
+                    </LicenceSection>
+                </div>
+            )}
+
+            {activeSubTab === 'scraped' && (
+                <div key={scrapedResetKey}>
                     <LicenceSection 
                         title="Linked Licences" 
                         itemType="linked licence"

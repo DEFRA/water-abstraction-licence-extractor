@@ -307,7 +307,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
         Assert.Equal("6", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
         Assert.Equal("LinkedLicenceNumber", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("1/23/01/159", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("1/23/01/159", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
         Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
         Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
         Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[3].MatchedLabel?.Name);

@@ -36,34 +36,38 @@ public static class Units
         {
             foreach (var line in lineGroup)
             {
-                var matchedPossibilityForLine = (string?)null;
+                var matchedPossibilityTextForLine = (string?)null;
+                var matchedPossibilityForLine = (TextToMatch?)null;
+                
                 var newColumns = new List<DocumentLineColumn>();
 
                 foreach (var column in line.Columns)
                 {
-                    var matchedPossibilityForColumn = (string?)null;
+                    var matchedPossibilityTextForColumn = (string?)null;
 
                     foreach (var possibility in label.Possibilities!)
                     {
-                        if (!column.Text.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        if (!column.Text.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase))
                         {
                             continue;
                         }
 
                         var possibilityWords = DocumentLineColumn.FilterWordsFromText(
                             column.Words,
-                            possibility);
+                            possibility.Text);
                         
                         var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Add(clonedColumn);
 
+                        matchedPossibilityTextForLine = possibility.Text;
                         matchedPossibilityForLine = possibility;
-                        matchedPossibilityForColumn = possibility;
+                        
+                        matchedPossibilityTextForColumn = possibility.Text;
 
                         break;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(matchedPossibilityForColumn))
+                    if (!string.IsNullOrWhiteSpace(matchedPossibilityTextForColumn))
                     {
                         continue;
                     }
@@ -72,7 +76,7 @@ public static class Units
                     break;
                 }
 
-                if (string.IsNullOrEmpty(matchedPossibilityForLine))
+                if (string.IsNullOrEmpty(matchedPossibilityTextForLine))
                 {
                     var previousLine = lines.FirstOrDefault(l => l.LineNumber == line.LineNumber - 1);
                     var linesToLookAt = new List<DocumentLine>();
@@ -89,7 +93,7 @@ public static class Units
 
                     foreach (var possibility in label.Possibilities!)
                     {
-                        if (!multipleLineText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase))
+                        if (!multipleLineText.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase))
                         {
                             continue;
                         }
@@ -101,17 +105,17 @@ public static class Units
                         
                         possibilityWords = DocumentLineColumn.FilterWordsFromText(
                             possibilityWords,
-                            possibility);
+                            possibility.Text);
                         
                         var clonedColumn = new DocumentLineColumn(possibilityWords);
                         newColumns.Clear();
                         newColumns.Add(clonedColumn);
 
-                        matchedPossibilityForLine = possibility;
+                        matchedPossibilityTextForLine = possibility.Text;
                         break;
                     }
 
-                    if (string.IsNullOrWhiteSpace(matchedPossibilityForLine))
+                    if (string.IsNullOrWhiteSpace(matchedPossibilityTextForLine))
                     {
                         continue;
                     }
@@ -119,7 +123,7 @@ public static class Units
 
                 var clonedLine = line.Clone(newColumns);
                 labelGroupResult = labelGroupResult.Clone([clonedLine]);
-                labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine];
+                labelGroupResult.MatchedLabel!.Possibilities = [matchedPossibilityForLine!];
 
                 return [labelGroupResult];
             }

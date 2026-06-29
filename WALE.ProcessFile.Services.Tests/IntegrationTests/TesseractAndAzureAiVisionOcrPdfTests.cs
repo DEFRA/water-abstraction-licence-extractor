@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -213,12 +214,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
         Assert.Equal("1. That the abstraction from Catcleugh Reservoir shall not exceed 63,645 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
         
-        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
-        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
-        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("63645", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("1", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("63645", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
         
         // 2nd
         otherConditionsPoint = otherConditionsResult.SubResults[1];
@@ -231,12 +233,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
         Assert.Equal("2. There shall be a continuous compensation flow of not less than 571 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
         
-        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
-        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
-        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("571", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("2", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("571", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
 
         // 3rd
         otherConditionsPoint = otherConditionsResult.SubResults[2];
@@ -249,12 +252,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
         Assert.Equal("3. That the abstraction from Colt Crag Reservoir and Little Swinburn Reservoir", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
         
-        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
-        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
-        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("90922", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("3", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("90922", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
         
         // 4th
         otherConditionsPoint = otherConditionsResult.SubResults[3];
@@ -267,12 +271,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
         Assert.Equal("4. There shall be a continuous compensation flow of not less than 38 cubic", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
         
-        Assert.Equal(2, otherConditionsPointSub.SubResults.Count);
-        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
-        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("38", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("4", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerHourUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerHourValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("38", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
         
         // 5th
         otherConditionsPoint = otherConditionsResult.SubResults[4];
@@ -298,15 +303,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("AbstractionLimitPointSub", otherConditionsPointSub.MatchedLabel?.Name);
         Assert.Equal("6. Neither the total abstraction from East and West Hallington Reservoirs nor the", otherConditionsPointSub.Text?.FirstOrDefault()?.Text);
         
-        Assert.Equal(3, otherConditionsPointSub.SubResults.Count);
-        Assert.Equal("LinkedLicenceNumber", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
-        Assert.Equal("1/23/01/159", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
-        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);
-        
-        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
-        Assert.Equal("181818", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(4, otherConditionsPointSub.SubResults.Count);
+        Assert.Equal("DocumentIdentifier", otherConditionsPointSub.SubResults[0].MatchedLabel?.Name);
+        Assert.Equal("6", otherConditionsPointSub.SubResults[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("LinkedLicenceNumber", otherConditionsPointSub.SubResults[1].MatchedLabel?.Name);
+        Assert.Equal("1/23/01/159", otherConditionsPointSub.SubResults[1].Text?.FirstOrDefault()?.Text);        
+        Assert.Equal("PerDayUnits", otherConditionsPointSub.SubResults[2].MatchedLabel?.Name);
+        Assert.Equal("cubic metres", otherConditionsPointSub.SubResults[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("PerDayValue", otherConditionsPointSub.SubResults[3].MatchedLabel?.Name);
+        Assert.Equal("181818", otherConditionsPointSub.SubResults[3].Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -373,7 +378,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
     
-    // TODO write test for 22722027 combined limit
     [Fact]
     public async Task When22722027__ThenFoundCorrectly()
     {
@@ -466,6 +470,16 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.NotNull(licenceNumberResult);
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("2/27/22/027", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        config.AllDmsData.Add(
+            "2_27_22_210",
+            new DmsFileData
+            {
+                DestinationFileName = "22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf",
+                DmsPath = "TEST_FAKE_PATH",
+                FileId = Guid.NewGuid(),
+            });
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -473,7 +487,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             _naldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
+            config
+            );
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -493,6 +508,19 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("thousand cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Units);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
         Assert.Equal("2/27/22/210", agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences![0]);
+
+        var licenceSetGroups1 = new List<IReadOnlyList<LicenceSet>> { agreedSchemaLicenceGroup };
+
+        var licenceSetGroups = WalSchemaConverter.AddAdditionalLicenceSets(
+            licenceSetGroups1,
+            new NaldLicenceStatusData(),
+            [],
+            []);
+        
+        WalSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
+        
+        var agreedSchemaLicence2 = licenceSetGroups.First().Licences.First();
+        Assert.Equal(13187500, agreedSchemaLicence2.AbstractionLimits.Aggregates![0].Limits[0].Value);
     }
     
     [Fact]

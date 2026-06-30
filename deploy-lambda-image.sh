@@ -15,11 +15,11 @@ echo "Using image uri: $IMAGE_URI"
 
 echo "Publishing .NET project locally..."
 
-dotnet publish WRADI.Lambda.Orchestrator.FileProcess/WRADI.Lambda.Orchestrator.FileProcess.csproj \
+dotnet publish WRADI.Lambda.FileProcess.Single/WRADI.Lambda.FileProcess.Single.csproj \
   -c Release \
   -r linux-x64 \
   --self-contained false \
-  -o WRADI.Lambda.Orchestrator.FileProcess/lambda-publish \
+  -o WRADI.Lambda.FileProcess.Single/lambda-publish \
   /p:PublishReadyToRun=true
 
 echo "Logging in to ECR..."
@@ -34,7 +34,7 @@ docker buildx build \
   --platform linux/amd64 \
   --provenance=false \
   --sbom=false \
-  -f WRADI.Lambda.Orchestrator.FileProcess/Dockerfile \
+  -f WRADI.Lambda.FileProcess.Single/Dockerfile \
   -t "$IMAGE_URI" \
   --push \
   .

@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>14</LangVersion>
         <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>WRADI.Services.ProcessFile</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,8 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WALE.OrchestrateFileProcess.Services\WALE.OrchestrateFileProcess.Services.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile.Orchestrate\WRADI.Services.ProcessFile.Orchestrate.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
     </ItemGroup>
-
 </Project>

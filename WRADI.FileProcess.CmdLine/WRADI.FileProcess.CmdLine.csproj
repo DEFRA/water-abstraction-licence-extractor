@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <UserSecretsId>f7f7f582-eade-4afc-b10f-f07e44e81c04</UserSecretsId>
         <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>WRADI.FileProcess.CmdLine</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,8 +25,8 @@
 
 
     <ItemGroup>
-      <ProjectReference Include="..\WALE.OrchestrateFileProcess.Services\WALE.OrchestrateFileProcess.Services.csproj" />
-      <ProjectReference Include="..\WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile.Orchestrate\WRADI.Services.ProcessFile.Orchestrate.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />
     </ItemGroup>
 
 </Project>

@@ -83,8 +83,8 @@ COPY --from=native-build /opt/tesseract /opt/tesseract
 
 # Copy your published Lambda app.
 # This assumes your deploy script publishes to:
-# WRADI.Lambda.Orchestrator.FileProcess/lambda-publish
-COPY WRADI.Lambda.Orchestrator.FileProcess/lambda-publish/ /var/task/
+# WRADI.Lambda.FileProcess.Single/lambda-publish
+COPY WRADI.Lambda.FileProcess.Single/lambda-publish/ /var/task/
 
 # Remove Windows native binaries from the Linux Lambda image
 RUN find /var/task \
@@ -131,4 +131,4 @@ RUN echo "---- libdl files ----" && \
     echo "---- ldd libtesseract ----" && \
     ldd /var/task/x64/libtesseract50.so
 
-CMD ["WRADI.Lambda.Orchestrator.FileProcess::WRADI.Lambda.Orchestrator.FileProcess.MessageReceivedFunction::FunctionHandler"]
+CMD ["WRADI.Lambda.FileProcess.Single::WRADI.Lambda.FileProcess.Single.MessageReceivedFunction::FunctionHandler"]

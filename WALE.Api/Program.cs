@@ -1,14 +1,12 @@
 using Amazon;
-using Amazon.Runtime;
+using Amazon.SQS;
 using Scalar.AspNetCore;
+using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
-using Amazon.SQS;
-using WALE.Api.Areas.BFF.Models;
-using WRADI.ProcessFile.DependInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();

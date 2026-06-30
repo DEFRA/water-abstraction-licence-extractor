@@ -13,7 +13,7 @@ jobs:
     uses: ./.github/workflows/lambda-build-sonar-template.yaml
     with:
       dotnet_application_solution_name: WALE
-      dotnet_application_project_path: WRADI.Lambda.EntryPointOrchestrator/WRADI.Lambda.EntryPointOrchestrator.csproj
+      dotnet_application_project_path: WRADI.Lambda.FileProcess.Orchestrator/WRADI.Lambda.FileProcess.Orchestrator.csproj
       sonar_project_key: DEFRA_water-abstraction-licence-extractor
       sonar_organisation: defra
       dotnet_version: "10.0.x"
@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/lambda-build-sonar-template.yaml
     with:
       dotnet_application_solution_name: WALE
-      dotnet_application_project_path: WRADI.Lambda.Orchestrator.FileProcess/WRADI.Lambda.Orchestrator.FileProcess.csproj
+      dotnet_application_project_path: WRADI.Lambda.FileProcess.Single/WRADI.Lambda.FileProcess.Single.csproj
       sonar_project_key: DEFRA_water-abstraction-licence-extractor
       sonar_organisation: defra
       dotnet_version: "10.0.x"
@@ -39,7 +39,7 @@ jobs:
     needs: build-sonar-entrypoint-orchestrator
     uses: ./.github/workflows/lambda-create-image-template.yaml
     with:
-      dockerfile_path: WRADI.Lambda.EntryPointOrchestrator/Dockerfile
+      dockerfile_path: WRADI.Lambda.FileProcess.Orchestrator/Dockerfile
       docker_build_context: .
       image_name: wradi-lambda-entrypoint-orchestrator
       image_artifact_name: wradi-lambda-entrypoint-orchestrator-image
@@ -50,7 +50,7 @@ jobs:
     needs: build-sonar-file-process
     uses: ./.github/workflows/lambda-create-image-template.yaml
     with:
-      dockerfile_path: WRADI.Lambda.Orchestrator.FileProcess/Dockerfile
+      dockerfile_path: WRADI.Lambda.FileProcess.Single/Dockerfile
       docker_build_context: .
       image_name: wradi-lambda-file-process
       image_artifact_name: wradi-lambda-file-process-image

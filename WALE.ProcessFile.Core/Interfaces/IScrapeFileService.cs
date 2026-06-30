@@ -4,5 +4,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IScrapeFileService
 {
-    Task<bool> RunAsync(SingleFileProcessRequest singleFileProcessRequest, CancellationToken cancellationToken = default);
+    Task<bool> RunAsync(
+        SingleFileProcessRequest singleFileProcessRequest,
+        CancellationToken cancellationToken = default);
 }

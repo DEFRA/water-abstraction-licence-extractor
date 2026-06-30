@@ -2,23 +2,21 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using WALE.OrchestrateFileProcess.Services;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
+using WRADI.Services.ProcessFile.Orchestrate;
 
-namespace WRADI.QueueFileProcess.Cmd;
+namespace WRADI.FileProcess.CmdLine;
 
-public sealed class OrchestrationHostedService(
+public sealed class FileProcessOrchestrationService(
     IAmazonSQS sqs,
     IOrchestrateFileProcess orchestrateFileProcess,
-    AppSettings settings,
-    ILogger<OrchestrationHostedService> logger)
+    FileProcessAppSettings settings,
+    ILogger<FileProcessOrchestrationService> logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("SQS worker started. Queue: {QueueUrl}", settings.SqsQueueOrchestrationUrl);
+        logger.LogInformation("Orchestration SQS worker started. Queue: {QueueUrl}", settings.SqsQueueOrchestrationUrl);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -51,19 +49,19 @@ public sealed class OrchestrationHostedService(
                 foreach (var message in response.Messages)
                 {
                     if (stoppingToken.IsCancellationRequested)
+                    {
                         break;
+                    }
 
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                       
+                        var result =  await orchestrateFileProcess.RunAsync(stoppingToken);
 
-                       var result =  await orchestrateFileProcess.RunAsync(stoppingToken);
-
-                       if (result)
-                       {
+                        if (result)
+                        {
                            await sqs.DeleteMessageAsync(
                                new DeleteMessageRequest
                                {
@@ -71,13 +69,14 @@ public sealed class OrchestrationHostedService(
                                    ReceiptHandle = message.ReceiptHandle
                                },
                                stoppingToken);
+                           
                            logger.LogInformation("Deleted message {MessageId}", message.MessageId);
-                       }
+                        }
                     }
                     catch (Exception ex)
                     { 
                         logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
-                        // leave message on queue so it can be retried
+                        // Leave message on queue so it can be retried
                     }
                 }
             }

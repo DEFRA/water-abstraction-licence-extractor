@@ -1,6 +1,6 @@
-namespace WALE.OrchestrateFileProcess.Services;
+namespace WRADI.Services.ProcessFile.Orchestrate;
 
-public class AppSettings
+public class FileProcessAppSettings
 {
     public int ConcurrentCount { get; set; }
     public bool RegenerateMappingJson { get; set; }

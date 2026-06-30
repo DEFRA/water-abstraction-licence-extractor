@@ -3,22 +3,22 @@ using Amazon.SQS.Model;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using WALE.OrchestrateFileProcess.Services;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Services.ProcessFile.Orchestrate;
 
-namespace WRADI.QueueFileProcess.Cmd;
+namespace WRADI.FileProcess.CmdLine;
 
-public sealed class SingleFileProcessHostedService(
+public sealed class FileProcessSingleFileService(
     IAmazonSQS sqs,
     IScrapeFileService scrapeFileService,
-    AppSettings settings,
-    ILogger<SingleFileProcessHostedService> logger)
+    FileProcessAppSettings settings,
+    ILogger<FileProcessSingleFileService> logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("SQS worker started. Queue: {QueueUrl}", settings.SqsQueueFileProcessUrl);
+        logger.LogInformation("Single file SQS worker started. Queue: {QueueUrl}", settings.SqsQueueFileProcessUrl);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -51,36 +51,44 @@ public sealed class SingleFileProcessHostedService(
                 foreach (var message in response.Messages)
                 {
                     if (stoppingToken.IsCancellationRequested)
+                    {
                         break;
+                    }
 
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                       var singleFileProcessRequest = JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
+                       var singleFileProcessRequest =
+                           JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
 
-                       if (singleFileProcessRequest?.FilePath != null)
+                       if (singleFileProcessRequest?.FilePath == null)
                        {
-                           var result = await scrapeFileService.RunAsync(singleFileProcessRequest, stoppingToken);
+                           continue;
+                       }
 
-                           if (result)
-                           {
-                               await sqs.DeleteMessageAsync(
-                                   new DeleteMessageRequest
-                                   {
-                                       QueueUrl = settings.SqsQueueFileProcessUrl,
-                                       ReceiptHandle = message.ReceiptHandle
-                                   },
-                                   stoppingToken);
-                               logger.LogInformation("Deleted message {MessageId}", message.MessageId);
-                           }
+                       var result = await scrapeFileService.RunAsync(
+                           singleFileProcessRequest,
+                           stoppingToken);
+
+                       if (result)
+                       {
+                           await sqs.DeleteMessageAsync(
+                               new DeleteMessageRequest
+                               {
+                                   QueueUrl = settings.SqsQueueFileProcessUrl,
+                                   ReceiptHandle = message.ReceiptHandle
+                               },
+                               stoppingToken);
+                           
+                           logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                        }
                     }
                     catch (Exception ex)
                     { 
                         logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
-                        // leave message on queue so it can be retried
+                        // Leave message on queue so it can be retried
                     }
                 }
             }

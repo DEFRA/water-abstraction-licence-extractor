@@ -12,11 +12,13 @@
         <UserSecretsId>6e6c0f0b-4a4c-43be-8eea-2414b6c3a8ea</UserSecretsId>
         <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
+    
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.Core" Version="2.8.1"/>
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.5"/>
         <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.1" />
         <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
+        <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.9" />
@@ -28,18 +30,16 @@
         <PackageReference Include="SkiaSharp" Version="3.119.4" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     </ItemGroup>
+    
     <ItemGroup>
-      <ProjectReference Include="..\WALE.OrchestrateFileProcess.Services\WALE.OrchestrateFileProcess.Services.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile.Orchestrate\WRADI.Services.ProcessFile.Orchestrate.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.TesseractExe\WALE.ProcessFile.Services.TesseractExe.csproj" />
-      <ProjectReference Include="..\WRADI.ProcessFile.DependInjection\WRADI.ProcessFile.DependInjection.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />
     </ItemGroup>
+    
     <ItemGroup>
       <Reference Include="Microsoft.Extensions.Hosting.Abstractions" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="lambda-publish\MappingFile\" />
-      <Folder Include="MappingFile\" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">

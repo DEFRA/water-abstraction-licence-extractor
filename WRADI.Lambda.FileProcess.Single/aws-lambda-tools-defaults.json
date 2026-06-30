@@ -11,6 +11,6 @@
   "function-runtime": "dotnet10",
   "function-memory-size": 512,
   "function-timeout": 30,
-  "image-command": "WRADI.Lambda.Orchestrator.FileProcess::WRADI.Lambda.Orchestrator.FileProcess.MessageReceivedFunction::FunctionHandler",
+  "image-command": "WRADI.Lambda.FileProcess.Single::WRADI.Lambda.FileProcess.Single.MessageReceivedFunction::FunctionHandler",
   "docker-host-build-output-dir": "./bin/Release/lambda-publish"
 }

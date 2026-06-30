@@ -3,7 +3,7 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class OrchestratorService(HttpClient httpClient) : IOrchestratorService
+public class ApiOrchestratorService(HttpClient httpClient) : IOrchestratorService
 {
     public async Task AddToFileProcessQueue(SingleFileProcessRequest request)
     {

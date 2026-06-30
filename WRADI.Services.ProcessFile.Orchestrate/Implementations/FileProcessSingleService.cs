@@ -1,9 +1,4 @@
-﻿using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
 using System.Text;
@@ -15,11 +10,16 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
-namespace WALE.OrchestrateFileProcess.Services.Implementations;
+using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
+using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
+using WALE.ProcessFile.Services.Models;
 
+namespace WRADI.Services.ProcessFile.Orchestrate.Implementations;
 
-public class SingleFileProcessService(
-    AppSettings settings,
+public class FileProcessSingleService(
+    FileProcessAppSettings settings,
     ICacheService cacheService,
     IOutputService outputService,
     IFileService fileService,
@@ -370,7 +370,6 @@ public class SingleFileProcessService(
             cacheService,
             regionCode,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
-
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
 

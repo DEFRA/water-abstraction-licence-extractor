@@ -1,25 +1,16 @@
-﻿using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
-using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
-using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 using System.Text;
 using ExcelDataReader;
-using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-namespace WALE.OrchestrateFileProcess.Services.Implementations;
 
+namespace WRADI.Services.ProcessFile.Orchestrate.Implementations;
 
-public class OrchestrateFileProcessService(
-    AppSettings settings,
+public class FileProcessOrchestrateService(
+    FileProcessAppSettings settings,
     ICacheService cacheService,
     IOutputService outputService,
     IFileService fileService,

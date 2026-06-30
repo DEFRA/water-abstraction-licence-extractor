@@ -1149,6 +1149,9 @@ public static class WalSchemaConverter
                             })
                             .ToArray();
 
+                        var incomingLicence = allLicencesInSets
+                            .FirstOrDefault(l => l.LicenceNumber?.Value == incomingLink.LicenceNumber);
+                        
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
@@ -1159,7 +1162,7 @@ public static class WalSchemaConverter
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
-                            new LicenceVersion(),
+                            incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)

@@ -26,6 +26,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
 
     // Data states
     const [reportData, setReportData] = useState<MatchesResult | null>(null);
+    const [matchesResultString, setMatchesResultString] = useState<string | null>(null);
     const [reportData2, setReportData2] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
     const [licenceString, setLicenceString] = useState<string | null>(null);
@@ -44,18 +45,19 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                 setLoading(true);
                 
                 // Load data using API client
-                const [matchesResult, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+                const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                     waleApiClient.matchesResult(fileId),
+                    waleApiClient.matchesResultString(fileId),
                     waleApiClient.licence(fileId, processRunId),
                     waleApiClient.licenceSets(fileId),
                     waleApiClient.licenceString(fileId, processRunId),
                 ]);
 
                 if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
+                if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
                 if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
                 if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
-                if (licenceStringResult.status === 'fulfilled') setLicenceString(
-                    JSON.parse(licenceStringResult.value));
+                if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -241,7 +243,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
 
                         {activeTab === 'json' && (
                             <div id="jsonPath">
-                                <JsonView src={reportData} collapsed={1} theme="default"/>
+                                <JsonView src={matchesResultString} collapsed={1} theme="default"/>
                             </div>
                         )}
 

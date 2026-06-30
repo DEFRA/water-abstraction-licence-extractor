@@ -256,6 +256,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Ingleby Greenhow Water Society Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
+        Assert.Equal("CompanyName3", nameResult.MatchedLabel!.Name);
+        Assert.Equal("CompanyName3", nameResult.MatchedLabelName);
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         Assert.Equal(59, nameResult.LineNumber);

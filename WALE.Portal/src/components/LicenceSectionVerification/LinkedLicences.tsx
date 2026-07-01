@@ -1,9 +1,9 @@
-import { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { type Licence, LinkedLicence } from "../../api/generated/apiClient.ts";
-import { waleApiClient } from "../../api/apiClient.ts";
-import { type ILicenceSectionBody, type LicenceSectionBodyProps } from "./LicenceSection";
-import { LinkedLicenceItem } from "./LinkedLicenceItem";
-import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo";
+import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
+import {type Licence, LinkedLicence} from "../../api/generated/apiClient.ts";
+import {waleApiClient} from "../../api/apiClient.ts";
+import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
+import {LinkedLicenceItem} from "./LinkedLicenceItem";
+import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -12,7 +12,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView }, ref) => {
+    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
 
@@ -57,6 +57,54 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     const results = await waleApiClient.getOutgoing(permitNumber);
                     setLinkedLicences(results || []);
                     setScrapedData(results?.map(ll => LinkedLicence.fromJS(ll)) || []);
+
+                    if (!scrapedView) {
+                        const verifications = [...(outputListDataItem?.latestLicenceSectionVerifications || [])]
+                            .sort((a, b) => (b.createdDateTimeUtc?.getTime() || 0) - (a.createdDateTimeUtc?.getTime() || 0));
+
+                        const outgoingLinkedLicences = [...(results || [])];
+
+                        verifications.forEach(verification => {
+                            if (verification.licenceSectionItemId === 'None Outgoing') {
+                                return;
+                            }
+
+                            try {
+                                const rawValue = verification.licenceSectionOverrideValue ?? verification.licenceSectionScrapedValue;
+                                if (!rawValue) return;
+
+                                const overrideLicence = LinkedLicence.fromJS(JSON.parse(rawValue));
+                                const existingIndex = outgoingLinkedLicences.findIndex(x => x.licenceNumber === verification.licenceSectionItemId);
+
+                                switch (verification.verificationType) {
+                                    case "Confirmed":
+                                    case "AutoConfirm":
+                                        if (existingIndex === -1) {
+                                            outgoingLinkedLicences.push(overrideLicence);
+                                        } else if (verification.scrapedDataIsDifferent) {
+                                            outgoingLinkedLicences.splice(existingIndex, 1, overrideLicence);
+                                        }
+                                        break;
+                                    case "Removed":
+                                        if (existingIndex !== -1) {
+                                            outgoingLinkedLicences.splice(existingIndex, 1);
+                                        }
+                                        break;
+                                    case "Edited":
+                                    case "Added":
+                                        if (existingIndex !== -1) {
+                                            outgoingLinkedLicences.splice(existingIndex, 1);
+                                        }
+                                        outgoingLinkedLicences.push(overrideLicence);
+                                        break;
+                                }
+                            } catch (e) {
+                                console.error("Failed to process verification", verification, e);
+                            }
+                        });
+
+                        setLinkedLicences(outgoingLinkedLicences);
+                    }
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);
                     setError("Failed to load linked licences.");
@@ -95,8 +143,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setEditingIndex(null);
                 setIsAddingNew(false);
                 setOriginalItem(null);
-            }
-            else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+            } else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
         };
 
         const handleDiscard = () => {
@@ -117,26 +164,27 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         };
 
         return (
-            <div className="linked-licences-container" style={{ padding: '8px' }}>
+            <div className="linked-licences-container" style={{padding: '8px'}}>
                 <div className="linked-licences-list">
-                    {isLoading && <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Loading linked licences...</p>}
-                    {error && <p style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</p>}
+                    {isLoading &&
+                        <p style={{textAlign: 'center', padding: '20px', color: '#888'}}>Loading linked licences...</p>}
+                    {error && <p style={{color: 'red', textAlign: 'center', padding: '20px'}}>{error}</p>}
                     {!isLoading && !error && linkedLicences.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '20px' }}>
-                            <p style={{ color: '#888', marginBottom: '16px' }}>No outgoing linked licences found.</p>
+                        <div style={{textAlign: 'center', padding: '20px'}}>
+                            <p style={{color: '#888', marginBottom: '16px'}}>No outgoing linked licences found.</p>
                             {noneOutgoingVerification && (
-                                <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
+                                <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                             )}
                             {!scrapedView && (
-                                <button 
+                                <button
                                     onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                    style={{ 
-                                        padding: '6px 20px', 
-                                        backgroundColor: '#52c41a', 
-                                        color: 'white', 
-                                        border: 'none', 
-                                        borderRadius: '4px', 
-                                        cursor: 'pointer', 
+                                    style={{
+                                        padding: '6px 20px',
+                                        backgroundColor: '#52c41a',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
                                         fontWeight: '600',
                                         fontSize: '0.85rem',
                                         marginTop: noneOutgoingVerification ? '12px' : '0'
@@ -148,14 +196,19 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                         </div>
                     )}
                     {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (
-                        <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                            <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
+                        <div style={{
+                            marginBottom: '12px',
+                            padding: '8px',
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: '4px'
+                        }}>
+                            <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                         </div>
                     )}
                     {!isLoading && !error && linkedLicences.map((ll, index) => (
-                        <LinkedLicenceItem 
-                            key={index} 
-                            linkedLicence={ll} 
+                        <LinkedLicenceItem
+                            key={index}
+                            linkedLicence={ll}
                             isEditing={editingIndex === index && !isWaitingForVerification}
                             isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                             onUpdate={(updated) => handleUpdateLicence(index, updated)}
@@ -180,17 +233,17 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                         />
                     ))}
                 </div>
-                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (
-                        <button 
+                        <button
                             onClick={handleAddLicence}
-                            style={{ 
-                                padding: '10px 24px', 
-                                backgroundColor: '#1890ff', 
-                                color: 'white', 
-                                border: 'none', 
-                                borderRadius: '4px', 
-                                cursor: 'pointer', 
+                            style={{
+                                padding: '10px 24px',
+                                backgroundColor: '#1890ff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
                                 fontWeight: 'bold',
                                 fontSize: '0.9rem',
                                 boxShadow: '0 2px 0 rgba(0,0,0,0.045)'

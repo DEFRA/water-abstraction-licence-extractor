@@ -14,7 +14,7 @@ export function ScrapeDocuments() {
         setIsStarting(true);
 
         try {
-            await client.startOrchestration();
+            await client.sendFileProcessOrchestrationMessage();
 
             setSuccessMessage('Scraping orchestration process started successfully.');
         } catch (err) {

@@ -26,17 +26,16 @@ public class FileProcessAppSettings
     public string AzureAIVisionEndpoint { get; set; } = "";
     public string AzureAIVisionKey { get; set; } = "";
 
-    public bool UseS3 { get; set; }
-    public string? AwsS3AccessKey { get; set; }
-    public string? AwsS3SecretKey { get; set; }
-    public string? AwsS3RegionName { get; set; }
+    public string? AwsSessionToken { get; set; }
+    public string? AwsAccessKey { get; set; }
+    public string? AwsSecretKey { get; set; }
+    public string? AwsRegionName { get; set; }
     public string? AwsS3BucketName { get; set; }
     
     // New SQS settings
     public string SqsQueueOrchestrationUrl { get; set; } = null!;
     
     public string SqsQueueFileProcessUrl { get; set; } = null!;
-    public string SqsRegionName { get; set; } = null!;
     public int SqsWaitTimeSeconds { get; set; } = 20;
     public int SqsMaxNumberOfMessages { get; set; } = 10;
     public int? SqsVisibilityTimeoutSeconds { get; set; }

@@ -47,15 +47,14 @@ namespace WRADI.Services.ProcessFile
                 options.AzureAIVisionKey = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionKey");
 
                 // Optional S3 support
-                options.UseS3 = ConfigHelper.GetOptionalBool(configuration, "UseS3") ?? false;
-                options.AwsS3AccessKey = configuration["AwsS3AccessKey"];
-                options.AwsS3SecretKey = configuration["AwsS3SecretKey"];
-                options.AwsS3RegionName = configuration["AwsS3RegionName"];
+                options.AwsAccessKey = configuration["AwsAccessKey"];
+                options.AwsSecretKey = configuration["AwsSecretKey"];
+                options.AwsRegionName = configuration["AwsRegionName"];
                 options.AwsS3BucketName = configuration["AwsS3BucketName"];
             
                 options.SqsQueueOrchestrationUrl = ConfigHelper.GetRequiredString(configuration, "SqsQueueOrchestrationUrl");
                 options.SqsQueueFileProcessUrl = ConfigHelper.GetRequiredString(configuration, "SqsQueueFileProcessUrl");
-                options.SqsRegionName = ConfigHelper.GetRequiredString(configuration, "SqsRegionName");
+                options.AwsRegionName = ConfigHelper.GetRequiredString(configuration, "AwsRegionName");
                 options.SqsWaitTimeSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsWaitTimeSeconds") ?? 20;
                 options.SqsMaxNumberOfMessages = ConfigHelper.GetOptionalInt(configuration, "SqsMaxNumberOfMessages") ?? 10;
                 options.SqsVisibilityTimeoutSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsVisibilityTimeoutSeconds");
@@ -67,13 +66,13 @@ namespace WRADI.Services.ProcessFile
             {
                 var settings = sp.GetRequiredService<FileProcessAppSettings>();
 
-                if (settings.UseS3)
+                if (true) // TODO should be using API
                 {
                     return new AwsS3FileService(
-                        settings.AwsS3RegionName ?? throw new NullReferenceException("AwsS3RegionName"),
+                        settings.AwsRegionName ?? throw new NullReferenceException("AwsRegionName"),
                         settings.AwsS3BucketName ?? throw new NullReferenceException("AwsS3BucketName"),
-                        settings.AwsS3AccessKey ?? throw new NullReferenceException("AwsS3AccessKey"),
-                        settings.AwsS3SecretKey ?? throw new NullReferenceException("AwsS3SecretKey"),
+                        settings.AwsAccessKey ?? throw new NullReferenceException("AwsAccessKey"),
+                        settings.AwsSecretKey ?? throw new NullReferenceException("AwsSecretKey"),
                         null);
                 }
 

@@ -1,4 +1,5 @@
 ﻿using Amazon;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,9 +26,50 @@ await Host.CreateDefaultBuilder(args)
             .AddSingleton<IAmazonSQS>(sp =>
         {
             var settings = sp.GetRequiredService<FileProcessAppSettings>();
-            var region = RegionEndpoint.GetBySystemName(settings.SqsRegionName);
-            
-            return new AmazonSQSClient(region);
+
+            return GetSqsClient(
+                settings.AwsRegionName!,
+                settings.AwsAccessKey,
+                settings.AwsSecretKey,
+                settings.AwsSessionToken);
         });
     })
     .RunConsoleAsync();
+
+return;
+
+static AmazonSQSClient GetSqsClient(
+    string regionName,
+    string? accessKey,
+    string? secretKey,
+    string? sessionToken)
+{
+    var sqsConfig = new AmazonSQSConfig
+    {
+        RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
+    };
+        
+    AmazonSQSClient client;
+
+    if (!string.IsNullOrEmpty(accessKey))
+    {
+        if (!string.IsNullOrEmpty(sessionToken))
+        {
+            client = new AmazonSQSClient(
+                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
+                sqsConfig);                
+        }
+        else
+        {
+            client = new AmazonSQSClient(
+                new BasicAWSCredentials(accessKey, secretKey),
+                sqsConfig);
+        }
+    }
+    else
+    {
+        client = new AmazonSQSClient(sqsConfig);
+    }
+    
+    return client;
+}

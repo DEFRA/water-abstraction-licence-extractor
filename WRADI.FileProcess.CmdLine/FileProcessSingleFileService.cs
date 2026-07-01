@@ -18,72 +18,66 @@ public sealed class FileProcessSingleFileService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Single file SQS worker started. Queue: {QueueUrl}", settings.SqsQueueFileProcessUrl);
+        logger.LogInformation("Single file SQS worker started. Queue: {QueueUrl}",
+            settings.SqsQueueFileProcessUrl);
 
+        var request = new ReceiveMessageRequest
+        {
+            QueueUrl = settings.SqsQueueFileProcessUrl,
+            MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
+            WaitTimeSeconds = settings.SqsWaitTimeSeconds
+        };
+
+        if (settings.SqsVisibilityTimeoutSeconds.HasValue)
+        {
+            request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
+        }
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var request = new ReceiveMessageRequest
-                {
-                    QueueUrl = settings.SqsQueueFileProcessUrl,
-                    MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
-                    WaitTimeSeconds = settings.SqsWaitTimeSeconds
-                };
-
-                if (settings.SqsVisibilityTimeoutSeconds.HasValue)
-                {
-                    request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
-                }
-
                 var response = await sqs.ReceiveMessageAsync(request, stoppingToken);
 
-                if (response.Messages == null)
+                if (response.Messages == null || response.Messages.Count == 0)
                 {
                     continue;
                 }
 
-                if (response.Messages.Count == 0)
+                foreach (var message in response.Messages
+                    .TakeWhile(message => !stoppingToken.IsCancellationRequested))
                 {
-                    continue;
-                }
-
-                foreach (var message in response.Messages)
-                {
-                    if (stoppingToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                       var singleFileProcessRequest =
-                           JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
+                        var singleFileProcessRequest =
+                            JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
 
-                       if (singleFileProcessRequest?.FilePath == null)
-                       {
-                           continue;
-                       }
+                        if (singleFileProcessRequest?.FilePath == null)
+                        {
+                            continue;
+                        }
 
-                       var result = await scrapeFileService.RunAsync(
-                           singleFileProcessRequest,
-                           stoppingToken);
+                        var result = await scrapeFileService.RunAsync(
+                            singleFileProcessRequest,
+                            stoppingToken);
 
-                       if (result)
-                       {
-                           await sqs.DeleteMessageAsync(
-                               new DeleteMessageRequest
-                               {
-                                   QueueUrl = settings.SqsQueueFileProcessUrl,
-                                   ReceiptHandle = message.ReceiptHandle
-                               },
-                               stoppingToken);
+                        if (!result)
+                        {
+                            continue;
+                        }
+                        
+                        await sqs.DeleteMessageAsync(
+                            new DeleteMessageRequest
+                            {
+                                QueueUrl = settings.SqsQueueFileProcessUrl,
+                                ReceiptHandle = message.ReceiptHandle
+                            },
+                            stoppingToken);
                            
-                           logger.LogInformation("Deleted message {MessageId}", message.MessageId);
-                       }
+                        logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                     }
                     catch (Exception ex)
                     { 
@@ -103,6 +97,6 @@ public sealed class FileProcessSingleFileService(
             }
         }
 
-        logger.LogInformation("SQS worker stopped.");
+        logger.LogInformation("Single SQS worker stopped.");
     }
 }

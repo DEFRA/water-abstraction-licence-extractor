@@ -16,43 +16,35 @@ public sealed class FileProcessOrchestrationService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Orchestration SQS worker started. Queue: {QueueUrl}", settings.SqsQueueOrchestrationUrl);
+        logger.LogInformation("Orchestration SQS worker started. Queue: {QueueUrl}",
+            settings.SqsQueueOrchestrationUrl);
 
+        var request = new ReceiveMessageRequest
+        {
+            QueueUrl = settings.SqsQueueOrchestrationUrl,
+            MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
+            WaitTimeSeconds = settings.SqsWaitTimeSeconds
+        };
+
+        if (settings.SqsVisibilityTimeoutSeconds.HasValue)
+        {
+            request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
+        }
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var request = new ReceiveMessageRequest
-                {
-                    QueueUrl = settings.SqsQueueOrchestrationUrl,
-                    MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
-                    WaitTimeSeconds = settings.SqsWaitTimeSeconds
-                };
-
-                if (settings.SqsVisibilityTimeoutSeconds.HasValue)
-                {
-                    request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
-                }
-
                 var response = await sqs.ReceiveMessageAsync(request, stoppingToken);
 
-                if (response.Messages == null)
+                if (response.Messages == null || response.Messages.Count == 0)
                 {
                     continue;
                 }
 
-                if (response.Messages.Count == 0)
+                foreach (var message in response.Messages
+                    .TakeWhile(message => !stoppingToken.IsCancellationRequested))
                 {
-                    continue;
-                }
-
-                foreach (var message in response.Messages)
-                {
-                    if (stoppingToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
@@ -60,18 +52,20 @@ public sealed class FileProcessOrchestrationService(
 
                         var result =  await orchestrateFileProcess.RunAsync(stoppingToken);
 
-                        if (result)
+                        if (!result)
                         {
-                           await sqs.DeleteMessageAsync(
-                               new DeleteMessageRequest
-                               {
-                                   QueueUrl = settings.SqsQueueOrchestrationUrl,
-                                   ReceiptHandle = message.ReceiptHandle
-                               },
-                               stoppingToken);
-                           
-                           logger.LogInformation("Deleted message {MessageId}", message.MessageId);
+                            continue;
                         }
+                        
+                        await sqs.DeleteMessageAsync(
+                            new DeleteMessageRequest
+                            {
+                                QueueUrl = settings.SqsQueueOrchestrationUrl,
+                                ReceiptHandle = message.ReceiptHandle
+                            },
+                            stoppingToken);
+                           
+                        logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                     }
                     catch (Exception ex)
                     { 
@@ -91,6 +85,6 @@ public sealed class FileProcessOrchestrationService(
             }
         }
 
-        logger.LogInformation("SQS worker stopped.");
+        logger.LogInformation("Orchestation SQS worker stopped.");
     }
 }

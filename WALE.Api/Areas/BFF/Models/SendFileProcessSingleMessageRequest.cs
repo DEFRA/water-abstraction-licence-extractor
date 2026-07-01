@@ -2,7 +2,7 @@ namespace WALE.Api.Areas.BFF.Models;
 
 public class SendFileProcessSingleMessageRequest
 {
-    public string? FilePath { get; set; }
+    public string? filePath { get; set; }
     
-    public string? ProcessRunId { get; set; }
+    public string? processRunId { get; set; }
 }

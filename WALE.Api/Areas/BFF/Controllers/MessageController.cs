@@ -29,12 +29,12 @@ public class MessageController(
     
     [HttpPost]
     public async Task<IActionResult> SendFileProcessSingleMessageAsync(
-        SendFileProcessSingleMessageRequest request)
+        [FromBody] SendFileProcessSingleMessageRequest request)
     {
         var payload = new
         {
-            request.FilePath,
-            request.ProcessRunId,
+            FilePath = request.filePath,
+            ProcessRunId = request.processRunId,
             RequestedAt = DateTime.UtcNow
         };
 

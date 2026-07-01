@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type {Licence, LicenceSectionVerification, OutputListDataItem} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
+import {ScrapedLicenceSection} from "./ScrapedLicenceSection";
 import {LinkedLicences} from "./LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
@@ -72,7 +73,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             setActiveSubTab('scraped');
                         }}
                     >
-                        Scraped
+                        Scraped / Original
                     </a>
                 </li>
                 <li>
@@ -112,13 +113,12 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
 
             {activeSubTab === 'scraped' && (
                 <div key={scrapedResetKey}>
-                    <LicenceSection 
+                    <ScrapedLicenceSection 
                         title="Linked Licences" 
                         itemType="linked licence"
                         licenceFileId={licence.dmsFileId!} 
                         processRunId={processRunId}
                         onRefresh={onRefresh}
-                        onVerified={handleVerified}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
                     >
@@ -126,8 +126,9 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             licence={licence} 
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
+                            scrapedView={true}
                         />
-                    </LicenceSection>
+                    </ScrapedLicenceSection>
                 </div>
             )}
 

@@ -8,10 +8,11 @@ import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     onJumpToPage?: (pageNumber: number) => void;
+    scrapedView?: boolean;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({ licence, onJumpToPage, onItemVerificationRequested, outputListDataItem }, ref) => {
+    ({ licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView }, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
 
@@ -126,22 +127,24 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             {noneOutgoingVerification && (
                                 <LicenceSectionVerificationInfo verification={noneOutgoingVerification} />
                             )}
-                            <button 
-                                onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                style={{ 
-                                    padding: '6px 20px', 
-                                    backgroundColor: '#52c41a', 
-                                    color: 'white', 
-                                    border: 'none', 
-                                    borderRadius: '4px', 
-                                    cursor: 'pointer', 
-                                    fontWeight: '600',
-                                    fontSize: '0.85rem',
-                                    marginTop: noneOutgoingVerification ? '12px' : '0'
-                                }}
-                            >
-                                Confirm No Outgoing Linked Licences
-                            </button>
+                            {!scrapedView && (
+                                <button 
+                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                    style={{ 
+                                        padding: '6px 20px', 
+                                        backgroundColor: '#52c41a', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '4px', 
+                                        cursor: 'pointer', 
+                                        fontWeight: '600',
+                                        fontSize: '0.85rem',
+                                        marginTop: noneOutgoingVerification ? '12px' : '0'
+                                    }}
+                                >
+                                    Confirm No Outgoing Linked Licences
+                                </button>
+                            )}
                         </div>
                     )}
                     {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (
@@ -173,26 +176,29 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 }
                             }}
                             outputListDataItem={outputListDataItem}
+                            scrapedView={scrapedView}
                         />
                     ))}
                 </div>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-                    <button 
-                        onClick={handleAddLicence}
-                        style={{ 
-                            padding: '10px 24px', 
-                            backgroundColor: '#1890ff', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '4px', 
-                            cursor: 'pointer', 
-                            fontWeight: 'bold',
-                            fontSize: '0.9rem',
-                            boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
-                        }}
-                    >
-                        + Add Linked Licence
-                    </button>
+                    {!scrapedView && (
+                        <button 
+                            onClick={handleAddLicence}
+                            style={{ 
+                                padding: '10px 24px', 
+                                backgroundColor: '#1890ff', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '4px', 
+                                cursor: 'pointer', 
+                                fontWeight: 'bold',
+                                fontSize: '0.9rem',
+                                boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
+                            }}
+                        >
+                            + Add Linked Licence
+                        </button>
+                    )}
                 </div>
             </div>
         );

@@ -14,6 +14,7 @@ interface LinkedLicenceItemProps {
     onReject?: () => void;
     onOverride?: () => void;
     outputListDataItem?: OutputListDataItem;
+    scrapedView?: boolean;
 }
 
 export const LinkedLicenceItem = ({ 
@@ -26,7 +27,8 @@ export const LinkedLicenceItem = ({
     onVerify,
     onReject,
     onOverride,
-    outputListDataItem
+    outputListDataItem,
+    scrapedView
 }: LinkedLicenceItemProps) => {
     const linkedLicence = linkedLicenceProp;
 
@@ -112,12 +114,14 @@ export const LinkedLicenceItem = ({
                 <div style={{ marginTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <strong style={{ fontSize: '0.9rem' }}>Contained In (Sections):</strong>
-                        <button 
-                            onClick={handleAddSection}
-                            style={{ padding: '4px 12px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                            + Add Section
-                        </button>
+                        {!scrapedView && (
+                            <button 
+                                onClick={handleAddSection}
+                                style={{ padding: '4px 12px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                + Add Section
+                            </button>
+                        )}
                     </div>
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                         {(linkedLicence.containedIn || []).map((section, idx) => {
@@ -190,12 +194,14 @@ export const LinkedLicenceItem = ({
                                             </div>
                                         )}
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'end' }}>
-                                            <button 
-                                                onClick={() => handleRemoveSection(idx)}
-                                                style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                                            >
-                                                Remove Section
-                                            </button>
+                                            {!scrapedView && (
+                                                <button 
+                                                    onClick={() => handleRemoveSection(idx)}
+                                                    style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                                >
+                                                    Remove Section
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </li>
@@ -270,7 +276,7 @@ export const LinkedLicenceItem = ({
                     </ul>
                 </div>
             )}
-            {(onVerify || onReject || onOverride) && (
+            {!scrapedView && (onVerify || onReject || onOverride) && (
                 <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end', alignItems: 'center' }}>
                     {(() => {
                         const licenceNumber = linkedLicence.licenceNumber;

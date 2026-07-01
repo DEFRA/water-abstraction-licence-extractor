@@ -25,7 +25,6 @@
 
 
     <ItemGroup>
-      <ProjectReference Include="..\WRADI.Services.ProcessFile.Orchestrate\WRADI.Services.ProcessFile.Orchestrate.csproj" />
       <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />
     </ItemGroup>
 

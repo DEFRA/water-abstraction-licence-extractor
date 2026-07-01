@@ -4,9 +4,8 @@ using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WRADI.FileProcess.CmdLine;
+using WRADI.FileProcess.CmdLine.BackgroundServices;
 using WRADI.Services.ProcessFile;
-using WRADI.Services.ProcessFile.Orchestrate;
 
 // NOTE - This is used rather then running the lambdas locally to process messages
 
@@ -20,19 +19,19 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         services
-            .AddFileProcessingServices(context.Configuration)
+            .AddFileProcessServices(context.Configuration)
             .AddHostedService<FileProcessOrchestrationService>()
             .AddHostedService<FileProcessSingleFileService>()
             .AddSingleton<IAmazonSQS>(sp =>
-        {
-            var settings = sp.GetRequiredService<FileProcessAppSettings>();
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
 
-            return GetSqsClient(
-                settings.AwsRegionName!,
-                settings.AwsAccessKey,
-                settings.AwsSecretKey,
-                settings.AwsSessionToken);
-        });
+                return GetSqsClient(
+                    settings.AwsRegionName!,
+                    settings.AwsAccessKey,
+                    settings.AwsSecretKey,
+                    settings.AwsSessionToken);
+            });
     })
     .RunConsoleAsync();
 

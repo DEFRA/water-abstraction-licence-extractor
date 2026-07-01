@@ -24,7 +24,7 @@ public class MessageReceivedFunction
 
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
-            .AddFileProcessingServices(configuration);
+            .AddFileProcessServices(configuration);
 
         _serviceProvider = services.BuildServiceProvider();
     }

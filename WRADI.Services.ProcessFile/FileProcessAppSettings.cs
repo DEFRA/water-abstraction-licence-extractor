@@ -1,4 +1,4 @@
-namespace WRADI.Services.ProcessFile.Orchestrate;
+namespace WRADI.Services.ProcessFile;
 
 public class FileProcessAppSettings
 {

@@ -24,6 +24,11 @@ public class AwsS3FileService(
             });
 
 
+        if (response.KeyCount == 0)
+        {
+            return [];
+        }
+        
         var returnList = response.S3Objects
             .Select(s3Object => s3Object.Key)
             .ToList();
@@ -64,6 +69,11 @@ public class AwsS3FileService(
                     MaxKeys = take
                 });
 
+        if (response.KeyCount == 0)
+        {
+            return [];
+        }
+        
         var returnList = response.S3Objects
             .Select(s3Object => new FileMetadata
             {
@@ -142,18 +152,25 @@ public class AwsS3FileService(
         }, CancellationToken.None);
     }
 
-    public async Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null)
+    public async Task<string?> UploadFileChunkAsync(
+        string filename,
+        Stream stream,
+        int chunkIndex,
+        int totalChunks,
+        string? uploadId = null)
     {
         var client = GetS3Client();
 
         if (chunkIndex == 0)
         {
-            var initiateResponse = await client.InitiateMultipartUploadAsync(new InitiateMultipartUploadRequest
-            {
-                BucketName = FolderPath,
-                Key = filename,
-                ContentType = "application/pdf"
-            });
+            var initiateResponse = await client.InitiateMultipartUploadAsync(
+                new InitiateMultipartUploadRequest
+                {
+                    BucketName = FolderPath,
+                    Key = filename,
+                    ContentType = "application/pdf"
+                });
+            
             uploadId = initiateResponse.UploadId;
         }
 
@@ -172,23 +189,25 @@ public class AwsS3FileService(
             PartSize = stream.Length
         });
 
-        if (chunkIndex == totalChunks - 1)
+        if (chunkIndex != totalChunks - 1)
         {
-            var parts = await client.ListPartsAsync(new ListPartsRequest
-            {
-                BucketName = FolderPath,
-                Key = filename,
-                UploadId = uploadId
-            });
-
-            await client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
-            {
-                BucketName = FolderPath,
-                Key = filename,
-                UploadId = uploadId,
-                PartETags = parts.Parts.Select(p => new PartETag(p.PartNumber!.Value, p.ETag)).ToList()
-            });
+            return uploadId;
         }
+        
+        var parts = await client.ListPartsAsync(new ListPartsRequest
+        {
+            BucketName = FolderPath,
+            Key = filename,
+            UploadId = uploadId
+        });
+
+        await client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
+        {
+            BucketName = FolderPath,
+            Key = filename,
+            UploadId = uploadId,
+            PartETags = parts.Parts.Select(p => new PartETag(p.PartNumber!.Value, p.ETag)).ToList()
+        });
 
         return uploadId;
     }

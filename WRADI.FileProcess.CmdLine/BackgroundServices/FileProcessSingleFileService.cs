@@ -2,26 +2,28 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using WALE.ProcessFile.Core.Interfaces;
-using WRADI.Services.ProcessFile.Orchestrate;
+using WALE.ProcessFile.Core.Models;
+using WRADI.Services.ProcessFile;
 
-namespace WRADI.FileProcess.CmdLine;
+namespace WRADI.FileProcess.CmdLine.BackgroundServices;
 
-public sealed class FileProcessOrchestrationService(
-    IAmazonSQS sqs,
-    IOrchestrateFileProcess orchestrateFileProcess,
+public sealed class FileProcessSingleFileService(
+    IAmazonSQS sqsClient,
+    IScrapeFileService scrapeFileService,
     FileProcessAppSettings settings,
-    ILogger<FileProcessOrchestrationService> logger)
+    ILogger<FileProcessSingleFileService> logger)
     : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Orchestration SQS worker started. Queue: {QueueUrl}",
-            settings.SqsQueueOrchestrationUrl);
+        logger.LogInformation("Single file SQS worker started. Queue: {QueueUrl}",
+            settings.SqsQueueFileProcessUrl);
 
         var request = new ReceiveMessageRequest
         {
-            QueueUrl = settings.SqsQueueOrchestrationUrl,
+            QueueUrl = settings.SqsQueueFileProcessUrl,
             MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
             WaitTimeSeconds = settings.SqsWaitTimeSeconds
         };
@@ -31,11 +33,11 @@ public sealed class FileProcessOrchestrationService(
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
         
-        while (!stoppingToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                var response = await sqs.ReceiveMessageAsync(request, stoppingToken);
+                var response = await sqsClient.ReceiveMessageAsync(request, cancellationToken);
 
                 if (response.Messages == null || response.Messages.Count == 0)
                 {
@@ -43,27 +45,37 @@ public sealed class FileProcessOrchestrationService(
                 }
 
                 foreach (var message in response.Messages
-                    .TakeWhile(message => !stoppingToken.IsCancellationRequested))
+                    .TakeWhile(message => !cancellationToken.IsCancellationRequested))
                 {
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var result =  await orchestrateFileProcess.RunAsync(stoppingToken);
+                        var singleFileProcessRequest =
+                            JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
+
+                        if (singleFileProcessRequest?.FilePath == null)
+                        {
+                            continue;
+                        }
+
+                        var result = await scrapeFileService.RunAsync(
+                            singleFileProcessRequest,
+                            cancellationToken);
 
                         if (!result)
                         {
                             continue;
                         }
                         
-                        await sqs.DeleteMessageAsync(
+                        await sqsClient.DeleteMessageAsync(
                             new DeleteMessageRequest
                             {
-                                QueueUrl = settings.SqsQueueOrchestrationUrl,
+                                QueueUrl = settings.SqsQueueFileProcessUrl,
                                 ReceiptHandle = message.ReceiptHandle
                             },
-                            stoppingToken);
+                            cancellationToken);
                            
                         logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                     }
@@ -81,10 +93,10 @@ public sealed class FileProcessOrchestrationService(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Unhandled error while polling SQS");
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }
 
-        logger.LogInformation("Orchestation SQS worker stopped.");
+        logger.LogInformation("Single SQS worker stopped.");
     }
 }

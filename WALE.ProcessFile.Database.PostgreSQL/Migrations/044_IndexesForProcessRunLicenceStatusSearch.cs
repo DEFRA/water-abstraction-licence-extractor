@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(40)]
+[Migration(44)]
 public class IndexesForProcessRunLicenceStatusSearch : Migration
 {
     public override void Up()

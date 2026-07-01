@@ -16,7 +16,7 @@ using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 
-namespace WRADI.Services.ProcessFile.Orchestrate.Implementations;
+namespace WRADI.Services.ProcessFile.Implementations;
 
 public class FileProcessSingleService(
     FileProcessAppSettings settings,

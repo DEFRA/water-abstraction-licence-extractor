@@ -32,7 +32,6 @@
     </ItemGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\WRADI.Services.ProcessFile.Orchestrate\WRADI.Services.ProcessFile.Orchestrate.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.TesseractExe\WALE.ProcessFile.Services.TesseractExe.csproj" />
       <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />

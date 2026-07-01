@@ -3,6 +3,7 @@ import { useState } from 'react';
 type PagingProps = {
     pageNumber: number;
     totalPages: number;
+    totalLicences: number;
     pageSize: number;
     searchTerm: string;
     setPageNumber: (pageNumber: number) => void;
@@ -13,6 +14,7 @@ type PagingProps = {
 export default function Paging({
                                    pageNumber,
                                    totalPages,
+                                   totalLicences,
                                    pageSize,
                                    searchTerm,
                                    setPageNumber,
@@ -73,7 +75,7 @@ export default function Paging({
                 <>
                     &nbsp;&nbsp;&nbsp;
 
-                    Page {pageNumber} of {totalPages}&nbsp;&nbsp;&nbsp;
+                    {totalLicences} licence(s) found :  Page {pageNumber} of {totalPages}&nbsp;&nbsp;&nbsp;
 
                     <label>
                         Page size:{' '}

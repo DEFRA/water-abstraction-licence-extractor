@@ -200,64 +200,7 @@ async Task ProgramAsync()
         allDmsData);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-    var allLicences = allLicenceSets
-        .SelectMany(ls => ls.Licences)
-        .GroupBy(l => l.Id)
-        .Select(l => l.First())
-        .ToList();
-
-    foreach (var licence in allLicences)
-    {
-        if (licence.AbstractionLimits.Aggregates == null)
-        {
-            continue;
-        }
-
-        foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-        {
-            if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Length == 0)
-            {
-                continue;
-            }
-                
-            foreach (var limit in aggregate.Limits)
-            {
-                if (string.IsNullOrEmpty(limit.ValueAdditionalText))
-                {
-                    continue;
-                }
-
-                var otherLicence = allLicences
-                    .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0]);
-
-                if (otherLicence == null)
-                {
-                    continue;
-                }
-                
-                var otherLicenceLimits = new List<AbstractionLimit>();
-
-                if (otherLicence.AbstractionLimits.Aggregates != null)
-                {
-                    otherLicenceLimits.AddRange(
-                        otherLicence.AbstractionLimits.Aggregates!.SelectMany(a => a.Limits));
-                }
-                
-                if (otherLicence.AbstractionLimits.Individual != null)
-                {
-                    otherLicenceLimits.AddRange(
-                        otherLicence.AbstractionLimits.Individual!.SelectMany(i => i.Limits));
-                }
-
-                var otherLicenceLimit = otherLicenceLimits.First();
-                var combinedAmount = limit.Value + otherLicenceLimit.Value;
-
-                limit.Value = combinedAmount;
-                limit.ValueAdditionalText = null;
-            }
-        }
-    }
+    WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
     
     var savedLicenceNumbers = new Dictionary<string, int>();
     var savedLicenceFilenames = new Dictionary<string, int>();
@@ -758,7 +701,7 @@ async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
     
     filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
         .Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
-            || x.Key.Contains("22722210", StringComparison.InvariantCultureIgnoreCase))
+            || x.Key.Contains("1asdssdds", StringComparison.InvariantCultureIgnoreCase))
         //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
         .Where(x => x.Value.RegionId == 3) // North east
         //.Skip(155)

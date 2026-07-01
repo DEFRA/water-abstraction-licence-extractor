@@ -466,12 +466,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 searchTerm
             });
 
-        return results.Select(r =>
+     return results.Select(r =>
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
-            licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+                licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
 
-            return licence;
+                return licence;
         }).ToList();
     }
 

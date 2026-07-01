@@ -35,8 +35,5 @@ node_modules/
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-**/*.xls
-**/*.xlsx
-**/*.csv
 LICENSE
 README.md

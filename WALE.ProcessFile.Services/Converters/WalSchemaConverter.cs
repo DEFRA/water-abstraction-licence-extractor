@@ -220,7 +220,7 @@ public static class WalSchemaConverter
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
                     RegionId = naldLinkedLicence.NaldLicence.RegionCode,
-                    PermitNumber = thisDmsFileData?.PermitNumber,
+                    DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
                     ContainedIn =
@@ -390,7 +390,15 @@ public static class WalSchemaConverter
         }
         
         individual = combinedIndividual.ToArray();
-        
+
+        (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
+            individual,
+            aggregates,
+            points,
+            licenceNumber,
+            licenceVersion.LicenceVersionId,
+            naldDataLine);
+
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -432,6 +440,73 @@ public static class WalSchemaConverter
             LicenceType = licenceType,
             RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode
         };
+    }
+
+    private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
+        PromoteAnyIndividualLimitsThatShouldBeAggregates(
+            AbstractionLimitGroup[] individuals,
+            Aggregate[] aggregates,
+            PointOfAbstraction[] points,
+            string? licenceNumber,
+            string? licenceVersionId,
+            NaldData? naldDataLine)
+    {
+        var multiplePointsInDocument = points.Length > 1;
+
+        if (!multiplePointsInDocument)
+        {
+            return (individuals, aggregates);
+        }
+        
+        var anyMultiplePointAggregate = aggregates.Any(a => a.Points?.Length > 1);
+
+        if (!anyMultiplePointAggregate)
+        {
+            return (individuals, aggregates);
+        }
+
+        var newIndividuals = new List<AbstractionLimitGroup>();
+        var newAggregates = new List<Aggregate>();
+        
+        foreach (var individual in individuals)
+        {
+            var isAllPoints = individual.Points == null || individual.Points.Length == 0;
+            
+            if (isAllPoints || individual.Points!.Length == points.Length)
+            {
+                var pointsLoop = individual.Points;
+
+                if (isAllPoints)
+                {
+                    pointsLoop = points
+                        .Select(Point (p) => p)
+                        .ToArray();
+                }
+                
+                newAggregates.Add(new Aggregate
+                {
+                    Points = pointsLoop,
+                    Purposes = individual.Purposes,
+                    TimePeriod = individual.TimePeriod,
+                    TimeCutoff = individual.TimeCutoff,
+                    DocumentIdentifier = individual.DocumentIdentifier,
+                    Limits = individual.Limits,
+                    ContainedIn = individual.ContainedIn,
+                    SourceLicenceNumber = licenceNumber,
+                    SourceLicenceVersionId = licenceVersionId,
+                    PrimaryType = PrimaryType.InLicence,
+                    NaldType = GetNaldType(naldDataLine),
+                    AggregateSetId = PositionConstants.ReplacementMarker
+                });
+                
+                continue;
+            }
+            
+            newIndividuals.Add(individual);
+        }
+
+        newAggregates.AddRange(aggregates);
+        return (newIndividuals.ToArray(), newAggregates.ToArray());
     }
 
     private static List<LinkedLicence> ConsolidateLinkedLicences(
@@ -499,8 +574,8 @@ public static class WalSchemaConverter
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
                         .RawScrapedLicenceNumber,
                     linkedLicencesGroup
-                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.PermitNumber))?
-                        .PermitNumber,
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.DmsPermitNumber))?
+                        .DmsPermitNumber,
                     linkedLicencesGroup
                         .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
                         .Filename,
@@ -511,6 +586,9 @@ public static class WalSchemaConverter
                     naldLicenceStatusData,
                     naldData,
                     licenceNumbersMapping,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.LicenceVersion.DmsFileIdStatus != null)?
+                        .LicenceVersion.Clone() ?? new LicenceVersion(),
                     regionId), regionId);
             })
             .Where(linkedLicence => !LicenceNumberContainsOther(
@@ -726,6 +804,7 @@ public static class WalSchemaConverter
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
+        LicenceVersion licenceVersion,
         int? regionId)
     {
         var permitOrLicenceNumber = linkedLicencePermitNumber;
@@ -758,13 +837,15 @@ public static class WalSchemaConverter
             LicenceNumber = linkedLicenceNumber,
             RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionId,
             RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
-            PermitNumber = dmsFileData?.PermitNumber,
+            DmsPermitNumber = dmsFileData?.PermitNumber,
+            DmsFileId = dmsFileData?.FileId,
+            DmsPath = dmsFileData?.DmsPath,
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
             NaldStatus = naldStatus,
             LicenceType = licenceType,
-            DmsPath = dmsFileData?.DmsPath
+            LicenceVersion = licenceVersion
         };
     }
 
@@ -1068,6 +1149,9 @@ public static class WalSchemaConverter
                             })
                             .ToArray();
 
+                        var incomingLicence = allLicencesInSets
+                            .FirstOrDefault(l => l.LicenceNumber?.Value == incomingLink.LicenceNumber);
+                        
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
@@ -1078,6 +1162,7 @@ public static class WalSchemaConverter
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
+                            incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
@@ -1346,7 +1431,7 @@ public static class WalSchemaConverter
             var destinationFileName = dmsFileData?.DestinationFileName;
             
             var missingDmsData = !foundDmsData;
-            var missingFileId = destinationFileId == Guid.Empty;
+            var missingFileId = destinationFileId == Guid.Empty || destinationFileId == null;
             var missingFilename = string.IsNullOrEmpty(destinationFileName);
                         
             if (missingDmsData || missingFileId || missingFilename)
@@ -1388,6 +1473,30 @@ public static class WalSchemaConverter
                 processRunId);
 
             returnLicences.Add(licence);
+        }
+
+        var allLicences = new List<Licence>
+        {
+            primaryLicence
+        };
+        
+        allLicences.AddRange(returnLicences);
+        
+        foreach (var licence in allLicences)
+        {
+            foreach (var linkedLicence in licence.LinkedLicences)
+            {
+                var linkedLicenceFull = allLicences
+                    .FirstOrDefault(l => l.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+
+                if (linkedLicenceFull != null)
+                {
+                    linkedLicence.LicenceVersion = linkedLicenceFull.LicenceVersion.Clone();
+                }
+                
+                linkedLicence.DmsFileId = linkedLicenceFull?.DmsFileId;
+                linkedLicence.DmsPath = linkedLicenceFull?.DmsPath;
+            }
         }
 
         returnLicences = returnLicences
@@ -1609,7 +1718,7 @@ public static class WalSchemaConverter
             LicenceNumber = licenceNumberLoop,
             RegionId = dmsFileData?.RegionId ?? naldDataLineLoop?.FgacRegionCode ?? regionCode,
             RawScrapedLicenceNumber = licenceNumberLoop,
-            PermitNumber = dmsFileData?.PermitNumber,
+            DmsPermitNumber = dmsFileData?.PermitNumber,
             Filename = dmsFileData?.DestinationFileName,
             DmsPath = dmsFileData?.DmsPath,
             NaldStatus = naldStatus,
@@ -1698,7 +1807,7 @@ public static class WalSchemaConverter
                 LicenceNumber = linkedLicenceNumber,
                 RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                 RawScrapedLicenceNumber = linkedLicenceNumber,
-                PermitNumber = dmsFileData?.PermitNumber,
+                DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
                 NaldStatus = naldStatus,
@@ -1788,7 +1897,7 @@ public static class WalSchemaConverter
                     LicenceNumber = lln,
                     RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                     RawScrapedLicenceNumber = lln,
-                    PermitNumber = dmsFileData?.PermitNumber,
+                    DmsPermitNumber = dmsFileData?.PermitNumber,
                     Filename = dmsFileData?.DestinationFileName,
                     DmsPath = dmsFileData?.DmsPath,
                     NaldStatus = naldStatus,
@@ -2387,11 +2496,11 @@ public static class WalSchemaConverter
         var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
                 
         var meetsAggregateConditions = 
-            textSuggestsIsAggregate
+            (textSuggestsIsAggregate
             && (limitedByPoints
                 || thisLimitedByPurpose
-                || (multiplePurposesSpecified && othersLimitedByPurpose)
-                || containsUnderThisLicenceText);
+                || containsUnderThisLicenceText))
+            || (multiplePurposesSpecified && othersLimitedByPurpose);
 
         // We are limited by points - its an aggregated
         if (!meetsAggregateConditions)
@@ -2433,7 +2542,7 @@ public static class WalSchemaConverter
                     LicenceNumber = naldDataLine2?.LicenceNumber ?? scrapedLicenceNumber,
                     RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
                     RawScrapedLicenceNumber = scrapedLicenceNumber,
-                    PermitNumber = dmsFileData?.PermitNumber,
+                    DmsPermitNumber = dmsFileData?.PermitNumber,
                     DmsPath = dmsFileData?.DmsPath,
                     Filename = dmsFileData?.DestinationFileName,
                     NaldStatus = naldStatus,
@@ -2666,7 +2775,7 @@ public static class WalSchemaConverter
 
         if (!isExcludedLinkReason)
         {
-            allIndividualGroups.AddRange(notIncludedList);
+            allIndividualGroups.AddRange(notIncludedList.Where(grp => grp.Limits.Count > 0));
         }
 
         if (aggregateAbstractionLimits.Count == 0)
@@ -4033,5 +4142,66 @@ public static class WalSchemaConverter
             : set1.Except(set2).ToList();
 
         return diff.Count;
+    }
+
+    public static void CalculateCombinedAggregates(List<LicenceSet> allLicenceSets)
+    {
+        var allLicences = allLicenceSets
+            .SelectMany(ls => ls.Licences)
+            .GroupBy(l => l.Id)
+            .Select(l => l.First())
+            .ToList();
+    
+        foreach (var licence in allLicences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Length == 0)
+                {
+                    continue;
+                }
+                
+                foreach (var limit in aggregate.Limits)
+                {
+                    if (string.IsNullOrEmpty(limit.ValueAdditionalText))
+                    {
+                        continue;
+                    }
+
+                    var otherLicence = allLicences
+                        .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0]);
+
+                    if (otherLicence == null)
+                    {
+                        continue;
+                    }
+                
+                    var otherLicenceLimits = new List<AbstractionLimit>();
+
+                    if (otherLicence.AbstractionLimits.Aggregates != null)
+                    {
+                        otherLicenceLimits.AddRange(
+                            otherLicence.AbstractionLimits.Aggregates!.SelectMany(a => a.Limits));
+                    }
+                
+                    if (otherLicence.AbstractionLimits.Individual != null)
+                    {
+                        otherLicenceLimits.AddRange(
+                            otherLicence.AbstractionLimits.Individual!.SelectMany(i => i.Limits));
+                    }
+
+                    var otherLicenceLimit = otherLicenceLimits.First();
+                    var combinedAmount = limit.Value + otherLicenceLimit.Value;
+
+                    limit.Value = combinedAmount;
+                    limit.ValueAdditionalText = null;
+                }
+            }
+        }
     }
 }

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using WALE.ProcessFile.Core.Helpers;
 
 namespace WALE.ProcessFile.Core.Models.OutputSchema;
 
@@ -23,12 +23,12 @@ public class LicenceVersion
                 return _explicitLicenceVersionId;
             }
             
-            if (EffectiveDate == null && ExpiryDate == null)
+            if (EffectiveDate == null && IssueDate == null && ExpiryDate == null)
             {
                 return UnknownVersion;
             }
 
-            return $"LV{EffectiveDate:yyyyMMdd}{ExpiryDate:yyyyMMdd}";
+            return $"LV{(EffectiveDate ?? IssueDate):yyyyMMdd}{ExpiryDate:yyyyMMdd}";
         }
     }
     
@@ -62,6 +62,28 @@ public class LicenceVersion
     
     public DateTime? DmsFileIdStatusDateUtc { get; set; }
 
+    public LicenceVersion Clone() => new()
+    {
+        Issuer = Issuer,
+        EffectiveDate = EffectiveDate,
+        ExpiryDate = ExpiryDate,
+        IssueDate = IssueDate,
+        OriginalIssueDate = OriginalIssueDate,
+        NaldEffectiveStartDate = NaldEffectiveStartDate,
+        NaldEffectiveEndDate = NaldEffectiveEndDate,
+        NaldExpiryDate = NaldExpiryDate,
+        NaldIssueNumber = NaldIssueNumber,
+        NaldIncrementNumber = NaldIncrementNumber,
+        NaldOrigEffectiveDate = NaldOrigEffectiveDate,
+        NaldOrigSignatureDate = NaldOrigSignatureDate,
+        NaldRevocationDate = NaldRevocationDate,
+        NaldStatus = NaldStatus,
+        NaldSignatureDate = NaldSignatureDate,
+        NaldUpdateReason = NaldUpdateReason,
+        DmsFileIdStatus = DmsFileIdStatus,
+        DmsFileIdStatusDateUtc = DmsFileIdStatusDateUtc
+    };
+    
     public static LicenceVersion Template => new()
     {
         NaldRevocationDate = null,
@@ -80,15 +102,6 @@ public class LicenceVersion
     public static string GetSchemaForPrompt()
     {
         // TODO this should happen elsewhere
-        return JsonSerializer.Serialize(Template, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-            }
-        });
+        return JsonSerializer.Serialize(Template, JsonHelper.GetSerializerOptions());
     }
 }

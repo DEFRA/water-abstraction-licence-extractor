@@ -43,6 +43,7 @@ function ListPage() {
     const totals = useTotals(filteredData);
 
     const [totalPages, setTotalPages] = useState(1);
+    const [totalLicences, setTotalLicences] = useState(0);
     
     const requests: number[] = [];
     
@@ -63,7 +64,7 @@ function ListPage() {
                 setOutputList(listDataItems.records);
 
                 let totalRecords = listDataItems.totalRecords;
-                
+                setTotalLicences(totalRecords);
                 if (totalRecords > 0)
                 {
                     setTotalPages(Math.ceil(totalRecords / pageSize));
@@ -80,7 +81,7 @@ function ListPage() {
         } finally {
             setLoading(false);
         }
-    }, [processRunId]);
+    }, [processRunId, pageNumber, pageSize, searchTerm]);
 
     useEffect(() => {
         fetchOutputList();
@@ -158,6 +159,19 @@ function ListPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
+
+                    <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
+                        <Paging
+                            pageNumber={pageNumber}
+                            totalPages={totalPages}
+                            totalLicences={totalLicences}
+                            pageSize={pageSize}
+                            searchTerm={searchTerm}
+                            setPageNumber={setPageNumber}
+                            setPageSize={setPageSize}
+                            setSearchTerm={setSearchTerm}
+                        />
+                    </div>
                     <table id="licencesTable">
                         <thead><LicencesTableHeaders
                             data={outputList}

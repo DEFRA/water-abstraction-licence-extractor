@@ -9,11 +9,15 @@ public class LinkedLicence
     
     public string? RawScrapedLicenceNumber { get; set; }
     
-    public string? PermitNumber { get; set; }
+    public string? DmsPermitNumber { get; set; }
+    
+    public string? DmsPath { get; set; }
+    
+    public Guid? DmsFileId { get; set; }
     
     public string? Filename { get; set; }
     
-    public string? DmsPath { get; set; }
+    public LicenceVersion LicenceVersion { get; set; } = new();
     
     public Condition? Condition { get; set; }
     

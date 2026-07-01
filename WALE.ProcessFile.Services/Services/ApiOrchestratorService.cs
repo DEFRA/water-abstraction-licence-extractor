@@ -11,16 +11,12 @@ public class ApiOrchestratorService(HttpClient httpClient) : IOrchestratorServic
     public async Task AddToFileProcessQueue(SingleFileProcessRequest request)
     {
         var path = "/BFF/Message/SendFileProcessSingleMessage";
-        var json = JsonSerializer.Serialize(new
-        {
-            request
-        }, JsonHelper.GetSerializerOptions());
+        var json = JsonSerializer.Serialize(request, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         
-        var content = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
     }
 }

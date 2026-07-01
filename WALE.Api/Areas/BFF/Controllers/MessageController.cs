@@ -33,8 +33,8 @@ public class MessageController(
     {
         var payload = new
         {
-            FilePath = request.filePath,
-            ProcessRunId = request.processRunId,
+            request.FilePath,
+            request.ProcessRunId,
             RequestedAt = DateTime.UtcNow
         };
 

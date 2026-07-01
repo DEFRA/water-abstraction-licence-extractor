@@ -61,9 +61,9 @@ public class DatabaseOutputService(
         return databaseWriteService.AddProcessRunAsync(processRun);
     }
 
-    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
     {
-        return databaseWriteService.MarkProcessRunCompleteAsync(processRun);
+        return databaseWriteService.MarkProcessRunCompleteIfCompleteAsync(processRun);
     }
 
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
@@ -71,7 +71,7 @@ public class DatabaseOutputService(
         return databaseWriteService.AddProcessRunFileAsync(processRunFile);
     }
 
-    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
     {
         return databaseWriteService.CompleteProcessRunFileAsync(processRunFile);
     }

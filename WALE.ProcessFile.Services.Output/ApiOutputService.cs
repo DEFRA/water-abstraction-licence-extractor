@@ -83,9 +83,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRun;
     }
 
-    public async Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    public async Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
     {
-        var path = "/Extractor/ProcessRun/MarkProcessRunComplete";
+        var path = "/Extractor/ProcessRun/MarkProcessRunCompleteIfComplete";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -123,9 +123,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRunFile;
     }
 
-    public async Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    public async Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
     {
-        var path = "/Extractor/ProcessRun/CompleteProcessRunFile";
+        var path = "/Extractor/ProcessRun/MarkProcessRunFileComplete";
 
         var json = JsonSerializer.Serialize(new
         {

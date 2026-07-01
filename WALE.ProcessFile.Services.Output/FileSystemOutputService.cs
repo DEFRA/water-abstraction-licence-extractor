@@ -65,7 +65,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(processRun);
     }
 
-    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
     {
         throw new NotImplementedException();
     }
@@ -75,7 +75,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
     {
         throw new NotImplementedException();
     }

@@ -25,12 +25,13 @@ public class ProcessRunController(IOutputService outputService) : Controller
     }
     
     [HttpPost]
-    public async Task<IActionResult> MarkProcessRunCompleteAsync([FromBody] ProcessRunEndRequest request)
+    public async Task<IActionResult> MarkProcessRunCompleteIfCompleteAsync([FromBody] ProcessRunEndRequest request)
     {
-        var processRun = await outputService.MarkProcessRunCompleteAsync(new ProcessRun
-        {
-            ProcessRunId = request.processRunId,
-        });
+        var processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(
+            new ProcessRun
+            {
+                ProcessRunId = request.processRunId,
+            });
 
         return Ok(processRun);
     }
@@ -50,7 +51,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
     [HttpPost]
     public async Task<IActionResult> CompleteProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
     {
-        var processRunFile = await outputService.CompleteProcessRunFileAsync(new ProcessRunFile
+        var processRunFile = await outputService.MarkProcessRunFileCompleteAsync(new ProcessRunFile
         {
             ProcessRunFileId = request.ProcessRunFileId,
             FileName = request.FileName,

@@ -26,9 +26,9 @@ public interface IOutputService
     
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
     
-    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun);
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
-    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile);
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile);
     public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId);

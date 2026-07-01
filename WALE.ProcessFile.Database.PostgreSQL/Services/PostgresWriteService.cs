@@ -35,7 +35,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         return processRun;
     }
 
-    public async Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun)
+    public async Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """

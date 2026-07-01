@@ -7,7 +7,7 @@ public interface IDatabaseWriteService
 {
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
     
-    public Task<ProcessRun> MarkProcessRunCompleteAsync(ProcessRun processRun);
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
     
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
 

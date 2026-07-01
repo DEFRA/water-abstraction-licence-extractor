@@ -1,4 +1,5 @@
 using Amazon;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
@@ -66,36 +67,74 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
-    var s3RegionName = config.GetValue<string>("AwsS3RegionName")
-        ?? throw new NullReferenceException("AwsS3RegionName");
+    var awsRegionName = config.GetValue<string>("AwsRegionName")
+        ?? throw new NullReferenceException("AwsRegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
-    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey");
-    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey");
-    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken");
+    var awsAccessKey = config.GetValue<string>("AwsAccessKey");
+    var awsSecretKey = config.GetValue<string>("AwsSecretKey");
+    var awsSessionToken = config.GetValue<string>("AwsSessionToken");
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddS3Services(
-            s3RegionName,
+            awsRegionName,
             s3BucketName,
-            s3AccessKey,
-            s3SecretKey,
-            s3SessionToken)        
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken)        
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),
             sp.GetRequiredService<IDatabaseWriteService>()));
     
-    services.AddSingleton<IAmazonSQS>(_ =>
-        new AmazonSQSClient(RegionEndpoint.EUNorth1));
-    
     services
+        .AddSingleton<IAmazonSQS>(_ => GetSqsClient(
+            awsRegionName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken))
         .AddOptions<AwsQueueConfig>()
         .Bind(config.GetSection("AwsQueueConfig"))
-        .Validate(x => !string.IsNullOrWhiteSpace(x.OrchestratorQueue),
+        .Validate(config => !string.IsNullOrWhiteSpace(config.OrchestratorQueue),
             "AwsQueueConfig:OrchestratorQueue is required")
-        .Validate(x => !string.IsNullOrWhiteSpace(x.FileProcessQueue),
+        .Validate(config => !string.IsNullOrWhiteSpace(config.FileProcessQueue),
             "AwsQueueConfig:FileProcessQueue is required")
         .ValidateOnStart();
+}
+
+static AmazonSQSClient GetSqsClient(
+    string regionName,
+    string? accessKey,
+    string? secretKey,
+    string? sessionToken)
+{
+    var sqsConfig = new AmazonSQSConfig
+    {
+        RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
+    };
+        
+    AmazonSQSClient client;
+
+    if (!string.IsNullOrEmpty(accessKey))
+    {
+        if (!string.IsNullOrEmpty(sessionToken))
+        {
+            client = new AmazonSQSClient(
+                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
+                sqsConfig);                
+        }
+        else
+        {
+            client = new AmazonSQSClient(
+                new BasicAWSCredentials(accessKey, secretKey),
+                sqsConfig);
+        }
+    }
+    else
+    {
+        client = new AmazonSQSClient(sqsConfig);
+    }
+    
+    return client;
 }

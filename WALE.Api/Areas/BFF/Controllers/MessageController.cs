@@ -1,41 +1,44 @@
+using System.Text.Json;
 using Amazon.SQS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
-using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class MessageController(IOptions<AwsQueueConfig> awsQueueConfig, IAmazonSQS sqsClient) : Controller
+public class MessageController(
+    IOptions<AwsQueueConfig> awsQueueConfig,
+    IAmazonSQS sqsClient) : Controller
 {
-    [HttpGet]
-    public async Task<IActionResult> StartOrchestrationAsync()
+    [HttpPost]
+    public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync()
     {
         var payload = new
         {
             RequestedAt = DateTime.UtcNow
         };
 
-        var messageBody = System.Text.Json.JsonSerializer.Serialize(payload);
+        var messageBody = JsonSerializer.Serialize(payload);
 
         await sqsClient.SendMessageAsync(awsQueueConfig.Value.OrchestratorQueue, messageBody);
         return Ok();
     }
     
-    [HttpGet]
-    public async Task<IActionResult> AddFileToProcessAsync([FromQuery] string filePath, int  processRunId)
+    [HttpPost]
+    public async Task<IActionResult> SendFileProcessSingleMessageAsync(
+        SendFileProcessSingleMessageRequest request)
     {
         var payload = new
         {
-            filePath,
-            processRunId,
+            request.FilePath,
+            request.ProcessRunId,
             RequestedAt = DateTime.UtcNow
         };
 
-        var messageBody = System.Text.Json.JsonSerializer.Serialize(payload);
+        var messageBody = JsonSerializer.Serialize(payload);
 
         await sqsClient.SendMessageAsync(awsQueueConfig.Value.FileProcessQueue, messageBody);
         return Ok();

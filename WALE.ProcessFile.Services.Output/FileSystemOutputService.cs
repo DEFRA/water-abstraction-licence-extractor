@@ -256,7 +256,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         throw new NotImplementedException();
     }
@@ -311,7 +311,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
+    public Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         throw new NotImplementedException();
     }

@@ -22,16 +22,20 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
-        [FromQuery] string searchTerm,
-        [FromQuery] int skip = 0,
-        [FromQuery] int take = int.MaxValue)
+        [FromQuery] ProcessRunQuery query)
     {
+        var take = query.Take;
+        var skip = query.Skip;
+        query.Take = int.MaxValue;
+        query.Skip = 0;
         var completeNumber = 1;
         var fileNumber = 1;
-        var totalLicenceCountTask = outputService.GetTotalLicenceCountAsync(processRunId, searchTerm.Equals("N/A") ? string.Empty : searchTerm);
+        var totalLicenceCountTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
-        var licences = await outputService.GetLicencesSearchAsync(processRunId,  searchTerm.Equals("N/A") ? string.Empty : searchTerm, skip, take);
+        var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, query);
+        
+        var licences = licencesAll.Skip(skip).Take(take).ToList();
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
@@ -55,11 +59,32 @@ public class ProcessRunsController(IOutputService outputService) : Controller
             },
             false,
             allLatestLicenceSectionVerifications);
+        
+        var paginationOutputLines = licencesAll
+            .Where(licence => licence.Status == LicenceStatus.Ok)
+            .Select(licence => JsOutputHelper.ToOutputLine(
+                licence,
+                DateTime.Now,
+                completeNumber++,
+                fileNumber++,
+                licenceSets))
+            .ToList();
+        
+        var paginationlistData = await JsOutputHelper.ToListDataAsync(
+            paginationOutputLines,
+            outputService,
+            new ProcessRun
+            {
+                ProcessRunId = processRunId
+            },
+            false,
+            allLatestLicenceSectionVerifications);
 
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await totalLicenceCountTask,
-            Records = listData
+            Records = listData,
+            NoPaginationRecords = paginationlistData,
         };
         
         return Ok(processRun);

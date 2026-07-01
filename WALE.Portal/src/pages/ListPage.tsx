@@ -1,5 +1,5 @@
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {OutputListDataItem } from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableHeaders from "../components/LicencesTableHeaders";
@@ -15,14 +15,31 @@ import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
 import Paging from "../components/Paging.tsx";
+import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
+import ProcessRunFilters from "../components/ProcessRunFilters";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
     const [pageNumber, setPageNumber] = useState(1);
-    const [pageSize, setPageSize] = useState(1000);
+    const [query, setQuery] = useState<ProcessRunQuery>({
+        searchTerm: '',
+        skip: 0,
+        take: 1000,
+        issuer: '',
+        limitsEmpty: undefined,
+        aggregatesEmpty: undefined,
+        purposesEmpty: undefined,
+        pointsEmpty: undefined,
+        ocrScan: undefined,
+        issueYear: undefined,
+        meansFound: undefined,
+        licenceSets: '',
+        linkedLicencesType: '',
+        verified: undefined
+    });
     const processRunId = searchParams.get('processRunId');
-    const [searchTerm, setSearchTerm] = useState('');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
+    const [paginationOutputList, setPaginationOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -44,44 +61,49 @@ function ListPage() {
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
-    
-    const requests: number[] = [];
-    
+
     const fetchOutputList = useCallback(async () => {
         try {
-            // Next line stops repeat requests
-            if (requests.length === 0 || requests[requests.length - 1] !== pageNumber) {
-                requests.push(pageNumber);
-                
-               let searchTermValue = searchTerm === "" ? "N/A" : searchTerm;
-                
-                let listDataItems = await waleApiClient.getProcessRun(
-                    parseInt(processRunId ?? '0'),
-                    searchTermValue,
-                    ((pageNumber - 1) * pageSize),
-                    pageSize);
+            setLoading(true);
 
-                setOutputList(listDataItems.records);
+            const currentQuery: ProcessRunQuery = {
+                ...query,
+                searchTerm: query.searchTerm?.trim() || "N/A",
+                skip: (pageNumber - 1) * query.take,
+                take: query.take
+            };
 
-                let totalRecords = listDataItems.totalRecords;
-                setTotalLicences(totalRecords);
-                if (totalRecords > 0)
-                {
-                    setTotalPages(Math.ceil(totalRecords / pageSize));
-                }
-                else
-                {
-                    setTotalPages(0);
-                }
-                 
-            }
+            const listDataItems = await waleApiClient.getProcessRun(
+                parseInt(processRunId ?? '0'),
+                currentQuery.searchTerm,
+                '',
+                currentQuery.skip,
+                currentQuery.take,
+                currentQuery.issuer,
+                currentQuery.limitsEmpty,
+                currentQuery.aggregatesEmpty,
+                currentQuery.ocrScan,
+                currentQuery.purposesEmpty,
+                currentQuery.pointsEmpty,
+                currentQuery.issueYear,
+                currentQuery.meansFound,
+                currentQuery.licenceSets,
+                currentQuery.linkedLicencesType,
+                currentQuery.verified
+            );
+
+            setOutputList(listDataItems.records);
+            setPaginationOutputList(listDataItems.noPaginationRecords);
+            const totalRecords = listDataItems.totalRecords;
+            setTotalLicences(totalRecords);
+            setTotalPages(totalRecords > 0 ? Math.ceil(totalRecords / currentQuery.take) : 0);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch process runs');
             console.error('Error fetching process runs:', err);
         } finally {
             setLoading(false);
         }
-    }, [processRunId, pageNumber, pageSize, searchTerm]);
+    }, [processRunId, pageNumber, query]);
 
     useEffect(() => {
         fetchOutputList();
@@ -105,6 +127,19 @@ function ListPage() {
     const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
         openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
     }, [openLicenceSetReport, processRunId]);
+
+    const updateQuery = <K extends keyof ProcessRunQuery>(
+        key: K,
+        value: ProcessRunQuery[K]
+    ) => {
+        setPageNumber(1);
+
+        setQuery(previous => ({
+            ...previous,
+            [key]: value,
+            skip: 0
+        }));
+    };
 
     useEffect(() => {
         modals.forEach(modal => {
@@ -165,15 +200,28 @@ function ListPage() {
                             pageNumber={pageNumber}
                             totalPages={totalPages}
                             totalLicences={totalLicences}
-                            pageSize={pageSize}
-                            searchTerm={searchTerm}
+                            pageSize={query.take}
+                            searchTerm={query.searchTerm ?? ''}
                             setPageNumber={setPageNumber}
-                            setPageSize={setPageSize}
-                            setSearchTerm={setSearchTerm}
+                            setPageSize={(value) => {
+                                setPageNumber(1);
+                                setQuery(previous => ({
+                                    ...previous,
+                                    take: value,
+                                    skip: 0
+                                }));
+                            }}
+                            setSearchTerm={(value) => updateQuery('searchTerm', value)}
                         />
                     </div>
                     <table id="licencesTable">
-                        <thead><LicencesTableHeaders
+                        <thead>
+                        <ProcessRunFilters
+                            data={paginationOutputList}
+                            query={query}
+                            updateQuery={updateQuery}
+                        />
+                        <LicencesTableHeaders
                             data={outputList}
                             onFilterChange={applyFilter}
                             onResetFilters={resetFiltersExcept}

@@ -3252,11 +3252,23 @@ export class Client {
 
     /**
      * @param searchTerm (optional) 
+     * @param searchTermClean (optional) 
      * @param skip (optional) 
      * @param take (optional) 
+     * @param issuer (optional) 
+     * @param limitsEmpty (optional) 
+     * @param aggregatesEmpty (optional) 
+     * @param ocrScan (optional) 
+     * @param purposesEmpty (optional) 
+     * @param pointsEmpty (optional) 
+     * @param issueYear (optional) 
+     * @param meansFound (optional) 
+     * @param licenceSets (optional) 
+     * @param linkedLicencesType (optional) 
+     * @param verified (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, licenceSets: string | undefined, linkedLicencesType: string | undefined, verified: string | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -3264,15 +3276,63 @@ export class Client {
         if (searchTerm === null)
             throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
         else if (searchTerm !== undefined)
-            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (searchTermClean === null)
+            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
+        else if (searchTermClean !== undefined)
+            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
         else if (skip !== undefined)
-            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
         if (take === null)
             throw new globalThis.Error("The parameter 'take' cannot be null.");
         else if (take !== undefined)
-            url_ += "take=" + encodeURIComponent("" + take) + "&";
+            url_ += "Take=" + encodeURIComponent("" + take) + "&";
+        if (issuer === null)
+            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
+        else if (issuer !== undefined)
+            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (limitsEmpty === null)
+            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
+        else if (limitsEmpty !== undefined)
+            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
+        if (aggregatesEmpty === null)
+            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
+        else if (aggregatesEmpty !== undefined)
+            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (ocrScan === null)
+            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
+        else if (ocrScan !== undefined)
+            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
+        if (purposesEmpty === null)
+            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
+        else if (purposesEmpty !== undefined)
+            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
+        if (pointsEmpty === null)
+            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
+        else if (pointsEmpty !== undefined)
+            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
+        if (issueYear === null)
+            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
+        else if (issueYear !== undefined)
+            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
+        if (meansFound === null)
+            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
+        else if (meansFound !== undefined)
+            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
+        if (licenceSets === null)
+            throw new globalThis.Error("The parameter 'licenceSets' cannot be null.");
+        else if (licenceSets !== undefined)
+            url_ += "LicenceSets=" + encodeURIComponent("" + licenceSets) + "&";
+        if (linkedLicencesType === null)
+            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
+        else if (linkedLicencesType !== undefined)
+            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
+        if (verified === null)
+            throw new globalThis.Error("The parameter 'verified' cannot be null.");
+        else if (verified !== undefined)
+            url_ += "Verified=" + encodeURIComponent("" + verified) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -6155,9 +6215,11 @@ export enum LimitPeriodType {
 export class LinkedLicence implements ILinkedLicence {
     licenceNumber?: string | undefined;
     rawScrapedLicenceNumber?: string | undefined;
-    permitNumber?: string | undefined;
-    filename?: string | undefined;
+    dmsPermitNumber?: string | undefined;
     dmsPath?: string | undefined;
+    dmsFileId?: string | undefined;
+    filename?: string | undefined;
+    licenceVersion?: LicenceVersion;
     condition?: Condition | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
@@ -6183,9 +6245,11 @@ export class LinkedLicence implements ILinkedLicence {
             }
             this.licenceNumber = _data["licenceNumber"];
             this.rawScrapedLicenceNumber = _data["rawScrapedLicenceNumber"];
-            this.permitNumber = _data["permitNumber"];
-            this.filename = _data["filename"];
+            this.dmsPermitNumber = _data["dmsPermitNumber"];
             this.dmsPath = _data["dmsPath"];
+            this.dmsFileId = _data["dmsFileId"];
+            this.filename = _data["filename"];
+            this.licenceVersion = _data["licenceVersion"] ? LicenceVersion.fromJS(_data["licenceVersion"]) : undefined as any;
             this.condition = _data["condition"] ? Condition.fromJS(_data["condition"]) : undefined as any;
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
@@ -6213,9 +6277,11 @@ export class LinkedLicence implements ILinkedLicence {
         }
         data["licenceNumber"] = this.licenceNumber;
         data["rawScrapedLicenceNumber"] = this.rawScrapedLicenceNumber;
-        data["permitNumber"] = this.permitNumber;
-        data["filename"] = this.filename;
+        data["dmsPermitNumber"] = this.dmsPermitNumber;
         data["dmsPath"] = this.dmsPath;
+        data["dmsFileId"] = this.dmsFileId;
+        data["filename"] = this.filename;
+        data["licenceVersion"] = this.licenceVersion ? this.licenceVersion.toJSON() : undefined as any;
         data["condition"] = this.condition ? this.condition.toJSON() : undefined as any;
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
@@ -6232,9 +6298,11 @@ export class LinkedLicence implements ILinkedLicence {
 export interface ILinkedLicence {
     licenceNumber?: string | undefined;
     rawScrapedLicenceNumber?: string | undefined;
-    permitNumber?: string | undefined;
-    filename?: string | undefined;
+    dmsPermitNumber?: string | undefined;
     dmsPath?: string | undefined;
+    dmsFileId?: string | undefined;
+    filename?: string | undefined;
+    licenceVersion?: LicenceVersion;
     condition?: Condition | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
@@ -7663,6 +7731,7 @@ export interface IProcessRunEndRequest {
 export class ProcessRunResponse implements IProcessRunResponse {
     totalRecords!: number;
     records!: OutputListDataItem[];
+    noPaginationRecords!: any[];
 
     [key: string]: any;
 
@@ -7675,6 +7744,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
         }
         if (!data) {
             this.records = [];
+            this.noPaginationRecords = [];
         }
     }
 
@@ -7689,6 +7759,11 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 this.records = [] as any;
                 for (let item of _data["records"])
                     this.records!.push(OutputListDataItem.fromJS(item));
+            }
+            if (Array.isArray(_data["noPaginationRecords"])) {
+                this.noPaginationRecords = [] as any;
+                for (let item of _data["noPaginationRecords"])
+                    this.noPaginationRecords!.push(item);
             }
         }
     }
@@ -7712,6 +7787,11 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.records)
                 data["records"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.noPaginationRecords)) {
+            data["noPaginationRecords"] = [];
+            for (let item of this.noPaginationRecords)
+                data["noPaginationRecords"].push(item);
+        }
         return data;
     }
 }
@@ -7719,6 +7799,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
 export interface IProcessRunResponse {
     totalRecords: number;
     records: OutputListDataItem[];
+    noPaginationRecords: any[];
 
     [key: string]: any;
 }

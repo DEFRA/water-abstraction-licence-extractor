@@ -1,9 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
-using System.Globalization;
-using System.Net;
-using System.Text;
-using ExcelDataReader;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -20,7 +15,6 @@ using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -49,33 +43,26 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
+    var firstNamesTask = cacheService.GetFirstNamesAsync();
+    
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
     var naldDataTask = GetNaldDataAsync(null, cacheService);
-    var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
 
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-
-    var dtStartGetDms = DateTime.Now;
-    
     var (dmsFilesToProcess, allDmsData) =
         await DmsHelper.GetDmsFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
             cacheService);
-
-    var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
-
-    ConsoleHelper.WriteLine(
-        $"INFO - WALE.Cmd - Got {dmsFilesToProcess.Count} DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-    var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
-    {
-        Description = $"Run using {services.FileService!.FolderPath}",
-        StartDateTimeUtc = DateTime.UtcNow,
-        NumberOfFiles = dmsFilesToProcess.Count
-    });
+    var processRunTask = outputService.StartProcessRunAsync(
+        new ProcessRun
+        {
+            Description = $"Run using {services.FileService!.FolderPath}",
+            StartDateTimeUtc = DateTime.UtcNow,
+            NumberOfFiles = dmsFilesToProcess.Count
+        });
 
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
@@ -91,7 +78,7 @@ async Task ProgramAsync()
     var dmsFileIdInformationDict = TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
 
-    const int unsetRegionCode = GeneralConstants.GenericRegionCode;
+    const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(

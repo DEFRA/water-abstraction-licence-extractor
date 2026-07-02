@@ -39,20 +39,24 @@ public class FileProcessSingleService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
+        var firstNamesTask = cacheService.GetFirstNamesAsync();
+        
         var naldDataTask = GetNaldDataAsync(null);
-        var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
-        var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-        var naldLicenceStatusData = await naldLicenceStatusDataTask;
+        
+        var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
+        var dmsFileTask = DmsHelper.GetDmsFilesAndMappingAsync(
+            fileService,
+            string.Empty,
+            false,
+            cacheService);
+        
         var firstNamesCsv = await firstNamesTask;
+
+        var naldLicenceStatusData = await naldLicenceStatusDataTask;
         var allNaldData = await naldDataTask;
 
-        var (dmsFilesToProcess, allDmsData) =
-            await DmsHelper.GetDmsFilesAndMappingAsync(
-                fileService,
-                string.Empty,
-                false,
-                cacheService);
+        var (dmsFilesToProcess, allDmsData) = await dmsFileTask;
 
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
@@ -65,8 +69,6 @@ public class FileProcessSingleService(
 
         var dmsFileIdInformationDict = TranformDmsFileIdInformation(
             await dmsFileIdInformationListTask);
-
-        const int unsetRegionCode = GeneralConstants.GenericRegionCode;
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
@@ -75,15 +77,15 @@ public class FileProcessSingleService(
             firstNamesCsv,
             fileService,
             cacheService,
-            unsetRegionCode,
+            GeneralConstants.UnsetRegionCode,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
         var processRun = processRuns.Single(pr => pr.ProcessRunId == singleFileProcessRequest.ProcessRunId);
 
         ConsoleHelper.WriteLine(
-            $"INFO - SingleFileProcessService - Start file to output for {singleFileProcessRequest.FilePath} " +
-            $"processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - {nameof(FileProcessSingleService)} - Start file to output for " +
+            $"{singleFileProcessRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         var processRunFile = await outputService.AddProcessRunFileAsync(
             new ProcessRunFile
@@ -102,7 +104,7 @@ public class FileProcessSingleService(
                 dmsFilesToProcess.FirstOrDefault().Value,
                 processRun);
 
-            await ProcessAllLicenceSets(
+            await UpdateAndSaveLicenceSets(
                 [licenceSet],
                 naldLicenceStatusData,
                 naldData,
@@ -110,13 +112,13 @@ public class FileProcessSingleService(
                 processRun);
 
             ConsoleHelper.WriteLine(
-                $"INFO - SingleFileProcessService - Marking process run file as complete for " +
+                $"INFO - {nameof(FileProcessSingleService)} - Marking process run file as complete for " +
                 $"{singleFileProcessRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             await outputService.MarkProcessRunFileCompleteAsync(processRunFile);
 
             ConsoleHelper.WriteLine(
-                $"INFO - SingleFileProcessService - Attempted marking batch as completed (if completed) " +
+                $"INFO - {nameof(FileProcessSingleService)} - Attempted marking batch as completed (if completed) " +
                 $"processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
@@ -126,7 +128,7 @@ public class FileProcessSingleService(
 
             if (processRunCompleted)
             {
-                await RunPostProcessingAsync(
+                await AddCompleteProcessRunDataAsync(
                     processRun,
                     naldLicenceStatusData,
                     naldData,
@@ -134,14 +136,14 @@ public class FileProcessSingleService(
             }
 
             ConsoleHelper.WriteLine(
-                $"INFO - SingleFileProcessService - Successfully finished processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return true;
         }
         catch (Exception e)
         {
             ConsoleHelper.WriteLine(
-                $" {e.Message} = {e}, ERROR - SingleFileProcessService - Exception on processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                $" {e.Message} = {e}, ERROR - {nameof(FileProcessSingleService)} - Exception on processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             throw;
         }
@@ -160,7 +162,7 @@ public class FileProcessSingleService(
         ProcessRun processRun)
     {
         var dtStart = DateTime.Now;
-        ConsoleHelper.WriteLine($"INFO - OrchestrateFileProcessService - Started {pdfFilename} " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Started {pdfFilename} " +
             $"at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
         try
@@ -189,18 +191,23 @@ public class FileProcessSingleService(
             if (matchesFull.Matches != null)
             {
                 var matches = matchesFull.Matches
-                    .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
+                    .Select(match => (
+                        matchResultId,
+                        match.MatchedLabel?.Name,
+                        match.LabelGroupName,
+                        match))
                     .ToList();
 
                 await outputService.SaveMatchesAsync(matches);
 
                 var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
                 ConsoleHelper.WriteLine(
-                    $"INFO - WALE.Cmd - Saved '{pdfFilename}' in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    $"INFO - {nameof(FileProcessSingleService)} - Saved '{pdfFilename}' in {saveDuration}ms " +
+                    $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             }
 
             var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-            ConsoleHelper.WriteLine($"INFO - OrchestrateFileProcessService - Finished ({pdfFilename} in " +
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return await WalSchemaConverter.ToLicenceSetsAsync(
@@ -214,17 +221,23 @@ public class FileProcessSingleService(
         }
         catch (TooManyPagesException)
         {
-            ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped '{pdfFilename}' as too many pages");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
+                $"as too many pages");
+            
             return [];
         }
         catch (TooManyImagesException)
         {
-            ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped '{pdfFilename}' as too many images");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
+                $"as too many images");
+            
             return [];
         }
         catch (Exception ex)
         {
-            ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex}");
+            ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
+                $"fatal error - {ex}");
+            
             return [];
         }
         finally
@@ -233,33 +246,37 @@ public class FileProcessSingleService(
         }
     }
     
-        private async Task RunPostProcessingAsync(
+    private async Task AddCompleteProcessRunDataAsync(
         ProcessRun processRun,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,
         Dictionary<string, DmsFileData> allDmsData)
     {
         ConsoleHelper.WriteLine(
-            $"INFO - SingleFileProcessService - started processing all license sets at " +
+            $"INFO - {nameof(FileProcessSingleService)} - started processing all license sets at " +
             $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
-        var licenceSets =
+        var allLicenceSets =
             await outputService.GetProcessRunLicenceSetsAsync(processRun.ProcessRunId);
 
-        var licenceSetGroups = licenceSets
+        var licenceSetGroups = allLicenceSets
             .Values
             .Select(IReadOnlyList<LicenceSet> (licenceSet) => new List<LicenceSet> { licenceSet }.AsReadOnly())
             .ToList();
                 
-        await ProcessAllLicenceSets(
+        await UpdateAndSaveLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
             naldData,
             allDmsData,
             processRun);
                
+        WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets
+            .Select(lsKvp => lsKvp.Value)
+            .ToList());
+        
         ConsoleHelper.WriteLine(
-            $"INFO - SingleFileProcessService - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - {nameof(FileProcessSingleService)} - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     }
         
     // TODO - check the following methods are the same as they used to be
@@ -283,7 +300,7 @@ public class FileProcessSingleService(
         return dmsFileIdInformationDict;
     }
 
-    private Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
+    private static Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
         IReadOnlyList<LicenceSetReference> licenceSetIds,
         IReadOnlyList<LicenceSet> licenceSets)
     {
@@ -301,8 +318,8 @@ public class FileProcessSingleService(
 
         return returnDict;
     }
-    
-    async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
+
+    private async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
     {
         const int take = 100000;
         var allNaldData = new NaldDataCollection
@@ -340,7 +357,7 @@ public class FileProcessSingleService(
         return allNaldData;
     }
 
-    private async Task ProcessAllLicenceSets(
+    private async Task UpdateAndSaveLicenceSets(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, List<NaldData>> naldData,

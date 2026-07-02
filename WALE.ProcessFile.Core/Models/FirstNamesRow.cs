@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Services.Models;
+namespace WALE.ProcessFile.Core.Models;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class FirstNamesRow

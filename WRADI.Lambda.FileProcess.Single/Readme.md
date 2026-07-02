@@ -7,6 +7,12 @@ This project consists of:
 
 ## Packaging as a Docker image.
 
+Build from the directory above this, using the command;
+
+```
+docker build -f WRADI.Lambda.FileProcess.Single/Dockerfile .
+```
+
 This project is configured to package the Lambda function as a Docker image. The default configuration for the project and the Dockerfile is to build 
 the .NET project on the host machine and then execute the `docker build` command which copies the .NET build artifacts from the host machine into 
 the Docker image. 
@@ -19,37 +25,10 @@ image.
 Alternatively the Docker file could be written to use [multi-stage](https://docs.docker.com/develop/develop-images/multistage-build/) builds and 
 have the .NET project built inside the container. Below is an example of building the .NET project inside the image.
 
-```dockerfile
-FROM public.ecr.aws/lambda/dotnet:10 AS base
-
-FROM mcr.microsoft.com/dotnet/sdk:10.0 as build
-WORKDIR /src
-COPY ["WRADI.Lambda.FileProcess.csproj", "WRADI.Lambda.FileProcess/"]
-RUN dotnet restore "WRADI.Lambda.FileProcess/WRADI.Lambda.FileProcess.csproj"
-
-WORKDIR "/src/WRADI.Lambda.FileProcess"
-COPY . .
-RUN dotnet build "WRADI.Lambda.FileProcess.csproj" --configuration Release --output /app/build
-
-FROM build AS publish
-RUN dotnet publish "WRADI.Lambda.FileProcess.csproj" \
-            --configuration Release \ 
-            --runtime linux-x64 \
-            --self-contained false \ 
-            --output /app/publish \
-            -p:PublishReadyToRun=true  
-
-FROM base AS final
-WORKDIR /var/task
-COPY --from=publish /app/publish .
-```
-
 When building the .NET project inside the image you must be sure to copy all of the class libraries the .NET Lambda project is depending on 
 as well before the `dotnet build` step. The final published artifacts of the .NET project must be copied to the `/var/task` directory. 
 The `--docker-host-build-output-dir` switch can also be removed from the `aws-lambda-tools-defaults.json` to avoid the 
 .NET project from being built on the host machine before calling `docker build`.
-
-
 
 ## Here are some steps to follow from Visual Studio:
 

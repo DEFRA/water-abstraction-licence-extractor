@@ -434,7 +434,7 @@ public static class GenerateLicenceReaderExtract
             LicenceReaderConfiguration.GetLabels(),
             DmsFileData,
             [], // Don't need
-            await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             fileService,
             cacheService,
             -1,

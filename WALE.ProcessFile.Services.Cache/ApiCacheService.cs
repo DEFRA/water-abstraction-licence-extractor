@@ -725,4 +725,19 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        var path = "/Extractor/FirstNames/GetAll";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        
+        return JsonSerializer.Deserialize<HashSet<string>>(
+            content,
+            JsonHelper.GetSerializerOptions())!; 
+    }
 }

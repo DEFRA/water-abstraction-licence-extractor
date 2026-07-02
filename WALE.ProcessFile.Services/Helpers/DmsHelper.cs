@@ -153,7 +153,7 @@ public static class DmsHelper
                         DmsPath = dmsPath,
                         StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
                         FileId = fileId,
-                        RegionId = GeneralConstants.GenericRegionCode
+                        RegionId = GeneralConstants.UnsetRegionCode
                     };
 
                     filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);

@@ -152,4 +152,6 @@ public interface ICacheService
     Task ClearVersionFilesAsync();
 
     Task ClearVersionFilesToDownloadAsync();
+
+    Task<HashSet<string>> GetFirstNamesAsync();
 }

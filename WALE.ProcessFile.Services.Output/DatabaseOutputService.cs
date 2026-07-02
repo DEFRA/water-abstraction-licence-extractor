@@ -94,7 +94,7 @@ public class DatabaseOutputService(
         var existingList =  await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
 
         if (existingList.Any(x =>
-                x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
+            x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
         {
             return;
         }
@@ -266,7 +266,7 @@ public class DatabaseOutputService(
             
             var licenceTransformed = FormattingHelper.FormatLicenceNumber(
                 missingLicenceId.LicenceNumber,
-                GeneralConstants.GenericRegionCode)!; // Used as not known real region code
+                GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);

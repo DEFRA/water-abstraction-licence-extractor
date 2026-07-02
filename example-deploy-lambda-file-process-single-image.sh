@@ -2,9 +2,9 @@
 set -e
 
 export AWS_REGION=eu-north-1
-export AWS_ACCOUNT_ID=624426144646
-export ECR_REPO=wradi-fileprocess-lambda
-export FUNCTION_NAME=wradi-fileprocess-lambda-image
+export AWS_ACCOUNT_ID=0123
+export ECR_REPO=wradi-fileprocess-single-lambda
+export FUNCTION_NAME=wradi-fileprocess-single-lambda-image
 
 # Date-based image tag
 export IMAGE_TAG="$(date +"%Y%m%d-%H%M%S")-TK"

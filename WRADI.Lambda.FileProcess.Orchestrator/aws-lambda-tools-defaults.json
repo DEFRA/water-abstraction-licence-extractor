@@ -6,11 +6,11 @@
     "All the command line options for the Lambda command can be specified in this file."
   ],
   "profile": "default",
-  "region": "eu-north-1",
+  "region": "eu-west-2",
   "configuration": "Release",
   "function-runtime": "dotnet10",
   "function-memory-size": 512,
   "function-timeout": 30,
-  "image-command": "WRADI.Lambda.FileProcess.Orchestrator::WRADI.Lambda.FileProcess.MessageReceivedFunction::FunctionHandler",
+  "image-command": "WRADI.Lambda.FileProcess.Orchestrator::WRADI.Lambda.FileProcess.Orchestrator.MessageReceivedFunction::FunctionHandler",
   "docker-host-build-output-dir": "./bin/Release/lambda-publish"
 }

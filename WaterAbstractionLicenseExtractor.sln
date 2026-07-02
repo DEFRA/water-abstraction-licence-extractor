@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		README.md = README.md
 		.dockerignore = .dockerignore
+		example-deploy-lambda-file-process-single-image.sh = example-deploy-lambda-file-process-single-image.sh
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services", "WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj", "{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}"

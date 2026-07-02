@@ -9,7 +9,7 @@ namespace WRADI.FileProcess.CmdLine.BackgroundServices;
 
 public sealed class FileProcessOrchestrationService(
     IAmazonSQS sqsClient,
-    IOrchestrateFileProcess orchestrateFileProcess,
+    IFileProcessOrchestrator fileProcessOrchestrator,
     FileProcessAppSettings settings,
     ILogger<FileProcessOrchestrationService> logger)
     : BackgroundService
@@ -50,7 +50,7 @@ public sealed class FileProcessOrchestrationService(
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var result =  await orchestrateFileProcess.RunAsync(cancellationToken);
+                        var result =  await fileProcessOrchestrator.RunAsync(cancellationToken);
 
                         if (!result)
                         {

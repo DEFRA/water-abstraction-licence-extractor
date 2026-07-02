@@ -21,7 +21,7 @@ public class DatabaseCacheService(
         // Nothing to do in this case
         return Task.CompletedTask;
     }
-    
+
     public Task ClearCacheAsync()
     {
         return databaseWriteService.ClearCacheAsync();

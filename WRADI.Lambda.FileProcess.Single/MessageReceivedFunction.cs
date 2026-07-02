@@ -40,7 +40,7 @@ public class MessageReceivedFunction
         context.Logger.LogInformation($"AwsRequestId: {context.AwsRequestId}");
         
         using var scope = _serviceProvider.CreateScope();
-        var scrapeFileService = scope.ServiceProvider.GetRequiredService<IScrapeFileService>();
+        var scrapeFileService = scope.ServiceProvider.GetRequiredService<IFileProcessSingleService>();
 
         var failures = new List<SQSBatchResponse.BatchItemFailure>();
         

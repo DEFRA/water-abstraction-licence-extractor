@@ -82,7 +82,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsAccessKey,
             awsSecretKey,
             awsSessionToken))
-        .AddOptions<AwsQueueConfig>()
+        .AddOptions<AwsSqsQueueConfig>()
         .Bind(config.GetSection("AwsQueueConfig"))
         .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
             "AwsQueueConfig:OrchestratorQueue is required")

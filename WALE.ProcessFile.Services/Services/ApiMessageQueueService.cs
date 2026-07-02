@@ -6,7 +6,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class ApiOrchestratorService(HttpClient httpClient) : IOrchestratorService
+public class ApiMessageQueueService(HttpClient httpClient) : IMessageQueueService
 {
     public async Task AddToFileProcessQueue(SingleFileProcessRequest request)
     {

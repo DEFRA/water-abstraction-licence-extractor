@@ -36,7 +36,7 @@ public class MessageReceivedFunction
         context.Logger.LogInformation($"AwsRequestId: {context.AwsRequestId}");
         
         using var scope = _serviceProvider.CreateScope();
-        var orchestrator = scope.ServiceProvider.GetRequiredService<IOrchestrateFileProcess>();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<IFileProcessOrchestrator>();
 
         var failures = new List<SQSBatchResponse.BatchItemFailure>();
         

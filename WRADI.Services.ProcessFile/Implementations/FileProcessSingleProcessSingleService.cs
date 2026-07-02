@@ -14,13 +14,13 @@ using WALE.ProcessFile.Services.Helpers;
 
 namespace WRADI.Services.ProcessFile.Implementations;
 
-public class FileProcessSingleService(
+public class FileProcessSingleProcessSingleService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IOutputService outputService,
     IFileService fileService,
     IPdfDataExtractorService pdfDataExtractor)
-    : IScrapeFileService
+    : IFileProcessSingleService
 {
     public async Task<bool> RunAsync(
         SingleFileProcessRequest singleFileProcessRequest,
@@ -84,7 +84,7 @@ public class FileProcessSingleService(
         var processRun = processRuns.Single(pr => pr.ProcessRunId == singleFileProcessRequest.ProcessRunId);
 
         ConsoleHelper.WriteLine(
-            $"INFO - {nameof(FileProcessSingleService)} - Start file to output for " +
+            $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Start file to output for " +
             $"{singleFileProcessRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         var processRunFile = await outputService.AddProcessRunFileAsync(
@@ -112,13 +112,13 @@ public class FileProcessSingleService(
                 processRun);
 
             ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Marking process run file as complete for " +
+                $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Marking process run file as complete for " +
                 $"{singleFileProcessRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             await outputService.MarkProcessRunFileCompleteAsync(processRunFile);
 
             ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Attempted marking batch as completed (if completed) " +
+                $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Attempted marking batch as completed (if completed) " +
                 $"processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
@@ -136,14 +136,14 @@ public class FileProcessSingleService(
             }
 
             ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Successfully finished processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return true;
         }
         catch (Exception e)
         {
             ConsoleHelper.WriteLine(
-                $" {e.Message} = {e}, ERROR - {nameof(FileProcessSingleService)} - Exception on processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                $" {e.Message} = {e}, ERROR - {nameof(FileProcessSingleProcessSingleService)} - Exception on processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             throw;
         }
@@ -162,7 +162,7 @@ public class FileProcessSingleService(
         ProcessRun processRun)
     {
         var dtStart = DateTime.Now;
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Started {pdfFilename} " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleProcessSingleService)} - Started {pdfFilename} " +
             $"at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
         try
@@ -202,12 +202,12 @@ public class FileProcessSingleService(
 
                 var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
                 ConsoleHelper.WriteLine(
-                    $"INFO - {nameof(FileProcessSingleService)} - Saved '{pdfFilename}' in {saveDuration}ms " +
+                    $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Saved '{pdfFilename}' in {saveDuration}ms " +
                     $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             }
 
             var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return await WalSchemaConverter.ToLicenceSetsAsync(
@@ -221,21 +221,21 @@ public class FileProcessSingleService(
         }
         catch (TooManyPagesException)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many pages");
             
             return [];
         }
         catch (TooManyImagesException)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many images");
             
             return [];
         }
         catch (Exception ex)
         {
-            ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
+            ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleProcessSingleService)} - {pdfFilename} threw " +
                 $"fatal error - {ex}");
             
             return [];
@@ -253,7 +253,7 @@ public class FileProcessSingleService(
         Dictionary<string, DmsFileData> allDmsData)
     {
         ConsoleHelper.WriteLine(
-            $"INFO - {nameof(FileProcessSingleService)} - started processing all license sets at " +
+            $"INFO - {nameof(FileProcessSingleProcessSingleService)} - started processing all license sets at " +
             $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
         var allLicenceSets =
@@ -276,7 +276,7 @@ public class FileProcessSingleService(
             .ToList());
         
         ConsoleHelper.WriteLine(
-            $"INFO - {nameof(FileProcessSingleService)} - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - {nameof(FileProcessSingleProcessSingleService)} - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     }
         
     // TODO - check the following methods are the same as they used to be

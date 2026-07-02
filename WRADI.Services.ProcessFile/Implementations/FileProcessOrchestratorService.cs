@@ -5,13 +5,13 @@ using WALE.ProcessFile.Services.Helpers;
 
 namespace WRADI.Services.ProcessFile.Implementations;
 
-public class FileProcessOrchestrateService(
+public class FileProcessOrchestratorService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IOutputService outputService,
     IFileService fileService,
-    IOrchestratorService orchestratorService)
-    : IOrchestrateFileProcess
+    IMessageQueueService messageQueueService)
+    : IFileProcessOrchestrator
 {
     public async Task<bool> RunAsync(CancellationToken cancellationToken)
     {
@@ -50,7 +50,7 @@ public class FileProcessOrchestrateService(
         {
             foreach (var (filePath, _) in dmsFilesToProcess)
             {
-                await orchestratorService.AddToFileProcessQueue(
+                await messageQueueService.AddToFileProcessQueue(
                     new SingleFileProcessRequest
                     {
                         FilePath = filePath,

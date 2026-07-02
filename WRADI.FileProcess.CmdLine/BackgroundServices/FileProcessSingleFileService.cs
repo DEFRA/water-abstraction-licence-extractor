@@ -11,7 +11,7 @@ namespace WRADI.FileProcess.CmdLine.BackgroundServices;
 
 public sealed class FileProcessSingleFileService(
     IAmazonSQS sqsClient,
-    IScrapeFileService scrapeFileService,
+    IFileProcessSingleService fileProcessSingleService,
     FileProcessAppSettings settings,
     ILogger<FileProcessSingleFileService> logger)
     : BackgroundService
@@ -60,7 +60,7 @@ public sealed class FileProcessSingleFileService(
                             continue;
                         }
 
-                        var result = await scrapeFileService.RunAsync(
+                        var result = await fileProcessSingleService.RunAsync(
                             singleFileProcessRequest,
                             cancellationToken);
 

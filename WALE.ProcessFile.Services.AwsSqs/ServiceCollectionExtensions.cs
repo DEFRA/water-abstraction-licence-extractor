@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
                 awsAccessKey,
                 awsSecretKey,
                 awsSessionToken))
-            .AddOptions<AwsQueueConfig>()
+            .AddOptions<AwsSqsQueueConfig>()
             .BindConfiguration("AwsQueueConfig")
             .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
                 "AwsQueueConfig:OrchestratorQueue is required")

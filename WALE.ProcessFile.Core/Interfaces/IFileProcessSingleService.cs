@@ -2,9 +2,9 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
-public interface IScrapeFileService
+public interface IFileProcessSingleService
 {
     Task<bool> RunAsync(
         SingleFileProcessRequest singleFileProcessRequest,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }

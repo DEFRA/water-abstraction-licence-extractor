@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Services.AwsSqs;
 
-public class AwsQueueConfig
+public class AwsSqsQueueConfig
 {
     public string? OrchestratorQueue { get; set; }
 

@@ -11,7 +11,7 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
 public class MessageController(
-    IOptions<AwsQueueConfig> awsQueueConfig,
+    IOptions<AwsSqsQueueConfig> awsQueueConfig,
     IAmazonSQS sqsClient) : Controller
 {
     [HttpPost]

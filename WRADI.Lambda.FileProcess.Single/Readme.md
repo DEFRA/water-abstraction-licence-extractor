@@ -10,7 +10,7 @@ This project consists of:
 Build from the directory above this, using the command;
 
 ```
-docker build -f WRADI.Lambda.FileProcess.Single/Dockerfile .
+docker build -f WRADI.Lambda.FileProcess.Single/Dockerfile . -t wradi/fileprocess-single
 ```
 
 This project is configured to package the Lambda function as a Docker image. The default configuration for the project and the Dockerfile is to build 

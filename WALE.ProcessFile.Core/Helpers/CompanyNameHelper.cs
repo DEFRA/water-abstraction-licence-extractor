@@ -12,7 +12,7 @@ public static class CompanyNameHelper
         var returnList = new HashSet<string>();
         var dtStart = DateTime.Now;
 
-        var basePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!;
+        var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         var path = Path.Combine(basePath, "Data/first-names.csv");
         
         using var reader = new StreamReader(path);

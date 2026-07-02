@@ -71,7 +71,6 @@ public class FileDataController(IOutputService outputService) : Controller
         return Ok(results);
     }
 
-
     [HttpPost]
     public async Task<ActionResult<int>> CreateLicenceSectionVerification([FromBody] LicenceSectionVerification verification)
     {

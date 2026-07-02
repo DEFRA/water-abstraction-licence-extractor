@@ -1,4 +1,4 @@
-namespace WALE.Api.Areas.BFF.Models;
+namespace WALE.ProcessFile.Services.AwsSqs;
 
 public class AwsQueueConfig
 {

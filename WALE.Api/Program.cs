@@ -6,6 +6,7 @@ using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
+using WALE.ProcessFile.Services.AwsSqs;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 
@@ -27,7 +28,7 @@ if (true || app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseCors();
 app.UseResponseCompression();
@@ -76,65 +77,34 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
     
     services
-        .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
-        .AddS3Services(
-            awsRegionName,
-            s3BucketName,
-            awsAccessKey,
-            awsSecretKey,
-            awsSessionToken)        
-        .AddTransient<IOutputService, DatabaseOutputService>()
-        .AddTransient<ICacheService>(sp => new DatabaseCacheService(
-            sp.GetRequiredService<IDatabaseReadService>(),
-            sp.GetRequiredService<IDatabaseWriteService>()));
-    
-    services
-        .AddSingleton<IAmazonSQS>(_ => GetSqsClient(
+        .AddSingleton<IAmazonSQS>(_ => SqsHelper.GetSqsClient(
             awsRegionName,
             awsAccessKey,
             awsSecretKey,
             awsSessionToken))
         .AddOptions<AwsQueueConfig>()
         .Bind(config.GetSection("AwsQueueConfig"))
-        .Validate(config => !string.IsNullOrWhiteSpace(config.OrchestratorQueue),
+        .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
             "AwsQueueConfig:OrchestratorQueue is required")
-        .Validate(config => !string.IsNullOrWhiteSpace(config.FileProcessQueue),
+        .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.FileProcessQueue),
             "AwsQueueConfig:FileProcessQueue is required")
         .ValidateOnStart();
-}
-
-static AmazonSQSClient GetSqsClient(
-    string regionName,
-    string? accessKey,
-    string? secretKey,
-    string? sessionToken)
-{
-    var sqsConfig = new AmazonSQSConfig
-    {
-        RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
-    };
-        
-    AmazonSQSClient client;
-
-    if (!string.IsNullOrEmpty(accessKey))
-    {
-        if (!string.IsNullOrEmpty(sessionToken))
-        {
-            client = new AmazonSQSClient(
-                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
-                sqsConfig);                
-        }
-        else
-        {
-            client = new AmazonSQSClient(
-                new BasicAWSCredentials(accessKey, secretKey),
-                sqsConfig);
-        }
-    }
-    else
-    {
-        client = new AmazonSQSClient(sqsConfig);
-    }
     
-    return client;
+    services
+        .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
+        .AddS3Services(
+            awsRegionName,
+            s3BucketName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken)   
+        .AddSqsServices(
+            awsRegionName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken)
+        .AddTransient<IOutputService, DatabaseOutputService>()
+        .AddTransient<ICacheService>(sp => new DatabaseCacheService(
+            sp.GetRequiredService<IDatabaseReadService>(),
+            sp.GetRequiredService<IDatabaseWriteService>()));
 }

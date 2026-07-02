@@ -4,9 +4,9 @@ using Amazon.SQS;
 
 namespace WALE.ProcessFile.Services.AwsSqs;
 
-public static class SqsHelper
+public static class AwsSqsHelper
 {
-    public static AmazonSQSClient GetSqsClient(
+    public static AmazonSQSClient GetAwsSqsClient(
         string regionName,
         string? accessKey,
         string? secretKey,

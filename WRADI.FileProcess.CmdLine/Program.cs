@@ -4,6 +4,7 @@ using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using WALE.ProcessFile.Services.AwsSqs;
 using WRADI.FileProcess.CmdLine.BackgroundServices;
 using WRADI.Services.ProcessFile;
 
@@ -26,7 +27,7 @@ await Host.CreateDefaultBuilder(args)
             {
                 var settings = sp.GetRequiredService<FileProcessAppSettings>();
 
-                return GetSqsClient(
+                return AwsSqsHelper.GetAwsSqsClient(
                     settings.AwsRegionName!,
                     settings.AwsAccessKey,
                     settings.AwsSecretKey,
@@ -34,41 +35,3 @@ await Host.CreateDefaultBuilder(args)
             });
     })
     .RunConsoleAsync();
-
-return;
-
-static AmazonSQSClient GetSqsClient(
-    string regionName,
-    string? accessKey,
-    string? secretKey,
-    string? sessionToken)
-{
-    var sqsConfig = new AmazonSQSConfig
-    {
-        RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)
-    };
-        
-    AmazonSQSClient client;
-
-    if (!string.IsNullOrEmpty(accessKey))
-    {
-        if (!string.IsNullOrEmpty(sessionToken))
-        {
-            client = new AmazonSQSClient(
-                new SessionAWSCredentials(accessKey, secretKey, sessionToken),
-                sqsConfig);                
-        }
-        else
-        {
-            client = new AmazonSQSClient(
-                new BasicAWSCredentials(accessKey, secretKey),
-                sqsConfig);
-        }
-    }
-    else
-    {
-        client = new AmazonSQSClient(sqsConfig);
-    }
-    
-    return client;
-}

@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.AwsSqs;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSqsServices(
+    public static IServiceCollection AddAwsSqsServices(
         this IServiceCollection services,
         string awsRegionName,
         string? awsAccessKey,
@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
         string? awsSessionToken)
     {
         services
-            .AddSingleton<IAmazonSQS>(_ => SqsHelper.GetSqsClient(
+            .AddSingleton<IAmazonSQS>(_ => AwsSqsHelper.GetAwsSqsClient(
                 awsRegionName,
                 awsAccessKey,
                 awsSecretKey,

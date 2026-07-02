@@ -77,7 +77,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
     
     services
-        .AddSingleton<IAmazonSQS>(_ => SqsHelper.GetSqsClient(
+        .AddSingleton<IAmazonSQS>(_ => AwsSqsHelper.GetAwsSqsClient(
             awsRegionName,
             awsAccessKey,
             awsSecretKey,
@@ -98,7 +98,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsAccessKey,
             awsSecretKey,
             awsSessionToken)   
-        .AddSqsServices(
+        .AddAwsSqsServices(
             awsRegionName,
             awsAccessKey,
             awsSecretKey,

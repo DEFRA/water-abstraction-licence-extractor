@@ -3,6 +3,7 @@ using Amazon.SQS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
+using WALE.ProcessFile.Services.AwsSqs;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 

@@ -42,10 +42,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\migrationrunner-push-image-template.yaml = .github\workflows\migrationrunner-push-image-template.yaml
 		.github\workflows\migrationrunner-create-rollout-image-version.yaml = .github\workflows\migrationrunner-create-rollout-image-version.yaml
 		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
-		.github\workflows\lambda-build-sonar-and-images.yaml = .github\workflows\lambda-build-sonar-and-images.yaml
-		.github\workflows\lambda-build-sonar-template.yaml = .github\workflows\lambda-build-sonar-template.yaml
-								.github\workflows\lambda-create-image-template.yaml = .github\workflows\lambda-create-image-template.yaml
-								.github\workflows\lambda-push-image-template.yaml = .github\workflows\lambda-push-image-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-push-image-template.yaml = .github\workflows\lambda-fileprocess-orchestrator-push-image-template.yaml
+		.github\workflows\lambda-fileprocess-single-push-image-template.yaml = .github\workflows\lambda-fileprocess-single-push-image-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-build-and-sonar-analyze-template.yaml = .github\workflows\lambda-fileprocess-orchestrator-build-and-sonar-analyze-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-create-rollout-image-version.yaml = .github\workflows\lambda-fileprocess-orchestrator-create-rollout-image-version.yaml
+		.github\workflows\lambda-fileprocess-single-build-and-sonar-analyze-template.yaml = .github\workflows\lambda-fileprocess-single-build-and-sonar-analyze-template.yaml
+		.github\workflows\lambda-fileprocess-single-create-rollout-image-version.yaml = .github\workflows\lambda-fileprocess-single-create-rollout-image-version.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tesseract", "WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj", "{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}"

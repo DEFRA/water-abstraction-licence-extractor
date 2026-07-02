@@ -252,9 +252,11 @@ public class TesseractOcrDataExtractorService(
                 ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process timed out- {imageReference}");
             }
             
-            while (!proc.StandardError.EndOfStream)
+            // ReSharper disable once MoveVariableDeclarationInsideLoopCondition
+            string? line;
+            
+            while ((line = await proc.StandardError.ReadLineAsync(cancellationToken)) is not null)
             {
-                var line = await proc.StandardError.ReadLineAsync();
                 const string errorPrefix = "\"Error: ";
                 
                 if (line?.StartsWith(errorPrefix, StringComparison.Ordinal) == true)

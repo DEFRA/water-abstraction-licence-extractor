@@ -1,11 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
-using System.Globalization;
-using System.Text;
-using ExcelDataReader;
-using WALE.ProcessFile.Core.Configuration;
+﻿using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -19,7 +13,6 @@ using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Models;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -36,7 +29,6 @@ async Task ProgramAsync()
 
     var cacheService = services.CacheService!;
     var outputService = services.OutputService!;
-    var outputFolder = services.OutputFolder!;
 
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
@@ -49,33 +41,26 @@ async Task ProgramAsync()
     await cacheService.SetupAsync();
     await outputService.SetupAsync();
 
-    var naldDataTask = GetNaldDataAsync(null, cacheService);
-    var firstNamesTask = CompanyName.GetFirstNamesCsvFromFileAsync();
+    var firstNamesTask = cacheService.GetFirstNamesAsync();
+    
+    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
+    var naldDataTask = SharedHelper.GetNaldDataAsync(null, cacheService);
 
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-
-    var dtStartGetDms = DateTime.Now;
-    
     var (dmsFilesToProcess, allDmsData) =
-        await GetDmsFilesAndMappingAsync(
+        await DmsHelper.GetDmsFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
             cacheService);
-
-    var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
-
-    ConsoleHelper.WriteLine(
-        $"INFO - WALE.Cmd - Got {dmsFilesToProcess.Count} DMS files to process in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-    var processRunTask = outputService.StartProcessRunAsync(new ProcessRun
-    {
-        Description = $"Run using {services.FileService!.FolderPath}",
-        StartDateTimeUtc = DateTime.UtcNow,
-        NumberOfFiles = dmsFilesToProcess.Count
-    });
+    var processRunTask = outputService.StartProcessRunAsync(
+        new ProcessRun
+        {
+            Description = $"Run using {services.FileService!.FolderPath}",
+            StartDateTimeUtc = DateTime.UtcNow,
+            NumberOfFiles = dmsFilesToProcess.Count
+        });
 
     var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
@@ -88,10 +73,10 @@ async Task ProgramAsync()
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
     var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
-    var dmsFileIdInformationDict = TranformDmsFileIdInformation(
+    var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
 
-    const int unsetRegionCode = GeneralConstants.GenericRegionCode;
+    const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
@@ -200,116 +185,12 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
-    
-    var savedLicenceNumbers = new Dictionary<string, int>();
-    var savedLicenceFilenames = new Dictionary<string, int>();
-    var savedNotFoundLicences = new Dictionary<string, int>();
 
-    var savedLicenceSetIds = new HashSet<string>();
-
-    foreach (var licenceSetGroup in licenceSetGroups)
-    {
-        if (licenceSetGroup.Count == 0)
-        {
-            // This shouldn't happen
-            ConsoleHelper.WriteLine("WARNING - WALE.Cmd - Empty licence set group found");
-            continue;
-        }
-
-        foreach (var licenceSetLoop in licenceSetGroup)
-        {
-            foreach (var licenceLoop in licenceSetLoop.Licences)
-            {
-                var filename = licenceLoop.Filename;
-                var licenceFound = licenceLoop.Status == LicenceStatus.Ok;
-                var licenceNumber = licenceLoop.LicenceNumber?.Value;
-                var isLicenceNumberNull = string.IsNullOrEmpty(licenceNumber);
-                var existingLicenceId = -1;
-                
-                var previouslySavedAsNotFound = !isLicenceNumberNull
-                    && savedNotFoundLicences.TryGetValue(licenceNumber!, out existingLicenceId);
-
-                var foundButPreviouslySavedAsNotFound = previouslySavedAsNotFound && licenceFound;
-                var licenceNumberPresentNotYetSaved = !isLicenceNumberNull
-                    && !savedLicenceNumbers.TryGetValue(licenceNumber!, out _);
-
-                var notYetSavedByFilename = isLicenceNumberNull
-                    && !string.IsNullOrEmpty(filename)
-                    && !savedLicenceFilenames.TryGetValue(filename, out _);
-                
-                if (licenceNumberPresentNotYetSaved || foundButPreviouslySavedAsNotFound)
-                {
-                    int loopLicenceId;
-
-                    if (foundButPreviouslySavedAsNotFound)
-                    {
-                        // TODO this appears to never happen - look into it
-                        
-                        await outputService.UpdateLicenceAsync(
-                            licenceLoop,
-                            existingLicenceId,
-                            processRun.ProcessRunId);
-
-                        loopLicenceId = existingLicenceId;
-                    }
-                    else
-                    {
-                        loopLicenceId = await outputService.SaveLicenceAsync(
-                            licenceLoop,
-                            processRun.ProcessRunId);
-                    }
-
-                    savedLicenceNumbers.TryAdd(licenceNumber!, loopLicenceId);
-
-                    if (!string.IsNullOrWhiteSpace(filename))
-                    {
-                        savedLicenceFilenames.TryAdd(filename, loopLicenceId);
-                    }
-
-                    if (!licenceFound)
-                    {
-                        savedNotFoundLicences.TryAdd(licenceNumber!, loopLicenceId);
-                    }
-                    else
-                    {
-                        savedNotFoundLicences.Remove(licenceNumber!);
-                    }
-
-                    licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
-                }
-                else if (notYetSavedByFilename)
-                {
-                    var loopLicenceId = await outputService.SaveLicenceAsync(
-                        licenceLoop,
-                        processRun.ProcessRunId);
-
-                    savedLicenceFilenames.Add(filename!, loopLicenceId);
-                    licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
-                }
-
-                var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
-                    licenceLoop.LicenceSets,
-                    allLicenceSets);
-
-                var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
-
-                foreach (var kvp in licenceSetsLoop.Where(kvp => !savedLicenceSetIds.Contains(kvp.Key)))
-                {
-                    newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
-                    savedLicenceSetIds.Add(kvp.Key);
-                }
-
-                foreach (var licenceSet in newLicenceSetsLoop)
-                {
-                    // Not batched as we get a 413 on the server
-                    await outputService.SaveLicenceSetAsync(
-                        licenceSet.Value,
-                        licenceLoop.DmsFileId,
-                        processRun.ProcessRunId);   
-                }
-            }
-        }
-    }
+    await SharedHelper.UpdateAndSaveLicenceSetsAsync(
+        licenceSetGroups,
+        allLicenceSets,
+        outputService,
+        processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     await outputService.FinishProcessRunAsync(processRun);
@@ -319,85 +200,103 @@ async Task ProgramAsync()
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
 }
 
-async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode, ICacheService cacheService)
+async Task<List<LicenceSet>> ScrapeDocumentAsync(
+    string pdfFilename,
+    int fileNumber,
+    int totalNumber,
+    NaldLicenceStatusData naldLicenceStatusData,
+    Dictionary<string, List<NaldData>> naldData,
+    IOutputService outputService,
+    List<IPdfDataExtractorService> pdfDataExtractors,
+    ProcessRun processRun,
+    Lock extractorLock,
+    LookupConfiguration lookupConfig,
+    DmsFileData dmsDataForFile)
 {
+    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
+
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started getting NALD data");
-    
-    const int take = 10_000;
-    var allNaldData = new NaldDataCollection
-    {
-        AbstractionAndImpoundmentLicences = [],
-        AbstractionLicencePoints = [],
-        AbstractionLicencePurposes = [],
-        AbstractionLicenceQuantities = [],
-        AbstractionLicences = [],
-        AbstractionLicenceVersions = []
-    };
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
 
-    var allNaldDataPartial = new NaldDataCollection();
-    var loopIdx = 0;
+    IPdfDataExtractorService pdfDataExtractor;
 
-    while (loopIdx == 0
-           || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
-           || allNaldDataPartial.AbstractionLicencePoints!.Count == take
-           || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
-           || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
-           || allNaldDataPartial.AbstractionLicences!.Count == take
-           || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
+    lock (extractorLock)
     {
-        var skip = take * loopIdx++;
-            
-        allNaldDataPartial = await cacheService.GetNaldDataAsync(regionCode, false, skip, take);
-        allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
-        allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
-        allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
-        allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
-        allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
-        allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
+        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
+        pdfDataExtractor.InUse = true;
     }
-    
-    var saveDuration = (DateTime.Now - dtStart).TotalMilliseconds;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished getting NALD data in {saveDuration}ms");
-    return allNaldData;
-}
 
-ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
-    List<DmsFileIdInformation> dmsFileIdInformationList)
-{
-    var dmsFileIdInformationDict = new ConcurrentDictionary<Guid, List<DmsFileIdInformation>>();
-    
-    foreach (var dmsFileIdInformation in dmsFileIdInformationList)
+    try
     {
-        if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
+        var previouslyParsedFiles = new List<string>
         {
-            changeList = [];
-            dmsFileIdInformationDict.TryAdd(dmsFileIdInformation.FileId, changeList);
+            pdfFilename
+        };
+
+        lookupConfig = lookupConfig.Clone();
+        lookupConfig.RegionId = dmsDataForFile.RegionId;
+
+        var matchesFull = await pdfDataExtractor.GetMatchesAsync(
+            pdfFilename,
+            dmsDataForFile,
+            lookupConfig,
+            previouslyParsedFiles,
+            processRun.ProcessRunId);
+
+        var matchResultId = await outputService.SaveMatchResultAsync(
+            matchesFull,
+            dmsDataForFile.FileId,
+            processRun.ProcessRunId);
+
+        var dtStartSaveMatches = DateTime.Now;
+
+        if (matchesFull.Matches != null)
+        {
+            var matches = matchesFull.Matches
+                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
+                .ToList();
+
+            await outputService.SaveMatchesAsync(matches);
+
+            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
+            ConsoleHelper.WriteLine(
+                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         }
 
-        changeList.Add(dmsFileIdInformation);
+        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+            matchesFull,
+            naldLicenceStatusData,
+            naldData,
+            pdfDataExtractor,
+            processRun.ProcessRunId,
+            lookupConfig,
+            dmsDataForFile);
+
+        return licenceSets;
     }
-    
-    return dmsFileIdInformationDict;
-}
-
-Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
-    IReadOnlyList<LicenceSetReference> licenceSetIds,
-    IReadOnlyList<LicenceSet> licenceSets)
-{
-    var returnDict = new Dictionary<string, LicenceSet>();
-
-    foreach (var licenceSet in licenceSets)
+    catch (TooManyPagesException)
     {
-        if (licenceSetIds.All(lsi => lsi.LicenceSetId != licenceSet.LicenceSetId))
-        {
-            continue;
-        }
-
-        returnDict.TryAdd(licenceSet.LicenceSetId, licenceSet);
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
     }
-
-    return returnDict;
+    catch (TooManyImagesException)
+    {
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        return [];
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
+        return [];
+    }
+    finally
+    {
+        pdfDataExtractor.InUse = false;
+    }
 }
 
 ConfiguredServices ConfigureServices()
@@ -566,308 +465,4 @@ ConfiguredServices ConfigureServices()
         DmsReportPath = fileMappingPath,
         DelayPerProcessMs = delayPerProcessMs
     };
-}
-
-async Task<List<LicenceSet>> ScrapeDocumentAsync(
-    string pdfFilename,
-    int fileNumber,
-    int totalNumber,
-    NaldLicenceStatusData naldLicenceStatusData,
-    Dictionary<string, List<NaldData>> naldData,
-    IOutputService outputService,
-    List<IPdfDataExtractorService> pdfDataExtractors,
-    ProcessRun processRun,
-    Lock extractorLock,
-    LookupConfiguration lookupConfig,
-    DmsFileData dmsDataForFile)
-{
-    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-
-    var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
-
-    IPdfDataExtractorService pdfDataExtractor;
-
-    lock (extractorLock)
-    {
-        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
-        pdfDataExtractor.InUse = true;
-    }
-
-    try
-    {
-        var previouslyParsedFiles = new List<string>
-        {
-            pdfFilename
-        };
-
-        lookupConfig = lookupConfig.Clone();
-        lookupConfig.RegionId = dmsDataForFile.RegionId;
-
-        var matchesFull = await pdfDataExtractor.GetMatchesAsync(
-            pdfFilename,
-            dmsDataForFile,
-            lookupConfig,
-            previouslyParsedFiles,
-            processRun.ProcessRunId);
-
-        var matchResultId = await outputService.SaveMatchResultAsync(
-            matchesFull,
-            dmsDataForFile.FileId,
-            processRun.ProcessRunId);
-
-        var dtStartSaveMatches = DateTime.Now;
-
-        if (matchesFull.Matches != null)
-        {
-            var matches = matchesFull.Matches
-                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
-                .ToList();
-
-            await outputService.SaveMatchesAsync(matches);
-
-            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
-            ConsoleHelper.WriteLine(
-                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        }
-
-        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
-            matchesFull,
-            naldLicenceStatusData,
-            naldData,
-            pdfDataExtractor,
-            processRun.ProcessRunId,
-            lookupConfig,
-            dmsDataForFile);
-
-        return licenceSets;
-    }
-    catch (TooManyPagesException)
-    {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
-        return [];
-    }
-    catch (TooManyImagesException)
-    {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
-        return [];
-    }
-    catch (Exception ex)
-    {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
-        return [];
-    }
-    finally
-    {
-        pdfDataExtractor.InUse = false;
-    }
-}
-
-async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
-    Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetDmsFilesAndMappingAsync(
-        IFileService fileService,
-        string dmsReportPath,
-        bool getFromFile,
-        ICacheService cacheService)
-{
-    //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-    (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
-        LicenceNumbersWithFilenames) filesAndMapping;
-    
-    if (getFromFile)
-    {
-        filesAndMapping = await GetFilesAndMappingFromExcelDownloadInfoFileAsync(
-            fileService,
-            dmsReportPath);
-    }
-    else
-    {
-        filesAndMapping = await GetFilesAndMappingFromLicenceFinderResultsAsync(
-            fileService,
-            cacheService);
-    }
-    
-    filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-        .OrderBy(filePath => filePath.Key)
-        .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-
-    // For debugging uncheck sections of the following
-    
-    filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-        .Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
-            || x.Key.Contains("1asdssdds", StringComparison.InvariantCultureIgnoreCase))
-        //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
-        .Where(x => x.Value.RegionId == 3) // North east
-        //.Skip(155)
-        //.Take(20)
-        .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-    
-    return filesAndMapping;
-}
-
-async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
-        LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
-{
-    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
-    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
-
-    var allDestinationFilenames = await fileService.GetAllFilesAsync();
-
-    var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
-    var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
-
-    foreach (var licenceFinderResult in licenceFinderResults)
-    {
-        if (licenceFinderResult.FileId == null)
-        {
-            continue;
-        }
-        
-        var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
-        
-        if (!lowercaseFilesInFolder.Contains(destinationFileName))
-        {
-            continue;
-        }
-
-        // Fix casing
-        destinationFileName = allDestinationFilenames.First(fname =>
-            fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
-        
-        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
-        
-        var dmsFileData = new DmsFileData
-        {
-            DestinationFileName = destinationFileName,
-            NaldLicenceRef = licenceFinderResult.LicenseNumber,
-            PermitNumber = licenceFinderResult.PermitNumber,
-            DmsPath = licenceFinderResult.FileUrl,
-            StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                licenceFinderResult.LicenseNumber,
-                regionId)!,
-            FileId = Guid.Parse(licenceFinderResult.FileId!),
-            RegionId = regionId
-        };
-
-        filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-        licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
-    }
-    
-    return (
-        filenamesWithLicenceNumbers,
-        licenceNumbersWithFilenames
-    );
-}
-
-async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromExcelDownloadInfoFileAsync(
-        IFileService fileService,
-        string dmsReportPath)
-{
-    var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
-    var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
-
-    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-    var filesInFolder = await fileService.GetAllFilesAsync();
-
-    await using (var stream = File.Open(dmsReportPath, FileMode.Open, FileAccess.Read))
-    {
-        using (var reader = ExcelReaderFactory.CreateReader(stream))
-        {
-            var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ => new ExcelDataTableConfiguration
-                {
-                    UseHeaderRow = true
-                }
-            });
-
-            if (dataSet.Tables.Count == 0)
-            {
-                throw new InvalidOperationException("No worksheets found in the Excel file.");
-            }
-
-            var dataTable = dataSet.Tables[0];
-
-            if (dataTable.Rows.Count == 0)
-            {
-                throw new InvalidOperationException("Excel file is empty.");
-            }
-
-            foreach (DataRow row in dataTable.Rows)
-            {
-                var permitNumberField = row["Permit Number"];
-                string permitNumber;
-
-                if (permitNumberField is string permitNumberValue)
-                {
-                    permitNumber = permitNumberValue;
-                }
-                else
-                {
-                    permitNumber = ((double)permitNumberField).ToString(CultureInfo.InvariantCulture);
-                }
-
-                string destinationFileName;
-                string dmsPath;
-                Guid fileId;
-                
-                if (dataTable.Columns.Contains("Definitive URL"))
-                {
-                    dmsPath = (string)row["Definitive URL"];
-                    destinationFileName = (string)row[1];
-                    
-                    var filenameParts = destinationFileName.Split("__");
-                    fileId = filenameParts.Length >= 2
-                        ? Guid.Parse(filenameParts[1])
-                        : throw new Exception("Filename format was incorrect");
-                }
-                else
-                {
-                    var fileIdColumn = row["File Id"] != DBNull.Value ? (string)row["File Id"] : null;
-                    
-                    if (!Guid.TryParse(fileIdColumn, out fileId))
-                    {
-                        continue;
-                    }
-                    
-                    dmsPath = (string)row["File URL"];
-                    destinationFileName = $"{permitNumber}_{fileId}.pdf";
-                }
-                
-                if (!filesInFolder.Contains(destinationFileName))
-                {
-                    continue;
-                }
-
-                var naldLicenceRef = (string)row["License Number"];
-
-                var dmsFileData = new DmsFileData
-                {
-                    DestinationFileName = destinationFileName,
-                    NaldLicenceRef = naldLicenceRef,
-                    PermitNumber = permitNumber,
-                    DmsPath = dmsPath,
-                    StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
-                    FileId = fileId,
-                    RegionId = GeneralConstants.GenericRegionCode
-                };
-
-                filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-                licenceNumbersWithFilenames.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
-            }
-        }
-    }
-
-    return (
-        filenamesWithLicenceNumbers,
-        licenceNumbersWithFilenames
-    );
 }

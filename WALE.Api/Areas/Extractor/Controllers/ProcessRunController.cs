@@ -17,12 +17,65 @@ public class ProcessRunController(IOutputService outputService) : Controller
         {
             Description = request.description,
             StartDateTimeUtc = DateTime.UtcNow,
-            NumberOfFiles = request.numberOfFiles
+            NumberOfFiles = request.numberOfFiles,
+            Status = request.status
         });
 
         return Ok(processRun.ProcessRunId);
     }
+    
+    [HttpPost]
+    public async Task<IActionResult> MarkProcessRunCompleteIfCompleteAsync([FromBody] ProcessRunEndRequest request)
+    {
+        var processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(
+            new ProcessRun
+            {
+                ProcessRunId = request.processRunId,
+            });
 
+        return Ok(processRun);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> AddProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
+    {
+        var processRunFile = await outputService.AddProcessRunFileAsync(new ProcessRunFile
+        {
+            FileName = request.FileName,
+            ProcessRunId = request.ProcessRunId
+        });
+
+        return Ok(processRunFile.ProcessRunFileId);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> CompleteProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
+    {
+        var processRunFile = await outputService.MarkProcessRunFileCompleteAsync(new ProcessRunFile
+        {
+            ProcessRunFileId = request.ProcessRunFileId,
+            FileName = request.FileName,
+            ProcessRunId = request.ProcessRunId
+        });
+
+        return Ok(processRunFile.ProcessRunFileId);
+    }
+    
+    
+    [HttpPost]
+    public async Task<IActionResult> ReportErrorProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
+    {
+        var processRunFile = await outputService.ReportErrorProcessRunFileAsync(new ProcessRunFile
+        {
+            ProcessRunFileId = request.ProcessRunFileId,
+            FileName = request.FileName,
+            ProcessRunId = request.ProcessRunId,
+            ErrorMessage = request.ErrorMessage
+        });
+
+        return Ok(processRunFile.ProcessRunFileId);
+    }
+ 
     [HttpPost]
     public async Task<IActionResult> FinishAsync([FromBody] ProcessRunEndRequest request)
     {

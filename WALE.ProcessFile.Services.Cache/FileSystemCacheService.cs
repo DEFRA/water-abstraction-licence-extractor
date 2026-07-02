@@ -581,13 +581,18 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        return CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());
         return fileOutputFolder.Trim();
     }
     
-    private string GetImageMetadataFilename(string serviceName, string folderPath)
+    private static string GetImageMetadataFilename(string serviceName, string folderPath)
     {
         var imagesMetadataFolder = $"{folderPath}/{serviceName}/Images";
         Directory.CreateDirectory(imagesMetadataFolder); // This checks if exists, and creates the whole path too

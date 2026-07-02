@@ -1831,9 +1831,9 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
 
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Equal("283922427-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("283922427-LV19760114", agreedSchemaLicenceGroup[0].LicenceSetId);
         Assert.Equal("427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
-        Assert.Equal("283922217-LVUNKNOWN-283922427-LVUNKNOWN", agreedSchemaLicenceGroup[1].LicenceSetId);
+        Assert.Equal("283922217-LVUNKNOWN-283922427-LV19760114", agreedSchemaLicenceGroup[1].LicenceSetId);
         Assert.Equal("217-427", agreedSchemaLicenceGroup[1].ShortLicenceSetId);
 
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

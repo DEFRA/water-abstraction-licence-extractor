@@ -1548,8 +1548,8 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal(new DateTime(1966, 01, 27), agreedSchemaLicence.LicenceVersion.IssueDate);
         Assert.Null(agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Null(agreedSchemaLicence.LicenceVersion.EffectiveDate);
-        Assert.Equal("22729012-LVUNKNOWN", agreedSchemaLicence.Id);
-        Assert.Equal("LVUNKNOWN", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
+        Assert.Equal("22729012-LV19660127", agreedSchemaLicence.Id);
+        Assert.Equal("LV19660127", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
         Assert.Equal(2, agreedSchemaLicence.Points.Length);
         Assert.Single(agreedSchemaLicence.Purposes);

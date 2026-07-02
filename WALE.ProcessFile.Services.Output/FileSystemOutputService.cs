@@ -17,6 +17,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         Directory.CreateDirectory(outputFolder);
         return Task.CompletedTask;
     }
+    
+    public Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
@@ -60,6 +65,26 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(processRun);
     }
 
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        throw new NotImplementedException();
+    }
+    
     public Task SaveLicenceSetsAsync(
         Dictionary<string, LicenceSet> licenceSets,
         Guid? fileId,
@@ -247,6 +272,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task<List<ProcessRun>> GetProcessRunsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<ProcessRun>> GetAllProcessRunsAsync()
     {
         throw new NotImplementedException();
     }

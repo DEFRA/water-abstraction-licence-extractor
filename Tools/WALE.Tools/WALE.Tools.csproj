@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>36a30afa-1c5b-40f0-bf53-adda14a53c4e</UserSecretsId>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <PackageReference Include="ClosedXML" Version="0.105.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.5.25277.114" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.9" />
         <PackageReference Include="PDFtoImage" Version="5.1.1" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
     </ItemGroup>

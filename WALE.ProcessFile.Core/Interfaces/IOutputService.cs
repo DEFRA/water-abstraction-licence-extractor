@@ -25,6 +25,14 @@ public interface IOutputService
         Guid fileId);
     
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun);
+    
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
+    
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
+    
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile);
+    
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId);
     
@@ -66,12 +74,14 @@ public interface IOutputService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
+    Task<List<ProcessRun>> GetAllProcessRunsAsync();
+
     Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
     Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take);
 
+    Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId);
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
-    
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);

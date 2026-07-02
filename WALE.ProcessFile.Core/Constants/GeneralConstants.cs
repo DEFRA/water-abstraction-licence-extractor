@@ -6,5 +6,5 @@ public static class GeneralConstants
     
     public const string DocnetExtractorServiceName = "Docnet";
     
-    public const int GenericRegionCode = -1;
+    public const int UnsetRegionCode = -1;
 }

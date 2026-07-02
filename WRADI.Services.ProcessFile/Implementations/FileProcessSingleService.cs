@@ -41,7 +41,7 @@ public class FileProcessSingleProcessSingleService(
 
         var firstNamesTask = cacheService.GetFirstNamesAsync();
         
-        var naldDataTask = GetNaldDataAsync(null);
+        var naldDataTask = SharedHelper.GetNaldDataAsync(null, cacheService);
         var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
         
         var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
@@ -67,7 +67,7 @@ public class FileProcessSingleProcessSingleService(
             allNaldData,
             allDmsData);
 
-        var dmsFileIdInformationDict = TranformDmsFileIdInformation(
+        var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
             await dmsFileIdInformationListTask);
         
         var lookupConfig = new LookupConfiguration(
@@ -104,11 +104,10 @@ public class FileProcessSingleProcessSingleService(
                 dmsFilesToProcess.FirstOrDefault().Value,
                 processRun);
 
-            await UpdateAndSaveLicenceSets(
+            await SharedHelper.UpdateAndSaveLicenceSetsAsync(
                 [licenceSet],
-                naldLicenceStatusData,
-                naldData,
-                allDmsData,
+                licenceSet,
+                outputService,
                 processRun);
 
             ConsoleHelper.WriteLine(
@@ -126,17 +125,19 @@ public class FileProcessSingleProcessSingleService(
             var processRunCompleted = processRun is { EndDateTimeUtc: not null }
                 && processRun.EndDateTimeUtc > DateTime.MinValue;
 
-            if (processRunCompleted)
-            {
-                await AddCompleteProcessRunDataAsync(
-                    processRun,
-                    naldLicenceStatusData,
-                    naldData,
-                    allDmsData);
-            }
-
             ConsoleHelper.WriteLine(
                 $"INFO - {nameof(FileProcessSingleProcessSingleService)} - Successfully finished processing {singleFileProcessRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+            if (!processRunCompleted)
+            {
+                return true;
+            }
+            
+            await AddCompleteProcessRunDataAsync(
+                processRun,
+                naldLicenceStatusData,
+                naldData,
+                allDmsData);
 
             return true;
         }
@@ -256,215 +257,30 @@ public class FileProcessSingleProcessSingleService(
             $"INFO - {nameof(FileProcessSingleProcessSingleService)} - started processing all license sets at " +
             $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
-        var allLicenceSets =
+        var allLicenceSets1 =
             await outputService.GetProcessRunLicenceSetsAsync(processRun.ProcessRunId);
 
-        var licenceSetGroups = allLicenceSets
+        var licenceSetGroups = allLicenceSets1
             .Values
-            .Select(IReadOnlyList<LicenceSet> (licenceSet) => new List<LicenceSet> { licenceSet }.AsReadOnly())
+            .Select(IReadOnlyList<LicenceSet> (licenceSet) => new List<LicenceSet> { licenceSet })
             .ToList();
-                
-        await UpdateAndSaveLicenceSets(
-            licenceSetGroups,
-            naldLicenceStatusData,
-            naldData,
-            allDmsData,
-            processRun);
-               
-        WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets
-            .Select(lsKvp => lsKvp.Value)
-            .ToList());
-        
-        ConsoleHelper.WriteLine(
-            $"INFO - {nameof(FileProcessSingleProcessSingleService)} - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    }
-        
-    // TODO - check the following methods are the same as they used to be
-        
-    private static ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
-        List<DmsFileIdInformation> dmsFileIdInformationList)
-    {
-        var dmsFileIdInformationDict = new ConcurrentDictionary<Guid, List<DmsFileIdInformation>>();
 
-        foreach (var dmsFileIdInformation in dmsFileIdInformationList)
-        {
-            if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
-            {
-                changeList = [];
-                dmsFileIdInformationDict.TryAdd(dmsFileIdInformation.FileId, changeList);
-            }
-
-            changeList.Add(dmsFileIdInformation);
-        }
-
-        return dmsFileIdInformationDict;
-    }
-
-    private static Dictionary<string, LicenceSet> GetLicenceSetsForLicenceSetIds(
-        IReadOnlyList<LicenceSetReference> licenceSetIds,
-        IReadOnlyList<LicenceSet> licenceSets)
-    {
-        var returnDict = new Dictionary<string, LicenceSet>();
-
-        foreach (var licenceSet in licenceSets)
-        {
-            if (licenceSetIds.All(lsi => lsi.LicenceSetId != licenceSet.LicenceSetId))
-            {
-                continue;
-            }
-
-            returnDict.TryAdd(licenceSet.LicenceSetId, licenceSet);
-        }
-
-        return returnDict;
-    }
-
-    private async Task<NaldDataCollection> GetNaldDataAsync(short? regionCode)
-    {
-        const int take = 100000;
-        var allNaldData = new NaldDataCollection
-        {
-            AbstractionAndImpoundmentLicences = [],
-            AbstractionLicencePoints = [],
-            AbstractionLicencePurposes = [],
-            AbstractionLicenceQuantities = [],
-            AbstractionLicences = [],
-            AbstractionLicenceVersions = []
-        };
-
-        var allNaldDataPartial = new NaldDataCollection();
-        var loopIdx = 0;
-
-        while (loopIdx == 0
-               || allNaldDataPartial.AbstractionAndImpoundmentLicences!.Count == take
-               || allNaldDataPartial.AbstractionLicencePoints!.Count == take
-               || allNaldDataPartial.AbstractionLicencePurposes!.Count == take
-               || allNaldDataPartial.AbstractionLicenceQuantities!.Count == take
-               || allNaldDataPartial.AbstractionLicences!.Count == take
-               || allNaldDataPartial.AbstractionLicenceVersions!.Count == take)
-        {
-            var skip = take * loopIdx++;
-                
-            allNaldDataPartial = await cacheService.GetNaldDataAsync(regionCode, false, skip, take);
-            allNaldData.AbstractionAndImpoundmentLicences!.AddRange(allNaldDataPartial.AbstractionAndImpoundmentLicences!);
-            allNaldData.AbstractionLicencePoints!.AddRange(allNaldDataPartial.AbstractionLicencePoints!);
-            allNaldData.AbstractionLicencePurposes!.AddRange(allNaldDataPartial.AbstractionLicencePurposes!);
-            allNaldData.AbstractionLicenceQuantities!.AddRange(allNaldDataPartial.AbstractionLicenceQuantities!);
-            allNaldData.AbstractionLicences!.AddRange(allNaldDataPartial.AbstractionLicences!);
-            allNaldData.AbstractionLicenceVersions!.AddRange(allNaldDataPartial.AbstractionLicenceVersions!);
-        }
-        
-        return allNaldData;
-    }
-
-    private async Task UpdateAndSaveLicenceSets(
-        List<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        NaldLicenceStatusData naldLicenceStatusData,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> allDmsData,
-        ProcessRun processRun)
-    {
         var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
             licenceSetGroups,
             naldLicenceStatusData,
             naldData,
             allDmsData);
 
-        var savedLicenceNumbers = new Dictionary<string, int>();
-        var savedLicenceFilenames = new Dictionary<string, int>();
-        var notFoundSavedLicenceNumbers = new Dictionary<string, int>();
-
-        var savedLicenceSetIds = new HashSet<string>();
-
-        foreach (var licenceSetGroup in licenceSetGroups)
-        {
-            if (licenceSetGroup.Count == 0)
-            {
-                continue;
-            }
-
-            foreach (var licenceSetLoop in licenceSetGroup)
-            {
-                foreach (var licenceLoop in licenceSetLoop.Licences)
-                {
-                    var filename = licenceLoop.Filename;
-
-                    if (licenceLoop.LicenceNumber?.Value != null
-                        && (!savedLicenceNumbers.TryGetValue(
-                                licenceLoop.LicenceNumber.Value, out _)
-                            || (licenceLoop.Status == LicenceStatus.Ok &&
-                                notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber.Value, out _))))
-                    {
-                        int loopLicenceId;
-                        var savedVersionIsStatusNotFound =
-                            notFoundSavedLicenceNumbers.TryGetValue(licenceLoop.LicenceNumber.Value,
-                                out var existingLicenceId);
-
-                        if (savedVersionIsStatusNotFound && licenceLoop.Status == LicenceStatus.Ok)
-                        {
-                            await outputService.UpdateLicenceAsync(
-                                licenceLoop,
-                                existingLicenceId,
-                                processRun.ProcessRunId);
-
-                            loopLicenceId = existingLicenceId;
-                        }
-                        else
-                        {
-                            loopLicenceId = await outputService.SaveLicenceAsync(
-                                licenceLoop,
-                                processRun.ProcessRunId);
-                        }
-
-                        savedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber.Value, loopLicenceId);
-
-                        if (!string.IsNullOrWhiteSpace(filename))
-                        {
-                            savedLicenceFilenames.TryAdd(filename, loopLicenceId);
-                        }
-
-                        if (licenceLoop.Status == LicenceStatus.NotFound)
-                        {
-                            notFoundSavedLicenceNumbers.TryAdd(licenceLoop.LicenceNumber.Value, loopLicenceId);
-                        }
-                        else
-                        {
-                            notFoundSavedLicenceNumbers.Remove(licenceLoop.LicenceNumber.Value);
-                        }
-
-                        licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
-                    }
-                    else if (licenceLoop.LicenceNumber == null
-                             && !string.IsNullOrEmpty(filename)
-                             && !savedLicenceFilenames.TryGetValue(filename, out _))
-                    {
-                        var loopLicenceId = await outputService.SaveLicenceAsync(
-                            licenceLoop,
-
-                            processRun.ProcessRunId);
-
-                        savedLicenceFilenames.Add(filename, loopLicenceId);
-                        licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
-                    }
-
-                    var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
-                        licenceLoop.LicenceSets,
-                        allLicenceSets);
-
-                    var newLicenceSetsLoop = new Dictionary<string, LicenceSet>();
-
-                    foreach (var kvp in licenceSetsLoop.Where(kvp => !savedLicenceSetIds.Contains(kvp.Key)))
-                    {
-                        newLicenceSetsLoop.Add(kvp.Key, kvp.Value);
-                        savedLicenceSetIds.Add(kvp.Key);
-                    }
-
-                    await outputService.SaveLicenceSetsAsync(
-                        newLicenceSetsLoop,
-                        licenceLoop.DmsFileId,
-                        processRun.ProcessRunId);
-                }
-            }
-        }
+        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
+        
+        await SharedHelper.UpdateAndSaveLicenceSetsAsync(
+            licenceSetGroups,
+            allLicenceSets,
+            outputService,
+            processRun);
+        
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(FileProcessSingleProcessSingleService)} - completed processing all license sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     }
 }

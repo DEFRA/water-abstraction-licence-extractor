@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
 using System.Text;
@@ -11,6 +12,25 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class DmsHelper
 {
+    public static ConcurrentDictionary<Guid, List<DmsFileIdInformation>> TranformDmsFileIdInformation(
+        List<DmsFileIdInformation> dmsFileIdInformationList)
+    {
+        var dmsFileIdInformationDict = new ConcurrentDictionary<Guid, List<DmsFileIdInformation>>();
+
+        foreach (var dmsFileIdInformation in dmsFileIdInformationList)
+        {
+            if (!dmsFileIdInformationDict.TryGetValue(dmsFileIdInformation.FileId, out var changeList))
+            {
+                changeList = [];
+                dmsFileIdInformationDict.TryAdd(dmsFileIdInformation.FileId, changeList);
+            }
+
+            changeList.Add(dmsFileIdInformation);
+        }
+
+        return dmsFileIdInformationDict;
+    }
+    
     public static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
             Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
         GetDmsFilesAndMappingAsync(
@@ -62,9 +82,9 @@ public static class DmsHelper
     }
     
     private static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromExcelDownloadInfoFileAsync(
-        IFileService fileService,
-        string dmsReportPath)
+        GetFilesAndMappingFromExcelDownloadInfoFileAsync(
+            IFileService fileService,
+            string dmsReportPath)
     {
         var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
         var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();

@@ -5,7 +5,7 @@ using WALE.ProcessFile.Services.Helpers;
 
 namespace WRADI.Services.ProcessFile.Implementations;
 
-public class FileProcessOrchestratorService(
+public class FileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IOutputService outputService,
@@ -15,7 +15,7 @@ public class FileProcessOrchestratorService(
 {
     public async Task<bool> RunAsync(CancellationToken cancellationToken)
     {
-        ConsoleHelper.WriteLine("INFO - OrchestrateFileProcessService - Started");
+        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
 
         if (settings.RefreshCache)
         {
@@ -34,7 +34,7 @@ public class FileProcessOrchestratorService(
 
         if (dmsFilesToProcess.Count == 0)
         {
-            ConsoleHelper.WriteLine("INFO - OrchestrateFileProcessService - No DMS files to process");
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - No DMS files to process");
             return true;
         }
         
@@ -57,18 +57,18 @@ public class FileProcessOrchestratorService(
                         ProcessRunId = processRun.ProcessRunId
                     });
                 
-                ConsoleHelper.WriteLine($"INFO - {filePath} - sent to single process file queue");
+                ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {filePath} sent to single process file queue");
             }
         }
         catch (Exception e)
         {
-            ConsoleHelper.WriteLine($"ERROR - OrchestrateFileProcessService - Error during sending to single " +
+            ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error during sending to single " +
                 $"file processing queue: {e}");
             
             throw;
         }
         
-        ConsoleHelper.WriteLine($"INFO - OrchestrateFileProcessService - Finished processing " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Finished processing " +
             $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         return true;

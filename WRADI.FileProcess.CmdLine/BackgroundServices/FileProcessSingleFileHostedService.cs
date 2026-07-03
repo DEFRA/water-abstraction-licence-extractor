@@ -9,24 +9,25 @@ using WRADI.Services.ProcessFile;
 
 namespace WRADI.FileProcess.CmdLine.BackgroundServices;
 
-public sealed class FileProcessSingleFileService(
+public sealed class FileProcessSingleFileHostedService(
     IAmazonSQS sqsClient,
     IFileProcessSingleService fileProcessSingleService,
     FileProcessAppSettings settings,
-    ILogger<FileProcessSingleFileService> logger)
+    ILogger<FileProcessSingleFileHostedService> logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Single file SQS worker started. Queue: {QueueUrl}",
-            settings.SqsQueueFileProcessUrl);
-
         var request = new ReceiveMessageRequest
         {
             QueueUrl = settings.SqsQueueFileProcessUrl,
             MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
             WaitTimeSeconds = settings.SqsWaitTimeSeconds
         };
+        
+        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
+            nameof(FileProcessSingleFileHostedService),
+            request.QueueUrl);
 
         if (settings.SqsVisibilityTimeoutSeconds.HasValue)
         {
@@ -72,7 +73,7 @@ public sealed class FileProcessSingleFileService(
                         await sqsClient.DeleteMessageAsync(
                             new DeleteMessageRequest
                             {
-                                QueueUrl = settings.SqsQueueFileProcessUrl,
+                                QueueUrl = request.QueueUrl,
                                 ReceiptHandle = message.ReceiptHandle
                             },
                             cancellationToken);
@@ -97,6 +98,6 @@ public sealed class FileProcessSingleFileService(
             }
         }
 
-        logger.LogInformation("Single SQS worker stopped.");
+        logger.LogInformation("{ServiceName} stopped.", nameof(FileProcessSingleFileHostedService));
     }
 }

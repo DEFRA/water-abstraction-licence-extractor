@@ -182,14 +182,14 @@ public static class FileProcessServiceRegistration
             return pdfDataExtractors;
         });
 
-        services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestratorService>();
+        services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();
         services.AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
         {
             var settings = sp.GetRequiredService<FileProcessAppSettings>();
             client.BaseAddress = new Uri(settings.ApiBaseUrl);
         });
         
-        services.AddSingleton<IFileProcessSingleService, FileProcessSingleProcessSingleService>();
+        services.AddSingleton<IFileProcessSingleService, FileProcessSingleService>();
         return services;
     }
 }

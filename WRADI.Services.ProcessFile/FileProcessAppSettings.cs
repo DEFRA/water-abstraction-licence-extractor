@@ -26,13 +26,16 @@ public class FileProcessAppSettings
     public string AzureAIVisionEndpoint { get; set; } = "";
     public string AzureAIVisionKey { get; set; } = "";
 
+    // General AWS settings
     public string? AwsSessionToken { get; set; }
     public string? AwsAccessKey { get; set; }
     public string? AwsSecretKey { get; set; }
     public string? AwsRegionName { get; set; }
+    
+    // S3 settings
     public string? AwsS3BucketName { get; set; }
     
-    // New SQS settings
+    // SQS settings
     public string SqsQueueOrchestrationUrl { get; set; } = null!;
     
     public string SqsQueueFileProcessUrl { get; set; } = null!;

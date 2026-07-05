@@ -112,7 +112,132 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    public async Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        var licenceNumbers = new List<string> { permitNumber };
+        
+        var sql = """
+               SELECT
+                   "ID" AS Id,
+                   "LIC_NO" AS LicenceNo,
+                   "AREP_SUC_CODE" AS ArepSucCode,
+                   "AREP_AREA_CODE" AS ArepAreaCode,
+                   "SUSP_FROM_BILLING" AS SuspFromBilling,
+                   "AREP_LEAP_CODE" AS ArepLeapCode,
+                   "EXPIRY_DATE" AS ExpiryDate,
+                   "ORIG_EFF_DATE" AS OrigEffectiveDate,
+                   "ORIG_SIG_DATE" AS OrigSignatureDate,
+                   "ORIG_APP_NO" AS OrigAppNo,
+                   "ORIG_LIC_NO" AS OrigLicNo,
+                   "NOTES" AS Notes,
+                   "REV_DATE" AS RevDate,
+                   "LAPSED_DATE" AS LapsedDate,
+                   "SUSP_FROM_RETURNS" AS SuspFromReturns,
+                   "AREP_CAMS_CODE" AS ArepCamsCode,
+                   "X_REG_IND" AS XRegInd,
+                   "PREV_LIC_NO" AS PrevLicNo,
+                   "FOLL_LIC_NO" AS FollLicNo,
+                   "AREP_EIUC_CODE" AS ArepEiucCode,
+                   "FGAC_REGION_CODE" AS FgacRegionCode
+               FROM nald."NALD_ABS_LICENCES"
+               WHERE "FGAC_REGION_CODE" = @RegionCode
+                    AND (
+               """;
+
+        var idx = 0;
+        foreach (var _ in licenceNumbers)
+        {
+            if (idx > 0)
+            {
+                sql += " OR ";
+            }
+            
+            sql += $"\"LIC_NO\" = @LicNo{idx++}\n";
+        }
+
+        sql += """
+               )
+               ORDER BY
+                   "ID",
+                   "FGAC_REGION_CODE"
+               LIMIT 1
+               """;
+
+        var paramsObj = new DynamicParameters();
+        paramsObj.Add("@RegionCode", regionCode);
+        
+        idx = 0;
+        foreach (var licenceNumber in licenceNumbers)
+        {
+            paramsObj.Add($"@LicNo{idx++}", licenceNumber);
+        }
+        
+        var dataLine = await QueryFirstOrDefaultAsync<NaldAbstractionLicenceDataLine>(
+            connection,
+            sql,
+            0,
+            paramsObj);
+
+        if (dataLine == null)
+        {
+            return null;
+        }
+        
+        var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
+
+        var versionsTask = GetNaldLicenceVersionsAsync(dataLine.LicenceNo, regionCode);
+        var purposesTask = GetNaldLicencePurposesAsync(dataLine.LicenceNo, regionCode);
+        var pointsTask = GetNaldLicencePointsAsync(dataLine.LicenceNo, regionCode);
+        var quantitiesTask = GetNaldLicenceQuantitiesAsync(dataLine.LicenceNo, regionCode);
+
+        foreach (var version in await versionsTask)
+        {
+            NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);   
+        }
+
+        foreach (var purpose in await purposesTask)
+        {
+            NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);               
+        }
+        
+        foreach (var point in await pointsTask)
+        {
+            NaldHelper.AddNaldAbstractionLicencePointsData(point, naldData);               
+        }
+        
+        foreach (var quantity in await quantitiesTask)
+        {
+            NaldHelper.AddNaldAbstractionLicenceQuantitiesData(quantity, naldData);               
+        }
+        
+        return naldData;
+    }
+
+    private Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(
+        string? dataLineLicenceNo,
+        int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(
+        string? dataLineLicenceNo,
+        int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(
+        string? dataLineLicenceNo,
+        int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(
+        string? dataLineLicenceNo,
+        int allVersions)
     {
         throw new NotImplementedException();
     }

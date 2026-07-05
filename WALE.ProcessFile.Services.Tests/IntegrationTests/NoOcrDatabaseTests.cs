@@ -267,7 +267,6 @@ public class NoOcrDatabaseTests
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             new NaldLicenceStatusData(),
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));

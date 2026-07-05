@@ -19,6 +19,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureOpenAiOcrPdfTests
 {
+    private static readonly ICacheService CacheService;
+
+    static AzureOpenAiOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, []);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -37,8 +45,7 @@ public class AzureOpenAiOcrPdfTests
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -167,7 +174,6 @@ public class AzureOpenAiOcrPdfTests
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             new NaldLicenceStatusData(),
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));

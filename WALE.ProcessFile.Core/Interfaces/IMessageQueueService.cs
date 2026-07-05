@@ -4,5 +4,5 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IMessageQueueService
 {
-    Task AddToFileProcessQueue(SingleFileProcessRequest singleFileProcessRequest);
+    Task AddToFileProcessQueue(FileProcessSingleRequest fileProcessSingleRequest);
 }

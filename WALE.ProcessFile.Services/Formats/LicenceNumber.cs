@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -8,13 +9,12 @@ namespace WALE.ProcessFile.Services.Formats;
 
 public partial class LicenceNumber : ILicenceNumberService
 {
-    private static ILicenceNumberService? _instance;
-
+    [field: AllowNull, MaybeNull]
     public static ILicenceNumberService Instance
     {
-        get => _instance ??
+        get => field ??
                throw new InvalidOperationException("LicenceNumber.Instance must be initialized before use.");
-        set => _instance = value;
+        set;
     }
 
     private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex;

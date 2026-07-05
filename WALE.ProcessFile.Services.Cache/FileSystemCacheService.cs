@@ -586,6 +586,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
     }
 
+    public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

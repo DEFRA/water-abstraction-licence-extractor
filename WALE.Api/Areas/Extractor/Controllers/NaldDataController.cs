@@ -27,6 +27,13 @@ public class NaldDataController(ICacheService cacheService) : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> GetImpoundmentAndAbstractionLicencesAsync()
+    {
+        var naldLicences = await cacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        return Ok(naldLicences);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetLicenceStatusDataAsync([FromQuery] short? regionCode = null)
     {
         var naldLicenceNumbers = await cacheService.GetNaldLicenceNumbersAsync(
@@ -69,5 +76,14 @@ public class NaldDataController(ICacheService cacheService) : Controller
     {
         var incrementNumber = await cacheService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
         return Ok(incrementNumber);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int regionCode)
+    {
+        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
+        return Ok(naldData);
     }
 }

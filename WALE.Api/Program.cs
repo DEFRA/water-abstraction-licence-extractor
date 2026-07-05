@@ -1,8 +1,7 @@
-using Amazon;
-using Amazon.Runtime;
+using System.IO.Compression;
 using Amazon.SQS;
+using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
-using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
@@ -16,6 +15,18 @@ builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
 });
 
 ConfigureServices(builder.Services, builder.Configuration);

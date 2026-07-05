@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -106,17 +107,27 @@ public static class FileProcessServiceRegistration
             return fileService;
         });
 
-        services.AddHttpClient<ICacheService, ApiCacheService>((sp, client) =>
-        {
-            var settings = sp.GetRequiredService<FileProcessAppSettings>();
-            client.BaseAddress = new Uri(settings.ApiBaseUrl);
-        });
+        services
+            .AddHttpClient<ICacheService, ApiCacheService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
 
-        services.AddHttpClient<IOutputService, ApiOutputService>((sp, client) =>
-        {
-            var settings = sp.GetRequiredService<FileProcessAppSettings>();
-            client.BaseAddress = new Uri(settings.ApiBaseUrl);
-        });
+        services
+            .AddHttpClient<IOutputService, ApiOutputService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });;
 
         services.AddSingleton<PdfPigNoOcrPdfDocumentService>();
         services.AddSingleton<DocnetNoOcrAlternativePdfDocumentService>();

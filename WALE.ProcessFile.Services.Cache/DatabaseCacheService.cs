@@ -393,4 +393,14 @@ public class DatabaseCacheService(
     {
         throw new NotImplementedException();
     }
+
+    public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
+    }
+
+    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    {
+        return databaseReadService.GetNaldLicenceAsync(permitNumber, regionCode);
+    }
 }

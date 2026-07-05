@@ -51,7 +51,7 @@ public class FileProcessOrchestrationService(
             foreach (var (filePath, _) in dmsFilesToProcess)
             {
                 await messageQueueService.AddToFileProcessQueue(
-                    new SingleFileProcessRequest
+                    new FileProcessSingleRequest
                     {
                         FilePath = filePath,
                         ProcessRunId = processRun.ProcessRunId
@@ -60,10 +60,10 @@ public class FileProcessOrchestrationService(
                 ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {filePath} sent to single process file queue");
             }
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
             ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error during sending to single " +
-                $"file processing queue: {e}");
+                $"file processing queue: {exception}");
             
             throw;
         }

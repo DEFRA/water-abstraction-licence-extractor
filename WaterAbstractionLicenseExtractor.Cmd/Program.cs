@@ -177,11 +177,11 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         naldLicenceStatusData,
-        naldData,
-        allDmsData);
+        allDmsData,
+        lookupConfig);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -270,7 +270,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
             naldLicenceStatusData,
-            naldData,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,

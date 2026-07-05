@@ -46,23 +46,23 @@ public sealed class FileProcessSingleFileHostedService(
                 }
 
                 foreach (var message in response.Messages
-                    .TakeWhile(message => !cancellationToken.IsCancellationRequested))
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested))
                 {
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var singleFileProcessRequest =
-                            JsonConvert.DeserializeObject<SingleFileProcessRequest>(message.Body);
+                        var fileProcessSingleRequest =
+                            JsonConvert.DeserializeObject<FileProcessSingleRequest>(message.Body);
 
-                        if (singleFileProcessRequest?.FilePath == null)
+                        if (fileProcessSingleRequest?.FilePath == null)
                         {
                             continue;
                         }
 
                         var result = await fileProcessSingleService.RunAsync(
-                            singleFileProcessRequest,
+                            fileProcessSingleRequest,
                             cancellationToken);
 
                         if (!result)
@@ -87,13 +87,14 @@ public sealed class FileProcessSingleFileHostedService(
                     }
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException operationCanceledException)
             {
+                logger.LogError(operationCanceledException, "Operation canceled");
                 break;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                logger.LogError(ex, "Unhandled error while polling SQS");
+                logger.LogError(exception, "Unhandled error while polling SQS");
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }

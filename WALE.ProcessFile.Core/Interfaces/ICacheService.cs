@@ -154,4 +154,8 @@ public interface ICacheService
     Task ClearVersionFilesToDownloadAsync();
 
     Task<HashSet<string>> GetFirstNamesAsync();
+    
+    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
+    
+    Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
 }

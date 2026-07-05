@@ -44,14 +44,15 @@ public sealed class FileProcessOrchestrationHostedService(
                 }
 
                 foreach (var message in response.Messages
-                    .TakeWhile(message => !cancellationToken.IsCancellationRequested))
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested))
                 {
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var result =  await fileProcessOrchestrator.RunAsync(cancellationToken);
+                        var result =  await fileProcessOrchestrator.RunAsync(
+                            cancellationToken);
 
                         if (!result)
                         {

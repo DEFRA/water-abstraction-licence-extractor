@@ -21,6 +21,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [EnableParallelization]
 public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static DoiRegressionTessaractAndAwsTextractOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, []);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -38,8 +46,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     {
         return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -121,7 +128,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -153,7 +159,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -182,7 +187,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -212,7 +216,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -242,7 +245,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -272,7 +274,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -302,7 +303,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -332,7 +332,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -362,7 +361,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -392,7 +390,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -422,7 +419,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -452,7 +448,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -482,7 +477,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -512,7 +506,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -542,7 +535,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));

@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Models;
 
-public class SingleFileProcessRequest
+public class FileProcessSingleRequest
 {
     public string? FilePath { get; set; }
 

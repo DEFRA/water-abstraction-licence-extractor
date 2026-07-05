@@ -112,6 +112,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();

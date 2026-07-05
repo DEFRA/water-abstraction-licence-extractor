@@ -216,4 +216,10 @@ public static class SharedHelper
             }
         }
     }
+
+    public static Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(
+        ICacheService cacheService)
+    {
+        return cacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+    }
 }

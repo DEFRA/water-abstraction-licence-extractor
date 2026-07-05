@@ -43,8 +43,8 @@ async Task ProgramAsync()
 
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
+    var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
     var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-    var naldDataTask = SharedHelper.GetNaldDataAsync(null, cacheService);
 
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var (dmsFilesToProcess, allDmsData) =
@@ -66,12 +66,11 @@ async Task ProgramAsync()
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
 
-    var allNaldData =  await naldDataTask;
+    var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
-    LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+    LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
-    var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
     var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
         await dmsFileIdInformationListTask);
@@ -110,7 +109,6 @@ async Task ProgramAsync()
                     processCount++,
                     processRun.NumberOfFiles,
                     naldLicenceStatusData,
-                    naldData,
                     outputService,
                     pdfDataExtractors,
                     processRun,
@@ -205,7 +203,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     int fileNumber,
     int totalNumber,
     NaldLicenceStatusData naldLicenceStatusData,
-    Dictionary<string, List<NaldData>> naldData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,

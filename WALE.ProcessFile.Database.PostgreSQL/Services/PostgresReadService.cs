@@ -187,19 +187,23 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
 
         var versionsTask = GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
-        /*var purposesTask = GetNaldLicencePurposesAsync(dataLine.Id, regionCode);
-        var pointsTask = GetNaldLicencePointsAsync(dataLine.Id, regionCode);
+        var purposesTask = GetNaldLicencePurposesAsync(dataLine.Id, regionCode);
+        /*var pointsTask = GetNaldLicencePointsAsync(dataLine.Id, regionCode);
         var quantitiesTask = GetNaldLicenceQuantitiesAsync(dataLine.Id, regionCode);*/
 
-        foreach (var version in await versionsTask)
+        var versions = await versionsTask;
+        
+        foreach (var version in versions)
         {
             NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);   
         }
 
-        /*foreach (var purpose in await purposesTask)
+        var purposes = await purposesTask;
+        
+        foreach (var purpose in purposes)
         {
             NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);               
-        }
+        }/*
         
         foreach (var point in await pointsTask)
         {
@@ -361,7 +365,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            JOIN nald."NALD_PURP_USES" pu
                                ON p."APUR_APUS_CODE" = pu."CODE"
                            WHERE p."FGAC_REGION_CODE" = @RegionCode
-                                AND p."AabvAablId" = @AabvAablId
+                                AND p."AABV_AABL_ID" = @AabvAablId
                            """;
 
         return (await QueryAsync<NaldLicencePurposeDataLine>(

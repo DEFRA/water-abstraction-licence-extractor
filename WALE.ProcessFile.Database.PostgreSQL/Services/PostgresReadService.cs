@@ -186,40 +186,58 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         
         var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
 
-        var versionsTask = GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
-        var purposesTask = GetNaldLicencePurposesAsync(dataLine.Id, regionCode);
-        /*var pointsTask = GetNaldLicencePointsAsync(dataLine.Id, regionCode);
-        var quantitiesTask = GetNaldLicenceQuantitiesAsync(dataLine.Id, regionCode);*/
-
-        var versions = await versionsTask;
+        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
+        versions = versions
+            .OrderByDescending(v => v.IssueNo)
+            .ThenBy(v => v.IncrNo)
+            .ToList();
         
         foreach (var version in versions)
         {
-            NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);   
+            NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);
+            break;
         }
 
+        var purposesTask = GetNaldLicencePurposesAsync(
+            naldData!.Id,
+            naldData.IssueNo!.Value,
+            naldData.IncrNo!.Value,
+            regionCode);
+        
+        var quantitiesTask = GetNaldLicenceQuantitiesAsync(
+            naldData.Id,
+            naldData.IssueNo!.Value,
+            naldData.IncrNo!.Value,
+            regionCode);
+        
         var purposes = await purposesTask;
         
         foreach (var purpose in purposes)
         {
-            NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);               
-        }/*
-        
-        foreach (var point in await pointsTask)
-        {
-            NaldHelper.AddNaldAbstractionLicencePointsData(point, naldData);               
+            NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);
+            
+            var points = await GetNaldLicencePointsAsync(purpose.Id!, regionCode);
+            
+            foreach (var point in points)
+            {
+                NaldHelper.AddNaldAbstractionLicencePointsData(point, naldData);               
+            }
         }
         
-        foreach (var quantity in await quantitiesTask)
+        var quantities = await quantitiesTask;
+        
+        foreach (var quantity in quantities)
         {
             NaldHelper.AddNaldAbstractionLicenceQuantitiesData(quantity, naldData);               
-        }*/
+        }
         
         return naldData;
     }
 
     private async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(
         int abvAablId,
+        int issueNumber,
+        int incrementNumber,
         int regionCode)
     {
         await using var connection = GetPostgresConnection();
@@ -237,7 +255,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_QUANTITIES"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
-                                AND "AabvAablId" = @AabvAablId
+                                AND "AABV_AABL_ID" = @AabvAablId
+                                AND "AABV_ISSUE_NO" = @AabvIssueNo
+                                AND "AABV_INCR_NO" = @AabvIncrNo     
                            """;
 
         return (await QueryAsync<NaldLicenceQuantitiesDataLine>(
@@ -247,12 +267,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 RegionCode = regionCode,
-                AabvAablId = abvAablId
+                AabvAablId = abvAablId,
+                AabvIssueNo = issueNumber,
+                AabvIncrNo = incrementNumber
             })).ToList();
     }
 
     private async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(
-        int abvAablId,
+        string purposeId,
         int regionCode)
     {
         await using var connection = GetPostgresConnection();
@@ -305,8 +327,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            JOIN nald."NALD_POINTS" p
                                ON pp."AAIP_ID" = p."ID"
                                AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
-                           WHERE p."FGAC_REGION_CODE" = @RegionCode
-                                AND p."AabvAablId" = @AabvAablId;
+                           WHERE pp."FGAC_REGION_CODE" = @RegionCode
+                                AND pp."AABP_ID" = @PurposeId;
                            """;
 
         return (await QueryAsync<NaldLicencePointDataLine>(
@@ -316,12 +338,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 RegionCode = regionCode,
-                AabvAablId = abvAablId
+                PurposeId = int.Parse(purposeId)
             })).ToList();
     }
 
     private async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(
         int abvAablId,
+        int issueNumber,
+        int incrementNumber,
         int regionCode)
     {
         await using var connection = GetPostgresConnection();
@@ -366,6 +390,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                ON p."APUR_APUS_CODE" = pu."CODE"
                            WHERE p."FGAC_REGION_CODE" = @RegionCode
                                 AND p."AABV_AABL_ID" = @AabvAablId
+                                AND p."AABV_ISSUE_NO" = @AabvIssueNo
+                                AND p."AABV_INCR_NO" = @AabvIncrNo
                            """;
 
         return (await QueryAsync<NaldLicencePurposeDataLine>(
@@ -375,7 +401,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 RegionCode = regionCode,
-                AabvAablId = abvAablId
+                AabvAablId = abvAablId,
+                AabvIssueNo = issueNumber,
+                AabvIncrNo = incrementNumber
             })).ToList();
     }
 

@@ -27,6 +27,30 @@ export function ProcessRunFilters({
         return Array.from(issuers).sort();
     }, [data]);
 
+    // Generate unique years for dropdown
+    const uniqueYears = useMemo(() => {
+        const years = new Set(
+            data
+                .map(item => item.issueDate?.split('-')[0])
+                .filter(year => year && parseInt(year) >= 1900)
+        );
+        return Array.from(years).sort().reverse();
+    }, [data]);
+
+    // Generate unique license sets for dropdown
+    const uniqueLicenseSets = useMemo(() => {
+        const sets = new Set<string>();
+        data.forEach(item => {
+            item.licenceSets?.slice(1).forEach(ls => {
+                if (ls.shortLicenceSetId) {
+                    sets.add(ls.shortLicenceSetId);
+                }
+            });
+        });
+        let results= Array.from(sets).sort();
+        return results;
+    }, [data]);
+
     return (
         <tr>
             <td></td>
@@ -117,6 +141,49 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    value={
+                        query.ocrScan === undefined
+                            ? ""
+                            : String(query.purposesEmpty)
+                    }
+                    onChange={e =>
+                        updateQuery(
+                            "ocrScan",
+                            e.target.value === ""
+                                ? undefined
+                                : e.target.value === "true"
+                        )
+                    }
+
+                >
+                    <option value="">All scan</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </td>
+            <td>
+                <select
+                    value={ query.issueYear === undefined
+                        ? ""
+                        : String(query.issueYear)}
+                    onChange={e =>
+                        updateQuery(
+                            "issueYear",
+                            e.target.value === "" ? undefined : Number(e.target.value)
+                        )
+                    }
+                >
+                    <option value="">All years</option>
+
+                    {uniqueYears.map(year => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
+            </td>
+            <td>
+                <select
                     value={query.issuer ?? ""}
                     onChange={e =>
                         updateQuery(
@@ -134,66 +201,7 @@ export function ProcessRunFilters({
                     ))}
                 </select>
             </td>
-            <td>
-                <select
-                    value={
-                        query.ocrScan === undefined
-                            ? ""
-                            : String(query.purposesEmpty)
-                    }
-                    onChange={e =>
-                        updateQuery(
-                            "ocrScan",
-                            e.target.value === ""
-                                ? undefined
-                                : e.target.value === "true"
-                        )
-                    }
-                        
-                >
-                    <option value="">All scan</option>
-                    <option value="true">True</option>
-                    <option value="false">False</option>
-                </select>
-            </td>
-            <td>
-                <select
-                    value={query.issuer ?? ""}
-                    onChange={e =>
-                        updateQuery(
-                            "issuer",
-                            e.target.value === "" ? undefined : e.target.value
-                        )
-                    }
-                >
-                    <option value="">All issue date</option>
 
-                    {uniqueIssuers.map(issuer => (
-                        <option key={issuer} value={issuer}>
-                            {issuer}
-                        </option>
-                    ))}
-                </select>
-            </td>
-            <td>
-                <select
-                    value={query.issuer ?? ""}
-                    onChange={e =>
-                        updateQuery(
-                            "issuer",
-                            e.target.value === "" ? undefined : e.target.value
-                        )
-                    }
-                >
-                    <option value="">All</option>
-
-                    {uniqueIssuers.map(issuer => (
-                        <option key={issuer} value={issuer}>
-                            {issuer}
-                        </option>
-                    ))}
-                </select>
-            </td>
             <td>
                 <select
                     value={
@@ -213,64 +221,74 @@ export function ProcessRunFilters({
                 >
                     <option value="">All mean</option>
                     <option value="true">True</option>
-                    <option value="false">False</option>                 
+                    <option value="false">False</option>
                 </select>
             </td>
+            
+
             <td>
                 <select
-                    value={query.issuer ?? ""}
+                    value={query.linkedLicencesType ?? ""}
                     onChange={e =>
                         updateQuery(
-                            "issuer",
+                            "linkedLicencesType",
                             e.target.value === "" ? undefined : e.target.value
                         )
                     }
                 >
-                    <option value="">All issuers</option>
+                    <option value="">All</option>
+                    <option value="AbstractionLimits">In Limits</option>
+                    <option value="FurtherConditions">In Further Conditions</option>
+                    <option value="ReasonsForConditions">In Reasons For Conditions</option>
+                    <option value="Additional">In Additional</option>
+                    <option value="Records">In Records</option>
+                    <option value="Points">In Points</option>
+                    <option value="LicenceHistory">In Licence History</option>
+                    <option value="Purposes">In Purposes</option>
+                    <option value="ImplicitBackLink">Implicit back link</option>
+                    <option value="OtherConditions">Other Conditions</option>
+                    <option value="FurtherProvisions">Further Provisions</option>
+                    
+                </select>
+            </td>
+            <td>
+                <select
+                    value={query.ShortLicenceSetId ?? ""}
+                    onChange={e =>
+                        updateQuery(
+                            "ShortLicenceSetId",
+                            e.target.value === "" ? undefined : e.target.value
+                        )
+                    }
+                >
+                    <option value="">All Licence Sets</option>
 
-                    {uniqueIssuers.map(issuer => (
-                        <option key={issuer} value={issuer}>
-                            {issuer}
+                    {uniqueLicenseSets.map(licenceSet => (
+                        <option key={licenceSet} value={licenceSet}>
+                            {licenceSet}
                         </option>
                     ))}
                 </select>
             </td>
             <td>
                 <select
-                    value={query.issuer ?? ""}
+                    value={query.verificationType ?? ""}
                     onChange={e =>
                         updateQuery(
-                            "issuer",
+                            "verificationType",
                             e.target.value === "" ? undefined : e.target.value
                         )
                     }
                 >
-                    <option value="">All issuers</option>
-
-                    {uniqueIssuers.map(issuer => (
-                        <option key={issuer} value={issuer}>
-                            {issuer}
-                        </option>
-                    ))}
-                </select>
-            </td>
-            <td>
-                <select
-                    value={query.issuer ?? ""}
-                    onChange={e =>
-                        updateQuery(
-                            "issuer",
-                            e.target.value === "" ? undefined : e.target.value
-                        )
-                    }
-                >
-                    <option value="">All issuers</option>
-
-                    {uniqueIssuers.map(issuer => (
-                        <option key={issuer} value={issuer}>
-                            {issuer}
-                        </option>
-                    ))}
+                    <option value="">All</option>
+                    <option value="AutoConfirm">AutoConfirm</option>
+                    <option value="AutoWarn">AutoWarn</option>
+                    <option value="AutoFail">AutoFail</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Removed">Removed</option>
+                    <option value="Edited">Edited</option>
+                    <option value="Added">Added</option>
+                  
                 </select>
             </td>
         </tr>

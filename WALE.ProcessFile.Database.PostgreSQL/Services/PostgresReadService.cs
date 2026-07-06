@@ -195,7 +195,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                     )
                 )
             )
-            
+            AND (
+                @IssueYear IS NULL
+                OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
+            )
             """;
 
         return await QuerySingleOrDefaultAsync<int>(
@@ -212,7 +215,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 processRunQuery.AggregatesEmpty,
                 processRunQuery.LimitsEmpty,
                 processRunQuery.PointsEmpty,
-                processRunQuery.PurposesEmpty
+                processRunQuery.PurposesEmpty,
+                processRunQuery.IssueYear
             });
     }
 
@@ -648,7 +652,41 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                    )
                                )
                            )
-
+                           AND (
+                               @IssueYear IS NULL
+                               OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
+                           )
+                           AND (
+                               @LinkedLicencesType IS NULL
+                               OR trim(@LinkedLicencesType) = ''
+                               OR (
+                                   @LinkedLicencesType = 'ImplicitBackLink'
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
+                                       ) linked_licence
+                                       CROSS JOIN jsonb_array_elements(
+                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
+                                       ) contained
+                                       WHERE contained ->> 'direction' = 'Incoming'
+                                   )
+                               )
+                               OR (
+                                   @LinkedLicencesType <> 'ImplicitBackLink'
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
+                                       ) linked_licence
+                                       CROSS JOIN jsonb_array_elements(
+                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
+                                       ) contained
+                                       WHERE contained ->> 'direction' = 'Outgoing'
+                                         AND contained ->> 'sectionName' = @LinkedLicencesType
+                                   )
+                               )
+                           )
                            ORDER BY licence_id
                            LIMIT @take
                            OFFSET @skip;
@@ -670,7 +708,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 query.AggregatesEmpty,
                 query.LimitsEmpty,
                 query.PointsEmpty,
-                query.PurposesEmpty
+                query.PurposesEmpty,
+                query.IssueYear,
+                query.LinkedLicencesType
             });
 
      return results.Select(r =>

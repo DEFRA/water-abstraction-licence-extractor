@@ -3263,12 +3263,12 @@ export class Client {
      * @param pointsEmpty (optional) 
      * @param issueYear (optional) 
      * @param meansFound (optional) 
-     * @param licenceSets (optional) 
+     * @param shortLicenceSetId (optional) 
      * @param linkedLicencesType (optional) 
-     * @param verified (optional) 
+     * @param verificationType (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, licenceSets: string | undefined, linkedLicencesType: string | undefined, verified: string | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -3321,18 +3321,18 @@ export class Client {
             throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
         else if (meansFound !== undefined)
             url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
-        if (licenceSets === null)
-            throw new globalThis.Error("The parameter 'licenceSets' cannot be null.");
-        else if (licenceSets !== undefined)
-            url_ += "LicenceSets=" + encodeURIComponent("" + licenceSets) + "&";
+        if (shortLicenceSetId === null)
+            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
+        else if (shortLicenceSetId !== undefined)
+            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
         if (linkedLicencesType === null)
             throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
         else if (linkedLicencesType !== undefined)
             url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
-        if (verified === null)
-            throw new globalThis.Error("The parameter 'verified' cannot be null.");
-        else if (verified !== undefined)
-            url_ += "Verified=" + encodeURIComponent("" + verified) + "&";
+        if (verificationType === null)
+            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
+        else if (verificationType !== undefined)
+            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

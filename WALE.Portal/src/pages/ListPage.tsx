@@ -33,9 +33,9 @@ function ListPage() {
         ocrScan: undefined,
         issueYear: undefined,
         meansFound: undefined,
-        licenceSets: '',
+        ShortLicenceSetId: '',
         linkedLicencesType: '',
-        verified: undefined
+        verificationType: undefined
     });
     const processRunId = searchParams.get('processRunId');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
@@ -87,9 +87,9 @@ function ListPage() {
                 currentQuery.pointsEmpty,
                 currentQuery.issueYear,
                 currentQuery.meansFound,
-                currentQuery.licenceSets,
+                currentQuery.ShortLicenceSetId,
                 currentQuery.linkedLicencesType,
-                currentQuery.verified
+                currentQuery.verificationType
             );
 
             setOutputList(listDataItems.records);
@@ -103,7 +103,7 @@ function ListPage() {
         } finally {
             setLoading(false);
         }
-    }, [processRunId, pageNumber, query]);
+    }, [processRunId, pageNumber, query, totalLicences]);
 
     useEffect(() => {
         fetchOutputList();

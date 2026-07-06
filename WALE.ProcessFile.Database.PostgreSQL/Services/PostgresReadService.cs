@@ -235,6 +235,29 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return naldData;
     }
 
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               file_id,
+                               dms_file_path,
+                               process_run_id,
+                               status,
+                               status_date_utc
+                           FROM sharepoint_fileid
+                           WHERE file_id = @FileId
+                           """;
+
+        var results = await QueryAsync<DmsFileIdInformation>(
+            connection,
+            sql,
+            0,
+            new { FileId = fileId });
+
+        return results.ToList();
+    }
+
     private async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(
         int abvAablId,
         int issueNumber,

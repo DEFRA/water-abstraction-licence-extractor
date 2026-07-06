@@ -1015,7 +1015,7 @@ public static class WalSchemaConverter
             throw new Exception("DMS file path is null - shouldn't happen");
         }
 
-        var beforeRecordList = lookupConfig.DmsFileIds.GetValueOrDefault(dmsDataForFile.FileId);
+        var beforeRecordList = await lookupConfig.CacheService.GetDmsFileIdInformationAsync(dmsDataForFile.FileId);
 
         var outputDmsFileIdInformation = new DmsFileIdInformation
         {
@@ -1025,12 +1025,10 @@ public static class WalSchemaConverter
             StatusDateUtc = DateTime.UtcNow
         };
 
-        if (beforeRecordList == null)
+        if (beforeRecordList.Count == 0)
         {
             outputDmsFileIdInformation.Status = "FirstSeen";
-            
             await lookupConfig.CacheService.AddDmsFileIdInformationAsync(outputDmsFileIdInformation);
-            lookupConfig.DmsFileIds.TryAdd(outputDmsFileIdInformation.FileId, [outputDmsFileIdInformation]);
         }
         else
         {
@@ -1052,7 +1050,6 @@ public static class WalSchemaConverter
             outputDmsFileIdInformation.Status = isFilenameSame ? "Moved" : "Renamed";
 
             await lookupConfig.CacheService.AddDmsFileIdInformationAsync(outputDmsFileIdInformation);
-            lookupConfig.DmsFileIds[outputDmsFileIdInformation.FileId].Add(outputDmsFileIdInformation);
         }
 
         return outputDmsFileIdInformation;

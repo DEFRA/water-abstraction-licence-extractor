@@ -133,7 +133,6 @@ public class CompareOcrPdfTests
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            [],
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

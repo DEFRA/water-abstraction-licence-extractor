@@ -524,6 +524,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        var path = "/Extractor/Dms/GetFileIds";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsFileIdInformation>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         var path = "/Extractor/Dms/AddFileIdInformation";

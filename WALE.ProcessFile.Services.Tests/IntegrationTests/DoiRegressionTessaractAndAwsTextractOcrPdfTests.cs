@@ -81,7 +81,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            [],
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

@@ -46,7 +46,6 @@ public class FileProcessSingleService(
         var abstractionAndImpoundmentLicencesTask =
             SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
 
-        var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync(); // Could do just the bit thats needed on the fily
         var dmsFileTask = DmsHelper.GetDmsFilesAndMappingAsync( // TODO only need 1, could do it on the fly
             fileService,
             string.Empty,
@@ -57,17 +56,11 @@ public class FileProcessSingleService(
 
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
 
-        var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
-            cacheService);
-
-
-        var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
-            await dmsFileIdInformationListTask);
+        var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService); // TODO look at if can optimise this
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             allDmsData,
-            dmsFileIdInformationDict,
             await firstNamesCsvTask,
             fileService,
             cacheService,

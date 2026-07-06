@@ -210,7 +210,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

@@ -82,8 +82,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
+            _fileLicenceMapping,       
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

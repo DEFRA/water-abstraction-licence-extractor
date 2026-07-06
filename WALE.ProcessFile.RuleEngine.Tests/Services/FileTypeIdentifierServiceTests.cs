@@ -98,7 +98,6 @@ public class FileTypeIdentifierServiceTests
             [],
             new Dictionary<string, DmsFileData>(),
             [],
-            [],
             new LocalFileService(""),
             new FileSystemCacheService(""),
             1);

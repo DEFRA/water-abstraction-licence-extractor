@@ -501,6 +501,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        return Task.FromResult(new List<DmsFileIdInformation>());
+    }
+
     public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         return Task.CompletedTask;

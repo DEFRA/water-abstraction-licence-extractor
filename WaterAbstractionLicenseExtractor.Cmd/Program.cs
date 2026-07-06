@@ -45,7 +45,6 @@ async Task ProgramAsync()
     
     var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
 
-    var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var (dmsFilesToProcess, allDmsData) =
         await DmsHelper.GetDmsFilesAndMappingAsync(
             services.FileService!,
@@ -70,16 +69,12 @@ async Task ProgramAsync()
 
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
 
-    var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
-        await dmsFileIdInformationListTask);
-
     const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
         WalLabelConfiguration.GetLabels(),
         allDmsData,
-        dmsFileIdInformationDict,
         firstNamesCsv,
         services.FileService,
         services.CacheService!,

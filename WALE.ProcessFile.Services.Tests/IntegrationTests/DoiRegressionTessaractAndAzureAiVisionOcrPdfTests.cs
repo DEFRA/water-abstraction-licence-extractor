@@ -85,7 +85,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

@@ -75,8 +75,7 @@ public class AzureOpenAiOcrPdfTests
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
+            _fileLicenceMapping,        
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

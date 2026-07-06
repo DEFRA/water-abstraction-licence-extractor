@@ -309,6 +309,11 @@ public class DatabaseCacheService(
         return databaseReadService.GetDmsFileIdInformationAsync();
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        return databaseReadService.GetDmsFileIdInformationAsync(fileId);
+    }
+
     public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         return databaseWriteService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);

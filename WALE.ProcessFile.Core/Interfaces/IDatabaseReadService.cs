@@ -109,4 +109,6 @@ public interface IDatabaseReadService
     Task<int> GetTotalLicenceCountAsync(int processRunId,  string? searchTerm);
     
     Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
+    
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
 }

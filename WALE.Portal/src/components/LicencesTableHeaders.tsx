@@ -1,6 +1,5 @@
-import {useMemo} from 'react';
 import {OutputListDataItem} from '../api/generated/apiClient';
-import {FilterSelect} from './FilterSelect';
+
 import type {FilterConfig, FilterType, OutputListDataItemKey} from "../utils/types.ts";
 
 interface LicencesTableHeadersProps {
@@ -13,45 +12,12 @@ interface LicencesTableHeadersProps {
     showSingles: boolean;
 }
 
-export function LicencesTableHeaders({
-                                         data,
-                                         onFilterChange,
-                                         onResetFilters,
+export function LicencesTableHeaders({  
                                          onToggleSort,
                                          onToggleSingles,
-                                         filters,
                                          showSingles
                                      }: LicencesTableHeadersProps) {
-
-    // Generate unique issuers for dropdown
-    const uniqueIssuers = useMemo(() => {
-        const issuers = new Set(data.map(item => item.issuer).filter(Boolean));
-        return ['All', ...Array.from(issuers).sort()];
-    }, [data]);
-
-    // Generate unique years for dropdown
-    const uniqueYears = useMemo(() => {
-        const years = new Set(
-            data
-                .map(item => item.issueDate?.split('-')[0])
-                .filter(year => year && parseInt(year) >= 1900)
-        );
-        return ['All', ...Array.from(years).sort().reverse()];
-    }, [data]);
-
-    // Generate unique license sets for dropdown
-    const uniqueLicenseSets = useMemo(() => {
-        const sets = new Set<string>();
-        data.forEach(item => {
-            item.licenceSets?.slice(1).forEach(ls => {
-                if (ls.shortLicenceSetId) {
-                    sets.add(ls.shortLicenceSetId);
-                }
-            });
-        });
-        return ['All', ...Array.from(sets).sort()];
-    }, [data]);
-
+    
     const handleSort = (field: OutputListDataItemKey) => {
         onToggleSort(field);
     };

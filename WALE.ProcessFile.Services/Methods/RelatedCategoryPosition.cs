@@ -215,10 +215,6 @@ public static class RelatedCategoryPosition
                 var categoryItem = categoryItemsOnLine[lineCount++];
                 labelGroupResult.CharPosition = categoryItem.CharPosition;
             }
-            else
-            {
-                // TODO - why? log? error?
-            }
 
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else

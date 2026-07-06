@@ -1981,6 +1981,48 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         return results.ToList();
     }
+    
+    public async Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               process_run_id, 
+                               description, 
+                               start_date_time_utc, 
+                               end_date_time_utc, 
+                               number_of_files
+                           FROM process_run
+                           """;
+
+        return (await QueryAsync<ProcessRun>(
+            connection,
+            sql,
+            0)).ToList();
+    }
+    
+    public async Task<List<LicenceSetTable>> GetProcessRunLicenceSetsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT DISTINCT
+                               ls.licence_set_id as LicenceSetTable,
+                               ls.short_licence_set_id as SchemaLicenceSetId, 
+                               ls.schema_licence_set_id as SchemaLicenceSetId,
+                           FROM licence_set ls
+                           WHERE
+                               ls.process_run_id = @ProcessRunId
+                           """;
+
+        return (await QueryAsync<LicenceSetTable>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+            })).ToList();
+    }
 
     public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
     {

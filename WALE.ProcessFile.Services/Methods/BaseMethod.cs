@@ -185,7 +185,7 @@ public static class BaseMethod
     }
     
     public static List<DocumentLine> RestrictToPossibilities(
-        IReadOnlyList<string>? possibilities,
+        IReadOnlyList<TextToMatch>? possibilities,
         IReadOnlyList<DocumentLine> lines)
     {
         if (possibilities?.Any() != true)
@@ -193,21 +193,23 @@ public static class BaseMethod
             return lines.ToList();
         }
         
-
-
         return lines
             .Where(line => possibilities
-                .Any(possibility => line.Text.Contains(possibility)))
+                .Any(possibility => possibility.LineMustStartWith
+                    ? line.Text.StartsWith(possibility.Text)
+                    : line.Text.Contains(possibility.Text)))
             .Select(line =>
             {
                 var possibility = possibilities
-                    .First(possibility => line.Text.Contains(possibility));
+                    .First(possibility => possibility.LineMustStartWith
+                        ? line.Text.StartsWith(possibility.Text)
+                        : line.Text.Contains(possibility.Text));
 
                 var possibilityWords = line.Columns
                     .SelectMany(c => c.Words)
                     .ToList();
                 
-                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
                 
                 var clonedLine = line.Clone();
                 clonedLine.Columns.Clear();
@@ -271,18 +273,18 @@ public static class BaseMethod
         }
 
         var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility) == true);
+            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text) == true);
 
         if (possiblityFound)
         {
             var possibility = request.label.Possibilities
-                .First(possibility => result.Text!.First().Text.Contains(possibility));
+                .First(possibility => result.Text!.First().Text.Contains(possibility.Text));
             
             var possibilityWords = result.Text!.First().Columns
                 .SelectMany(c => c.Words)
                 .ToList();
             
-            possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+            possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
             
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
@@ -309,19 +311,19 @@ public static class BaseMethod
         return results
             .Where(result => request.label.Possibilities
                 .Any(possibility =>
-                    result.Text?.FirstOrDefault()?.Text.Contains(possibility) == true))
+                    result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text) == true))
             .Select(result =>
             {
                 var lineText = result.Text!.First().Text;
                 
                 var possibility = request.label.Possibilities
-                    .First(possibility => lineText.Contains(possibility));
+                    .First(possibility => lineText.Contains(possibility.Text));
 
                 var possibilityWords = result.Text!.First().Columns
                     .SelectMany(c => c.Words)
                     .ToList();
                 
-                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility);
+                possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
                 
                 var clonedLine = result.Text!.First().Clone();
                 clonedLine.Columns.Clear();

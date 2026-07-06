@@ -388,4 +388,9 @@ public class DatabaseCacheService(
     {
         return databaseWriteService.ClearVersionFilesToDownloadAsync();
     }
+
+    public Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        throw new NotImplementedException();
+    }
 }

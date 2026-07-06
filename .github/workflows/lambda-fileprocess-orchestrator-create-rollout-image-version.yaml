@@ -1,0 +1,45 @@
+name: File Process Orchestrator Lambda - Create rollout Image Version and Push ECR
+
+on:
+  workflow_dispatch:
+    inputs:
+      DEVIMAGEVERSION:
+        description: 'DEV Image Version'
+        type: string
+        required: true
+      tag_short_description:
+        description: "Short description for the git tag"
+        required: true
+        type: string
+
+
+permissions: {}   # disables all default permissions
+jobs:
+  # 1️⃣ First run the dev build & sonar analysis
+  build-and-sonar:
+    uses: ./.github/workflows/lambda-fileprocess-orchestrator-build-and-sonar-analyze-template.yaml
+    with:
+      dotnet_application_solution_name: WaterAbstractionLicenseExtractor
+      environment: rollout
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    permissions:
+      id-token: write
+      contents: read
+  
+  # 2️⃣ Then push the image after build succeeds  
+  push-image:
+    needs: build-and-sonar   # ensures sonar must complete first
+    uses: ./.github/workflows/lambda-fileprocess-orchestrator-push-image-template.yaml
+    with:
+      IMAGE_VERSION: ${{ github.event.inputs.DEVIMAGEVERSION }}
+      repository: wli/wradi-lambda-fileprocess-orchestrator
+      dev_image_version_release: true
+      tag_short_description: ${{ github.event.inputs.tag_short_description }}
+    secrets:
+      AWS_ENV_REGION: ${{ secrets.AWS_ENV_REGION }}
+      AWS_ENV_ACCOUNT: ${{ secrets.AWS_ENV_ACCOUNT }}
+      AWS_ENV_ROLE: ${{ secrets.AWS_ENV_ROLE }}
+    permissions:
+      id-token: write
+      contents: write

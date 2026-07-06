@@ -23,8 +23,25 @@ public class LabelGroupResult
     
     public string? LabelGroupName { get; set; }
     
+    [JsonIgnore]
     public LabelToMatch? MatchedLabel { get; set; }
-    
+
+    private string? _matchedLabelName;
+    public string? MatchedLabelName
+    {
+        get => MatchedLabel?.Name ?? _matchedLabelName;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                _matchedLabelName = null;
+                return;
+            }
+            
+            _matchedLabelName = value;
+        }
+    }
+
     public double? Confidence
     {
         get

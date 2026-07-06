@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
@@ -39,7 +40,7 @@ public class BaseFixture : IDisposable
     {
         lock (_firstNamesLock)
         {
-            return _firstNamesCsvTask ??= CompanyName.GetFirstNamesCsvFromFileAsync();
+            return _firstNamesCsvTask ??= CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
         }
     }
     

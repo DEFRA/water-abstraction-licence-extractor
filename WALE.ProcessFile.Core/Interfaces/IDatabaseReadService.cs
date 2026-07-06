@@ -33,6 +33,8 @@ public interface IDatabaseReadService
     
     Task<List<ProcessRun>> GetProcessRunsAsync();
     
+    Task<List<ProcessRun>> GetAllProcessRunsAsync();
+    
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
     Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query);
@@ -40,7 +42,7 @@ public interface IDatabaseReadService
     Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
-    
+
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);

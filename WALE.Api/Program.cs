@@ -1,7 +1,12 @@
+using Amazon;
+using Amazon.Runtime;
+using Amazon.SQS;
 using Scalar.AspNetCore;
+using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
+using WALE.ProcessFile.Services.AwsSqs;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 
@@ -63,22 +68,41 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var dbPassword = config.GetValue<string>("POSTGRESQL_PASSWORD")
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
-    var s3RegionName = config.GetValue<string>("AwsS3RegionName")
-        ?? throw new NullReferenceException("AwsS3RegionName");
+    var awsRegionName = config.GetValue<string>("AwsRegionName")
+        ?? throw new NullReferenceException("AwsRegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
-    var s3AccessKey = config.GetValue<string>("AwsS3AccessKey");
-    var s3SecretKey = config.GetValue<string>("AwsS3SecretKey");
-    var s3SessionToken = config.GetValue<string>("AwsS3SessionToken");
+    var awsAccessKey = config.GetValue<string>("AwsAccessKey");
+    var awsSecretKey = config.GetValue<string>("AwsSecretKey");
+    var awsSessionToken = config.GetValue<string>("AwsSessionToken");
+    
+    services
+        .AddSingleton<IAmazonSQS>(_ => AwsSqsHelper.GetAwsSqsClient(
+            awsRegionName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken))
+        .AddOptions<AwsSqsQueueConfig>()
+        .Bind(config.GetSection("AwsQueueConfig"))
+        .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
+            "AwsQueueConfig:OrchestratorQueue is required")
+        .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.FileProcessQueue),
+            "AwsQueueConfig:FileProcessQueue is required")
+        .ValidateOnStart();
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddS3Services(
-            s3RegionName,
+            awsRegionName,
             s3BucketName,
-            s3AccessKey,
-            s3SecretKey,
-            s3SessionToken)        
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken)   
+        .AddAwsSqsServices(
+            awsRegionName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),

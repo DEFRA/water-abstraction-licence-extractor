@@ -15,8 +15,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO process_run (description, start_date_time_utc, number_of_files) 
-                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles) 
+                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status) 
+                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status) 
                            RETURNING process_run_id
                            """;
 
@@ -28,10 +28,132 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 processRun.Description,
                 processRun.StartDateTimeUtc,
-                processRun.NumberOfFiles
+                processRun.NumberOfFiles,
+                processRun.Status
             });
 
         return processRun;
+    }
+
+    public async Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run pr
+                           SET status = 'Completed',
+                               end_date_time_utc = now()
+                           WHERE pr.process_run_id = @ProcessRunId
+                             AND pr.status <> 'Completed'
+                             AND pr.number_of_files = (
+                                 SELECT COUNT(*)
+                                 FROM process_run_file prf
+                                 WHERE prf.process_run_id = pr.process_run_id
+                             )
+                             AND NOT EXISTS (
+                                 SELECT 1
+                                 FROM process_run_file prf
+                                 WHERE prf.process_run_id = pr.process_run_id
+                                   AND prf.end_date_time_utc IS NULL
+                             )
+                           RETURNING pr.end_date_time_utc;
+                           """;
+
+      processRun.EndDateTimeUtc =  await ExecuteDateTimeScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRun.ProcessRunId,
+            });
+        
+        return processRun;
+    }
+
+    public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO public.process_run_file 
+                           (
+                               process_run_id, 
+                               file_name, 
+                               start_date_time_utc
+                           )
+                           VALUES 
+                           (
+                               @ProcessRunId, 
+                               @FileName, 
+                               @UTCStartDateTime
+                           )
+                           ON CONFLICT (process_run_id, file_name) DO NOTHING
+                           RETURNING process_run__file_id;
+                           """;
+
+        processRunFile.ProcessRunFileId = await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.ProcessRunId,
+                processRunFile.FileName,
+                UTCStartDateTime = DateTime.UtcNow
+            });
+
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run_file
+                           SET
+                               end_date_time_utc = @UTCEndDateTime
+                           WHERE
+                                process_run__file_id = @ProcessRunFileId
+                           AND file_name = @FileName     
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.FileName,
+                processRunFile.ProcessRunFileId,
+                UTCEndDateTime = DateTime.UtcNow
+            });
+
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run_file
+                           SET
+                               error_message = @ErrorMessage
+                           WHERE
+                                process_run__file_id = @ProcessRunFileId
+                           AND file_name = @FileName     
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                processRunFile.FileName,
+                processRunFile.ProcessRunFileId,
+                processRunFile.ErrorMessage
+            });
+
+        return processRunFile;
     }
 
     public async Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId)
@@ -463,7 +585,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            UPDATE process_run 
-                           SET end_date_time_utc = @EndDateTimeUtc 
+                           SET end_date_time_utc = @EndDateTimeUtc, Status = 'Completed',  success_count = @SuccessCount
                            WHERE process_run_id = @ProcessRunId
                            """;
 
@@ -473,8 +595,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
+                processRun.SuccessCount,
                 processRun.ProcessRunId,
-                EndDateTimeUtc = DateTime.UtcNow
+                EndDateTimeUtc = DateTime.UtcNow,
+                
             });
     }
 
@@ -970,7 +1094,47 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
+    
+    private async Task<DateTime> ExecuteDateTimeScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
+    {
+        try
+        {
+            var dtStart = DateTime.Now;
+            var thisQueryNumber = NpgsqlDataSourceProvider.QueryNumber++;
 
+            if (NpgsqlDataSourceProvider.AddDebugLogging)
+            {
+                NpgsqlDataSourceProvider.Queries.Add((thisQueryNumber, sql));
+            }
+
+            var result = await connection.ExecuteScalarAsync<DateTime>(sql, param);
+            var duration =  DateTime.Now - dtStart;
+
+            if (duration.TotalSeconds > 1)
+            {
+                ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - Query {thisQueryNumber} - {sql.Replace("\n", " ")} took {duration.TotalMilliseconds}ms");
+            }
+
+            return result;
+        }
+        catch (NpgsqlException ex)
+        {
+            if (ex.InnerException is not EndOfStreamException)
+            {
+                throw;
+            }
+            
+            if (retryNumber > RetryHelper.MaxRetries)
+            {
+                throw;
+            }
+            
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresWriteService)} - ExecuteScalarAsync retrying");
+
+            await RetryHelper.WaitWithMessageAsync(retryNumber, nameof(PostgresWriteService));
+            return await ExecuteDateTimeScalarAsync(GetPostgresConnection(), sql, retryNumber + 1, param);
+        }
+    }
     private async Task<int> ExecuteScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

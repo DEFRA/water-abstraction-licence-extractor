@@ -117,7 +117,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("RecordsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(8)
                         ]
                     }
                 ]
@@ -187,7 +187,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("ReasonsForConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -257,7 +257,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("OtherConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(7)
                         ]
                     }
                 ]
@@ -339,7 +339,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("AdditionalLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -555,7 +555,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("FurtherProvisionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(null)
                         ]
                     }
                 ]
@@ -596,29 +596,29 @@ public static class WalLabelConfiguration
                     {
                         Name = "FurtherConditionsPoint",
                         TextStart = [
-                            new("9.1"),
-                            new("9.2"),
-                            new("9.3"),
-                            new("9.4"),
-                            new("9.5"),
-                            new("9.6"),
-                            new("9.7"),
-                            new("9.8"),
-                            new("9.9"),
-                            new("9.10"),
+                            new("9.1") { LineMustStartWith = true},
+                            new("9.2") { LineMustStartWith = true},
+                            new("9.3") { LineMustStartWith = true},
+                            new("9.4") { LineMustStartWith = true},
+                            new("9.5") { LineMustStartWith = true},
+                            new("9.6") { LineMustStartWith = true},
+                            new("9.7") { LineMustStartWith = true},
+                            new("9.8") { LineMustStartWith = true},
+                            new("9.9") { LineMustStartWith = true},
+                            new("9.10") { LineMustStartWith = true},
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
-                            new("9.2"),
-                            new("9.3"),
-                            new("9.4"),
-                            new("9.5"),
-                            new("9.6"),
-                            new("9.7"),
-                            new("9.8"),
-                            new("9.9"),
-                            new("9.10"),
-                            new("9.11"),
+                            new("9.2") { LineMustStartWith = true},
+                            new("9.3") { LineMustStartWith = true},
+                            new("9.4") { LineMustStartWith = true},
+                            new("9.5") { LineMustStartWith = true},
+                            new("9.6") { LineMustStartWith = true},
+                            new("9.7") { LineMustStartWith = true},
+                            new("9.8") { LineMustStartWith = true},
+                            new("9.9") { LineMustStartWith = true},
+                            new("9.10") { LineMustStartWith = true},
+                            new("9.11") { LineMustStartWith = true},
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -629,7 +629,7 @@ public static class WalLabelConfiguration
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
                         SubLabels = [
                             GetLinkedLicenceNumber("FurtherConditionsLinkedLicenceNumber"),
-                            ..GetLimitLineSubLabels()
+                            ..GetLimitLineSubLabels(9)
                         ]
                     }
                 ]
@@ -669,26 +669,26 @@ public static class WalLabelConfiguration
                     new("Yorkshire Water Authority")                  
                 ],
                 Possibilities = [
-                    "Environment Agency",
-                    "Lee Conservancy Catchment Board",
-                    "National Rivers Authority",
-                    "South Water Authority",
-                    "Northumbrian Water Authority",
-                    "Northumbrian River Authority",
-                    "North West Water",
-                    "Wessex Water Authority",
-                    "Wessex Water",
-                    "Essex River Authority",
-                    "Thames Water Authority",
-                    "Mersey and Weaver River Authority",
-                    "Conservators of the The River Thames",
-                    "Yorkshire Ouse and Hull River Authority",
-                    "Yorkshire River Authority",
-                    "Avon and Dorset River authority",
-                    "The Somerset River Authority",
-                    "Southern Water Authority",
-                    "Sussex River Authority",
-                    "Yorkshire Water Authority"
+                    new("Environment Agency"),
+                    new("Lee Conservancy Catchment Board"),
+                    new("National Rivers Authority"),
+                    new("South Water Authority"),
+                    new("Northumbrian Water Authority"),
+                    new("Northumbrian River Authority"),
+                    new("North West Water"),
+                    new("Wessex Water Authority"),
+                    new("Wessex Water"),
+                    new("Essex River Authority"),
+                    new("Thames Water Authority"),
+                    new("Mersey and Weaver River Authority"),
+                    new("Conservators of the The River Thames"),
+                    new("Yorkshire Ouse and Hull River Authority"),
+                    new("Yorkshire River Authority"),
+                    new("Avon and Dorset River authority"),
+                    new("The Somerset River Authority"),
+                    new("Southern Water Authority"),
+                    new("Sussex River Authority"),
+                    new("Yorkshire Water Authority")
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -983,28 +983,28 @@ public static class WalLabelConfiguration
                                     {
                                         Name = "PointPointNumber",
                                         Possibilities = [
-                                            "2.1",
-                                            "2.2",
-                                            "2.3",
-                                            "2.4",
-                                            "2.5",
-                                            "2.6",
-                                            "2.7",
-                                            "2.8",
-                                            "2.9",
-                                            "2.10",
-                                            "(1)",
-                                            "(2)",
-                                            "(3)",
-                                            "(4)",
-                                            "A ",
-                                            "B ",
-                                            "C ",
-                                            "D ",
-                                            "E ",
-                                            "F ",
-                                            "G ",
-                                            "H "
+                                            new("2.1"),
+                                            new("2.2"),
+                                            new("2.3"),
+                                            new("2.4"),
+                                            new("2.5"),
+                                            new("2.6"),
+                                            new("2.7"),
+                                            new("2.8"),
+                                            new("2.9"),
+                                            new("2.10"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("A "),
+                                            new("B "),
+                                            new("C "),
+                                            new("D "),
+                                            new("E "),
+                                            new("F "),
+                                            new("G "),
+                                            new("H ")
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
@@ -1168,16 +1168,16 @@ public static class WalLabelConfiguration
                                 Format = "Number",
                                 Position = LabelPosition.LabelIsBeforeTextToFind,
                                 Possibilities = [
-                                    "2.1",
-                                    "2.2",
-                                    "2.3",
-                                    "2.4",
-                                    "2.5",
-                                    "2.6",
-                                    "2.7",
-                                    "2.8",
-                                    "2.9",
-                                    "2.10"                                    
+                                    new("2.1"),
+                                    new("2.2"),
+                                    new("2.3"),
+                                    new("2.4"),
+                                    new("2.5"),
+                                    new("2.6"),
+                                    new("2.7"),
+                                    new("2.8"),
+                                    new("2.9"),
+                                    new("2.10")                                    
                                 ],
                                 PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 0,
@@ -1218,9 +1218,9 @@ public static class WalLabelConfiguration
                                     {
                                         Name = "PurposeNumber",
                                         Possibilities = [
-                                            "4.1",
-                                            "4.2",
-                                            "4.3"
+                                            new("4.1"),
+                                            new("4.2"),
+                                            new("4.3")
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Number",
@@ -1424,9 +1424,9 @@ public static class WalLabelConfiguration
                             {
                                 Name = "PeriodPeriodNumber",
                                 Possibilities = [
-                                    "5.1",
-                                    "5.2",
-                                    "5.3"
+                                    new("5.1"),
+                                    new("5.2"),
+                                    new("5.3")
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Number",
@@ -1561,9 +1561,9 @@ public static class WalLabelConfiguration
                             {
                                 Name = "MeanId",
                                 Possibilities = [
-                                    "3.1",
-                                    "3.2",
-                                    "3.3"
+                                    new("3.1"),
+                                    new("3.2"),
+                                    new("3.3")
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Number",
@@ -1579,16 +1579,16 @@ public static class WalLabelConfiguration
                                 Format = "Units",
                                 PreviousLinesToFetch = 1,
                                 NextLinesToFetch = 1,
-                                Possibilities = new List<string>
+                                Possibilities = new List<TextToMatch>
                                 {
-                                    "megalitres",
-                                    "litres",
-                                    "cubic metres",
-                                    "cubic meters",
-                                    "megagallons",
-                                    "thousand gallons",
-                                    "million gallons",
-                                    "gallons"                                    
+                                    new("megalitres"),
+                                    new("litres"),
+                                    new("cubic metres"),
+                                    new("cubic meters"),
+                                    new("megagallons"),
+                                    new("thousand gallons"),
+                                    new("million gallons"),
+                                    new("gallons")                                    
                                 }
                             },
                             new()
@@ -1759,14 +1759,14 @@ public static class WalLabelConfiguration
                         PreviousLinesToFetch = 3,
                         NextLinesToFetch = 20,
                         MinimumSubMatches = 1,
-                        SubLabels = GetLimitLineSubLabels()
+                        SubLabels = GetLimitLineSubLabels(6)
                     }
                 }
             }
         ];
     }
 
-    private static List<LabelToMatch> GetLimitLineSubLabels()
+    private static List<LabelToMatch> GetLimitLineSubLabels(int? documentIdentifierPrefix)
     {
         return
         [
@@ -1788,16 +1788,25 @@ public static class WalLabelConfiguration
                     new()
                     {
                         Name = "DocumentIdentifier",
-                        Possibilities = [
-                            "6.1",
-                            "6.2",
-                            "6.3",
-                            "6.4",
-                            "6.5",
-                            "6.6",
-                            "6.7",
-                            "6.8"
-                        ],
+                        Possibilities = documentIdentifierPrefix != null ? [
+                            new($"{documentIdentifierPrefix}.1"),
+                            new($"{documentIdentifierPrefix}.2"),
+                            new($"{documentIdentifierPrefix}.3"),
+                            new($"{documentIdentifierPrefix}.4"),
+                            new($"{documentIdentifierPrefix}.5"),
+                            new($"{documentIdentifierPrefix}.6"),
+                            new($"{documentIdentifierPrefix}.7"),
+                            new($"{documentIdentifierPrefix}.8"),
+                            new("1. ") { LineMustStartWith = true },
+                            new("2. ") { LineMustStartWith = true },
+                            new("3. ") { LineMustStartWith = true },
+                            new("4. ") { LineMustStartWith = true },
+                            new("5. ") { LineMustStartWith = true },
+                            new("6. ") { LineMustStartWith = true },
+                            new("7. ") { LineMustStartWith = true },
+                            new("8. ") { LineMustStartWith = true },
+                            new("9. ") { LineMustStartWith = true }
+                        ] : [],
                         Position = LabelPosition.ApplicableToMost,
                         Format = "Number",
                         PreviousLinesToFetch = 0,
@@ -1818,14 +1827,14 @@ public static class WalLabelConfiguration
                             "Note:"
                         ],
                         Remove = [
-                            new ("6.1"),
-                            new ("6.2"),
-                            new ("6.3"),
-                            new ("6.4"),
-                            new ("6.5"),
-                            new ("6.6"),
-                            new ("6.7"),
-                            new ("6.8")
+                            new ($"{documentIdentifierPrefix}.1"),
+                            new ($"{documentIdentifierPrefix}.2"),
+                            new ($"{documentIdentifierPrefix}.3"),
+                            new ($"{documentIdentifierPrefix}.4"),
+                            new ($"{documentIdentifierPrefix}.5"),
+                            new ($"{documentIdentifierPrefix}.6"),
+                            new ($"{documentIdentifierPrefix}.7"),
+                            new ($"{documentIdentifierPrefix}.8")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
@@ -1865,14 +1874,14 @@ public static class WalLabelConfiguration
                             new("December[END_OF_COLUMN]")
                         ],
                         Remove = [
-                            new ("6.1"),
-                            new ("6.2"),
-                            new ("6.3"),
-                            new ("6.4"),
-                            new ("6.5"),
-                            new ("6.6"),
-                            new ("6.7"),
-                            new ("6.8")
+                            new ($"{documentIdentifierPrefix}.1"),
+                            new ($"{documentIdentifierPrefix}.2"),
+                            new ($"{documentIdentifierPrefix}.3"),
+                            new ($"{documentIdentifierPrefix}.4"),
+                            new ($"{documentIdentifierPrefix}.5"),
+                            new ($"{documentIdentifierPrefix}.6"),
+                            new ($"{documentIdentifierPrefix}.7"),
+                            new ($"{documentIdentifierPrefix}.8")
                         ],
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0,
@@ -1940,6 +1949,16 @@ public static class WalLabelConfiguration
                         [
                             new("Abstraction Point A"),
                             new("Abstraction Point B"),
+                            new("Abstraction Point C"),
+                            new("Abstraction Point D"),
+                            new("Abstraction Point E"),
+                            new("Abstraction Point F"),
+                            new("Abstraction Point 'A'"),
+                            new("Abstraction Point 'B'"),
+                            new("Abstraction Point 'C'"),
+                            new("Abstraction Point 'D'"),
+                            new("Abstraction Point 'E'"),
+                            new("Abstraction Point 'F'"),
                             new("condition "),
                             new("conditions "),
                             new("(1)"),
@@ -1951,6 +1970,16 @@ public static class WalLabelConfiguration
                         [
                             new("Abstraction Point B"),
                             new("Abstraction Point C"),
+                            new("Abstraction Point D"),
+                            new("Abstraction Point E"),
+                            new("Abstraction Point F"),
+                            new("Abstraction Point G"),
+                            new("Abstraction Point 'B'"),
+                            new("Abstraction Point 'C'"),
+                            new("Abstraction Point 'D'"),
+                            new("Abstraction Point 'E'"),
+                            new("Abstraction Point 'F'"),
+                            new("Abstraction Point 'G'"),
                             new("shall not exceed"),
                             new(":"),
                             new("(2)"),
@@ -1963,26 +1992,46 @@ public static class WalLabelConfiguration
                         Format = "Text",
                         Possibilities =
                         [
-                            "Abstraction Point A",
-                            "Abstraction Point B",
-                            "2.1",
-                            "2.2",
-                            "2.3",
-                            "2.4",
-                            "2.5",
-                            "2.6",
-                            "2.7",
-                            "2.8",
-                            "2.9",
-                            "(1)",
-                            "(2)",
-                            "(3)",
-                            "(4)"
+                            new("Abstraction Point A"),
+                            new("Abstraction Point B"),
+                            new("Abstraction Point C"),
+                            new("Abstraction Point D"),
+                            new("Abstraction Point E"),
+                            new("Abstraction Point F"),
+                            new("Abstraction Point 'A'"),
+                            new("Abstraction Point 'B'"),
+                            new("Abstraction Point 'C'"),
+                            new("Abstraction Point 'D'"),
+                            new("Abstraction Point 'E'"),
+                            new("Abstraction Point 'F'"),
+                            new("2.1"),
+                            new("2.2"),
+                            new("2.3"),
+                            new("2.4"),
+                            new("2.5"),
+                            new("2.6"),
+                            new("2.7"),
+                            new("2.8"),
+                            new("2.9"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
                         ],
                         MustContain =
                         [
                             "Abstraction Point A",
                             "Abstraction Point B",
+                            "Abstraction Point C",
+                            "Abstraction Point D",
+                            "Abstraction Point E",
+                            "Abstraction Point F",
+                            "Abstraction Point 'A'",
+                            "Abstraction Point 'B'",
+                            "Abstraction Point 'C'",
+                            "Abstraction Point 'D'",
+                            "Abstraction Point 'E'",
+                            "Abstraction Point 'F'",                            
                             "2.1",
                             "2.2",
                             "2.3",
@@ -2044,20 +2093,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2071,20 +2120,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new( "million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2098,20 +2147,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2129,20 +2178,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2160,20 +2209,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2187,20 +2236,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel,
                         FindMultipleOnSingleLine = true
@@ -2214,20 +2263,20 @@ public static class WalLabelConfiguration
                         Format = "Units",
                         PreviousLinesToFetch = 1,
                         NextLinesToFetch = 1,
-                        Possibilities = new List<string>
+                        Possibilities = new List<TextToMatch>
                         {
-                            "megalitres",
-                            "litres",
-                            "thousand cubic metres",
-                            "cubic metres",
-                            "cubic meters",
-                            "cubic metre",
-                            "cubic meter",
-                            "m\u00b3", // m3
-                            "megagallons",
-                            "thousand gallons",
-                            "million gallons",
-                            "gallons"
+                            new("megalitres"),
+                            new("litres"),
+                            new("thousand cubic metres"),
+                            new("cubic metres"),
+                            new("cubic meters"),
+                            new("cubic metre"),
+                            new("cubic meter"),
+                            new("m\u00b3"), // m3
+                            new("megagallons"),
+                            new("thousand gallons"),
+                            new("million gallons"),
+                            new("gallons")
                         },
                         SkipLineWhenContains =
                         [

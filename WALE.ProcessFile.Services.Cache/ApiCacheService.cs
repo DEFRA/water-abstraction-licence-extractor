@@ -18,6 +18,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return Task.CompletedTask;
     }
 
+    public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
+    {
+        var path = "/Extractor/LicenceFinder/GetResults";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<LicenceFinderResult>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+    
     public async Task ClearCacheAsync(Guid fileId)
     {
         var path = $"/Extractor/Cache/ClearSingle?fileId={fileId}";
@@ -710,5 +724,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
         
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        var path = "/Extractor/FirstNames/GetAll";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        
+        return JsonSerializer.Deserialize<HashSet<string>>(
+            content,
+            JsonHelper.GetSerializerOptions())!; 
     }
 }

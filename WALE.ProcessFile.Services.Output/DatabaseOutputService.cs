@@ -20,6 +20,7 @@ public class DatabaseOutputService(
         // Nothing to do in this case
         return Task.CompletedTask;
     }
+    
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
@@ -60,6 +61,26 @@ public class DatabaseOutputService(
         return databaseWriteService.AddProcessRunAsync(processRun);
     }
 
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
+    {
+        return databaseWriteService.MarkProcessRunCompleteIfCompleteAsync(processRun);
+    }
+
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        return databaseWriteService.AddProcessRunFileAsync(processRunFile);
+    }
+
+    public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
+    {
+        return databaseWriteService.CompleteProcessRunFileAsync(processRunFile);
+    }
+
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        return databaseWriteService.ReportErrorProcessRunFileAsync(processRunFile);
+    }
+    
     public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
     {
         foreach (var licenceSetKvp in licenceSets)
@@ -70,6 +91,14 @@ public class DatabaseOutputService(
 
     public async Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
     {
+        var existingList =  await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
+
+        if (existingList.Any(x =>
+            x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
+        {
+            return;
+        }
+        
         var licenceSetId = await databaseWriteService.SaveLicenceSetAsync(
             licenceSet.LicenceSetId,
             licenceSet.ShortLicenceSetId,
@@ -237,7 +266,7 @@ public class DatabaseOutputService(
             
             var licenceTransformed = FormattingHelper.FormatLicenceNumber(
                 missingLicenceId.LicenceNumber,
-                GeneralConstants.GenericRegionCode)!; // Used as not known real region code
+                GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
 
             var licence =
                 await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
@@ -258,6 +287,11 @@ public class DatabaseOutputService(
     public Task<List<ProcessRun>> GetProcessRunsAsync()
     {
         return databaseReadService.GetProcessRunsAsync();
+    }
+
+    public Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        return databaseReadService.GetAllProcessRunsAsync();
     }
 
     public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
@@ -319,6 +353,11 @@ public class DatabaseOutputService(
         return licences;
     }
 
+    public Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+    
     public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         return await databaseReadService.GetLicencesSearchAsync(processRunId, processRunQuery);
@@ -352,7 +391,7 @@ public class DatabaseOutputService(
                 var licence = allLicences.FirstOrDefault(l =>
                 {
                     var licenceId = (int)l.NoneSchemaData["licenceId"]!;
-                    return licenceId == licenceSetLicence.LicenceId;
+                    return licenceId == licenceSetLicence.LicenceId || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
                 });
 
                 if (licence == null)
@@ -382,7 +421,7 @@ public class DatabaseOutputService(
 
         return returnList;
     }
-
+    
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         var processRun = (await databaseReadService.GetMostRecentProcessRunAsync(fileId))!;

@@ -1,9 +1,6 @@
-using System.Globalization;
-using CsvHelper;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Formats;
 
@@ -345,58 +342,11 @@ public static class CompanyName
                 || char.IsDigit(text.Last()));
     }
     
-    public static async Task<HashSet<string>> GetFirstNamesCsvFromFileAsync()
-    {
-        var returnList = new HashSet<string>();
-        var dtStart = DateTime.Now;
-        
-        using var reader = new StreamReader("Data/first-names.csv");
-        using var csv = new CsvReader(reader, new CultureInfo("en-GB"));
-        
-        var data = csv.GetRecordsAsync<FirstNamesRow>();
-        
-        await foreach (var record in data)
-        {
-            var name = record.FirstForename!.ToLower();
-            if (name.Length <= 2 || FirstNameAvoidWords.Contains(name))
-            {
-                continue;
-            }
-            
-            returnList.Add(name);
-        }
-
-        ConsoleHelper.WriteLine($"INFO - {nameof(CompanyName)} - Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
-        return returnList;
-    }
-    
     private static readonly List<string> Suffixes =
     [
         " road",
         " lane",
         " avenue",
         " street"
-    ];
-    
-    private static readonly HashSet<string> FirstNameAvoidWords =
-    [
-        "the", // Too generic
-        "po", // PO box
-        "mersey", // Geography
-        "june", // Month
-        "charity", // Company word
-        "grant", // Legal word
-        "manor", // house name,
-        "red", // color, not common name
-        "south", // direction
-        "north", // direction
-        "west", // direction
-        "rho", // In postcodes
-        "rivers", // water
-        "see", // doing word,
-        "heh", // Is it a name?
-        "you", //  Is it a name?
-        "thames", // River
-        "fee"
     ];
 }

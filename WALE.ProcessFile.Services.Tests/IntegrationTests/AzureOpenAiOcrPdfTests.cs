@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -69,7 +70,7 @@ public class AzureOpenAiOcrPdfTests
             WalLabelConfiguration.GetLabels(),
             _fileLicenceMapping,
             [],            
-            await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             4); // TODO - whatever Hampshire & IOW is

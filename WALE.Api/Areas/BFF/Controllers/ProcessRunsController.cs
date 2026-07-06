@@ -3,6 +3,7 @@ using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -17,6 +18,25 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     {
         var processRuns = await outputService.GetProcessRunsAsync();
         return Ok(processRuns.OrderByDescending(pr => pr.ProcessRunId));
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProcessRun>>> GetAllProcessRuns()
+    {
+        var processRuns = await outputService.GetAllProcessRunsAsync();
+        return Ok(processRuns.OrderByDescending(pr => pr.ProcessRunId));
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<Dictionary<string, LicenceSet>>> GetProcessRunLicenceSetsAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue )
+    {
+        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
+        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
+
+        return Ok(licenceSets);
     }
 
     [HttpGet("{processRunId:int}")]

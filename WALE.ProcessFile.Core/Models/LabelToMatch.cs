@@ -56,7 +56,7 @@ public class LabelToMatch
     public bool IncludeWholeLine { get; init; }
     public string? Name { get; init; }
     public string? CategoryName { get; init; }
-    public IReadOnlyList<string>? Possibilities { get; set; }
+    public IReadOnlyList<TextToMatch>? Possibilities { get; set; }
     public int PreviousLinesToFetch { get; init; } = 2;
     public int NextLinesToFetch { get; init; } = 4;
     public bool DoNotTrimLines { get; init; }

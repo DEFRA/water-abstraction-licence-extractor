@@ -2177,6 +2177,154 @@ export class Client {
     /**
      * @return OK
      */
+    markProcessRunComplete(body: ProcessRunEndRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunComplete";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkProcessRunComplete(_response);
+        });
+    }
+
+    protected processMarkProcessRunComplete(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    addProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/AddProcessRunFile";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddProcessRunFile(_response);
+        });
+    }
+
+    protected processAddProcessRunFile(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    completeProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/CompleteProcessRunFile";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCompleteProcessRunFile(_response);
+        });
+    }
+
+    protected processCompleteProcessRunFile(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    reportErrorProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/ReportErrorProcessRunFile";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processReportErrorProcessRunFile(_response);
+        });
+    }
+
+    protected processReportErrorProcessRunFile(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     finish(body: ProcessRunEndRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/Finish";
         url_ = url_.replace(/[?&]$/, "");
@@ -2741,6 +2889,50 @@ export class Client {
     /**
      * @return OK
      */
+    getLatestLicenceSectionVerifications(): Promise<LicenceSectionVerification[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetLatestLicenceSectionVerifications";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLatestLicenceSectionVerifications(_response);
+        });
+    }
+
+    protected processGetLatestLicenceSectionVerifications(response: Response): Promise<LicenceSectionVerification[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LicenceSectionVerification.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceSectionVerification[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     createLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
         let url_ = this.baseUrl + "/BFF/FileData/CreateLicenceSectionVerification";
         url_ = url_.replace(/[?&]$/, "");
@@ -3209,6 +3401,76 @@ export class Client {
     /**
      * @return OK
      */
+    sendFileProcessOrchestrationMessage(): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendFileProcessOrchestrationMessage(_response);
+        });
+    }
+
+    protected processSendFileProcessOrchestrationMessage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    sendFileProcessSingleMessage(body: SendFileProcessSingleMessageRequest): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessSingleMessage";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendFileProcessSingleMessage(_response);
+        });
+    }
+
+    protected processSendFileProcessSingleMessage(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     getProcessRuns(): Promise<ProcessRun[]> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRuns";
         url_ = url_.replace(/[?&]$/, "");
@@ -3248,6 +3510,111 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRun[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getAllProcessRuns(): Promise<ProcessRun[]> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetAllProcessRuns";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAllProcessRuns(_response);
+        });
+    }
+
+    protected processGetAllProcessRuns(response: Response): Promise<ProcessRun[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProcessRun.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProcessRun[]>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getProcessRunLicenceSets(processRunId: number | undefined, skip: number | undefined, take: number | undefined): Promise<{ [key: string]: LicenceSet; }> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunLicenceSets?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProcessRunLicenceSets(_response);
+        });
+    }
+
+    protected processGetProcessRunLicenceSets(response: Response): Promise<{ [key: string]: LicenceSet; }> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (result200 as any)![key] = resultData200[key] ? LicenceSet.fromJS(resultData200[key]) : new LicenceSet();
+                }
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<{ [key: string]: LicenceSet; }>(null as any);
     }
 
     /**
@@ -7570,6 +7937,8 @@ export class ProcessRun implements IProcessRun {
     startDateTimeUtc?: Date | undefined;
     endDateTimeUtc?: Date | undefined;
     numberOfFiles?: number;
+    successCount?: number;
+    status?: string | undefined;
 
     [key: string]: any;
 
@@ -7593,6 +7962,8 @@ export class ProcessRun implements IProcessRun {
             this.startDateTimeUtc = _data["startDateTimeUtc"] ? new Date(_data["startDateTimeUtc"].toString()) : undefined as any;
             this.endDateTimeUtc = _data["endDateTimeUtc"] ? new Date(_data["endDateTimeUtc"].toString()) : undefined as any;
             this.numberOfFiles = _data["numberOfFiles"];
+            this.successCount = _data["successCount"];
+            this.status = _data["status"];
         }
     }
 
@@ -7614,6 +7985,8 @@ export class ProcessRun implements IProcessRun {
         data["startDateTimeUtc"] = this.startDateTimeUtc ? this.startDateTimeUtc.toISOString() : undefined as any;
         data["endDateTimeUtc"] = this.endDateTimeUtc ? this.endDateTimeUtc.toISOString() : undefined as any;
         data["numberOfFiles"] = this.numberOfFiles;
+        data["successCount"] = this.successCount;
+        data["status"] = this.status;
         return data;
     }
 }
@@ -7624,6 +7997,8 @@ export interface IProcessRun {
     startDateTimeUtc?: Date | undefined;
     endDateTimeUtc?: Date | undefined;
     numberOfFiles?: number;
+    successCount?: number;
+    status?: string | undefined;
 
     [key: string]: any;
 }
@@ -7631,6 +8006,7 @@ export interface IProcessRun {
 export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
+    status?: string | undefined;
 
     [key: string]: any;
 
@@ -7651,6 +8027,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
             }
             this.description = _data["description"];
             this.numberOfFiles = _data["numberOfFiles"];
+            this.status = _data["status"];
         }
     }
 
@@ -7669,6 +8046,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
         }
         data["description"] = this.description;
         data["numberOfFiles"] = this.numberOfFiles;
+        data["status"] = this.status;
         return data;
     }
 }
@@ -7676,6 +8054,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
 export interface IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
+    status?: string | undefined;
 
     [key: string]: any;
 }
@@ -7724,6 +8103,66 @@ export class ProcessRunEndRequest implements IProcessRunEndRequest {
 
 export interface IProcessRunEndRequest {
     processRunId?: number;
+
+    [key: string]: any;
+}
+
+export class ProcessRunFileRequest implements IProcessRunFileRequest {
+    fileName?: string | undefined;
+    processRunId?: number;
+    processRunFileId?: number;
+    errorMessage?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunFileRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.fileName = _data["fileName"];
+            this.processRunId = _data["processRunId"];
+            this.processRunFileId = _data["processRunFileId"];
+            this.errorMessage = _data["errorMessage"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunFileRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunFileRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["fileName"] = this.fileName;
+        data["processRunId"] = this.processRunId;
+        data["processRunFileId"] = this.processRunFileId;
+        data["errorMessage"] = this.errorMessage;
+        return data;
+    }
+}
+
+export interface IProcessRunFileRequest {
+    fileName?: string | undefined;
+    processRunId?: number;
+    processRunFileId?: number;
+    errorMessage?: string | undefined;
 
     [key: string]: any;
 }
@@ -8628,6 +9067,58 @@ export interface ISaveTemporaryOcrImageTextRequest {
     imageNumber?: number;
     ocrServiceName?: string | undefined;
     text?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SendFileProcessSingleMessageRequest implements ISendFileProcessSingleMessageRequest {
+    filePath?: string | undefined;
+    processRunId?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISendFileProcessSingleMessageRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.filePath = _data["filePath"];
+            this.processRunId = _data["processRunId"];
+        }
+    }
+
+    static fromJS(data: any): SendFileProcessSingleMessageRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SendFileProcessSingleMessageRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["filePath"] = this.filePath;
+        data["processRunId"] = this.processRunId;
+        return data;
+    }
+}
+
+export interface ISendFileProcessSingleMessageRequest {
+    filePath?: string | undefined;
+    processRunId?: string | undefined;
 
     [key: string]: any;
 }

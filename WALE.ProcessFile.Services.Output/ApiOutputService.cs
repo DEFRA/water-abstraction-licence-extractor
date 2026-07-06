@@ -68,7 +68,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             processRun.Description,
-            processRun.NumberOfFiles
+            processRun.NumberOfFiles,
+            processRun.Status
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -80,6 +81,90 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         processRun.ProcessRunId = int.Parse(content);
         return processRun;
+    }
+
+    public async Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun)
+    {
+        var path = "/Extractor/ProcessRun/MarkProcessRunCompleteIfComplete";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRun.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<ProcessRun>(content, JsonHelper.GetSerializerOptions());
+        return result!;
+    }
+
+    public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/AddProcessRunFile";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/MarkProcessRunFileComplete";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.ProcessRunFileId,
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
+    }
+
+    public async Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
+    {
+        var path = "/Extractor/ProcessRun/ReportErrorProcessRunFile";
+      
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunFile.ProcessRunFileId,
+            processRunFile.FileName,
+            processRunFile.ProcessRunId,
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        processRunFile.ProcessRunFileId = int.Parse(content);
+        return processRunFile;
     }
 
     public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
@@ -349,9 +434,42 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         processRun.EndDateTimeUtc = DateTime.Parse(content).ToUniversalTime();
     }
 
-    public Task<List<ProcessRun>> GetProcessRunsAsync()
+    public async Task<List<ProcessRun>> GetProcessRunsAsync()
     {
-        throw new NotImplementedException();
+        var path = "/BFF/ProcessRuns/GetProcessRuns";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+
+        if (processRuns == null)
+        {
+            throw new FileNotFoundException("Could not load processRuns");
+        }
+        
+        return processRuns;
+    }
+    
+    public async Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        var path = "/BFF/ProcessRuns/GetAllProcessRuns";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (processRuns == null)
+        {
+            throw new FileNotFoundException("Could not load processRuns");
+        }
+        
+        return processRuns;
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
@@ -382,6 +500,26 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
+    public async Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(
+        int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunLicenceSets?processRunId={processRunId}";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSets == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSets");
+        }
+        
+        return licenceSets;
+    }
+
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         throw new NotImplementedException();
@@ -402,14 +540,42 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSectionVerifications == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSectionVerifications");
+        }
+        
+        return licenceSectionVerifications;
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/GetLatestLicenceSectionVerifications";
+        
+        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        
+        if (licenceSectionVerifications == null)
+        {
+            throw new FileNotFoundException("Could not load licenceSectionVerifications");
+        }
+        
+        return licenceSectionVerifications;
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)

@@ -110,7 +110,6 @@ public interface ICacheService
         int take);
     
     Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
-    
     Task<(
             HashSet<(string, int)> Live,
             HashSet<(string, int)> Lapsed,

@@ -340,8 +340,8 @@
               "pageNumber": 4
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown",
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction",
           "regionId": 1
         }
       ],
@@ -575,8 +575,8 @@
               "pageNumber": 4
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown",
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction",
           "regionId": 1
         },
         {
@@ -612,8 +612,8 @@
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "Abstraction",
-          "regionId": 0
+          "licenceType": "SurfaceWaterAbstraction",
+          "regionId": 1
         }
       ],
       "licenceSets": [
@@ -668,8 +668,8 @@
     {
       "id": "2568001248-LV20190619",
       "status": "Ok",
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown",
+      "naldStatus": "Live",
+      "licenceType": "SurfaceWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/248",
         "confidence": 85
@@ -883,8 +883,8 @@
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "Abstraction",
-          "regionId": 0
+          "licenceType": "SurfaceWaterAbstraction",
+          "regionId": 1
         }
       ],
       "licenceSets": [

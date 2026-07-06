@@ -97,7 +97,7 @@ public static class GenerateLicenceReaderExtract
         //var maxConcurrentScrapers = 6;
         var maxConcurrentScrapers = 10;
         
-        var cacheService = new ApiCacheService(httpClient);
+        var cacheService = (ICacheService)new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();

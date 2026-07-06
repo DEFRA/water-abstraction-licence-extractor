@@ -43,9 +43,9 @@ public class FileProcessSingleService(
 
         var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
 
-        var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
-        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync(); // TODO could do this on the fly
-        
+        var abstractionAndImpoundmentLicencesTask =
+            SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
+
         var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync(); // Could do just the bit thats needed on the fily
         var dmsFileTask = DmsHelper.GetDmsFilesAndMappingAsync( // TODO only need 1, could do it on the fly
             fileService,
@@ -53,7 +53,6 @@ public class FileProcessSingleService(
             false,
             cacheService);
         
-        var naldLicenceStatusData = await naldLicenceStatusDataTask;
         var (dmsFilesToProcess, allDmsData) = await dmsFileTask;
 
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
@@ -93,7 +92,6 @@ public class FileProcessSingleService(
         {
             var licenceSet = await ScrapeDocumentAsync(
                 fileProcessSingleRequest.FilePath,
-                naldLicenceStatusData,
                 lookupConfig,
                 dmsFilesToProcess.FirstOrDefault().Value,
                 processRun);
@@ -129,7 +127,6 @@ public class FileProcessSingleService(
             
             await AddCompleteProcessRunDataAsync(
                 processRun,
-                naldLicenceStatusData,
                 allDmsData,
                 lookupConfig);
 
@@ -150,7 +147,6 @@ public class FileProcessSingleService(
     
     private async Task<List<LicenceSet>> ScrapeDocumentAsync(
         string pdfFilename,
-        NaldLicenceStatusData naldLicenceStatusData,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
         ProcessRun processRun)
@@ -206,7 +202,6 @@ public class FileProcessSingleService(
 
             return await WalSchemaConverter.ToLicenceSetsAsync(
                 matchesFull,
-                naldLicenceStatusData,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,
@@ -241,7 +236,6 @@ public class FileProcessSingleService(
     
     private async Task AddCompleteProcessRunDataAsync(
         ProcessRun processRun,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> allDmsData,
         LookupConfiguration lookupConfiguration)
     {
@@ -259,7 +253,6 @@ public class FileProcessSingleService(
 
         var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
-            naldLicenceStatusData,
             allDmsData,
             lookupConfiguration);
 

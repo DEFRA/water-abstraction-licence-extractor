@@ -15,7 +15,6 @@ public static class WalSchemaConverter
 {
     private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
-        NaldLicenceStatusData naldLicenceStatusData,
         DmsFileData? dmsFileData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
@@ -103,7 +102,6 @@ public static class WalSchemaConverter
                 purposes,
                 naldDataLine,
                 licenceNumbersMapping,
-                naldLicenceStatusData,
                 matchesResult.RegionCode,
                 noneSchemaData,
                 lookupConfiguration);
@@ -142,12 +140,8 @@ public static class WalSchemaConverter
         noneSchemaData.Add("ocr", ocr);
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
-
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(
-            licenceNumber,
-            naldLicenceStatusData,
-            naldDataLine,
-            regionCode);
+        
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
 
         var sectionDataDict = new Dictionary<
             string,
@@ -172,7 +166,6 @@ public static class WalSchemaConverter
             var sectionData = await GetSectionDataAsync(
                 sectionToLookAt,
                 matches,
-                naldLicenceStatusData,
                 licenceNumbersMapping,
                 matchesResult.RegionCode,
                 licenceNumber,
@@ -251,7 +244,6 @@ public static class WalSchemaConverter
         
         linkedLicences.AddRange(await GetPurposesLinkedLicencesAsync(
             matches,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData,
@@ -259,7 +251,6 @@ public static class WalSchemaConverter
         
         linkedLicences.AddRange(await GetPointsLinkedLicencesAsync(
             matches,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData,
@@ -272,7 +263,6 @@ public static class WalSchemaConverter
 
         var licenceHistory = await GetLicenceHistoryLinkedLicencesAsync(
             matches,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData,
@@ -283,13 +273,11 @@ public static class WalSchemaConverter
         linkedLicences = await ConsolidateLinkedLicencesAsync(
             linkedLicences,
             licenceNumber!,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             lookupConfiguration);
 
         var anywhereInDocumentLinkedLicences = await GetAnywhereInDocumentLinkedLicencesAsync(
             matches,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             matchesResult.RegionCode,
             noneSchemaData,
@@ -516,7 +504,6 @@ public static class WalSchemaConverter
     private static async Task<List<LinkedLicence>> ConsolidateLinkedLicencesAsync(
         List<LinkedLicence> linkedLicences,
         string? licenceNumber,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         LookupConfiguration lookupConfiguration)
     {
@@ -590,7 +577,6 @@ public static class WalSchemaConverter
                     .FirstOrDefault(ll => ll.Condition != null)?
                     .Condition,
                 containedIn.ToArray(),
-                naldLicenceStatusData,
                 licenceNumbersMapping,
                 linkedLicencesGroup
                     .FirstOrDefault(ll => ll.LicenceVersion.DmsFileIdStatus != null)?
@@ -707,71 +693,53 @@ public static class WalSchemaConverter
     }
 
     private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
-        string? licenceNumberInNaldFormat,
-        NaldLicenceStatusData naldLicenceStatusData,
-        NaldData? naldData,
-        int regionCode)
+        NaldData? naldData)
     {
-        if (naldLicenceStatusData.LiveLicences.Count == 0
-            && naldLicenceStatusData.ExpiredLicences.Count == 0
-            && naldLicenceStatusData.RevokedLicences.Count == 0
-            && naldLicenceStatusData.LapsedLicences.Count == 0
-            && naldLicenceStatusData.ImpoundmentLicences.Count == 0)
+        if (naldData == null)
         {
             return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
         }
         
-        var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-            licenceNumberInNaldFormat,
-            regionCode);
+        NaldLicenceStatus status;
 
-        if (strippedLicenceNumbers.Count == 0)
+        if (naldData.RevocationDate != null && naldData.RevocationDate.Value < DateTime.Now)
         {
-            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+            status = NaldLicenceStatus.Revoked;
         }
-
-        foreach (var strippedLicenceNumber in strippedLicenceNumbers)
+        else if (naldData.ExpiryDate != null && naldData.ExpiryDate.Value < DateTime.Now)
         {
-            var isLiveLicence = naldLicenceStatusData.LiveLicences.Contains(strippedLicenceNumber);
-            var isExpired = naldLicenceStatusData.ExpiredLicences.Contains(strippedLicenceNumber);
-            var isRevoked = naldLicenceStatusData.RevokedLicences.Contains(strippedLicenceNumber);
-            var isLapsed = naldLicenceStatusData.LapsedLicences.Contains(strippedLicenceNumber);
-            var isImpoundmentLicence = naldLicenceStatusData.ImpoundmentLicences.Contains(strippedLicenceNumber);
-
-            var status = NaldLicenceStatus.Unknown;
-                
-            if (isLiveLicence) status = NaldLicenceStatus.Live;
-            else if (isExpired) status = NaldLicenceStatus.Expired;
-            else if (isRevoked) status = NaldLicenceStatus.Revoked;
-            else if (isLapsed) status = NaldLicenceStatus.Lapsed;
-            else if (!isImpoundmentLicence)
-            {
-                continue;
-            }
-
-            LicenceType type;
-
-            if (isImpoundmentLicence)
-            {
-                type = LicenceType.Impoundment;
-            }
-            else switch (naldData?.AsrcCode)
-            {
-                case "G":
-                    type = LicenceType.GroundWaterAbstraction;
-                    break;
-                case "S":
-                    type = LicenceType.SurfaceWaterAbstraction;
-                    break;
-                default:
-                    type = LicenceType.Abstraction;
-                    break;
-            }
-            
-            return (status, type);
+            status = NaldLicenceStatus.Expired;
+        }
+        else if (naldData.LapsedDate != null && naldData.LapsedDate.Value < DateTime.Now)
+        {
+            status = NaldLicenceStatus.Lapsed;
+        }
+        else if ((naldData.EffEndDate == null || naldData.EffEndDate.Value > DateTime.Now)
+            && (naldData.EffStDate == null || DateTime.Now > naldData.EffStDate.Value))
+        {
+            status = NaldLicenceStatus.Live;
+        }
+        else
+        {
+            status = NaldLicenceStatus.Unknown;
         }
         
-        return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+        var isImpoundmentLicence = false;
+        LicenceType type;
+        
+        if (isImpoundmentLicence)
+        {
+            type = LicenceType.Impoundment;
+        }
+        else
+            type = naldData.AsrcCode switch
+            {
+                "G" => LicenceType.GroundWaterAbstraction,
+                "S" => LicenceType.SurfaceWaterAbstraction,
+                _ => LicenceType.Abstraction
+            };
+
+        return (status, type);
     }
 
     private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionId)
@@ -811,7 +779,6 @@ public static class WalSchemaConverter
         string? filename,
         Condition? condition,
         ContainedInInformation[] containedIn,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> dmsLicenceNumbersMapping,
         LicenceVersion licenceVersion,
         int? regionId,
@@ -836,11 +803,8 @@ public static class WalSchemaConverter
             dmsLicenceNumbersMapping,
             out var dmsFileData);
         
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(
-            permitOrLicenceNumber,
-            naldLicenceStatusData,
-            naldDataLine,
-            regionId.Value);
+        
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
 
         return new LinkedLicence
         {
@@ -861,7 +825,6 @@ public static class WalSchemaConverter
 
     public static async Task<List<LicenceSet>> ToLicenceSetsAsync(
         MatchesResult matchesResult,
-        NaldLicenceStatusData naldLicenceStatusData,
         IPdfDataExtractorService pdfDataExtractorService,
         int processRunId,
         LookupConfiguration lookupConfiguration,
@@ -871,7 +834,6 @@ public static class WalSchemaConverter
 
         var primaryLicence = await ToLicenceAsync(
             matchesResult,
-            naldLicenceStatusData,
             dmsDataForFile,
             lookupConfiguration.AllDmsData,
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
@@ -882,7 +844,6 @@ public static class WalSchemaConverter
 
         var linkedLicences = await GetLinkedLicencesAsync(
             primaryLicence,
-            naldLicenceStatusData,
             pdfDataExtractorService,
             previouslyParsedPaths,
             processRunId,
@@ -1000,7 +961,6 @@ public static class WalSchemaConverter
             await AddIncomingLinksAsync(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
-                naldLicenceStatusData,
                 lookupConfiguration.AllDmsData,
                 lookupConfiguration);
 
@@ -1101,7 +1061,6 @@ public static class WalSchemaConverter
     private static async Task<List<LicenceSet>> AddIncomingLinksAsync(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         LookupConfiguration lookupConfiguration)
     {
@@ -1166,7 +1125,6 @@ public static class WalSchemaConverter
                             incomingLink.Filename,
                             null,
                             newSections,
-                            naldLicenceStatusData,
                             licenceNumbersMapping,
                             incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId,
@@ -1222,7 +1180,6 @@ public static class WalSchemaConverter
                     licence.LinkedLicences = (await ConsolidateLinkedLicencesAsync(
                         licence.LinkedLicences.ToList(),
                         licence.LicenceNumber?.Value,
-                        naldLicenceStatusData,
                         licenceNumbersMapping,
                         lookupConfiguration)).ToArray();
                 }
@@ -1389,7 +1346,6 @@ public static class WalSchemaConverter
 
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         Licence primaryLicence,
-        NaldLicenceStatusData naldLicenceStatusData,
         IPdfDataExtractorService pdfDataExtractorService,
         List<string> previouslyParsedFiles,
         int processRunId,
@@ -1470,7 +1426,6 @@ public static class WalSchemaConverter
 
             var licence = await ToLicenceAsync(
                 relatedFileMatches,
-                naldLicenceStatusData,
                 dmsFileData,
                 lookupConfiguration.AllDmsData,
                 (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
@@ -1609,7 +1564,6 @@ public static class WalSchemaConverter
         List<Aggregate> Aggregates)> GetSectionDataAsync(
             string sectionName,
             List<LabelGroupResult> matches,
-            NaldLicenceStatusData naldLicenceStatusData,
             Dictionary<string, DmsFileData> licenceNumbersMapping,
             int regionCode,
             string? licenceNumber,
@@ -1653,7 +1607,6 @@ public static class WalSchemaConverter
                     allPurposes,
                     naldDataLine,
                     licenceNumbersMapping,
-                    naldLicenceStatusData,
                     regionCode,
                     sectionName,
                     lookupConfiguration,
@@ -1675,7 +1628,6 @@ public static class WalSchemaConverter
                         linkedLicenceNumber,
                         section,
                         sectionName,
-                        naldLicenceStatusData,
                         regionCode,
                         count++,
                         licenceNumbersMapping,
@@ -1691,7 +1643,6 @@ public static class WalSchemaConverter
         LabelGroupResult linkedLicenceNumber,
         LabelGroupResult section,
         string sectionName,
-        NaldLicenceStatusData naldLicenceStatusData,
         int regionCode,
         int count,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
@@ -1708,11 +1659,7 @@ public static class WalSchemaConverter
             licenceNumberLoop,
             regionCode);
 
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(
-            naldLicenceNumber,
-            naldLicenceStatusData,
-            naldDataLineLoop,
-            regionCode);
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLineLoop);
 
         FormattingHelper.GetDmsFileData(
             licenceNumberLoop,
@@ -1764,7 +1711,6 @@ public static class WalSchemaConverter
 
     private static async Task<List<LinkedLicence>> GetAnywhereInDocumentLinkedLicencesAsync(
         List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
@@ -1801,11 +1747,7 @@ public static class WalSchemaConverter
                 linkedLicenceNumber,
                 regionCode);
             
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                naldLinkedLicenceNumber,
-                naldLicenceStatusData,
-                naldDataLine,
-                regionCode);
+            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
 
             FormattingHelper.GetDmsFileData(
                 linkedLicenceNumber,
@@ -1861,7 +1803,6 @@ public static class WalSchemaConverter
 
     private static async Task<List<LinkedLicence>> GetLicenceHistoryLinkedLicencesAsync(
         List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
@@ -1896,11 +1837,7 @@ public static class WalSchemaConverter
 
             var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                naldLicenceNumber,
-                naldLicenceStatusData,
-                naldDataLine,
-                regionCode);
+            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
 
             FormattingHelper.GetDmsFileData(
                 licenceNumber,
@@ -1941,7 +1878,6 @@ public static class WalSchemaConverter
 
     private static async Task<List<LinkedLicence>> GetPurposesLinkedLicencesAsync(
         List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
@@ -1977,7 +1913,6 @@ public static class WalSchemaConverter
                         linkedLicenceNumber,
                         purposePointGroup,
                         DocumentSectionNames.Purposes,
-                        naldLicenceStatusData,
                         regionCode,
                         count++,
                         licenceNumbersMapping,
@@ -1992,7 +1927,6 @@ public static class WalSchemaConverter
 
     private static async Task<List<LinkedLicence>> GetPointsLinkedLicencesAsync(
         List<LabelGroupResult> matches,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
@@ -2028,7 +1962,6 @@ public static class WalSchemaConverter
                         linkedLicenceNumber,
                         pointPurposeGroup,
                         DocumentSectionNames.Points,
-                        naldLicenceStatusData,
                         regionCode,
                         count++,
                         licenceNumbersMapping,
@@ -2226,7 +2159,6 @@ public static class WalSchemaConverter
             PurposeOfAbstraction[] allPurposes,
             NaldData? naldDataLine,
             Dictionary<string, DmsFileData> licenceNumbersMapping,
-            NaldLicenceStatusData naldLicenceStatusData,
             int regionCode,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration)
@@ -2263,7 +2195,6 @@ public static class WalSchemaConverter
                 allPurposes,
                 naldDataLine,
                 licenceNumbersMapping,
-                naldLicenceStatusData,
                 regionCode,
                 DocumentSectionNames.AbstractionLimits,
                 lookupConfiguration,
@@ -2292,7 +2223,6 @@ public static class WalSchemaConverter
         PurposeOfAbstraction[] allPurposes,
         NaldData? naldDataLine,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
-        NaldLicenceStatusData naldLicenceStatusData,
         int regionCode,
         string sectionName,
         LookupConfiguration lookupConfiguration,
@@ -2556,12 +2486,8 @@ public static class WalSchemaConverter
                 lookupConfiguration.CacheService,
                 naldLicenceNumber,
                 regionCode);
-            
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(
-                naldLicenceNumber,
-                naldLicenceStatusData,
-                naldDataLine2,
-                regionCode);
+
+            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine2);
 
             FormattingHelper.GetDmsFileData(
                 scrapedLicenceNumber,
@@ -3835,7 +3761,6 @@ public static class WalSchemaConverter
 
     public static async Task<List<LicenceSet>> AddAdditionalLicenceSetsAsync(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        NaldLicenceStatusData naldLicenceStatusData,
         Dictionary<string, DmsFileData> licenceNumbersMapping,
         LookupConfiguration lookupConfiguration)
     {
@@ -3844,7 +3769,6 @@ public static class WalSchemaConverter
         distinctLicenceSets.AddRange(await AddIncomingLinksAsync(
             licenceSetGroups,
             true,
-            naldLicenceStatusData,
             licenceNumbersMapping,
             lookupConfiguration));
 

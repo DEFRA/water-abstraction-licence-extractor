@@ -44,7 +44,6 @@ async Task ProgramAsync()
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
     var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
 
     var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
     var (dmsFilesToProcess, allDmsData) =
@@ -62,7 +61,6 @@ async Task ProgramAsync()
             NumberOfFiles = dmsFilesToProcess.Count
         });
 
-    var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
 
@@ -108,7 +106,6 @@ async Task ProgramAsync()
                     filePath,
                     processCount++,
                     processRun.NumberOfFiles,
-                    naldLicenceStatusData,
                     outputService,
                     pdfDataExtractors,
                     processRun,
@@ -177,7 +174,6 @@ async Task ProgramAsync()
 
     var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
-        naldLicenceStatusData,
         allDmsData,
         lookupConfig);
 
@@ -202,7 +198,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
     int fileNumber,
     int totalNumber,
-    NaldLicenceStatusData naldLicenceStatusData,
     IOutputService outputService,
     List<IPdfDataExtractorService> pdfDataExtractors,
     ProcessRun processRun,
@@ -266,7 +261,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             matchesFull,
-            naldLicenceStatusData,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,

@@ -7,6 +7,7 @@ public class NaldData
     public string? LicenceIdCharsAndDigitsOnly { get; set; }
     public DateTime? ExpiryDate { get; init; }
     public DateTime? RevocationDate { get; init; }
+    public DateTime? LapsedDate { get; init; }
     public DateTime? OrigEffDate { get; init; }
     public DateTime? OrigSigDate { get; init; }
     public List<NaldDataAggregate> AggregateConditions { get; init; } = [];

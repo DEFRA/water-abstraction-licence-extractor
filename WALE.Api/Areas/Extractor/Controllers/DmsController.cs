@@ -18,6 +18,15 @@ public class DmsController(ICacheService cacheService) : Controller
         return Ok(dmsFileIdInformation);
     }
     
+    [HttpGet]
+    public async Task<IActionResult> GetFileIdInformationAsync(Guid fileId)
+    {
+        var dmsFileIdInformation =
+            await cacheService.GetDmsFileIdInformationAsync(fileId);
+        
+        return Ok(dmsFileIdInformation);
+    }
+    
     [HttpPost]
     public async Task<ActionResult> AddFileIdInformationAsync(
         [FromBody] DmsFileIdInformation request)

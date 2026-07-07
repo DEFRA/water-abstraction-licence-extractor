@@ -526,7 +526,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
     {
-        var path = "/Extractor/Dms/GetFileIds";
+        var path = $"/Extractor/Dms/GetFileIdInformation?fileId={fileId}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

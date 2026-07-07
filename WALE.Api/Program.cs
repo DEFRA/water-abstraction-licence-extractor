@@ -75,7 +75,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsAccessKey = config.GetValue<string>("AwsAccessKey");
     var awsSecretKey = config.GetValue<string>("AwsSecretKey");
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
-    
+
     services
         .AddSingleton<IAmazonSQS>(_ => AwsSqsHelper.GetAwsSqsClient(
             awsRegionName,
@@ -83,12 +83,14 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsSecretKey,
             awsSessionToken))
         .AddOptions<AwsSqsQueueConfig>()
-        .Bind(config.GetSection("AwsQueueConfig"))
-        .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
+        .Bind(config.GetSection("AwsQueueConfig"));
+    
+        // Commented out for now till these exist in DEV env
+        /*.Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
             "AwsQueueConfig:OrchestratorQueue is required")
         .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.FileProcessQueue),
             "AwsQueueConfig:FileProcessQueue is required")
-        .ValidateOnStart();
+        .ValidateOnStart();*/
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)

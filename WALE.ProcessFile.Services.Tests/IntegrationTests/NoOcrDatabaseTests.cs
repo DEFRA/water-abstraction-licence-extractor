@@ -2,6 +2,7 @@ using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -90,7 +91,7 @@ public class NoOcrDatabaseTests
             WalLabelConfiguration.GetLabels(),
             FileLicenceMapping,
             [],            
-            await CompanyName.GetFirstNamesCsvFromFileAsync(),
+            await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             3);

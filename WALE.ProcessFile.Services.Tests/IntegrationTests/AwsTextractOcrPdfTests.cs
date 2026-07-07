@@ -136,7 +136,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         Assert.Single(abstractionLimitsSection1.SubResults!);
 
         var section1Sub1 = abstractionLimitsSection1.SubResults![0];
-        Assert.Equal(8, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults.Count);
 
         var linkedLicences = section1Sub1.SubResults.Where(x => x.MatchedLabel?.Name == "LinkedLicenceNumber").ToList();
         Assert.Single(linkedLicences);

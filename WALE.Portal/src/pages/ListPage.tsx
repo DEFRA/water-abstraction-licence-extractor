@@ -15,6 +15,7 @@ import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
 import Paging from "../components/Paging.tsx";
+import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ function ListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files'>('licences');
+    const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'actions'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
 
@@ -155,6 +156,17 @@ function ListPage() {
                     }}>
                     Files
                 </a>
+                {' | '}
+                <a
+                    href="#"
+                    id="actionsLink"
+                    className={activeTab === 'actions' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('actions');
+                    }}>
+                    Actions
+                </a>
             </h1>
 
             {activeTab === 'licences' && (
@@ -219,6 +231,12 @@ function ListPage() {
             {activeTab === 'files' && (
                 <div id="files">
                     <FilesList/>
+                </div>
+            )}
+
+            {activeTab === 'actions' && (
+                <div id="actions">
+                    <ScrapeDocuments/>
                 </div>
             )}
 

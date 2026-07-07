@@ -38,7 +38,9 @@ public class FilesController(IFileService fileService) : Controller
     
     [HttpPut]
     [DisableRequestSizeLimit]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000, ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = 1_048_576_000,
+        ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
     public async Task<ActionResult<string>> UploadAsync()
     {
         if (!Request.Form.Files.Any())
@@ -85,7 +87,11 @@ public class FilesController(IFileService fileService) : Controller
 
     [HttpPut]
     [DisableRequestSizeLimit]
-    public async Task<ActionResult<string>> UploadChunkAsync([FromForm] string filename, [FromForm] int chunkIndex, [FromForm] int totalChunks, [FromForm] string? uploadId = null)
+    public async Task<ActionResult<string>> UploadChunkAsync(
+        [FromForm] string filename,
+        [FromForm] int chunkIndex,
+        [FromForm] int totalChunks,
+        [FromForm] string? uploadId = null)
     {
         if (!Request.Form.Files.Any())
         {

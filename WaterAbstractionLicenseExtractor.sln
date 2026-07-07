@@ -9,13 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		README.md = README.md
 		.dockerignore = .dockerignore
+		example-deploy-lambda-file-process-single-image.sh = example-deploy-lambda-file-process-single-image.sh
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services", "WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj", "{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.BlobTrigger", "WALE.ProcessFile.AzureFunction.BlobTrigger\WALE.ProcessFile.AzureFunction.BlobTrigger.csproj", "{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.AzureFunction.ServiceBusTrigger", "WALE.ProcessFile.AzureFunction.ServiceBusTrigger\WALE.ProcessFile.AzureFunction.ServiceBusTrigger.csproj", "{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.Tools", "Tools\WALE.Tools\WALE.Tools.csproj", "{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}"
 EndProject
@@ -45,6 +42,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\migrationrunner-push-image-template.yaml = .github\workflows\migrationrunner-push-image-template.yaml
 		.github\workflows\migrationrunner-create-rollout-image-version.yaml = .github\workflows\migrationrunner-create-rollout-image-version.yaml
 		.github\workflows\migrationrunner-build-template.yaml = .github\workflows\migrationrunner-build-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-push-image-template.yaml = .github\workflows\lambda-fileprocess-orchestrator-push-image-template.yaml
+		.github\workflows\lambda-fileprocess-single-push-image-template.yaml = .github\workflows\lambda-fileprocess-single-push-image-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-build-and-sonar-analyze-template.yaml = .github\workflows\lambda-fileprocess-orchestrator-build-and-sonar-analyze-template.yaml
+		.github\workflows\lambda-fileprocess-orchestrator-create-rollout-image-version.yaml = .github\workflows\lambda-fileprocess-orchestrator-create-rollout-image-version.yaml
+		.github\workflows\lambda-fileprocess-single-build-and-sonar-analyze-template.yaml = .github\workflows\lambda-fileprocess-single-build-and-sonar-analyze-template.yaml
+		.github\workflows\lambda-fileprocess-single-create-rollout-image-version.yaml = .github\workflows\lambda-fileprocess-single-create-rollout-image-version.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tesseract", "WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj", "{4ED58D39-E80E-4C62-8EDF-FAAD4F975BDB}"
@@ -77,6 +80,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database", "Database", "{44D373C2-0BC9-4123-B4E8-018BC3D493EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.FileProcess.CmdLine", "WRADI.FileProcess.CmdLine\WRADI.FileProcess.CmdLine.csproj", "{1436FC5D-D236-4395-8074-0450DDCC9094}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.FileProcess.Orchestrator", "WRADI.Lambda.FileProcess.Orchestrator\WRADI.Lambda.FileProcess.Orchestrator.csproj", "{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.ProcessFile", "WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj", "{0133FF46-525A-4B18-827A-990726AEAA01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.FileProcess.Single", "WRADI.Lambda.FileProcess.Single\WRADI.Lambda.FileProcess.Single.csproj", "{5F2C235B-2F7B-4A77-BD59-2F345CC98384}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lambdas", "Lambdas", "{43B9A380-0CE3-4440-A4CD-A79B5778BCBF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local Development", "Local Development", "{CB1F271E-169B-4D2A-937E-7603B3AB1157}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.AwsSqs", "WALE.ProcessFile.Services.AwsSqs\WALE.ProcessFile.Services.AwsSqs.csproj", "{8923187A-4952-4D06-9383-A822D910F3CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,14 +112,6 @@ Global
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C6BE94F4-31F5-45D9-AE1C-E39288E11FC7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C9A32AF-7B00-4612-AF7E-54C9F72269C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F8A3D72-E41B-4C99-BB8C-52039865A2CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -175,6 +184,26 @@ Global
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB8EC9D8-F940-40B2-A119-360A3EA7AD57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1436FC5D-D236-4395-8074-0450DDCC9094}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0133FF46-525A-4B18-827A-990726AEAA01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8923187A-4952-4D06-9383-A822D910F3CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8923187A-4952-4D06-9383-A822D910F3CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8923187A-4952-4D06-9383-A822D910F3CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8923187A-4952-4D06-9383-A822D910F3CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C631FC59-822E-47BE-95FA-B873AF121613} = {FBF2F0B0-857B-4B50-97FE-99A582022CAD}
@@ -199,5 +228,12 @@ Global
 		{9DADA8B2-6995-4BCF-AF69-912E81FEAA99} = {44D373C2-0BC9-4123-B4E8-018BC3D493EC}
 		{E4D950C1-7525-4C82-AAD9-3CEA95C02C9A} = {F3435563-37A5-4423-ABFF-D48AA9423AC9}
 		{67B5129F-0E4D-4429-96DD-9B2FF4AECD14} = {44D373C2-0BC9-4123-B4E8-018BC3D493EC}
+		{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE} = {43B9A380-0CE3-4440-A4CD-A79B5778BCBF}
+		{5F2C235B-2F7B-4A77-BD59-2F345CC98384} = {43B9A380-0CE3-4440-A4CD-A79B5778BCBF}
+		{1436FC5D-D236-4395-8074-0450DDCC9094} = {CB1F271E-169B-4D2A-937E-7603B3AB1157}
+		{0133FF46-525A-4B18-827A-990726AEAA01} = {F3435563-37A5-4423-ABFF-D48AA9423AC9}
+		{841517C2-5B2C-4D79-8308-4FCC6FF8CB36} = {CB1F271E-169B-4D2A-937E-7603B3AB1157}
+		{68EE4F77-B3CA-4BDD-BAAA-80E016FF269E} = {CB1F271E-169B-4D2A-937E-7603B3AB1157}
+		{8923187A-4952-4D06-9383-A822D910F3CA} = {F3435563-37A5-4423-ABFF-D48AA9423AC9}
 	EndGlobalSection
 EndGlobal

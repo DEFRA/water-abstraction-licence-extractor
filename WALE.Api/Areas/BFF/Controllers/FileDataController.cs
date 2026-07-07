@@ -63,6 +63,13 @@ public class FileDataController(IOutputService outputService) : Controller
         var results = await outputService.GetLicenceSectionVerificationsAsync(licenceFileId);
         return Ok(results);
     }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetLatestLicenceSectionVerificationsAsync()
+    {
+        var results = await outputService.GetLatestLicenceSectionVerificationsAsync();
+        return Ok(results);
+    }
 
     [HttpPost]
     public async Task<ActionResult<int>> CreateLicenceSectionVerification([FromBody] LicenceSectionVerification verification)

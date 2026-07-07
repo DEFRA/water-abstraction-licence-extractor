@@ -188,10 +188,25 @@ public static class ApplicableToMost
                 
                 if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
                 {
-                    numberLines = RestrictToPossibilities(request.label?.Possibilities, numberLines);
+                    numberLines = RestrictToPossibilities(request.label?.Possibilities, [documentLine]);
 
                     if (numberLines.Count > 0)
                     {
+                        // Remove any trailing dots
+                        foreach (var numberLine in numberLines)
+                        {
+                            foreach (var column in numberLine.Columns)
+                            {
+                                foreach (var word in column.Words)
+                                {
+                                    if (word.Text.EndsWith('.'))
+                                    {
+                                        word.Text = word.Clone().Text[..^1];
+                                    }
+                                }
+                            }
+                        }
+                        
                         labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
 
                         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
@@ -345,6 +360,7 @@ public static class ApplicableToMost
             }
 
             var isPossiblity = false;
+            var matchedPossibility = (TextToMatch?)null;
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
@@ -359,14 +375,15 @@ public static class ApplicableToMost
 
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
-                    if (!outputText.Contains(possibility, StringComparison.InvariantCultureIgnoreCase)
-                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility, StringComparison.InvariantCultureIgnoreCase)))
+                    if (!outputText.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase)
+                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility.Text, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         continue;
                     }
                     
-                    outputText = possibility;
+                    outputText = possibility.Text;
                     isPossiblity = true;
+                    matchedPossibility = possibility;
                     
                     break;
                 }
@@ -389,7 +406,7 @@ public static class ApplicableToMost
                     labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
                 
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                    labelGroupResult.MatchedLabel.Possibilities = [outputText];
+                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];
 
                     labelGroupResult = CheckContains(request.label, labelGroupResult);
                     if (labelGroupResult == null)
@@ -491,7 +508,7 @@ public static class ApplicableToMost
 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
                 {
-                    labelGroupResult.MatchedLabel.Possibilities = [outputText!];   
+                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
                 
                 labelGroupResult = CheckContains(request.label, labelGroupResult);
@@ -526,7 +543,7 @@ public static class ApplicableToMost
                 
                 if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
                 {
-                    labelGroupResult.MatchedLabel.Possibilities = [outputText];   
+                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
 
                 labelGroupResult = CheckContains(request.label, labelGroupResult);

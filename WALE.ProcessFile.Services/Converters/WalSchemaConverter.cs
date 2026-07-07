@@ -1149,6 +1149,9 @@ public static class WalSchemaConverter
                             })
                             .ToArray();
 
+                        var incomingLicence = allLicencesInSets
+                            .FirstOrDefault(l => l.LicenceNumber?.Value == incomingLink.LicenceNumber);
+                        
                         var incomingLinkedLicence = ToLinkedLicence(
                             incomingLink.LicenceNumber,
                             incomingLink.ScrapedLicenceNumber,
@@ -1159,7 +1162,7 @@ public static class WalSchemaConverter
                             naldLicenceStatusData,
                             naldData,
                             licenceNumbersMapping,
-                            new LicenceVersion(),
+                            incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
@@ -1428,7 +1431,7 @@ public static class WalSchemaConverter
             var destinationFileName = dmsFileData?.DestinationFileName;
             
             var missingDmsData = !foundDmsData;
-            var missingFileId = destinationFileId == Guid.Empty;
+            var missingFileId = destinationFileId == Guid.Empty || destinationFileId == null;
             var missingFilename = string.IsNullOrEmpty(destinationFileName);
                         
             if (missingDmsData || missingFileId || missingFilename)
@@ -2493,11 +2496,11 @@ public static class WalSchemaConverter
         var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
                 
         var meetsAggregateConditions = 
-            textSuggestsIsAggregate
+            (textSuggestsIsAggregate
             && (limitedByPoints
                 || thisLimitedByPurpose
-                || (multiplePurposesSpecified && othersLimitedByPurpose)
-                || containsUnderThisLicenceText);
+                || containsUnderThisLicenceText))
+            || (multiplePurposesSpecified && othersLimitedByPurpose);
 
         // We are limited by points - its an aggregated
         if (!meetsAggregateConditions)
@@ -4139,5 +4142,66 @@ public static class WalSchemaConverter
             : set1.Except(set2).ToList();
 
         return diff.Count;
+    }
+
+    public static void CalculateCombinedAggregates(List<LicenceSet> allLicenceSets)
+    {
+        var allLicences = allLicenceSets
+            .SelectMany(ls => ls.Licences)
+            .GroupBy(l => l.Id)
+            .Select(l => l.First())
+            .ToList();
+    
+        foreach (var licence in allLicences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.LinkedLicences == null || aggregate.LinkedLicences.Length == 0)
+                {
+                    continue;
+                }
+                
+                foreach (var limit in aggregate.Limits)
+                {
+                    if (string.IsNullOrEmpty(limit.ValueAdditionalText))
+                    {
+                        continue;
+                    }
+
+                    var otherLicence = allLicences
+                        .FirstOrDefault(l => l.LicenceNumber?.Value == aggregate.LinkedLicences[0]);
+
+                    if (otherLicence == null)
+                    {
+                        continue;
+                    }
+                
+                    var otherLicenceLimits = new List<AbstractionLimit>();
+
+                    if (otherLicence.AbstractionLimits.Aggregates != null)
+                    {
+                        otherLicenceLimits.AddRange(
+                            otherLicence.AbstractionLimits.Aggregates!.SelectMany(a => a.Limits));
+                    }
+                
+                    if (otherLicence.AbstractionLimits.Individual != null)
+                    {
+                        otherLicenceLimits.AddRange(
+                            otherLicence.AbstractionLimits.Individual!.SelectMany(i => i.Limits));
+                    }
+
+                    var otherLicenceLimit = otherLicenceLimits.First();
+                    var combinedAmount = limit.Value + otherLicenceLimit.Value;
+
+                    limit.Value = combinedAmount;
+                    limit.ValueAdditionalText = null;
+                }
+            }
+        }
     }
 }

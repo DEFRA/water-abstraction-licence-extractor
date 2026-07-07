@@ -6,6 +6,14 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IDatabaseWriteService
 {
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
+    
+    public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
+    
+    public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
+
+    public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile);
+    
+    public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 

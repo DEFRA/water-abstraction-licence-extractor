@@ -29,6 +29,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 
+builder.Services.AddOutputCache();
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
@@ -43,9 +44,11 @@ app.UseHttpsRedirection();
 
 app.UseCors();
 app.UseResponseCompression();
+app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.Run();
+
 return;
 
 static void ConfigureServices(IServiceCollection services, IConfigurationRoot config)

@@ -52,11 +52,12 @@ public class FileProcessSingleService(
             false,
             cacheService);
         
+        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
+        
         var (dmsFilesToProcess, allDmsData) = await dmsFileTask;
 
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
-
-        var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService); // TODO look at if can optimise this
+        var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),

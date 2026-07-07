@@ -52,6 +52,8 @@ async Task ProgramAsync()
             false,
             cacheService);
     
+    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
+    
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
@@ -66,8 +68,7 @@ async Task ProgramAsync()
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
     LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
-
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
+    var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
 
     const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();

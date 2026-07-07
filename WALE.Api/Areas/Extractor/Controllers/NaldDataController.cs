@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -26,6 +27,7 @@ public class NaldDataController(ICacheService cacheService) : Controller
         return Ok(naldData);
     }
 
+    [OutputCache(Duration=60)] // Doesn't change often at all
     [HttpGet]
     public async Task<IActionResult> GetImpoundmentAndAbstractionLicencesAsync()
     {

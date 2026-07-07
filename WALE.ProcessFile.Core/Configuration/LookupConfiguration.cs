@@ -6,7 +6,6 @@ namespace WALE.ProcessFile.Core.Configuration;
 
 public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
-    Dictionary<string, DmsFileData> allDmsData,
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     ICacheService cacheService,
@@ -16,8 +15,6 @@ public class LookupConfiguration(
     object? naldLinkedLicenceHelper = null)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
-
-    public Dictionary<string, DmsFileData> AllDmsData { get; set; } = allDmsData;
     
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
     
@@ -37,7 +34,6 @@ public class LookupConfiguration(
     {
         return new LookupConfiguration(
             Labels,
-            AllDmsData,
             ValidLowercaseFirstNames,
             FileService,
             CacheService,

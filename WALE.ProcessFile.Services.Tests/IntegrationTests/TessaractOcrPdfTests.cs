@@ -27,7 +27,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     static TessaractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData);
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -78,7 +78,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
             "28_39_28_312", new DmsFileData
@@ -104,7 +104,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

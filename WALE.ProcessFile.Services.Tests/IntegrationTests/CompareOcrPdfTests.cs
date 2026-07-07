@@ -21,6 +21,12 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class CompareOcrPdfTests
 {
+    static CompareOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -126,13 +132,12 @@ public class CompareOcrPdfTests
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

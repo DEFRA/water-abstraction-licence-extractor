@@ -21,7 +21,6 @@ public interface IPdfDataExtractorService
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,

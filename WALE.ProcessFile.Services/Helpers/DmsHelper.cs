@@ -30,7 +30,14 @@ public static class DmsHelper
 
         return dmsFileIdInformationDict;
     }
-    
+
+    public static async Task<DmsFileData>
+        GetDmsFilesData(ICacheService cacheService, string fileName)
+    {
+        var licenceFinderResult = await cacheService.GetLicenceFinderResultAsync(fileName);
+        return LicenceFinderResultToDmsFileData(licenceFinderResult, fileName);
+    }
+
     public static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
             Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
         GetDmsFilesAndMappingAsync(
@@ -218,28 +225,35 @@ public static class DmsHelper
             destinationFileName = allDestinationFilenames.First(fname =>
                 fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
             
-            var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
-            
-            var dmsFileData = new DmsFileData
-            {
-                DestinationFileName = destinationFileName,
-                NaldLicenceRef = licenceFinderResult.LicenseNumber,
-                PermitNumber = licenceFinderResult.PermitNumber,
-                DmsPath = licenceFinderResult.FileUrl,
-                StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                    licenceFinderResult.LicenseNumber,
-                    regionId)!,
-                FileId = Guid.Parse(licenceFinderResult.FileId!),
-                RegionId = regionId
-            };
+            var dmsFileData = LicenceFinderResultToDmsFileData(licenceFinderResult, destinationFileName);
 
             filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-            licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
+            licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber!, dmsFileData);
         }
         
         return (
             filenamesWithLicenceNumbers,
             licenceNumbersWithFilenames
         );
+    }
+
+    private static DmsFileData LicenceFinderResultToDmsFileData(
+        LicenceFinderResult licenceFinderResult,
+        string destinationFileName)
+    {
+        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
+            
+        return new DmsFileData
+        {
+            DestinationFileName = destinationFileName,
+            NaldLicenceRef = licenceFinderResult.LicenseNumber,
+            PermitNumber = licenceFinderResult.PermitNumber,
+            DmsPath = licenceFinderResult.FileUrl,
+            StrippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                regionId)!,
+            FileId = Guid.Parse(licenceFinderResult.FileId!),
+            RegionId = regionId
+        };
     }
 }

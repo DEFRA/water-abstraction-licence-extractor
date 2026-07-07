@@ -156,7 +156,6 @@ public class PdfDataExtractorService(
             configuration.Labels,
             isOcr,
             noOcrDataExtractorService.Name,
-            configuration.AllDmsData,
             previouslyParsedPaths,
             configuration.RegionId,
             processRunId,
@@ -408,7 +407,6 @@ public class PdfDataExtractorService(
                         unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        configuration.AllDmsData,
                         previouslyParsedPaths,
                         configuration.RegionId,
                         processRunId,
@@ -915,7 +913,6 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -955,7 +952,6 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     labelGroupMatches,
-                    licenceNumberMapping,
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,
@@ -991,7 +987,6 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedFiles,
         int regionCode,
         int processRunId,
@@ -1013,16 +1008,17 @@ public class PdfDataExtractorService(
                 continue;
             }
             
-            if (!FormattingHelper.GetDmsFileData(
+            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 licenceNumber.Text,
                 regionCode,
-                licenceNumberMapping,
-                out var dmsFileData))
+                cacheService!);
+                    
+            if (dmsFileData == null)
             {
                 continue;
             }
             
-            var destinationFilenames = dmsFileData!.DestinationFileName!;
+            var destinationFilenames = dmsFileData.DestinationFileName!;
                 
             if (previouslyParsedFiles.Contains(destinationFilenames))
             {
@@ -1041,14 +1037,12 @@ public class PdfDataExtractorService(
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.AllDmsData = licenceNumberMapping;
             clonedConfig.RegionId = regionCode;
             
-            FormattingHelper.GetDmsFileData(
+            var linkedDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 relatedLicenceNumber,
                 regionCode,
-                lookupConfiguration.AllDmsData,
-                out var linkedDmsFileData);
+                cacheService);
 
             if (linkedDmsFileData == null)
             {
@@ -1189,7 +1183,6 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -1240,7 +1233,6 @@ public class PdfDataExtractorService(
                                 partialLine,
                                 siblingMatches,
                                 label,
-                                licenceNumberMapping,
                                 previouslyParsedPaths,
                                 regionCode,
                                 processRunId,
@@ -1407,7 +1399,6 @@ public class PdfDataExtractorService(
                         label = matchedLabel,
                         labelGroupName = labelGroupName,
                         labelGroupResult = labelGroupResult,
-                        licenceNumberMapping = licenceNumberMapping,
                         pdfDataExtractorService = this,
                         previouslyParsedPaths = previouslyParsedPaths,
                         previousLines = previousLines,
@@ -1838,7 +1829,6 @@ public class PdfDataExtractorService(
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -1865,7 +1855,6 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     subResults,
-                    licenceMapping,
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,

@@ -210,7 +210,7 @@ public static class TextToFindIsBetweenLabels
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
         
-        var returnList = FilterIntoFormat(request, labelGroupResult, betweenText, false);
+        var returnList = await FilterIntoFormatAsync(request, labelGroupResult, betweenText, false);
         return await ProcessSubLabelsAsync(request, returnList);
     }
     

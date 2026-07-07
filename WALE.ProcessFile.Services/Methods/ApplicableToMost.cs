@@ -303,11 +303,12 @@ public static class ApplicableToMost
                     
                 foreach (var licenceNumberLine in licenceNumberLinesF)
                 {
-                    if (!FormattingHelper.GetDmsFileData(
-                            licenceNumberLine.Text,
-                            request.regionCode,
-                            request.licenceNumberMapping,
-                            out var dmsFileData))
+                    var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+                        licenceNumberLine.Text,
+                        request.regionCode,
+                        request.cacheService!);
+                    
+                    if (dmsFileData == null)
                     {
                         continue;
                     }

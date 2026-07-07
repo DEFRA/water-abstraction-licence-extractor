@@ -432,7 +432,6 @@ public static class GenerateLicenceReaderExtract
         
         var originalConfiguration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
-            DmsFileData,
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             fileService,
             cacheService,

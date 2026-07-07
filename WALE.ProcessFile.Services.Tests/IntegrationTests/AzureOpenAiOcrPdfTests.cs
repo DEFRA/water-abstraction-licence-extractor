@@ -24,7 +24,7 @@ public class AzureOpenAiOcrPdfTests
     static AzureOpenAiOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, []);
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -67,7 +67,7 @@ public class AzureOpenAiOcrPdfTests
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
 
@@ -75,7 +75,6 @@ public class AzureOpenAiOcrPdfTests
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,        
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

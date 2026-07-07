@@ -24,7 +24,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     static AwsTextractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, []);
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -61,13 +61,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

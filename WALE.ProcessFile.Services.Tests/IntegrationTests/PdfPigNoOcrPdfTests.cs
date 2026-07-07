@@ -24,12 +24,13 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
-    private static readonly ICacheService CacheService;
-
+    public static ICacheService CacheService;
+    private static FileSystemCacheService? RealCacheService;
+    
     static PdfPigNoOcrPdfTests()
     {
-        var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, NaldData);
+        RealCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(RealCacheService, NaldData, FileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -209,23 +210,34 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             regionCode);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
+    private async Task<MatchesResult> GetMatchesAsync(
+        string fileName,
+        int regionCode,
+        int folderNumber = 1,
+        int fileLicenceMapping = 1,
+        ICacheService? cacheService = null)
     {
         var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
         if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
+
+        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder);
+        
+        if (cacheService != null)
+        {
+            lookupConfig.CacheService = cacheService;
+        }
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder),
+            lookupConfig,
             [fileName],
             0);
     }
@@ -2409,96 +2421,114 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearPreviousLineIsCompany_SimpleAbstractionLimits1LicenceToLicenceLink_ThenFoundCorrectly()
     {
         // Arrange
+        var specialCacheService =
+            GeneralTestsHelper.GetFakeCacheService(RealCacheService!, NaldData, FileLicenceMappingWithout52);
+
         await SetupLicenceNumbersAsync(3);
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, fileLicenceMapping: 2);
+        var resultFull = await GetMatchesAsync(filename, 3, fileLicenceMapping: 2, cacheService: specialCacheService);
         var resultList = resultFull.Matches!;
-        
+
         // Assert
-        
+
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
-        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(10, records.Text!.Count);
-        
-        var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
+
+        var additionalInformation =
+            resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
         Assert.Equal(32, additionalInformation.Text!.Count);
-        
+
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        
+
         Assert.NotNull(nameResult);
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Rolawn Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        
-        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
+
+        var abstractionLimitsSection =
+            resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.NotNull(abstractionLimitsSection.Text);
         Assert.Equal(11, abstractionLimitsSection.Text.Count);
-        Assert.Equal("200,000 cubic metres per year.", 
-        abstractionLimitsSection.Text![10].Text);
+        Assert.Equal("200,000 cubic metres per year.",
+            abstractionLimitsSection.Text![10].Text);
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(7, abstractionLimitsSection.SubResults[0].Text!.Count);
 
         var point1 = abstractionLimitsSection.SubResults[0];
         var point1Sub1 = point1.SubResults[0];
-        
+
         Assert.Equal("120", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
+            .First().Text);
         Assert.Equal("2600", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text); 
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
+            .First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("33.3", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
+            ?.Text!.First().Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
+            ?.Text!.First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
-        
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
+
         // TODO
-        
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");   
-        
+
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NE/027/0028/059", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+
+        var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
+        config.CacheService = specialCacheService;
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder))).Last();
+            config)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
 

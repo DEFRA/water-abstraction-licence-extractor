@@ -408,4 +408,14 @@ public class DatabaseCacheService(
     {
         return databaseReadService.GetNaldLicenceAsync(permitNumber, regionCode);
     }
+
+    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    {
+        return databaseReadService.GetLicenceFinderResultAsync(fileName);
+    }
+
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
 }

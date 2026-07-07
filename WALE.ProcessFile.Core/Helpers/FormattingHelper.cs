@@ -1,5 +1,6 @@
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Helpers;
@@ -41,24 +42,13 @@ public static class FormattingHelper
         ];
     }
 
-    public static bool GetDmsFileData(
+    public static async Task<DmsFileData?> GetDmsFileDataAsync(
         string? licenceNumber,
         int regionCode,
-        Dictionary<string, DmsFileData>? licenceNumberMapping,
-        out DmsFileData? dmsFileData)
+        ICacheService cacheService)
     {
-        var strippedOptions = StripForComparisonMultipleOptions(licenceNumber, regionCode);
-        dmsFileData = null;
-            
-        foreach (var stripped in strippedOptions)
-        {
-            if (licenceNumberMapping?.TryGetValue(stripped, out dmsFileData) == true)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber, regionCode);
+        return dmsFileData;
     }
 
     public static string? StripForComparison(

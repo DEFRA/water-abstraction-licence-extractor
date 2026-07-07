@@ -78,7 +78,6 @@ public static class TestsForAiPrompts
                     new LookupConfiguration(
                         [],
                         [],
-                        [],
                         new LocalFileService(KeyConfig.PdfFolder),
                         cacheService,
                         -1));

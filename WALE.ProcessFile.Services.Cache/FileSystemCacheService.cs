@@ -601,6 +601,16 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     private string GetFolderPath(Guid fileId)
     {
         var fileOutputFolder = Path.Combine(CacheFolderOrUrl!, fileId.ToString());

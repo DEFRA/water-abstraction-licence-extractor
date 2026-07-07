@@ -75,7 +75,6 @@ public class OcrDatabaseTests
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             new LookupConfiguration(
                 WalLabelConfiguration.GetLabels(),
-                _fileLicenceMapping,   
                 await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
                 CacheService,

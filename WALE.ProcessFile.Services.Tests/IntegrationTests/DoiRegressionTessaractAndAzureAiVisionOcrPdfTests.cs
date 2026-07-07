@@ -26,7 +26,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     static DoiRegressionTessaractAndAzureAiVisionOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData);
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -69,7 +69,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         DocumentService,
         DocnetAlternativeDocumentService);
 
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
@@ -84,7 +84,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

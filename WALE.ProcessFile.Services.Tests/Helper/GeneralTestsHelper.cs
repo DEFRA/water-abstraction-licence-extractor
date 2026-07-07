@@ -18,9 +18,35 @@ public static class GeneralTestsHelper
 
     public static ICacheService GetFakeCacheService(
         ICacheService realCacheService,
-        Dictionary<string, List<NaldData>> naldData)
+        Dictionary<string, List<NaldData>> naldData,
+        Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
+        
+        A
+            .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._, A<int>._))
+            .ReturnsLazily(x =>
+            {
+                var licenceNumberInNaldFormat = (string)x.Arguments[0]!;
+                var regionCode = (int)x.Arguments[1]!;
+                
+                var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
+                    licenceNumberInNaldFormat,
+                    regionCode);
+
+                foreach (var strippedLicenceNumber in strippedLicenceNumbers)
+                {
+                    if (!dmsData.TryGetValue(strippedLicenceNumber, out var value))
+                    {
+                        continue;
+                    }
+                
+                    var dmsFileData = (DmsFileData?)value;
+                    return Task.FromResult(dmsFileData);   
+                }
+                
+                return Task.FromResult((DmsFileData?)null);
+            });
         
         A
             .CallTo(() => fakeCache.GetNaldLicenceAsync(A<string>._, A<int>._))

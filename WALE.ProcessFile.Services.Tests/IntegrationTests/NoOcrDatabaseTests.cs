@@ -89,7 +89,6 @@ public class NoOcrDatabaseTests
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            FileLicenceMapping,
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

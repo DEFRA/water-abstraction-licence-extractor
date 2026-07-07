@@ -44,15 +44,14 @@ async Task ProgramAsync()
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
     var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
-
-    var (dmsFilesToProcess, allDmsData) =
+    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
+    
+    var (dmsFilesToProcess, _) =
         await DmsHelper.GetDmsFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
             cacheService);
-    
-    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
     
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
@@ -75,7 +74,6 @@ async Task ProgramAsync()
     
     var lookupConfig = new LookupConfiguration(
         WalLabelConfiguration.GetLabels(),
-        allDmsData,
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
@@ -170,7 +168,6 @@ async Task ProgramAsync()
 
     var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
-        allDmsData,
         lookupConfig);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");

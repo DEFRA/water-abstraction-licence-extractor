@@ -537,6 +537,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             content,
             JsonHelper.GetSerializerOptions())!;
     }
+    
+    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    {
+        var path = $"/Extractor/Dms/GetFileData?licenceNumber={licenceNumber}&regionCode={regionCode}";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
+        response.EnsureSuccessStatusCode();
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<DmsFileData>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
 
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
@@ -781,5 +795,19 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return JsonSerializer.Deserialize<NaldData>(
             content,
             JsonHelper.GetSerializerOptions());
+    }
+
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    {
+        var path = $"/Extractor/LicenceFinder/Get?fileName={fileName}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<LicenceFinderResult>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
     }
 }

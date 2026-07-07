@@ -45,23 +45,16 @@ public class FileProcessSingleService(
 
         var abstractionAndImpoundmentLicencesTask =
             SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
-
-        var dmsFileTask = DmsHelper.GetDmsFilesAndMappingAsync( // TODO only need 1, could do it on the fly
-            fileService,
-            string.Empty,
-            false,
-            cacheService);
         
+        var dmsFileDataTask = DmsHelper.GetDmsFilesData(cacheService, fileProcessSingleRequest.FilePath);
         var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
         
-        var (dmsFilesToProcess, allDmsData) = await dmsFileTask;
-
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
+        var dmsFileData = await dmsFileDataTask;
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            allDmsData,
             await firstNamesCsvTask,
             fileService,
             cacheService,
@@ -87,7 +80,7 @@ public class FileProcessSingleService(
             var licenceSet = await ScrapeDocumentAsync(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
-                dmsFilesToProcess.FirstOrDefault().Value,
+                dmsFileData,
                 processRun);
 
             await SharedHelper.UpdateAndSaveLicenceSetsAsync(
@@ -121,7 +114,6 @@ public class FileProcessSingleService(
             
             await AddCompleteProcessRunDataAsync(
                 processRun,
-                allDmsData,
                 lookupConfig);
 
             return true;
@@ -230,7 +222,6 @@ public class FileProcessSingleService(
     
     private async Task AddCompleteProcessRunDataAsync(
         ProcessRun processRun,
-        Dictionary<string, DmsFileData> allDmsData,
         LookupConfiguration lookupConfiguration)
     {
         ConsoleHelper.WriteLine(
@@ -247,7 +238,6 @@ public class FileProcessSingleService(
 
         var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
-            allDmsData,
             lookupConfiguration);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");

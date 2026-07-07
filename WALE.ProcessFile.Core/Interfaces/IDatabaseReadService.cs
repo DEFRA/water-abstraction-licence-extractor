@@ -111,4 +111,6 @@ public interface IDatabaseReadService
     Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
+    
+    Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName);
 }

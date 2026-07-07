@@ -258,6 +258,55 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return results.ToList();
     }
 
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               permit_number,
+                               file_url,
+                               rule_used,
+                               change_audit_action,
+                               license_number,
+                               document_date,
+                               signature_date,
+                               date_of_issue,
+                               other_reference,
+                               file_size,
+                               disclosure_status,
+                               region,
+                               nald_id,
+                               nald_issue_no,
+                               nald_increment_no,
+                               primary_template,
+                               secondary_template,
+                               number_of_pages,
+                               doi_signature_date_match,
+                               included_in_version_match,
+                               single_licence_in_version_match,
+                               version_match_file_url,
+                               duplicate_licence_in_version_match_result,
+                               nald_issue,
+                               file_id,
+                               file_id_status,
+                               file_id_status_change_date,
+                               is_water_company,
+                               folder_name_auto_correct,
+                               seen_in_dms_extract,
+                               we_have_downloaded
+                           FROM public.licence_finder_result
+                           WHERE file_url = @FileName
+                           """;
+
+        var result = await QueryFirstOrDefaultAsync<LicenceFinderResult>(
+            connection,
+            sql,
+            0,
+            new { FileName = fileName });
+
+        return result!;
+    }
+
     private async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(
         int abvAablId,
         int issueNumber,

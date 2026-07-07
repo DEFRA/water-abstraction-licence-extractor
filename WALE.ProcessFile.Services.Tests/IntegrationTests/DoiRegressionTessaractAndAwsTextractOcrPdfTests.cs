@@ -26,7 +26,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     static DoiRegressionTessaractAndAwsTextractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, []);
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -65,7 +65,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
         DocumentService,
         DocnetAlternativeDocumentService);
 
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
@@ -80,7 +80,6 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,

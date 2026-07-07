@@ -335,9 +335,9 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
-        return databaseReadService.GetTotalLicenceCountAsync(processRunId, searchTerm);
+        return await databaseReadService.GetTotalLicenceCountAsync(processRunId, processRunQuery);
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
@@ -358,9 +358,9 @@ public class DatabaseOutputService(
         throw new NotImplementedException();
     }
     
-    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
-        return await databaseReadService.GetLicencesSearchAsync(processRunId, searchTerm, skip, take);
+        return await databaseReadService.GetLicencesSearchAsync(processRunId, processRunQuery);
     }
 
     public async Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> allLicences)

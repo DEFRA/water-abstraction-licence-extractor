@@ -6,4 +6,6 @@ public record ProcessRunResponse
 {
     public required int TotalRecords { get; init; }
     public required IReadOnlyList<OutputListDataItem> Records { get; init; }
+    
+    public required IReadOnlyList<OutputListDataItem> NoPaginationRecords { get; init; }
 }

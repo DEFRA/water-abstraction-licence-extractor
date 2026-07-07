@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Services.AwsS3;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddS3Services(
+    public static IServiceCollection AddAwsS3Services(
         this IServiceCollection services,
         string s3RegionName,
         string s3BucketName,

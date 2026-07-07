@@ -37,7 +37,7 @@ public interface IDatabaseReadService
     
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
-    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take);
+    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query);
     
     Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
@@ -113,4 +113,6 @@ public interface IDatabaseReadService
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName);
+    
+    Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
 }

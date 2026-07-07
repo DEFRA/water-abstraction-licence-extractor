@@ -78,7 +78,7 @@ public interface IOutputService
 
     Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
     
-    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take);
+    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId);
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
@@ -98,5 +98,5 @@ public interface IOutputService
     
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
    
-    Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm);
+    Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 }

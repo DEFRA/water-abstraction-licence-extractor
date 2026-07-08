@@ -58,14 +58,6 @@ public static class WalSchemaConverter
                 confidence)
             : null;
 
-        if (dmsFileData != null)
-        {
-            licenceNumberWithConfidence ??= new ValueWithConfidence<string>(
-                dmsFileData.NaldLicenceRef,
-                null,
-                100.0);
-        }
-
         var naldDataLine = await GetNaldDataLineAsync(
             lookupConfiguration!.CacheService,
             licenceNumber,

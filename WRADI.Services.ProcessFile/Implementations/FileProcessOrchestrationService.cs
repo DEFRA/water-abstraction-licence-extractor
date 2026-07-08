@@ -38,22 +38,30 @@ public class FileProcessOrchestrationService(
             return true;
         }
         
-        var processRun = await outputService.StartProcessRunAsync(new ProcessRun
-        {
-            Description = $"Batch process request for single file process from: {fileService.FolderPath}",
-            StartDateTimeUtc = DateTime.UtcNow,
-            NumberOfFiles = dmsFilesToProcess.Count,
-            Status = "Batch"
-        });
+        var processRun = await outputService.StartProcessRunAsync(
+            new ProcessRun
+            {
+                Description = $"Batch process request for single file process from: {fileService.FolderPath}",
+                StartDateTimeUtc = DateTime.UtcNow,
+                NumberOfFiles = dmsFilesToProcess.Count,
+                Status = "Batch"
+            });
 
         try
         {
-            foreach (var (filePath, _) in dmsFilesToProcess)
+            foreach (var (filePath, dmsFileData) in dmsFilesToProcess)
             {
                 await messageQueueService.AddToFileProcessQueue(
                     new FileProcessSingleRequest
                     {
                         FilePath = filePath,
+                        DestinationFileName = dmsFileData.DestinationFileName,
+                        DmsPath = dmsFileData.DmsPath,
+                        FileId = dmsFileData.FileId,
+                        PermitNumber = dmsFileData.PermitNumber,
+                        NaldLicenceRef = dmsFileData.NaldLicenceRef,
+                        StrippedLicenceNumber = dmsFileData.StrippedLicenceNumber,
+                        RegionId = dmsFileData.RegionId,
                         ProcessRunId = processRun.ProcessRunId
                     });
                 

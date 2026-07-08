@@ -34,7 +34,14 @@ public class MessageController(
     {
         var payload = new
         {
+            request.DestinationFileName,
+            request.DmsPath,
+            request.FileId,
             request.FilePath,
+            request.NaldLicenceRef,
+            request.PermitNumber,
+            request.RegionId,
+            request.StrippedLicenceNumber,
             request.ProcessRunId,
             RequestedAt = DateTime.UtcNow
         };

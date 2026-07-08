@@ -404,9 +404,9 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
     {
-        return databaseReadService.GetNaldLicenceAsync(permitNumber, regionCode);
+        return databaseReadService.GetNaldLicenceAsync(licenceNumber, regionCode);
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)

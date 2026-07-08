@@ -48,8 +48,8 @@ public static class WalSchemaConverter
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
 
-        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence) =
-            GetLicenceNumber(matchesResult, noneSchemaData);
+        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, source) =
+            GetLicenceNumber(matchesResult, dmsFileData?.NaldLicenceRef, noneSchemaData);
 
         var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
             ? new ValueWithConfidence<string>(
@@ -3805,12 +3805,16 @@ public static class WalSchemaConverter
         return returnList;
     }
 
-    private static (string? LicenceNumber,
+    private static (
+        string? LicenceNumber,
         string? ScrapedLicenceNumber,
         double? Confidence,
-        double? OcrConfidence) GetLicenceNumber(
-        MatchesResult matchesResult,
-        Dictionary<string, object?>? noneSchemaData = null)
+        double? OcrConfidence,
+        string Source)
+        GetLicenceNumber(
+            MatchesResult matchesResult,
+            string? naldLicenceNumber,
+            Dictionary<string, object?>? noneSchemaData = null)
     {
         string? licenceNumber = null;
         var (scrapedLicenceNumber, confidence, ocrConfidence) =
@@ -3822,7 +3826,14 @@ public static class WalSchemaConverter
             licenceNumber = FormattingHelper.FormatLicenceNumber(scrapedLicenceNumber, matchesResult.RegionCode);
         }
 
+        if (!string.IsNullOrEmpty(naldLicenceNumber))
+        {
+            licenceNumber = naldLicenceNumber;
+            return (licenceNumber, scrapedLicenceNumber, 100.0, null, "NaldLicenceNumber");
+        }
+        
         string? fileNameLicenceNumber = null;
+        var source = "Scraped";
 
         if (!string.IsNullOrEmpty(matchesResult.Filename))
         {
@@ -3831,17 +3842,6 @@ public static class WalSchemaConverter
             var isPartALicenceNumber = licenceNumberPart.Length > 5
                 && !licenceNumberPart.Contains('.')
                 && licenceNumberPart.Count(char.IsDigit) >= 3;
-
-            // Leave the below, we can't trust the bit in the filename for old files
-
-            /*if (!isPartALicenceNumber)
-            {
-                licenceNumberPart = filenameParts[^1].Split('.')[0];
-
-                isPartALicenceNumber = licenceNumberPart.Length > 5
-                    && !licenceNumberPart.Contains('.')
-                    && licenceNumberPart.Count(char.IsDigit) >= 3;
-            }*/
 
             if (isPartALicenceNumber)
             {
@@ -3859,6 +3859,7 @@ public static class WalSchemaConverter
                     if (string.IsNullOrEmpty(scrapedLicenceNumber))
                     {
                         licenceNumber = fileNameLicenceNumber;
+                        source = "Filename";
                     }
                 }
             }
@@ -3876,12 +3877,12 @@ public static class WalSchemaConverter
             if (characterDifferenceCount <= 2)
             {
                 licenceNumber = fileNameLicenceNumber;
+                source = "Filename";
             }
         }
 
         licenceNumber = FormattingHelper.FormatLicenceNumber(licenceNumber, matchesResult.RegionCode)?.ToUpper();
-        
-        return (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence);
+        return (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, source);
     }
 
     private static (string? ScrapedLicenceNumber, double? Confidence, double? OcrConfidence)

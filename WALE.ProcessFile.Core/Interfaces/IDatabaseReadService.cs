@@ -106,7 +106,7 @@ public interface IDatabaseReadService
     
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
   
-    Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
+    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     

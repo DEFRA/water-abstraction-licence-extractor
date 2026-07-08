@@ -220,10 +220,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
     {
         await using var connection = GetPostgresConnection();
-        var licenceNumbers = new List<string> { permitNumber };
+        var licenceNumbers = new List<string> { licenceNumber };
         
         var sql = """
                SELECT
@@ -277,9 +277,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         paramsObj.Add("@RegionCode", regionCode);
         
         idx = 0;
-        foreach (var licenceNumber in licenceNumbers)
+        
+        foreach (var licenceNumberLoop in licenceNumbers)
         {
-            paramsObj.Add($"@LicNo{idx++}", licenceNumber);
+            paramsObj.Add($"@LicNo{idx++}", licenceNumberLoop);
         }
         
         var dataLine = await QueryFirstOrDefaultAsync<NaldAbstractionLicenceDataLine>(

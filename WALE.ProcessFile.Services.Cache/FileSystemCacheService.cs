@@ -596,7 +596,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
     {
         throw new NotImplementedException();
     }

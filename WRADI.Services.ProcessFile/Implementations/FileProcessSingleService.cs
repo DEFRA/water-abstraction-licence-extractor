@@ -60,7 +60,7 @@ public class FileProcessSingleService(
             await firstNamesCsvTask,
             fileService,
             cacheService,
-            GeneralConstants.UnsetRegionCode,
+            fileProcessSingleRequest.RegionId,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();

@@ -158,7 +158,7 @@ public interface ICacheService
     
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
     
-    Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
+    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
     
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     

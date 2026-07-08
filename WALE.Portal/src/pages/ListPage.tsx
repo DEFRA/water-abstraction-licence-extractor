@@ -16,7 +16,7 @@ import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
 import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
-import ProcessRunFilters from "../components/ProcessRunFilters";
+import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
 
 function ListPage() {
@@ -228,7 +228,7 @@ function ListPage() {
                     </div>
                     <table id="licencesTable">
                         <thead>
-                        <ProcessRunFilters
+                        <ProcessRunLicenceFilters
                             data={paginationOutputList}
                             query={query}
                             updateQuery={updateQuery}

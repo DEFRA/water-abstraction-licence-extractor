@@ -2,7 +2,7 @@ import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
 import { OutputListDataItem } from "../api/generated/apiClient";
 import { useMemo } from "react";
 
-type ProcessRunFiltersProps = {
+type ProcessRunLicenceFiltersProps = {
     data: OutputListDataItem[];
     query: ProcessRunQuery;
     updateQuery: <K extends keyof ProcessRunQuery>(
@@ -11,12 +11,25 @@ type ProcessRunFiltersProps = {
     ) => void;
 };
 
-export function ProcessRunFilters({
+export function ProcessRunLicenceFilters({
                                       data,
                                       query,
                                       updateQuery
-                                  }: ProcessRunFiltersProps) {
-
+                                  }: ProcessRunLicenceFiltersProps) {
+    const clearFilters = () => {
+        updateQuery("purposesEmpty", undefined);
+        updateQuery("pointsEmpty", undefined);
+        updateQuery("limitsEmpty", undefined);
+        updateQuery("aggregatesEmpty", undefined);
+        updateQuery("ocrScan", undefined);
+        updateQuery("issueYear", undefined);
+        updateQuery("issuer", undefined);
+        updateQuery("meansFound", undefined);
+        updateQuery("linkedLicencesType", undefined);
+        updateQuery("ShortLicenceSetId", undefined);
+        updateQuery("verificationType", undefined);
+    };
+    
     const uniqueIssuers = useMemo(() => {
         const issuers = new Set(
             data
@@ -54,9 +67,18 @@ export function ProcessRunFilters({
     return (
         <tr>
             <td></td>
-            <td></td>
+            <td>    
+                <button
+                type="button"
+                className="clear-filters-button"
+                onClick={clearFilters}
+            >
+                Clear Filters
+            </button>
+            </td>
             <td>
                 <select
+                    className={query.purposesEmpty === undefined ? "" : "filter-active"}
                     value={
                         query.purposesEmpty === undefined
                             ? ""
@@ -78,6 +100,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={query.pointsEmpty === undefined ? "" : "filter-active"}
                     value={
                         query.pointsEmpty === undefined
                             ? ""
@@ -99,6 +122,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={query.limitsEmpty === undefined ? "" : "filter-active"}
                     value={
                         query.limitsEmpty === undefined
                             ? ""
@@ -120,6 +144,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={query.aggregatesEmpty === undefined ? "" : "filter-active"}
                     value={
                         query.aggregatesEmpty === undefined
                             ? ""
@@ -141,10 +166,11 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={query.ocrScan === undefined ? "" : "filter-active"}
                     value={
                         query.ocrScan === undefined
                             ? ""
-                            : String(query.purposesEmpty)
+                            : String(query.ocrScan)
                     }
                     onChange={e =>
                         updateQuery(
@@ -163,6 +189,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={!query.issueYear ? "" : "filter-active"} 
                     value={ query.issueYear === undefined
                         ? ""
                         : String(query.issueYear)}
@@ -184,6 +211,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={!query.issuer ? "" : "filter-active"}     
                     value={query.issuer ?? ""}
                     onChange={e =>
                         updateQuery(
@@ -204,10 +232,11 @@ export function ProcessRunFilters({
 
             <td>
                 <select
+                    className={query.meansFound === undefined ? "" : "filter-active"}
                     value={
                         query.meansFound === undefined
                             ? ""
-                            : String(query.purposesEmpty)
+                            : String(query.meansFound)
                     }
                     onChange={e =>
                         updateQuery(
@@ -228,6 +257,7 @@ export function ProcessRunFilters({
 
             <td>
                 <select
+                    className={!query.linkedLicencesType ? "" : "filter-active"}
                     value={query.linkedLicencesType ?? ""}
                     onChange={e =>
                         updateQuery(
@@ -253,6 +283,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={!query.ShortLicenceSetId ? "" : "filter-active"}
                     value={query.ShortLicenceSetId ?? ""}
                     onChange={e =>
                         updateQuery(
@@ -272,6 +303,7 @@ export function ProcessRunFilters({
             </td>
             <td>
                 <select
+                    className={!query.verificationType ? "" : "filter-active"}
                     value={query.verificationType ?? ""}
                     onChange={e =>
                         updateQuery(
@@ -295,4 +327,4 @@ export function ProcessRunFilters({
     );
 }
 
-export default ProcessRunFilters;
+export default ProcessRunLicenceFilters;

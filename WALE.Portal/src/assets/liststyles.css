@@ -154,3 +154,8 @@ h1 a.selected {
 #dragDropArea p {
   margin: 0;
 }
+
+.filter-active {
+  background-color: yellowgreen;
+}
+

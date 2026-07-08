@@ -249,3 +249,7 @@ dl a {
   font-weight: bold;
   border: 2px solid black;
 }
+
+.filter-active {
+  background-color: #e8f4ff;
+}

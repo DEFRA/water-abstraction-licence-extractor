@@ -24,38 +24,32 @@ public static class FileProcessServiceRegistration
     {
         services.Configure<FileProcessAppSettings>(options =>
         {
-            options.ConcurrentCount = ConfigHelper.GetRequiredInt(configuration, "ConcurrentCount");
-            options.RegenerateMappingJson = ConfigHelper.GetRequiredBool(configuration, "REGENERATE_MAPPING_JSON");
-            options.LoadAiJs = ConfigHelper.GetRequiredBool(configuration, "LOAD_AI_JS");
             options.RefreshCache = ConfigHelper.GetRequiredBool(configuration, "RefreshCache");
-            options.ReportTemplatePath = ConfigHelper.GetRequiredString(configuration, "ReportTemplatePath");
-            options.OutputFolder = ConfigHelper.GetRequiredString(configuration, "OutputFolder");
-            options.ListDataPath = ConfigHelper.GetRequiredString(configuration, "ListDataPath");
-            options.ProcessRunsDataPath = ConfigHelper.GetRequiredString(configuration, "ProcessRunsDataPath");
-            options.InternalDataPath = ConfigHelper.GetRequiredString(configuration, "InternalDataPath");
-            options.LicenceDataPath = ConfigHelper.GetRequiredString(configuration, "LicenceDataPath");
-            options.LicenceSetsDataPath = ConfigHelper.GetRequiredString(configuration, "LicenceSetsDataPath");
-            options.ThumbnailImageDataPath = ConfigHelper.GetRequiredString(configuration, "ThumbnailImageDataPath");
-            options.FullImageDataPath = ConfigHelper.GetRequiredString(configuration, "FullImageDataPath");
-            options.FileMappingPath = ConfigHelper.GetRequiredString(configuration, "FileMappingPath");
             options.DotnetPath = ConfigHelper.GetRequiredString(configuration, "DotnetPath");
+            options.ApiBaseUrl = ConfigHelper.GetRequiredString(configuration, "ApiBaseUrl");
+            options.PdfFolderPath = ConfigHelper.GetRequiredString(configuration, "PdfFolderPath");
+
+            // Tesseract
             options.TesseractExeName = ConfigHelper.GetRequiredString(configuration, "TesseractExeName");
             options.TesseractExeDirectory = ConfigHelper.GetRequiredString(configuration, "TesseractExeDirectory");
             options.TessDataPrefix = ConfigHelper.GetRequiredString(configuration, "TESSDATA_PREFIX");
-            options.ApiBaseUrl = ConfigHelper.GetRequiredString(configuration, "ApiBaseUrl");
-            options.PdfFolderPath = ConfigHelper.GetRequiredString(configuration, "PdfFolderPath");
-            options.AzureAIVisionEndpoint = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionEndpoint");
-            options.AzureAIVisionKey = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionKey");
+            
+            // Azure AI
+            options.AzureAiVisionEndpoint = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionEndpoint");
+            options.AzureAiVisionKey = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionKey");
 
+            // AWS general
+            options.AwsRegionName = ConfigHelper.GetRequiredString(configuration, "AwsRegionName");
+            
             // Optional S3 support
             options.AwsAccessKey = configuration["AwsAccessKey"];
             options.AwsSecretKey = configuration["AwsSecretKey"];
             options.AwsRegionName = configuration["AwsRegionName"];
             options.AwsS3BucketName = configuration["AwsS3BucketName"];
             
+            // SQS
             options.SqsQueueOrchestrationUrl = ConfigHelper.GetRequiredString(configuration, "SqsQueueOrchestrationUrl");
             options.SqsQueueFileProcessUrl = ConfigHelper.GetRequiredString(configuration, "SqsQueueFileProcessUrl");
-            options.AwsRegionName = ConfigHelper.GetRequiredString(configuration, "AwsRegionName");
             options.SqsWaitTimeSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsWaitTimeSeconds") ?? 20;
             options.SqsMaxNumberOfMessages = ConfigHelper.GetOptionalInt(configuration, "SqsMaxNumberOfMessages") ?? 10;
             options.SqsVisibilityTimeoutSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsVisibilityTimeoutSeconds");
@@ -132,7 +126,7 @@ public static class FileProcessServiceRegistration
         services.AddSingleton<PdfPigNoOcrPdfDocumentService>();
         services.AddSingleton<DocnetNoOcrAlternativePdfDocumentService>();
 
-        services.AddSingleton<List<IPdfDataExtractorService>>(sp =>
+        services.AddSingleton<IPdfDataExtractorService>(sp =>
         {
             var settings = sp.GetRequiredService<FileProcessAppSettings>();
             var cacheService = sp.GetRequiredService<ICacheService>();
@@ -140,57 +134,45 @@ public static class FileProcessServiceRegistration
             var pdfPigDocumentService = sp.GetRequiredService<PdfPigNoOcrPdfDocumentService>();
             var docnetAlternativeDocumentService = sp.GetRequiredService<DocnetNoOcrAlternativePdfDocumentService>();
 
-            var pdfDataExtractors = new List<IPdfDataExtractorService>();
+            var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
-            for (var idx = 0; idx < settings.ConcurrentCount; idx++)
-            {
-                var id = idx + 1;
-                var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
+            var tesseractOcrSparse = new TesseractOcrDataExtractorService(
+                settings.TessDataPrefix,
+                WALE.ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
+                cacheService,
+                outputService,
+                settings.DotnetPath,
+                settings.TesseractExeName,
+                settings.TesseractExeDirectory);
 
-                var tesseractOcrSparse = new TesseractOcrDataExtractorService(
-                    settings.TessDataPrefix,
-                    WALE.ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
-                    cacheService,
-                    outputService,
-                    settings.DotnetPath,
-                    settings.TesseractExeName,
-                    settings.TesseractExeDirectory,
-                    id);
+            var tesseractOcrDefault = new TesseractOcrDataExtractorService(
+                settings.TessDataPrefix,
+                WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
+                cacheService,
+                outputService,
+                settings.DotnetPath,
+                settings.TesseractExeName,
+                settings.TesseractExeDirectory);
 
-                var tesseractOcrDefault = new TesseractOcrDataExtractorService(
-                    settings.TessDataPrefix,
-                    WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
-                    cacheService,
-                    outputService,
-                    settings.DotnetPath,
-                    settings.TesseractExeName,
-                    settings.TesseractExeDirectory,
-                    id);
+            var azureAiServices = new AzureAiVisionOcrDataExtractorService(
+                settings.AzureAiVisionEndpoint,
+                settings.AzureAiVisionKey,
+                cacheService,
+                outputService);
 
-                var azureAiServices = new AzureAiVisionOcrDataExtractorService(
-                    settings.AzureAIVisionEndpoint,
-                    settings.AzureAIVisionKey,
-                    cacheService,
-                    outputService,
-                    id);
+            var pdfDataExtractor = new PdfDataExtractorService(
+                pdfPigNoOcr,
+                [
+                    tesseractOcrSparse,
+                    tesseractOcrDefault,
+                    azureAiServices
+                ],
+                cacheService,
+                outputService,
+                pdfPigDocumentService,
+                docnetAlternativeDocumentService);
 
-                var pdfDataExtractor = new PdfDataExtractorService(
-                    pdfPigNoOcr,
-                    [
-                        tesseractOcrSparse,
-                        tesseractOcrDefault,
-                        azureAiServices
-                    ],
-                    cacheService,
-                    outputService,
-                    pdfPigDocumentService,
-                    docnetAlternativeDocumentService,
-                    id);
-
-                pdfDataExtractors.Add(pdfDataExtractor);
-            }
-
-            return pdfDataExtractors;
+            return pdfDataExtractor;
         });
 
         services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();

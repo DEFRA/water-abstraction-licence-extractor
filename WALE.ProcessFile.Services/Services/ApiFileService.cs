@@ -59,7 +59,7 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             if (hrex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
             {
                 ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(PdfDataExtractorService)} - File was too large, skipping - {filename}");
+                    $"WARNING - {nameof(ApiFileService)} - File was too large, skipping - {filename}");
                 
                 return null;
             }

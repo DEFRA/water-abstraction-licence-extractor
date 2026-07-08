@@ -69,6 +69,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         ?? throw new InvalidOperationException("POSTGRESQL_PASSWORD connection string not configured");
     
     var awsRegionName = config.GetValue<string>("AwsRegionName")
+        ?? config.GetValue<string>("AwsS3RegionName")
         ?? throw new NullReferenceException("AwsRegionName");
     var s3BucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");

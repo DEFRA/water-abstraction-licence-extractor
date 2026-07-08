@@ -7,24 +7,24 @@ public static class CopyS3Files
 {
     public static async Task RunAsync()
     {
-        var devHttpClient = new HttpClient();
-        devHttpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl); // DEV url
-        var devFileService = new ApiFileService(devHttpClient);
+        var sourceHttpClient = new HttpClient();
+        sourceHttpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl); // Source url
+        var sourceFileService = new ApiFileService(sourceHttpClient);
         
-        var tstHttpClient = new HttpClient();
-        tstHttpClient.BaseAddress = new Uri(""); // Hardcoded TST url
-        var tstFileService = new ApiFileService(tstHttpClient);
+        var destinationHttpClient = new HttpClient();
+        destinationHttpClient.BaseAddress = new Uri("http://localhost:8080"); // Hardcoded destination url
+        var destinationFileService = new ApiFileService(destinationHttpClient);
 
-        var devFiles = await devFileService.GetAllFilesWithMetadataAsync(
+        var sourceFiles = await sourceFileService.GetAllFilesWithMetadataAsync(
             string.Empty,
             int.MaxValue);
         
         var copyingTasks = new List<Task>();
         const int maxConcurrent = 5;
         
-        foreach (var filename in devFiles.Select(devFileMetadata => devFileMetadata.Filename))
+        foreach (var filename in sourceFiles.Select(sourceFileMetadata => sourceFileMetadata.Filename))
         {
-            copyingTasks.Add(CopyFileAsync(filename, devFileService, tstFileService));
+            copyingTasks.Add(CopyFileAsync(filename, sourceFileService, destinationFileService));
             
             if (copyingTasks.Count != maxConcurrent)
             {
@@ -52,29 +52,32 @@ public static class CopyS3Files
         }
     }
 
-    private static async Task CopyFileAsync(string filename, ApiFileService devFileService, ApiFileService tstFileService)
+    private static async Task CopyFileAsync(
+        string filename,
+        ApiFileService sourceFileService,
+        ApiFileService destinationFileService)
     {
-        var devFileStream = await devFileService.GetFileAsStreamAsync(filename);
+        var sourceFileStream = await sourceFileService.GetFileAsStreamAsync(filename);
 
-        if (devFileStream == null)
+        if (sourceFileStream == null)
         {
             return;
         }
         
         const int chunkSize = 5 * 1024 * 1024; // 5MB
         
-        if (devFileStream.Length > chunkSize)
+        if (sourceFileStream.Length > chunkSize)
         {
             var chunkIndex = 0;
-            var totalChunks = Convert.ToInt32(Math.Ceiling(devFileStream.Length / (double)chunkSize));
+            var totalChunks = Convert.ToInt32(Math.Ceiling(sourceFileStream.Length / (double)chunkSize));
                 
             string? uploadId = null;
                 
             while (chunkIndex < totalChunks)
             {
-                var tempUploadId = await tstFileService.UploadFileChunkAsync(
+                var tempUploadId = await destinationFileService.UploadFileChunkAsync(
                     filename,
-                    devFileStream,
+                    sourceFileStream,
                     chunkIndex++,
                     totalChunks,
                     uploadId);
@@ -84,7 +87,7 @@ public static class CopyS3Files
         }
         else
         {
-            await tstFileService.UploadFileAsStreamAsync(filename, devFileStream);
+            await destinationFileService.UploadFileAsStreamAsync(filename, sourceFileStream);
         }
     }
 }

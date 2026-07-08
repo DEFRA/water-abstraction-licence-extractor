@@ -5,6 +5,7 @@ using CsvHelper;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
@@ -38,7 +39,22 @@ public static class GenerateAggregatesCsvForTesting
     static async Task<List<AggregatesCsvLine>> GetDataAsync(int processRunId)
     {
         var returnList = new List<AggregatesCsvLine>();
-        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
+        
+        var licences = new List<Licence>();
+        var loopLicences = new List<Licence>();
+        
+        const int licencesToTake = 10;
+        var first = true;
+        var loopIdx = 0;
+        
+        while (first || loopLicences.Count == licencesToTake)
+        {
+            first = false;
+            var startAt = loopIdx++ * licencesToTake;
+            
+            loopLicences = await OutputService.GetLicencesAsync(processRunId, startAt, licencesToTake);
+            licences.AddRange(loopLicences);
+        }
 
         foreach (var licence in licences)
         {

@@ -100,7 +100,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     [HttpGet]
     public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
     {
-        var total = await outputService.GetTotalLicenceCountAsync(processRunId, null);
+        var total = await outputService.GetTotalLicenceCountAsync(processRunId, new ProcessRunQuery());
         return Ok(total);
     }
 }

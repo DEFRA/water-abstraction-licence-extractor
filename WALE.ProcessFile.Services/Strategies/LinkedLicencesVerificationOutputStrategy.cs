@@ -39,7 +39,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 var verification = invertedVerification.Verification;
                 var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    verification.LicenceSectionOverrideValue 
+                    ?? verification.LicenceSectionSnapshotValue 
+                    ?? verification.LicenceSectionScrapedValue!,
                     JsonHelper.GetSerializerOptions());
 
                 overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
@@ -140,7 +142,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             try
             {
                 var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    verification.LicenceSectionOverrideValue 
+                    ?? verification.LicenceSectionSnapshotValue
+                    ?? verification.LicenceSectionScrapedValue!,
                     JsonHelper.GetSerializerOptions());
 
                 var existingLinkedLicence =

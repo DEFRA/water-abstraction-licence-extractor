@@ -7,6 +7,7 @@ public class LicenceSectionVerification
     public int ProcessRunId { get; set; }
     public string? LicenceSectionName { get; set; }
     public string? LicenceSectionScrapedValue { get; set; }
+    public string? LicenceSectionSnapshotValue { get; set; }
     public string? LicenceSectionOverrideValue { get; set; }
     public string? VerificationType { get; set; }
     public string? LicenceSectionItemId { get; set; }

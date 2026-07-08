@@ -571,11 +571,44 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    getAll2(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/FirstNames/GetAll";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAll2(_response);
+        });
+    }
+
+    protected processGetAll2(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    getAll2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    getAll3(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetAll?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -594,11 +627,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll2(_response);
+            return this.processGetAll3(_response);
         });
     }
 
-    protected processGetAll2(response: Response): Promise<void> {
+    protected processGetAll3(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1038,14 +1071,24 @@ export class Client {
 
     /**
      * @param processRunId (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
      * @return OK
      */
-    getAll3(processRunId: number | undefined): Promise<void> {
+    getAll4(processRunId: number | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetAll?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1055,11 +1098,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll3(_response);
+            return this.processGetAll4(_response);
         });
     }
 
-    protected processGetAll3(response: Response): Promise<void> {
+    protected processGetAll4(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1492,7 +1535,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getAll4(regionCode: number | undefined, allVersions: boolean | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
+    getAll5(regionCode: number | undefined, allVersions: boolean | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/GetAll?";
         if (regionCode === null)
             throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
@@ -1519,11 +1562,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll4(_response);
+            return this.processGetAll5(_response);
         });
     }
 
-    protected processGetAll4(response: Response): Promise<void> {
+    protected processGetAll5(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2177,8 +2220,8 @@ export class Client {
     /**
      * @return OK
      */
-    markProcessRunComplete(body: ProcessRunEndRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunComplete";
+    markProcessRunCompleteIfComplete(body: ProcessRunEndRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunCompleteIfComplete";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -2192,11 +2235,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processMarkProcessRunComplete(_response);
+            return this.processMarkProcessRunCompleteIfComplete(_response);
         });
     }
 
-    protected processMarkProcessRunComplete(response: Response): Promise<void> {
+    protected processMarkProcessRunCompleteIfComplete(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2395,7 +2438,7 @@ export class Client {
     /**
      * @return OK
      */
-    getAll5(): Promise<void> {
+    getAll6(): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/VersionFiles/GetAll";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2406,11 +2449,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll5(_response);
+            return this.processGetAll6(_response);
         });
     }
 
-    protected processGetAll5(response: Response): Promise<void> {
+    protected processGetAll6(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -4548,15 +4591,6 @@ export interface ICondition {
     [key: string]: any;
 }
 
-export enum ConfidenceType {
-    NotSet = "NotSet",
-    OcrConfidencePassthrough = "OcrConfidencePassthrough",
-    OcrConfidenceMultiplied = "OcrConfidenceMultiplied",
-    OcrConfidenceMultipliedMinusNPerLine = "OcrConfidenceMultipliedMinusNPerLine",
-    OcrConfidencePassthroughMinusNPerLine = "OcrConfidencePassthroughMinusNPerLine",
-    Static = "Static",
-}
-
 export class ContainedInInformation implements IContainedInInformation {
     source?: InformationSource;
     direction?: InformationDirection;
@@ -5151,7 +5185,7 @@ export class LabelGroupResult implements ILabelGroupResult {
     pageNumber?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
-    matchedLabel?: LabelToMatch | undefined;
+    matchedLabelName?: string | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
@@ -5185,7 +5219,7 @@ export class LabelGroupResult implements ILabelGroupResult {
             this.pageNumber = _data["pageNumber"];
             this.serviceName = _data["serviceName"];
             this.labelGroupName = _data["labelGroupName"];
-            this.matchedLabel = _data["matchedLabel"] ? LabelToMatch.fromJS(_data["matchedLabel"]) : undefined as any;
+            this.matchedLabelName = _data["matchedLabelName"];
             this.confidence = _data["confidence"];
             if (Array.isArray(_data["subResults"])) {
                 this.subResults = [] as any;
@@ -5225,7 +5259,7 @@ export class LabelGroupResult implements ILabelGroupResult {
         data["pageNumber"] = this.pageNumber;
         data["serviceName"] = this.serviceName;
         data["labelGroupName"] = this.labelGroupName;
-        data["matchedLabel"] = this.matchedLabel ? this.matchedLabel.toJSON() : undefined as any;
+        data["matchedLabelName"] = this.matchedLabelName;
         data["confidence"] = this.confidence;
         if (Array.isArray(this.subResults)) {
             data["subResults"] = [];
@@ -5250,544 +5284,10 @@ export interface ILabelGroupResult {
     pageNumber?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
-    matchedLabel?: LabelToMatch | undefined;
+    matchedLabelName?: string | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
-
-    [key: string]: any;
-}
-
-export enum LabelPosition {
-    ApplicableToMost = "ApplicableToMost",
-    LabelIsBeforeTextToFind = "LabelIsBeforeTextToFind",
-    LabelIsAfterTextToFind = "LabelIsAfterTextToFind",
-    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore",
-    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter",
-    LabelIsInMiddleOfTextToFind = "LabelIsInMiddleOfTextToFind",
-    ContractIsSuccession = "ContractIsSuccession",
-    TextToFindIsBetweenLabels = "TextToFindIsBetweenLabels",
-    RelatedCategoryPosition = "RelatedCategoryPosition",
-    SplitAtLabel = "SplitAtLabel",
-    LabelIsActuallyResult = "LabelIsActuallyResult",
-}
-
-export class LabelToMatch implements ILabelToMatch {
-    textStart?: TextToMatch[] | undefined;
-    matchAllText?: boolean;
-    ignoreBlockIfContains?: string[] | undefined;
-    ignoreMatchIfContains?: string[] | undefined;
-    skipLineWhenContains?: string[] | undefined;
-    remove?: any[] | undefined;
-    textEnd?: any[] | undefined;
-    mustContain?: string[] | undefined;
-    minimumSubMatches?: number | undefined;
-    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
-    canGoOverPageBoundary?: boolean;
-    position?: LabelPosition;
-    relatedCategoryName?: string | undefined;
-    relatedName?: string | undefined;
-    leewayBefore?: number;
-    subLabels?: LabelToMatch2[] | undefined;
-    format?: string;
-    includeStartLabelText?: boolean;
-    includeEndLabelText?: boolean;
-    includeWholeLine?: boolean;
-    name?: string | undefined;
-    categoryName?: string | undefined;
-    possibilities?: string[] | undefined;
-    previousLinesToFetch?: number;
-    nextLinesToFetch?: number;
-    doNotTrimLines?: boolean;
-    multipleMatchBehaviour?: MultipleMatchBehaviour;
-    findMultipleOnSingleLine?: boolean;
-    autoCorrect?: boolean;
-    confidenceType?: ConfidenceType;
-    noOcrConfidence?: number;
-    confidenceIfMatched?: number | undefined;
-    ocrConfidenceMinusNPerLine?: number;
-    skipLineNumbers?: number[];
-
-    [key: string]: any;
-
-    constructor(data?: ILabelToMatch) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            if (Array.isArray(_data["textStart"])) {
-                this.textStart = [] as any;
-                for (let item of _data["textStart"])
-                    this.textStart!.push(TextToMatch.fromJS(item));
-            }
-            this.matchAllText = _data["matchAllText"];
-            if (Array.isArray(_data["ignoreBlockIfContains"])) {
-                this.ignoreBlockIfContains = [] as any;
-                for (let item of _data["ignoreBlockIfContains"])
-                    this.ignoreBlockIfContains!.push(item);
-            }
-            if (Array.isArray(_data["ignoreMatchIfContains"])) {
-                this.ignoreMatchIfContains = [] as any;
-                for (let item of _data["ignoreMatchIfContains"])
-                    this.ignoreMatchIfContains!.push(item);
-            }
-            if (Array.isArray(_data["skipLineWhenContains"])) {
-                this.skipLineWhenContains = [] as any;
-                for (let item of _data["skipLineWhenContains"])
-                    this.skipLineWhenContains!.push(item);
-            }
-            if (Array.isArray(_data["remove"])) {
-                this.remove = [] as any;
-                for (let item of _data["remove"])
-                    this.remove!.push(item);
-            }
-            if (Array.isArray(_data["textEnd"])) {
-                this.textEnd = [] as any;
-                for (let item of _data["textEnd"])
-                    this.textEnd!.push(item);
-            }
-            if (Array.isArray(_data["mustContain"])) {
-                this.mustContain = [] as any;
-                for (let item of _data["mustContain"])
-                    this.mustContain!.push(item);
-            }
-            this.minimumSubMatches = _data["minimumSubMatches"];
-            this.multipleServiceMatchBehaviour = _data["multipleServiceMatchBehaviour"];
-            this.canGoOverPageBoundary = _data["canGoOverPageBoundary"];
-            this.position = _data["position"];
-            this.relatedCategoryName = _data["relatedCategoryName"];
-            this.relatedName = _data["relatedName"];
-            this.leewayBefore = _data["leewayBefore"];
-            if (Array.isArray(_data["subLabels"])) {
-                this.subLabels = [] as any;
-                for (let item of _data["subLabels"])
-                    this.subLabels!.push(LabelToMatch2.fromJS(item));
-            }
-            this.format = _data["format"];
-            this.includeStartLabelText = _data["includeStartLabelText"];
-            this.includeEndLabelText = _data["includeEndLabelText"];
-            this.includeWholeLine = _data["includeWholeLine"];
-            this.name = _data["name"];
-            this.categoryName = _data["categoryName"];
-            if (Array.isArray(_data["possibilities"])) {
-                this.possibilities = [] as any;
-                for (let item of _data["possibilities"])
-                    this.possibilities!.push(item);
-            }
-            this.previousLinesToFetch = _data["previousLinesToFetch"];
-            this.nextLinesToFetch = _data["nextLinesToFetch"];
-            this.doNotTrimLines = _data["doNotTrimLines"];
-            this.multipleMatchBehaviour = _data["multipleMatchBehaviour"];
-            this.findMultipleOnSingleLine = _data["findMultipleOnSingleLine"];
-            this.autoCorrect = _data["autoCorrect"];
-            this.confidenceType = _data["confidenceType"];
-            this.noOcrConfidence = _data["noOcrConfidence"];
-            this.confidenceIfMatched = _data["confidenceIfMatched"];
-            this.ocrConfidenceMinusNPerLine = _data["ocrConfidenceMinusNPerLine"];
-            if (Array.isArray(_data["skipLineNumbers"])) {
-                this.skipLineNumbers = [] as any;
-                for (let item of _data["skipLineNumbers"])
-                    this.skipLineNumbers!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): LabelToMatch {
-        data = typeof data === 'object' ? data : {};
-        let result = new LabelToMatch();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        if (Array.isArray(this.textStart)) {
-            data["textStart"] = [];
-            for (let item of this.textStart)
-                data["textStart"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["matchAllText"] = this.matchAllText;
-        if (Array.isArray(this.ignoreBlockIfContains)) {
-            data["ignoreBlockIfContains"] = [];
-            for (let item of this.ignoreBlockIfContains)
-                data["ignoreBlockIfContains"].push(item);
-        }
-        if (Array.isArray(this.ignoreMatchIfContains)) {
-            data["ignoreMatchIfContains"] = [];
-            for (let item of this.ignoreMatchIfContains)
-                data["ignoreMatchIfContains"].push(item);
-        }
-        if (Array.isArray(this.skipLineWhenContains)) {
-            data["skipLineWhenContains"] = [];
-            for (let item of this.skipLineWhenContains)
-                data["skipLineWhenContains"].push(item);
-        }
-        if (Array.isArray(this.remove)) {
-            data["remove"] = [];
-            for (let item of this.remove)
-                data["remove"].push(item);
-        }
-        if (Array.isArray(this.textEnd)) {
-            data["textEnd"] = [];
-            for (let item of this.textEnd)
-                data["textEnd"].push(item);
-        }
-        if (Array.isArray(this.mustContain)) {
-            data["mustContain"] = [];
-            for (let item of this.mustContain)
-                data["mustContain"].push(item);
-        }
-        data["minimumSubMatches"] = this.minimumSubMatches;
-        data["multipleServiceMatchBehaviour"] = this.multipleServiceMatchBehaviour;
-        data["canGoOverPageBoundary"] = this.canGoOverPageBoundary;
-        data["position"] = this.position;
-        data["relatedCategoryName"] = this.relatedCategoryName;
-        data["relatedName"] = this.relatedName;
-        data["leewayBefore"] = this.leewayBefore;
-        if (Array.isArray(this.subLabels)) {
-            data["subLabels"] = [];
-            for (let item of this.subLabels)
-                data["subLabels"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["format"] = this.format;
-        data["includeStartLabelText"] = this.includeStartLabelText;
-        data["includeEndLabelText"] = this.includeEndLabelText;
-        data["includeWholeLine"] = this.includeWholeLine;
-        data["name"] = this.name;
-        data["categoryName"] = this.categoryName;
-        if (Array.isArray(this.possibilities)) {
-            data["possibilities"] = [];
-            for (let item of this.possibilities)
-                data["possibilities"].push(item);
-        }
-        data["previousLinesToFetch"] = this.previousLinesToFetch;
-        data["nextLinesToFetch"] = this.nextLinesToFetch;
-        data["doNotTrimLines"] = this.doNotTrimLines;
-        data["multipleMatchBehaviour"] = this.multipleMatchBehaviour;
-        data["findMultipleOnSingleLine"] = this.findMultipleOnSingleLine;
-        data["autoCorrect"] = this.autoCorrect;
-        data["confidenceType"] = this.confidenceType;
-        data["noOcrConfidence"] = this.noOcrConfidence;
-        data["confidenceIfMatched"] = this.confidenceIfMatched;
-        data["ocrConfidenceMinusNPerLine"] = this.ocrConfidenceMinusNPerLine;
-        if (Array.isArray(this.skipLineNumbers)) {
-            data["skipLineNumbers"] = [];
-            for (let item of this.skipLineNumbers)
-                data["skipLineNumbers"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface ILabelToMatch {
-    textStart?: TextToMatch[] | undefined;
-    matchAllText?: boolean;
-    ignoreBlockIfContains?: string[] | undefined;
-    ignoreMatchIfContains?: string[] | undefined;
-    skipLineWhenContains?: string[] | undefined;
-    remove?: any[] | undefined;
-    textEnd?: any[] | undefined;
-    mustContain?: string[] | undefined;
-    minimumSubMatches?: number | undefined;
-    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
-    canGoOverPageBoundary?: boolean;
-    position?: LabelPosition;
-    relatedCategoryName?: string | undefined;
-    relatedName?: string | undefined;
-    leewayBefore?: number;
-    subLabels?: LabelToMatch2[] | undefined;
-    format?: string;
-    includeStartLabelText?: boolean;
-    includeEndLabelText?: boolean;
-    includeWholeLine?: boolean;
-    name?: string | undefined;
-    categoryName?: string | undefined;
-    possibilities?: string[] | undefined;
-    previousLinesToFetch?: number;
-    nextLinesToFetch?: number;
-    doNotTrimLines?: boolean;
-    multipleMatchBehaviour?: MultipleMatchBehaviour;
-    findMultipleOnSingleLine?: boolean;
-    autoCorrect?: boolean;
-    confidenceType?: ConfidenceType;
-    noOcrConfidence?: number;
-    confidenceIfMatched?: number | undefined;
-    ocrConfidenceMinusNPerLine?: number;
-    skipLineNumbers?: number[];
-
-    [key: string]: any;
-}
-
-export class LabelToMatch2 implements ILabelToMatch2 {
-    textStart?: TextToMatch[] | undefined;
-    matchAllText?: boolean;
-    ignoreBlockIfContains?: string[] | undefined;
-    ignoreMatchIfContains?: string[] | undefined;
-    skipLineWhenContains?: string[] | undefined;
-    remove?: any[] | undefined;
-    textEnd?: any[] | undefined;
-    mustContain?: string[] | undefined;
-    minimumSubMatches?: number | undefined;
-    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
-    canGoOverPageBoundary?: boolean;
-    position?: LabelPosition;
-    relatedCategoryName?: string | undefined;
-    relatedName?: string | undefined;
-    leewayBefore?: number;
-    subLabels?: LabelToMatch2[] | undefined;
-    format?: string;
-    includeStartLabelText?: boolean;
-    includeEndLabelText?: boolean;
-    includeWholeLine?: boolean;
-    name?: string | undefined;
-    categoryName?: string | undefined;
-    possibilities?: string[] | undefined;
-    previousLinesToFetch?: number;
-    nextLinesToFetch?: number;
-    doNotTrimLines?: boolean;
-    multipleMatchBehaviour?: MultipleMatchBehaviour;
-    findMultipleOnSingleLine?: boolean;
-    autoCorrect?: boolean;
-    confidenceType?: ConfidenceType;
-    noOcrConfidence?: number;
-    confidenceIfMatched?: number | undefined;
-    ocrConfidenceMinusNPerLine?: number;
-    skipLineNumbers?: number[];
-
-    [key: string]: any;
-
-    constructor(data?: ILabelToMatch2) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            if (Array.isArray(_data["textStart"])) {
-                this.textStart = [] as any;
-                for (let item of _data["textStart"])
-                    this.textStart!.push(TextToMatch.fromJS(item));
-            }
-            this.matchAllText = _data["matchAllText"];
-            if (Array.isArray(_data["ignoreBlockIfContains"])) {
-                this.ignoreBlockIfContains = [] as any;
-                for (let item of _data["ignoreBlockIfContains"])
-                    this.ignoreBlockIfContains!.push(item);
-            }
-            if (Array.isArray(_data["ignoreMatchIfContains"])) {
-                this.ignoreMatchIfContains = [] as any;
-                for (let item of _data["ignoreMatchIfContains"])
-                    this.ignoreMatchIfContains!.push(item);
-            }
-            if (Array.isArray(_data["skipLineWhenContains"])) {
-                this.skipLineWhenContains = [] as any;
-                for (let item of _data["skipLineWhenContains"])
-                    this.skipLineWhenContains!.push(item);
-            }
-            if (Array.isArray(_data["remove"])) {
-                this.remove = [] as any;
-                for (let item of _data["remove"])
-                    this.remove!.push(item);
-            }
-            if (Array.isArray(_data["textEnd"])) {
-                this.textEnd = [] as any;
-                for (let item of _data["textEnd"])
-                    this.textEnd!.push(item);
-            }
-            if (Array.isArray(_data["mustContain"])) {
-                this.mustContain = [] as any;
-                for (let item of _data["mustContain"])
-                    this.mustContain!.push(item);
-            }
-            this.minimumSubMatches = _data["minimumSubMatches"];
-            this.multipleServiceMatchBehaviour = _data["multipleServiceMatchBehaviour"];
-            this.canGoOverPageBoundary = _data["canGoOverPageBoundary"];
-            this.position = _data["position"];
-            this.relatedCategoryName = _data["relatedCategoryName"];
-            this.relatedName = _data["relatedName"];
-            this.leewayBefore = _data["leewayBefore"];
-            if (Array.isArray(_data["subLabels"])) {
-                this.subLabels = [] as any;
-                for (let item of _data["subLabels"])
-                    this.subLabels!.push(LabelToMatch2.fromJS(item));
-            }
-            this.format = _data["format"];
-            this.includeStartLabelText = _data["includeStartLabelText"];
-            this.includeEndLabelText = _data["includeEndLabelText"];
-            this.includeWholeLine = _data["includeWholeLine"];
-            this.name = _data["name"];
-            this.categoryName = _data["categoryName"];
-            if (Array.isArray(_data["possibilities"])) {
-                this.possibilities = [] as any;
-                for (let item of _data["possibilities"])
-                    this.possibilities!.push(item);
-            }
-            this.previousLinesToFetch = _data["previousLinesToFetch"];
-            this.nextLinesToFetch = _data["nextLinesToFetch"];
-            this.doNotTrimLines = _data["doNotTrimLines"];
-            this.multipleMatchBehaviour = _data["multipleMatchBehaviour"];
-            this.findMultipleOnSingleLine = _data["findMultipleOnSingleLine"];
-            this.autoCorrect = _data["autoCorrect"];
-            this.confidenceType = _data["confidenceType"];
-            this.noOcrConfidence = _data["noOcrConfidence"];
-            this.confidenceIfMatched = _data["confidenceIfMatched"];
-            this.ocrConfidenceMinusNPerLine = _data["ocrConfidenceMinusNPerLine"];
-            if (Array.isArray(_data["skipLineNumbers"])) {
-                this.skipLineNumbers = [] as any;
-                for (let item of _data["skipLineNumbers"])
-                    this.skipLineNumbers!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): LabelToMatch2 {
-        data = typeof data === 'object' ? data : {};
-        let result = new LabelToMatch2();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        if (Array.isArray(this.textStart)) {
-            data["textStart"] = [];
-            for (let item of this.textStart)
-                data["textStart"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["matchAllText"] = this.matchAllText;
-        if (Array.isArray(this.ignoreBlockIfContains)) {
-            data["ignoreBlockIfContains"] = [];
-            for (let item of this.ignoreBlockIfContains)
-                data["ignoreBlockIfContains"].push(item);
-        }
-        if (Array.isArray(this.ignoreMatchIfContains)) {
-            data["ignoreMatchIfContains"] = [];
-            for (let item of this.ignoreMatchIfContains)
-                data["ignoreMatchIfContains"].push(item);
-        }
-        if (Array.isArray(this.skipLineWhenContains)) {
-            data["skipLineWhenContains"] = [];
-            for (let item of this.skipLineWhenContains)
-                data["skipLineWhenContains"].push(item);
-        }
-        if (Array.isArray(this.remove)) {
-            data["remove"] = [];
-            for (let item of this.remove)
-                data["remove"].push(item);
-        }
-        if (Array.isArray(this.textEnd)) {
-            data["textEnd"] = [];
-            for (let item of this.textEnd)
-                data["textEnd"].push(item);
-        }
-        if (Array.isArray(this.mustContain)) {
-            data["mustContain"] = [];
-            for (let item of this.mustContain)
-                data["mustContain"].push(item);
-        }
-        data["minimumSubMatches"] = this.minimumSubMatches;
-        data["multipleServiceMatchBehaviour"] = this.multipleServiceMatchBehaviour;
-        data["canGoOverPageBoundary"] = this.canGoOverPageBoundary;
-        data["position"] = this.position;
-        data["relatedCategoryName"] = this.relatedCategoryName;
-        data["relatedName"] = this.relatedName;
-        data["leewayBefore"] = this.leewayBefore;
-        if (Array.isArray(this.subLabels)) {
-            data["subLabels"] = [];
-            for (let item of this.subLabels)
-                data["subLabels"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["format"] = this.format;
-        data["includeStartLabelText"] = this.includeStartLabelText;
-        data["includeEndLabelText"] = this.includeEndLabelText;
-        data["includeWholeLine"] = this.includeWholeLine;
-        data["name"] = this.name;
-        data["categoryName"] = this.categoryName;
-        if (Array.isArray(this.possibilities)) {
-            data["possibilities"] = [];
-            for (let item of this.possibilities)
-                data["possibilities"].push(item);
-        }
-        data["previousLinesToFetch"] = this.previousLinesToFetch;
-        data["nextLinesToFetch"] = this.nextLinesToFetch;
-        data["doNotTrimLines"] = this.doNotTrimLines;
-        data["multipleMatchBehaviour"] = this.multipleMatchBehaviour;
-        data["findMultipleOnSingleLine"] = this.findMultipleOnSingleLine;
-        data["autoCorrect"] = this.autoCorrect;
-        data["confidenceType"] = this.confidenceType;
-        data["noOcrConfidence"] = this.noOcrConfidence;
-        data["confidenceIfMatched"] = this.confidenceIfMatched;
-        data["ocrConfidenceMinusNPerLine"] = this.ocrConfidenceMinusNPerLine;
-        if (Array.isArray(this.skipLineNumbers)) {
-            data["skipLineNumbers"] = [];
-            for (let item of this.skipLineNumbers)
-                data["skipLineNumbers"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface ILabelToMatch2 {
-    textStart?: TextToMatch[] | undefined;
-    matchAllText?: boolean;
-    ignoreBlockIfContains?: string[] | undefined;
-    ignoreMatchIfContains?: string[] | undefined;
-    skipLineWhenContains?: string[] | undefined;
-    remove?: any[] | undefined;
-    textEnd?: any[] | undefined;
-    mustContain?: string[] | undefined;
-    minimumSubMatches?: number | undefined;
-    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
-    canGoOverPageBoundary?: boolean;
-    position?: LabelPosition;
-    relatedCategoryName?: string | undefined;
-    relatedName?: string | undefined;
-    leewayBefore?: number;
-    subLabels?: LabelToMatch2[] | undefined;
-    format?: string;
-    includeStartLabelText?: boolean;
-    includeEndLabelText?: boolean;
-    includeWholeLine?: boolean;
-    name?: string | undefined;
-    categoryName?: string | undefined;
-    possibilities?: string[] | undefined;
-    previousLinesToFetch?: number;
-    nextLinesToFetch?: number;
-    doNotTrimLines?: boolean;
-    multipleMatchBehaviour?: MultipleMatchBehaviour;
-    findMultipleOnSingleLine?: boolean;
-    autoCorrect?: boolean;
-    confidenceType?: ConfidenceType;
-    noOcrConfidence?: number;
-    confidenceIfMatched?: number | undefined;
-    ocrConfidenceMinusNPerLine?: number;
-    skipLineNumbers?: number[];
 
     [key: string]: any;
 }
@@ -6198,6 +5698,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
+    licenceSectionSnapshotValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
@@ -6227,6 +5728,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.processRunId = _data["processRunId"];
             this.licenceSectionName = _data["licenceSectionName"];
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
+            this.licenceSectionSnapshotValue = _data["licenceSectionSnapshotValue"];
             this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
             this.licenceSectionItemId = _data["licenceSectionItemId"];
@@ -6254,6 +5756,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["processRunId"] = this.processRunId;
         data["licenceSectionName"] = this.licenceSectionName;
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
+        data["licenceSectionSnapshotValue"] = this.licenceSectionSnapshotValue;
         data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
         data["licenceSectionItemId"] = this.licenceSectionItemId;
@@ -6270,6 +5773,7 @@ export interface ILicenceSectionVerification {
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
+    licenceSectionSnapshotValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
@@ -6954,26 +6458,6 @@ export interface IMeanOfAbstraction {
     abstractionLimit?: AbstractionLimit | undefined;
 
     [key: string]: any;
-}
-
-export enum MultipleMatchBehaviour {
-    FindSingleInstanceOfLabelWithASingleValue = "FindSingleInstanceOfLabelWithASingleValue",
-    FindSingleInstanceOfLabelWithASingleValueButMultipleLines = "FindSingleInstanceOfLabelWithASingleValueButMultipleLines",
-    FindSingleInstanceOfLabelWithMultipleValues = "FindSingleInstanceOfLabelWithMultipleValues",
-    FindMultipleInstancesOfLabelWithASingleValuePerLabel = "FindMultipleInstancesOfLabelWithASingleValuePerLabel",
-    FindMultipleInstancesOfLabelWithMultipleValuesPerLabel = "FindMultipleInstancesOfLabelWithMultipleValuesPerLabel",
-}
-
-export enum MultipleServiceMatchBehaviour {
-    UseLastServiceResult = "UseLastServiceResult",
-    UseFirstServiceResult = "UseFirstServiceResult",
-    UseLongestUseLastServiceResultIfEqual = "UseLongestUseLastServiceResultIfEqual",
-    UseFullestDateUseLastServiceResultIfMultipleFull = "UseFullestDateUseLastServiceResultIfMultipleFull",
-    UseFullestDateUseHighestOcrConfidenceIfMultipleFull = "UseFullestDateUseHighestOcrConfidenceIfMultipleFull",
-    UseBestLicenceNumberUseLastServiceResultIfEqual = "UseBestLicenceNumberUseLastServiceResultIfEqual",
-    UseMostSubResultsUseLastServiceResultIfEqual = "UseMostSubResultsUseLastServiceResultIfEqual",
-    UseAllUnique = "UseAllUnique",
-    UseHighestOcrConfidence = "UseHighestOcrConfidence",
 }
 
 export class NaldCartesianReference implements INaldCartesianReference {
@@ -9073,7 +8557,7 @@ export interface ISaveTemporaryOcrImageTextRequest {
 
 export class SendFileProcessSingleMessageRequest implements ISendFileProcessSingleMessageRequest {
     filePath?: string | undefined;
-    processRunId?: string | undefined;
+    processRunId?: number | undefined;
 
     [key: string]: any;
 
@@ -9118,99 +8602,7 @@ export class SendFileProcessSingleMessageRequest implements ISendFileProcessSing
 
 export interface ISendFileProcessSingleMessageRequest {
     filePath?: string | undefined;
-    processRunId?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class TextToMatch implements ITextToMatch {
-    text!: string;
-    lineMustStartWith?: boolean;
-    columnMustStartWith?: boolean;
-    ifMultiplePreferLast?: boolean;
-    ifMultiplePreferLongest?: boolean;
-    columnMustHave2SequentialNumbers?: boolean;
-    removeWholeLine?: boolean;
-    instanceNumber?: number;
-    isRegularExpression?: boolean;
-    regularExpressionIsCaseInsensitive?: boolean;
-    exceptWhenInsideWord?: boolean;
-    singleLinePerItem?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: ITextToMatch) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.text = _data["text"];
-            this.lineMustStartWith = _data["lineMustStartWith"];
-            this.columnMustStartWith = _data["columnMustStartWith"];
-            this.ifMultiplePreferLast = _data["ifMultiplePreferLast"];
-            this.ifMultiplePreferLongest = _data["ifMultiplePreferLongest"];
-            this.columnMustHave2SequentialNumbers = _data["columnMustHave2SequentialNumbers"];
-            this.removeWholeLine = _data["removeWholeLine"];
-            this.instanceNumber = _data["instanceNumber"];
-            this.isRegularExpression = _data["isRegularExpression"];
-            this.regularExpressionIsCaseInsensitive = _data["regularExpressionIsCaseInsensitive"];
-            this.exceptWhenInsideWord = _data["exceptWhenInsideWord"];
-            this.singleLinePerItem = _data["singleLinePerItem"];
-        }
-    }
-
-    static fromJS(data: any): TextToMatch {
-        data = typeof data === 'object' ? data : {};
-        let result = new TextToMatch();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["text"] = this.text;
-        data["lineMustStartWith"] = this.lineMustStartWith;
-        data["columnMustStartWith"] = this.columnMustStartWith;
-        data["ifMultiplePreferLast"] = this.ifMultiplePreferLast;
-        data["ifMultiplePreferLongest"] = this.ifMultiplePreferLongest;
-        data["columnMustHave2SequentialNumbers"] = this.columnMustHave2SequentialNumbers;
-        data["removeWholeLine"] = this.removeWholeLine;
-        data["instanceNumber"] = this.instanceNumber;
-        data["isRegularExpression"] = this.isRegularExpression;
-        data["regularExpressionIsCaseInsensitive"] = this.regularExpressionIsCaseInsensitive;
-        data["exceptWhenInsideWord"] = this.exceptWhenInsideWord;
-        data["singleLinePerItem"] = this.singleLinePerItem;
-        return data;
-    }
-}
-
-export interface ITextToMatch {
-    text: string;
-    lineMustStartWith?: boolean;
-    columnMustStartWith?: boolean;
-    ifMultiplePreferLast?: boolean;
-    ifMultiplePreferLongest?: boolean;
-    columnMustHave2SequentialNumbers?: boolean;
-    removeWholeLine?: boolean;
-    instanceNumber?: number;
-    isRegularExpression?: boolean;
-    regularExpressionIsCaseInsensitive?: boolean;
-    exceptWhenInsideWord?: boolean;
-    singleLinePerItem?: boolean;
+    processRunId?: number | undefined;
 
     [key: string]: any;
 }

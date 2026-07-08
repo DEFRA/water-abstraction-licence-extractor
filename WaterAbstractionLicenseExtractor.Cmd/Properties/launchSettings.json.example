@@ -14,7 +14,7 @@
         "CacheFolder": "Cache/",
         "AwsS3AccessKey": "",
         "AwsS3SecretKey": "",
-        "AwsS3RegionName": "eu-west-1",
+        "AwsRegionName": "eu-west-1",
         "AwsS3BucketName": "",        
         "ConcurrentCount": "10",
         "REGENERATE_MAPPING_JSON": "true",

@@ -9,10 +9,11 @@ string workflow;
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-workflow = "GenerateLicenceReaderExtract";
+//workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
+workflow = "CopyS3Files";
 
-const int processRunId = 1707;
+const int processRunId = 89;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 var folderPathUsername = "xxx";
@@ -97,6 +98,10 @@ switch (workflow)
     
     case "TestsForAiPrompts": // POC - An old POC in AI prompts to read files
         await TestsForAiPrompts.TestsForAiPromptsAsync();
+        break;
+    
+    case "CopyS3Files": // UNCOMMONLY USED - Promotion of S3 files between environments
+        await CopyS3Files.RunAsync();
         break;
 }
 

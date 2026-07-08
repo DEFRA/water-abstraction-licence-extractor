@@ -32,9 +32,8 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         
-        response.EnsureSuccessStatusCode();
-        
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
         
         return JsonSerializer.Deserialize<List<FileMetadata>>(
             content,

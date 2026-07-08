@@ -340,8 +340,8 @@ ConfiguredServices ConfigureServices()
                 ?? throw new NullReferenceException("AwsS3AccessKey");
             var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
                 ?? throw new NullReferenceException("AwsS3SecretKey");
-            var regionName = Environment.GetEnvironmentVariable("AwsS3RegionName")
-                ?? throw new NullReferenceException("AwsS3RegionName");
+            var regionName = Environment.GetEnvironmentVariable("AwsRegionName")
+                ?? throw new NullReferenceException("AwsRegionName");
             var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
                 ?? throw new NullReferenceException("AwsS3BucketName");
         

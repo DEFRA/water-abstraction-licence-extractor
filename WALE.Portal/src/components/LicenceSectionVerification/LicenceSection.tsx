@@ -16,6 +16,11 @@ export interface ILicenceSectionBody {
      * Returns the original scraped data of the section as JSON.
      */
     getScrapedData: (itemId?: string) => any;
+
+    /**
+     * Returns a snapshot of the data of the section, before the current session's edits, as JSON.
+     */
+    getSnapshotData: (itemId?: string) => any;
 }
 
 export interface LicenceSectionBodyProps {
@@ -62,6 +67,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
         if (bodyRef.current) {
             const data = isConfirmNone ? undefined : bodyRef.current.getData(pendingVerificationItemId);
             const scrapedData = isConfirmNone ? undefined : bodyRef.current.getScrapedData(pendingVerificationItemId);
+            const snapshotData = isConfirmNone ? undefined : bodyRef.current.getSnapshotData(pendingVerificationItemId);
             
             // Map the pending verification type to the required verificationType string
             let verificationType: string;
@@ -90,7 +96,8 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     licenceFileId: licenceFileId,
                     processRunId: processRunId,
                     licenceSectionName: title,
-                    licenceSectionScrapedValue: (verificationType === 'Added' || isConfirmNone) ? undefined : JSON.stringify(scrapedData),
+                    licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
+                    licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone) ? undefined : JSON.stringify(snapshotData),
                     licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone) ? JSON.stringify(data) : undefined,
                     verificationType: verificationType,
                     licenceSectionItemId: pendingVerificationItemId,

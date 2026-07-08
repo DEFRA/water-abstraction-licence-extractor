@@ -15,6 +15,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
     ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
+        const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
 
         const noneOutgoingVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(
             v => v.licenceSectionItemId === 'None Outgoing'
@@ -41,10 +42,16 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 }
                 return scrapedData;
             },
+            getSnapshotData: (itemId?: string) => {
+                if (itemId) {
+                    return snapshotData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                }
+                return snapshotData;
+            },
             onVerificationCancelled: () => {
                 setIsWaitingForVerification(false);
             }
-        }), [linkedLicences, scrapedData]);
+        }), [linkedLicences, scrapedData, snapshotData]);
 
         useEffect(() => {
             const fetchLinkedLicences = async () => {
@@ -104,6 +111,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                         });
 
                         setLinkedLicences(outgoingLinkedLicences);
+                        setSnapshotData(outgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
                     }
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);

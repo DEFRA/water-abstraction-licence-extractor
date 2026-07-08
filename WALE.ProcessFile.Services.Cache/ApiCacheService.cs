@@ -783,15 +783,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode)
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
     {
-        var path = "/Extractor/NaldData/Get";
+        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
-        response.EnsureSuccessStatusCode();
-
         var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
         return JsonSerializer.Deserialize<NaldData>(
             content,
             JsonHelper.GetSerializerOptions());

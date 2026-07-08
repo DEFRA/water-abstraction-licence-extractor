@@ -49,7 +49,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
     }
     
     [HttpPost]
-    public async Task<IActionResult> CompleteProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
+    public async Task<IActionResult> MarkProcessRunFileCompleteAsync([FromBody] ProcessRunFileRequest request)
     {
         var processRunFile = await outputService.MarkProcessRunFileCompleteAsync(new ProcessRunFile
         {

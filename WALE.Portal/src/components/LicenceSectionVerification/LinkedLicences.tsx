@@ -77,7 +77,9 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             }
 
                             try {
-                                const rawValue = verification.licenceSectionOverrideValue ?? verification.licenceSectionScrapedValue;
+                                const rawValue = verification.licenceSectionOverrideValue 
+                                    ?? verification.licenceSectionSnapshotValue
+                                    ?? verification.licenceSectionScrapedValue;
                                 if (!rawValue) return;
 
                                 const overrideLicence = LinkedLicence.fromJS(JSON.parse(rawValue));
@@ -86,9 +88,11 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 switch (verification.verificationType) {
                                     case "Confirmed":
                                     case "AutoConfirm":
+                                    case "Edited":
+                                    case "Added":
                                         if (existingIndex === -1) {
                                             outgoingLinkedLicences.push(overrideLicence);
-                                        } else if (verification.scrapedDataIsDifferent) {
+                                        } else {
                                             outgoingLinkedLicences.splice(existingIndex, 1, overrideLicence);
                                         }
                                         break;
@@ -96,13 +100,6 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         if (existingIndex !== -1) {
                                             outgoingLinkedLicences.splice(existingIndex, 1);
                                         }
-                                        break;
-                                    case "Edited":
-                                    case "Added":
-                                        if (existingIndex !== -1) {
-                                            outgoingLinkedLicences.splice(existingIndex, 1);
-                                        }
-                                        outgoingLinkedLicences.push(overrideLicence);
                                         break;
                                 }
                             } catch (e) {

@@ -409,9 +409,9 @@ public class DatabaseCacheService(
         return databaseReadService.GetNaldLicenceAsync(permitNumber, regionCode);
     }
 
-    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
     {
-        return databaseReadService.GetLicenceFinderResultAsync(fileName);
+        return databaseReadService.GetLicenceFinderResultAsync(fileId);
     }
 
     public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)

@@ -797,15 +797,16 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions());
     }
 
-    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
     {
-        var path = $"/Extractor/LicenceFinder/Get?fileName={fileName}";
+        var path = $"/Extractor/LicenceFinder/Get?fileId={fileId}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
-        response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        
         return JsonSerializer.Deserialize<LicenceFinderResult>(
             content,
             JsonHelper.GetSerializerOptions())!;

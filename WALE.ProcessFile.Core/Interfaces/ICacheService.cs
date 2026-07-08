@@ -160,7 +160,7 @@ public interface ICacheService
     
     Task<NaldData?> GetNaldLicenceAsync(string permitNumber, int regionCode);
     
-    Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName);
+    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode);
 }

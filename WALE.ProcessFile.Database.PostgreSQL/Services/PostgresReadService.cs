@@ -366,7 +366,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return results.ToList();
     }
 
-    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName)
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -403,14 +403,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                seen_in_dms_extract,
                                we_have_downloaded
                            FROM public.licence_finder_result
-                           WHERE file_url = @FileName
+                           WHERE file_id = @FileId
                            """;
 
         var result = await QueryFirstOrDefaultAsync<LicenceFinderResult>(
             connection,
             sql,
             0,
-            new { FileName = fileName });
+            new { FileId = fileId.ToString() });
 
         return result!;
     }

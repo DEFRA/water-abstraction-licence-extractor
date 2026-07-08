@@ -41,12 +41,14 @@ public class FileProcessSingleService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
+        var fileId = FileHelper.ExtractFileId(fileProcessSingleRequest.FilePath);
+        
         var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
 
         var abstractionAndImpoundmentLicencesTask =
             SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
         
-        var dmsFileDataTask = DmsHelper.GetDmsFilesData(cacheService, fileProcessSingleRequest.FilePath);
+        var dmsFileDataTask = DmsHelper.GetDmsFilesData(cacheService, fileId!.Value);
         var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
         
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);

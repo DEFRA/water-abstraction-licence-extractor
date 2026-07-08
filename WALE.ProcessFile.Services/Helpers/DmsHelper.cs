@@ -32,10 +32,10 @@ public static class DmsHelper
     }
 
     public static async Task<DmsFileData>
-        GetDmsFilesData(ICacheService cacheService, string fileName)
+        GetDmsFilesData(ICacheService cacheService, Guid fileId)
     {
-        var licenceFinderResult = await cacheService.GetLicenceFinderResultAsync(fileName);
-        return LicenceFinderResultToDmsFileData(licenceFinderResult, fileName);
+        var licenceFinderResult = await cacheService.GetLicenceFinderResultAsync(fileId);
+        return LicenceFinderResultToDmsFileData(licenceFinderResult, null);
     }
 
     public static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
@@ -239,7 +239,7 @@ public static class DmsHelper
 
     private static DmsFileData LicenceFinderResultToDmsFileData(
         LicenceFinderResult licenceFinderResult,
-        string destinationFileName)
+        string? destinationFileName)
     {
         var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
             

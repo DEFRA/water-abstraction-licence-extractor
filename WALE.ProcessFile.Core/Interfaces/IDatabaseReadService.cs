@@ -110,7 +110,7 @@ public interface IDatabaseReadService
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
-    Task<LicenceFinderResult> GetLicenceFinderResultAsync(string fileName);
+    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     
     Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
 }

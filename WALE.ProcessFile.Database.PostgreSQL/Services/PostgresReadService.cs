@@ -83,23 +83,123 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<int> GetTotalLicenceCountAsync(int processRunId, string? searchTerm)
+    public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT count(1)
-                           FROM licence
-                           WHERE process_run_id = @ProcessRunId
-                           AND data::jsonb ->> 'status' = 'Ok'
-                           AND (
-                               @searchTerm IS NULL
-                               OR trim(@searchTerm) = ''
-                               OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
-                               OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
-                               OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
-                               OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
-                           )
-                           """;
+        const string sql =
+            """
+            SELECT count(1)
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+            AND data::jsonb ->> 'status' = 'Ok'
+            AND (
+                @searchTerm IS NULL
+                OR trim(@searchTerm) = ''
+                OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
+                OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
+                OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
+                OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+            )
+            AND (
+                @Issuer IS NULL
+                OR trim(@Issuer) = ''
+                OR data::jsonb -> 'licenceVersion' ->> 'issuer' = @Issuer
+            )
+            AND (
+                @OcrScan IS NULL
+                OR (
+                    @OcrScan = true
+                    AND data::jsonb -> 'noneSchemaData' ->> 'ocr' = 'OCR'
+                )
+                OR (
+                    @OcrScan = false
+                    AND COALESCE(data::jsonb -> 'noneSchemaData' ->> 'ocr', '') <> 'OCR'
+                )
+            )
+            AND (
+                @MeansFound IS NULL
+                OR (
+                    @MeansFound = true
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) > 0
+                )
+                OR (
+                    @MeansFound = false
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) = 0
+                )
+            )
+            AND (
+                @PointsEmpty IS NULL
+                OR (
+                    @PointsEmpty = true
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) = 0
+                )
+                OR (
+                    @PointsEmpty = false
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) > 0
+                )
+            )
+            AND (
+                @PurposesEmpty IS NULL
+                OR (
+                    @PurposesEmpty = true
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) = 0
+                )
+                OR (
+                    @PurposesEmpty = false
+                    AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) > 0
+                )
+            )
+            AND (
+                @LimitsEmpty IS NULL
+                OR (
+                    @LimitsEmpty = true
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM jsonb_array_elements(
+                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
+                        ) individual_item
+                        WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
+                    )
+                )
+                OR (
+                    @LimitsEmpty = false
+                    AND EXISTS (
+                        SELECT 1
+                        FROM jsonb_array_elements(
+                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
+                        ) individual_item
+                        WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
+                    )
+                )
+            )
+            AND (
+                @AggregatesEmpty IS NULL
+                OR (
+                    @AggregatesEmpty = true
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM jsonb_array_elements(
+                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
+                        ) aggregate_item
+                        WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
+                    )
+                )
+                OR (
+                    @AggregatesEmpty = false
+                    AND EXISTS (
+                        SELECT 1
+                        FROM jsonb_array_elements(
+                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
+                        ) aggregate_item
+                        WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
+                    )
+                )
+            )
+            AND (
+                @IssueYear IS NULL
+                OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
+            )
+            """;
 
         return await QuerySingleOrDefaultAsync<int>(
             connection,
@@ -108,7 +208,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId,
-                searchTerm
+                searchTerm = processRunQuery.SearchTermClean,
+                processRunQuery.Issuer,
+                processRunQuery.MeansFound,
+                processRunQuery.OcrScan,
+                processRunQuery.AggregatesEmpty,
+                processRunQuery.LimitsEmpty,
+                processRunQuery.PointsEmpty,
+                processRunQuery.PurposesEmpty,
+                processRunQuery.IssueYear
             });
     }
 
@@ -433,7 +541,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, string searchTerm, int skip, int take)
+    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -449,6 +557,136 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                  OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
                                  OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
                              )
+                           AND (
+                               @Issuer IS NULL
+                               OR trim(@Issuer) = ''
+                               OR data::jsonb -> 'licenceVersion' ->> 'issuer' = @Issuer
+                           )
+                           AND (
+                               @OcrScan IS NULL
+                               OR (
+                                   @OcrScan = true
+                                   AND data::jsonb -> 'noneSchemaData' ->> 'ocr' = 'OCR'
+                               )
+                               OR (
+                                   @OcrScan = false
+                                   AND COALESCE(data::jsonb -> 'noneSchemaData' ->> 'ocr', '') <> 'OCR'
+                               )
+                           )
+                           AND (
+                               @MeansFound IS NULL
+                               OR (
+                                   @MeansFound = true
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) > 0
+                               )
+                               OR (
+                                   @MeansFound = false
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) = 0
+                               )
+                           )
+                           AND (
+                               @PointsEmpty IS NULL
+                               OR (
+                                   @PointsEmpty = true
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) = 0
+                               )
+                               OR (
+                                   @PointsEmpty = false
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) > 0
+                               )
+                           )
+                           AND (
+                               @PurposesEmpty IS NULL
+                               OR (
+                                   @PurposesEmpty = true
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) = 0
+                               )
+                               OR (
+                                   @PurposesEmpty = false
+                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) > 0
+                               )
+                           )
+                           AND (
+                               @LimitsEmpty IS NULL
+                               OR (
+                                   @LimitsEmpty = true
+                                   AND NOT EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
+                                       ) individual_item
+                                       WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
+                                   )
+                               )
+                               OR (
+                                   @LimitsEmpty = false
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
+                                       ) individual_item
+                                       WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
+                                   )
+                               )
+                           )
+                           AND (
+                               @AggregatesEmpty IS NULL
+                               OR (
+                                   @AggregatesEmpty = true
+                                   AND NOT EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
+                                       ) aggregate_item
+                                       WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
+                                   )
+                               )
+                               OR (
+                                   @AggregatesEmpty = false
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
+                                       ) aggregate_item
+                                       WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
+                                   )
+                               )
+                           )
+                           AND (
+                               @IssueYear IS NULL
+                               OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
+                           )
+                           AND (
+                               @LinkedLicencesType IS NULL
+                               OR trim(@LinkedLicencesType) = ''
+                               OR (
+                                   @LinkedLicencesType = 'ImplicitBackLink'
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
+                                       ) linked_licence
+                                       CROSS JOIN jsonb_array_elements(
+                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
+                                       ) contained
+                                       WHERE contained ->> 'direction' = 'Incoming'
+                                   )
+                               )
+                               OR (
+                                   @LinkedLicencesType <> 'ImplicitBackLink'
+                                   AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements(
+                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
+                                       ) linked_licence
+                                       CROSS JOIN jsonb_array_elements(
+                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
+                                       ) contained
+                                       WHERE contained ->> 'direction' = 'Outgoing'
+                                         AND contained ->> 'sectionName' = @LinkedLicencesType
+                                   )
+                               )
+                           )
                            ORDER BY licence_id
                            LIMIT @take
                            OFFSET @skip;
@@ -461,9 +699,18 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId,
-                Skip = skip,
-                Take = take,
-                searchTerm
+                query.Skip,
+                query.Take,
+                SearchTerm = query.SearchTermClean,
+                query.Issuer,
+                query.OcrScan,
+                query.MeansFound,
+                query.AggregatesEmpty,
+                query.LimitsEmpty,
+                query.PointsEmpty,
+                query.PurposesEmpty,
+                query.IssueYear,
+                query.LinkedLicencesType
             });
 
      return results.Select(r =>

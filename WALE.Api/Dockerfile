@@ -7,7 +7,7 @@ RUN dotnet restore WALE.Api/WALE.Api.csproj
 
 RUN dotnet publish WALE.Api/WALE.Api.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 COPY ./WALE.Api/nginx.conf /etc/nginx/conf.d/default.conf
 

@@ -13,9 +13,12 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class LicenceController(IOutputService outputService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllAsync([FromQuery] int processRunId)
+    public async Task<IActionResult> GetAllAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
     {
-        var licences = await outputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
+        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
         return Ok(licences);
     }
     

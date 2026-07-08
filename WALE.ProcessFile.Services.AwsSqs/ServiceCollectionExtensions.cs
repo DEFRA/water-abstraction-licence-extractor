@@ -19,12 +19,12 @@ public static class ServiceCollectionExtensions
                 awsSecretKey,
                 awsSessionToken))
             .AddOptions<AwsSqsQueueConfig>()
-            .BindConfiguration("AwsQueueConfig")
-            .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
+            .BindConfiguration("AwsQueueConfig");
+            /*.Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.OrchestratorQueue),
                 "AwsQueueConfig:OrchestratorQueue is required")
             .Validate(configLocal => !string.IsNullOrWhiteSpace(configLocal.FileProcessQueue),
                 "AwsQueueConfig:FileProcessQueue is required")
-            .ValidateOnStart();
+            .ValidateOnStart();*/
 
         return services;
     }

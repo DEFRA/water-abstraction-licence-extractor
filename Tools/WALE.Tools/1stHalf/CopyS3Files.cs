@@ -14,7 +14,7 @@ public static class CopyS3Files
             30);
         
         var destinationHttpClient = HttpHelper.GetResilientHttpClient(
-            "https://wli-api-tst.aws-int.defra.cloud",
+            "http://localhost:8080",
             100,
             30);
         
@@ -25,10 +25,10 @@ public static class CopyS3Files
         var existingDestinationFiles = await destinationFileService.GetAllFilesAsync();
 
         // For debugging / limiting file uploads
-        sourceFiles = sourceFiles
-            .Where(x => x.StartsWith("032864"))
+        /*sourceFiles = sourceFiles
+            .Where(x => x.StartsWith("0328640105__462b0c9c-682e-4dc0-bc76-85786c80baf7.pdf"))
             .Take(10)
-            .ToList();
+            .ToList();*/
         
         var missingFiles = sourceFiles
             .Except(existingDestinationFiles)

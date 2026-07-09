@@ -2,6 +2,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -257,6 +258,8 @@ public class AwsS3FileService(
             return _client;
         }
 
+        ConsoleHelper.WriteLine($"Region name is '{regionName}'");
+        
         var s3Config = new AmazonS3Config
         {
             RegionEndpoint = RegionEndpoint.GetBySystemName(regionName)

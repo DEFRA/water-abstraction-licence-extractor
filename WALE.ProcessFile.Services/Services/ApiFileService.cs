@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -79,14 +80,45 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public Task UploadFileAsStreamAsync(string filename, Stream stream)
+    public async Task UploadFileAsStreamAsync(string filename, Stream stream)
     {
-        throw new NotImplementedException();
+        var path = "/BFF/Files/Upload";
+        var uri = new Uri(httpClient.BaseAddress!, path);
+
+        using var form = new MultipartFormDataContent();
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/pdf");
+        form.Add(fileContent, "file", filename);
+
+        var response = await httpClient.PutAsync(uri, form);
+        response.EnsureSuccessStatusCode();
     }
 
-    public Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null)
+    public async Task<string?> UploadFileChunkAsync(
+        string filename,
+        Stream stream,
+        int chunkIndex,
+        int totalChunks,
+        string? uploadId = null)
     {
-        throw new NotImplementedException();
+        var path = "/BFF/Files/UploadChunk";
+        var uri = new Uri(httpClient.BaseAddress!, path);
+
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent(filename), "filename");
+        form.Add(new StringContent(chunkIndex.ToString()), "chunkIndex");
+        form.Add(new StringContent(totalChunks.ToString()), "totalChunks");
+        form.Add(new StringContent(uploadId ?? string.Empty), "uploadId");
+        
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+        form.Add(fileContent, "file", filename);
+
+        var response = await httpClient.PutAsync(uri, form);
+        var content = await response.Content.ReadAsStringAsync();
+        
+        response.EnsureSuccessStatusCode();
+        return content;
     }
 
     public string FolderPath { get; set; } = "N/A";

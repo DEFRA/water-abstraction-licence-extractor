@@ -90,6 +90,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow,
         List<LinkedLicence> incomingOnlyLinkedLicences, List<LinkedLicence> outgoingLinkedLicences)
     {
+        HashSet<string> licenceNumbersSeen = [];
+        
         var orderedVerifications = verifications
             .OrderByDescending(v => v.CreatedDateTimeUtc)
             .ToList();
@@ -121,6 +123,12 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             if (verification.LicenceSectionItemId == NoneOutgoing)
             {
                 listRow.latestLicenceSectionVerifications!.Remove(verification);
+                continue;
+            }
+
+            // Skip processing older verifications for the same licence number
+            if (!licenceNumbersSeen.Add(verification.LicenceSectionItemId!))
+            {
                 continue;
             }
 

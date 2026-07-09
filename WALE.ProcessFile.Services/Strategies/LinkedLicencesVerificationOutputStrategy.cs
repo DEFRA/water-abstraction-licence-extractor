@@ -39,7 +39,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 var verification = invertedVerification.Verification;
                 var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    verification.LicenceSectionOverrideValue 
+                    ?? verification.LicenceSectionSnapshotValue 
+                    ?? verification.LicenceSectionScrapedValue!,
                     JsonHelper.GetSerializerOptions());
 
                 overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
@@ -88,6 +90,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications, OutputListDataItem listRow,
         List<LinkedLicence> incomingOnlyLinkedLicences, List<LinkedLicence> outgoingLinkedLicences)
     {
+        HashSet<string> licenceNumbersSeen = [];
+        
         var orderedVerifications = verifications
             .OrderByDescending(v => v.CreatedDateTimeUtc)
             .ToList();
@@ -122,30 +126,38 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 continue;
             }
 
+            // Skip processing older verifications for the same licence number
+            if (!licenceNumbersSeen.Add(verification.LicenceSectionItemId!))
+            {
+                continue;
+            }
+
             if (verification.ProcessRunId < listRow.processRunId)
             {
                 var wasScrapedThisRun = (listRow.linkedLicences ?? [])
                     .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
                               && x.ContainedIn != null
                               && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
+                
+                var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
 
-                verification.ScrapedDataIsDifferent = verification.VerificationType switch
-                {
-                    "Confirmed" or "AutoConfirm" or "Removed" or "Edited" => !wasScrapedThisRun,
-                    "Added" => wasScrapedThisRun,
-                    _ => false
-                };
+                verification.ScrapedDataIsDifferent = wasScrapedThisRun != wasScrapedOnVerificationRun;
             }
+            
+            //todo: calculate effective verification type (for multi's)
 
             try
             {
                 var overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                    verification.LicenceSectionOverrideValue ?? verification.LicenceSectionScrapedValue!,
+                    verification.LicenceSectionOverrideValue 
+                    ?? verification.LicenceSectionSnapshotValue
+                    ?? verification.LicenceSectionScrapedValue!,
                     JsonHelper.GetSerializerOptions());
 
                 var existingLinkedLicence =
                     outgoingLinkedLicences.FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId);
 
+                // todo: follow same logic as UI
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":

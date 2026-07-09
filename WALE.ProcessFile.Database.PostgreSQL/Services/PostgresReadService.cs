@@ -1771,6 +1771,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_snapshot_value AS LicenceSectionSnapshotValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
@@ -1792,12 +1793,13 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT DISTINCT ON (licence_file_id, licence_section_name, licence_section_item_id)
+                           SELECT DISTINCT ON (licence_file_id, licence_section_name, licence_section_item_id, verification_type)
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
                                process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_snapshot_value AS LicenceSectionSnapshotValue,
                                licence_section_override_value AS LicenceSectionOverrideValue,
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
@@ -1807,7 +1809,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            ORDER BY 
                                licence_file_id, 
                                licence_section_name, 
-                               licence_section_item_id, 
+                               licence_section_item_id,
+                               verification_type,
                                created_date_time_utc DESC
                            """;
 

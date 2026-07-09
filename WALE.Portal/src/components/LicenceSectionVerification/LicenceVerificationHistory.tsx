@@ -36,6 +36,29 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
         const Component = SECTION_COMPONENTS[sectionName];
+        const verificationType = verification.verificationType || '';
+
+        const getSnapshotLabel = (type: string) => {
+            switch (type) {
+                case 'Confirmed':
+                case 'AutoConfirm':
+                    return 'Confirmed value';
+                case 'Edited':
+                    return 'Value before this edit';
+                case 'Removed':
+                    return 'Removed value';
+                /* Snapshot should not exist for Added */
+            }
+        };
+
+        const getOverrideLabel = (type: string) => {
+            switch (type) {
+                case 'Edited':
+                    return 'Value after this edit';
+                case 'Added':
+                    return 'Added value';
+            }
+        };
 
         const renderValue = (value: string | undefined, label?: string) => {
             if (!value) return null;
@@ -65,9 +88,10 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
             <div>
                 {verification.licenceSectionName === 'Linked Licences' && verification.licenceSectionItemId === 'None Outgoing' && (
                     <label>No outgoing linked licences</label>
-                )}
-                {renderValue(verification.licenceSectionScrapedValue, 'Scraped Value')}
-                {renderValue(verification.licenceSectionOverrideValue, 'Override Value')}
+                )}                
+                {renderValue(verification.licenceSectionScrapedValue, `Original value (scraped on process run ${verification.processRunId})`)}
+                {renderValue(verification.licenceSectionSnapshotValue, getSnapshotLabel(verificationType))}
+                {renderValue(verification.licenceSectionOverrideValue, getOverrideLabel(verificationType))}
             </div>
         );
     };

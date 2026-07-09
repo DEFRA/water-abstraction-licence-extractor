@@ -39,7 +39,7 @@ public class LocalFileService(string folderPath) : IFileService
                 FileShare.Read));
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string filename)
+    public Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
         return File.ReadAllBytesAsync($"{FolderPath}{filename}");
     }

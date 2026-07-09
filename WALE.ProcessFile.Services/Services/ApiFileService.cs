@@ -58,19 +58,36 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         {
             if (hrex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
             {
-                ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(PdfDataExtractorService)} - File was too large, skipping - {filename}");
+                const int chunkSize = 5 * 1024 * 1024; // 5MB
+
+                var byteList = new List<byte>();
+                var loopBytes = new List<byte>();
+
+                var first = true;
+                var loopIdx = 0;
                 
-                return null;
+                while (first || loopBytes.Count == chunkSize)
+                {
+                    first = false;
+
+                    loopBytes = [];
+                    loopBytes.AddRange(
+                        await GetFileAsBytesAsync(filename, loopIdx++, chunkSize));
+                    
+                    byteList.AddRange(loopBytes);                    
+                }
+                
+                var combinedByteArray = byteList.ToArray();
+                return new MemoryStream(combinedByteArray);
             }
 
             throw;
         }
     }
     
-    public async Task<byte[]> GetFileAsBytesAsync(string filename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
-        var path = $"/Extractor/Files/Get?filename={filename}";
+        var path = $"/Extractor/Files/Get?filename={filename}&chunkIndex={chunkIndex}&chunkSize={chunkSize}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

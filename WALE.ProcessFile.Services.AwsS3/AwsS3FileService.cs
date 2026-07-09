@@ -114,7 +114,7 @@ public class AwsS3FileService(
             .ToList();
     }
 
-    public async Task<byte[]> GetFileAsBytesAsync(string filename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
         var stream = await GetFileAsStreamAsync(filename);
 
@@ -124,7 +124,12 @@ public class AwsS3FileService(
         }
         
         using var binaryReader = new BinaryReader(stream);
-        return binaryReader.ReadBytes((int)stream.Length);
+        var bytes = binaryReader.ReadBytes((int)stream.Length);
+
+        return bytes
+            .Skip(chunkIndex * chunkSize)
+            .Take(chunkSize)
+            .ToArray();
     }
     
     public async Task<Stream?> GetFileAsStreamAsync(string filename)

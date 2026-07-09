@@ -9,8 +9,26 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class FilesController(IFileService fileService) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult> GetAsync([FromQuery] string filename)
+    public async Task<ActionResult> GetAsync(
+        [FromQuery] string filename,
+        [FromQuery] int chunkIndex = 0,
+        [FromQuery] int chunkSize = int.MaxValue)
     {
+        var chunkSet = chunkSize != 0;
+        var chunkSizeSet = chunkSize != int.MaxValue;
+        
+        if (chunkSet || chunkSizeSet)
+        {
+            var bytes = await fileService.GetFileAsBytesAsync(filename, chunkIndex, chunkSize);
+            
+            if (bytes == null)
+            {
+                throw new Exception("No data found");
+            }
+            
+            return File(bytes, "application/octet-stream");
+        }
+        
         var data = await fileService.GetFileAsStreamAsync(filename);
 
         if (data == null)

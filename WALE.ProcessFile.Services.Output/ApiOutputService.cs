@@ -75,9 +75,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
-        response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         processRun.ProcessRunId = int.Parse(content);
         return processRun;

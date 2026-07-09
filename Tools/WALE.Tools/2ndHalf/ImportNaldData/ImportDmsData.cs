@@ -203,7 +203,7 @@ public static class ImportDmsData
         var allDmsRecords = new Dictionary<string, List<DmsExtract>>(StringComparer.OrdinalIgnoreCase);
         var filepaths = FindFilesByPattern("Consolidated");
         
-        Console.WriteLine($"Found {filepaths.Count} extracts - First is {filepaths.FirstOrDefault()}");
+        Console.WriteLine($"Found {filepaths.Count} extract(s) - First is {filepaths.FirstOrDefault()}");
         
         var fileProcessor = new LicenceFileProcessor();
         

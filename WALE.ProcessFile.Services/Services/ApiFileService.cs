@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
+using WALE.ProcessFile.Services.Types;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -60,25 +61,34 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             {
                 const int chunkSize = 5 * 1024 * 1024; // 5MB
 
-                var byteList = new List<byte>();
-                var loopBytes = new List<byte>();
-
+                var loopBytes = -1;
+                var totalLength = 0;
+                
                 var first = true;
                 var loopIdx = 0;
                 
-                while (first || loopBytes.Count == chunkSize)
+                var documentChunks = new List<byte[]>();
+                
+                while (first || loopBytes == chunkSize)
                 {
                     first = false;
-
-                    loopBytes = [];
-                    loopBytes.AddRange(
-                        await GetFileAsBytesAsync(filename, loopIdx++, chunkSize));
                     
-                    byteList.AddRange(loopBytes);                    
+                    var bytes = await GetFileAsBytesAsync(filename, loopIdx++, chunkSize);
+
+                    loopBytes = bytes.Length;
+                    totalLength += loopBytes;
+                    
+                    documentChunks.Add(bytes);                    
                 }
-                
-                var combinedByteArray = byteList.ToArray();
-                return new MemoryStream(combinedByteArray);
+
+                var combinedByteArray = documentChunks[0].AsEnumerable();
+
+                for (var idx = 1; idx < documentChunks.Count; idx++)
+                {
+                    combinedByteArray = combinedByteArray.Concat(documentChunks[idx]);
+                }
+
+                return new ByteStream(combinedByteArray, totalLength);
             }
 
             throw;

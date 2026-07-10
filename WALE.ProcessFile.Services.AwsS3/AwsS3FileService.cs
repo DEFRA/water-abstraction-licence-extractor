@@ -295,8 +295,8 @@ public class AwsS3FileService(
         _client = client;
         return client;
     }
-    
-    public byte[] GetByteArrayFromStream(Stream stream)
+
+    private static byte[] GetByteArrayFromStream(Stream stream)
     {
         byte[] bytes;
         List<byte> totalStream = [];

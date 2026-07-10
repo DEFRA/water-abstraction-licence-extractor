@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Types;
 using WALE.Tools.Config;
 
 namespace WALE.Tools._1stHalf;
@@ -105,10 +106,9 @@ public static class CopyS3Files
                 {
                     var chunkOfByteArray = fullByteArray
                         .Skip(chunkIndex * chunkSize)
-                        .Take(chunkSize)
-                        .ToArray();
+                        .Take(chunkSize);
 
-                    var streamChunk = new MemoryStream(chunkOfByteArray);
+                    var streamChunk = new ByteStream(chunkOfByteArray, 0); // Length doesn't matter here
 
                     var tempUploadId = await destinationFileService.UploadFileChunkAsync(
                         filename,

@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(45)]
+[Migration(46)]
 public class AddLicenceSectionSnapshotValueToLicenceSectionVerificationTable : Migration
 {
     public override void Up()

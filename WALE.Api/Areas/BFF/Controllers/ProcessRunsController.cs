@@ -48,12 +48,16 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         var skip = query.Skip;
         query.Take = int.MaxValue;
         query.Skip = 0;
+        
         var completeNumber = 1;
         var fileNumber = 1;
+        
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
+        
         var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll);
+        
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
         
@@ -67,30 +71,33 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 licenceSetsAll))
             .ToList();
         
-        var paginationListData = await JsOutputHelper.ToListDataAsync(
+        var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
-            outputService,
-            new ProcessRun
-            {
-                ProcessRunId = processRunId
-            },
-            false,
+            processRunId,
             allLatestLicenceSectionVerifications);
 
         if (!string.IsNullOrEmpty(query.ShortLicenceSetId))
         {
-            paginationListData = paginationListData.Where(x => x.licenceSets?.Any(item => item?.ShortLicenceSetId?.Equals(query.ShortLicenceSetId) == true) == true).ToList();
+            paginationListData = paginationListData
+                .Where(x => x.licenceSets?.Any(item => item?.ShortLicenceSetId?.Equals(query.ShortLicenceSetId) == true) == true)
+                .ToList();
         }
         
         if (!string.IsNullOrEmpty(query.VerificationType))
         {
-            paginationListData = paginationListData.Where(x => x.latestLicenceSectionVerifications?.Any(item => item?.VerificationType?.Equals(query.VerificationType) == true) == true).ToList();
+            paginationListData = paginationListData
+                .Where(x => x.latestLicenceSectionVerifications?
+                    .Any(item => item.VerificationType?.Equals(query.VerificationType) == true) == true)
+                .ToList();
         }
 
         var processRun = new ProcessRunResponse
         {
             TotalRecords = paginationListData.Count,
-            Records = paginationListData.Skip(skip).Take(take).ToList(),
+            Records = paginationListData
+                .Skip(skip)
+                .Take(take)
+                .ToList(),
             NoPaginationRecords = paginationListData,
         };
         

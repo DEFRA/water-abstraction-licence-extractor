@@ -45,19 +45,15 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
-        var take = query.Take;
-        var skip = query.Skip;
-        query.Take = int.MaxValue;
-        query.Skip = 0;
-        
         var completeNumber = 1;
         var fileNumber = 1;
         
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
-        
+
+        var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, query);
-        var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll);
+        var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll); // TODO i might have broken these by passing less licences
         
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
@@ -77,6 +73,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
             processRunId,
             allLatestLicenceSectionVerifications);
 
+        // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.ShortLicenceSetId))
         {
             paginationListData = paginationListData
@@ -84,6 +81,7 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 .ToList();
         }
         
+        // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.VerificationType))
         {
             paginationListData = paginationListData
@@ -94,12 +92,8 @@ public class ProcessRunsController(IOutputService outputService) : Controller
 
         var processRun = new ProcessRunResponse
         {
-            TotalRecords = paginationListData.Count,
+            TotalRecords = await getTotalsTask,
             Records = paginationListData
-                .Skip(skip)
-                .Take(take)
-                .ToList(),
-            NoPaginationRecords = paginationListData,
         };
         
         return Ok(processRun);

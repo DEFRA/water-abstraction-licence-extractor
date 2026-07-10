@@ -93,12 +93,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             WHERE process_run_id = @ProcessRunId
             AND data::jsonb ->> 'status' = 'Ok'
             AND (
-                @searchTerm IS NULL
-                OR trim(@searchTerm) = ''
-                OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
-                OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
-                OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
-                OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                @SearchTerm IS NULL
+                OR trim(@SearchTerm) = ''
+                OR data::jsonb ->> 'id' ILIKE '%' || @SearchTerm || '%'
+                OR data::jsonb ->> 'filename' ILIKE '%' || @SearchTerm || '%'
+                OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @SearchTerm || '%'
+                OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @SearchTerm || '%'
             )
             AND (
                 @Issuer IS NULL
@@ -208,7 +208,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId,
-                searchTerm = processRunQuery.SearchTermClean,
+                SearchTerm = processRunQuery.SearchTermClean,
                 processRunQuery.Issuer,
                 processRunQuery.MeansFound,
                 processRunQuery.OcrScan,
@@ -543,6 +543,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
     public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query)
     {
+        // TODO SQL short circuiting doesnt work as you might imagine so we should change this to use cases
+        // Also pull out some of the common searched things (status, licenceVersion etc into db columns)
+        
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT data, licence_id
@@ -550,12 +553,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            WHERE process_run_id = @ProcessRunId
                              AND data::jsonb ->> 'status' = 'Ok'
                              AND (
-                                 @searchTerm IS NULL
-                                 OR trim(@searchTerm) = ''
-                                 OR data::jsonb ->> 'id' ILIKE '%' || @searchTerm || '%'
-                                 OR data::jsonb ->> 'filename' ILIKE '%' || @searchTerm || '%'
-                                 OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @searchTerm || '%'
-                                 OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @searchTerm || '%'
+                                 @SearchTerm IS NULL
+                                 OR trim(@SearchTerm) = ''
+                                 OR data::jsonb ->> 'id' ILIKE '%' || @SearchTerm || '%'
+                                 OR data::jsonb ->> 'filename' ILIKE '%' || @SearchTerm || '%'
+                                 OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @SearchTerm || '%'
+                                 OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @SearchTerm || '%'
                              )
                            AND (
                                @Issuer IS NULL
@@ -701,7 +704,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId,
                 query.Skip,
                 query.Take,
-                SearchTerm = query.SearchTermClean,
+                SearchTerm = !string.IsNullOrEmpty(query.SearchTermClean) ? query.SearchTermClean : null,
                 query.Issuer,
                 query.OcrScan,
                 query.MeansFound,
@@ -716,9 +719,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
      return results.Select(r =>
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
-                licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+            licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
 
-                return licence;
+            return licence;
         }).ToList();
     }
 

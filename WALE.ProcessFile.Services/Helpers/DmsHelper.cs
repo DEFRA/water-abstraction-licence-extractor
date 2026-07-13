@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -77,7 +78,7 @@ public static class DmsHelper
             //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
             //.Where(x => x.Value.RegionId == 3) // North east
             //.Skip(155)
-            .Take(20)
+            .Take(1)
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
         var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
@@ -175,16 +176,15 @@ public static class DmsHelper
                     var dmsFileData = new DmsFileData
                     {
                         DestinationFileName = destinationFileName,
-                        NaldLicenceRef = naldLicenceRef,
                         PermitNumber = permitNumber,
                         DmsPath = dmsPath,
-                        StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
-                        FileId = fileId,
-                        RegionId = GeneralConstants.UnsetRegionCode
+                        FileId = fileId
                     };
 
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!;
+                    
                     filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-                    licenceNumbersWithFilenames.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
+                    licenceNumbersWithFilenames.Add(strippedLicenceNumber, dmsFileData);
                 }
             }
         }
@@ -227,8 +227,10 @@ public static class DmsHelper
             
             var dmsFileData = LicenceFinderResultToDmsFileData(licenceFinderResult, destinationFileName);
 
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceFinderResult.LicenseNumber, -1)!;
+            
             filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-            licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber!, dmsFileData);
+            licenceNumbersWithFilenames.TryAdd(strippedLicenceNumber, dmsFileData);
         }
         
         return (
@@ -237,23 +239,26 @@ public static class DmsHelper
         );
     }
 
-    private static DmsFileData LicenceFinderResultToDmsFileData(
+    private static (DmsFileData, NaldLicence) LicenceFinderResultToDmsFileData(
         LicenceFinderResult licenceFinderResult,
-        string? destinationFileName)
+        string destinationFileName)
     {
-        var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
-            
-        return new DmsFileData
+        var naldLicence = new NaldLicence
+        {
+            RegionCode = (short)RegionHelper.GetRegionId(licenceFinderResult.Region),
+            LicenceNumber = licenceFinderResult.LicenseNumber,
+            Id = -1, // TODO
+            Type = LicenceType.Abstraction // TODO
+        };
+        
+        var dmsFileData = new DmsFileData
         {
             DestinationFileName = destinationFileName,
-            NaldLicenceRef = licenceFinderResult.LicenseNumber,
             PermitNumber = licenceFinderResult.PermitNumber,
             DmsPath = licenceFinderResult.FileUrl,
-            StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                licenceFinderResult.LicenseNumber,
-                regionId)!,
-            FileId = Guid.Parse(licenceFinderResult.FileId!),
-            RegionId = regionId
+            FileId = Guid.Parse(licenceFinderResult.FileId!)
         };
+
+        return (dmsFileData, naldLicence);
     }
 }

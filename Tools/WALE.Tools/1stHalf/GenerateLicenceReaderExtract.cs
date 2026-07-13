@@ -329,7 +329,7 @@ public static class GenerateLicenceReaderExtract
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToList();
 
-        // TODO - Need to implement paging above
+        // TODO - May need to implement paging above
         
         var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
@@ -383,9 +383,12 @@ public static class GenerateLicenceReaderExtract
             .Where(templateFinderInput => licenceFinderResultsByFileId.ContainsKey(templateFinderInput.FileId))
             .ToList();
 
+        var versionFilesCount = 0;
+        
         if (includeVersionMatch)
         {
             var versionFiles = await cacheService.GetVersionFilesAsync();
+            versionFilesCount =  versionFiles.Count;
 
             foreach (var versionFile in versionFiles)
             {
@@ -407,6 +410,8 @@ public static class GenerateLicenceReaderExtract
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {versionFilesCount} version files to look at {DateTime.Now}");
+
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
@@ -452,6 +457,7 @@ public static class GenerateLicenceReaderExtract
 
         var templateDict = new Dictionary<int, TemplateTypeIdentifierService>
         {
+            { -1, new TemplateTypeIdentifierService("Unknown") },
             { 1, new TemplateTypeIdentifierService("Anglian") },
             { 2, new TemplateTypeIdentifierService("Midlands") },
             { 3, new TemplateTypeIdentifierService("NE") },
@@ -459,7 +465,7 @@ public static class GenerateLicenceReaderExtract
             { 5, new TemplateTypeIdentifierService("South West") },
             { 6, new TemplateTypeIdentifierService("Southern") },
             { 7, new TemplateTypeIdentifierService("Thames") },
-            { 8, new TemplateTypeIdentifierService("Wales") },
+            { 8, new TemplateTypeIdentifierService("Wales") }
         };
         
         var fileTypeService = new FileTypeIdentifierService();

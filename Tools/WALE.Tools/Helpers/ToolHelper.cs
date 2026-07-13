@@ -22,6 +22,8 @@ public static class ToolHelper
         var csvFileName = $"{fileName}-{DateTime.Today:yyyyMMdd}.csv";
         var fullPath = Path.Combine(outputFolder, csvFileName);
 
+        Directory.CreateDirectory(outputFolder);
+        
         await using var writer = new StreamWriter(fullPath);
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 

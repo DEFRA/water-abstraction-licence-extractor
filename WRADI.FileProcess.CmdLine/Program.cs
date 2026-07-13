@@ -6,7 +6,7 @@ using WALE.ProcessFile.Services.AwsSqs;
 using WRADI.FileProcess.CmdLine.BackgroundServices;
 using WRADI.Services.ProcessFile;
 
-// NOTE - This is used rather then running the lambdas locally to process messages
+// NOTE - This is used locally rather than running the lambdas to process messages
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>

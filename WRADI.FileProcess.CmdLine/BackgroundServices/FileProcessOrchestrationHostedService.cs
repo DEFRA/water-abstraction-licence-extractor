@@ -51,7 +51,7 @@ public sealed class FileProcessOrchestrationHostedService(
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var result =  await fileProcessOrchestrator.RunAsync(
+                        var result = await fileProcessOrchestrator.RunAsync(
                             cancellationToken);
 
                         if (!result)

@@ -416,6 +416,6 @@ public class DatabaseCacheService(
 
     public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
     {
-        throw new NotImplementedException();
+        return databaseReadService.GetDmsFileDataAsync(licenceNumber, regionCode);
     }
 }

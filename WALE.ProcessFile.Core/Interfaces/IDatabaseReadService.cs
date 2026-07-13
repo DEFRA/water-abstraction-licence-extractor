@@ -113,4 +113,6 @@ public interface IDatabaseReadService
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     
     Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
+    
+    Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode);
 }

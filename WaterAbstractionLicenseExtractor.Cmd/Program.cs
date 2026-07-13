@@ -43,7 +43,8 @@ async Task ProgramAsync()
 
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
-    var abstractionAndImpoundmentLicencesTask = SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
+    var abstractionAndImpoundmentLicencesTask =
+        SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
     var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
     
     var (dmsFilesToProcess, _) =

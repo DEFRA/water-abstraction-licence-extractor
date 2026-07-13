@@ -413,7 +413,7 @@ public static class WalSchemaConverter
             NoneSchemaData = noneSchemaData,
             NaldStatus = naldStatus,
             LicenceType = licenceType,
-            RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode
+            RegionId = naldDataLine?.FgacRegionCode ?? regionCode
         };
     }
 
@@ -787,7 +787,7 @@ public static class WalSchemaConverter
         return new LinkedLicence
         {
             LicenceNumber = linkedLicenceNumber,
-            RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionId,
+            RegionId = naldDataLine?.FgacRegionCode ?? regionId,
             RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
             DmsPermitNumber = dmsFileData?.PermitNumber,
             DmsFileId = dmsFileData?.FileId,
@@ -1384,9 +1384,14 @@ public static class WalSchemaConverter
                 
                 continue;
             }
+            
+            var naldDataLine = await GetNaldDataLineAsync(
+                lookupConfiguration!.CacheService,
+                linkedLicence.LicenceNumber,
+                primaryLicence.RegionId!.Value);
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.RegionId = dmsFileData!.RegionId;
+            clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
             
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName!,
@@ -1638,7 +1643,7 @@ public static class WalSchemaConverter
         return new LinkedLicence
         {
             LicenceNumber = licenceNumberLoop,
-            RegionId = dmsFileData?.RegionId ?? naldDataLineLoop?.FgacRegionCode ?? regionCode,
+            RegionId = naldDataLineLoop?.FgacRegionCode ?? regionCode,
             RawScrapedLicenceNumber = licenceNumberLoop,
             DmsPermitNumber = dmsFileData?.PermitNumber,
             Filename = dmsFileData?.DestinationFileName,
@@ -1723,7 +1728,7 @@ public static class WalSchemaConverter
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
-                RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
+                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
                 RawScrapedLicenceNumber = linkedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
@@ -1811,7 +1816,7 @@ public static class WalSchemaConverter
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = lln,
-                RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
+                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
                 RawScrapedLicenceNumber = lln,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
@@ -2451,7 +2456,7 @@ public static class WalSchemaConverter
             linkedLicenceNumbers.Add(new LinkedLicence
             {
                 LicenceNumber = naldDataLine2?.LicenceNumber ?? scrapedLicenceNumber,
-                RegionId = dmsFileData?.RegionId ?? naldDataLine?.FgacRegionCode ?? regionCode,
+                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 DmsPath = dmsFileData?.DmsPath,

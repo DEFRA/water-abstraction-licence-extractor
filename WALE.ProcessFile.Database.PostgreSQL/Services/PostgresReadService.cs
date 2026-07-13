@@ -220,6 +220,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
     {
         await using var connection = GetPostgresConnection();

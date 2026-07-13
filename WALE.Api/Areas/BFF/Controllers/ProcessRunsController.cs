@@ -40,7 +40,6 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     }
 
     [HttpGet("{processRunId:int}")]
-    [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)

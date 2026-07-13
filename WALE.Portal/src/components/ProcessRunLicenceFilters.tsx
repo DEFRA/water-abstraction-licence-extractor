@@ -1,10 +1,13 @@
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
-import { OutputListDataItem } from "../api/generated/apiClient";
-import { useMemo } from "react";
+import { OutputListDataItem} from "../api/generated/apiClient";
+import type { OutputListDataItemKey} from "../utils/types.ts";
+import {useMemo} from "react";
 
 type ProcessRunLicenceFiltersProps = {
     data: OutputListDataItem[];
     query: ProcessRunQuery;
+    showSingles: boolean;
+    onToggleSingles: (checked: boolean) => void;
     updateQuery: <K extends keyof ProcessRunQuery>(
         key: K,
         value: ProcessRunQuery[K]
@@ -14,7 +17,9 @@ type ProcessRunLicenceFiltersProps = {
 export function ProcessRunLicenceFilters({
                                       data,
                                       query,
-                                      updateQuery
+                                      updateQuery,
+                                             onToggleSingles,
+                                             showSingles
                                   }: ProcessRunLicenceFiltersProps) {
     const clearFilters = () => {
         updateQuery("purposesEmpty", undefined);
@@ -28,6 +33,19 @@ export function ProcessRunLicenceFilters({
         updateQuery("linkedLicencesType", undefined);
         updateQuery("ShortLicenceSetId", undefined);
         updateQuery("verificationType", undefined);
+    };
+
+    const handleSort = (field: OutputListDataItemKey) => {
+        const currentField = query.sortField ?? "filename";
+        const currentAscending = query.sortAscending ?? true;
+
+        const nextAscending =
+            currentField === field
+                ? !currentAscending
+                : true;
+
+        updateQuery("sortField", field);
+        updateQuery("sortAscending", nextAscending);
     };
     
     const uniqueIssuers = useMemo(() => {
@@ -65,6 +83,19 @@ export function ProcessRunLicenceFilters({
     }, [data]);
 
     return (
+        <>
+            <tr>
+                <td colSpan={11}></td>
+                <td>
+                    <input
+                        type="checkbox"
+                        id="showSingles"
+                        checked={showSingles}
+                        onChange={(e) => onToggleSingles(e.target.checked)}
+                    /> Show singles
+                </td>
+                <td colSpan={2}></td>
+            </tr>
         <tr>
             <td></td>
             <td>    
@@ -324,6 +355,49 @@ export function ProcessRunLicenceFilters({
                 </select>
             </td>
         </tr>
+    <tr>
+        <td style={{width: '5%'}}>&nbsp;</td>
+        <td style={{width: '7%'}}>
+            Licence no. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceNumber'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}} className="default-hidden">
+            Licence holder <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceHolder'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '14%'}}>
+            Purposes <a href="#" onClick={(e) => { e.preventDefault(); handleSort('purposes'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '14%'}}>
+            Points <a href="#" onClick={(e) => { e.preventDefault(); handleSort('points'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Abs. limits <a href="#" onClick={(e) => { e.preventDefault(); handleSort('limitsCount'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Agg's <a href="#" onClick={(e) => { e.preventDefault(); handleSort('aggregatesCount'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Scan <a href="#" onClick={(e) => { e.preventDefault(); handleSort('ocr'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Iss. date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issueDate'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '6%'}}>
+            Issuer <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issuer'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Means of abs. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '8%'}}>
+            Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '10%'}}>
+            Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('latestLicenceSectionVerifications'); }}>&#8693;</a>
+        </td>
+    </tr>
+            </>
     );
 }
 

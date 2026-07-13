@@ -31,4 +31,8 @@ public class ProcessRunQuery
     public string? LinkedLicencesType { get; init; }
     
     public string? VerificationType { get; init; }
-}
+    
+    public bool? SortAscending { get; init; }
+
+    public string? SortField { get; init; }
+}  

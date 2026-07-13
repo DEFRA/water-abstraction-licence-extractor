@@ -84,12 +84,12 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                                                 let color = 'inherit';
                                                 let initials = '';
                                                 if (v.verificationType === 'Confirmed') { color = 'inherit'; initials = '✅'; }
-                                                else if (v.verificationType === 'AutoConfirm') { color = 'inherit'; initials = '✅'; }
+                                                else if (v.verificationType === 'AutoConfirm') { color = 'green'; initials = 'AC'; }
                                                 else if (v.verificationType === 'Removed') { color = 'inherit'; initials = '❌'; }
                                                 else if (v.verificationType === 'Edited') { color = 'inherit'; initials = '✏️'; }
                                                 else if (v.verificationType === 'Added') { color = 'inherit'; initials = '➕'; }
-                                                else if (v.verificationType === 'AutoFail') { color = 'inherit'; initials = '❌'; }
-                                                else if (v.verificationType === 'AutoWarn') { color = 'inherit'; initials = '⚠'; }
+                                                else if (v.verificationType === 'AutoFail') { color = 'red'; initials = 'AF'; }
+                                                else if (v.verificationType === 'AutoWarn') { color = 'darkorange'; initials = 'AW'; }
 
                                                 return (
                                                     <span key={i}>

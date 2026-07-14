@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -194,10 +195,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return returnList;
     }
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(
+        int regionCode,
+        int fileLicenceMapping,
+        string pdfFolder,
+        bool isAbstractionLicence = true)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            isAbstractionLicence ? WalLabelConfiguration.GetLabels() : Wr51LabelConfiguration.GetLabels(),
             fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
             [],
             await firstNamesFixture.FirstNamesCsvTask(),
@@ -208,14 +213,17 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
     {
+        var isWr51 = folderNumber == -99;
+        
         var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
         if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
+        if (isWr51) pdfFolder = TestConfig.PdfFolderWr51;
         
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder),
+            await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder, !isWr51),
             [fileName],
             0);
     }
@@ -5990,5 +5998,81 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
         Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences?.Length); // TODO should be 6 - probably 7 as its referencing itself
+    }
+    
+    [Fact]
+    public async Task WhenWR51_POCA_1_ThenGood()
+    {
+        // Arrange
+        const string filename = "WR51__121014G8__dummy.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
+        Assert.Equal(13, resultFull.Matches!.Count);
+
+        var sourceOfSupply = resultFull.Matches[0];
+        Assert.NotNull(sourceOfSupply);
+        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal("In", sourceOfSupply.Text[0].Text);
+        
+        var pointOfAbstraction = resultFull.Matches[1];
+        Assert.NotNull(pointOfAbstraction);
+        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal("in", pointOfAbstraction.Text[0].Text); // TODO should be 'In Order'
+        
+        var meansOfAbstraction = resultFull.Matches[2];
+        Assert.NotNull(meansOfAbstraction);
+        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal("In", meansOfAbstraction.Text[0].Text);
+        
+        var purposes = resultFull.Matches[3];
+        Assert.NotNull(purposes);
+        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal("Not", purposes.Text[0].Text);
+        
+        var period = resultFull.Matches[4];
+        Assert.NotNull(period);
+        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal("In", period.Text[0].Text);
+        
+        var quantities = resultFull.Matches[5];
+        Assert.NotNull(quantities);
+        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal("In", quantities.Text[0].Text);
+        
+        var meansOfMeasurement = resultFull.Matches[6];
+        Assert.NotNull(meansOfMeasurement);
+        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal("In", meansOfMeasurement.Text[0].Text);
+        
+        var records = resultFull.Matches[7];
+        Assert.NotNull(records);
+        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal("Not", records.Text[0].Text);
+        
+        var provisionOfInformation = resultFull.Matches[8];
+        Assert.NotNull(provisionOfInformation);
+        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal("Not", provisionOfInformation.Text[0].Text);
+        
+        var specialConditions = resultFull.Matches[9];
+        Assert.NotNull(specialConditions);
+        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal("N/A", specialConditions.Text[0].Text);
+        
+        var land = resultFull.Matches[10];
+        Assert.NotNull(land);
+        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal("In", land.Text[0].Text);
+        
+        var chargingFactors = resultFull.Matches[11];
+        Assert.NotNull(chargingFactors);
+        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal("Not", chargingFactors.Text[0].Text);
+        
+        var otherProvisions = resultFull.Matches[12];
+        Assert.NotNull(otherProvisions);
+        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal("N/A", otherProvisions.Text[0].Text);
     }
 }

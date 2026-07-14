@@ -452,7 +452,7 @@ public static class ApplicableToMost
             
             var tWords = DocumentLineColumn.FilterWordsFromText(
                 inputWords,
-                outputText!);
+                outputText!); // TODO see why this function makes 'In' into 'in'
 
             if (request.isOcr)
             {
@@ -585,6 +585,8 @@ public static class ApplicableToMost
                         .Words
                         .First()
                         .Coordinates;
+                    
+                    // TODO shouldn't be able to get here if we had possiblities that werent matched
                     
                     documentLine.Columns[0].Words.Clear();
                     documentLine.Columns[0].Words.AddRange(

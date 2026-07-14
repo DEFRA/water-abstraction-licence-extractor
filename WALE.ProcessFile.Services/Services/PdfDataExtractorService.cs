@@ -1335,6 +1335,7 @@ public class PdfDataExtractorService(
                             continue;
                         }
                     }
+                    // If there is no text, only possibilities
                     else if (label.Possibilities?.Any() == true && label.Format == "Text")
                     {
                         var matchedPossibilities =
@@ -1393,6 +1394,37 @@ public class PdfDataExtractorService(
                     
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
+
+                    var lineForPosition = fullLine;
+                    var partialLineT = partialLine.Clone();
+                    
+                    if (label.LimitTo == LimitTo.SameColumn)
+                    {
+                        var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
+                        var newColumns = new List<DocumentLineColumn>();
+                        
+                        foreach (var column in partialLineT.Columns)
+                        {
+                            if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                            {
+                                continue;
+                            }
+                            
+                            newColumns.Add(column);
+                            break;
+                        }
+                        
+                        partialLineT.Columns = newColumns;
+                        lineForPosition = partialLineT;
+
+                        textBeforeAtAndAfterLabel = [ 
+                            new TextAndLabel
+                            {
+                                ColumnsText = [partialLineT.Columns[0].Text],
+                                Label = matchedLabel
+                            }
+                        ];
+                    }
                     
                     var request = new FunctionInputModel
                     {
@@ -1418,8 +1450,8 @@ public class PdfDataExtractorService(
                         cacheService = cacheService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
-                        line = partialLine,
-                        lineForPosition = fullLine,
+                        line = partialLineT,
+                        lineForPosition = lineForPosition,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
                         regionCode = regionCode,

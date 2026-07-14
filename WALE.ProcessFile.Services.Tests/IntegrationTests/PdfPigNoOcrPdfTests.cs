@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(22, resultFull.Matches!.Count);
+        Assert.Equal(29, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6117,7 +6117,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         /*var inspectionDate = resultFull.Matches[20];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
-        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);*/
+        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);*/ // TODO
         
         var time = resultFull.Matches[20];
         Assert.NotNull(time);
@@ -6130,5 +6130,41 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.Equal("Southern Water Service Limited, Southern House, Yeoman Road, Worthing", nameAndAddress.Text[0].Text);
         Assert.Equal("BN13 3NX", nameAndAddress.Text[1].Text);
+        
+        var meterMake = resultFull.Matches[22];
+        Assert.NotNull(meterMake);
+        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal("Abstraction Flowmeter", meterMake.Text[0].Text);
+        
+        var serialNumber = resultFull.Matches[23];
+        Assert.NotNull(serialNumber);
+        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.StartsWith("V/", serialNumber.Text[0].Text);
+        Assert.EndsWith("2", serialNumber.Text[0].Text);
+        
+        var reading = resultFull.Matches[24];
+        Assert.NotNull(reading);
+        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal("4,714,612", reading.Text[0].Text);
+        
+        var units = resultFull.Matches[25];
+        Assert.NotNull(units);
+        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal("m3", units.Text[0].Text);
+        
+        var other = resultFull.Matches[26];
+        Assert.NotNull(other);
+        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal("N/A", other.Text[0].Text);
+        
+        var certificatesOfRecord = resultFull.Matches[27];
+        Assert.NotNull(certificatesOfRecord);
+        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
+        
+        var dateOfCertificate = resultFull.Matches[28];
+        Assert.NotNull(dateOfCertificate);
+        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal("30/06/2021", dateOfCertificate.Text[0].Text);
     }
 }

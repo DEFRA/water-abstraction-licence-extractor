@@ -32,10 +32,29 @@ public static class Wr51LabelConfiguration
             ("InspectionDate", TextAfterLabel("Inspection Date:", "InspectionDate", 1)),
             ("Time", TextAfterLabel("Time:", "Time", 0)),
             ("NameAndAddress", TextAfterLabel("Name and address:", "NameAndAddress", 2)),
+            ("MeterMake", TextAfterLabel("Meter make:", "MeterMake", 0)),
+            ("SerialNumber", TextAfterLabel("Serial number:", "SerialNumber", 0)),
+            ("Reading", TextAfterLabel("Reading:", "Reading", 0)),
+            ("Units", TextAfterLabel("Units:", "Units", 0)),
+            ("Other", TextAfterLabel("Other:", "Other", 0)),
+            ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for:", "CertificatesOfRecords", 0)),
+            ("DateOfCertification", TextAfterLabel("Date of certificate or", "DateOfCertification", 1, [new("record:")]))
         ];
     }
+
+    private static List<LabelToMatch> TextAfterLabel(
+        string text,
+        string labelName,
+        int nextLinesToFetch)
+    {
+        return TextAfterLabel(text, labelName, nextLinesToFetch, []);
+    }
     
-    private static List<LabelToMatch> TextAfterLabel(string text, string labelName, int nextLinesToFetch)
+    private static List<LabelToMatch> TextAfterLabel(
+        string text,
+        string labelName,
+        int nextLinesToFetch,
+        List<TextToMatch> additionalRemoves)
     {
         return
         [
@@ -55,7 +74,8 @@ public static class Wr51LabelConfiguration
                 NextLinesToFetch = nextLinesToFetch,
                 Name = labelName,
                 Remove = [
-                    new(text)
+                    new(text),
+                    ..additionalRemoves
                 ]
             }
         ];

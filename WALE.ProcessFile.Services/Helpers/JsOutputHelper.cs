@@ -92,11 +92,9 @@ public static class JsOutputHelper
         };
     }
 
-    public static async Task<IReadOnlyList<OutputListDataItem>> ToListDataAsync(
+    public static IReadOnlyList<OutputListDataItem> ToListData(
         List<IntermediateOutputLicence> outputLines,
-        IOutputService outputService,
-        ProcessRun processRun,
-        bool save,
+        int processRunId,
         List<LicenceSectionVerification> allLatestLicenceSectionVerifications)
     {
         var listData = new List<OutputListDataItem>();
@@ -124,12 +122,17 @@ public static class JsOutputHelper
             .GroupBy(x => x.Verification.LicenceSectionItemId!)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        foreach (var outputLine in outputLines.OrderBy(ol => ol.Filename))
+        var orderedOutputLines = outputLines
+            .OrderBy(ol => ol.Filename)
+            .ToList();
+        
+        foreach (var outputLine in orderedOutputLines)
         {
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
             var licenceSets = outputLine.LicenceSetReferences?
-                .Select(lsr => {
+                .Select(lsr =>
+                {
                     var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
 
                     if (ls == null)
@@ -167,7 +170,7 @@ public static class JsOutputHelper
             
             var listRow = new OutputListDataItem
             {
-                processRunId = processRun.ProcessRunId,
+                processRunId = processRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
                 licenceNumber =
@@ -190,14 +193,14 @@ public static class JsOutputHelper
 
             var groupedVerifications = (listRow.latestLicenceSectionVerifications ?? [])
                 .Where(verification =>
-                    verification.ProcessRunId <= processRun.ProcessRunId &&
+                    verification.ProcessRunId <= processRunId &&
                     verification.LicenceSectionName != null)
                 .GroupBy(verification => verification.LicenceSectionName!)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             var groupedInvertedVerifications = (invertedLatestLicenceSectionVerifications ?? [])
                 .Where(x =>
-                    x.Verification.ProcessRunId <= processRun.ProcessRunId &&
+                    x.Verification.ProcessRunId <= processRunId &&
                     x.Verification.LicenceSectionName != null)
                 .GroupBy(x => x.Verification.LicenceSectionName!)
                 .ToDictionary(g => g.Key, g => g.ToList());
@@ -211,20 +214,17 @@ public static class JsOutputHelper
                     continue;
                 }
 
-                var sectionVerifications = groupedVerifications.GetValueOrDefault(sectionName) ?? [];
-                var sectionInvertedVerifications = groupedInvertedVerifications.GetValueOrDefault(sectionName) ?? [];
+                var sectionVerifications =
+                    groupedVerifications.GetValueOrDefault(sectionName) ?? [];
+                var sectionInvertedVerifications =
+                    groupedInvertedVerifications.GetValueOrDefault(sectionName) ?? [];
+
                 strategy.HandleVerifications(sectionVerifications, listRow, sectionInvertedVerifications);
             }
 
             listData.Add(listRow);
         }
 
-        if (!save)
-        {
-            return listData;
-        }
-        
-        await outputService.SaveListDataAsync(listData, processRun.ProcessRunId);
         return listData;
     }
 

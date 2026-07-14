@@ -323,11 +323,11 @@ public static class GenerateLicenceReaderExtract
             existingResults
                 .Where(existingResult => !redos.Contains(existingResult.FileId))
                 .Select(existingResult => existingResult.FileId));
-        
+
         var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
             .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
-            .ToList();
+            .ToDictionary(fileMetadata => fileMetadata.Filename, fileMetadata => fileMetadata);
 
         // TODO - May need to implement paging above
         
@@ -354,8 +354,9 @@ public static class GenerateLicenceReaderExtract
         
         // Create file entries from PDF files and filter out already processed ones
         var filesToProcessRaw = allPdfFilesInS3
-            .Select(fileMetadata =>
+            .Select(fileMetadataKvp =>
             {
+                var fileMetadata = fileMetadataKvp.Value;
                 var permitNumber = ExtractPermitNumber(fileMetadata.Filename);
 
                 if (string.IsNullOrWhiteSpace(permitNumber))
@@ -392,9 +393,16 @@ public static class GenerateLicenceReaderExtract
 
             foreach (var versionFile in versionFiles)
             {
+                var filename = $"{versionFile.PermitNumber!.ToLower()}__{versionFile.FileId}.pdf";
+
+                if (!allPdfFilesInS3.ContainsKey(filename))
+                {
+                    continue;
+                }
+                
                 filesToProcessRaw.Add(new TemplateFinderInput
                 { 
-                    FileName = $"{versionFile.PermitNumber!.ToLower()}__{versionFile.FileId}.pdf",
+                    FileName = filename,
                     PermitNumber = versionFile.PermitNumber,
                     FileId = versionFile.FileId!.Value,
                     FileSize = versionFile.FileSize!.Value
@@ -414,7 +422,7 @@ public static class GenerateLicenceReaderExtract
 
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
-        var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Filename));
+        var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Value.Filename));
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Hard-coded exclusions: {excludedCount} files");
 
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Remaining to process (with correct filenames etc..): {filesToProcessRaw.Count} files");

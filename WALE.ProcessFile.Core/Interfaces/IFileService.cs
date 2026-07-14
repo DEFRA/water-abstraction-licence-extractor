@@ -10,7 +10,7 @@ public interface IFileService
     
     public Task<Stream?> GetFileAsStreamAsync(string filename);
 
-    public Task<byte[]> GetFileAsBytesAsync(string filename);
+    public Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize);
     
     public Task UploadFileAsStreamAsync(string filename, Stream stream);
 

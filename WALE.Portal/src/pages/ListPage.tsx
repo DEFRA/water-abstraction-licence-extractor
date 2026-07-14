@@ -40,7 +40,6 @@ function ListPage() {
     });
     const processRunId = searchParams.get('processRunId');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
-    const [paginationOutputList, setPaginationOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -65,8 +64,6 @@ function ListPage() {
 
     const fetchOutputList = useCallback(async () => {
         try {
-            setLoading(true);
-
             const currentQuery: ProcessRunQuery = {
                 ...query,
                 searchTerm: query.searchTerm?.trim() || "N/A",
@@ -74,6 +71,33 @@ function ListPage() {
                 take: query.take
             };
 
+            let filterKey = parseInt(processRunId ?? '0') +
+                (currentQuery.searchTerm ?? '') +
+                '' +
+                currentQuery.skip +
+                currentQuery.take +
+                currentQuery.issuer +
+                currentQuery.limitsEmpty +
+                currentQuery.aggregatesEmpty +
+                currentQuery.ocrScan +
+                currentQuery.purposesEmpty +
+                currentQuery.pointsEmpty +
+                currentQuery.issueYear +
+                currentQuery.meansFound +
+                currentQuery.ShortLicenceSetId +
+                currentQuery.linkedLicencesType +
+                currentQuery.verificationType;
+
+            // @ts-ignore
+            if (filterKey == window.lastFilterKey) {
+                return;
+            }
+            
+            // @ts-ignore
+            window.lastFilterKey = filterKey;
+            
+            setLoading(true);
+            
             const listDataItems = await waleApiClient.getProcessRun(
                 parseInt(processRunId ?? '0'),
                 currentQuery.searchTerm,
@@ -94,7 +118,6 @@ function ListPage() {
             );
 
             setOutputList(listDataItems.records);
-            setPaginationOutputList(listDataItems.noPaginationRecords);
             const totalRecords = listDataItems.totalRecords;
             setTotalLicences(totalRecords);
             setTotalPages(totalRecords > 0 ? Math.ceil(totalRecords / currentQuery.take) : 0);
@@ -229,7 +252,7 @@ function ListPage() {
                     <table id="licencesTable">
                         <thead>
                         <ProcessRunLicenceFilters
-                            data={paginationOutputList}
+                            data={filteredData}
                             query={query}
                             updateQuery={updateQuery}
                         />

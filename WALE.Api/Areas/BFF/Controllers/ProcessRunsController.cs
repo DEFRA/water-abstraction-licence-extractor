@@ -44,16 +44,16 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
-        var take = query.Take;
-        var skip = query.Skip;
-        query.Take = int.MaxValue;
-        query.Skip = 0;
         var completeNumber = 1;
         var fileNumber = 1;
+        
         var allLatestLicenceSectionVerificationsTask =
             outputService.GetLatestLicenceSectionVerificationsAsync();
+
+        var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, query);
-        var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll);
+        var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll); // TODO i might have broken these by passing less licences
+        
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
         
@@ -67,31 +67,32 @@ public class ProcessRunsController(IOutputService outputService) : Controller
                 licenceSetsAll))
             .ToList();
         
-        var paginationListData = await JsOutputHelper.ToListDataAsync(
+        var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
-            outputService,
-            new ProcessRun
-            {
-                ProcessRunId = processRunId
-            },
-            false,
+            processRunId,
             allLatestLicenceSectionVerifications);
 
+        // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.ShortLicenceSetId))
         {
-            paginationListData = paginationListData.Where(x => x.licenceSets?.Any(item => item?.ShortLicenceSetId?.Equals(query.ShortLicenceSetId) == true) == true).ToList();
+            paginationListData = paginationListData
+                .Where(x => x.licenceSets?.Any(item => item?.ShortLicenceSetId?.Equals(query.ShortLicenceSetId) == true) == true)
+                .ToList();
         }
         
+        // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.VerificationType))
         {
-            paginationListData = paginationListData.Where(x => x.latestLicenceSectionVerifications?.Any(item => item?.VerificationType?.Equals(query.VerificationType) == true) == true).ToList();
+            paginationListData = paginationListData
+                .Where(x => x.latestLicenceSectionVerifications?
+                    .Any(item => item.VerificationType?.Equals(query.VerificationType) == true) == true)
+                .ToList();
         }
 
         var processRun = new ProcessRunResponse
         {
-            TotalRecords = paginationListData.Count,
-            Records = paginationListData.Skip(skip).Take(take).ToList(),
-            NoPaginationRecords = paginationListData,
+            TotalRecords = await getTotalsTask,
+            Records = paginationListData
         };
         
         return Ok(processRun);

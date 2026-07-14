@@ -114,7 +114,7 @@ public class AwsS3FileService(
             .ToList();
     }
 
-    public async Task<byte[]> GetFileAsBytesAsync(string filename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
         var stream = await GetFileAsStreamAsync(filename);
 
@@ -123,8 +123,12 @@ public class AwsS3FileService(
             throw new Exception("Stream is null");
         }
         
-        using var binaryReader = new BinaryReader(stream);
-        return binaryReader.ReadBytes((int)stream.Length);
+        var bytes = GetByteArrayFromStream(stream);
+
+        return bytes
+            .Skip(chunkIndex * chunkSize)
+            .Take(chunkSize)
+            .ToArray();
     }
     
     public async Task<Stream?> GetFileAsStreamAsync(string filename)
@@ -180,15 +184,16 @@ public class AwsS3FileService(
             throw new InvalidOperationException($"No multipart upload in progress for file {filename}");
         }
 
-        await client.UploadPartAsync(new UploadPartRequest
-        {
-            BucketName = FolderPath,
-            Key = filename,
-            UploadId = uploadId,
-            PartNumber = chunkIndex + 1,
-            InputStream = stream,
-            PartSize = stream.Length
-        });
+        await client.UploadPartAsync(
+            new UploadPartRequest
+            {
+                BucketName = FolderPath,
+                Key = filename,
+                UploadId = uploadId,
+                PartNumber = chunkIndex + 1,
+                InputStream = stream,
+                PartSize = stream.Length
+            });
 
         if (chunkIndex != totalChunks - 1)
         {
@@ -289,6 +294,22 @@ public class AwsS3FileService(
         
         _client = client;
         return client;
+    }
+
+    private static byte[] GetByteArrayFromStream(Stream stream)
+    {
+        byte[] bytes;
+        List<byte> totalStream = [];
+        var buffer = new byte[32];
+        int read;
+        
+        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            totalStream.AddRange(buffer.Take(read));
+        }
+        
+        bytes = totalStream.ToArray();
+        return bytes;
     }
 
     private AmazonS3Client? _client;

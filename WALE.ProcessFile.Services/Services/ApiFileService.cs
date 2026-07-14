@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
+using WALE.ProcessFile.Services.Types;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -58,19 +59,45 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         {
             if (hrex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
             {
-                ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(ApiFileService)} - File was too large, skipping - {filename}");
+                const int chunkSize = 5 * 1024 * 1024; // 5MB
+
+                var loopBytes = -1;
+                var totalLength = 0;
                 
-                return null;
+                var first = true;
+                var loopIdx = 0;
+                
+                var documentChunks = new List<byte[]>();
+                
+                while (first || loopBytes == chunkSize)
+                {
+                    first = false;
+                    
+                    var bytes = await GetFileAsBytesAsync(filename, loopIdx++, chunkSize);
+
+                    loopBytes = bytes.Length;
+                    totalLength += loopBytes;
+                    
+                    documentChunks.Add(bytes);                    
+                }
+
+                var combinedByteArray = documentChunks[0].AsEnumerable();
+
+                for (var idx = 1; idx < documentChunks.Count; idx++)
+                {
+                    combinedByteArray = combinedByteArray.Concat(documentChunks[idx]);
+                }
+
+                return new ByteStream(combinedByteArray, totalLength);
             }
 
             throw;
         }
     }
     
-    public async Task<byte[]> GetFileAsBytesAsync(string filename)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
-        var path = $"/Extractor/Files/Get?filename={filename}";
+        var path = $"/Extractor/Files/Get?filename={filename}&chunkIndex={chunkIndex}&chunkSize={chunkSize}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

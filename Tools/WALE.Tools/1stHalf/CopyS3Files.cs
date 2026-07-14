@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Types;
 using WALE.Tools.Config;
 
 namespace WALE.Tools._1stHalf;
@@ -14,26 +15,47 @@ public static class CopyS3Files
             30);
         
         var destinationHttpClient = HttpHelper.GetResilientHttpClient(
-            "http://localhost:8080",
+            "https://wli-api-tst.aws-int.defra.cloud",
             100,
             30);
-        
+
+        Console.WriteLine($"Started at {DateTime.Now}");
+        Console.WriteLine($"Copying files from {sourceHttpClient.BaseAddress} to {destinationHttpClient.BaseAddress}");
+
         var sourceFileService = new ApiFileService(sourceHttpClient);
         var destinationFileService = new ApiFileService(destinationHttpClient);
 
-        var sourceFiles = await sourceFileService.GetAllFilesAsync();
+        var sourceFilesTask = sourceFileService.GetAllFilesAsync();
 
+        var existingDestinationFiles = await destinationFileService.GetAllFilesAsync();
+        Console.WriteLine($"{existingDestinationFiles.Count} existing destination files");
+        
         // For debugging / limiting file uploads
         /*sourceFiles = sourceFiles
-            //.Where(x => x == "02107__100e7d07-a1a2-43fb-9e69-890b97926f8d.pdf")
-            .Take(100)
+            .Where(x => x.StartsWith("0328640105__462b0c9c-682e-4dc0-bc76-85786c80baf7.pdf"))
+            .Take(10)
             .ToList();*/
         
+        var sourceFiles = await sourceFilesTask;
+        Console.WriteLine($"{sourceFiles.Count} source files");
+        
+        var excludeIncorrectlyNamedFiles = sourceFiles
+            .Where(filename => !filename.Any(char.IsUpper))
+            .ToList();
+
+        Console.WriteLine($"{excludeIncorrectlyNamedFiles.Count} correctly named files");
+        
+        var missingFiles = excludeIncorrectlyNamedFiles
+            .Except(existingDestinationFiles)
+            .ToList();
+        
         var copyingTasks = new List<Task>();
-        const int maxConcurrent = 5;
+        const int maxConcurrent = 20; // Might be a touch to high
         var loopIdx = 1;
         
-        foreach (var sourceFilename in sourceFiles)
+        Console.WriteLine($"{missingFiles.Count} missing files");
+        
+        foreach (var sourceFilename in missingFiles)
         {
             copyingTasks.Add(
                 CopyFileAsync(
@@ -41,7 +63,7 @@ public static class CopyS3Files
                     sourceFileService,
                     destinationFileService,
                     loopIdx++,
-                    sourceFiles.Count));
+                    missingFiles.Count));
             
             if (copyingTasks.Count != maxConcurrent)
             {
@@ -67,6 +89,8 @@ public static class CopyS3Files
         {
             await copyingTask;
         }
+
+        Console.WriteLine("Done");
     }
 
     private static async Task CopyFileAsync(
@@ -76,50 +100,63 @@ public static class CopyS3Files
         int loopIdx,
         int totalFiles)
     {
-        var sourceFileStream = await sourceFileService.GetFileAsStreamAsync(filename);
-
-        if (sourceFileStream == null)
+        try
         {
-            return;
-        }
-        
-        const int chunkSize = 5 * 1024 * 1024; // 5MB
-        var isChunked = sourceFileStream.Length > chunkSize;
-        
-        if (isChunked)
-        {
-            var chunkIndex = 0;
-            var totalChunks = Convert.ToInt32(Math.Ceiling(sourceFileStream.Length / (double)chunkSize));
-                
-            string? uploadId = null;
-            var fullByteArray = GetByteArray(sourceFileStream);
+            var dtStart = DateTime.UtcNow;
             
-            while (chunkIndex < totalChunks)
-            {
-                var chunkOfByteArray = fullByteArray
-                    .Skip(chunkIndex * chunkSize)
-                    .Take(chunkSize)
-                    .ToArray();
-                
-                var streamChunk = new MemoryStream(chunkOfByteArray);
-                
-                var tempUploadId = await destinationFileService.UploadFileChunkAsync(
-                    filename,
-                    streamChunk,
-                    chunkIndex++,
-                    totalChunks,
-                    uploadId);
+            var sourceFileStream = await sourceFileService.GetFileAsStreamAsync(filename);
 
-                uploadId ??= tempUploadId;
+            if (sourceFileStream == null)
+            {
+                return;
             }
+
+            const int chunkSize = 5 * 1024 * 1024; // 5MB
+            var fileLength = sourceFileStream.Length;
+            
+            var isChunked = fileLength > chunkSize;
+
+            if (isChunked)
+            {
+                var chunkIndex = 0;
+                var totalChunks = Convert.ToInt32(Math.Ceiling(fileLength / (double)chunkSize));
+
+                string? uploadId = null;
+                var fullByteArray = GetByteArray(sourceFileStream);
+
+                while (chunkIndex < totalChunks)
+                {
+                    var chunkOfByteArray = fullByteArray
+                        .Skip(chunkIndex * chunkSize)
+                        .Take(chunkSize);
+
+                    var streamChunk = new ByteStream(chunkOfByteArray, 0); // Length doesn't matter here
+
+                    var tempUploadId = await destinationFileService.UploadFileChunkAsync(
+                        filename,
+                        streamChunk,
+                        chunkIndex++,
+                        totalChunks,
+                        uploadId);
+
+                    uploadId ??= tempUploadId;
+                }
+            }
+            else
+            {
+                await destinationFileService.UploadFileAsStreamAsync(filename, sourceFileStream);
+            }
+
+            var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;
+            
+            var additionalText = isChunked ? " (chunked)" : string.Empty;
+            Console.WriteLine($"Uploaded file {loopIdx} of {totalFiles} - {filename}{additionalText} - " +
+                $"{fileLength / 1024.0 / 1024.0}mb in {tsDuration} seconds");
         }
-        else
+        catch (Exception ex)
         {
-            await destinationFileService.UploadFileAsStreamAsync(filename, sourceFileStream);
+            Console.WriteLine($"ERROR - Downloading or uploading file {filename} - {ex.Message} ({loopIdx} of {totalFiles} - {filename})");
         }
-        
-        var additionalText = isChunked ? " (chunked)" : string.Empty;
-        Console.WriteLine($"Uploaded file {loopIdx} of {totalFiles} - {filename}{additionalText}");
     }
     
     private static byte[] GetByteArray(Stream stream)

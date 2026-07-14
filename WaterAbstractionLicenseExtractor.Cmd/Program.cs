@@ -45,9 +45,8 @@ async Task ProgramAsync()
     
     var abstractionAndImpoundmentLicencesTask =
         SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
-    var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
     
-    var (dmsFilesToProcess, _) =
+    var (filesToProcess, _) =
         await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
@@ -59,7 +58,7 @@ async Task ProgramAsync()
         {
             Description = $"Run using {services.FileService!.FolderPath}",
             StartDateTimeUtc = DateTime.UtcNow,
-            NumberOfFiles = dmsFilesToProcess.Count
+            NumberOfFiles = filesToProcess.Count
         });
 
     var firstNamesCsv = await firstNamesTask;
@@ -68,7 +67,7 @@ async Task ProgramAsync()
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
     LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
-    var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
 
     const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
@@ -89,18 +88,15 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var (filePath, dmsAndNaldData) in dmsFilesToProcess)
+        foreach (var (filePath, dmsAndNaldData) in filesToProcess)
         {
-            var dmsDataForFile = dmsAndNaldData.Item1;
-            var naldLicence = dmsAndNaldData.Item2;
-            
             if (services.DelayPerProcessMs > 0)
             {
                 await Task.Delay(services.DelayPerProcessMs);
             }
 
             var loopLookupConfig = lookupConfig.Clone();
-            loopLookupConfig.RegionId = naldLicence.RegionCode;
+            loopLookupConfig.RegionId = dmsAndNaldData.NaldLicence.RegionCode;
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -112,7 +108,8 @@ async Task ProgramAsync()
                     processRun,
                     extractorLock,
                     loopLookupConfig,
-                    dmsDataForFile));
+                    dmsAndNaldData.DmsFileData,
+                    dmsAndNaldData.NaldLicence));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -203,7 +200,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     ProcessRun processRun,
     Lock extractorLock,
     LookupConfiguration lookupConfig,
-    DmsFileData dmsDataForFile)
+    DmsFileData dmsDataForFile,
+    NaldLicence naldLicence)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -261,7 +259,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,
-            dmsDataForFile);
+            dmsDataForFile,
+            naldLicence);
 
         return licenceSets;
     }

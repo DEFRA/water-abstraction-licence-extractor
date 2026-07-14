@@ -52,7 +52,7 @@ public class FileProcessSingleService(
         
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
-        var (dmsFileData, _) = await dmsAndNaldFileDataTask;
+        var (dmsFileData, naldLicence) = await dmsAndNaldFileDataTask;
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
@@ -82,6 +82,7 @@ public class FileProcessSingleService(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
+                naldLicence,
                 processRun);
 
             await SharedHelper.UpdateAndSaveLicenceSetsAsync(
@@ -136,6 +137,7 @@ public class FileProcessSingleService(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
+        NaldLicence naldLicence,
         ProcessRun processRun)
     {
         var dtStart = DateTime.Now;
@@ -190,7 +192,8 @@ public class FileProcessSingleService(
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,
-                dmsDataForFile);
+                dmsDataForFile,
+                naldLicence);
         }
         catch (TooManyPagesException)
         {

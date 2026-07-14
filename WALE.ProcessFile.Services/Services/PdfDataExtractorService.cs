@@ -61,7 +61,7 @@ public class PdfDataExtractorService(
 
             return await GetMatchesInternalAsync(
                 pdfFileName,
-                dmsDataForFile,
+                dmsDataForFile.FileId,
                 configuration,
                 previouslyParsedFiles,
                 processRunId);
@@ -74,14 +74,12 @@ public class PdfDataExtractorService(
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFileName,
-        DmsFileData? dmsDataForFile,
+        Guid fileId,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
-        ArgumentNullException.ThrowIfNull(dmsDataForFile);
-
-        if (dmsDataForFile.FileId == Guid.Empty)
+        if (fileId == Guid.Empty)
         {
             throw new Exception("FileId is empty");
         }
@@ -102,7 +100,7 @@ public class PdfDataExtractorService(
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
-            dmsDataForFile.FileId,
+            fileId,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -189,7 +187,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                FileId = dmsDataForFile.FileId,
+                FileId = fileId,
                 NoOcrServiceName = Name
             });
 
@@ -240,7 +238,7 @@ public class PdfDataExtractorService(
                     if (image == null)
                     {
                         ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not" +
-                            $" found, P{page} I{imageNumber} {dmsDataForFile.FileId}");
+                            $" found, P{page} I{imageNumber} {fileId}");
                         
                         continue;
                     }

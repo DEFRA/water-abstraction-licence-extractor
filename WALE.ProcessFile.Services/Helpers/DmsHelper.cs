@@ -39,8 +39,8 @@ public static class DmsHelper
         return LicenceFinderResultToDmsAndNaldData(licenceFinderResult, null);
     }
 
-    public static async Task<(Dictionary<string, (DmsFileData, NaldLicence)> FilenamesWithLicenceNumbers,
-            Dictionary<string, (DmsFileData, NaldLicence)> LicenceNumbersWithFilenames)>
+    public static async Task<(Dictionary<string, (DmsFileData DmsFileData, NaldLicence NaldLicence)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData DmsFileData, NaldLicence NaldLicence)> LicenceNumbersWithFilenames)>
         GetDmsAndNaldFilesAndMappingAsync(
             IFileService fileService,
             string dmsReportPath,
@@ -235,9 +235,13 @@ public static class DmsHelper
             destinationFileName = allDestinationFilenames.First(fname =>
                 fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
             
-            var (dmsFileData, naldLicence) = LicenceFinderResultToDmsAndNaldData(licenceFinderResult, destinationFileName);
-
-            var strippedLicenceNumber = FormattingHelper.StripForComparison(licenceFinderResult.LicenseNumber, -1)!;
+            var (dmsFileData, naldLicence) = LicenceFinderResultToDmsAndNaldData(
+                licenceFinderResult,
+                destinationFileName);
+            
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                naldLicence.RegionCode)!;
             
             filenamesWithLicenceNumbers.Add(destinationFileName, (dmsFileData, naldLicence));
             licenceNumbersWithFilenames.TryAdd(strippedLicenceNumber, (dmsFileData, naldLicence));

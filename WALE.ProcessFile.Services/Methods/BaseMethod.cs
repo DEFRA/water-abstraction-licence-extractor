@@ -176,8 +176,20 @@ public static class BaseMethod
                 break;
             case Text.Constant:
                 var result = RestrictToPossibility(request, labelGroupResult);
-                if (result?.Text != null) returnList.Add(result);
 
+                if (result.HasPossiblites)
+                {
+                    if (result.LabelGroupResult!.Text != null)
+                    {
+                        returnList.Add(result.LabelGroupResult);
+                    }
+                }
+                else
+                {
+                    labelGroupResult.Text = lines;
+                    returnList.Add(labelGroupResult);
+                }
+                
                 break;
         }
 
@@ -263,13 +275,13 @@ public static class BaseMethod
         return results;
     }
     
-    private static LabelGroupResult? RestrictToPossibility(
+    private static (bool HasPossiblites, LabelGroupResult? LabelGroupResult) RestrictToPossibility(
         FunctionInputModel request,
         LabelGroupResult result)
     {
         if (request.label!.Possibilities?.Any() != true)
         {
-            return result;
+            return (false, result);
         }
 
         var possiblityFound = request.label.Possibilities.Any(possibility =>
@@ -293,10 +305,10 @@ public static class BaseMethod
             var clonedResult = result.Clone();
             clonedResult.Text = [clonedLine];
             
-            return clonedResult;
+            return (true, clonedResult);
         }
 
-        return null;
+        return (true, null);
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(

@@ -6008,8 +6008,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(13, resultFull.Matches!.Count);
-
+        Assert.Equal(14, resultFull.Matches!.Count);
+        
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
         Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
@@ -6074,5 +6074,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(otherProvisions);
         Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
+        
+        var licenceNumber = resultFull.Matches[13];
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal("12/101/4/G/8 ", licenceNumber.Text[0].Text);
     }
 }

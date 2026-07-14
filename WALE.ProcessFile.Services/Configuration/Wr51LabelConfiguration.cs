@@ -21,10 +21,37 @@ public static class Wr51LabelConfiguration
             ("SpecialConditions", GetInOrderField("Special conditions:", "SpecialConditions")),
             ("Land", GetInOrderField("Land (only if specified):", "Land")),
             ("ChargingFactors", GetInOrderField("Charging factors:", "ChargingFactors")),
-            ("OtherProvisions", GetInOrderField("Other provisions (specify below):", "OtherProvisions"))
+            ("OtherProvisions", GetInOrderField("Other provisions (specify below):", "OtherProvisions")),
+            ("LicenceNumber", GetLicenceNumber())
         ];
     }
     
+    private static List<LabelToMatch> GetLicenceNumber()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Licence No. (or Application No. or GIC No. etc.)")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                LimitTo = LimitTo.SameColumn,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1,
+                Name = "LicenceNumber",
+                Remove = [
+                    new("Licence No. (or Application No. or GIC No. etc.)"),
+                    new("Less Critical")
+                ]
+            }
+        ];
+    }
     
     private static List<LabelToMatch> GetInOrderField(string text, string labelName)
     {

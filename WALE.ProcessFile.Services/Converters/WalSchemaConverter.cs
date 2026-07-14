@@ -16,6 +16,7 @@ public static class WalSchemaConverter
     private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
         DmsFileData? dmsFileData,
+        NaldLicence? naldLicence,
         NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
         LookupConfiguration? lookupConfiguration,
         int processRunId)
@@ -49,7 +50,7 @@ public static class WalSchemaConverter
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
 
         var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, source) =
-            GetLicenceNumber(matchesResult, dmsFileData?.NaldLicenceRef, noneSchemaData);
+            GetLicenceNumber(matchesResult, naldLicence?.LicenceNumber, noneSchemaData);
 
         var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
             ? new ValueWithConfidence<string>(
@@ -806,13 +807,15 @@ public static class WalSchemaConverter
         IPdfDataExtractorService pdfDataExtractorService,
         int processRunId,
         LookupConfiguration lookupConfiguration,
-        DmsFileData? dmsDataForFile = null)
+        DmsFileData? dmsDataForFile = null,
+        NaldLicence? naldLicence = null)
     {
         var returnList = new List<LicenceSet>();
 
         var primaryLicence = await ToLicenceAsync(
             matchesResult,
             dmsDataForFile,
+            naldLicence,
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
             lookupConfiguration,
             processRunId);
@@ -1386,16 +1389,29 @@ public static class WalSchemaConverter
             }
             
             var naldDataLine = await GetNaldDataLineAsync(
-                lookupConfiguration!.CacheService,
+                lookupConfiguration.CacheService,
                 linkedLicence.LicenceNumber,
                 primaryLicence.RegionId!.Value);
 
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
-            
+
+            NaldLicence? naldLicence = null;
+
+            if (!string.IsNullOrEmpty(naldDataLine?.LicenceNumber))
+            {
+                naldLicence = new NaldLicence
+                {
+                    LicenceNumber = naldDataLine.LicenceNumber,
+                    RegionCode = (short)primaryLicence.RegionId!.Value,
+                    Id = -1,
+                    Type = Core.Enums.LicenceType.Abstraction
+                };
+            }
+
             var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
                 destinationFileName!,
-                dmsFileData,
+                dmsFileData!,
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
@@ -1403,6 +1419,7 @@ public static class WalSchemaConverter
             var licence = await ToLicenceAsync(
                 relatedFileMatches,
                 dmsFileData,
+                naldLicence,
                 (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
                 lookupConfiguration,
                 processRunId);

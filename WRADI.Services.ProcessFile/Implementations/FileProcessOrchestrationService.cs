@@ -26,7 +26,7 @@ public class FileProcessOrchestrationService(
         await outputService.SetupAsync();
 
         var (dmsFilesToProcess, allDmsData) =
-            await DmsHelper.GetDmsFilesAndMappingAsync(
+            await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
                 fileService,
                 string.Empty,
                 false,
@@ -49,8 +49,15 @@ public class FileProcessOrchestrationService(
 
         try
         {
-            foreach (var (filePath, dmsFileData) in dmsFilesToProcess)
+            foreach (var (filePath, dmsAndNald) in dmsFilesToProcess)
             {
+                var dmsFileData = dmsAndNald.Item1;
+                var naldLicence = dmsAndNald.Item2;
+                
+                var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                    naldLicence.LicenceNumber,
+                    naldLicence.RegionCode)!;
+                
                 await messageQueueService.AddToFileProcessQueue(
                     new FileProcessSingleRequest
                     {
@@ -59,9 +66,9 @@ public class FileProcessOrchestrationService(
                         DmsPath = dmsFileData.DmsPath,
                         FileId = dmsFileData.FileId,
                         PermitNumber = dmsFileData.PermitNumber,
-                        NaldLicenceRef = dmsFileData.NaldLicenceRef,
-                        StrippedLicenceNumber = dmsFileData.StrippedLicenceNumber,
-                        RegionId = dmsFileData.RegionId,
+                        NaldLicenceRef = naldLicence.LicenceNumber,
+                        StrippedLicenceNumber = strippedLicenceNumber,
+                        RegionId = naldLicence.RegionCode,
                         ProcessRunId = processRun.ProcessRunId
                     });
                 

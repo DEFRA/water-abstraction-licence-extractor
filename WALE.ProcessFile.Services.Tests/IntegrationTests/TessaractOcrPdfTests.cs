@@ -84,8 +84,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = "something",
-                RegionId = 1
+                DestinationFileName = "something"
             }
         }
     };
@@ -98,7 +97,16 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
+
+    private static readonly Dictionary<string, List<NaldData>> _naldData = new()
+    {
+        {
+            "28/39/28/312", [new NaldData
+            {
+                FgacRegionCode = 1
+            }]
+        }
+    };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {

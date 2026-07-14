@@ -48,7 +48,7 @@ async Task ProgramAsync()
     var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
     
     var (dmsFilesToProcess, _) =
-        await DmsHelper.GetDmsFilesAndMappingAsync(
+        await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
@@ -89,13 +89,19 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
+        foreach (var (filePath, dmsAndNaldData) in dmsFilesToProcess)
         {
+            var dmsDataForFile = dmsAndNaldData.Item1;
+            var naldLicence = dmsAndNaldData.Item2;
+            
             if (services.DelayPerProcessMs > 0)
             {
                 await Task.Delay(services.DelayPerProcessMs);
             }
 
+            var loopLookupConfig = lookupConfig.Clone();
+            loopLookupConfig.RegionId = naldLicence.RegionCode;
+            
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
@@ -105,7 +111,7 @@ async Task ProgramAsync()
                     pdfDataExtractors,
                     processRun,
                     extractorLock,
-                    lookupConfig,
+                    loopLookupConfig,
                     dmsDataForFile));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
@@ -218,9 +224,6 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         {
             pdfFilename
         };
-
-        lookupConfig = lookupConfig.Clone();
-        lookupConfig.RegionId = dmsDataForFile.RegionId;
 
         var matchesFull = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,

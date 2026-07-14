@@ -42,18 +42,17 @@ public class FileProcessSingleService(
         await outputService.SetupAsync();
 
         var fileId = FileHelper.ExtractFileId(fileProcessSingleRequest.FilePath);
-        
         var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
 
         var abstractionAndImpoundmentLicencesTask =
             SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
         
-        var dmsFileDataTask = DmsHelper.GetDmsFilesData(cacheService, fileId!.Value);
+        var dmsAndNaldFileDataTask = DmsHelper.GetDmsAndNaldFileData(cacheService, fileId!.Value);
         var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
         
         LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
-        var dmsFileData = await dmsFileDataTask;
+        var (dmsFileData, _) = await dmsAndNaldFileDataTask;
         
         var lookupConfig = new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
@@ -149,8 +148,6 @@ public class FileProcessSingleService(
             {
                 pdfFilename
             };
-
-            lookupConfig.RegionId = dmsDataForFile.RegionId;
             
             var matchesFull = await pdfDataExtractor.GetMatchesAsync(
                 pdfFilename,

@@ -401,7 +401,7 @@
       "licenceType": "GroundWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/247",
-        "confidence": 85
+        "confidence": 100
       },
       "dmsPath": "Something to look for",
       "dmsFileId": "fc901013-3c0e-008d-117a-b48fa58d8feb",
@@ -672,7 +672,7 @@
       "licenceType": "SurfaceWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/248",
-        "confidence": 85
+        "confidence": 100
       },
       "dmsPath": "Something to look for",
       "dmsFileId": "e0f2960b-0ec4-38c2-3c50-878691bcdef4",

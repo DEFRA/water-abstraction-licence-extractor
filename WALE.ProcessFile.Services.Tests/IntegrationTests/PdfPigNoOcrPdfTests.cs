@@ -79,8 +79,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -89,8 +88,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -99,8 +97,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -109,8 +106,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             }
         };
@@ -124,8 +120,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -134,8 +129,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -144,8 +138,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             }
         };
@@ -2670,7 +2663,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            new DmsFileData { RegionId = 1, FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"), DmsPath = "main path"})).Last();
+            new DmsFileData
+            {
+                FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
+                DmsPath = "main path"
+            })).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);

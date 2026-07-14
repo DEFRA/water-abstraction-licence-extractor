@@ -795,8 +795,13 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
         var content = await response.Content.ReadAsStringAsync();
-
         response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+        
         return JsonSerializer.Deserialize<NaldData>(
             content,
             JsonHelper.GetSerializerOptions());

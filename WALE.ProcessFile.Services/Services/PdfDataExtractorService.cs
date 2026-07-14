@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -296,7 +297,7 @@ public class PdfDataExtractorService(
             var breakPageLoop = false;
 
             var pageImages = page.Images.ToList(); // They are ordered earlier
-            var servicesUsed = new List<string>();
+            var servicesUsed = new Dictionary<string, double>();
             
             if (pageImages.Count > 10)
             {
@@ -340,10 +341,8 @@ public class PdfDataExtractorService(
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
                 {
-                    if (!servicesUsed.Contains(ocrService.Name))
-                    {
-                        servicesUsed.Add(ocrService.Name);
-                    }
+                    servicesUsed.TryAdd(ocrService.Name, 0);
+                    var serviceStartTimeUtc = DateTime.UtcNow;
                     
                     if (!returnResult.ServicesUsed.Contains(ocrService.Name))
                     {
@@ -365,6 +364,9 @@ public class PdfDataExtractorService(
                     {
                         ConsoleHelper.WriteLine($"ERROR - {ocrService.Name} - {ex} - {imageReference}");
                         // TODO proper logging somewhere
+
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
                         
                         // Don't rethrow - just carry on with the other providers and pages
                         continue;
@@ -373,6 +375,9 @@ public class PdfDataExtractorService(
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)
                     {
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
 
@@ -394,6 +399,9 @@ public class PdfDataExtractorService(
                         outputPage.LikelyMapPage = true;
                         serviceImageLines = [];
 
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
                     
@@ -416,6 +424,9 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         continue;
                     }
                     
@@ -455,8 +466,14 @@ public class PdfDataExtractorService(
                         breakImageLoop = true;
                         breakPageLoop = true;
 
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
+                    
+                    var serviceDurationMs1 = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                    servicesUsed[ocrService.Name] += serviceDurationMs1;
                 }
                 
                 documentLines.AddRange(serviceImageLines);
@@ -533,12 +550,13 @@ public class PdfDataExtractorService(
         int pageNumber,
         int numberOfImages,
         PdfDocument pdfDocument,
-        List<string> servicesUsed)
+        Dictionary<string, double> servicesUsed)
     {
         var duration = DateTime.Now - dtStart;
+        var servicesUsedStr = servicesUsed.Select(su => $"{su.Key} ({su.Value}ms)");
         
         ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
-            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilename}");
+            $". Services used {string.Join(", ", servicesUsedStr)} - {pdfDocument.PdfFilename}");
     }
     
     private static bool IsPageScan(int imageWidth, int imageHeight)

@@ -59,7 +59,7 @@ public static class WalSchemaConverter
                 confidence)
             : null;
 
-        var naldDataLine = await GetNaldDataLineAsync(
+        var naldDataLine = await FormattingHelper.GetNaldDataLineAsync(
             lookupConfiguration!.CacheService,
             licenceNumber,
             regionCode);
@@ -764,10 +764,10 @@ public static class WalSchemaConverter
         int? regionId,
         ICacheService cacheService)
     {
-        var permitOrLicenceNumber = linkedLicencePermitNumber;
-        if (string.IsNullOrWhiteSpace(permitOrLicenceNumber))
+        var licenceOrPermitNumber = linkedLicenceNumber;
+        if (string.IsNullOrWhiteSpace(linkedLicenceNumber))
         {
-            permitOrLicenceNumber = linkedLicenceNumber;
+            licenceOrPermitNumber = linkedLicencePermitNumber;
         }
 
         if (regionId == null)
@@ -775,12 +775,16 @@ public static class WalSchemaConverter
             throw new Exception("regionId is null");
         }
         
-        var naldDataLine = await GetNaldDataLineAsync(cacheService, permitOrLicenceNumber, regionId.Value);
+        var naldDataLineTask = FormattingHelper.GetNaldDataLineAsync(
+            cacheService,
+            licenceOrPermitNumber,
+            regionId.Value);
         
         var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
             linkedLicenceNumber,
             cacheService);
-        
+
+        var naldDataLine = await naldDataLineTask;
         var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
 
         return new LinkedLicence
@@ -1385,7 +1389,7 @@ public static class WalSchemaConverter
                 continue;
             }
             
-            var naldDataLine = await GetNaldDataLineAsync(
+            var naldDataLine = await FormattingHelper.GetNaldDataLineAsync(
                 lookupConfiguration.CacheService,
                 linkedLicence.LicenceNumber,
                 primaryLicence.RegionId!.Value);
@@ -1626,16 +1630,18 @@ public static class WalSchemaConverter
             null;
 
         var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-        var naldDataLineLoop = await GetNaldDataLineAsync(
+        
+        var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+            licenceNumberLoop,
+            lookupConfiguration.CacheService);
+        
+        var naldDataLineLoop = await FormattingHelper.GetNaldDataLineAsync(
             lookupConfiguration.CacheService,
             licenceNumberLoop,
             regionCode);
 
         var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLineLoop);
-
-        var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
-            licenceNumberLoop,
-            lookupConfiguration.CacheService);
+        var dmsFileData = await dmsFileDataTask;
         
         noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
             linkedLicenceNumber.Confidence);
@@ -1711,16 +1717,17 @@ public static class WalSchemaConverter
                 (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
-            var naldDataLine = await GetNaldDataLineAsync(
+            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+                linkedLicenceNumber,
+                lookupConfiguration.CacheService);
+            
+            var naldDataLine = await FormattingHelper.GetNaldDataLineAsync(
                 lookupConfiguration.CacheService,
                 linkedLicenceNumber,
                 regionCode);
             
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
-
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
-                linkedLicenceNumber,
-                lookupConfiguration.CacheService);
+            var dmsFileData = await dmsFileDataTask;
 
             noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
             
@@ -1799,15 +1806,16 @@ public static class WalSchemaConverter
             var naldLicenceNumber =
                 (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
 
-            var naldDataLine = await GetNaldDataLineAsync(lookupConfiguration.CacheService, lln, regionCode);
-
             var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
-
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+            
+            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
                 licenceNumber,
                 lookupConfiguration.CacheService);
+            
+            var naldDataLine = await FormattingHelper.GetNaldDataLineAsync(lookupConfiguration.CacheService, lln, regionCode);
+            
+            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+            var dmsFileData = await dmsFileDataTask;
 
             noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
 
@@ -2439,16 +2447,17 @@ public static class WalSchemaConverter
                 (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
                 null;
 
-            var naldDataLine2 = await GetNaldDataLineAsync(
+            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+                scrapedLicenceNumber,
+                lookupConfiguration.CacheService);
+            
+            var naldDataLine2 = await FormattingHelper.GetNaldDataLineAsync(
                 lookupConfiguration.CacheService,
                 naldLicenceNumber,
                 regionCode);
 
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine2);
-
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
-                scrapedLicenceNumber,
-                lookupConfiguration.CacheService);
+            var dmsFileData = await dmsFileDataTask;
             
             linkedLicenceNumbers.Add(new LinkedLicence
             {
@@ -3256,15 +3265,6 @@ public static class WalSchemaConverter
         }
 
         return returnList.ToArray();
-    }
-
-    private static Task<NaldData?> GetNaldDataLineAsync(
-        ICacheService cacheService,
-        string? licenceNumber,
-        int regionCode)
-    {
-        // TODO check we don't already have
-        return cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
     }
 
     private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)

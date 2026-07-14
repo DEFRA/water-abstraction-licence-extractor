@@ -8,6 +8,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 public static class FormattingHelper
 {
     private static readonly Dictionary<string, DmsFileData?> DmsFileDataCache = new();
+    private static readonly Dictionary<string, NaldData?> NaldDataCache = new();
     
     public static string? RemoveSeperators(string? licenceNumber)
     {
@@ -60,6 +61,29 @@ public static class FormattingHelper
         DmsFileDataCache.Add(licenceNumber, dmsFileData);
         
         return dmsFileData;
+    }
+    
+    public static async Task<NaldData?> GetNaldDataLineAsync(
+        ICacheService cacheService,
+        string? licenceNumber,
+        int regionCode)
+    {
+        var key = $"{regionCode}|{licenceNumber}";
+        
+        if (string.IsNullOrEmpty(key))
+        {
+            return null;
+        }
+        
+        if (NaldDataCache.TryGetValue(key, out var cachedData))
+        {
+            return cachedData;
+        }
+        
+        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
+        NaldDataCache.Add(key, naldData);
+
+        return naldData;
     }
 
     public static string? StripForComparison(

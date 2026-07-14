@@ -22,7 +22,9 @@ public static class Wr51LabelConfiguration
             ("Land", GetInOrderField("Land (only if specified):", "Land")),
             ("ChargingFactors", GetInOrderField("Charging factors:", "ChargingFactors")),
             ("OtherProvisions", GetInOrderField("Other provisions (specify below):", "OtherProvisions")),
-            ("LicenceNumber", GetLicenceNumber())
+            ("LicenceNumber", GetLicenceNumber()),
+            ("MetWith", GetMetWith()),
+            ("InspectingOfficer", GetInspectingOfficer())
         ];
     }
     
@@ -48,6 +50,58 @@ public static class Wr51LabelConfiguration
                 Remove = [
                     new("Licence No. (or Application No. or GIC No. etc.)"),
                     new("Less Critical")
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetMetWith()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Met with:")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                LimitTo = LimitTo.SameColumn,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Name = "MetWith",
+                Remove = [
+                    new("Met with:")
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetInspectingOfficer()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Inspecting Officer:")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                LimitTo = LimitTo.SameColumn,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Name = "InspectingOfficer",
+                Remove = [
+                    new("Inspecting Officer:")
                 ]
             }
         ];

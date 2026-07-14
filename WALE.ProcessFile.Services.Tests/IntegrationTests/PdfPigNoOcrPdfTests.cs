@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(14, resultFull.Matches!.Count);
+        Assert.Equal(16, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6079,5 +6079,17 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(licenceNumber);
         Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
         Assert.Equal("12/101/4/G/8 ", licenceNumber.Text[0].Text);
+        
+        var metWith = resultFull.Matches[14];
+        Assert.NotNull(metWith);
+        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.StartsWith("Ja", metWith.Text[0].Text);
+        Assert.EndsWith("or", metWith.Text[0].Text);
+        
+        var inspectingOfficer = resultFull.Matches[15];
+        Assert.NotNull(inspectingOfficer);
+        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.StartsWith("Ar", inspectingOfficer.Text[0].Text);
+        Assert.EndsWith("an", inspectingOfficer.Text[0].Text);
     }
 }

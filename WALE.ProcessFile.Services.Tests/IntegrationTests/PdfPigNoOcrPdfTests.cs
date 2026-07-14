@@ -2528,7 +2528,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(6, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);

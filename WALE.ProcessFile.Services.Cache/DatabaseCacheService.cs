@@ -12,8 +12,6 @@ public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
     IDatabaseWriteService databaseWriteService) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true;
-
     public string? CacheFolderOrUrl { get; set; } = null;
 
     public Task SetupAsync()

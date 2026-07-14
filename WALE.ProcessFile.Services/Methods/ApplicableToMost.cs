@@ -321,7 +321,7 @@ public static class ApplicableToMost
                         
                     licenceNumberLine.Columns[0].Words.Clear();
                     licenceNumberLine.Columns[0].Words.AddRange(
-                        DocumentLineColumn.TextToWords(dmsFileData!.DestinationFileName!, null, coords));
+                        DocumentLineColumn.TextToWords(dmsFileData.DestinationFileName!, null, coords));
                     labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
                         
                     returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));

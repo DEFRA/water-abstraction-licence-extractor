@@ -7,6 +7,8 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
+    private static readonly Dictionary<string, DmsFileData?> DmsFileDataCache = new();
+    
     public static string? RemoveSeperators(string? licenceNumber)
     {
         return licenceNumber?
@@ -44,7 +46,19 @@ public static class FormattingHelper
 
     public static async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, ICacheService cacheService)
     {
+        if (string.IsNullOrEmpty(licenceNumber))
+        {
+            return null;
+        }
+        
+        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData))
+        {
+            return cachedData;
+        }
+        
         var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
+        DmsFileDataCache.Add(licenceNumber, dmsFileData);
+        
         return dmsFileData;
     }
 

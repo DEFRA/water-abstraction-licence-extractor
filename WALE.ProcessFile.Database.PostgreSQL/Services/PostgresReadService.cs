@@ -229,7 +229,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                        lfr.permit_number,
                        de.file_url as dmsPath,
                        concat(lower(lfr.permit_number), '__', lower(lfr.file_id), '.pdf') as destinationFileName,
-                       de.file_id
+                       uuid(de.file_id) as file_id
                    FROM public.licence_finder_result lfr
                    JOIN public.dms_extract de
                        ON de.permit_number = lfr.permit_number

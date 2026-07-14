@@ -262,8 +262,6 @@ public class AwsS3FileService(
         {
             return _client;
         }
-
-        ConsoleHelper.WriteLine($"Region name is '{regionName}'");
         
         var s3Config = new AmazonS3Config
         {

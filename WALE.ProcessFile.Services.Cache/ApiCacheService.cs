@@ -10,7 +10,6 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true; // Because its back by a DB
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
     public Task SetupAsync()
@@ -544,9 +543,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
-        response.EnsureSuccessStatusCode();
         
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+        
         return JsonSerializer.Deserialize<DmsFileData>(
             content,
             JsonHelper.GetSerializerOptions())!;

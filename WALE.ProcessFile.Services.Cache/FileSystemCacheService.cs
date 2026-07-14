@@ -9,8 +9,6 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class FileSystemCacheService(string cacheFolder) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = false;
-
     public string? CacheFolderOrUrl { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
     public Task SetupAsync()

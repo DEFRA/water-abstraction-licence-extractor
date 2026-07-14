@@ -38,7 +38,14 @@ public static class Wr51LabelConfiguration
             ("Units", TextAfterLabel("Units:", "Units", 0)),
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for:", "CertificatesOfRecords", 0)),
-            ("DateOfCertification", TextAfterLabel("Date of certificate or", "DateOfCertification", 1, [new("record:")]))
+            ("DateOfCertification", TextAfterLabel("Date of certificate or", "DateOfCertification", 1, [new("record:")])),
+            ("Calibration", TextAfterLabel("Calibration:", "Calibration", 1)),
+            ("Conformance", TextAfterLabel("Conformance:", "Conformance", 1)),
+            ("FlowVerification", TextAfterLabel("Flow verification:", "FlowVerification", 1)),
+            ("MeterVerification", TextAfterLabel("Meter verification:", "MeterVerification", 1)),
+            ("WhereKept", TextAfterLabel("Where kept:", "WhereKept", 0)),
+            ("FormSentTo", TextAfterLabel("Form sent to:", "FormSentTo", 0)),
+            ("Date", TextAfterLabel("Date:", "Date", 0)),
         ];
     }
 

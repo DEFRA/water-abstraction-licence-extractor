@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(29, resultFull.Matches!.Count);
+        Assert.Equal(36, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6166,5 +6166,41 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(dateOfCertificate);
         Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
         Assert.Equal("30/06/2021", dateOfCertificate.Text[0].Text);
+        
+        var calibration = resultFull.Matches[29];
+        Assert.NotNull(calibration);
+        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal("Yes", calibration.Text[0].Text);
+        
+        var conformance = resultFull.Matches[30];
+        Assert.NotNull(conformance);
+        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal("No", conformance.Text[0].Text);
+        
+        var flowVerification = resultFull.Matches[31];
+        Assert.NotNull(flowVerification);
+        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal("Yes", flowVerification.Text[0].Text);
+        
+        var meterVerification = resultFull.Matches[32];
+        Assert.NotNull(meterVerification);
+        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal("Yes", meterVerification.Text[0].Text);
+        
+        var whereKept = resultFull.Matches[33];
+        Assert.NotNull(whereKept);
+        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal("On Site", whereKept.Text[0].Text);
+        
+        var formSentTo = resultFull.Matches[34];
+        Assert.NotNull(formSentTo);
+        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.StartsWith("Ja", formSentTo.Text[0].Text);
+        Assert.EndsWith("or", formSentTo.Text[0].Text);
+        
+        var date = resultFull.Matches[35];
+        Assert.NotNull(date);
+        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal("12/04/2024", date.Text[0].Text);
     }
 }

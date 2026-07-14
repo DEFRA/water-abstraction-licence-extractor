@@ -88,7 +88,7 @@ async Task ProgramAsync()
 
         var extractorLock = new Lock();
         
-        foreach (var (filePath, dmsAndNaldData) in filesToProcess)
+        foreach (var (filePath, (dmsFileData, naldLicence)) in filesToProcess)
         {
             if (services.DelayPerProcessMs > 0)
             {
@@ -96,7 +96,7 @@ async Task ProgramAsync()
             }
 
             var loopLookupConfig = lookupConfig.Clone();
-            loopLookupConfig.RegionId = dmsAndNaldData.NaldLicence.RegionCode;
+            loopLookupConfig.RegionId = naldLicence.RegionCode;
             
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
@@ -108,8 +108,8 @@ async Task ProgramAsync()
                     processRun,
                     extractorLock,
                     loopLookupConfig,
-                    dmsAndNaldData.DmsFileData,
-                    dmsAndNaldData.NaldLicence));
+                    dmsFileData,
+                    naldLicence.LicenceNumber));
 
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -201,7 +201,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     Lock extractorLock,
     LookupConfiguration lookupConfig,
     DmsFileData dmsDataForFile,
-    NaldLicence naldLicence)
+    string naldLicenceNumber)
 {
     var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
 
@@ -260,7 +260,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             processRun.ProcessRunId,
             lookupConfig,
             dmsDataForFile,
-            naldLicence);
+            naldLicenceNumber);
 
         return licenceSets;
     }

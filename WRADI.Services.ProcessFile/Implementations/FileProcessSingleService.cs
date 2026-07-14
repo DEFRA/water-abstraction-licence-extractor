@@ -82,7 +82,7 @@ public class FileProcessSingleService(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
-                naldLicence,
+                naldLicence.LicenceNumber,
                 processRun);
 
             await SharedHelper.UpdateAndSaveLicenceSetsAsync(
@@ -137,7 +137,7 @@ public class FileProcessSingleService(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
-        NaldLicence naldLicence,
+        string naldLicenceNumber,
         ProcessRun processRun)
     {
         var dtStart = DateTime.Now;
@@ -193,7 +193,7 @@ public class FileProcessSingleService(
                 processRun.ProcessRunId,
                 lookupConfig,
                 dmsDataForFile,
-                naldLicence);
+                naldLicenceNumber);
         }
         catch (TooManyPagesException)
         {

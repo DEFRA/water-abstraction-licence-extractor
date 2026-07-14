@@ -32,15 +32,16 @@ public static class DmsHelper
         return dmsFileIdInformationDict;
     }
 
-    public static async Task<(DmsFileData DmsFileData, NaldLicence NaldLicence)>
+    public static async Task<(DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)>
         GetDmsAndNaldFileData(ICacheService cacheService, Guid fileId)
     {
         var licenceFinderResult = await cacheService.GetLicenceFinderResultAsync(fileId);
         return LicenceFinderResultToDmsAndNaldData(licenceFinderResult, null);
     }
 
-    public static async Task<(Dictionary<string, (DmsFileData DmsFileData, NaldLicence NaldLicence)> FilenamesWithLicenceNumbers,
-            Dictionary<string, (DmsFileData DmsFileData, NaldLicence NaldLicence)> LicenceNumbersWithFilenames)>
+    public static async Task<(
+            Dictionary<string, (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)> LicenceNumbersWithFilenames)>
         GetDmsAndNaldFilesAndMappingAsync(
             IFileService fileService,
             string dmsReportPath,
@@ -50,8 +51,8 @@ public static class DmsHelper
         var dtStartGetDms = DateTime.Now;
         
         //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-        (Dictionary<string, (DmsFileData, NaldLicence)> FilenamesWithLicenceNumbers, Dictionary<string, (DmsFileData, NaldLicence)>
-            LicenceNumbersWithFilenames) filesAndMapping;
+        (Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames) filesAndMapping;
     
         if (getFromFile)
         {
@@ -89,13 +90,14 @@ public static class DmsHelper
         return filesAndMapping;
     }
     
-    private static async Task<(Dictionary<string, (DmsFileData, NaldLicence)> FilenamesWithLicenceNumbers, Dictionary<string, (DmsFileData, NaldLicence)> LicenceNumbersWithFilenames)>
+    private static async Task<(Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames)>
         GetFilesAndMappingFromExcelDownloadInfoFileAsync(
             IFileService fileService,
             string dmsReportPath)
     {
-        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicence)>();
-        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicence)>();
+        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
+        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -183,12 +185,10 @@ public static class DmsHelper
 
                     var regionCode = -1; // TODO
                     
-                    var naldLicence = new NaldLicence
+                    var naldLicence = new NaldLicenceSimple
                     {
-                        LicenceNumber = permitNumber, // TODO
-                        Id = -1,
-                        RegionCode = (short)regionCode,
-                        Type = LicenceType.Abstraction // TODO
+                        LicenceNumber = naldLicenceRef,
+                        RegionCode = (short)regionCode
                     };
 
                     var strippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!;
@@ -205,12 +205,12 @@ public static class DmsHelper
         );
     }
     
-    private static async Task<(Dictionary<string, (DmsFileData, NaldLicence)> FilenamesWithLicenceNumbers, Dictionary<string, (DmsFileData, NaldLicence)>
-        LicenceNumbersWithFilenames)>
+    private static async Task<(Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames)>
     GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
     {
-        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicence)>();
-        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicence)>();
+        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
+        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
         var allDestinationFilenames = await fileService.GetAllFilesAsync();
 
@@ -253,7 +253,7 @@ public static class DmsHelper
         );
     }
 
-    private static (DmsFileData DmsFileData, NaldLicence NaldLicence) LicenceFinderResultToDmsAndNaldData(
+    private static (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence) LicenceFinderResultToDmsAndNaldData(
         LicenceFinderResult licenceFinderResult,
         string? destinationFileName)
     {
@@ -262,12 +262,10 @@ public static class DmsHelper
             destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
         }
         
-        var naldLicence = new NaldLicence
+        var naldLicence = new NaldLicenceSimple
         {
             RegionCode = (short)RegionHelper.GetRegionId(licenceFinderResult.Region),
-            LicenceNumber = licenceFinderResult.LicenseNumber,
-            Id = -1, // TODO
-            Type = LicenceType.Abstraction // TODO
+            LicenceNumber = licenceFinderResult.LicenseNumber
         };
         
         var dmsFileData = new DmsFileData

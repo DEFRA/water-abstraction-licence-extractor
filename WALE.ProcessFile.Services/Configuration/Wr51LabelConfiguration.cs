@@ -24,7 +24,9 @@ public static class Wr51LabelConfiguration
             ("OtherProvisions", GetInOrderField("Other provisions (specify below):", "OtherProvisions")),
             ("LicenceNumber", GetLicenceNumber()),
             ("MetWith", GetMetWith()),
-            ("InspectingOfficer", GetInspectingOfficer())
+            ("InspectingOfficer", GetInspectingOfficer()),
+            ("SiteAddress", GetSiteAddress()),
+            ("InspectionClass", GetInspectionClass())
         ];
     }
     
@@ -102,6 +104,61 @@ public static class Wr51LabelConfiguration
                 Name = "InspectingOfficer",
                 Remove = [
                     new("Inspecting Officer:")
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetSiteAddress()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Site address (if different):")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                LimitTo = LimitTo.SameColumn,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1,
+                Name = "SiteAddress",
+                Remove = [
+                    new("Site address (if different):")
+                ]
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetInspectionClass()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Text =
+                [
+                    new("Inspection Class:")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                Position = LabelPosition.LabelIsBeforeTextToFind,
+                LimitTo = LimitTo.SameColumn,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1,
+                Name = "InspectionClass",
+                Possibilities = [
+                    new("Less Critical") // TODO what are the other options
+                ],
+                Remove = [
+                    new("Inspection Class:")
                 ]
             }
         ];

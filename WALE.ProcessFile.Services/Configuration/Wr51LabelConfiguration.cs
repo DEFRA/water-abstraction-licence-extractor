@@ -22,15 +22,20 @@ public static class Wr51LabelConfiguration
             ("Land", GetInOrderField("Land (only if specified):", "Land")),
             ("ChargingFactors", GetInOrderField("Charging factors:", "ChargingFactors")),
             ("OtherProvisions", GetInOrderField("Other provisions (specify below):", "OtherProvisions")),
-            ("LicenceNumber", GetLicenceNumber()),
-            ("MetWith", GetMetWith()),
-            ("InspectingOfficer", GetInspectingOfficer()),
-            ("SiteAddress", GetSiteAddress()),
-            ("InspectionClass", GetInspectionClass())
+            ("LicenceNumber", TextAfterLabel("Licence No. (or Application No. or GIC No. etc.)", "LicenceNumber", 1)),
+            ("MetWith", TextAfterLabel("Met with:", "MetWith", 0)),
+            ("InspectingOfficer", TextAfterLabel("Inspecting Officer:", "InspectingOfficer", 0)),
+            ("SiteAddress", TextAfterLabel("Site address (if different):", "SiteAddress", 1)),
+            ("InspectionClass", TextAfterLabel("Inspection Class:", "InspectionClass", 1)),
+            ("TelephoneNumber", TextAfterLabel("Telephone No:", "TelephoneNumber", 1)),
+            ("Position", TextAfterLabel("Position:", "Position", 0)),
+            ("InspectionDate", TextAfterLabel("Inspection Date:", "InspectionDate", 1)),
+            ("Time", TextAfterLabel("Time:", "Time", 0)),
+            ("NameAndAddress", TextAfterLabel("Name and address:", "NameAndAddress", 2)),
         ];
     }
     
-    private static List<LabelToMatch> GetLicenceNumber()
+    private static List<LabelToMatch> TextAfterLabel(string text, string labelName, int nextLinesToFetch)
     {
         return
         [
@@ -38,7 +43,7 @@ public static class Wr51LabelConfiguration
             {
                 Text =
                 [
-                    new("Licence No. (or Application No. or GIC No. etc.)")
+                    new(text)
                     {
                         ColumnMustStartWith = true
                     }
@@ -47,118 +52,10 @@ public static class Wr51LabelConfiguration
                 LimitTo = LimitTo.SameColumn,
                 Format = "Text",
                 PreviousLinesToFetch = 0,
-                NextLinesToFetch = 1,
-                Name = "LicenceNumber",
+                NextLinesToFetch = nextLinesToFetch,
+                Name = labelName,
                 Remove = [
-                    new("Licence No. (or Application No. or GIC No. etc.)"),
-                    new("Less Critical")
-                ]
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetMetWith()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Met with:")
-                    {
-                        ColumnMustStartWith = true
-                    }
-                ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
-                LimitTo = LimitTo.SameColumn,
-                Format = "Text",
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Name = "MetWith",
-                Remove = [
-                    new("Met with:")
-                ]
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetInspectingOfficer()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Inspecting Officer:")
-                    {
-                        ColumnMustStartWith = true
-                    }
-                ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
-                LimitTo = LimitTo.SameColumn,
-                Format = "Text",
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 0,
-                Name = "InspectingOfficer",
-                Remove = [
-                    new("Inspecting Officer:")
-                ]
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetSiteAddress()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Site address (if different):")
-                    {
-                        ColumnMustStartWith = true
-                    }
-                ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
-                LimitTo = LimitTo.SameColumn,
-                Format = "Text",
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 1,
-                Name = "SiteAddress",
-                Remove = [
-                    new("Site address (if different):")
-                ]
-            }
-        ];
-    }
-    
-    private static List<LabelToMatch> GetInspectionClass()
-    {
-        return
-        [
-            new LabelToMatch
-            {
-                Text =
-                [
-                    new("Inspection Class:")
-                    {
-                        ColumnMustStartWith = true
-                    }
-                ],
-                Position = LabelPosition.LabelIsBeforeTextToFind,
-                LimitTo = LimitTo.SameColumn,
-                Format = "Text",
-                PreviousLinesToFetch = 0,
-                NextLinesToFetch = 1,
-                Name = "InspectionClass",
-                Possibilities = [
-                    new("Less Critical") // TODO what are the other options
-                ],
-                Remove = [
-                    new("Inspection Class:")
+                    new(text)
                 ]
             }
         ];

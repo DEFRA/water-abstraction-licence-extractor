@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(18, resultFull.Matches!.Count);
+        Assert.Equal(22, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6018,7 +6018,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var pointOfAbstraction = resultFull.Matches[1];
         Assert.NotNull(pointOfAbstraction);
         Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
-        Assert.Equal("in", pointOfAbstraction.Text[0].Text); // TODO should be 'In Order'
+        Assert.Equal("in", pointOfAbstraction.Text[0].Text); // TODO should be 'In'
         
         var meansOfAbstraction = resultFull.Matches[2];
         Assert.NotNull(meansOfAbstraction);
@@ -6078,7 +6078,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var licenceNumber = resultFull.Matches[13];
         Assert.NotNull(licenceNumber);
         Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
-        Assert.Equal("12/101/4/G/8 ", licenceNumber.Text[0].Text);
+        Assert.Equal("12/101/4/G/8", licenceNumber.Text[0].Text);
         
         var metWith = resultFull.Matches[14];
         Assert.NotNull(metWith);
@@ -6102,5 +6102,33 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(inspectionClass);
         Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
         Assert.Equal("Less Critical", inspectionClass.Text[0].Text);
+        
+        var telephoneNumber = resultFull.Matches[18];
+        Assert.NotNull(telephoneNumber);
+        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.StartsWith("07", telephoneNumber.Text[0].Text);
+        Assert.EndsWith("86", telephoneNumber.Text[0].Text);
+        
+        var position = resultFull.Matches[19];
+        Assert.NotNull(position);
+        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal("Flow Measurement Coordinator", position.Text[0].Text);
+        
+        /*var inspectionDate = resultFull.Matches[20];
+        Assert.NotNull(inspectionDate);
+        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);*/
+        
+        var time = resultFull.Matches[20];
+        Assert.NotNull(time);
+        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal("11:20", time.Text[0].Text);
+        
+        var nameAndAddress = resultFull.Matches[21];
+        Assert.NotNull(nameAndAddress);
+        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(2, nameAndAddress.Text.Count);
+        Assert.Equal("Southern Water Service Limited, Southern House, Yeoman Road, Worthing", nameAndAddress.Text[0].Text);
+        Assert.Equal("BN13 3NX", nameAndAddress.Text[1].Text);
     }
 }

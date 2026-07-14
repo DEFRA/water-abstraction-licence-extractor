@@ -1402,11 +1402,14 @@ public class PdfDataExtractorService(
                     {
                         var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
                         var newColumns = new List<DocumentLineColumn>();
+
+                        var columnIndex = 0;
                         
                         foreach (var column in partialLineT.Columns)
                         {
                             if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
                             {
+                                columnIndex += 1;
                                 continue;
                             }
                             
@@ -1424,6 +1427,23 @@ public class PdfDataExtractorService(
                                 Label = matchedLabel
                             }
                         ];
+
+                        var newNextLines = new List<DocumentLine>();
+                        
+                        foreach (var nextLine in nextLines)
+                        {
+                            var newNextLine = nextLine.Clone();
+                            var columnToKeep = nextLine.Columns.Count > columnIndex
+                                ? nextLine.Columns[columnIndex]
+                                : nextLine.Columns[0];
+                            
+                            newNextLine.Columns.Clear();
+                            newNextLine.Columns.Add(columnToKeep);
+                            
+                            newNextLines.Add(newNextLine);
+                        }
+                        
+                        nextLines = newNextLines;
                     }
                     
                     var request = new FunctionInputModel

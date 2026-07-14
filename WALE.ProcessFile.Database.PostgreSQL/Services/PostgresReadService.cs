@@ -220,9 +220,30 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
-        throw new NotImplementedException();
+        await using var connection = GetPostgresConnection();
+        
+        var sql = """
+                   SELECT
+                       lfr.permit_number,
+                       de.file_url as dmsPath,
+                       concat(lower(lfr.permit_number), '__', lower(lfr.file_id), '.pdf') as destinationFileName,
+                       de.file_id
+                   FROM public.licence_finder_result lfr
+                   JOIN public.dms_extract de
+                       ON de.permit_number = lfr.permit_number
+                       AND de.file_id = lfr.file_id
+                   WHERE
+                       lfr.license_number = @LicenceNumber
+                   LIMIT 1;
+               """;
+        
+        return await QueryFirstOrDefaultAsync<DmsFileData>(
+            connection,
+            sql,
+            0,
+            new { LicenceNumber = licenceNumber });
     }
 
     public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)

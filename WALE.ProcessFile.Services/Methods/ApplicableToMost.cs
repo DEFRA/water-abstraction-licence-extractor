@@ -305,7 +305,6 @@ public static class ApplicableToMost
                 {
                     var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                         licenceNumberLine.Text,
-                        request.regionCode,
                         request.cacheService!);
                     
                     if (dmsFileData == null)

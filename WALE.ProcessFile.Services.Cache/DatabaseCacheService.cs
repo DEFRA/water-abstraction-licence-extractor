@@ -414,8 +414,8 @@ public class DatabaseCacheService(
         return databaseReadService.GetLicenceFinderResultAsync(fileId);
     }
 
-    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
-        return databaseReadService.GetDmsFileDataAsync(licenceNumber, regionCode);
+        return databaseReadService.GetDmsFileDataAsync(licenceNumber);
     }
 }

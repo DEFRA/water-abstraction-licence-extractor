@@ -606,7 +606,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
         throw new NotImplementedException();
     }

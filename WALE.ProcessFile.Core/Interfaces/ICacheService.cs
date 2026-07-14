@@ -162,5 +162,5 @@ public interface ICacheService
     
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     
-    Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode);
+    Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
 }

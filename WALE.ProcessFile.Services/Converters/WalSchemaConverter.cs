@@ -180,7 +180,6 @@ public static class WalSchemaConverter
             {
                 var thisDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
-                    naldLinkedLicence.NaldLicence.RegionCode,
                     lookupConfiguration.CacheService);
 
                 var outputLicenceType = LicenceType.Unknown;
@@ -780,7 +779,6 @@ public static class WalSchemaConverter
         
         var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
             linkedLicenceNumber,
-            regionId.Value,
             cacheService);
         
         var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
@@ -1358,7 +1356,6 @@ public static class WalSchemaConverter
 
             var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 linkedLicence.LicenceNumber,
-                primaryLicence.RegionId!.Value,
                 lookupConfiguration.CacheService);
 
             var foundDmsData = dmsFileData != null;
@@ -1638,7 +1635,6 @@ public static class WalSchemaConverter
 
         var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
             licenceNumberLoop,
-            regionCode,
             lookupConfiguration.CacheService);
         
         noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
@@ -1724,7 +1720,6 @@ public static class WalSchemaConverter
 
             var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 linkedLicenceNumber,
-                regionCode,
                 lookupConfiguration.CacheService);
 
             noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
@@ -1812,7 +1807,6 @@ public static class WalSchemaConverter
 
             var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 licenceNumber,
-                regionCode,
                 lookupConfiguration.CacheService);
 
             noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
@@ -2454,7 +2448,6 @@ public static class WalSchemaConverter
 
             var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
-                regionCode,
                 lookupConfiguration.CacheService);
             
             linkedLicenceNumbers.Add(new LinkedLicence

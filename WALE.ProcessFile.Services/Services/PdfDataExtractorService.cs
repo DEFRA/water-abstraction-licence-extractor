@@ -1006,10 +1006,7 @@ public class PdfDataExtractorService(
                 continue;
             }
             
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
-                licenceNumber.Text,
-                regionCode,
-                cacheService!);
+            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(licenceNumber.Text, cacheService);
                     
             if (dmsFileData == null)
             {
@@ -1039,7 +1036,6 @@ public class PdfDataExtractorService(
             
             var linkedDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 relatedLicenceNumber,
-                regionCode,
                 cacheService);
 
             if (linkedDmsFileData == null)

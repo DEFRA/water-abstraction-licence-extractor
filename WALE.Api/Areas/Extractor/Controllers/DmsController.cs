@@ -10,11 +10,9 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class DmsController(ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetFileDataAsync(
-        [FromQuery] string? licenceNumber,
-        [FromQuery] int regionCode)
+    public async Task<IActionResult> GetFileDataAsync([FromQuery] string? licenceNumber)
     {
-        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber, regionCode);
+        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
         return Ok(dmsFileData);
     }
     

@@ -1,4 +1,5 @@
 using FakeItEasy;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -24,15 +25,14 @@ public static class GeneralTestsHelper
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
         
         A
-            .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._, A<int>._))
+            .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._))
             .ReturnsLazily(x =>
             {
                 var licenceNumberInNaldFormat = (string)x.Arguments[0]!;
-                var regionCode = (int)x.Arguments[1]!;
                 
                 var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
                     licenceNumberInNaldFormat,
-                    regionCode);
+                    GeneralConstants.UnsetRegionCode);
 
                 foreach (var strippedLicenceNumber in strippedLicenceNumbers)
                 {

@@ -42,12 +42,9 @@ public static class FormattingHelper
         ];
     }
 
-    public static async Task<DmsFileData?> GetDmsFileDataAsync(
-        string? licenceNumber,
-        int regionCode,
-        ICacheService cacheService)
+    public static async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, ICacheService cacheService)
     {
-        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber, regionCode);
+        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
         return dmsFileData;
     }
 

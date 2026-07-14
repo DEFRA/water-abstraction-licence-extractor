@@ -538,9 +538,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
     
-    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, int regionCode)
+    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
-        var path = $"/Extractor/Dms/GetFileData?licenceNumber={licenceNumber}&regionCode={regionCode}";
+        var path = $"/Extractor/Dms/GetFileData?licenceNumber={licenceNumber}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));

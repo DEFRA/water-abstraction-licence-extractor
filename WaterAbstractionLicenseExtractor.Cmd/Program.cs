@@ -69,7 +69,6 @@ async Task ProgramAsync()
     LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
 
-    const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
@@ -77,7 +76,7 @@ async Task ProgramAsync()
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
-        unsetRegionCode,
+        GeneralConstants.UnsetRegionCode,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper);
     
     try

@@ -47,9 +47,48 @@ public static class Wr51LabelConfiguration
             ("FormSentTo", TextAfterLabel("Form sent to:", "FormSentTo", 0)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
-            ("GeneralComments", GeneralComments())
+            ("GeneralComments", GeneralComments()),
+            ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
+            ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine"))
         ];
     }
+    
+    private static List<LabelToMatch> MaintenanceLine(string textStart, string textEnd, string name)
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                TextStart =
+                [
+                    new(textStart)
+                    {
+                        LineMustStartWith = true
+                    }
+                ],
+                TextEnd = 
+                [
+                    new(textEnd) { LineMustStartWith = true},
+                    new("[END_OF_BLOCK]")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 1,
+                Name = name,
+                IncludeStartLabelText = true,
+                SubLabels =
+                [
+                    name == "MaintenanceLine"
+                        ? TextAfterLabel("Maintenance:", $"{name}Maintenance", 0)[0]
+                        : TextAfterLabel("Readings taken:", $"{name}ReadingsTaken", 0)[0],
+                    TextAfterLabel("Frequency:", $"{name}Frequency", 0)[0],
+                    TextAfterLabel("By whom:", $"{name}ByWhom", 0)[0]
+                ]
+            }
+        ];
+    }
+    
     private static List<LabelToMatch> GeneralComments()
     {
         return

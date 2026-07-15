@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(38, resultFull.Matches!.Count);
+        Assert.Equal(40, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6216,5 +6216,49 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.EndsWith("single borehole.", generalComments.Text[0].Text);
         Assert.StartsWith("No RTW", generalComments.Text[4].Text);
         Assert.EndsWith("inspection.", generalComments.Text[4].Text);
+        
+        var maintenance = resultFull.Matches[38];
+        Assert.NotNull(maintenance);
+        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(3, maintenance.Text[0].Columns.Count);
+        Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
+        Assert.Equal(3, maintenance.SubResults.Count);
+
+        var maintenanceSubLabel = maintenance.SubResults[0];
+        Assert.NotNull(maintenanceSubLabel);
+        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
+        
+        var frequencySubLabel = maintenance.SubResults[1];
+        Assert.NotNull(frequencySubLabel);
+        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
+        
+        var byWhomSubLabel = maintenance.SubResults[2];
+        Assert.NotNull(byWhomSubLabel);
+        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
+        
+        var readingsTaken = resultFull.Matches[39];
+        Assert.NotNull(readingsTaken);
+        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
+        Assert.Equal("Readings taken: Yes Frequency: Fortnightly By whom: MP", readingsTaken.Text[0].Text);
+        Assert.Equal(3, readingsTaken.SubResults.Count);
+
+        var readingsTakenSubLabel = readingsTaken.SubResults[0];
+        Assert.NotNull(readingsTakenSubLabel);
+        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
+        
+        frequencySubLabel = readingsTaken.SubResults[1];
+        Assert.NotNull(frequencySubLabel);
+        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal("Fortnightly", frequencySubLabel.Text[0].Text);
+        
+        byWhomSubLabel = readingsTaken.SubResults[2];
+        Assert.NotNull(byWhomSubLabel);
+        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
     }
 }

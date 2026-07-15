@@ -246,8 +246,10 @@ public static class TextToFindIsBetweenLabels
             
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
+
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
+            clonedLine.Columns.Add(new DocumentLineColumn());
+            ToColumns(textWords, clonedLine);
             
             linesLoop.Add(clonedLine);
         }
@@ -339,8 +341,10 @@ public static class TextToFindIsBetweenLabels
                                 ctWords = DocumentLineColumn.FilterWordsFromText(ctWords, ct!);
                                 
                                 var clonedLine2 = line.Clone();
+                                
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
+                                clonedLine2.Columns.Add(new DocumentLineColumn());
+                                ToColumns(ctWords, clonedLine2);
 
                                 returnList.Add(clonedLine2);
                             }
@@ -372,5 +376,28 @@ public static class TextToFindIsBetweenLabels
         }
 
         return matchData == null ? null : returnList;
+    }
+
+    // TODO move this to somewhere more standardised and check the distances are correct for none-digital
+    private static void ToColumns(List<DocumentLineWord> words, DocumentLine line)
+    {
+        DocumentLineWord? previousWord = null;
+                
+        foreach (var word in words)
+        {
+            previousWord ??= word;
+                    
+            var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
+                    
+            if (xDiff >= 18)
+            {
+                line.Columns.Add(new DocumentLineColumn());
+            }
+
+            var columnToAddTo = line.Columns.Last();
+            columnToAddTo.Words.Add(word);
+
+            previousWord = word;
+        }
     }
 }

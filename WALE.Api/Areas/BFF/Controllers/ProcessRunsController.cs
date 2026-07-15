@@ -121,7 +121,7 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
                    async cacheEntry =>
                    {
                        cacheEntry.AbsoluteExpirationRelativeToNow =
-                           TimeSpan.FromHours(24);
+                           TimeSpan.FromMinutes(10);
 
                        var processRunQuery = new ProcessRunQuery
                        {
@@ -165,7 +165,7 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
                    async cacheEntry =>
                    {
                        cacheEntry.AbsoluteExpirationRelativeToNow =
-                           TimeSpan.FromHours(24);
+                           TimeSpan.FromMinutes(10);
                        
                        var issuers =  await outputService.GetDistinctIssuersAsync(processRunId);
                        
@@ -183,7 +183,7 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
                    async cacheEntry =>
                    {
                        cacheEntry.AbsoluteExpirationRelativeToNow =
-                           TimeSpan.FromHours(24);
+                           TimeSpan.FromMinutes(10);
                        
                        var years = await outputService.GetDistinctIssueDatesAsync(processRunId);
                        

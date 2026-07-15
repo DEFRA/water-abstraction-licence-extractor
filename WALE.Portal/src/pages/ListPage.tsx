@@ -61,7 +61,9 @@ function ListPage() {
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
-
+    const [issuers, setIssuers] = useState<string[]>([]);
+    const [issueDates, setIssueDates] = useState<string[]>([]);
+    const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
     const fetchOutputList = useCallback(async () => {
         try {
             const currentQuery: ProcessRunQuery = {
@@ -118,6 +120,9 @@ function ListPage() {
             );
 
             setOutputList(listDataItems.records);
+            setShortLicenceIds(listDataItems.licenceSetIds ?? []);
+            setIssuers(listDataItems.issuers ?? []);
+            setIssueDates(listDataItems.issueDates ?? []);
             const totalRecords = listDataItems.totalRecords;
             setTotalLicences(totalRecords);
             setTotalPages(totalRecords > 0 ? Math.ceil(totalRecords / currentQuery.take) : 0);
@@ -252,9 +257,11 @@ function ListPage() {
                     <table id="licencesTable">
                         <thead>
                         <ProcessRunLicenceFilters
-                            data={filteredData}
                             query={query}
                             updateQuery={updateQuery}
+                            issuers={issuers}
+                            shortLicenceIds={shortLicenceIds}
+                            issueDates={issueDates}
                         />
                         <LicencesTableHeaders
                             data={outputList}

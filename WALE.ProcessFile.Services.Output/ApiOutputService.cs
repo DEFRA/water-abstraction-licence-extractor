@@ -622,5 +622,15 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<int>(content, JsonHelper.GetSerializerOptions())!;
     }
 
+    public Task<List<string>> GetDistinctIssuersAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     private static bool _showAllLogs = false;
 }

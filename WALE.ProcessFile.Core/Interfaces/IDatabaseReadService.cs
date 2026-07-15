@@ -107,4 +107,8 @@ public interface IDatabaseReadService
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
   
     Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
+
+    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 }

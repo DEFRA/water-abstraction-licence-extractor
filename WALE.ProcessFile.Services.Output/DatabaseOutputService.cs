@@ -340,6 +340,16 @@ public class DatabaseOutputService(
         return await databaseReadService.GetTotalLicenceCountAsync(processRunId, processRunQuery);
     }
 
+    public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
+    {
+        return await databaseReadService.GetDistinctIssuersAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        return await databaseReadService.GetDistinctIssueDatesAsync(processRunId);
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var licences = await databaseReadService.GetLicencesAsync(processRunId, skip, take);

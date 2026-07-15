@@ -31,6 +31,7 @@ if (true || app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+app.UseResponseCaching();
 app.UseResponseCompression();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
@@ -39,11 +40,11 @@ return;
 
 static void ConfigureServices(IServiceCollection services, IConfigurationRoot config)
 {
-    services.AddControllers();
     services.AddResponseCaching();
-    
+    services.AddControllers();
     services.AddOpenApi();
     services.AddHealthChecks();
+    services.AddMemoryCache();
 
     services.AddCors(options =>
     {

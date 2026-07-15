@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
@@ -11,7 +12,7 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class ProcessRunsController(IOutputService outputService) : Controller
+public class ProcessRunsController(IOutputService outputService, IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProcessRun>>> GetProcessRuns()
@@ -40,7 +41,9 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     }
 
     [HttpGet("{processRunId:int}")]
-    [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]
+    [ResponseCache(
+        Duration = 3600,
+        VaryByQueryKeys = ["*"])]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
@@ -52,20 +55,20 @@ public class ProcessRunsController(IOutputService outputService) : Controller
             outputService.GetLatestLicenceSectionVerificationsAsync();
 
         var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
-        var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, query);
-        var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll); // TODO i might have broken these by passing less licences
+        var licences = await outputService.GetLicencesSearchAsync(processRunId, query);
+        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences); 
         
         var allLatestLicenceSectionVerifications =
             (await allLatestLicenceSectionVerificationsTask).ToList();
         
-        var paginationOutputLines = licencesAll
+        var paginationOutputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
                 licence,
                 DateTime.Now,
                 completeNumber++,
                 fileNumber++,
-                licenceSetsAll))
+                licenceSets))
             .ToList();
         
         var paginationListData = JsOutputHelper.ToListData(
@@ -93,7 +96,10 @@ public class ProcessRunsController(IOutputService outputService) : Controller
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await getTotalsTask,
-            Records = paginationListData
+            Records = paginationListData,
+            Issuers = await GetIssuers(processRunId),
+            LicenceSetIds = await GetLicenceSetIds(processRunId),
+            IssueDates =  await GetIssueDates(processRunId),
         };
         
         return Ok(processRun);
@@ -104,5 +110,85 @@ public class ProcessRunsController(IOutputService outputService) : Controller
     {
         var total = await outputService.GetTotalLicenceCountAsync(processRunId, null);
         return Ok(total);
+    }
+    
+    private async Task<string[]> GetLicenceSetIds(int processRunId)
+    {
+        var cacheKey = $"licence-set-ids:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromHours(24);
+
+                       var processRunQuery = new ProcessRunQuery
+                       {
+                           Skip = 0,
+                           Take = int.MaxValue
+                       };
+
+                       var completeNumber = 1;
+                       var fileNumber = 1;
+                       
+                       var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, processRunQuery);
+                       var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll); 
+                       
+                       var paginationOutputLines = licencesAll
+                           .Where(licence => licence.Status == LicenceStatus.Ok)
+                           .Select(licence => JsOutputHelper.ToOutputLine(
+                               licence,
+                               DateTime.Now,
+                               completeNumber++,
+                               fileNumber++,
+                               licenceSetsAll))
+                           .ToList();
+                       var setIds = new List<string>();
+
+                       foreach (var set in from item in paginationOutputLines from set in item.LicenceSets?.Skip(1) where !setIds.Contains(set.ShortLicenceSetId) select set)
+                       {
+                           setIds.Add(set.ShortLicenceSetId);
+                       }
+                       
+                       return setIds.ToArray();
+                   })
+               ?? [];
+    }
+    
+    private async Task<string[]> GetIssuers(int processRunId)
+    {
+        var cacheKey = $"licence-issuers:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromHours(24);
+                       
+                       var issuers =  await outputService.GetDistinctIssuersAsync(processRunId);
+                       
+                       return issuers.ToArray();
+                   })
+               ?? [];
+    }
+    
+    private async Task<string[]> GetIssueDates(int processRunId)
+    {
+        var cacheKey = $"licence-issuer-dates:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromHours(24);
+                       
+                       var years = await outputService.GetDistinctIssueDatesAsync(processRunId);
+                       
+                       return years.ToArray();
+                   })
+               ?? [];
     }
 }

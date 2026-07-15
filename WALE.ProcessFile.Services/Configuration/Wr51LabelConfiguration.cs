@@ -46,9 +46,37 @@ public static class Wr51LabelConfiguration
             ("WhereKept", TextAfterLabel("Where kept:", "WhereKept", 0)),
             ("FormSentTo", TextAfterLabel("Form sent to:", "FormSentTo", 0)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
+            ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
+            ("GeneralComments", GeneralComments())
         ];
     }
-
+    private static List<LabelToMatch> GeneralComments()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                TextStart =
+                [
+                    new("General comments, details / dates of occupation changes, actions required etc.")
+                    {
+                        ColumnMustStartWith = true
+                    }
+                ],
+                TextEnd = 
+                [
+                    new("Form sent to") { LineMustStartWith = true},
+                    new("[END_OF_BLOCK]")
+                ],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                Name = "GeneralComments"
+            }
+        ];
+    }
+    
     private static List<LabelToMatch> TextAfterLabel(
         string text,
         string labelName,

@@ -6008,7 +6008,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(36, resultFull.Matches!.Count);
+        Assert.Equal(38, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6202,5 +6202,19 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(date);
         Assert.Equal("Date", date.LabelGroupName);
         Assert.Equal("12/04/2024", date.Text[0].Text);
+        
+        var documentTemplateVersion = resultFull.Matches[36];
+        Assert.NotNull(documentTemplateVersion);
+        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[37];
+        Assert.NotNull(generalComments);
+        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(5, generalComments.Text.Count);
+        Assert.StartsWith("Licence 12/", generalComments.Text[0].Text);
+        Assert.EndsWith("single borehole.", generalComments.Text[0].Text);
+        Assert.StartsWith("No RTW", generalComments.Text[4].Text);
+        Assert.EndsWith("inspection.", generalComments.Text[4].Text);
     }
 }

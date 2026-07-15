@@ -28,7 +28,7 @@ public static class Wr51LabelConfiguration
             ("SiteAddress", TextAfterLabel("Site address (if different)", "SiteAddress", 1)),
             ("InspectionClass", TextAfterLabel("Inspection Class", "InspectionClass", 1)),
             ("TelephoneNumber", TextAfterLabel("Telephone No", "TelephoneNumber", 1)),
-            ("Position", TextAfterLabel("Position", "Position", 0)),
+            ("Position", TextAfterLabelWithSpecifiedColumn("Position", "Position", 1, 1)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             ("NameAndAddress", TextToFindIsBetweenLabels(
                 "Name and address",

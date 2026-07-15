@@ -673,7 +673,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             })
             .SelectMany(lineWords =>
             {
-                var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
+                var orderedWords = lineWords
+                    .OrderBy(w => w.BoundingBox.Left)
+                    .ToList();
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -708,10 +710,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 foreach (var word in orderedWords)
                 {
                     previousWord2 ??= word;
-                    
+
+                    var maxXDiff = lineHeight == 6 ? 15 : 18;
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
                     
-                    if (xDiff >= 18)
+                    if (xDiff >= maxXDiff)
                     {
                         columns.Add(new DocumentLineColumn());
                     }

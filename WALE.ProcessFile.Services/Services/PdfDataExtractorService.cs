@@ -1307,7 +1307,6 @@ public class PdfDataExtractorService(
                                 partialLine = null;
                                 continue;
                             }
-
                         }
                     }
                     

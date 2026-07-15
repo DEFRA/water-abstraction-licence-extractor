@@ -1901,7 +1901,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var telephoneNumber = resultFull.Matches[18];
         Assert.NotNull(telephoneNumber);
         Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
-        //Assert.Equal(2, telephoneNumber.Text.Count); // TODO
+        Assert.Equal(2, telephoneNumber.Text.Count);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("ma", telephoneNumber.Text[0].Text);
         
@@ -2712,9 +2712,9 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var meterMake = resultFull.Matches[22];
         Assert.NotNull(meterMake);
         Assert.Equal("MeterMake", meterMake.LabelGroupName);
-        //Assert.Equal(2, meterMake.Text.Count); // TODO fix
+        Assert.Equal(2, meterMake.Text.Count);
         Assert.Equal("No meter – means of measurement", meterMake.Text[0].Text);
-        //Assert.Equal("under Fish Farm RPS", meterMake.Text[1].Text);
+        Assert.Equal("under Fish Farm RPS", meterMake.Text[1].Text);
         
         var serialNumber = resultFull.Matches[23];
         Assert.NotNull(serialNumber);

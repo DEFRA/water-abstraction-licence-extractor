@@ -27,7 +27,7 @@ public static class Wr51LabelConfiguration
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
             ("SiteAddress", TextAfterLabel("Site address (if different)", "SiteAddress", 1)),
             ("InspectionClass", TextAfterLabel("Inspection Class", "InspectionClass", 1)),
-            ("TelephoneNumber", TextAfterLabel("Telephone No", "TelephoneNumber", 1)),
+            ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "[NOT_USED]", "TelephoneNumber", 2, LimitTo.SameColumn)),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             ("NameAndAddress", TextToFindIsBetweenLabels(
@@ -36,7 +36,7 @@ public static class Wr51LabelConfiguration
                 "NameAndAddress",
                 7,
                 LimitTo.SameColumn)),
-            ("MeterMake", TextAfterLabel("Meter make", "MeterMake", 0)),
+            ("MeterMake", TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn)),
             ("SerialNumber", TextAfterLabel("Serial number", "SerialNumber", 0)),
             ("Reading", TextAfterLabel("Reading", "Reading", 0)),
             ("Units", TextAfterLabel("Units", "Units", 0)),

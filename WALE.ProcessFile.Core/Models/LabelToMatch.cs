@@ -80,6 +80,8 @@ public class LabelToMatch
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
 
+    public int LimitToColumnIndex { get; set; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -120,7 +122,8 @@ public class LabelToMatch
             OcrConfidenceMinusNPerLine = OcrConfidenceMinusNPerLine,
             ConfidenceType = ConfidenceType,
             NoOcrConfidence = NoOcrConfidence,
-            LimitTo = LimitTo
+            LimitTo = LimitTo,
+            LimitToColumnIndex = LimitToColumnIndex
         };
     }    
 }

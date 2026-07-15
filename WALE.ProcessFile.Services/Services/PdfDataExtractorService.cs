@@ -1398,7 +1398,7 @@ public class PdfDataExtractorService(
                     var lineForPosition = fullLine;
                     var partialLineT = partialLine.Clone();
                     
-                    if (label.LimitTo == LimitTo.SameColumn)
+                    if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
                     {
                         var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
                         var newColumns = new List<DocumentLineColumn>();
@@ -1429,6 +1429,11 @@ public class PdfDataExtractorService(
                         ];
 
                         var newNextLines = new List<DocumentLine>();
+
+                        if (label.LimitTo == LimitTo.SpecifiedColumn)
+                        {
+                            columnIndex = label.LimitToColumnIndex;
+                        }
                         
                         foreach (var nextLine in nextLines)
                         {

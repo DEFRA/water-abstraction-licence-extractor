@@ -208,7 +208,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            regionCode,
+            lineHeight: isAbstractionLicence ? 9 : 6);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
@@ -6008,7 +6009,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(40, resultFull.Matches!.Count);
+        Assert.Equal(41, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -6113,11 +6114,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(position);
         Assert.Equal("Position", position.LabelGroupName);
         Assert.Equal("Flow Measurement Coordinator", position.Text[0].Text);
-        
-        /*var inspectionDate = resultFull.Matches[20];
-        Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
-        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);*/ // TODO
         
         var time = resultFull.Matches[20];
         Assert.NotNull(time);
@@ -6260,5 +6256,10 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(byWhomSubLabel);
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
+        
+        var inspectionDate = resultFull.Matches[40];
+        Assert.NotNull(inspectionDate);
+        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
     }
 }

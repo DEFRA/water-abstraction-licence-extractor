@@ -14,6 +14,7 @@ public class LookupConfiguration(
     int regionId,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
+    int lineHeight = 9,
     object? naldLinkedLicenceHelper = null)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
@@ -36,6 +37,8 @@ public class LookupConfiguration(
 
     public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
     
+    public int LineHeight { get; set; } = lineHeight;
+    
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -48,6 +51,7 @@ public class LookupConfiguration(
             RegionId,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
+            LineHeight,
             NaldLinkedLicenceHelper);
     }
 }

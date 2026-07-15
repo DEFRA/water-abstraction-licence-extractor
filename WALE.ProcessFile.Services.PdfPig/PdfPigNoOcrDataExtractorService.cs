@@ -17,7 +17,6 @@ namespace WALE.ProcessFile.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int LineHeight = 9;
     
     public async Task<PdfDocument?> GetPdfDocumentAsync(
         string pdfFileName,
@@ -63,6 +62,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
                 pdfDocument,
+                configuration,
                 metadata.PagesMetadata,
                 metadata.AllDocumentLines!);
         
@@ -76,6 +76,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         await PopulateImageDataAndDocumentLinesAsync(
             pdfDocument,
+            configuration,
             cacheService,
             outputService,
             processRunId);
@@ -164,12 +165,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     private async Task PopulateImageDataAndDocumentLinesAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId)
     {
         var documentLinesTask = GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             pdfDocument,
+            configuration,
             cacheService,
             outputService,
             processRunId);
@@ -216,6 +219,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     private Task<List<DocumentLine>> GetCachedTextLinesAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         Dictionary<string, object>? pagesTextMetadata,
         Dictionary<int, string> allPagesTextLines)
     {
@@ -248,7 +252,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             var pageLinesTransformed = FormatPageLines(
                 pageLines,
-                pageNumber);
+                pageNumber,
+                configuration.LineHeight);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -267,6 +272,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId)
@@ -290,6 +296,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 ProcessPageAsync(
                     pdfDocument,
                     page,
+                    configuration,
                     cacheService,
                     outputService,
                     processRunId,
@@ -364,6 +371,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private async Task<IReadOnlyList<DocumentLine>> ProcessPageAsync(
         PdfDocument pdfDocument,
         PdfPage page,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId,
@@ -422,7 +430,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         dtStart = DateTime.Now;
         var pageLinesFormatted = FormatPageLines(
             pageLines,
-            page.Number);
+            page.Number,
+            configuration.LineHeight);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -597,7 +606,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
-        int pageNumber)
+        int pageNumber,
+        int lineHeight)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -614,7 +624,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(textLine => textLine.Words)
             .OrderByDescending(word => LineSnappingHelper.RoundToNearestN(
                 word.BoundingBox.Bottom,
-                LineHeight,
+                lineHeight,
                 word.Text))
             .ThenBy(line => line.BoundingBox.CentroidX)
             .ToList();
@@ -635,7 +645,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                         word.Text,
                         word.BoundingBox.Bottom);
                 
-                if (yDiff >= LineHeight)
+                if (yDiff >= lineHeight)
                 {
                     lineIndex += 1;
                 }

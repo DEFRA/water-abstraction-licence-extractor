@@ -29,7 +29,6 @@ public static class Wr51LabelConfiguration
             ("InspectionClass", TextAfterLabel("Inspection Class:", "InspectionClass", 1)),
             ("TelephoneNumber", TextAfterLabel("Telephone No:", "TelephoneNumber", 1)),
             ("Position", TextAfterLabel("Position:", "Position", 0)),
-            ("InspectionDate", TextAfterLabel("Inspection Date:", "InspectionDate", 1)),
             ("Time", TextAfterLabel("Time:", "Time", 0)),
             ("NameAndAddress", TextAfterLabel("Name and address:", "NameAndAddress", 2)),
             ("MeterMake", TextAfterLabel("Meter make:", "MeterMake", 0)),
@@ -49,7 +48,8 @@ public static class Wr51LabelConfiguration
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
             ("GeneralComments", GeneralComments()),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
-            ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine"))
+            ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine")),
+            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 1, 1))
         ];
     }
     
@@ -114,6 +114,19 @@ public static class Wr51LabelConfiguration
                 Name = "GeneralComments"
             }
         ];
+    }
+    
+    private static List<LabelToMatch> TextAfterLabelWithSpecifiedColumn(
+        string text,
+        string labelName,
+        int nextLinesToFetch,
+        int columnIndex)
+    {
+        var label = TextAfterLabel(text, labelName, nextLinesToFetch, []);
+        label[0].LimitTo = LimitTo.SpecifiedColumn;
+        label[0].LimitToColumnIndex = columnIndex;
+        
+        return label;
     }
     
     private static List<LabelToMatch> TextAfterLabel(

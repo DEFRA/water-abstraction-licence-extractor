@@ -386,7 +386,7 @@ public static class TextToFindIsBetweenLabels
         foreach (var word in words)
         {
             previousWord ??= word;
-                    
+
             var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
                     
             if (xDiff >= 18)

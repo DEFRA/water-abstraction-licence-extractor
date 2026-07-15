@@ -4,7 +4,7 @@ public class MatchesResult
 {
     public string? Filename { get; set; }
     public int RegionCode { get; set; }
-    public List<LabelGroupResult>? Matches { get; set; }
+    public List<LabelGroupResult>? Matches { get; set; } // TODO change to a dict
     public int NumberOfPages { get; set; }
     public bool ScannedFile { get; set; }
     public List<string> ServicesUsed { get; set; } = [];

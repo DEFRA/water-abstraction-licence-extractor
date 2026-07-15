@@ -7,7 +7,9 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
+using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
+using WALE.ProcessFile.Services.Enums.Wr51;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -484,6 +486,22 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
+
+        var converted = await Wr51SchemaConverter.ToFormAsync(resultFull);
+        Assert.NotNull(converted);
+        Assert.Equal(InOrderStatus.InOrder, converted.SourceOfSupply);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.Purposes);
+        Assert.Equal(InOrderStatus.InOrder, converted.PointOfAbstraction);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.SpecialConditions);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.ChargingFactors);
+        Assert.Equal(InOrderStatus.InOrder, converted.Land);
+        Assert.Equal(InOrderStatus.InOrder, converted.MeansOfAbstraction);
+        Assert.Equal(InOrderStatus.InOrder, converted.MeansOfMeasurement);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.OtherProvisions);
+        Assert.Equal(InOrderStatus.InOrder, converted.Period);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.ProvisionOfInformation);
+        Assert.Equal(InOrderStatus.InOrder, converted.Quantities);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.Records);
     }
     
     [Fact]

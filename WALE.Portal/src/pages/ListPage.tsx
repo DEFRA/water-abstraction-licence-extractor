@@ -64,7 +64,7 @@ function ListPage() {
     const [issuers, setIssuers] = useState<string[]>([]);
     const [issueDates, setIssueDates] = useState<string[]>([]);
     const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
-    const fetchOutputList = useCallback(async () => {
+    const fetchOutputList = useCallback(async (force: boolean = false) => {
         try {
             const currentQuery: ProcessRunQuery = {
                 ...query,
@@ -91,7 +91,7 @@ function ListPage() {
                 currentQuery.verificationType;
 
             // @ts-ignore
-            if (filterKey == window.lastFilterKey) {
+            if (!force && filterKey == window.lastFilterKey) {
                 return;
             }
             
@@ -324,7 +324,7 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onRefresh={fetchOutputList}
+                onRefresh={() => fetchOutputList(true)}
                 /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);

@@ -345,4 +345,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<List<string>> GetDistinctIssuersAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 }

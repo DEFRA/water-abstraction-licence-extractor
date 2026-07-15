@@ -1,9 +1,9 @@
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
-import { OutputListDataItem } from "../api/generated/apiClient";
-import { useMemo } from "react";
 
 type ProcessRunLicenceFiltersProps = {
-    data: OutputListDataItem[];
+    issuers?: string[];
+    shortLicenceIds?: string[];
+    issueDates?: string[];
     query: ProcessRunQuery;
     updateQuery: <K extends keyof ProcessRunQuery>(
         key: K,
@@ -11,10 +11,12 @@ type ProcessRunLicenceFiltersProps = {
     ) => void;
 };
 
-export function ProcessRunLicenceFilters({
-                                      data,
+export function ProcessRunLicenceFilters({                                    
                                       query,
-                                      updateQuery
+                                      updateQuery,
+    issuers,
+    shortLicenceIds,
+    issueDates
                                   }: ProcessRunLicenceFiltersProps) {
     const clearFilters = () => {
         updateQuery("purposesEmpty", undefined);
@@ -29,40 +31,6 @@ export function ProcessRunLicenceFilters({
         updateQuery("ShortLicenceSetId", undefined);
         updateQuery("verificationType", undefined);
     };
-    
-    const uniqueIssuers = useMemo(() => {
-        const issuers = new Set(
-            data
-                .map(item => item.issuer)
-                .filter((issuer): issuer is string => Boolean(issuer))
-        );
-
-        return Array.from(issuers).sort();
-    }, [data]);
-
-    // Generate unique years for dropdown
-    const uniqueYears = useMemo(() => {
-        const years = new Set(
-            data
-                .map(item => item.issueDate?.split('-')[0])
-                .filter(year => year && parseInt(year) >= 1900)
-        );
-        return Array.from(years).sort().reverse();
-    }, [data]);
-
-    // Generate unique license sets for dropdown
-    const uniqueLicenseSets = useMemo(() => {
-        const sets = new Set<string>();
-        data.forEach(item => {
-            item.licenceSets?.slice(1).forEach(ls => {
-                if (ls.shortLicenceSetId) {
-                    sets.add(ls.shortLicenceSetId);
-                }
-            });
-        });
-        let results= Array.from(sets).sort();
-        return results;
-    }, [data]);
 
     return (
         <tr>
@@ -202,7 +170,7 @@ export function ProcessRunLicenceFilters({
                 >
                     <option value="">All years</option>
 
-                    {uniqueYears.map(year => (
+                    {issueDates?.map(year => (
                         <option key={year} value={year}>
                             {year}
                         </option>
@@ -222,7 +190,7 @@ export function ProcessRunLicenceFilters({
                 >
                     <option value="">All issuers</option>
 
-                    {uniqueIssuers.map(issuer => (
+                    {issuers?.map(issuer => (
                         <option key={issuer} value={issuer}>
                             {issuer}
                         </option>
@@ -294,7 +262,7 @@ export function ProcessRunLicenceFilters({
                 >
                     <option value="">All Licence Sets</option>
 
-                    {uniqueLicenseSets.map(licenceSet => (
+                    {shortLicenceIds?.map(licenceSet => (
                         <option key={licenceSet} value={licenceSet}>
                             {licenceSet}
                         </option>

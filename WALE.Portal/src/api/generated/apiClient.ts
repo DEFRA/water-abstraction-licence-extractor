@@ -496,14 +496,24 @@ export class Client {
 
     /**
      * @param filename (optional) 
+     * @param chunkIndex (optional) 
+     * @param chunkSize (optional) 
      * @return OK
      */
-    get(filename: string | undefined): Promise<void> {
+    get(filename: string | undefined, chunkIndex: number | undefined, chunkSize: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Files/Get?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (chunkIndex === null)
+            throw new globalThis.Error("The parameter 'chunkIndex' cannot be null.");
+        else if (chunkIndex !== undefined)
+            url_ += "chunkIndex=" + encodeURIComponent("" + chunkIndex) + "&";
+        if (chunkSize === null)
+            throw new globalThis.Error("The parameter 'chunkSize' cannot be null.");
+        else if (chunkSize !== undefined)
+            url_ += "chunkSize=" + encodeURIComponent("" + chunkSize) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -7654,7 +7664,9 @@ export interface IProcessRunFileRequest {
 export class ProcessRunResponse implements IProcessRunResponse {
     totalRecords!: number;
     records!: OutputListDataItem[];
-    noPaginationRecords!: any[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
 
     [key: string]: any;
 
@@ -7667,7 +7679,6 @@ export class ProcessRunResponse implements IProcessRunResponse {
         }
         if (!data) {
             this.records = [];
-            this.noPaginationRecords = [];
         }
     }
 
@@ -7683,10 +7694,20 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 for (let item of _data["records"])
                     this.records!.push(OutputListDataItem.fromJS(item));
             }
-            if (Array.isArray(_data["noPaginationRecords"])) {
-                this.noPaginationRecords = [] as any;
-                for (let item of _data["noPaginationRecords"])
-                    this.noPaginationRecords!.push(item);
+            if (Array.isArray(_data["issuers"])) {
+                this.issuers = [] as any;
+                for (let item of _data["issuers"])
+                    this.issuers!.push(item);
+            }
+            if (Array.isArray(_data["issueDates"])) {
+                this.issueDates = [] as any;
+                for (let item of _data["issueDates"])
+                    this.issueDates!.push(item);
+            }
+            if (Array.isArray(_data["licenceSetIds"])) {
+                this.licenceSetIds = [] as any;
+                for (let item of _data["licenceSetIds"])
+                    this.licenceSetIds!.push(item);
             }
         }
     }
@@ -7710,10 +7731,20 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.records)
                 data["records"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.noPaginationRecords)) {
-            data["noPaginationRecords"] = [];
-            for (let item of this.noPaginationRecords)
-                data["noPaginationRecords"].push(item);
+        if (Array.isArray(this.issuers)) {
+            data["issuers"] = [];
+            for (let item of this.issuers)
+                data["issuers"].push(item);
+        }
+        if (Array.isArray(this.issueDates)) {
+            data["issueDates"] = [];
+            for (let item of this.issueDates)
+                data["issueDates"].push(item);
+        }
+        if (Array.isArray(this.licenceSetIds)) {
+            data["licenceSetIds"] = [];
+            for (let item of this.licenceSetIds)
+                data["licenceSetIds"].push(item);
         }
         return data;
     }
@@ -7722,7 +7753,9 @@ export class ProcessRunResponse implements IProcessRunResponse {
 export interface IProcessRunResponse {
     totalRecords: number;
     records: OutputListDataItem[];
-    noPaginationRecords: any[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
 
     [key: string]: any;
 }

@@ -743,6 +743,27 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 return resultList;
             })
         .ToList();
+        
+        DocumentLine? previousLine = null;
+        
+        // Add in missing columns
+        foreach (var line in  returnList)
+        {
+            if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
+            {
+                var previousLineSecondColumn = previousLine.Columns[1].Words.FirstOrDefault()?.Coordinates.Left;
+                var thisLineFirstColumnLeft = line.Columns[0].Words.FirstOrDefault()?.Coordinates.Left;
+
+                const double xLeeway = 10;
+                
+                if (thisLineFirstColumnLeft + xLeeway >= previousLineSecondColumn)
+                {
+                    line.Columns.Insert(0, new DocumentLineColumn());
+                }
+            }
+            
+            previousLine = line;
+        }
 
         AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
         return returnList;

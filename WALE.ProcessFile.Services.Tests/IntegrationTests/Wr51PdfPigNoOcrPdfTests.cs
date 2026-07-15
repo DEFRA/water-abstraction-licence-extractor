@@ -1643,9 +1643,9 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var position = resultFull.Matches[19];
         Assert.NotNull(position);
         Assert.Equal("Position", position.LabelGroupName);
-//        Assert.Equal(2, position.Text.Count); // TODO
+        Assert.Equal(2, position.Text.Count); // TODO
         Assert.Equal("Head of Irrigation and Senior Farm", position.Text[0].Text);
-//        Assert.Equal("Manager respectively", position.Text[1].Text);
+        Assert.Equal("Manager respectively", position.Text[1].Text);
         
         var time = resultFull.Matches[20];
         Assert.NotNull(time);

@@ -2512,8 +2512,8 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var formSentTo = resultFull.Matches[34];
         Assert.NotNull(formSentTo);
         Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
-        //Assert.StartsWith("Co", formSentTo.Text[0].Text); // TODO
-        //Assert.EndsWith("uk", formSentTo.Text[0].Text);
+        Assert.StartsWith("Co", formSentTo.Text[0].Text);
+        Assert.EndsWith("uk", formSentTo.Text[0].Text);
         
         var date = resultFull.Matches[35];
         Assert.NotNull(date);

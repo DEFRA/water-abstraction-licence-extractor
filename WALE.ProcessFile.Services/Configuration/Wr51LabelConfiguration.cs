@@ -48,7 +48,7 @@ public static class Wr51LabelConfiguration
             ("FlowVerification", TextAfterLabel("Flow verification", "FlowVerification", 1)),
             ("MeterVerification", TextAfterLabel("Meter verification", "MeterVerification", 1)),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
-            ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 0)),
+            ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 1)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
             ("GeneralComments", TextToFindIsBetweenLabels(

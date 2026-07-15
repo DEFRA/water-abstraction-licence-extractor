@@ -258,10 +258,11 @@ function ListPage() {
                         <thead>
                         <ProcessRunLicenceFilters
                             query={query}
-                            updateQuery={updateQuery}
+                            setQuery={setQuery}
                             issuers={issuers}
                             shortLicenceIds={shortLicenceIds}
                             issueDates={issueDates}
+                            setPageNumber={setPageNumber}
                         />
                         <LicencesTableHeaders
                             data={outputList}

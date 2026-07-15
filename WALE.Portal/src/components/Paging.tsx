@@ -33,16 +33,23 @@ export default function Paging({
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        const trimmedValue = value.trim();
+        setSearchText(e.target.value);
+    };
 
-        setSearchText(value);
+    const applySearch = () => {
+        const trimmedValue = searchText.trim();
 
         if (trimmedValue.length === 0 || trimmedValue.length > 3) {
             setSearchTerm(trimmedValue);
             setPageNumber(1);
         }
     };
+
+    const clearSearch = () => {        
+            setSearchTerm('');
+            setPageNumber(1);        
+    };
+    
 
     return (
         <div
@@ -64,7 +71,26 @@ export default function Paging({
                     style={{ width: '180px' }}
                 />
             </label>
-
+            <button
+                type="button"
+                onClick={applySearch}
+                disabled={
+                    searchText.trim().length <= 3
+                }
+                style={{ marginLeft: '8px' }}
+            >
+                Apply
+            </button>
+            <button
+                type="button"
+                onClick={clearSearch}
+                disabled={
+                    searchText.trim().length <= 3
+                }
+                style={{ marginLeft: '8px' }}
+            >
+                Clear Search
+            </button>
             {searchText.trim().length > 0 && searchText.trim().length <= 3 && (
                 <span style={{ marginLeft: '8px' }}>
                     Enter more than 3 characters

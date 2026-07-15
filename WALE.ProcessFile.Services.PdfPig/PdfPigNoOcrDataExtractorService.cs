@@ -628,29 +628,47 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 word.Text))
             .ThenBy(line => line.BoundingBox.CentroidX)
             .ToList();
+
+        if (orderedPageWords.Count == 0)
+        {
+            return [];
+        }
         
-        MinimalWord? previousWord = null;
+        // We are keeping track of when a line starts in the Y axis, so we can see if we need to start a new line
+        var lineIndexOffsets = new Dictionary<int, double>
+        {
+            {
+                0,
+                LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                    orderedPageWords[0].Text,
+                    orderedPageWords[0].BoundingBox.Bottom,
+                    lineHeight)
+            }
+        };
+
         var lineIndex = 0;
         
         var returnList = orderedPageWords
             .GroupBy(word =>
             {
-                previousWord ??= word;
+                var thisOffset = LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                    word.Text,
+                    word.BoundingBox.Bottom,
+                    lineHeight);
                 
                 var yDiff =
-                    LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        previousWord.Text,
-                        previousWord.BoundingBox.Bottom)
-                    - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        word.Text,
-                        word.BoundingBox.Bottom);
-                
-                if (yDiff >= lineHeight)
-                {
-                    lineIndex += 1;
-                }
+                    lineIndexOffsets[lineIndex]
+                    - thisOffset;
 
-                previousWord = word;
+                if (!(yDiff >= lineHeight))
+                {
+                    return lineIndex;
+                }
+                
+                lineIndexOffsets.Add(
+                    ++lineIndex,
+                    thisOffset);
+
                 return lineIndex;
             })
             .SelectMany(lineWords =>

@@ -1279,7 +1279,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-//        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(41, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -1466,7 +1466,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var date = resultFull.Matches[35];
         Assert.NotNull(date);
         Assert.Equal("Date", date.LabelGroupName);
-        //Assert.Equal("26/06/2023",  // TODO
+        Assert.Equal("26/06/2023", date.Text[0].Text);
         
         var documentTemplateVersion = resultFull.Matches[36];
         Assert.NotNull(documentTemplateVersion);
@@ -1526,9 +1526,9 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        /*var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[40];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
-        Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);*/
+        Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);
     }
 }

@@ -59,7 +59,7 @@ public static class Wr51LabelConfiguration
                 LimitTo.WholeLine)),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
             ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine")),
-            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 1, 1))
+            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 2, 1))
         ];
     }
     

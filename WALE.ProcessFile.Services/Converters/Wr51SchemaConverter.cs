@@ -10,6 +10,13 @@ public static class Wr51SchemaConverter
     {
         return new Wr51Form
         {
+            Metadata = new Wr51FormMetadata
+            {
+                DocumentTemplateVerison = GetDocumentTemplateVersion(matchesResult),
+                Filename = matchesResult.Filename,
+                IsScan = matchesResult.ScannedFile
+            },
+            // TODO a bunch more fields
             SourceOfSupply = GetInOrderStatus(matchesResult, "SourceOfSupply"),
             Purposes = GetInOrderStatus(matchesResult, "Purposes"),
             PointOfAbstraction = GetInOrderStatus(matchesResult, "PointOfAbstraction"),
@@ -22,10 +29,33 @@ public static class Wr51SchemaConverter
             Quantities = GetInOrderStatus(matchesResult, "Quantities"),
             Records = GetInOrderStatus(matchesResult, "Records"),
             OtherProvisions = GetInOrderStatus(matchesResult, "OtherProvisions"),
-            Period = GetInOrderStatus(matchesResult, "Period")
+            Period = GetInOrderStatus(matchesResult, "Period"),
+            // TODO a bunch more fields
+            Maintenance = new Wr51FormMaintenance
+            {
+                Maintenance = "", // TODO
+                Frequency = "",
+                ByWhom = ""
+            },
+            ReadingsTaken = new Wr51FormReadingsTaken
+            {
+                ReadingsTaken = "",
+                Frequency = "",
+                ByWhom = ""
+            },
+            // TODO a bunch more fields
         };
     }
 
+    private static string? GetDocumentTemplateVersion(MatchesResult matchesResult)
+    {
+        return matchesResult.Matches?
+            .FirstOrDefault(m => m.MatchedLabelName == "DocumentTemplateVersion")?
+            .Text?
+            .FirstOrDefault()?
+            .Text;
+    }
+    
     private static InOrderStatus GetInOrderStatus(MatchesResult matchesResult,  string name)
     {
         var labelGroupResult = matchesResult.Matches?

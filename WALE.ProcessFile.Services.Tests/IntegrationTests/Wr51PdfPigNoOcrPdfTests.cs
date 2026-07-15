@@ -489,6 +489,10 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         var converted = await Wr51SchemaConverter.ToFormAsync(resultFull);
         Assert.NotNull(converted);
+        Assert.NotNull(converted.Metadata);
+        Assert.Equal("2026_07_10_v1", converted.Metadata.DocumentTemplateVerison);
+        Assert.Equal("WR51__121014G8__dummy.pdf", converted.Metadata.Filename);
+        Assert.Equal(false, converted.Metadata.IsScan);
         Assert.Equal(InOrderStatus.InOrder, converted.SourceOfSupply);
         Assert.Equal(InOrderStatus.NotInOrder, converted.Purposes);
         Assert.Equal(InOrderStatus.InOrder, converted.PointOfAbstraction);
@@ -502,6 +506,14 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal(InOrderStatus.NotInOrder, converted.ProvisionOfInformation);
         Assert.Equal(InOrderStatus.InOrder, converted.Quantities);
         Assert.Equal(InOrderStatus.NotInOrder, converted.Records);
+        Assert.NotNull(converted.Maintenance);
+        Assert.Equal("", converted.Maintenance.Maintenance);
+        Assert.Equal("", converted.Maintenance.Frequency);
+        Assert.Equal("", converted.Maintenance.ByWhom);
+        Assert.NotNull(converted.ReadingsTaken);
+        Assert.Equal("", converted.ReadingsTaken.ReadingsTaken);
+        Assert.Equal("", converted.ReadingsTaken.Frequency);
+        Assert.Equal("", converted.ReadingsTaken.ByWhom);
     }
     
     [Fact]

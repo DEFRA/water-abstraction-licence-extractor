@@ -46,6 +46,43 @@ public static class Wr51SchemaConverter
 
         var whereKept = GetMultilineText(matchesResult, "WhereKept");
         if (string.IsNullOrWhiteSpace(whereKept)) whereKept = null;
+
+        var maintenanceYesNo =
+            GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance");
+
+        // Could do similar based off of template instead
+        if (string.IsNullOrEmpty(maintenanceYesNo))
+        {
+            var maintenanceYes = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceYes");
+            var maintenanceNo = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceNo");
+
+            if (maintenanceYes?.Equals("✓") == true)
+            {
+                maintenanceYesNo = "Yes";
+            }
+            else if (maintenanceNo?.Equals("✓") == true)
+            {
+                maintenanceYesNo = "No";
+            }
+        }
+
+        var readingsTakenYesNo =
+            GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken");
+        
+        if (string.IsNullOrEmpty(readingsTakenYesNo))
+        {
+            var readingsTakenYes = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenYes");
+            var readingsTakenNo = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenNo");
+
+            if (readingsTakenYes?.Equals("✓") == true)
+            {
+                readingsTakenYesNo = "Yes";
+            }
+            else if (readingsTakenNo?.Equals("✓") == true)
+            {
+                readingsTakenYesNo = "No";
+            }
+        }
         
         return new Wr51Form
         {
@@ -98,7 +135,7 @@ public static class Wr51SchemaConverter
                 Period = GetInOrderStatus(matchesResult, "Period")
             },
             MeasurementDetails = new Wr51FormMeasurementDetails
-                {
+            {
                 MeterMake = GetMultilineText(matchesResult, "MeterMake"),
                 SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
                 Reading = GetMultilineText(matchesResult, "Reading"),
@@ -116,13 +153,13 @@ public static class Wr51SchemaConverter
                 MeterVerification = GetMultilineText(matchesResult, "MeterVerification"),
                 Maintenance = new Wr51FormMaintenance
                 {
-                    Maintenance = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance"),
+                    Maintenance = maintenanceYesNo,
                     Frequency = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineFrequency"),
                     ByWhom = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineByWhom")
                 },
                 ReadingsTaken = new Wr51FormReadingsTaken
                 {
-                    ReadingsTaken = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken"),
+                    ReadingsTaken = readingsTakenYesNo,
                     Frequency = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineFrequency"),
                     ByWhom = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineByWhom")
                 },

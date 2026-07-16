@@ -38,10 +38,22 @@ public static class Wr51LabelConfiguration
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for", "CertificatesOfRecords", 0)),
             ("DateOfCertification", TextToFindIsBetweenLabels("Date of certificate or", "By whom", "DateOfCertification", 1, LimitTo.SameColumn, [new("record:"), new("Conformance:")])),
-            ("Calibration", TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")])),
-            ("Conformance", TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")])),
-            ("FlowVerification", TextAfterLabel("Flow verification", "FlowVerification", 1, possibilities: [new("Yes"), new("No")])),
-            ("MeterVerification", TextAfterLabel("Meter verification", "MeterVerification", 1, possibilities: [new("Yes"), new("No")])),
+            ("Calibration", [
+                ..TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")]), // New template
+                ..TextToFindIsBetweenLabels("Calibration", "Conformance", "CalibrationYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
+            ]),
+            ("Conformance", [
+                ..TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")]), // New template
+                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "ConformanceYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
+            ]),
+            ("FlowVerification", [
+                ..TextAfterLabel("Flow verification", "FlowVerification", 1, possibilities: [new("Yes"), new("No")]), // New template
+                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerificationN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
+            ]),
+            ("MeterVerification", [
+                ..TextAfterLabel("Meter verification", "MeterVerification", 1, possibilities: [new("Yes"), new("No")]), // New template
+                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerificationYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
+            ]),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
             ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 1)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
@@ -88,6 +100,12 @@ public static class Wr51LabelConfiguration
                     name == "MaintenanceLine"
                         ? TextAfterLabel("Maintenance:", $"{name}Maintenance", 0)[0]
                         : TextAfterLabel("Readings taken:", $"{name}ReadingsTaken", 0)[0],
+                    name == "MaintenanceLine"
+                        ? TextToFindIsBetweenLabels("Maintenance:", "N:", $"{name}MaintenanceYes", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0]
+                        : TextToFindIsBetweenLabels("Readings taken:", "N:", $"{name}ReadingsTakenYes", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0],
+                    name == "MaintenanceLine"
+                        ? TextToFindIsBetweenLabels("N:", "Frequency:", $"{name}MaintenanceNo", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0]
+                        : TextToFindIsBetweenLabels("N:", "Frequency:", $"{name}ReadingsTakenNo", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0],
                     TextAfterLabel("Frequency:", $"{name}Frequency", 0)[0],
                     TextAfterLabel("By whom:", $"{name}ByWhom", 0)[0]
                 ]
@@ -101,7 +119,8 @@ public static class Wr51LabelConfiguration
         string name,
         int nextLines,
         LimitTo limitTo,
-        List<TextToMatch>? additionalRemoves = null)
+        List<TextToMatch>? additionalRemoves = null,
+        List<TextToMatch>? possibilities = null)
     {
         return
         [
@@ -128,7 +147,8 @@ public static class Wr51LabelConfiguration
                 Remove = [
                     new(startText), // TODO not sure why we have to add this, we dont always have to with betweens - probably because of the column limiting
                     ..additionalRemoves ?? []
-                ]
+                ],
+                Possibilities = possibilities
             }
         ];
     }

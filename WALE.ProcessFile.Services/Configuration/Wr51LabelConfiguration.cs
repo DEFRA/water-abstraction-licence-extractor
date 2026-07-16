@@ -25,17 +25,12 @@ public static class Wr51LabelConfiguration
             ("LicenceNumber", TextAfterLabel("Licence No. (or Application No. or GIC No. etc.)", "LicenceNumber", 1)),
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
-            ("SiteAddress", TextAfterLabel("Site address (if different)", "SiteAddress", 1)),
-            ("InspectionClass", TextAfterLabel("Inspection Class", "InspectionClass", 1)),
-            ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "[NOT_USED]", "TelephoneNumber", 2, LimitTo.SameColumn)),
+            ("SiteAddress", TextToFindIsBetweenLabels("Site address (if different)", "Met with", "SiteAddress", 1, LimitTo.SameColumn)),
+            ("InspectionClass", TextToFindIsBetweenLabels("Inspection Class", "Telephone No", "InspectionClass", 1, LimitTo.SameColumn)),
+            ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "Email", "TelephoneNumber", 2, LimitTo.SameColumn)),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
-            ("NameAndAddress", TextToFindIsBetweenLabels(
-                "Name and address",
-                "Site address",
-                "NameAndAddress",
-                7,
-                LimitTo.SameColumn)),
+            ("NameAndAddress", TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 7, LimitTo.SameColumn)),
             ("MeterMake", TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn)),
             ("SerialNumber", TextAfterLabel("Serial number", "SerialNumber", 0)),
             ("Reading", TextAfterLabel("Reading", "Reading", 0)),
@@ -59,7 +54,8 @@ public static class Wr51LabelConfiguration
                 LimitTo.WholeLine)),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
             ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine")),
-            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 2, 1))
+            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 2, 1)),
+            ("Email", TextToFindIsBetweenLabels("Email", "Position:", "Email", 1, LimitTo.SameColumn)),
         ];
     }
     

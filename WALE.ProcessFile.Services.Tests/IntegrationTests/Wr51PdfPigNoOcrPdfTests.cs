@@ -3040,8 +3040,8 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("N/A", converted.MeasurementDetails.Units);
         Assert.Equal("N/A", converted.MeasurementDetails.Other);
         Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
-//        Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
-//        Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
+        Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
+        Assert.Equal("", converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
         Assert.Null(converted.MeasurementDetails.Calibration); // TODO wouldnt work if had value
         Assert.Null(converted.MeasurementDetails.Conformance); // TODO wouldnt work if had value
         Assert.Null(converted.MeasurementDetails.FlowVerification); // TODO wouldnt work if had value
@@ -3068,6 +3068,6 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("10:00", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(5257, json.Length);
+        Assert.Equal(5229, json.Length);
     }
 }

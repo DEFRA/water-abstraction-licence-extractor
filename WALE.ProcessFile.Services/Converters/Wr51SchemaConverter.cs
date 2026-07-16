@@ -9,7 +9,12 @@ public static class Wr51SchemaConverter
     public static Wr51Form ToForm(MatchesResult matchesResult)
     {
         var rawFormDate = GetMultilineText(matchesResult, "Date");
-        DateOnly.TryParse(rawFormDate, out var formDate);
+        
+        DateOnly? formDate = null;
+        if (DateOnly.TryParse(rawFormDate, out var tFormDate))
+        {
+            formDate = tFormDate;
+        }
 
         var rawInspectionDate = GetMultilineText(matchesResult, "InspectionDate");
         var rawInspectionTime = GetMultilineText(matchesResult, "Time");
@@ -17,12 +22,18 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
-            DateTime.TryParse($"{rawInspectionDate} {rawInspectionTime}", out var tIinspectionDateTime);
-            inspectionDateTime = tIinspectionDateTime;
+            if (DateTime.TryParse($"{rawInspectionDate} {rawInspectionTime}", out var tIinspectionDateTime))
+            {
+                inspectionDateTime = tIinspectionDateTime;
+            }
         }
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, "DateOfCertification");
-        DateOnly.TryParse(rawDateOfCertificateOrRecord, out var dateOfCertificateOrRecord);
+        DateOnly? dateOfCertificateOrRecord = null;
+        if (DateOnly.TryParse(rawDateOfCertificateOrRecord, out var tDateOfCertificateOrRecord))
+        {
+            dateOfCertificateOrRecord = tDateOfCertificateOrRecord;
+        }
 
         var nameAndAddress = GetMultilineText(matchesResult, "NameAndAddress");
         var siteAddress = GetMultilineText(matchesResult, "SiteAddress");

@@ -1399,7 +1399,6 @@ public class PdfDataExtractorService(
                     
                     if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
                     {
-                        if (label.Name == "TelephoneNumber")
                         {
                             
                         }

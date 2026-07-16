@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type PagingProps = {
     pageNumber: number;
@@ -23,22 +23,6 @@ export default function Paging({
                                }: PagingProps) {
     const [searchText, setSearchText] = useState(searchTerm);
 
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            const trimmedValue = searchText.trim();
-            if (trimmedValue === searchTerm) return;
-
-            if (trimmedValue.length === 0 || trimmedValue.length > 3) {
-                setSearchTerm(trimmedValue);
-                setPageNumber(1);
-            }
-        }, 1000);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [searchText, searchTerm, setSearchTerm, setPageNumber]);
-
     const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
     const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -51,6 +35,21 @@ export default function Paging({
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
     };
+
+    const applySearch = () => {
+        const trimmedValue = searchText.trim();
+
+        if (trimmedValue.length === 0 || trimmedValue.length > 3) {
+            setSearchTerm(trimmedValue);
+            setPageNumber(1);
+        }
+    };
+
+    const clearSearch = () => {        
+            setSearchTerm('');
+            setPageNumber(1);        
+    };
+    
 
     return (
         <div
@@ -72,7 +71,26 @@ export default function Paging({
                     style={{ width: '180px' }}
                 />
             </label>
-
+            <button
+                type="button"
+                onClick={applySearch}
+                disabled={
+                    searchText.trim().length <= 3
+                }
+                style={{ marginLeft: '8px' }}
+            >
+                Apply
+            </button>
+            <button
+                type="button"
+                onClick={clearSearch}
+                disabled={
+                    searchText.trim().length <= 3
+                }
+                style={{ marginLeft: '8px' }}
+            >
+                Clear Search
+            </button>
             {searchText.trim().length > 0 && searchText.trim().length <= 3 && (
                 <span style={{ marginLeft: '8px' }}>
                     Enter more than 3 characters

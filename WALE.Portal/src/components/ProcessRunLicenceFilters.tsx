@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
 
 type ProcessRunLicenceFiltersProps = {
@@ -5,37 +6,70 @@ type ProcessRunLicenceFiltersProps = {
     shortLicenceIds?: string[];
     issueDates?: string[];
     query: ProcessRunQuery;
-    updateQuery: <K extends keyof ProcessRunQuery>(
-        key: K,
-        value: ProcessRunQuery[K]
-    ) => void;
+    setQuery: React.Dispatch<React.SetStateAction<ProcessRunQuery>>;
+    setPageNumber: (pageNumber: number) => void;
 };
 
-export function ProcessRunLicenceFilters({                                    
-                                      query,
-                                      updateQuery,
-    issuers,
-    shortLicenceIds,
-    issueDates
-                                  }: ProcessRunLicenceFiltersProps) {
+export function ProcessRunLicenceFilters({
+                                             query,
+                                             setQuery,
+                                             issuers,
+                                             shortLicenceIds,
+                                             issueDates,
+                                             setPageNumber
+                                         }: ProcessRunLicenceFiltersProps) {
+    const [pendingQuery, setPendingQuery] = useState<ProcessRunQuery>(query);
+
+    useEffect(() => {
+        setPendingQuery(query);
+    }, [query]);
+
+    const updatePendingQuery = <K extends keyof ProcessRunQuery>(
+        key: K,
+        value: ProcessRunQuery[K]
+    ) => {
+        setPendingQuery(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    const applyQuery = (queryToApply: ProcessRunQuery) => {
+        setPageNumber(1);
+        setQuery(prev => ({
+            ...prev,
+            ...queryToApply,
+            skip: 0
+        }));
+    };
+
+    const applyFilters = () => {
+        applyQuery(pendingQuery);
+    };
+
     const clearFilters = () => {
-        updateQuery("purposesEmpty", undefined);
-        updateQuery("pointsEmpty", undefined);
-        updateQuery("limitsEmpty", undefined);
-        updateQuery("aggregatesEmpty", undefined);
-        updateQuery("ocrScan", undefined);
-        updateQuery("issueYear", undefined);
-        updateQuery("issuer", undefined);
-        updateQuery("meansFound", undefined);
-        updateQuery("linkedLicencesType", undefined);
-        updateQuery("ShortLicenceSetId", undefined);
-        updateQuery("verificationType", undefined);
+        const clearedQuery: ProcessRunQuery = {
+            ...pendingQuery,
+            purposesEmpty: undefined,
+            pointsEmpty: undefined,
+            limitsEmpty: undefined,
+            aggregatesEmpty: undefined,
+            ocrScan: undefined,
+            issueYear: undefined,
+            issuer: undefined,
+            meansFound: undefined,
+            linkedLicencesType: undefined,
+            ShortLicenceSetId: undefined,
+            verificationType: undefined
+        };
+
+        setPendingQuery(clearedQuery);
+        applyQuery(clearedQuery);
     };
 
     return (
         <tr>
-            <td></td>
-            <td>    
+            <td> 
                 <button
                 type="button"
                 className="clear-filters-button"
@@ -44,16 +78,30 @@ export function ProcessRunLicenceFilters({
                 Clear Filters
             </button>
             </td>
+
+            <td>
+               
+
+                <button
+                    type="button"
+                    className="apply-filters-button"
+                    onClick={applyFilters}
+                    style={{ marginLeft: "8px" }}
+                >
+                    Apply Filters
+                </button>
+            </td>
+
             <td>
                 <select
-                    className={query.purposesEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.purposesEmpty === undefined ? "" : "filter-active"}
                     value={
-                        query.purposesEmpty === undefined
+                        pendingQuery.purposesEmpty === undefined
                             ? ""
-                            : String(query.purposesEmpty)
+                            : String(pendingQuery.purposesEmpty)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "purposesEmpty",
                             e.target.value === ""
                                 ? undefined
@@ -66,16 +114,17 @@ export function ProcessRunLicenceFilters({
                     <option value="true">Empty</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={query.pointsEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.pointsEmpty === undefined ? "" : "filter-active"}
                     value={
-                        query.pointsEmpty === undefined
+                        pendingQuery.pointsEmpty === undefined
                             ? ""
-                            : String(query.pointsEmpty)
+                            : String(pendingQuery.pointsEmpty)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "pointsEmpty",
                             e.target.value === ""
                                 ? undefined
@@ -88,16 +137,17 @@ export function ProcessRunLicenceFilters({
                     <option value="true">Empty</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={query.limitsEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.limitsEmpty === undefined ? "" : "filter-active"}
                     value={
-                        query.limitsEmpty === undefined
+                        pendingQuery.limitsEmpty === undefined
                             ? ""
-                            : String(query.limitsEmpty)
+                            : String(pendingQuery.limitsEmpty)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "limitsEmpty",
                             e.target.value === ""
                                 ? undefined
@@ -110,16 +160,17 @@ export function ProcessRunLicenceFilters({
                     <option value="true">Empty</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={query.aggregatesEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.aggregatesEmpty === undefined ? "" : "filter-active"}
                     value={
-                        query.aggregatesEmpty === undefined
+                        pendingQuery.aggregatesEmpty === undefined
                             ? ""
-                            : String(query.aggregatesEmpty)
+                            : String(pendingQuery.aggregatesEmpty)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "aggregatesEmpty",
                             e.target.value === ""
                                 ? undefined
@@ -132,37 +183,40 @@ export function ProcessRunLicenceFilters({
                     <option value="true">Empty</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={query.ocrScan === undefined ? "" : "filter-active"}
+                    className={pendingQuery.ocrScan === undefined ? "" : "filter-active"}
                     value={
-                        query.ocrScan === undefined
+                        pendingQuery.ocrScan === undefined
                             ? ""
-                            : String(query.ocrScan)
+                            : String(pendingQuery.ocrScan)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "ocrScan",
                             e.target.value === ""
                                 ? undefined
                                 : e.target.value === "true"
                         )
                     }
-
                 >
                     <option value="">All scan</option>
                     <option value="true">True</option>
                     <option value="false">False</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={!query.issueYear ? "" : "filter-active"} 
-                    value={ query.issueYear === undefined
-                        ? ""
-                        : String(query.issueYear)}
+                    className={!pendingQuery.issueYear ? "" : "filter-active"}
+                    value={
+                        pendingQuery.issueYear === undefined
+                            ? ""
+                            : String(pendingQuery.issueYear)
+                    }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "issueYear",
                             e.target.value === "" ? undefined : Number(e.target.value)
                         )
@@ -177,12 +231,13 @@ export function ProcessRunLicenceFilters({
                     ))}
                 </select>
             </td>
+
             <td>
                 <select
-                    className={!query.issuer ? "" : "filter-active"}     
-                    value={query.issuer ?? ""}
+                    className={!pendingQuery.issuer ? "" : "filter-active"}
+                    value={pendingQuery.issuer ?? ""}
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "issuer",
                             e.target.value === "" ? undefined : e.target.value
                         )
@@ -200,35 +255,33 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={query.meansFound === undefined ? "" : "filter-active"}
+                    className={pendingQuery.meansFound === undefined ? "" : "filter-active"}
                     value={
-                        query.meansFound === undefined
+                        pendingQuery.meansFound === undefined
                             ? ""
-                            : String(query.meansFound)
+                            : String(pendingQuery.meansFound)
                     }
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "meansFound",
                             e.target.value === ""
                                 ? undefined
                                 : e.target.value === "true"
                         )
                     }
-
                 >
                     <option value="">All mean</option>
                     <option value="true">True</option>
                     <option value="false">False</option>
                 </select>
             </td>
-            
 
             <td>
                 <select
-                    className={!query.linkedLicencesType ? "" : "filter-active"}
-                    value={query.linkedLicencesType ?? ""}
+                    className={!pendingQuery.linkedLicencesType ? "" : "filter-active"}
+                    value={pendingQuery.linkedLicencesType ?? ""}
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "linkedLicencesType",
                             e.target.value === "" ? undefined : e.target.value
                         )
@@ -246,15 +299,16 @@ export function ProcessRunLicenceFilters({
                     <option value="ImplicitBackLink">Implicit back link</option>
                     <option value="OtherConditions">Other Conditions</option>
                     <option value="FurtherProvisions">Further Provisions</option>
-                    
+                    <option value="NoRecords">No Records</option>
                 </select>
             </td>
+
             <td>
                 <select
-                    className={!query.ShortLicenceSetId ? "" : "filter-active"}
-                    value={query.ShortLicenceSetId ?? ""}
+                    className={!pendingQuery.ShortLicenceSetId ? "" : "filter-active"}
+                    value={pendingQuery.ShortLicenceSetId ?? ""}
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "ShortLicenceSetId",
                             e.target.value === "" ? undefined : e.target.value
                         )
@@ -269,12 +323,13 @@ export function ProcessRunLicenceFilters({
                     ))}
                 </select>
             </td>
+
             <td>
                 <select
-                    className={!query.verificationType ? "" : "filter-active"}
-                    value={query.verificationType ?? ""}
+                    className={!pendingQuery.verificationType ? "" : "filter-active"}
+                    value={pendingQuery.verificationType ?? ""}
                     onChange={e =>
-                        updateQuery(
+                        updatePendingQuery(
                             "verificationType",
                             e.target.value === "" ? undefined : e.target.value
                         )
@@ -288,7 +343,7 @@ export function ProcessRunLicenceFilters({
                     <option value="Removed">Removed</option>
                     <option value="Edited">Edited</option>
                     <option value="Added">Added</option>
-                  
+                    <option value="NoVerification">No Verification</option>
                 </select>
             </td>
         </tr>

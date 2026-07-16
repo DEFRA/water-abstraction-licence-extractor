@@ -84,6 +84,12 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.VerificationType))
         {
+            if (query.VerificationType == "NoVerification")
+            {
+                paginationListData = paginationListData
+                    .Where(x => x.latestLicenceSectionVerifications ==null || x.latestLicenceSectionVerifications.Count == 0)
+                    .ToList();
+            }
             paginationListData = paginationListData
                 .Where(x => x.latestLicenceSectionVerifications?
                     .Any(item => item.VerificationType?.Equals(query.VerificationType) == true) == true)

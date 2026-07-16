@@ -37,11 +37,11 @@ public static class Wr51LabelConfiguration
             ("Units", TextAfterLabel("Units", "Units", 0)),
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for", "CertificatesOfRecords", 0)),
-            ("DateOfCertification", TextAfterLabel("Date of certificate or", "DateOfCertification", 1, [new("record:")])),
-            ("Calibration", TextAfterLabel("Calibration", "Calibration", 1)),
-            ("Conformance", TextAfterLabel("Conformance", "Conformance", 1)),
-            ("FlowVerification", TextAfterLabel("Flow verification", "FlowVerification", 1)),
-            ("MeterVerification", TextAfterLabel("Meter verification", "MeterVerification", 1)),
+            ("DateOfCertification", TextToFindIsBetweenLabels("Date of certificate or", "By whom", "DateOfCertification", 1, LimitTo.SameColumn, [new("record:"), new("Conformance:")])),
+            ("Calibration", TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")])),
+            ("Conformance", TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")])),
+            ("FlowVerification", TextAfterLabel("Flow verification", "FlowVerification", 1, possibilities: [new("Yes"), new("No")])),
+            ("MeterVerification", TextAfterLabel("Meter verification", "MeterVerification", 1, possibilities: [new("Yes"), new("No")])),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
             ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 1)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
@@ -100,7 +100,8 @@ public static class Wr51LabelConfiguration
         string endText,
         string name,
         int nextLines,
-        LimitTo limitTo)
+        LimitTo limitTo,
+        List<TextToMatch>? additionalRemoves = null)
     {
         return
         [
@@ -125,7 +126,8 @@ public static class Wr51LabelConfiguration
                 LimitTo = limitTo,
                 Name = name,
                 Remove = [
-                    new(startText) // TODO not sure why we have to add this, we dont always have to with betweens - probably because of the column limiting
+                    new(startText), // TODO not sure why we have to add this, we dont always have to with betweens - probably because of the column limiting
+                    ..additionalRemoves ?? []
                 ]
             }
         ];
@@ -147,16 +149,9 @@ public static class Wr51LabelConfiguration
     private static List<LabelToMatch> TextAfterLabel(
         string text,
         string labelName,
-        int nextLinesToFetch)
-    {
-        return TextAfterLabel(text, labelName, nextLinesToFetch, []);
-    }
-    
-    private static List<LabelToMatch> TextAfterLabel(
-        string text,
-        string labelName,
         int nextLinesToFetch,
-        List<TextToMatch> additionalRemoves)
+        List<TextToMatch>? additionalRemoves = null,
+        List<TextToMatch>? possibilities = null)
     {
         return
         [
@@ -177,8 +172,9 @@ public static class Wr51LabelConfiguration
                 Name = labelName,
                 Remove = [
                     new(text),
-                    ..additionalRemoves
-                ]
+                    ..additionalRemoves ?? []
+                ],
+                Possibilities = possibilities
             }
         ];
     }

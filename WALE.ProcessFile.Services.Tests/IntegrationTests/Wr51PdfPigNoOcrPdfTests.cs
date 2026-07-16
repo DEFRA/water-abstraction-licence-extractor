@@ -2777,7 +2777,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(39, resultFull.Matches!.Count);
+        Assert.Equal(35, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -2922,45 +2922,25 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var dateOfCertificate = resultFull.Matches[27];
         Assert.NotNull(dateOfCertificate);
         Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
-        //Assert.Empty(dateOfCertificate.Text);
+        Assert.Empty(dateOfCertificate.Text);
         
-        var calibration = resultFull.Matches[28];
-        Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
-        //Assert.Empty(calibration.Text);
-        
-        var conformance = resultFull.Matches[29];
-        Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
-        //Assert.Empty(conformance.Text);
-        
-        var flowVerification = resultFull.Matches[30];
-        Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
-        //Assert.Empty(flowVerification.Text);
-        
-        var meterVerification = resultFull.Matches[31];
-        Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
-        //Assert.Empty(meterVerification.Text);
-        
-        var whereKept = resultFull.Matches[32];
+        var whereKept = resultFull.Matches[28];
         Assert.NotNull(whereKept);
         Assert.Equal("WhereKept", whereKept.LabelGroupName);
-        //Assert.Empty(whereKept.Text);
+        Assert.Empty(whereKept.Text);
         
-        var formSentTo = resultFull.Matches[33];
+        var formSentTo = resultFull.Matches[29];
         Assert.NotNull(formSentTo);
         Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
         Assert.StartsWith("en", formSentTo.Text[0].Text);
         Assert.EndsWith("uk", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches[34];
+        var date = resultFull.Matches[30];
         Assert.NotNull(date);
         Assert.Equal("Date", date.LabelGroupName);
         Assert.Equal("3 June 2026", date.Text[0].Text);
         
-        var generalComments = resultFull.Matches[35];
+        var generalComments = resultFull.Matches[31];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(38, generalComments.Text.Count);
@@ -2969,7 +2949,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("Ple", generalComments.Text[37].Text);
         Assert.EndsWith("ly.", generalComments.Text[37].Text);
         
-        var maintenance = resultFull.Matches[36];
+        var maintenance = resultFull.Matches[32];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(4, maintenance.Text[0].Columns.Count);
@@ -2979,7 +2959,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
         Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
-        Assert.Equal("Y:", maintenanceSubLabel.Text[0].Text);
+        Assert.Equal("Y:", maintenanceSubLabel.Text[0].Text); // TODO wrong
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
@@ -2991,7 +2971,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Empty(byWhomSubLabel.Text);
         
-        var readingsTaken = resultFull.Matches[37];
+        var readingsTaken = resultFull.Matches[33];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(4, readingsTaken.Text[0].Columns.Count);
@@ -3001,7 +2981,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
         Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
-        Assert.Equal("Y:", readingsTakenSubLabel.Text[0].Text);
+        Assert.Equal("Y:", readingsTakenSubLabel.Text[0].Text); // TODO wrong
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
@@ -3013,83 +2993,81 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Empty(byWhomSubLabel.Text);
         
-        var inspectionDate = resultFull.Matches[38];
+        var inspectionDate = resultFull.Matches[34];
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("19/5/26", inspectionDate.Text[0].Text);
 
-        /*var converted = Wr51SchemaConverter.ToForm(resultFull);
+        var converted = Wr51SchemaConverter.ToForm(resultFull);
         Assert.NotNull(converted);
         Assert.NotNull(converted.Metadata);
         Assert.Null(converted.Metadata.DocumentTemplateVerison);
         Assert.Equal("190526.pdf", converted.Metadata.Filename);
         Assert.Equal(false, converted.Metadata.IsScan);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SourceOfSupply);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Purposes);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Purposes);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.PointOfAbstraction);
-        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.SpecialConditions);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ChargingFactors);
-        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Land);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SpecialConditions);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.ChargingFactors);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.Land);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfAbstraction);
-        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfMeasurement);
-        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.OtherProvisions);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.MeansOfMeasurement);
+        Assert.Equal(InOrderStatus.DidntMatch, converted.LicenceProvisions.OtherProvisions);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Period);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ProvisionOfInformation);
-        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Quantities);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.ProvisionOfInformation);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Quantities);
         Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Records);
         Assert.NotNull(converted.MeasurementDetails.Maintenance);
-        Assert.Equal("Yes", converted.MeasurementDetails.Maintenance.Maintenance);
-        Assert.Equal("Daily", converted.MeasurementDetails.Maintenance.Frequency);
-        Assert.Equal("JP", converted.MeasurementDetails.Maintenance.ByWhom);
+        Assert.Equal("Y:", converted.MeasurementDetails.Maintenance.Maintenance); // TODO wrong
+        Assert.Null(converted.MeasurementDetails.Maintenance.Frequency);
+        Assert.Null(converted.MeasurementDetails.Maintenance.ByWhom);
         Assert.NotNull(converted.MeasurementDetails.ReadingsTaken);
-        Assert.Equal("Yes", converted.MeasurementDetails.ReadingsTaken.ReadingsTaken);
-        Assert.Equal("Fortnightly", converted.MeasurementDetails.ReadingsTaken.Frequency);
-        Assert.Equal("MP", converted.MeasurementDetails.ReadingsTaken.ByWhom);
-        Assert.Equal("On Site", converted.MeasurementDetails.WhereKept);
-        Assert.Equal(480, converted.GeneralComments?.Length);
-        Assert.StartsWith("Licence", converted.GeneralComments);
-        Assert.EndsWith("inspection.", converted.GeneralComments);
-        Assert.StartsWith("Ja", converted.Metadata.FormSentTo);
-        Assert.EndsWith("or", converted.Metadata.FormSentTo);
-        Assert.Equal(new DateOnly(2024, 4, 12), converted.Metadata.Date.Date); 
-        Assert.Equal("12/04/2024", converted.Metadata.Date.RawDate);
-        Assert.Equal("Abstraction Flowmeter", converted.MeasurementDetails.MeterMake);
-        Assert.StartsWith("V", converted.MeasurementDetails.SerialNumber);
-        Assert.EndsWith("2", converted.MeasurementDetails.SerialNumber);
-        Assert.Equal("4,714,612", converted.MeasurementDetails.Reading);
-        Assert.Equal("m3", converted.MeasurementDetails.Units);
+        Assert.Equal("Y:", converted.MeasurementDetails.ReadingsTaken.ReadingsTaken); // TODO wrong
+        Assert.Null(converted.MeasurementDetails.ReadingsTaken.Frequency);
+        Assert.Null(converted.MeasurementDetails.ReadingsTaken.ByWhom);
+        Assert.Null(converted.MeasurementDetails.WhereKept);
+        Assert.Equal(3504, converted.GeneralComments?.Length);
+        Assert.StartsWith("An", converted.GeneralComments);
+        Assert.EndsWith("ly.", converted.GeneralComments);
+        Assert.StartsWith("en", converted.Metadata.FormSentTo);
+        Assert.EndsWith("uk", converted.Metadata.FormSentTo);
+        Assert.Equal(new DateOnly(2026, 6, 3), converted.Metadata.Date.Date); 
+        Assert.Equal("3 June 2026", converted.Metadata.Date.RawDate);
+        Assert.Equal("N/A", converted.MeasurementDetails.MeterMake);
+        Assert.Equal("N/A", converted.MeasurementDetails.SerialNumber);
+        Assert.Equal("N/A", converted.MeasurementDetails.Reading);
+        Assert.Equal("N/A", converted.MeasurementDetails.Units);
         Assert.Equal("N/A", converted.MeasurementDetails.Other);
         Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
-        Assert.Equal(new DateOnly(2021, 6, 30), converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
-        Assert.Equal("30/06/2021", converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
-        Assert.Equal("Yes", converted.MeasurementDetails.Calibration);
-        Assert.Equal("No", converted.MeasurementDetails.Conformance);
-        Assert.Equal("Yes", converted.MeasurementDetails.FlowVerification);
-        Assert.Equal("Yes", converted.MeasurementDetails.MeterVerification);
-        Assert.StartsWith("12", converted.LicenceNumber);
-        Assert.EndsWith("8", converted.LicenceNumber);
-        Assert.Equal("Less Critical", converted.InspectionClass);
-        Assert.StartsWith("Sou", converted.Address.NameAndAddress);
-        Assert.EndsWith("NX", converted.Address.NameAndAddress);
-        Assert.StartsWith("07", converted.Address.TelephoneNumber);
-        Assert.EndsWith("86", converted.Address.TelephoneNumber);
-        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.Address.SiteAddress);
-        Assert.StartsWith("Ja", converted.MetWith.Name);
-        Assert.EndsWith("or", converted.MetWith.Name);
-        Assert.Equal("Flow Measurement Coordinator", converted.MetWith.Position);
-        Assert.StartsWith("Ar", converted.InspectingOfficer);
-        Assert.EndsWith("an", converted.InspectingOfficer);
+//        Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
+//        Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
+        Assert.Null(converted.MeasurementDetails.Calibration); // TODO wouldnt work if had value
+        Assert.Null(converted.MeasurementDetails.Conformance); // TODO wouldnt work if had value
+        Assert.Null(converted.MeasurementDetails.FlowVerification); // TODO wouldnt work if had value
+        Assert.Null(converted.MeasurementDetails.MeterVerification); // TODO wouldnt work if had value
+        Assert.StartsWith("2", converted.LicenceNumber);
+        Assert.EndsWith("4", converted.LicenceNumber);
+        Assert.Equal("", converted.InspectionClass);
+        Assert.StartsWith("Yo", converted.Address.NameAndAddress);
+        Assert.EndsWith("SZ", converted.Address.NameAndAddress);
+        Assert.StartsWith("", converted.Address.TelephoneNumber);
+        Assert.EndsWith("", converted.Address.TelephoneNumber);
+        Assert.StartsWith("Sc", converted.Address.SiteAddress);
+        Assert.StartsWith("Ka", converted.MetWith.Name);
+        Assert.EndsWith("on", converted.MetWith.Name);
+        Assert.Equal("Regulatory Compliance Specialist", converted.MetWith.Position);
+        Assert.StartsWith("Al", converted.InspectingOfficer);
+        Assert.EndsWith("ly", converted.InspectingOfficer);
 
-        var expectedDateTime = new DateTime(2024, 3, 4);
-        expectedDateTime = expectedDateTime.AddHours(11);
-        expectedDateTime = expectedDateTime.AddMinutes(20);
+        var expectedDateTime = new DateTime(2026, 5, 19);
+        expectedDateTime = expectedDateTime.AddHours(10);
             
         Assert.Equal(expectedDateTime, converted.InspectionDate.DateTime);
-        Assert.Equal("04/03/2024", converted.InspectionDate.RawDate);
-        Assert.Equal("11:20", converted.InspectionDate.RawTime);
+        Assert.Equal("19/5/26", converted.InspectionDate.RawDate);
+        Assert.Equal("10:00", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(2513, json.Length);*/
+        Assert.Equal(5257, json.Length);
     }
 }

@@ -32,6 +32,9 @@ public static class Wr51SchemaConverter
         {
             siteAddress = nameAndAddress;
         }
+
+        var whereKept = GetMultilineText(matchesResult, "WhereKept");
+        if (string.IsNullOrWhiteSpace(whereKept)) whereKept = null;
         
         return new Wr51Form
         {
@@ -112,7 +115,7 @@ public static class Wr51SchemaConverter
                     Frequency = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineFrequency"),
                     ByWhom = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineByWhom")
                 },
-                WhereKept = GetMultilineText(matchesResult, "WhereKept")
+                WhereKept = whereKept
             },
             GeneralComments = GetMultilineText(matchesResult, "GeneralComments")
         };

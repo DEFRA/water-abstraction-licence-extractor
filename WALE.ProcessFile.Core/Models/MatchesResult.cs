@@ -3,6 +3,9 @@ namespace WALE.ProcessFile.Core.Models;
 public class MatchesResult
 {
     public string? Filename { get; set; }
+    
+    public Guid? FileId { get; set; }
+    
     public int RegionCode { get; set; }
     public List<LabelGroupResult>? Matches { get; set; } // TODO change to a dict
     public int NumberOfPages { get; set; }

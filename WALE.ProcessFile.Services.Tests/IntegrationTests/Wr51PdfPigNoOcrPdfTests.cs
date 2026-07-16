@@ -340,6 +340,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.NotNull(converted.Metadata);
         Assert.Equal("2026_07_10_v1", converted.Metadata.DocumentTemplateVerison);
         Assert.Equal("WR51__121014G8__dummy.pdf", converted.Metadata.Filename);
+        Assert.Equal(Guid.Parse("d60c3360-e810-cd19-d1de-406cbb5a938e"), converted.Metadata.FileId);
         Assert.Equal(false, converted.Metadata.IsScan);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SourceOfSupply);
         Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Purposes);
@@ -406,7 +407,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("11:20", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(2513, json.Length);
+        Assert.Equal(2567, json.Length);
     }
     
     [Fact]
@@ -3004,6 +3005,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.NotNull(converted.Metadata);
         Assert.Null(converted.Metadata.DocumentTemplateVerison);
         Assert.Equal("190526.pdf", converted.Metadata.Filename);
+        Assert.Equal(Guid.Parse("32d8e674-4d1b-612b-d7e3-11c5e318a7f0"), converted.Metadata.FileId);
         Assert.Equal(false, converted.Metadata.IsScan);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SourceOfSupply);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Purposes);
@@ -3019,11 +3021,11 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Quantities);
         Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Records);
         Assert.NotNull(converted.MeasurementDetails.Maintenance);
-        Assert.Equal("Y:", converted.MeasurementDetails.Maintenance.Maintenance); // TODO wrong
+        Assert.Null(converted.MeasurementDetails.Maintenance.Maintenance);
         Assert.Null(converted.MeasurementDetails.Maintenance.Frequency);
         Assert.Null(converted.MeasurementDetails.Maintenance.ByWhom);
         Assert.NotNull(converted.MeasurementDetails.ReadingsTaken);
-        Assert.Equal("Y:", converted.MeasurementDetails.ReadingsTaken.ReadingsTaken); // TODO wrong
+        Assert.Null(converted.MeasurementDetails.ReadingsTaken.ReadingsTaken);
         Assert.Null(converted.MeasurementDetails.ReadingsTaken.Frequency);
         Assert.Null(converted.MeasurementDetails.ReadingsTaken.ByWhom);
         Assert.Null(converted.MeasurementDetails.WhereKept);
@@ -3042,10 +3044,10 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
         Assert.Null(converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
         Assert.Equal("", converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
-        Assert.Null(converted.MeasurementDetails.Calibration); // TODO wouldnt work if had value
-        Assert.Null(converted.MeasurementDetails.Conformance); // TODO wouldnt work if had value
-        Assert.Null(converted.MeasurementDetails.FlowVerification); // TODO wouldnt work if had value
-        Assert.Null(converted.MeasurementDetails.MeterVerification); // TODO wouldnt work if had value
+        Assert.Null(converted.MeasurementDetails.Calibration);
+        Assert.Null(converted.MeasurementDetails.Conformance); 
+        Assert.Null(converted.MeasurementDetails.FlowVerification);
+        Assert.Null(converted.MeasurementDetails.MeterVerification);
         Assert.StartsWith("2", converted.LicenceNumber);
         Assert.EndsWith("4", converted.LicenceNumber);
         Assert.Equal("", converted.InspectionClass);
@@ -3068,6 +3070,19 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("10:00", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(5229, json.Length);
+        Assert.Equal(5219, json.Length);
+    }
+    
+    [Fact]
+    public async Task WhenWR51_POCA_12_NewFormatWithImages_ThenGood()
+    {
+        // Arrange
+        const string filename = "WR51__940020238G__dummy.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
+        Assert.Equal(40, resultFull.Matches!.Count);
+        
+        
     }
 }

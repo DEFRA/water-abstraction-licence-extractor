@@ -89,6 +89,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            FileId = dmsDataForFile.FileId,
             RegionCode = configuration.RegionId,
             ServicesUsed =
             [

@@ -47,11 +47,16 @@ public static class Wr51SchemaConverter
         var whereKept = GetMultilineText(matchesResult, "WhereKept");
         if (string.IsNullOrWhiteSpace(whereKept)) whereKept = null;
 
-        var maintenanceYesNo =
-            GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance");
+        var documentTemplateVerison = GetMultilineText(matchesResult, "DocumentTemplateVersion");
+        var isNewTemplate = documentTemplateVerison == "2026_07_10_v1";
+        
+        string? maintenanceYesNo = null;
 
-        // Could do similar based off of template instead
-        if (string.IsNullOrEmpty(maintenanceYesNo))
+        if (isNewTemplate)
+        {
+            maintenanceYesNo = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance");
+        }
+        else
         {
             var maintenanceYes = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceYes");
             var maintenanceNo = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceNo");
@@ -66,10 +71,13 @@ public static class Wr51SchemaConverter
             }
         }
 
-        var readingsTakenYesNo =
-            GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken");
+        string? readingsTakenYesNo = null;
         
-        if (string.IsNullOrEmpty(readingsTakenYesNo))
+        if (isNewTemplate)
+        {
+            readingsTakenYesNo = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken");
+        }
+        else
         {
             var readingsTakenYes = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenYes");
             var readingsTakenNo = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenNo");
@@ -88,8 +96,9 @@ public static class Wr51SchemaConverter
         {
             Metadata = new Wr51FormMetadata
             {
-                DocumentTemplateVerison = GetMultilineText(matchesResult, "DocumentTemplateVersion"),
+                DocumentTemplateVerison = documentTemplateVerison,
                 Filename = matchesResult.Filename,
+                FileId = matchesResult.FileId,
                 IsScan = matchesResult.ScannedFile,
                 FormSentTo = GetMultilineText(matchesResult, "FormSentTo"),
                 Date = new Wr51FormInspectionDate

@@ -1399,6 +1399,11 @@ public class PdfDataExtractorService(
                     
                     if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
                     {
+                        if (label.Name == "TelephoneNumber")
+                        {
+                            
+                        }
+                        
                         var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
                         var newColumns = new List<DocumentLineColumn>();
 
@@ -1439,7 +1444,12 @@ public class PdfDataExtractorService(
                             var newNextLine = nextLine.Clone();
                             var columnToKeep = nextLine.Columns.Count > columnIndex
                                 ? nextLine.Columns[columnIndex]
-                                : nextLine.Columns[0];
+                                : null;
+
+                            if (columnToKeep == null)
+                            {
+                                continue;
+                            }
                             
                             newNextLine.Columns.Clear();
                             newNextLine.Columns.Add(columnToKeep);

@@ -19,13 +19,13 @@ public class Wr51Form
     
     public string? MetWith { get; set; }
     
-    public string? Position { get; set; }
+    public string? MetWithsPosition { get; set; }
     
     public string? InspectingOfficer { get; set; }
     
     public string? InspectionDate { get; set; }
     
-    public string? Time { get; set; }
+    public string? InspectionTime { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public InOrderStatus SourceOfSupply { get; set; }
@@ -93,6 +93,8 @@ public class Wr51Form
     public Wr51FormReadingsTaken ReadingsTaken { get; set; } = new();
     
     public string? WhereKept { get; set; }
+    
+    public string? GeneralComments { get; set; }
     
     public string? FormSentTo { get; set; }
     

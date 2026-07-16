@@ -332,6 +332,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var telephoneNumber = resultFull.Matches[18];
         Assert.NotNull(telephoneNumber);
         Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Single(telephoneNumber.Text!);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("86", telephoneNumber.Text[0].Text);
         
@@ -484,6 +485,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         
         var inspectionDate = resultFull.Matches[40];
         Assert.NotNull(inspectionDate);
+        Assert.Single(inspectionDate.Text!);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
 
@@ -507,13 +509,47 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal(InOrderStatus.InOrder, converted.Quantities);
         Assert.Equal(InOrderStatus.NotInOrder, converted.Records);
         Assert.NotNull(converted.Maintenance);
-        Assert.Equal("", converted.Maintenance.Maintenance);
-        Assert.Equal("", converted.Maintenance.Frequency);
-        Assert.Equal("", converted.Maintenance.ByWhom);
+        Assert.Equal("Yes", converted.Maintenance.Maintenance);
+        Assert.Equal("Daily", converted.Maintenance.Frequency);
+        Assert.Equal("JP", converted.Maintenance.ByWhom);
         Assert.NotNull(converted.ReadingsTaken);
-        Assert.Equal("", converted.ReadingsTaken.ReadingsTaken);
-        Assert.Equal("", converted.ReadingsTaken.Frequency);
-        Assert.Equal("", converted.ReadingsTaken.ByWhom);
+        Assert.Equal("Yes", converted.ReadingsTaken.ReadingsTaken);
+        Assert.Equal("Fortnightly", converted.ReadingsTaken.Frequency);
+        Assert.Equal("MP", converted.ReadingsTaken.ByWhom);
+        Assert.Equal("On Site", converted.WhereKept);
+        Assert.Equal(480, converted.GeneralComments?.Length);
+        Assert.StartsWith("Licence", converted.GeneralComments);
+        Assert.EndsWith("inspection.", converted.GeneralComments);
+        Assert.StartsWith("Ja", converted.FormSentTo);
+        Assert.EndsWith("or", converted.FormSentTo);
+        Assert.Equal("12/04/2024", converted.Date);
+        Assert.Equal("Abstraction Flowmeter", converted.MeterMake);
+        Assert.StartsWith("V", converted.SerialNumber);
+        Assert.EndsWith("2", converted.SerialNumber);
+        Assert.Equal("4,714,612", converted.Reading);
+        Assert.Equal("m3", converted.Units);
+        Assert.Equal("N/A", converted.Other);
+        Assert.Equal("N/A", converted.CertificatesOrRecordsAvailableFor);
+        Assert.Equal("30/06/2021", converted.DateOfCertificateOrRecord);
+        Assert.Equal("Yes", converted.Calibration);
+        Assert.Equal("No", converted.Conformance);
+        Assert.Equal("Yes", converted.FlowVerification);
+        Assert.Equal("Yes", converted.MeterVerification);
+        Assert.StartsWith("12", converted.LicenceNumber);
+        Assert.EndsWith("8", converted.LicenceNumber);
+        Assert.Equal("Less Critical", converted.InspectionClass);
+        Assert.StartsWith("Sou", converted.NameAndAddress);
+        Assert.EndsWith("NX", converted.NameAndAddress);
+        Assert.StartsWith("07", converted.TelephoneNumber);
+        Assert.EndsWith("86", converted.TelephoneNumber);
+        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.SiteAddress);
+        Assert.StartsWith("Ja", converted.MetWith);
+        Assert.EndsWith("or", converted.MetWith);
+        Assert.Equal("Flow Measurement Coordinator", converted.MetWithsPosition);
+        Assert.StartsWith("Ar", converted.InspectingOfficer);
+        Assert.EndsWith("an", converted.InspectingOfficer);
+        Assert.Equal("04/03/2024", converted.InspectionDate);
+        Assert.Equal("11:20", converted.InspectionTime);
     }
     
     [Fact]

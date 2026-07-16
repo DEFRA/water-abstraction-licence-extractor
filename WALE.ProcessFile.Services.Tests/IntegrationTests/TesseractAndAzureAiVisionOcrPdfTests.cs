@@ -478,7 +478,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             {
                 DestinationFileName = "22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf",
                 DmsPath = "TEST_FAKE_PATH",
-                FileId = Guid.NewGuid(),
+                FileId = GuidHelper.GetConsistentFileIdFromFilename("22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf")
             });
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(

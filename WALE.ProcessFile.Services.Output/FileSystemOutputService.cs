@@ -177,17 +177,18 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
         
         var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
-
+        var size = 0;
+        
         foreach (var (provider, bitmap) in images)
         {
             var imgOutputFilename = imagePaths
                 .First(x => x.ProviderName == provider)
                 .ImageReference!;
             
-            await SaveAsJpegAsync(bitmap, imgOutputFilename);
+            size += await SaveAsJpegAsync(bitmap, imgOutputFilename);
         }
 
-        return images.Sum(i => i.Bitmap.ByteCount);
+        return size;
     }
 
     public Task SavePageScreenshotInternalAsync(
@@ -200,7 +201,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
+    private static async Task<int> SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
     {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
@@ -214,7 +215,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         data.SaveTo(stream);
         
         await stream.FlushAsync();
+        
+        var streamLength = stream.Length;
         stream.Close();
+
+        return (int)streamLength;
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName, int processRunId)

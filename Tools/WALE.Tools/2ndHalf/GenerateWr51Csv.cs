@@ -13,6 +13,7 @@ using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
+using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 
 namespace WALE.Tools._2ndHalf;
@@ -120,7 +121,7 @@ public static class GenerateWr51Csv
         
         return PdfDataExtractor.GetMatchesAsync(
             fileName,
-            new DmsFileData { FileId = Guid.NewGuid() },
+            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             LookupConfiguration(folderPath),
             [fileName],
             -1);

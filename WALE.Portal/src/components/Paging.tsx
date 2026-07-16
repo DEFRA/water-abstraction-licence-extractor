@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type PagingProps = {
     pageNumber: number;
@@ -23,22 +23,6 @@ export default function Paging({
                                }: PagingProps) {
     const [searchText, setSearchText] = useState(searchTerm);
 
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            const trimmedValue = searchText.trim();
-            if (trimmedValue === searchTerm) return;
-
-            if (trimmedValue.length === 0 || trimmedValue.length > 3) {
-                setSearchTerm(trimmedValue);
-                setPageNumber(1);
-            }
-        }, 1000);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [searchText, searchTerm, setSearchTerm, setPageNumber]);
-
     const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
     const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -59,7 +43,6 @@ export default function Paging({
             setSearchTerm(trimmedValue);
             setPageNumber(1);
         }
-        setSearchText(e.target.value);
     };
 
     const clearSearch = () => {        

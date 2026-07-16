@@ -180,6 +180,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             "aggregates");
 
         AddIssueYearFilter(sql, parameters, query.IssueYear);
+        
+        AddIssueYearFilter(
+            sql,
+            parameters,
+            query.IssueYear);
+
+        AddLinkedLicencesTypeFilter(
+            sql,
+            parameters,
+            query.LinkedLicencesType);
 
         return await QuerySingleOrDefaultAsync<int>(
             connection,
@@ -2288,6 +2298,25 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         if (string.IsNullOrWhiteSpace(linkedLicencesType))
         {
+            return;
+        }
+        
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "NoRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND jsonb_array_length(
+                      COALESCE(
+                          data::jsonb -> 'linkedLicences',
+                          '[]'::jsonb
+                      )
+                  ) = 0
+                """);
+
             return;
         }
 

@@ -299,6 +299,7 @@ export function ProcessRunLicenceFilters({
                     <option value="ImplicitBackLink">Implicit back link</option>
                     <option value="OtherConditions">Other Conditions</option>
                     <option value="FurtherProvisions">Further Provisions</option>
+                    <option value="NoRecords">No Records</option>
                 </select>
             </td>
 
@@ -342,6 +343,7 @@ export function ProcessRunLicenceFilters({
                     <option value="Removed">Removed</option>
                     <option value="Edited">Edited</option>
                     <option value="Added">Added</option>
+                    <option value="NoVerification">No Verification</option>
                 </select>
             </td>
         </tr>

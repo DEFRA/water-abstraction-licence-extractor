@@ -1039,6 +1039,7 @@ public static class FormattingHelper
         {
             while (trimmed?.Length >= 1
                && trimmed[0] != '('
+               && trimmed[0] != '✓'
                && trimmed[0] != '&'               
                && (char.IsPunctuation(trimmed[0])
                    || char.IsSymbol(trimmed[0])
@@ -1052,6 +1053,7 @@ public static class FormattingHelper
         {
             while (trimmed?.Length >= 1
                && trimmed[^1] != ')'
+               && trimmed[0] != '✓'
                && trimmed[^1] != ':'
                && trimmed[^1] != '&'               
                && trimmed[^1] != '/'

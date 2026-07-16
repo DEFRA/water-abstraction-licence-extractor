@@ -2767,4 +2767,341 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("06/12/2024", inspectionDate.Text[0].Text);
     }
+    
+    [Fact]
+    public async Task WhenWR51_POCA_11_NotNewFormat_ThenGood()
+    {
+        // Arrange
+        const string filename = "190526.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
+//        Assert.Equal(39, resultFull.Matches!.Count);
+        
+        var sourceOfSupply = resultFull.Matches[0];
+        Assert.NotNull(sourceOfSupply);
+        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal("✓", sourceOfSupply.Text[0].Text);
+        
+        var pointOfAbstraction = resultFull.Matches[1];
+        Assert.NotNull(pointOfAbstraction);
+        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal("✓", pointOfAbstraction.Text[0].Text); // TODO should be 'In'
+        
+        var meansOfAbstraction = resultFull.Matches[2];
+        Assert.NotNull(meansOfAbstraction);
+        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal("✓", meansOfAbstraction.Text[0].Text);
+        
+        var purposes = resultFull.Matches[3];
+        Assert.NotNull(purposes);
+        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal("✓", purposes.Text[0].Text);
+        
+        var period = resultFull.Matches[4];
+        Assert.NotNull(period);
+        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal("✓", period.Text[0].Text);
+        
+        var quantities = resultFull.Matches[5];
+        Assert.NotNull(quantities);
+        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal("X", quantities.Text[0].Text);
+        
+        var meansOfMeasurement = resultFull.Matches[6];
+        Assert.NotNull(meansOfMeasurement);
+        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal("X", meansOfMeasurement.Text[0].Text);
+        
+        var records = resultFull.Matches[7];
+        Assert.NotNull(records);
+        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal("X", records.Text[0].Text);
+        
+        var provisionOfInformation = resultFull.Matches[8];
+        Assert.NotNull(provisionOfInformation);
+        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal("✓", provisionOfInformation.Text[0].Text);
+        
+        var specialConditions = resultFull.Matches[9];
+        Assert.NotNull(specialConditions);
+        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal("✓", specialConditions.Text[0].Text);
+        
+        var land = resultFull.Matches[10];
+        Assert.NotNull(land);
+        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal("N/A", land.Text[0].Text);
+        
+        var chargingFactors = resultFull.Matches[11];
+        Assert.NotNull(chargingFactors);
+        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal("N/A", chargingFactors.Text[0].Text);
+        
+        var otherProvisions = resultFull.Matches[12];
+        Assert.NotNull(otherProvisions);
+        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal("", otherProvisions.Text[0].Text);
+        
+        var licenceNumber = resultFull.Matches[13];
+        Assert.NotNull(licenceNumber);
+        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal("12/101/4/G/8", licenceNumber.Text[0].Text);
+        
+        var metWith = resultFull.Matches[14];
+        Assert.NotNull(metWith);
+        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.StartsWith("Ja", metWith.Text[0].Text);
+        Assert.EndsWith("or", metWith.Text[0].Text);
+        
+        var inspectingOfficer = resultFull.Matches[15];
+        Assert.NotNull(inspectingOfficer);
+        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.StartsWith("Ar", inspectingOfficer.Text[0].Text);
+        Assert.EndsWith("an", inspectingOfficer.Text[0].Text);
+        
+        var siteAddress = resultFull.Matches[16];
+        Assert.NotNull(siteAddress);
+        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.StartsWith("Ly", siteAddress.Text[0].Text);
+        Assert.EndsWith("JQ", siteAddress.Text[0].Text);
+        
+        var inspectionClass = resultFull.Matches[17];
+        Assert.NotNull(inspectionClass);
+        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal("Less Critical", inspectionClass.Text[0].Text);
+        
+        var telephoneNumber = resultFull.Matches[18];
+        Assert.NotNull(telephoneNumber);
+        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Single(telephoneNumber.Text!);
+        Assert.StartsWith("07", telephoneNumber.Text[0].Text);
+        Assert.EndsWith("86", telephoneNumber.Text[0].Text);
+        
+        var position = resultFull.Matches[19];
+        Assert.NotNull(position);
+        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal("Flow Measurement Coordinator", position.Text[0].Text);
+        
+        var time = resultFull.Matches[20];
+        Assert.NotNull(time);
+        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal("11:20", time.Text[0].Text);
+        
+        var nameAndAddress = resultFull.Matches[21];
+        Assert.NotNull(nameAndAddress);
+        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(2, nameAndAddress.Text.Count);
+        Assert.Equal("Southern Water Service Limited, Southern House, Yeoman Road, Worthing,", nameAndAddress.Text[0].Text);
+        Assert.Equal("BN13 3NX", nameAndAddress.Text[1].Text);
+        
+        var meterMake = resultFull.Matches[22];
+        Assert.NotNull(meterMake);
+        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal("Abstraction Flowmeter", meterMake.Text[0].Text);
+        
+        var serialNumber = resultFull.Matches[23];
+        Assert.NotNull(serialNumber);
+        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.StartsWith("V/", serialNumber.Text[0].Text);
+        Assert.EndsWith("2", serialNumber.Text[0].Text);
+        
+        var reading = resultFull.Matches[24];
+        Assert.NotNull(reading);
+        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal("4,714,612", reading.Text[0].Text);
+        
+        var units = resultFull.Matches[25];
+        Assert.NotNull(units);
+        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal("m3", units.Text[0].Text);
+        
+        var other = resultFull.Matches[26];
+        Assert.NotNull(other);
+        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal("N/A", other.Text[0].Text);
+        
+        var certificatesOfRecord = resultFull.Matches[27];
+        Assert.NotNull(certificatesOfRecord);
+        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
+        
+        var dateOfCertificate = resultFull.Matches[28];
+        Assert.NotNull(dateOfCertificate);
+        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal("30/06/2021", dateOfCertificate.Text[0].Text);
+        
+        var calibration = resultFull.Matches[29];
+        Assert.NotNull(calibration);
+        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal("Yes", calibration.Text[0].Text);
+        
+        var conformance = resultFull.Matches[30];
+        Assert.NotNull(conformance);
+        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal("No", conformance.Text[0].Text);
+        
+        var flowVerification = resultFull.Matches[31];
+        Assert.NotNull(flowVerification);
+        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal("Yes", flowVerification.Text[0].Text);
+        
+        var meterVerification = resultFull.Matches[32];
+        Assert.NotNull(meterVerification);
+        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal("Yes", meterVerification.Text[0].Text);
+        
+        var whereKept = resultFull.Matches[33];
+        Assert.NotNull(whereKept);
+        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal("On Site", whereKept.Text[0].Text);
+        
+        var formSentTo = resultFull.Matches[34];
+        Assert.NotNull(formSentTo);
+        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.StartsWith("Ja", formSentTo.Text[0].Text);
+        Assert.EndsWith("or", formSentTo.Text[0].Text);
+        
+        var date = resultFull.Matches[35];
+        Assert.NotNull(date);
+        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal("12/04/2024", date.Text[0].Text);
+        
+        var documentTemplateVersion = resultFull.Matches[36];
+        Assert.NotNull(documentTemplateVersion);
+        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[37];
+        Assert.NotNull(generalComments);
+        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(5, generalComments.Text.Count);
+        Assert.StartsWith("Licence 12/", generalComments.Text[0].Text);
+        Assert.EndsWith("single borehole.", generalComments.Text[0].Text);
+        Assert.StartsWith("No RTW", generalComments.Text[4].Text);
+        Assert.EndsWith("inspection.", generalComments.Text[4].Text);
+        
+        var maintenance = resultFull.Matches[38];
+        Assert.NotNull(maintenance);
+        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(3, maintenance.Text[0].Columns.Count);
+        Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
+        Assert.Equal(3, maintenance.SubResults.Count);
+
+        var maintenanceSubLabel = maintenance.SubResults[0];
+        Assert.NotNull(maintenanceSubLabel);
+        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
+        
+        var frequencySubLabel = maintenance.SubResults[1];
+        Assert.NotNull(frequencySubLabel);
+        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
+        
+        var byWhomSubLabel = maintenance.SubResults[2];
+        Assert.NotNull(byWhomSubLabel);
+        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
+        
+        var readingsTaken = resultFull.Matches[39];
+        Assert.NotNull(readingsTaken);
+        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
+        Assert.Equal("Readings taken: Yes Frequency: Fortnightly By whom: MP", readingsTaken.Text[0].Text);
+        Assert.Equal(3, readingsTaken.SubResults.Count);
+
+        var readingsTakenSubLabel = readingsTaken.SubResults[0];
+        Assert.NotNull(readingsTakenSubLabel);
+        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
+        
+        frequencySubLabel = readingsTaken.SubResults[1];
+        Assert.NotNull(frequencySubLabel);
+        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal("Fortnightly", frequencySubLabel.Text[0].Text);
+        
+        byWhomSubLabel = readingsTaken.SubResults[2];
+        Assert.NotNull(byWhomSubLabel);
+        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
+        
+        var inspectionDate = resultFull.Matches[40];
+        Assert.NotNull(inspectionDate);
+        Assert.Single(inspectionDate.Text!);
+        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
+
+        var converted = Wr51SchemaConverter.ToForm(resultFull);
+        Assert.NotNull(converted);
+        Assert.NotNull(converted.Metadata);
+        Assert.Equal("2026_07_10_v1", converted.Metadata.DocumentTemplateVerison);
+        Assert.Equal("WR51__121014G8__dummy.pdf", converted.Metadata.Filename);
+        Assert.Equal(false, converted.Metadata.IsScan);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SourceOfSupply);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Purposes);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.PointOfAbstraction);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.SpecialConditions);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ChargingFactors);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Land);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfAbstraction);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfMeasurement);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.OtherProvisions);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Period);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ProvisionOfInformation);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Quantities);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Records);
+        Assert.NotNull(converted.MeasurementDetails.Maintenance);
+        Assert.Equal("Yes", converted.MeasurementDetails.Maintenance.Maintenance);
+        Assert.Equal("Daily", converted.MeasurementDetails.Maintenance.Frequency);
+        Assert.Equal("JP", converted.MeasurementDetails.Maintenance.ByWhom);
+        Assert.NotNull(converted.MeasurementDetails.ReadingsTaken);
+        Assert.Equal("Yes", converted.MeasurementDetails.ReadingsTaken.ReadingsTaken);
+        Assert.Equal("Fortnightly", converted.MeasurementDetails.ReadingsTaken.Frequency);
+        Assert.Equal("MP", converted.MeasurementDetails.ReadingsTaken.ByWhom);
+        Assert.Equal("On Site", converted.MeasurementDetails.WhereKept);
+        Assert.Equal(480, converted.GeneralComments?.Length);
+        Assert.StartsWith("Licence", converted.GeneralComments);
+        Assert.EndsWith("inspection.", converted.GeneralComments);
+        Assert.StartsWith("Ja", converted.Metadata.FormSentTo);
+        Assert.EndsWith("or", converted.Metadata.FormSentTo);
+        Assert.Equal(new DateOnly(2024, 4, 12), converted.Metadata.Date.Date); 
+        Assert.Equal("12/04/2024", converted.Metadata.Date.RawDate);
+        Assert.Equal("Abstraction Flowmeter", converted.MeasurementDetails.MeterMake);
+        Assert.StartsWith("V", converted.MeasurementDetails.SerialNumber);
+        Assert.EndsWith("2", converted.MeasurementDetails.SerialNumber);
+        Assert.Equal("4,714,612", converted.MeasurementDetails.Reading);
+        Assert.Equal("m3", converted.MeasurementDetails.Units);
+        Assert.Equal("N/A", converted.MeasurementDetails.Other);
+        Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
+        Assert.Equal(new DateOnly(2021, 6, 30), converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
+        Assert.Equal("30/06/2021", converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
+        Assert.Equal("Yes", converted.MeasurementDetails.Calibration);
+        Assert.Equal("No", converted.MeasurementDetails.Conformance);
+        Assert.Equal("Yes", converted.MeasurementDetails.FlowVerification);
+        Assert.Equal("Yes", converted.MeasurementDetails.MeterVerification);
+        Assert.StartsWith("12", converted.LicenceNumber);
+        Assert.EndsWith("8", converted.LicenceNumber);
+        Assert.Equal("Less Critical", converted.InspectionClass);
+        Assert.StartsWith("Sou", converted.Address.NameAndAddress);
+        Assert.EndsWith("NX", converted.Address.NameAndAddress);
+        Assert.StartsWith("07", converted.Address.TelephoneNumber);
+        Assert.EndsWith("86", converted.Address.TelephoneNumber);
+        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.Address.SiteAddress);
+        Assert.StartsWith("Ja", converted.MetWith.Name);
+        Assert.EndsWith("or", converted.MetWith.Name);
+        Assert.Equal("Flow Measurement Coordinator", converted.MetWith.Position);
+        Assert.StartsWith("Ar", converted.InspectingOfficer);
+        Assert.EndsWith("an", converted.InspectingOfficer);
+
+        var expectedDateTime = new DateTime(2024, 3, 4);
+        expectedDateTime = expectedDateTime.AddHours(11);
+        expectedDateTime = expectedDateTime.AddMinutes(20);
+            
+        Assert.Equal(expectedDateTime, converted.InspectionDate.DateTime);
+        Assert.Equal("04/03/2024", converted.InspectionDate.RawDate);
+        Assert.Equal("11:20", converted.InspectionDate.RawTime);
+
+        var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
+        Assert.Equal(2513, json.Length);
+    }
 }

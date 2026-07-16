@@ -164,12 +164,14 @@ public static class Wr51SchemaConverter
             return InOrderStatus.Blank;
         }
 
-        if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.InOrder;
         }
         
-        if (text.Equals("not", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Equals("not", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("X", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.NotInOrder;
         }

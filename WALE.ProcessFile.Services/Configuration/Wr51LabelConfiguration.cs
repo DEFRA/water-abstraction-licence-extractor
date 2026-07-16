@@ -195,7 +195,8 @@ public static class Wr51LabelConfiguration
             {
                 Text =
                 [
-                    new(text) { ColumnMustStartWith = true }
+                    new(text) { ColumnMustStartWith = true },
+                    new(text.Replace(" ", string.Empty)) { ColumnMustStartWith = true }
                 ],
                 Position = LabelPosition.LabelIsBeforeTextToFind,
                 LimitTo = LimitTo.SameColumn,
@@ -203,10 +204,15 @@ public static class Wr51LabelConfiguration
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1,
                 Name = labelName,
+                Remove = [
+                    new(text) // Gets rid of issue of finding 'in' in 'Points'
+                ],
                 Possibilities = [
                     new TextToMatch("N/A"),
                     new TextToMatch("Not"),
-                    new TextToMatch("In")
+                    new TextToMatch("In"),
+                    new TextToMatch("✓"),
+                    new TextToMatch("X")
                 ]
             }
         ];

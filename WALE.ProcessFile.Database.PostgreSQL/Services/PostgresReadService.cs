@@ -2126,10 +2126,24 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         sql.AppendLine(
             """
-              AND data::jsonb
-                  -> 'licenceNumber'
-                  ->> 'value'
-                  ILIKE '%' || @SearchTerm || '%'
+              AND (
+                  data::jsonb
+                      -> 'licenceNumber'
+                      ->> 'value'
+                      ILIKE '%' || @SearchTerm || '%'
+
+                  OR EXISTS (
+                      SELECT 1
+                      FROM jsonb_array_elements(
+                          COALESCE(
+                              data::jsonb -> 'linkedLicences',
+                              '[]'::jsonb
+                          )
+                      ) AS linked_licence
+                      WHERE linked_licence ->> 'licenceNumber'
+                            ILIKE '%' || @SearchTerm || '%'
+                  )
+              )
             """);
 
         parameters.Add("SearchTerm", searchTerm.Trim());

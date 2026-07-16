@@ -51,7 +51,8 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
             new LocalFileService(pdfFolder),
             CacheService,
             regionCode,
-            lineHeight: isAbstractionLicence ? 9 : 6);
+            lineHeight: isAbstractionLicence ? 9 : 6,
+            minimumRowsForDigital: 40);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)

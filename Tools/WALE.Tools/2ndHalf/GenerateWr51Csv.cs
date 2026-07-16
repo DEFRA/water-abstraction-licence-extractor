@@ -136,6 +136,7 @@ public static class GenerateWr51Csv
             new LocalFileService(pdfFolder),
             CacheService,
             GeneralConstants.UnsetRegionCode,
-            lineHeight: 6);
+            lineHeight: 6,
+            minimumRowsForDigital: 40);
     }
 }

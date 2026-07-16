@@ -39,36 +39,43 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const iframeParentRef = useRef<HTMLDivElement>(null);
 
     // Load all data
+    const loadAllData = async () => {
+        try {
+            setLoading(true);
+            
+            // Load data using API client
+            const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+                waleApiClient.matchesResult(fileId),
+                waleApiClient.matchesResultString(fileId),
+                waleApiClient.licence(fileId, processRunId),
+                waleApiClient.licenceSets(fileId),
+                waleApiClient.licenceString(fileId, processRunId),
+            ]);
+
+            if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
+            if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
+            if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
+            if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+            if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
+
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load report');
+            console.error('Error loading report:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const loadAllData = async () => {
-            try {
-                setLoading(true);
-                
-                // Load data using API client
-                const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
-                    waleApiClient.matchesResult(fileId),
-                    waleApiClient.matchesResultString(fileId),
-                    waleApiClient.licence(fileId, processRunId),
-                    waleApiClient.licenceSets(fileId),
-                    waleApiClient.licenceString(fileId, processRunId),
-                ]);
-
-                if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
-                if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
-                if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
-                if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
-                if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
-
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to load report');
-                console.error('Error loading report:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         loadAllData();
     }, [fileId]);
+
+    const handleRefresh = () => {
+        loadAllData();
+        if (onRefresh) {
+            onRefresh();
+        }
+    };
 
     // Helper functions (converted from report.js)
     /*const getText = (dataToUse: any, path: string): string | null => {
@@ -269,7 +276,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     licence={reportData2}
                                     processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
-                                    onRefresh={onRefresh}
+                                    onRefresh={handleRefresh}
                                     outputListDataItem={outputListDataItem}
                                 />
                             </div>

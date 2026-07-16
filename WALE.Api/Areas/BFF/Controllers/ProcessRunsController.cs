@@ -41,9 +41,6 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
     }
 
     [HttpGet("{processRunId:int}")]
-    [ResponseCache(
-        Duration = 3600,
-        VaryByQueryKeys = ["*"])]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)

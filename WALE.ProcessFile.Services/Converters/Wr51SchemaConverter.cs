@@ -6,66 +6,115 @@ namespace WALE.ProcessFile.Services.Converters;
 
 public static class Wr51SchemaConverter
 {
-    public static async Task<Wr51Form> ToFormAsync(MatchesResult matchesResult)
+    public static Wr51Form ToForm(MatchesResult matchesResult)
     {
+        var rawFormDate = GetMultilineText(matchesResult, "Date");
+        DateOnly.TryParse(rawFormDate, out var formDate);
+
+        var rawInspectionDate = GetMultilineText(matchesResult, "InspectionDate");
+        var rawInspectionTime = GetMultilineText(matchesResult, "Time");
+
+        DateTime? inspectionDateTime = null;
+        if (!string.IsNullOrWhiteSpace(rawInspectionDate))
+        {
+            DateTime.TryParse($"{rawInspectionDate} {rawInspectionTime}", out var tIinspectionDateTime);
+            inspectionDateTime = tIinspectionDateTime;
+        }
+
+        var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, "DateOfCertification");
+        DateOnly.TryParse(rawDateOfCertificateOrRecord, out var dateOfCertificateOrRecord);
+
+        var nameAndAddress = GetMultilineText(matchesResult, "NameAndAddress");
+        var siteAddress = GetMultilineText(matchesResult, "SiteAddress");
+
+        if (siteAddress?.Equals("Same as above", StringComparison.InvariantCultureIgnoreCase) == true
+            || siteAddress?.Equals("As above", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            siteAddress = nameAndAddress;
+        }
+        
         return new Wr51Form
         {
             Metadata = new Wr51FormMetadata
             {
                 DocumentTemplateVerison = GetMultilineText(matchesResult, "DocumentTemplateVersion"),
                 Filename = matchesResult.Filename,
-                IsScan = matchesResult.ScannedFile
+                IsScan = matchesResult.ScannedFile,
+                FormSentTo = GetMultilineText(matchesResult, "FormSentTo"),
+                Date = new Wr51FormInspectionDate
+                {
+                    RawDate = rawFormDate,
+                    Date = formDate   
+                }
             },
             LicenceNumber = GetMultilineText(matchesResult, "LicenceNumber"),
             InspectionClass = GetMultilineText(matchesResult, "InspectionClass"),
-            NameAndAddress = GetMultilineText(matchesResult, "NameAndAddress"),
-            TelephoneNumber = GetMultilineText(matchesResult, "TelephoneNumber"),
-            SiteAddress = GetMultilineText(matchesResult, "SiteAddress"),
-            MetWith = GetMultilineText(matchesResult, "MetWith"),
-            MetWithsPosition = GetMultilineText(matchesResult, "Position"),
+            Address = new Wr51FormAddress
+            {
+                NameAndAddress = nameAndAddress,
+                TelephoneNumber = GetMultilineText(matchesResult, "TelephoneNumber"),
+                SiteAddress = siteAddress      
+            },
+            MetWith = new Wr51FormMetWith
+            {
+                Name = GetMultilineText(matchesResult, "MetWith"),
+                Position = GetMultilineText(matchesResult, "Position"),                
+            },
             InspectingOfficer = GetMultilineText(matchesResult, "InspectingOfficer"),
-            InspectionDate = GetMultilineText(matchesResult, "InspectionDate"),
-            InspectionTime = GetMultilineText(matchesResult, "Time"),
-            SourceOfSupply = GetInOrderStatus(matchesResult, "SourceOfSupply"),
-            Purposes = GetInOrderStatus(matchesResult, "Purposes"),
-            PointOfAbstraction = GetInOrderStatus(matchesResult, "PointOfAbstraction"),
-            SpecialConditions = GetInOrderStatus(matchesResult, "SpecialConditions"),
-            ChargingFactors = GetInOrderStatus(matchesResult, "ChargingFactors"),
-            Land = GetInOrderStatus(matchesResult, "Land"),
-            MeansOfAbstraction = GetInOrderStatus(matchesResult, "MeansOfAbstraction"),
-            MeansOfMeasurement = GetInOrderStatus(matchesResult, "MeansOfMeasurement"),
-            ProvisionOfInformation = GetInOrderStatus(matchesResult, "ProvisionOfInformation"),
-            Quantities = GetInOrderStatus(matchesResult, "Quantities"),
-            Records = GetInOrderStatus(matchesResult, "Records"),
-            OtherProvisions = GetInOrderStatus(matchesResult, "OtherProvisions"),
-            Period = GetInOrderStatus(matchesResult, "Period"),
-            MeterMake = GetMultilineText(matchesResult, "MeterMake"),
-            SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
-            Reading = GetMultilineText(matchesResult, "Reading"),
-            Units = GetMultilineText(matchesResult, "Units"),
-            Other = GetMultilineText(matchesResult, "Other"),
-            CertificatesOrRecordsAvailableFor = GetMultilineText(matchesResult, "CertificatesOfRecords"),
-            DateOfCertificateOrRecord = GetMultilineText(matchesResult, "DateOfCertification"),
-            Calibration = GetMultilineText(matchesResult, "Calibration"),
-            Conformance = GetMultilineText(matchesResult, "Conformance"),
-            FlowVerification = GetMultilineText(matchesResult, "FlowVerification"),
-            MeterVerification = GetMultilineText(matchesResult, "MeterVerification"),
-            Maintenance = new Wr51FormMaintenance
+            InspectionDate = new Wr51FormInspectionDateTime
             {
-                Maintenance = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance"),
-                Frequency = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineFrequency"),
-                ByWhom = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineByWhom")
+                DateTime = inspectionDateTime,
+                RawDate = rawInspectionDate,
+                RawTime = rawInspectionTime
             },
-            ReadingsTaken = new Wr51FormReadingsTaken
+            LicenceProvisions = new Wr51FormLicenceProvisions
             {
-                ReadingsTaken = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken"),
-                Frequency = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineFrequency"),
-                ByWhom = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineByWhom")
+                SourceOfSupply = GetInOrderStatus(matchesResult, "SourceOfSupply"),
+                Purposes = GetInOrderStatus(matchesResult, "Purposes"),
+                PointOfAbstraction = GetInOrderStatus(matchesResult, "PointOfAbstraction"),
+                SpecialConditions = GetInOrderStatus(matchesResult, "SpecialConditions"),
+                ChargingFactors = GetInOrderStatus(matchesResult, "ChargingFactors"),
+                Land = GetInOrderStatus(matchesResult, "Land"),
+                MeansOfAbstraction = GetInOrderStatus(matchesResult, "MeansOfAbstraction"),
+                MeansOfMeasurement = GetInOrderStatus(matchesResult, "MeansOfMeasurement"),
+                ProvisionOfInformation = GetInOrderStatus(matchesResult, "ProvisionOfInformation"),
+                Quantities = GetInOrderStatus(matchesResult, "Quantities"),
+                Records = GetInOrderStatus(matchesResult, "Records"),
+                OtherProvisions = GetInOrderStatus(matchesResult, "OtherProvisions"),
+                Period = GetInOrderStatus(matchesResult, "Period")
             },
-            WhereKept = GetMultilineText(matchesResult, "WhereKept"),
-            GeneralComments = GetMultilineText(matchesResult, "GeneralComments"),
-            FormSentTo = GetMultilineText(matchesResult, "FormSentTo"),
-            Date = GetMultilineText(matchesResult, "Date")
+            MeasurementDetails = new Wr51FormMeasurementDetails
+                {
+                MeterMake = GetMultilineText(matchesResult, "MeterMake"),
+                SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
+                Reading = GetMultilineText(matchesResult, "Reading"),
+                Units = GetMultilineText(matchesResult, "Units"),
+                Other = GetMultilineText(matchesResult, "Other"),
+                CertificatesOrRecordsAvailableFor = GetMultilineText(matchesResult, "CertificatesOfRecords"),
+                DateOfCertificateOrRecord = new Wr51FormInspectionDate
+                {
+                    Date = dateOfCertificateOrRecord,
+                    RawDate = rawDateOfCertificateOrRecord
+                },
+                Calibration = GetMultilineText(matchesResult, "Calibration"),
+                Conformance = GetMultilineText(matchesResult, "Conformance"),
+                FlowVerification = GetMultilineText(matchesResult, "FlowVerification"),
+                MeterVerification = GetMultilineText(matchesResult, "MeterVerification"),
+                Maintenance = new Wr51FormMaintenance
+                {
+                    Maintenance = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance"),
+                    Frequency = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineFrequency"),
+                    ByWhom = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineByWhom")
+                },
+                ReadingsTaken = new Wr51FormReadingsTaken
+                {
+                    ReadingsTaken = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken"),
+                    Frequency = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineFrequency"),
+                    ByWhom = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineByWhom")
+                },
+                WhereKept = GetMultilineText(matchesResult, "WhereKept")
+            },
+            GeneralComments = GetMultilineText(matchesResult, "GeneralComments")
         };
     }
 

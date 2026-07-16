@@ -1,10 +1,10 @@
+using System.Text.Json;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
@@ -21,24 +21,6 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 1")]
 public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
-    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
-        new(TestConfig.PostgresHost,
-            TestConfig.PostgresPort,
-            TestConfig.PostgresDbName,
-            TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
-    
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
-
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
-    
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -56,151 +38,14 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         DocumentService,
         DocnetAlternativeDocumentService);
     
-    private static readonly int NoneNeRegionCode = 1;
-    private static readonly int NeRegionCode = 3;
-    
-    private static Dictionary<string, DmsFileData> FileLicenceMapping =>
-        new()
-        {
-            { 
-                FormattingHelper.StripForComparison("25 68 001 247", NoneNeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("25 68 001 248", NoneNeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("NE/026/0034/052", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
-                }
-            }
-        };
-    
-    private static Dictionary<string, DmsFileData> FileLicenceMappingWithout52 =>
-        new()
-        {
-            { 
-                FormattingHelper.StripForComparison("25 68 001 247", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("25 68 001 248", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
-                }
-            }
-        };
-    
-    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
-    {
-        LiveLicences = [
-            "2568001247",
-            "2568001249"
-        ],
-        LapsedLicences = [],
-        ExpiredLicences = [],
-        RevokedLicences = [],
-        ImpoundmentLicences = []
-    };
-    
-    private static readonly Dictionary<string, List<NaldData>> NaldData = GetNaldData();
-
-    private static Dictionary<string, List<NaldData>> GetNaldData()
-    {
-        var returnList = new Dictionary<string, List<NaldData>>
-        {
-            {
-                "1|2568001247",
-                [
-                    new NaldData
-                    {
-                        AsrcCode = "G",
-                        LicenceNumber = "25/68/001/247"
-                    }
-                ]
-            },
-            {
-                "1|2568001248",
-                [
-                    new NaldData
-                    {
-                        AsrcCode = "S",
-                        LicenceNumber = "25/68/001/248"
-                    }
-                ]
-            },
-            {
-                "1|2568001249",
-                [
-                    new NaldData
-                    {
-                        AsrcCode = "S",
-                        LicenceNumber = "25/68/001/249"
-                    }
-                ]
-            }
-        };
-
-        return returnList;
-    }
-
     private async Task<LookupConfiguration> LookupConfigurationAsync(
         int regionCode,
-        int fileLicenceMapping,
         string pdfFolder,
         bool isAbstractionLicence = true)
     {
         return new LookupConfiguration(
             isAbstractionLicence ? WalLabelConfiguration.GetLabels() : Wr51LabelConfiguration.GetLabels(),
-            fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
+            [],
             [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
@@ -209,7 +54,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
             lineHeight: isAbstractionLicence ? 9 : 6);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
         var isWr51 = folderNumber == -99;
         
@@ -221,7 +66,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         return await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder, !isWr51),
+            await LookupConfigurationAsync(regionCode, pdfFolder, !isWr51),
             [fileName],
             0);
     }
@@ -489,67 +334,78 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
 
-        var converted = await Wr51SchemaConverter.ToFormAsync(resultFull);
+        var converted = Wr51SchemaConverter.ToForm(resultFull);
         Assert.NotNull(converted);
         Assert.NotNull(converted.Metadata);
         Assert.Equal("2026_07_10_v1", converted.Metadata.DocumentTemplateVerison);
         Assert.Equal("WR51__121014G8__dummy.pdf", converted.Metadata.Filename);
         Assert.Equal(false, converted.Metadata.IsScan);
-        Assert.Equal(InOrderStatus.InOrder, converted.SourceOfSupply);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.Purposes);
-        Assert.Equal(InOrderStatus.InOrder, converted.PointOfAbstraction);
-        Assert.Equal(InOrderStatus.NotApplicable, converted.SpecialConditions);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.ChargingFactors);
-        Assert.Equal(InOrderStatus.InOrder, converted.Land);
-        Assert.Equal(InOrderStatus.InOrder, converted.MeansOfAbstraction);
-        Assert.Equal(InOrderStatus.InOrder, converted.MeansOfMeasurement);
-        Assert.Equal(InOrderStatus.NotApplicable, converted.OtherProvisions);
-        Assert.Equal(InOrderStatus.InOrder, converted.Period);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.ProvisionOfInformation);
-        Assert.Equal(InOrderStatus.InOrder, converted.Quantities);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.Records);
-        Assert.NotNull(converted.Maintenance);
-        Assert.Equal("Yes", converted.Maintenance.Maintenance);
-        Assert.Equal("Daily", converted.Maintenance.Frequency);
-        Assert.Equal("JP", converted.Maintenance.ByWhom);
-        Assert.NotNull(converted.ReadingsTaken);
-        Assert.Equal("Yes", converted.ReadingsTaken.ReadingsTaken);
-        Assert.Equal("Fortnightly", converted.ReadingsTaken.Frequency);
-        Assert.Equal("MP", converted.ReadingsTaken.ByWhom);
-        Assert.Equal("On Site", converted.WhereKept);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.SourceOfSupply);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Purposes);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.PointOfAbstraction);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.SpecialConditions);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ChargingFactors);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Land);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfAbstraction);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfMeasurement);
+        Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.OtherProvisions);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Period);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ProvisionOfInformation);
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Quantities);
+        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.Records);
+        Assert.NotNull(converted.MeasurementDetails.Maintenance);
+        Assert.Equal("Yes", converted.MeasurementDetails.Maintenance.Maintenance);
+        Assert.Equal("Daily", converted.MeasurementDetails.Maintenance.Frequency);
+        Assert.Equal("JP", converted.MeasurementDetails.Maintenance.ByWhom);
+        Assert.NotNull(converted.MeasurementDetails.ReadingsTaken);
+        Assert.Equal("Yes", converted.MeasurementDetails.ReadingsTaken.ReadingsTaken);
+        Assert.Equal("Fortnightly", converted.MeasurementDetails.ReadingsTaken.Frequency);
+        Assert.Equal("MP", converted.MeasurementDetails.ReadingsTaken.ByWhom);
+        Assert.Equal("On Site", converted.MeasurementDetails.WhereKept);
         Assert.Equal(480, converted.GeneralComments?.Length);
         Assert.StartsWith("Licence", converted.GeneralComments);
         Assert.EndsWith("inspection.", converted.GeneralComments);
-        Assert.StartsWith("Ja", converted.FormSentTo);
-        Assert.EndsWith("or", converted.FormSentTo);
-        Assert.Equal("12/04/2024", converted.Date);
-        Assert.Equal("Abstraction Flowmeter", converted.MeterMake);
-        Assert.StartsWith("V", converted.SerialNumber);
-        Assert.EndsWith("2", converted.SerialNumber);
-        Assert.Equal("4,714,612", converted.Reading);
-        Assert.Equal("m3", converted.Units);
-        Assert.Equal("N/A", converted.Other);
-        Assert.Equal("N/A", converted.CertificatesOrRecordsAvailableFor);
-        Assert.Equal("30/06/2021", converted.DateOfCertificateOrRecord);
-        Assert.Equal("Yes", converted.Calibration);
-        Assert.Equal("No", converted.Conformance);
-        Assert.Equal("Yes", converted.FlowVerification);
-        Assert.Equal("Yes", converted.MeterVerification);
+        Assert.StartsWith("Ja", converted.Metadata.FormSentTo);
+        Assert.EndsWith("or", converted.Metadata.FormSentTo);
+        Assert.Equal(new DateOnly(2024, 4, 12), converted.Metadata.Date.Date); 
+        Assert.Equal("12/04/2024", converted.Metadata.Date.RawDate);
+        Assert.Equal("Abstraction Flowmeter", converted.MeasurementDetails.MeterMake);
+        Assert.StartsWith("V", converted.MeasurementDetails.SerialNumber);
+        Assert.EndsWith("2", converted.MeasurementDetails.SerialNumber);
+        Assert.Equal("4,714,612", converted.MeasurementDetails.Reading);
+        Assert.Equal("m3", converted.MeasurementDetails.Units);
+        Assert.Equal("N/A", converted.MeasurementDetails.Other);
+        Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
+        Assert.Equal(new DateOnly(2021, 6, 30), converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
+        Assert.Equal("30/06/2021", converted.MeasurementDetails.DateOfCertificateOrRecord.RawDate);
+        Assert.Equal("Yes", converted.MeasurementDetails.Calibration);
+        Assert.Equal("No", converted.MeasurementDetails.Conformance);
+        Assert.Equal("Yes", converted.MeasurementDetails.FlowVerification);
+        Assert.Equal("Yes", converted.MeasurementDetails.MeterVerification);
         Assert.StartsWith("12", converted.LicenceNumber);
         Assert.EndsWith("8", converted.LicenceNumber);
         Assert.Equal("Less Critical", converted.InspectionClass);
-        Assert.StartsWith("Sou", converted.NameAndAddress);
-        Assert.EndsWith("NX", converted.NameAndAddress);
-        Assert.StartsWith("07", converted.TelephoneNumber);
-        Assert.EndsWith("86", converted.TelephoneNumber);
-        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.SiteAddress);
-        Assert.StartsWith("Ja", converted.MetWith);
-        Assert.EndsWith("or", converted.MetWith);
-        Assert.Equal("Flow Measurement Coordinator", converted.MetWithsPosition);
+        Assert.StartsWith("Sou", converted.Address.NameAndAddress);
+        Assert.EndsWith("NX", converted.Address.NameAndAddress);
+        Assert.StartsWith("07", converted.Address.TelephoneNumber);
+        Assert.EndsWith("86", converted.Address.TelephoneNumber);
+        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.Address.SiteAddress);
+        Assert.StartsWith("Ja", converted.MetWith.Name);
+        Assert.EndsWith("or", converted.MetWith.Name);
+        Assert.Equal("Flow Measurement Coordinator", converted.MetWith.Position);
         Assert.StartsWith("Ar", converted.InspectingOfficer);
         Assert.EndsWith("an", converted.InspectingOfficer);
-        Assert.Equal("04/03/2024", converted.InspectionDate);
-        Assert.Equal("11:20", converted.InspectionTime);
+
+        var expectedDateTime = new DateTime(2024, 3, 4);
+        expectedDateTime = expectedDateTime.AddHours(11);
+        expectedDateTime = expectedDateTime.AddMinutes(20);
+            
+        Assert.Equal(expectedDateTime, converted.InspectionDate.DateTime);
+        Assert.Equal("04/03/2024", converted.InspectionDate.RawDate);
+        Assert.Equal("11:20", converted.InspectionDate.RawTime);
+
+        var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
+        Assert.Equal(2513, json.Length);
     }
     
     [Fact]

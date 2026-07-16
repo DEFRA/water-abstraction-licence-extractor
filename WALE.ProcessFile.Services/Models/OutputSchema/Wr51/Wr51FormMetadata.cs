@@ -7,4 +7,8 @@ public class Wr51FormMetadata
     public string? DocumentTemplateVerison { get; set; }
     
     public bool? IsScan { get; set; }
+    
+    public string? FormSentTo { get; set; }
+
+    public Wr51FormInspectionDate Date { get; set; } = new();
 }

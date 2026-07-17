@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Globalization;
+using System.IO.Compression;
 using System.Text;
 using CsvHelper;
 using WALE.ProcessFile.Core.Configuration;
@@ -44,9 +45,10 @@ public static class GenerateWr51Csv
         ConsoleHelper.WriteLine("Started generating wr51s csv");
         
         var filesInDirectory = Directory.GetFiles(folderPath);
-
+        var uniqueFolder = $"WR51-{DateTime.Today:yyyyMMdd}";
+        
         await using var writer = new StreamWriter(
-            $"WR51-{DateTime.Today:yyyyMMdd}.csv",
+            $"{uniqueFolder}.csv",
             false,
             Encoding.Unicode);
         
@@ -156,6 +158,8 @@ public static class GenerateWr51Csv
                 MeasurementDetails__WhereKept = parsedForm.MeasurementDetails.WhereKept
             });
         }
+        
+        await ZipFile.CreateFromDirectoryAsync("Images", $"{uniqueFolder}-images.zip");
         
         await csv.WriteRecordsAsync((IEnumerable)lines);
         ConsoleHelper.WriteLine("Finished generating wr51s csv");

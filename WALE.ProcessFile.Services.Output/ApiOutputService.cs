@@ -559,7 +559,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return licenceSectionVerifications;
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync()
     {
         var path = $"/BFF/FileData/GetLatestLicenceSectionVerifications";
         
@@ -576,6 +576,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }
         
         return licenceSectionVerifications;
+    }
+
+    public Task<(Dictionary<Guid, List<LicenceSectionVerification>> VerificationsByFileId, Dictionary<string, List<LicenceSectionVerification>> VerificationsByItemId)> GetVerificationLookupsAsync()
+    {
+        throw new NotImplementedException();
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)

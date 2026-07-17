@@ -90,7 +90,7 @@ public interface IDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync();
 
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 

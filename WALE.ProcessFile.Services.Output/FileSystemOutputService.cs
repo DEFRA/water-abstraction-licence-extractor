@@ -326,7 +326,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(Dictionary<Guid, List<LicenceSectionVerification>> VerificationsByFileId, Dictionary<string, List<LicenceSectionVerification>> VerificationsByItemId)> GetVerificationLookupsAsync()
     {
         throw new NotImplementedException();
     }

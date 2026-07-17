@@ -48,15 +48,14 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var completeNumber = 1;
         var fileNumber = 1;
         
-        var allLatestLicenceSectionVerificationsTask =
-            outputService.GetLatestLicenceSectionVerificationsAsync();
+        var allVerificationsTask = outputService.GetAllVerificationsAsync();
 
         var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var licences = await outputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences); 
         
         var allLatestLicenceSectionVerifications =
-            (await allLatestLicenceSectionVerificationsTask).ToList();
+            (await allVerificationsTask).ToList();
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)

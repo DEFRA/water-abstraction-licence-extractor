@@ -35,8 +35,15 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             .Where(x => x.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) == true)
             .ToList();
 
-        ProcessOutgoingVerifications(verifications, listRow, outgoingLinkedLicences);
-        ProcessIncomingVerifications(invertedVerifications, incomingOnlyLinkedLicences);
+        if (hasOutgoingVerifications)
+        {
+            ProcessOutgoingVerifications(outgoingVerifications!, listRow, outgoingLinkedLicences);
+        }
+
+        if (hasIncomingVerifications)
+        {
+            ProcessIncomingVerifications(incomingVerifications!, incomingOnlyLinkedLicences);
+        }
 
         listRow.linkedLicences = incomingOnlyLinkedLicences
             .Union(outgoingLinkedLicences)
@@ -48,10 +55,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         OutputListDataItem listRow,
         List<LinkedLicence> outgoingLinkedLicences)
     {
-        HashSet<string> licenceNumbersSeen = [];
-
         var orderedVerifications = verifications
-            .OrderByDescending(v => v.CreatedDateTimeUtc)
+            .OrderBy(v => v.CreatedDateTimeUtc)
             .ToList();
 
         if (orderedVerifications.Count == 0)
@@ -59,38 +64,21 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             return;
         }
 
-        var firstVerification = orderedVerifications[0];
-
-        if (firstVerification.LicenceSectionItemId == NoneOutgoing)
-        {
-            foreach (var verification in orderedVerifications[1..])
-            {
-                listRow.latestLicenceSectionVerifications!.Remove(verification);
-            }
-
-            if (firstVerification.ProcessRunId < listRow.processRunId && outgoingLinkedLicences.Count > 0)
-            {
-                firstVerification.ScrapedDataIsDifferent = true;
-            }
-
-            outgoingLinkedLicences.Clear();
-            return;
-        }
-
         foreach (var verification in orderedVerifications)
         {
             if (verification.LicenceSectionItemId == NoneOutgoing)
             {
-                listRow.latestLicenceSectionVerifications!.Remove(verification);
+                if (outgoingLinkedLicences.Count > 0)
+                {
+                    // Flag this because the verification confirmed there are zero LLs but actually there are some
+                    verification.ScrapedDataIsDifferent = true; 
+                    outgoingLinkedLicences.Clear();
+                }
+
                 continue;
             }
 
-            // Skip processing older verifications for the same licence number
-            if (!licenceNumbersSeen.Add(verification.LicenceSectionItemId!))
-            {
-                continue;
-            }
-
+            // Apply flag check
             if (verification.ProcessRunId < listRow.processRunId)
             {
                 var wasScrapedThisRun = (listRow.linkedLicences ?? [])
@@ -102,20 +90,19 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
                 verification.ScrapedDataIsDifferent = wasScrapedThisRun != wasScrapedOnVerificationRun;
             }
-
-            //todo: calculate effective verification type (for multi's)
-
+            
+            // Apply verification
             try
             {
                 var json = verification.LicenceSectionOverrideValue
                            ?? verification.LicenceSectionSnapshotValue
                            ?? verification.LicenceSectionScrapedValue;
 
-                LinkedLicence? overrideLicence = null;
+                LinkedLicence? verificationLicence = null;
 
                 if (!string.IsNullOrEmpty(json))
                 {
-                    overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
+                    verificationLicence = JsonSerializer.Deserialize<LinkedLicence>(
                         json,
                         JsonHelper.GetSerializerOptions());
                 }
@@ -128,9 +115,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 {
                     case "Confirmed":
                     case "AutoConfirm":
-                        if (existingLinkedLicence == null && overrideLicence != null)
+                        if (existingLinkedLicence == null && verificationLicence != null)
                         {
-                            outgoingLinkedLicences.Add(overrideLicence);
+                            outgoingLinkedLicences.Add(verificationLicence);
                         }
                         else if (verification.ScrapedDataIsDifferent)
                         {
@@ -139,9 +126,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                                 outgoingLinkedLicences.Remove(existingLinkedLicence);
                             }
 
-                            if (overrideLicence != null)
+                            if (verificationLicence != null)
                             {
-                                outgoingLinkedLicences.Add(overrideLicence);
+                                outgoingLinkedLicences.Add(verificationLicence);
                             }
                         }
 
@@ -160,9 +147,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                             outgoingLinkedLicences.Remove(existingLinkedLicence);
                         }
 
-                        if (overrideLicence != null)
+                        if (verificationLicence != null)
                         {
-                            outgoingLinkedLicences.Add(overrideLicence);
+                            outgoingLinkedLicences.Add(verificationLicence);
                         }
 
                         break;
@@ -176,7 +163,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     }
 
     private static void ProcessIncomingVerifications(
-        IEnumerable<InvertedLicenceSectionVerification> invertedVerifications,
+        IEnumerable<LicenceSectionVerification> invertedVerifications,
         List<LinkedLicence> incomingOnlyLinkedLicences)
     {
         var orderedInvertedVerifications = invertedVerifications

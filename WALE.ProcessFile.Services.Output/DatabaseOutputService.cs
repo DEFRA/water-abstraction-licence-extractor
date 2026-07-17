@@ -318,24 +318,27 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId);
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
     {
-        return databaseReadService.GetAllVerificationsAsync();
+        return databaseReadService.GetAllVerificationsAsync(maxProcessRunId);
     }
 
-    public async
-        Task<(Dictionary<Guid, List<LicenceSectionVerification>> VerificationsByFileId,
-            Dictionary<string, List<LicenceSectionVerification>> VerificationsByItemId)>
-        GetVerificationLookupsAsync()
+    public async Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
     {
-        var all = (await GetAllVerificationsAsync()).ToList();
-        var byFileId = all.GroupBy(v => v.LicenceFileId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-        var byItemId = all.GroupBy(v => v.LicenceSectionItemId)
-            .Where(g => g.Key != null)
-            .ToDictionary(g => g.Key!, g => g.ToList());
-        
-        return (byFileId, byItemId);
+        var all = (await GetAllVerificationsAsync(maxProcessRunId)).ToList();
+
+        return all
+                .Where(v => !string.IsNullOrEmpty(v.LicenceSectionName))
+                .GroupBy(v => v.LicenceSectionName)
+                .ToDictionary(g => g.Key!, g =>
+                    new LicenceVerificationLookups
+                    {
+                        ByFileId = g.GroupBy(v => v.LicenceFileId)
+                            .ToDictionary(gf => gf.Key, gf => gf.ToList()),
+                        ByItemId = g.GroupBy(v => v.LicenceSectionItemId)
+                            .Where(gi => gi.Key != null)
+                            .ToDictionary(gi => gi.Key!, gi => gi.ToList())
+                    });
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)

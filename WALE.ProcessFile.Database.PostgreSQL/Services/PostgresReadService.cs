@@ -1669,7 +1669,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { LicenceFileId = licenceFileId });
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1686,6 +1686,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
+                           WHERE process_run_id <= @MaxProcessRunId
                            ORDER BY 
                                licence_file_id, 
                                licence_section_name, 
@@ -1696,7 +1697,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return await QueryAsync<LicenceSectionVerification>(
             connection,
             sql,
-            0);
+            0,
+            new { MaxProcessRunId = maxProcessRunId });
     }
 
     public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)

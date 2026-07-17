@@ -93,11 +93,9 @@ public interface IOutputService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
 
-    Task<(Dictionary<Guid, List<LicenceSectionVerification>> VerificationsByFileId,
-            Dictionary<string, List<LicenceSectionVerification>> VerificationsByItemId)>
-        GetVerificationLookupsAsync();
+    Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 

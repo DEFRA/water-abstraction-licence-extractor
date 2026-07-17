@@ -48,14 +48,13 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var completeNumber = 1;
         var fileNumber = 1;
         
-        var allVerificationsTask = outputService.GetAllVerificationsAsync();
+        var verificationsBySectionTask = outputService.GetVerificationLookupsBySectionNameAsync(processRunId);
 
         var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var licences = await outputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences); 
         
-        var allLatestLicenceSectionVerifications =
-            (await allVerificationsTask).ToList();
+        var verificationsBySection = await verificationsBySectionTask;
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
@@ -70,7 +69,7 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
             processRunId,
-            allLatestLicenceSectionVerifications);
+            verificationsBySection);
 
         // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.ShortLicenceSetId))

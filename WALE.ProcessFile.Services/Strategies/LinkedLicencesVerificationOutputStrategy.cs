@@ -10,22 +10,29 @@ namespace WALE.ProcessFile.Services.Strategies;
 public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrategy
 {
     private const string NoneOutgoing = "None Outgoing";
-    
+
     public string SectionName => "Linked Licences";
 
-    public void HandleVerifications(
-        IEnumerable<LicenceSectionVerification> verifications,
-        OutputListDataItem listRow,
-        IEnumerable<InvertedLicenceSectionVerification> invertedVerifications)
+    public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
+        Guid fileId, string licenceNumber)
     {
+        var hasOutgoingVerifications = 
+            verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
+        
+        var hasIncomingVerifications =
+            verificationLookups.ByItemId.TryGetValue(licenceNumber, out var incomingVerifications);
+
+        if (!hasOutgoingVerifications && !hasIncomingVerifications)
+        {
+            return;
+        }
+
         var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
-            .Where(x => x.ContainedIn?.All(
-                c => c.Direction != InformationDirection.Outgoing) == true)
+            .Where(x => x.ContainedIn?.All(c => c.Direction != InformationDirection.Outgoing) == true)
             .ToList();
 
         var outgoingLinkedLicences = (listRow.linkedLicences ?? [])
-            .Where(x => x.ContainedIn?.Any(
-                c => c.Direction == InformationDirection.Outgoing) == true)
+            .Where(x => x.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) == true)
             .ToList();
 
         ProcessOutgoingVerifications(verifications, listRow, outgoingLinkedLicences);
@@ -35,14 +42,14 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             .Union(outgoingLinkedLicences)
             .ToArray();
     }
-    
+
     private static void ProcessOutgoingVerifications(
         IEnumerable<LicenceSectionVerification> verifications,
         OutputListDataItem listRow,
         List<LinkedLicence> outgoingLinkedLicences)
     {
         HashSet<string> licenceNumbersSeen = [];
-        
+
         var orderedVerifications = verifications
             .OrderByDescending(v => v.CreatedDateTimeUtc)
             .ToList();
@@ -53,7 +60,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         }
 
         var firstVerification = orderedVerifications[0];
-        
+
         if (firstVerification.LicenceSectionItemId == NoneOutgoing)
         {
             foreach (var verification in orderedVerifications[1..])
@@ -65,7 +72,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 firstVerification.ScrapedDataIsDifferent = true;
             }
-            
+
             outgoingLinkedLicences.Clear();
             return;
         }
@@ -90,22 +97,22 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
                               && x.ContainedIn != null
                               && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
-                
+
                 var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
 
                 verification.ScrapedDataIsDifferent = wasScrapedThisRun != wasScrapedOnVerificationRun;
             }
-            
+
             //todo: calculate effective verification type (for multi's)
 
             try
             {
                 var json = verification.LicenceSectionOverrideValue
-                   ?? verification.LicenceSectionSnapshotValue
-                   ?? verification.LicenceSectionScrapedValue;
+                           ?? verification.LicenceSectionSnapshotValue
+                           ?? verification.LicenceSectionScrapedValue;
 
                 LinkedLicence? overrideLicence = null;
-                
+
                 if (!string.IsNullOrEmpty(json))
                 {
                     overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
@@ -167,7 +174,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             }
         }
     }
-    
+
     private static void ProcessIncomingVerifications(
         IEnumerable<InvertedLicenceSectionVerification> invertedVerifications,
         List<LinkedLicence> incomingOnlyLinkedLicences)
@@ -175,18 +182,18 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         var orderedInvertedVerifications = invertedVerifications
             .OrderByDescending(v => v.Verification.CreatedDateTimeUtc)
             .ToList();
-        
+
         foreach (var invertedVerification in orderedInvertedVerifications)
         {
             try
             {
                 var verification = invertedVerification.Verification;
                 var json = verification.LicenceSectionOverrideValue
-                   ?? verification.LicenceSectionSnapshotValue
-                   ?? verification.LicenceSectionScrapedValue;
+                           ?? verification.LicenceSectionSnapshotValue
+                           ?? verification.LicenceSectionScrapedValue;
 
                 LinkedLicence? overrideLicence = null;
-                
+
                 if (!string.IsNullOrEmpty(json))
                 {
                     overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
@@ -201,7 +208,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 }
 
                 var existingLinkedLicence =
-                    incomingOnlyLinkedLicences.FirstOrDefault(x => x.LicenceNumber == invertedVerification.SourceLicenceNumber);
+                    incomingOnlyLinkedLicences.FirstOrDefault(x =>
+                        x.LicenceNumber == invertedVerification.SourceLicenceNumber);
 
                 switch (verification.VerificationType)
                 {

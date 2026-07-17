@@ -390,8 +390,23 @@ public class DatabaseOutputService(
             {
                 var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licenceId = (int)l.NoneSchemaData["licenceId"]!;
-                    return licenceId == licenceSetLicence.LicenceId || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
+                    if (!l.NoneSchemaData.TryGetValue("licenceId", out var licenceIdObj))
+                    {
+                        return false;
+                    }
+
+                    int licenceId;
+                    if (licenceIdObj is JsonElement jsonElement)
+                    {
+                        licenceId = jsonElement.GetInt32();
+                    }
+                    else
+                    {
+                        licenceId = (int)licenceIdObj!;
+                    }
+                    
+                    return licenceId == licenceSetLicence.LicenceId
+                        || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
                 });
 
                 if (licence == null)

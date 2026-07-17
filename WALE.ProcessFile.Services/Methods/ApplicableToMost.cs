@@ -452,7 +452,7 @@ public static class ApplicableToMost
             
             var tWords = DocumentLineColumn.FilterWordsFromText(
                 inputWords,
-                outputText!); // TODO see why this function makes 'In' into 'in'
+                outputText!);
 
             if (request.isOcr)
             {

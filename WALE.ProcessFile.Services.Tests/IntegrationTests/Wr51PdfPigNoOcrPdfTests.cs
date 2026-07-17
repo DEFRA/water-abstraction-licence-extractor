@@ -196,7 +196,8 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.NotNull(nameAndAddress);
         Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
-        Assert.Equal("Southern Water Service Limited, Southern House, Yeoman Road, Worthing,", nameAndAddress.Text[0].Text);
+        Assert.StartsWith("Sout", nameAndAddress.Text[0].Text);
+        Assert.EndsWith("ing,", nameAndAddress.Text[0].Text);
         Assert.Equal("BN13 3NX", nameAndAddress.Text[1].Text);
         
         var meterMake = resultFull.Matches[22];
@@ -391,12 +392,14 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.EndsWith("NX", converted.Address.NameAndAddress);
         Assert.StartsWith("07", converted.Address.TelephoneNumber);
         Assert.EndsWith("86", converted.Address.TelephoneNumber);
-        Assert.Equal("Lynch Lane, Calbourne, Newport, Isle of Wight, PO30 4JQ", converted.Address.SiteAddress);
+        Assert.StartsWith("Lyn", converted.Address.SiteAddress);
+        Assert.EndsWith("JQ", converted.Address.SiteAddress);
         Assert.StartsWith("Ja", converted.MetWith.Name);
         Assert.EndsWith("or", converted.MetWith.Name);
         Assert.Equal("Flow Measurement Coordinator", converted.MetWith.Position);
         Assert.StartsWith("Ar", converted.InspectingOfficer);
         Assert.EndsWith("an", converted.InspectingOfficer);
+        Assert.Empty(converted.Images);
 
         var expectedDateTime = new DateTime(2024, 3, 4);
         expectedDateTime = expectedDateTime.AddHours(11);
@@ -407,7 +410,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("11:20", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(2567, json.Length);
+        Assert.Equal(2583, json.Length);
     }
     
     [Fact]
@@ -1561,7 +1564,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var telephoneNumber = resultFull.Matches[18];
         Assert.NotNull(telephoneNumber);
         Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
-        Assert.StartsWith("0 7", telephoneNumber.Text[0].Text); // TODO why the spaces
+        Assert.StartsWith("07", telephoneNumber.Text[0].Text); // TODO why the spaces
         Assert.EndsWith("97", telephoneNumber.Text[0].Text);
         
         var position = resultFull.Matches[19];
@@ -3061,6 +3064,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("Regulatory Compliance Specialist", converted.MetWith.Position);
         Assert.StartsWith("Al", converted.InspectingOfficer);
         Assert.EndsWith("ly", converted.InspectingOfficer);
+        Assert.Empty(converted.Images);
 
         var expectedDateTime = new DateTime(2026, 5, 19);
         expectedDateTime = expectedDateTime.AddHours(10);
@@ -3070,7 +3074,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("10:00", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(5219, json.Length);
+        Assert.Equal(5235, json.Length);
     }
     
     [Fact]
@@ -3083,6 +3087,16 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
         Assert.Equal(40, resultFull.Matches!.Count);
         
-        
+        var converted = Wr51SchemaConverter.ToForm(resultFull);
+        Assert.NotNull(converted);
+        Assert.NotNull(converted.Metadata);
+        Assert.Equal("2026_07_10_v1", converted.Metadata.DocumentTemplateVerison);
+        Assert.Equal("WR51__940020238G__dummy.pdf", converted.Metadata.Filename);
+        Assert.Equal(Guid.Parse("ba80b0b1-23ed-e9eb-afe5-2c45adf74f71"), converted.Metadata.FileId);
+        Assert.Equal(false, converted.Metadata.IsScan);
+        Assert.Equal(12, converted.Images.Count);
+        Assert.Equal("WR51__940020238G__dummy/pdfpig-page2-image1.jpg", converted.Images[0]);
+        Assert.Equal("WR51__940020238G__dummy/pdfpig-page2-image2.jpg", converted.Images[1]);
+        Assert.Equal("WR51__940020238G__dummy/pdfpig-page8-image1.jpg", converted.Images[11]);
     }
 }

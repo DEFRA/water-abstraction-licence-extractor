@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -44,7 +45,11 @@ public static class GenerateWr51Csv
         
         var filesInDirectory = Directory.GetFiles(folderPath);
 
-        await using var writer = new StreamWriter($"WR51-{DateTime.Today:yyyyMMdd}.csv");
+        await using var writer = new StreamWriter(
+            $"WR51-{DateTime.Today:yyyyMMdd}.csv",
+            false,
+            Encoding.Unicode);
+        
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
 
         var lines = new List<Wr51CsvLine>();
@@ -53,6 +58,48 @@ public static class GenerateWr51Csv
         {
             var internalResults = await GetMatchesAsync(filepath, folderPath);
             var parsedForm = Wr51SchemaConverter.ToForm(internalResults);
+
+            if (parsedForm.Images.Count > 0)
+            {
+                var firstImage = parsedForm.Images.First();
+                var pathParts = firstImage.Split('/');
+                var folderName = pathParts[0];
+                
+                Directory.CreateDirectory($"Images/{folderName}");
+
+                foreach (var image in parsedForm.Images)
+                {
+                    var filenameParts = Path.GetFileNameWithoutExtension(image).Split('-');
+                    var serviceName = filenameParts[0];
+                    var pageNumber = int.Parse(filenameParts[1].Replace("page", string.Empty));
+                    var imageNumber = int.Parse(filenameParts[2].Replace("image", string.Empty));
+
+                    var outputFolder = $"{parsedForm.Metadata.FileId}/{serviceName}/Images";
+                    var partialOutputFilename = $"page-{pageNumber}-image-{imageNumber}";
+
+                    var sourceImages = Directory.GetFiles($"Cache/{outputFolder}");
+                    var sourceImage = sourceImages
+                        .Select(Path.GetFileName)
+                        .Single(f => f!.StartsWith(partialOutputFilename, StringComparison.InvariantCultureIgnoreCase));
+
+                    var sourceFullPath = sourceImages.Single(i => i.Contains(sourceImage!, StringComparison.InvariantCultureIgnoreCase));
+                    var destinationFullPath = $"Images/{image}";
+                    
+                    File.Copy(sourceFullPath, destinationFullPath, true);
+                }
+            }
+
+            var imagesSb = new StringBuilder();
+
+            foreach (var image in parsedForm.Images)
+            {
+                if (imagesSb.Length > 0)
+                {
+                    imagesSb.Append('\n');
+                }
+                
+                imagesSb.Append(image);
+            }
             
             lines.Add(new Wr51CsvLine
             {
@@ -66,6 +113,7 @@ public static class GenerateWr51Csv
                 InspectionClass =  parsedForm.InspectionClass,
                 InspectingOfficer =   parsedForm.InspectingOfficer,
                 GeneralComments =  parsedForm.GeneralComments,
+                Images = imagesSb.Length > 0 ? imagesSb.ToString() : null,
                 Address__NameAndAddress = parsedForm.Address.NameAndAddress,
                 Address__SiteAddress = parsedForm.Address.SiteAddress,
                 Address__TelephoneNumber = parsedForm.Address.TelephoneNumber,

@@ -91,6 +91,28 @@ public static class Wr51SchemaConverter
                 readingsTakenYesNo = "No";
             }
         }
+
+        var images = new List<string>();
+        var pageIndex = 1;
+
+        var filenameNoExtension = Path.GetFileNameWithoutExtension(matchesResult.Filename);
+        
+        foreach (var page in matchesResult.Pages)
+        {
+            for (var idx = 1; idx <= page.NumberOfImages; idx++)
+            {
+                if (pageIndex == 1 && idx == 1)
+                {
+                    // Skip EA Logo
+                    continue;
+                }
+                
+                var imageIndex = pageIndex == 1 && idx >= 2 ? idx - 1 : idx;
+                images.Add($"{filenameNoExtension}/pdfpig-page{pageIndex}-image{imageIndex}.jpg");
+            }
+
+            pageIndex += 1;
+        }
         
         return new Wr51Form
         {
@@ -174,7 +196,8 @@ public static class Wr51SchemaConverter
                 },
                 WhereKept = whereKept
             },
-            GeneralComments = GetMultilineText(matchesResult, "GeneralComments")
+            GeneralComments = GetMultilineText(matchesResult, "GeneralComments"),
+            Images = images
         };
     }
 

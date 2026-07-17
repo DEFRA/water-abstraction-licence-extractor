@@ -101,4 +101,6 @@ public class Wr51CsvLine
     public string? MeasurementDetails__WhereKept { get; set; }
     
     public string? GeneralComments { get; set; }
+    
+    public string? Images { get; set; }
 }

@@ -413,7 +413,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - GetPageLinesAsync took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
         
-        var pageLines = pdfPigPageLines.Select(MinimalTextBlock.FromPdfPigTextBlock).ToList();
+        var pageLines = pdfPigPageLines
+            .Select(MinimalTextBlock.FromPdfPigTextBlock)
+            .ToList();
+        
         var serialisedPageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         
         dtStart = DateTime.Now;
@@ -747,7 +750,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         DocumentLine? previousLine = null;
         
         // Add in missing columns
-        foreach (var line in  returnList)
+        foreach (var line in returnList)
         {
             if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
             {
@@ -760,6 +763,56 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 {
                     line.Columns.Insert(0, new DocumentLineColumn());
                 }
+            }
+            
+            previousLine = line;
+        }
+        
+        //Remove weird spaces in some words
+        foreach (var line in returnList)
+        {
+            foreach (var column in line.Columns)
+            {
+                var countSingleCharWords = column.Words.Count(w => w.Text.Length == 1);
+
+                if (countSingleCharWords < 4)
+                {
+                    continue;
+                }
+                
+                DocumentLineWord? prevWord = null;
+                var totalGapSize = column.Words.Sum(w =>
+                {
+                    if (prevWord == null)
+                    {
+                        prevWord = w;
+                        return 0;
+                    }
+
+                    var gap = w.Coordinates.Left - prevWord.Coordinates.Right;
+                    prevWord = w;
+                    
+                    return gap;
+                });
+
+                if (totalGapSize > (0.3 * column.Words.Count))
+                {
+                    continue;
+                }
+                
+                var originalColumnText = column.Text;
+                var columnText = originalColumnText.Replace(" ", string.Empty);
+                
+                var newWords = new List<DocumentLineWord>
+                {
+                    new(
+                        columnText,
+                        column.OcrConfidence,
+                        column.Words[0].Coordinates,
+                        column.Words[0].HandwrittenOrTyped)
+                };
+
+                column.Words = newWords;
             }
             
             previousLine = line;

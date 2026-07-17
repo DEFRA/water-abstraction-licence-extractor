@@ -20,5 +20,7 @@ public class Wr51Form
     
     public Wr51FormMeasurementDetails MeasurementDetails { get; set; } = new();
     
+    public List<string> Images { get; set; } = [];
+    
     public string? GeneralComments { get; set; }
 }

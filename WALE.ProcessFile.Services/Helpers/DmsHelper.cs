@@ -72,14 +72,14 @@ public static class DmsHelper
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
         // For debugging uncheck sections of the following
-        /*filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
+        filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
             //.Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
             //            || x.Key.Contains("1asdssdds", StringComparison.InvariantCultureIgnoreCase))
             //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
             //.Where(x => x.Value.RegionId == 3) // North east
-            .Skip(1)
+            .Skip(10)
             .Take(2)
-            .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);*/
+            .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
     
         var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 

@@ -62,6 +62,8 @@ public interface IDatabaseReadService
     Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
     
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
+    
+    Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 

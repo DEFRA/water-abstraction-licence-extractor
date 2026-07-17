@@ -160,6 +160,7 @@ public class DatabaseOutputService(
         
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.Status.ToString(),
             licenceStr,
             licence.DmsFileId,
             licence.DmsPermitNumber,
@@ -191,6 +192,11 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
+    public Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId)
+    {
+        return databaseWriteService.SaveStubMatchesResultAsync(fileId, processRunId);
+    }
+    
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
@@ -269,7 +275,9 @@ public class DatabaseOutputService(
                 GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
 
             var licence =
-                await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceAsync(
+                    licenceTransformed,
+                    processRun.ProcessRunId);
 
             if (licence == null)
             {
@@ -299,9 +307,14 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceAsync(fileId, processRunId);
     }
     
-    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         return databaseReadService.GetMatchesResult(fileId);
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
+    {
+        return databaseReadService.GetMatchesResult(fileId, processRunId);
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)

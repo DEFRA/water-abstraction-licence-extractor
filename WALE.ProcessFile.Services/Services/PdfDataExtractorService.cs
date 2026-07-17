@@ -1,9 +1,8 @@
-using System.Collections.Concurrent;
-using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -26,8 +25,6 @@ public class PdfDataExtractorService(
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
     private string Name => noOcrPdfDocumentService.Name!;
-
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
     
     public async Task<MatchesResult> GetMatchesAsync(
         string pdfFileName,
@@ -41,36 +38,77 @@ public class PdfDataExtractorService(
             Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Pdf file name should not contain full path");
             pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
         }
+
+        var matchesResult = await LockProcessAsync(
+            dmsDataForFile.FileId,
+            processRunId);
         
+        if (matchesResult != null)
+        {
+            return matchesResult;
+        }
+
+        await outputService.SaveStubMatchesResultAsync(
+            dmsDataForFile.FileId,
+            processRunId);
+        
+        return await GetMatchesInternalAsync(
+            pdfFileName,
+            dmsDataForFile.FileId,
+            configuration,
+            previouslyParsedFiles,
+            processRunId);
+    }
+
+    private async Task<MatchesResult?> LockProcessAsync(Guid fileId, int processRunId)
+    {
         var dtStart = DateTime.Now;
         
-        var pathLock = PathLocks.GetOrAdd(
-            dmsDataForFile.FileId.ToString(),
-            _ => new SemaphoreSlim(1, 1));
+        var existingLicenceInRun = await
+            outputService.GetMatchesResultAsync(fileId, processRunId);
+
+        if (existingLicenceInRun == null)
+        {
+            return null;
+        }
         
-        await pathLock.WaitAsync();
-
-        try
+        if (existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
         {
-            var lockWaitDuration = DateTime.Now.Subtract(dtStart);
+            return existingLicenceInRun;
+        }
 
-            if (lockWaitDuration.TotalMilliseconds > 1000)
+        var maxFinishTime = DateTime.Now.AddSeconds(55);
+
+        while (DateTime.Now < maxFinishTime)
+        {
+            existingLicenceInRun = await 
+                outputService.GetMatchesResultAsync(fileId, processRunId);
+                
+            if (existingLicenceInRun != null && existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
             {
-                ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
-            }
+                var lockWaitDuration = DateTime.Now.Subtract(dtStart);
 
-            return await GetMatchesInternalAsync(
-                pdfFileName,
-                dmsDataForFile.FileId,
-                configuration,
-                previouslyParsedFiles,
-                processRunId);
+                if (lockWaitDuration.TotalMilliseconds > 1000)
+                {
+                    ConsoleHelper.WriteLine(
+                        $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms (ended) - {fileId}");
+                }
+                    
+                return existingLicenceInRun;
+            }
+                
+            await Task.Delay(1000);
         }
-        finally
+            
+        var lockWaitDuration2 = DateTime.Now.Subtract(dtStart);
+
+        if (lockWaitDuration2.TotalMilliseconds > 1000)
         {
-            pathLock.Release();
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration2.TotalMilliseconds}ms (never ended) - {fileId}");
         }
+
+        return null;
     }
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
@@ -89,6 +127,7 @@ public class PdfDataExtractorService(
         {
             Filename = pdfFileName,
             RegionCode = configuration.RegionId,
+            Status = nameof(LicenceStatus.Ok),
             ServicesUsed =
             [
                 noOcrDataExtractorService.Name,

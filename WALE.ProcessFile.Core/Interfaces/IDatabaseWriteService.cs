@@ -21,12 +21,15 @@ public interface IDatabaseWriteService
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        string status,
         string licenceData,
         Guid? fileId,
         string? permitNumber,
         int processRunId);
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
+
+    public Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId);
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId);
 

@@ -1,5 +1,6 @@
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -202,9 +203,10 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId
             });
     }
-    
+
     public async Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        string status,
         string licenceData,
         Guid? fileId,
         string? permitNumber,
@@ -212,8 +214,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (file_id, licence_number, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
+                           INSERT INTO licence (file_id, licence_number, status, data, process_run_id, permit_number, date_time_utc)
+                           VALUES (@FileId, @LicenceNumber, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -224,6 +226,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new {
                 FileId = fileId,
                 LicenceNumber = licenceNumber,
+                Status = status,
                 Data = licenceData,
                 ProcessRunId = processRunId,
                 PermitNumber = permitNumber,
@@ -249,6 +252,28 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 LabelName = labelName,
                 LabelGroupName = labelGroupName,
                 Data = data
+            });
+    }
+
+    public async Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO matches_result (file_id, status, process_run_id, date_time_utc)
+                           VALUES (@FileId, @Status, @ProcessRunId, @DateTimeUtc)
+                           RETURNING matches_result_id
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Status = nameof(LicenceStatus.InProgress),
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
             });
     }
 

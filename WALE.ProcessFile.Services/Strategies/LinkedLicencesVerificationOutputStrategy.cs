@@ -10,6 +10,7 @@ namespace WALE.ProcessFile.Services.Strategies;
 public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrategy
 {
     private const string NoneOutgoing = "None Outgoing";
+    private const string Review = "Review";
 
     public string SectionName => "Linked Licences";
 
@@ -75,21 +76,14 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
         foreach (var verification in orderedVerifications)
         {
-            var existingSummary =
-                sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == verification.LicenceSectionItemId);
-            if (existingSummary == null)
+            UpdateSectionSummaries(sectionSummaries, verification);
+
+            // Ignore review and auto-warn/fail - we just want the tags to appear to flag them for review
+            if (verification.LicenceSectionItemId == Review
+                || verification.VerificationType == "AutoWarn"
+                || verification.VerificationType == "AutoFail")
             {
-                sectionSummaries.Add(new LicenceSectionItemSummary
-                {
-                    LicenceSectionItemId = verification.LicenceSectionItemId!,
-                    VerificationTypes = [verification.VerificationType!]
-                });
-            }
-            else if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
-            {
-                existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Append(verification.VerificationType!)
-                    .ToArray();
+                continue;
             }
 
             if (verification.LicenceSectionItemId == NoneOutgoing)
@@ -104,7 +98,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 continue;
             }
 
-            // Apply flag check
+            // Apply data changed flag check
             if (verification.ProcessRunId < listRow.processRunId)
             {
                 var wasScrapedThisRun = (listRow.linkedLicences ?? [])
@@ -180,6 +174,28 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 ConsoleHelper.WriteLine($"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - {ex}");
             }
+        }
+    }
+
+    private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
+        LicenceSectionVerification verification)
+    {
+        var existingSummary =
+            sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == verification.LicenceSectionItemId);
+
+        if (existingSummary == null)
+        {
+            sectionSummaries.Add(new LicenceSectionItemSummary
+            {
+                LicenceSectionItemId = verification.LicenceSectionItemId!,
+                VerificationTypes = [verification.VerificationType!]
+            });
+        }
+        else if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+        {
+            existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                .Append(verification.VerificationType!)
+                .ToArray();
         }
     }
 

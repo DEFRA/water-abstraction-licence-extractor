@@ -85,13 +85,15 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
             if (query.VerificationType == "NoVerification")
             {
                 paginationListData = paginationListData
-                    .Where(x => x.licenceSectionVerificationSummaries ==null || x.licenceSectionVerificationSummaries.Count == 0)
+                    .Where(x => x.licenceSectionVerifications == null || x.licenceSectionVerifications.Length == 0)
                     .ToList();
             }
             paginationListData = paginationListData
-                .Where(x => x.licenceSectionVerificationSummaries?
-                    .Any(item => item.VerificationType?.Equals(query.VerificationType) == true) == true)
+                .Where(x => x.licenceSectionVerifications?
+                    .Any(item => item.LicenceSectionItems
+                        .Any(i => i.VerificationTypes.Contains(query.VerificationType))) == true)
                 .ToList();
+            ;
         }
 
         var processRun = new ProcessRunResponse

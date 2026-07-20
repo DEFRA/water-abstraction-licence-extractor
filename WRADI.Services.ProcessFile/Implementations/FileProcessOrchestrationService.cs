@@ -49,15 +49,8 @@ public class FileProcessOrchestrationService(
 
         try
         {
-            foreach (var (filePath, dmsAndNald) in dmsFilesToProcess)
+            foreach (var (filePath, (dmsFileData, naldLicence)) in dmsFilesToProcess)
             {
-                var dmsFileData = dmsAndNald.Item1;
-                var naldLicence = dmsAndNald.Item2;
-                
-                var strippedLicenceNumber = FormattingHelper.StripForComparison(
-                    naldLicence.LicenceNumber,
-                    naldLicence.RegionCode)!;
-                
                 await messageQueueService.AddToFileProcessQueue(
                     new FileProcessSingleRequest
                     {
@@ -67,7 +60,8 @@ public class FileProcessOrchestrationService(
                         FileId = dmsFileData.FileId,
                         PermitNumber = dmsFileData.PermitNumber,
                         RegionId = naldLicence.RegionCode,
-                        ProcessRunId = processRun.ProcessRunId
+                        ProcessRunId = processRun.ProcessRunId,
+                        RequestedAt =  DateTime.UtcNow
                     });
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {filePath} sent to single process file queue");

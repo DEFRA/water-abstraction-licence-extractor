@@ -245,7 +245,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
         if (matchesFull.Item.Matches != null)
         {
             var matches = matchesFull.Item.Matches
-                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
+                .Select(match => (matchResultId, match.MatchedLabelName, match.LabelGroupName, match))
                 .ToList();
 
             await outputService.SaveMatchesAsync(matches);

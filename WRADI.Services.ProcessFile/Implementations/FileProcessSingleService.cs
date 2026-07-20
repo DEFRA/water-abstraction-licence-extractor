@@ -179,7 +179,7 @@ public class FileProcessSingleService(
                 var matches = matchesFull.Item.Matches
                     .Select(match => (
                         matchResultId,
-                        match.MatchedLabel?.Name,
+                        match.MatchedLabelName,
                         match.LabelGroupName,
                         match))
                     .ToList();

@@ -33,6 +33,8 @@ public class LabelGroupResult
             {
                 MatchedLabelName = value.Name;
                 MatchedLabelRelatedName = value.RelatedName;
+                MatchedLabelPosition = value.Position;
+                MatchedLabelTextFirstLine = value.Text?.FirstOrDefault()?.Text;
             }
             
             field = value;
@@ -57,6 +59,36 @@ public class LabelGroupResult
     public string? MatchedLabelRelatedName
     {
         get => MatchedLabel?.RelatedName ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
+        }
+    }
+    
+    public LabelPosition? MatchedLabelPosition
+    {
+        get => MatchedLabel?.Position ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
+        }
+    }
+    
+    public string? MatchedLabelTextFirstLine
+    {
+        get => (MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text ?? field);
         set
         {
             if (value == null || MatchedLabel != null)

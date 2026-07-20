@@ -117,10 +117,10 @@ public static class WalSchemaConverter
 
             noneSchemaData.Add("issuedToConfidence", companyNameMatch.Confidence);
 
-            var issuedToMatchedLabelText = companyNameMatch.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text ?? string.Empty;
+            var issuedToMatchedLabelText = companyNameMatch.MatchedLabelTextFirstLine ?? string.Empty;
             noneSchemaData.Add("issuedToMatchedLabelText", issuedToMatchedLabelText);
 
-            var issuedToMatchLabelPosition = companyNameMatch.MatchedLabel?.Position.ToString() ?? "--";
+            var issuedToMatchLabelPosition = companyNameMatch.MatchedLabelPosition.ToString() ?? "--";
             noneSchemaData.Add("issuedToMatchLabelPosition", issuedToMatchLabelPosition);
 
             var issuedToCertainty = (int)companyNameMatchType / 100;
@@ -2620,7 +2620,7 @@ public static class WalSchemaConverter
                         .Text
                     : null;
 
-                var text = valueResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text;
+                var text = valueResult.MatchedLabelTextFirstLine;
 
                 var abstractionLimit = new AbstractionLimit
                 {

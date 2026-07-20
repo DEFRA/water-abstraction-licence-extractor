@@ -16,9 +16,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
         Guid fileId, string licenceNumber)
     {
-        var hasOutgoingVerifications = 
+        var hasOutgoingVerifications =
             verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
-        
+
         var hasIncomingVerifications =
             verificationLookups.ByItemId.TryGetValue(licenceNumber, out var incomingVerifications);
 
@@ -37,7 +37,19 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
         if (hasOutgoingVerifications)
         {
-            ProcessOutgoingVerifications(outgoingVerifications!, listRow, outgoingLinkedLicences);
+            var sectionSummaries = new List<LicenceSectionItemSummary>();
+            ProcessOutgoingVerifications(outgoingVerifications!, listRow, outgoingLinkedLicences, sectionSummaries,
+                incomingOnlyLinkedLicences);
+
+            var summaries = listRow.licenceSectionVerifications?.ToList() ?? [];
+            LicenceSectionVerificationSummary summary = new()
+            {
+                LicenceSectionName = SectionName,
+                LicenceSectionItems = sectionSummaries.ToArray()
+            };
+
+            summaries.Add(summary);
+            listRow.licenceSectionVerifications = summaries.ToArray();
         }
 
         if (hasIncomingVerifications)
@@ -50,28 +62,42 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             .ToArray();
     }
 
-    private static void ProcessOutgoingVerifications(
-        IEnumerable<LicenceSectionVerification> verifications,
+    private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications,
         OutputListDataItem listRow,
-        List<LinkedLicence> outgoingLinkedLicences)
+        List<LinkedLicence> outgoingLinkedLicences,
+        List<LicenceSectionItemSummary> sectionSummaries,
+        List<LinkedLicence> incomingOnlyLinkedLicences)
     {
         var orderedVerifications = verifications
+            .Where(v => v.LicenceSectionItemId is not null)
             .OrderBy(v => v.CreatedDateTimeUtc)
             .ToList();
 
-        if (orderedVerifications.Count == 0)
-        {
-            return;
-        }
-
         foreach (var verification in orderedVerifications)
         {
+            var existingSummary =
+                sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == verification.LicenceSectionItemId);
+            if (existingSummary == null)
+            {
+                sectionSummaries.Add(new LicenceSectionItemSummary
+                {
+                    LicenceSectionItemId = verification.LicenceSectionItemId!,
+                    VerificationTypes = [verification.VerificationType!]
+                });
+            }
+            else if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            {
+                existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                    .Append(verification.VerificationType!)
+                    .ToArray();
+            }
+
             if (verification.LicenceSectionItemId == NoneOutgoing)
             {
                 if (outgoingLinkedLicences.Count > 0)
                 {
                     // Flag this because the verification confirmed there are zero LLs but actually there are some
-                    verification.ScrapedDataIsDifferent = true; 
+                    verification.ScrapedDataIsDifferent = true;
                     outgoingLinkedLicences.Clear();
                 }
 
@@ -90,7 +116,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
                 verification.ScrapedDataIsDifferent = wasScrapedThisRun != wasScrapedOnVerificationRun;
             }
-            
+
             // Apply verification
             try
             {
@@ -98,58 +124,53 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                            ?? verification.LicenceSectionSnapshotValue
                            ?? verification.LicenceSectionScrapedValue;
 
-                LinkedLicence? verificationLicence = null;
-
-                if (!string.IsNullOrEmpty(json))
+                if (string.IsNullOrEmpty(json))
                 {
-                    verificationLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                        json,
-                        JsonHelper.GetSerializerOptions());
+                    ConsoleHelper.WriteLine(
+                        $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Verification {verification.LicenceSectionVerificationId} does not have any JSON");
+                    continue;
                 }
 
-                var existingLinkedLicence =
-                    outgoingLinkedLicences.FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId);
+                var verificationLicence =
+                    JsonSerializer.Deserialize<LinkedLicence>(json, JsonHelper.GetSerializerOptions());
 
-                // todo: follow same logic as UI
+                if (verificationLicence == null)
+                {
+                    ConsoleHelper.WriteLine(
+                        $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
+                    continue;
+                }
+
+                var existingOutgoingLinkedLicence =
+                    outgoingLinkedLicences.FirstOrDefault(x =>
+                        x.LicenceNumber == verification.LicenceSectionItemId);
+
+                var existingIncomingLinkedLicence =
+                    incomingOnlyLinkedLicences.FirstOrDefault(x =>
+                        x.LicenceNumber == verification.LicenceSectionItemId);
+
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
                     case "AutoConfirm":
-                        if (existingLinkedLicence == null && verificationLicence != null)
-                        {
-                            outgoingLinkedLicences.Add(verificationLicence);
-                        }
-                        else if (verification.ScrapedDataIsDifferent)
-                        {
-                            if (existingLinkedLicence != null)
-                            {
-                                outgoingLinkedLicences.Remove(existingLinkedLicence);
-                            }
-
-                            if (verificationLicence != null)
-                            {
-                                outgoingLinkedLicences.Add(verificationLicence);
-                            }
-                        }
-
-                        break;
-                    case "Removed":
-                        if (existingLinkedLicence != null)
-                        {
-                            outgoingLinkedLicences.Remove(existingLinkedLicence);
-                        }
-
-                        break;
                     case "Edited":
                     case "Added":
-                        if (existingLinkedLicence != null)
+                        if (existingIncomingLinkedLicence != null)
                         {
-                            outgoingLinkedLicences.Remove(existingLinkedLicence);
+                            incomingOnlyLinkedLicences.Remove(existingIncomingLinkedLicence);
                         }
 
-                        if (verificationLicence != null)
+                        if (existingOutgoingLinkedLicence != null)
                         {
-                            outgoingLinkedLicences.Add(verificationLicence);
+                            outgoingLinkedLicences.Remove(existingOutgoingLinkedLicence);
+                        }
+
+                        outgoingLinkedLicences.Add(verificationLicence);
+                        break;
+                    case "Removed":
+                        if (existingOutgoingLinkedLicence != null)
+                        {
+                            outgoingLinkedLicences.Remove(existingOutgoingLinkedLicence);
                         }
 
                         break;

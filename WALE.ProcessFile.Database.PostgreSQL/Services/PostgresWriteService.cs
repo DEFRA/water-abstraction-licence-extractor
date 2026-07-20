@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
@@ -264,6 +265,13 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            RETURNING matches_result_id
                            """;
 
+        const string status = nameof(LicenceStatus.InProgress);
+        var data = JsonSerializer.Serialize(new
+        {
+            Filename = filename,
+            Status = status
+        }, JsonHelper.GetSerializerOptions());
+        
         return await ExecuteScalarAsync(
             connection,
             sql,
@@ -271,8 +279,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 FileId = fileId,
-                Status = nameof(LicenceStatus.InProgress),
-                Data = $"{{\"filename\": \"{filename}\"}}",
+                Status = status,
+                Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });

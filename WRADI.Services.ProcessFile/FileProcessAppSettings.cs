@@ -29,6 +29,6 @@ public class FileProcessAppSettings
     public string SqsQueueOrchestrationUrl { get; set; } = null!;
     public string SqsQueueFileProcessUrl { get; set; } = null!;
     public int SqsWaitTimeSeconds { get; set; } = 20;
-    public int SqsMaxNumberOfMessages { get; set; } = 10;
+    public int SqsMaxNumberOfMessages { get; set; } = 5;
     public int? SqsVisibilityTimeoutSeconds { get; set; }
 }

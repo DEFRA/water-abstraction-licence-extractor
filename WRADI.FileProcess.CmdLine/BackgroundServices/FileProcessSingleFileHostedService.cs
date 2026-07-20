@@ -42,22 +42,27 @@ public sealed class FileProcessSingleFileHostedService(
             {
                 var response = await sqsClient.ReceiveMessageAsync(request, cancellationToken);
 
-                if (response.Messages == null || response.Messages.Count == 0)
+                handleMessageTasks = handleMessageTasks
+                    .Where(handleMessageTask => !handleMessageTask.IsCompleted)
+                    .ToList();
+                
+                if (handleMessageTasks.Count >= 5)
                 {
+                    await Task.WhenAny(handleMessageTasks);
+                    
                     handleMessageTasks = handleMessageTasks
                         .Where(handleMessageTask => !handleMessageTask.IsCompleted)
                         .ToList();
-                    
+                }
+                
+                if (response.Messages == null || response.Messages.Count == 0)
+                {
                     continue;
                 }
 
                 handleMessageTasks.AddRange(response.Messages
                     .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
                     .Select(message => HandleMessageAsync(message, cancellationToken, request)));
-                
-                handleMessageTasks = handleMessageTasks
-                    .Where(handleMessageTask => !handleMessageTask.IsCompleted)
-                    .ToList();
             }
             catch (OperationCanceledException operationCanceledException)
             {

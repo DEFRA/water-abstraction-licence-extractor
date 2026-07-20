@@ -12,7 +12,7 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class ProcessRunsController(IOutputService outputService, IMemoryCache memoryCache) : Controller
+public class ProcessRunsController(IOutputService outputService, IMemoryCache memoryCache, ILicenceListItemModelService licenceListItemModelService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProcessRun>>> GetProcessRuns()
@@ -39,11 +39,17 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
 
         return Ok(licenceSets);
     }
-
-    [HttpGet("{processRunId:int}")]
+[HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
+    {
+        var processRun = await GetProcessRunResponse(processRunId, query);
+
+        return Ok(processRun);
+    }
+
+    private async Task<ProcessRunResponse> GetProcessRunResponse(int processRunId, ProcessRunQuery query)
     {
         var completeNumber = 1;
         var fileNumber = 1;
@@ -104,8 +110,28 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
             LicenceSetIds = await GetLicenceSetIds(processRunId),
             IssueDates =  await GetIssueDates(processRunId),
         };
-        
-        return Ok(processRun);
+        return processRun;
+    }
+
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult<int>> UpdateLicenceListProcessRun(
+        [FromRoute] int processRunId)
+    {
+        var query = new ProcessRunQuery
+        {
+            Skip = 0,
+            Take = int.MaxValue
+        };
+
+        var processRun = await GetProcessRunResponse(processRunId, query);
+        var dbItems = licenceListItemModelService
+            .CreateMany(processRun.Records)
+            .ToList();
+
+        // Replace this with your repository insert.
+        var total = dbItems.Count;
+
+        return Ok(total);
     }
 
     [HttpGet]
@@ -114,7 +140,7 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var total = await outputService.GetTotalLicenceCountAsync(processRunId, null);
         return Ok(total);
     }
-    
+
     private async Task<string[]> GetLicenceSetIds(int processRunId)
     {
         var cacheKey = $"licence-set-ids:{processRunId}";

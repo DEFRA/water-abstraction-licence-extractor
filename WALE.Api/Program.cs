@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
+using WALE.Api.Services;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
@@ -92,6 +93,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsSecretKey,
             awsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
+        .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),
             sp.GetRequiredService<IDatabaseWriteService>()));

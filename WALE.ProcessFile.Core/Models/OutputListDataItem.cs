@@ -21,4 +21,6 @@ public class OutputListDataItem
     public LinkedLicence[]? linkedLicences { get; set; }
     public OutputListDataItemLicenceSet?[]? licenceSets { get; set; }
     public List<LicenceSectionVerification>? latestLicenceSectionVerifications { get; set; }
+    
+    public List<LicenceSectionVerificationSummary>? LicenceSectionItems { get; set; }
 }

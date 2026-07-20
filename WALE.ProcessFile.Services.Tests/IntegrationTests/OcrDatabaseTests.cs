@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -41,6 +42,7 @@ public class OcrDatabaseTests
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     public OcrDatabaseTests()
     {
@@ -63,7 +65,8 @@ public class OcrDatabaseTests
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);    
+        DocnetAlternativeDocumentService,
+        MessageQueueService);    
     
     private static string PdfFolder => TestConfig.PdfFolder;
     private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
@@ -78,7 +81,8 @@ public class OcrDatabaseTests
                 await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
                 CacheService,
-                3),
+                3,
+                DateTime.Now),
             [fileName],
             0)).Item;
     }

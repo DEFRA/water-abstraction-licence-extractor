@@ -77,6 +77,7 @@ async Task ProgramAsync()
         services.FileService,
         services.CacheService!,
         GeneralConstants.UnsetRegionCode,
+        DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper);
     
     try
@@ -378,6 +379,7 @@ ConfiguredServices ConfigureServices()
     
     var cacheService = new ApiCacheService(httpClient);
     var outputService = new ApiOutputService(httpClient);
+    var messageQueueService = new ApiMessageQueueService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
     var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
@@ -429,6 +431,7 @@ ConfiguredServices ConfigureServices()
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,
+            messageQueueService,
             id);
 
         pdfDataExtractors.Add(pdfDataExtractor);

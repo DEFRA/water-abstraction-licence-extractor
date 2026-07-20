@@ -60,6 +60,8 @@ public class FileProcessSingleService(
             fileService,
             cacheService,
             fileProcessSingleRequest.RegionId,
+            fileProcessSingleRequest.RequestedAt,
+            fileProcessSingleRequest.LockRetryCount,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();

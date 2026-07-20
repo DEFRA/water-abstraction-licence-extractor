@@ -99,7 +99,8 @@ public class FileTypeIdentifierServiceTests
             [],
             new LocalFileService(""),
             new FileSystemCacheService(""),
-            1);
+            1,
+            DateTime.Now);
     }
 
     private static MatchesResult CreateMockMatchesResult(string content)

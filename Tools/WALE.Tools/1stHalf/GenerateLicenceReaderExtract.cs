@@ -41,7 +41,8 @@ public static class GenerateLicenceReaderExtract
         ICacheService cacheService,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
-        INoOcrAlternativePdfDocumentService alternativeDocumentService)
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
+        IMessageQueueService messageQueueService)
     {
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
@@ -79,7 +80,8 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             documentService,
-            alternativeDocumentService);
+            alternativeDocumentService,
+            messageQueueService);
     }
 
     public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
@@ -99,6 +101,7 @@ public static class GenerateLicenceReaderExtract
         
         var cacheService = (ICacheService)new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
+        var messageQueueService = (IMessageQueueService)new ApiMessageQueueService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
@@ -169,7 +172,8 @@ public static class GenerateLicenceReaderExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
-                    docnetAlternativeDocumentService));
+                    docnetAlternativeDocumentService,
+                    messageQueueService));
         }
 
         var fileServiceType = "api";
@@ -451,6 +455,7 @@ public static class GenerateLicenceReaderExtract
             fileService,
             cacheService,
             -1,
+            DateTime.Now,
             skipFileIfMoreThenPages: 25);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {originalConfiguration.Labels.Count} label groups from configuration");

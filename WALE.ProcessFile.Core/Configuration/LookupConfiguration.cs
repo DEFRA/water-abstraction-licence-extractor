@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -10,6 +9,8 @@ public class LookupConfiguration(
     IFileService fileService,
     ICacheService cacheService,
     int regionId,
+    DateTime requestedAt,
+    int currentLockRetryCount = 0,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
     object? naldLinkedLicenceHelper = null)
@@ -29,6 +30,10 @@ public class LookupConfiguration(
     public readonly int SkipFileWhenMoreThenPages = skipFileIfMoreThenPages;
 
     public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
+
+    public DateTime RequestedAt { get; set; } = requestedAt;
+
+    public int CurrentLockRetryCount { get; set; } = currentLockRetryCount;
     
     public LookupConfiguration Clone()
     {
@@ -38,6 +43,8 @@ public class LookupConfiguration(
             FileService,
             CacheService,
             RegionId,
+            RequestedAt,
+            CurrentLockRetryCount,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
             NaldLinkedLicenceHelper);

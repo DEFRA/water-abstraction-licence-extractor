@@ -121,6 +121,17 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
+        
+        services
+            .AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
             });;
 
         services.AddSingleton<PdfPigNoOcrPdfDocumentService>();
@@ -131,6 +142,7 @@ public static class FileProcessServiceRegistration
             var settings = sp.GetRequiredService<FileProcessAppSettings>();
             var cacheService = sp.GetRequiredService<ICacheService>();
             var outputService = sp.GetRequiredService<IOutputService>();
+            var messageQueueService = sp.GetRequiredService<IMessageQueueService>();
             var pdfPigDocumentService = sp.GetRequiredService<PdfPigNoOcrPdfDocumentService>();
             var docnetAlternativeDocumentService = sp.GetRequiredService<DocnetNoOcrAlternativePdfDocumentService>();
 
@@ -159,7 +171,7 @@ public static class FileProcessServiceRegistration
                 settings.AzureAiVisionKey,
                 cacheService,
                 outputService);
-
+            
             var pdfDataExtractor = new PdfDataExtractorService(
                 pdfPigNoOcr,
                 [
@@ -170,7 +182,8 @@ public static class FileProcessServiceRegistration
                 cacheService,
                 outputService,
                 pdfPigDocumentService,
-                docnetAlternativeDocumentService);
+                docnetAlternativeDocumentService,
+                messageQueueService);
 
             return pdfDataExtractor;
         });

@@ -80,7 +80,8 @@ public static class TestsForAiPrompts
                         [],
                         new LocalFileService(KeyConfig.PdfFolder),
                         cacheService,
-                        -1));
+                        -1,
+                        DateTime.Now));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 

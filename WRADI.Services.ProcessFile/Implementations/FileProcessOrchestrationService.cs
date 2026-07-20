@@ -66,8 +66,6 @@ public class FileProcessOrchestrationService(
                         DmsPath = dmsFileData.DmsPath,
                         FileId = dmsFileData.FileId,
                         PermitNumber = dmsFileData.PermitNumber,
-                        NaldLicenceRef = naldLicence.LicenceNumber,
-                        StrippedLicenceNumber = strippedLicenceNumber,
                         RegionId = naldLicence.RegionCode,
                         ProcessRunId = processRun.ProcessRunId
                     });

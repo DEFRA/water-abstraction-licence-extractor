@@ -1,3 +1,4 @@
+using FakeItEasy;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -50,6 +51,7 @@ public class AzureOpenAiOcrPdfTests
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -65,7 +67,8 @@ public class AzureOpenAiOcrPdfTests
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
     private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
@@ -78,7 +81,8 @@ public class AzureOpenAiOcrPdfTests
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
-            4); // TODO - whatever Hampshire & IOW is
+            4,
+            DateTime.Now); // TODO - whatever Hampshire & IOW is
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName)

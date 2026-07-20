@@ -20,6 +20,7 @@ public class PdfDataExtractorService(
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
+    IMessageQueueService  apiMessageQueueService,
     int id = -1) : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
@@ -39,9 +40,12 @@ public class PdfDataExtractorService(
             pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
         }
 
-        var matchesResult = await LockProcessAsync(
-            dmsDataForFile.FileId,
-            processRunId);
+        var matchesResult = await CheckExclusiveAccess(
+            dmsDataForFile,
+            configuration.RegionId,
+            pdfFileName,
+            processRunId,
+            configuration.CurrentLockRetryCount);
         
         if (matchesResult != null)
         {
@@ -61,14 +65,19 @@ public class PdfDataExtractorService(
             processRunId));
     }
 
-    private async Task<MatchesResult?> LockProcessAsync(Guid fileId, int processRunId)
+    private async Task<MatchesResult?> CheckExclusiveAccess(
+        DmsFileData dmsDataForFile,
+        int regionId,
+        string pdfFileName,
+        int processRunId,
+        int currentLockRetryCount)
     {
-        var dtStart = DateTime.Now;
-        
         var existingLicenceInRun = await
-            outputService.GetMatchesResultAsync(fileId, processRunId);
+            outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
 
-        if (existingLicenceInRun == null)
+        const int maxLockRetries = 5;
+        
+        if (existingLicenceInRun == null || currentLockRetryCount > maxLockRetries)
         {
             return null;
         }
@@ -78,36 +87,25 @@ public class PdfDataExtractorService(
             return existingLicenceInRun;
         }
 
-        var maxFinishTime = DateTime.Now.AddSeconds(55);
-
-        while (DateTime.Now < maxFinishTime)
-        {
-            existingLicenceInRun = await 
-                outputService.GetMatchesResultAsync(fileId, processRunId);
-                
-            if (existingLicenceInRun != null && existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
+        const int delayInSeconds = 5;
+        const int inProcessDelayInMilliseconds = 1000;
+        
+        Thread.Sleep(inProcessDelayInMilliseconds);
+        
+        await apiMessageQueueService.AddToFileProcessQueue(
+            new FileProcessSingleRequest
             {
-                var lockWaitDuration = DateTime.Now.Subtract(dtStart);
-
-                if (lockWaitDuration.TotalMilliseconds > 1000)
-                {
-                    ConsoleHelper.WriteLine(
-                        $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms (ended) - {fileId}");
-                }
-                    
-                return existingLicenceInRun;
-            }
-                
-            await Task.Delay(1000);
-        }
-            
-        var lockWaitDuration2 = DateTime.Now.Subtract(dtStart);
-
-        if (lockWaitDuration2.TotalMilliseconds > 1000)
-        {
-            ConsoleHelper.WriteLine(
-                $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration2.TotalMilliseconds}ms (never ended) - {fileId}");
-        }
+                DelayInSeconds = delayInSeconds,
+                DestinationFileName = dmsDataForFile.DestinationFileName,
+                DmsPath = dmsDataForFile.DmsPath,
+                FileId = dmsDataForFile.FileId,
+                FilePath = pdfFileName,
+                PermitNumber = dmsDataForFile.PermitNumber,
+                ProcessRunId = processRunId,
+                RegionId = regionId,
+                RequestedAt = DateTime.Now,
+                LockRetryCount = currentLockRetryCount + 1
+            });
 
         return null;
     }

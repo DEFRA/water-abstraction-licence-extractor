@@ -107,4 +107,6 @@ public interface IOutputService
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
 
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
+
+    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
 }

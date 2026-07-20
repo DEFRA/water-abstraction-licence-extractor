@@ -92,11 +92,10 @@ public static class JsOutputHelper
         };
     }
 
-    public static IReadOnlyList<OutputListDataItem> ToListData(
-        List<IntermediateOutputLicence> outputLines,
+    public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
         int processRunId,
-        Dictionary<string, LicenceVerificationLookups> verificationLookups
-    )
+        Dictionary<string, LicenceVerificationLookups> verificationLookups,
+        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -105,7 +104,7 @@ public static class JsOutputHelper
             {
                 new LinkedLicencesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
-        
+
         var verificationSectionNames = verificationLookups.Keys.ToList();
 
         var orderedOutputLines = outputLines
@@ -172,7 +171,8 @@ public static class JsOutputHelper
                     continue;
                 }
 
-                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value, outputLine.LicenceNumber!);
+                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
+                    outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);
             }
 
             listData.Add(listRow);

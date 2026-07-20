@@ -15,7 +15,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     public string SectionName => "Linked Licences";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber)
+        Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
     {
         var hasOutgoingVerifications =
             verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
@@ -55,7 +55,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
         if (hasIncomingVerifications)
         {
-            ProcessIncomingVerifications(incomingVerifications!, incomingOnlyLinkedLicences);
+            ProcessIncomingVerifications(incomingVerifications!, incomingOnlyLinkedLicences,
+                fileIdToLicenceNumberMapping, outgoingLinkedLicences);
         }
 
         listRow.linkedLicences = incomingOnlyLinkedLicences
@@ -80,8 +81,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
             // Ignore review and auto-warn/fail - we just want the tags to appear to flag them for review
             if (verification.LicenceSectionItemId == Review
-                || verification.VerificationType == "AutoWarn"
-                || verification.VerificationType == "AutoFail")
+                || verification.VerificationType is "AutoWarn" or "AutoFail")
             {
                 continue;
             }
@@ -199,69 +199,83 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         }
     }
 
-    private static void ProcessIncomingVerifications(
-        IEnumerable<LicenceSectionVerification> invertedVerifications,
-        List<LinkedLicence> incomingOnlyLinkedLicences)
+    private static void ProcessIncomingVerifications(IEnumerable<LicenceSectionVerification> incomingVerifications,
+        List<LinkedLicence> incomingOnlyLinkedLicences, Dictionary<Guid, string> fileIdToLicenceNumberMapping,
+        List<LinkedLicence> outgoingLinkedLicences)
     {
-        var orderedInvertedVerifications = invertedVerifications
-            .OrderByDescending(v => v.Verification.CreatedDateTimeUtc)
+        var orderedVerifications = incomingVerifications
+            .OrderBy(v => v.CreatedDateTimeUtc)
             .ToList();
 
-        foreach (var invertedVerification in orderedInvertedVerifications)
+        foreach (var verification in orderedVerifications)
         {
+            var fileId = verification.LicenceFileId;
+            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceLicenceNumber))
+            {
+                ConsoleHelper.WriteLine(
+                    $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Incoming LL Verifications - No licence number found for {fileId}");
+                continue;
+            }
+
+            // Ignore auto-warn/fail - it has no effect on incoming LLs
+            if (verification.VerificationType is "AutoWarn" or "AutoFail")
+            {
+                continue;
+            }
+
             try
             {
-                var verification = invertedVerification.Verification;
                 var json = verification.LicenceSectionOverrideValue
                            ?? verification.LicenceSectionSnapshotValue
                            ?? verification.LicenceSectionScrapedValue;
 
-                LinkedLicence? overrideLicence = null;
-
-                if (!string.IsNullOrEmpty(json))
+                if (string.IsNullOrEmpty(json))
                 {
-                    overrideLicence = JsonSerializer.Deserialize<LinkedLicence>(
-                        json,
-                        JsonHelper.GetSerializerOptions());
-
-                    overrideLicence!.ContainedIn = overrideLicence.ContainedIn?
-                        .Select(x => x with { Direction = InformationDirection.Incoming })
-                        .ToArray();
-
-                    overrideLicence.LicenceNumber = invertedVerification.SourceLicenceNumber;
+                    ConsoleHelper.WriteLine(
+                        $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Verification {verification.LicenceSectionVerificationId} does not have any JSON");
+                    continue;
                 }
 
-                var existingLinkedLicence =
+                var verificationLicence =
+                    JsonSerializer.Deserialize<LinkedLicence>(json, JsonHelper.GetSerializerOptions());
+
+                if (verificationLicence == null)
+                {
+                    ConsoleHelper.WriteLine(
+                        $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
+                    continue;
+                }
+
+                var existingOutgoingLinkedLicence =
+                    outgoingLinkedLicences.FirstOrDefault(x =>
+                        x.LicenceNumber == sourceLicenceNumber);
+
+                var existingIncomingLinkedLicence =
                     incomingOnlyLinkedLicences.FirstOrDefault(x =>
-                        x.LicenceNumber == invertedVerification.SourceLicenceNumber);
+                        x.LicenceNumber == sourceLicenceNumber);
 
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
                     case "AutoConfirm":
-                        if (existingLinkedLicence == null && overrideLicence != null)
+                    case "Edited":
+                    case "Added":
+                        if (existingIncomingLinkedLicence == null && existingOutgoingLinkedLicence == null)
                         {
-                            incomingOnlyLinkedLicences.Add(overrideLicence);
+                            incomingOnlyLinkedLicences.Add(verificationLicence);
                         }
 
                         break;
                     case "Removed":
-                        if (existingLinkedLicence != null)
+                        if (existingIncomingLinkedLicence != null)
                         {
-                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
+                            incomingOnlyLinkedLicences.Remove(existingIncomingLinkedLicence);
                         }
 
-                        break;
-                    case "Edited":
-                    case "Added":
-                        if (existingLinkedLicence != null)
+                        if (existingOutgoingLinkedLicence != null)
                         {
-                            incomingOnlyLinkedLicences.Remove(existingLinkedLicence);
-                        }
-
-                        if (overrideLicence != null)
-                        {
-                            incomingOnlyLinkedLicences.Add(overrideLicence);
+                            existingOutgoingLinkedLicence.ContainedIn = existingOutgoingLinkedLicence.ContainedIn!
+                                .Where(c => c.Direction != InformationDirection.Incoming).ToArray();
                         }
 
                         break;

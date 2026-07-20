@@ -197,6 +197,27 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             parameters);
     }
+    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT licence_number, file_id
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                             AND licence_number IS NOT NULL
+                             AND file_id IS NOT NULL;
+                           """;
+
+        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
+
+        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
+    }
+
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();

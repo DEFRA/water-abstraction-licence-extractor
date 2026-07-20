@@ -638,5 +638,10 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     private static bool _showAllLogs = false;
 }

@@ -501,6 +501,11 @@ public class DatabaseOutputService(
         return returnList;
     }
 
+    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        return databaseReadService.GetLicenceFileIdsAsync(processRunId);
+    }
+
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);

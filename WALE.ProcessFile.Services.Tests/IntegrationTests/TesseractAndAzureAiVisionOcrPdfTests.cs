@@ -128,7 +128,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
              new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
     
     [Fact]
@@ -1043,7 +1043,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [TestConfig.PdfFolder3 + fileName],
             0);
 
-        Assert.Single(resultFull.Item.Matches!);
+        Assert.Single(resultFull.Item!.Matches!);
     }
     
     [Fact]

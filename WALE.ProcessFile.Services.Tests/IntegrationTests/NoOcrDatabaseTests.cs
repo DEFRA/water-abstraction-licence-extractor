@@ -106,7 +106,7 @@ public class NoOcrDatabaseTests
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
     
     [Fact]

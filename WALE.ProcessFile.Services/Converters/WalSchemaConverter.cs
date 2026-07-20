@@ -1404,16 +1404,21 @@ public static class WalSchemaConverter
                 previouslyParsedFiles,
                 processRunId);
 
+            if (relatedFileMatches.StopExecution)
+            {
+                continue;
+            }
+            
             Licence licence;
 
-            if (relatedFileMatches.AlreadySaved)
+            if (relatedFileMatches.AlreadySaved == true)
             {
                 licence = null!;
             }
             else
             {
                 licence = await ToLicenceAsync(
-                    relatedFileMatches.Item,
+                    relatedFileMatches.Item!,
                     dmsFileData,
                     naldDataLine?.LicenceNumber,
                     (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,

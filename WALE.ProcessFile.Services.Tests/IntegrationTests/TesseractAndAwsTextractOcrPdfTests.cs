@@ -103,7 +103,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(folder, regionCode),
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
     
     [Fact]

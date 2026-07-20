@@ -235,7 +235,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             lookupConfig,
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
     
     [Fact]

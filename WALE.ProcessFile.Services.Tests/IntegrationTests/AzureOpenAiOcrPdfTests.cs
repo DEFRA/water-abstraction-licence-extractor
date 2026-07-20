@@ -93,7 +93,7 @@ public class AzureOpenAiOcrPdfTests
             await LookupConfigurationAsync(PdfFolder),
             
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
     
     [Fact]

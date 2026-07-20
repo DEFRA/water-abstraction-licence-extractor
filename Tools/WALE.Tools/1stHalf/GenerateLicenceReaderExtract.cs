@@ -305,7 +305,7 @@ public static class GenerateLicenceReaderExtract
             [fileMetadata.FileName!],
             0);
 
-        return data.Item;
+        return data.Item!;
     }
 
     private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(

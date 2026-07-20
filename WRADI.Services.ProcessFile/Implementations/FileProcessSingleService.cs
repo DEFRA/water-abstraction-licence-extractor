@@ -80,18 +80,23 @@ public class FileProcessSingleService(
 
         try
         {
-            var licenceSet = await ScrapeDocumentAsync(
+            var (stopExecution, licenceSets) = await ScrapeDocumentAsync(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
                 naldLicence.LicenceNumber,
                 processRun);
 
-            if (licenceSet.Count > 0)
+            if (stopExecution)
+            {
+                return true;
+            }
+            
+            if (licenceSets.Count > 0)
             {
                 await SharedHelper.UpdateAndSaveLicenceSetsAsync(
-                    [licenceSet],
-                    licenceSet,
+                    [licenceSets],
+                    licenceSets,
                     outputService,
                     processRun);
 
@@ -138,7 +143,7 @@ public class FileProcessSingleService(
         }
     }
     
-    private async Task<List<LicenceSet>> ScrapeDocumentAsync(
+    private async Task<(bool StopExecution, List<LicenceSet> LicenceSets)> ScrapeDocumentAsync(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
@@ -156,29 +161,34 @@ public class FileProcessSingleService(
                 pdfFilename
             };
             
-            var matchesFull = await pdfDataExtractor.GetMatchesAsync(
+            var (stopExecution, alreadySaved, matchesResult) = await pdfDataExtractor.GetMatchesAsync(
                 pdfFilename,
                 dmsDataForFile,
                 lookupConfig,
                 previouslyParsedFiles,
                 processRun.ProcessRunId);
 
-            if (matchesFull.AlreadySaved)
+            if (stopExecution)
             {
-                // Everything already saved, should have licence sets etc...
-                return [];
+                return (true, []);
+            }
+            
+            if (alreadySaved == true)
+            {
+                // Everything already saved (or we're waiting), should have licence sets etc...
+                return (false, []);
             }
             
             var matchResultId = await outputService.SaveMatchResultAsync(
-                matchesFull.Item,
+                matchesResult!,
                 dmsDataForFile.FileId,
                 processRun.ProcessRunId);
 
             var dtStartSaveMatches = DateTime.Now;
 
-            if (matchesFull.Item.Matches != null)
+            if (matchesResult!.Matches != null)
             {
-                var matches = matchesFull.Item.Matches
+                var matches = matchesResult.Matches
                     .Select(match => (
                         matchResultId,
                         match.MatchedLabelName,
@@ -198,34 +208,34 @@ public class FileProcessSingleService(
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            return await WalSchemaConverter.ToLicenceSetsAsync(
-                matchesFull.Item,
+            return (false, await WalSchemaConverter.ToLicenceSetsAsync(
+                matchesResult,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,
                 dmsDataForFile,
-                naldLicenceNumber);
+                naldLicenceNumber));
         }
         catch (TooManyPagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many pages");
             
-            return [];
+            return (false, []);
         }
         catch (TooManyImagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many images");
             
-            return [];
+            return (false, []);
         }
         catch (Exception ex)
         {
             ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
                 $"fatal error - {ex}");
             
-            return [];
+            return (false, []);
         }
         finally
         {

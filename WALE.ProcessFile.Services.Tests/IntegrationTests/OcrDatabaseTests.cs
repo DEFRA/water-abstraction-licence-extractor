@@ -84,7 +84,7 @@ public class OcrDatabaseTests
                 3,
                 DateTime.Now),
             [fileName],
-            0)).Item;
+            0)).Item!;
     }
 
     [Fact(Skip = "UsedAsAUtilityOnly")]

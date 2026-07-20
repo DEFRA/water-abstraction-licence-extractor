@@ -27,7 +27,7 @@ public class PdfDataExtractorService(
     public bool InUse { get; set; } = false;
     private string Name => noOcrPdfDocumentService.Name!;
     
-    public async Task<(bool AlreadySaved, MatchesResult Item)> GetMatchesAsync(
+    public async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
@@ -40,16 +40,21 @@ public class PdfDataExtractorService(
             pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
         }
 
-        var matchesResult = await CheckExclusiveAccess(
+        var (stopExecution, matchesResult) = await CheckExclusiveAccess(
             dmsDataForFile,
             configuration.RegionId,
             pdfFileName,
             processRunId,
             configuration.CurrentLockRetryCount);
+
+        if (stopExecution)
+        {
+            return (true, null, null);
+        }
         
         if (matchesResult != null)
         {
-            return (true, matchesResult);
+            return (false, true, matchesResult);
         }
 
         await outputService.SaveStubMatchesResultAsync(
@@ -57,7 +62,7 @@ public class PdfDataExtractorService(
             dmsDataForFile.FileId,
             processRunId);
         
-        return (false, await GetMatchesInternalAsync(
+        return (false, false, await GetMatchesInternalAsync(
             pdfFileName,
             dmsDataForFile.FileId,
             configuration,
@@ -65,26 +70,31 @@ public class PdfDataExtractorService(
             processRunId));
     }
 
-    private async Task<MatchesResult?> CheckExclusiveAccess(
+    private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(
         DmsFileData dmsDataForFile,
         int regionId,
         string pdfFileName,
         int processRunId,
         int currentLockRetryCount)
     {
-        var existingLicenceInRun = await
-            outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
-
         const int maxLockRetries = 5;
         
-        if (existingLicenceInRun == null || currentLockRetryCount > maxLockRetries)
+        if (currentLockRetryCount > maxLockRetries)
         {
-            return null;
+            return (true, null);
+        }
+        
+        var existingLicenceInRun = await
+            outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+        
+        if (existingLicenceInRun == null)
+        {
+            return (false ,null);
         }
         
         if (existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
         {
-            return existingLicenceInRun;
+            return (false, existingLicenceInRun);
         }
 
         const int delayInSeconds = 5;
@@ -107,7 +117,7 @@ public class PdfDataExtractorService(
                 LockRetryCount = currentLockRetryCount + 1
             });
 
-        return null;
+        return (true, null);
     }
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
@@ -1114,7 +1124,7 @@ public class PdfDataExtractorService(
             var labelResult = new LabelGroupResult
             {
                 MatchedLabel = label,
-                SubResults = relatedFileMatches.Item.Matches!,
+                SubResults = relatedFileMatches.Item!.Matches!,
                 PageNumber = line.PageNumber
             };
             

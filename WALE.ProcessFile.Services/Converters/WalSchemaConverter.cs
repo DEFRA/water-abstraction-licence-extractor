@@ -1413,6 +1413,7 @@ public static class WalSchemaConverter
 
             if (relatedFileMatches.AlreadySaved == true)
             {
+                // TODO get the licence from the already saved stuff
                 licence = null!;
             }
             else

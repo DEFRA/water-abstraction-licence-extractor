@@ -46,7 +46,7 @@ public interface IOutputService
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
     
-    public Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId);
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
     
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
     

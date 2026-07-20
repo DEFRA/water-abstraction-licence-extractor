@@ -1493,7 +1493,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM matches_result 
                            WHERE
                                file_id = @FileId
-                                and process_run_id = @ProcessRunId;
+                                and process_run_id = @ProcessRunId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;

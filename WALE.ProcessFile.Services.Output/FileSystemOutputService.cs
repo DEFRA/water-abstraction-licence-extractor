@@ -135,7 +135,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId)
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
     {
         throw new NotImplementedException();
     }

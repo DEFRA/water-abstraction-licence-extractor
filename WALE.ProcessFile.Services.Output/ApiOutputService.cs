@@ -269,12 +269,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId)
+    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
     {
         var path = "/Extractor/MatchResult/SaveStub";
 
         var json = JsonSerializer.Serialize(new
         {
+            filename,
             fileId,
             ProcessRunId = processRunId
         }, JsonHelper.GetSerializerOptions());
@@ -556,7 +557,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
-        var path = $"/BFF/FileData/GetMatchesResult?processRunId={processRunId}&processRunId={processRunId}";
+        var path = $"/BFF/FileData/GetMatchesResult?fileId={fileId}&processRunId={processRunId}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

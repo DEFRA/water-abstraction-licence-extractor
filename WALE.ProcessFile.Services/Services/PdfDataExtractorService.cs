@@ -49,6 +49,7 @@ public class PdfDataExtractorService(
         }
 
         await outputService.SaveStubMatchesResultAsync(
+            pdfFileName,
             dmsDataForFile.FileId,
             processRunId);
         

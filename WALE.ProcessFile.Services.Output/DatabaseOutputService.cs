@@ -192,9 +192,9 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
-    public Task<int> SaveStubMatchesResultAsync(Guid fileId, int processRunId)
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
     {
-        return databaseWriteService.SaveStubMatchesResultAsync(fileId, processRunId);
+        return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
     }
     
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)

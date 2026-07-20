@@ -34,6 +34,8 @@ public sealed class FileProcessSingleFileHostedService(
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
         
+        var handleMessageTasks = new List<Task>();
+        
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -42,50 +44,20 @@ public sealed class FileProcessSingleFileHostedService(
 
                 if (response.Messages == null || response.Messages.Count == 0)
                 {
+                    handleMessageTasks = handleMessageTasks
+                        .Where(handleMessageTask => !handleMessageTask.IsCompleted)
+                        .ToList();
+                    
                     continue;
                 }
 
-                foreach (var message in response.Messages
-                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested))
-                {
-                    try
-                    {
-                        logger.LogInformation("Processing message {MessageId}", message.MessageId);
-                        logger.LogInformation("Message body: {Body}", message.Body);
-
-                        var fileProcessSingleRequest =
-                            JsonConvert.DeserializeObject<FileProcessSingleRequest>(message.Body);
-
-                        if (fileProcessSingleRequest?.FilePath == null)
-                        {
-                            continue;
-                        }
-
-                        var result = await fileProcessSingleService.RunAsync(
-                            fileProcessSingleRequest,
-                            cancellationToken);
-
-                        if (!result)
-                        {
-                            continue;
-                        }
-                        
-                        await sqsClient.DeleteMessageAsync(
-                            new DeleteMessageRequest
-                            {
-                                QueueUrl = request.QueueUrl,
-                                ReceiptHandle = message.ReceiptHandle
-                            },
-                            cancellationToken);
-                           
-                        logger.LogInformation("Deleted message {MessageId}", message.MessageId);
-                    }
-                    catch (Exception ex)
-                    { 
-                        logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
-                        // Leave message on queue so it can be retried
-                    }
-                }
+                handleMessageTasks.AddRange(response.Messages
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
+                    .Select(message => HandleMessageAsync(message, cancellationToken, request)));
+                
+                handleMessageTasks = handleMessageTasks
+                    .Where(handleMessageTask => !handleMessageTask.IsCompleted)
+                    .ToList();
             }
             catch (OperationCanceledException operationCanceledException)
             {
@@ -100,5 +72,49 @@ public sealed class FileProcessSingleFileHostedService(
         }
 
         logger.LogInformation("{ServiceName} stopped.", nameof(FileProcessSingleFileHostedService));
+    }
+    
+    private async Task HandleMessageAsync(
+        Message message,
+        CancellationToken cancellationToken,
+        ReceiveMessageRequest request)
+    {
+        try
+        {
+            logger.LogInformation("Processing message {MessageId}", message.MessageId);
+            logger.LogInformation("Message body: {Body}", message.Body);
+
+            var fileProcessSingleRequest =
+                JsonConvert.DeserializeObject<FileProcessSingleRequest>(message.Body);
+
+            if (fileProcessSingleRequest?.FilePath == null)
+            {
+                return;
+            }
+
+            var result = await fileProcessSingleService.RunAsync(
+                fileProcessSingleRequest,
+                cancellationToken);
+
+            if (!result)
+            {
+                return;
+            }
+                        
+            await sqsClient.DeleteMessageAsync(
+                new DeleteMessageRequest
+                {
+                    QueueUrl = request.QueueUrl,
+                    ReceiptHandle = message.ReceiptHandle
+                },
+                cancellationToken);
+                           
+            logger.LogInformation("Deleted message {MessageId}", message.MessageId);
+        }
+        catch (Exception ex)
+        { 
+            logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
+            // Leave message on queue so it can be retried
+        }
     }
 }

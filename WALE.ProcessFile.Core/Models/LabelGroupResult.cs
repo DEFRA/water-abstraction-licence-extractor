@@ -71,6 +71,7 @@ public class LabelGroupResult
         }
     }
     
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public LabelPosition? MatchedLabelPosition
     {
         get => MatchedLabel?.Position ?? field;
@@ -88,7 +89,7 @@ public class LabelGroupResult
     
     public string? MatchedLabelTextFirstLine
     {
-        get => (MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text ?? field);
+        get => MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text ?? field;
         set
         {
             if (value == null || MatchedLabel != null)

@@ -1409,23 +1409,13 @@ public static class WalSchemaConverter
                 continue;
             }
             
-            Licence licence;
-
-            if (relatedFileMatches.AlreadySaved == true)
-            {
-                // TODO get the licence from the already saved stuff
-                licence = null!;
-            }
-            else
-            {
-                licence = await ToLicenceAsync(
-                    relatedFileMatches.Item!,
-                    dmsFileData,
-                    naldDataLine?.LicenceNumber,
-                    (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
-                    lookupConfiguration,
-                    processRunId);
-            }
+            var licence = await ToLicenceAsync(
+                relatedFileMatches.Item!,
+                dmsFileData,
+                naldDataLine?.LicenceNumber,
+                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+                lookupConfiguration,
+                processRunId);
 
             returnLicences.Add(licence);
         }

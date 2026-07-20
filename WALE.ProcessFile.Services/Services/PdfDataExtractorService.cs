@@ -1118,8 +1118,11 @@ public class PdfDataExtractorService(
                 clonedConfig,
                 previouslyParsedFiles,
                 processRunId);
-
-            // TODO check if we already had it
+            
+            if (relatedFileMatches.StopExecution)
+            {
+                continue;
+            }
             
             var labelResult = new LabelGroupResult
             {

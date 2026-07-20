@@ -230,14 +230,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
-        if (stopExecution)
+        if (stopExecution || alreadySaved!.Value)
         {
-            return [];
-        }
-        
-        if (alreadySaved!.Value)
-        {
-            // Everything already saved, should have licence sets etc...
             return [];
         }
         

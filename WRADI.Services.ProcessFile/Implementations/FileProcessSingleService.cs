@@ -168,15 +168,9 @@ public class FileProcessSingleService(
                 previouslyParsedFiles,
                 processRun.ProcessRunId);
 
-            if (stopExecution)
+            if (stopExecution || alreadySaved == true)
             {
-                return (true, []);
-            }
-            
-            if (alreadySaved == true)
-            {
-                // Everything already saved (or we're waiting), should have licence sets etc...
-                return (false, []);
+                return (stopExecution, []);
             }
             
             var matchResultId = await outputService.SaveMatchResultAsync(

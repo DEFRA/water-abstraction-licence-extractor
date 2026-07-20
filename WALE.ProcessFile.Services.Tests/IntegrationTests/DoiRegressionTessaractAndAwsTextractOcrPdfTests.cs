@@ -99,12 +99,12 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractorCombined5.GetMatchesAsync(
+        return (await _pdfDataExtractorCombined5.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

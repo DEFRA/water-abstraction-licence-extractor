@@ -227,12 +227,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             lookupConfig.CacheService = cacheService;
         }
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             lookupConfig,
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

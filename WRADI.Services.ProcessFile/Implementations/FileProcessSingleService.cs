@@ -85,16 +85,19 @@ public class FileProcessSingleService(
                 naldLicence.LicenceNumber,
                 processRun);
 
-            await SharedHelper.UpdateAndSaveLicenceSetsAsync(
-                [licenceSet],
-                licenceSet,
-                outputService,
-                processRun);
+            if (licenceSet.Count > 0)
+            {
+                await SharedHelper.UpdateAndSaveLicenceSetsAsync(
+                    [licenceSet],
+                    licenceSet,
+                    outputService,
+                    processRun);
 
-            ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Marking process run file as complete for " +
-                $"{fileProcessSingleRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
+                ConsoleHelper.WriteLine(
+                    $"INFO - {nameof(FileProcessSingleService)} - Marking process run file as complete for " +
+                    $"{fileProcessSingleRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            }
+            
             await outputService.MarkProcessRunFileCompleteAsync(processRunFile);
 
             ConsoleHelper.WriteLine(
@@ -158,16 +161,22 @@ public class FileProcessSingleService(
                 previouslyParsedFiles,
                 processRun.ProcessRunId);
 
+            if (matchesFull.AlreadySaved)
+            {
+                // Everything already saved, should have licence sets etc...
+                return [];
+            }
+            
             var matchResultId = await outputService.SaveMatchResultAsync(
-                matchesFull,
+                matchesFull.Item,
                 dmsDataForFile.FileId,
                 processRun.ProcessRunId);
 
             var dtStartSaveMatches = DateTime.Now;
 
-            if (matchesFull.Matches != null)
+            if (matchesFull.Item.Matches != null)
             {
-                var matches = matchesFull.Matches
+                var matches = matchesFull.Item.Matches
                     .Select(match => (
                         matchResultId,
                         match.MatchedLabel?.Name,
@@ -188,7 +197,7 @@ public class FileProcessSingleService(
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return await WalSchemaConverter.ToLicenceSetsAsync(
-                matchesFull,
+                matchesFull.Item,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,

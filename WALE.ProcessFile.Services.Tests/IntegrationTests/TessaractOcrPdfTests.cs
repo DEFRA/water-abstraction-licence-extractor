@@ -137,12 +137,12 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractorCombined1.GetMatchesAsync(
+        return (await _pdfDataExtractorCombined1.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

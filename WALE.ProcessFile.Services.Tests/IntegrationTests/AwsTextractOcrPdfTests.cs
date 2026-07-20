@@ -78,12 +78,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         if (number == 5) pdfFolder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

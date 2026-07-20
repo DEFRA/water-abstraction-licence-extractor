@@ -92,13 +92,13 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     {
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
-        
-        return await _pdfDataExtractor.GetMatchesAsync(
+
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

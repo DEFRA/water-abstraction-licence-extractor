@@ -97,12 +97,12 @@ public class NoOcrDatabaseTests
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

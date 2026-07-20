@@ -606,11 +606,11 @@ public static class WalSchemaConverter
         bool setConfidence,
         Dictionary<string, object?>? noneSchemaData = null)
     {
-        var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var matchedLabel);
+        var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
 
         if (setConfidence)
         {
-            noneSchemaData?.Add($"Confidence:{labelName}", matchedLabel?.Confidence);
+            noneSchemaData?.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
         }
 
         return Date.DateFormatConsistent(text);
@@ -667,8 +667,8 @@ public static class WalSchemaConverter
         string labelName,
         Dictionary<string, object?> noneSchemaData)
     {
-        var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var matchedLabel);
-        noneSchemaData.Add($"Confidence:{labelName}", matchedLabel?.Confidence);
+        var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
+        noneSchemaData.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
 
         return text;
     }
@@ -1404,13 +1404,22 @@ public static class WalSchemaConverter
                 previouslyParsedFiles,
                 processRunId);
 
-            var licence = await ToLicenceAsync(
-                relatedFileMatches,
-                dmsFileData,
-                naldDataLine?.LicenceNumber,
-                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
-                lookupConfiguration,
-                processRunId);
+            Licence licence;
+
+            if (relatedFileMatches.AlreadySaved)
+            {
+                licence = null!;
+            }
+            else
+            {
+                licence = await ToLicenceAsync(
+                    relatedFileMatches.Item,
+                    dmsFileData,
+                    naldDataLine?.LicenceNumber,
+                    (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+                    lookupConfiguration,
+                    processRunId);
+            }
 
             returnLicences.Add(licence);
         }
@@ -1573,7 +1582,7 @@ public static class WalSchemaConverter
         {
             var abstractionLimitPointSubs = sectionPoint.SubResults
                 .Where(linkedLicenceNumber =>
-                    linkedLicenceNumber.MatchedLabel?.Name == "AbstractionLimitPointSub")
+                    linkedLicenceNumber.MatchedLabelName == "AbstractionLimitPointSub")
                 .ToList();
 
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
@@ -1596,7 +1605,7 @@ public static class WalSchemaConverter
 
             var linkedLicenceNumbers = sectionPoint.SubResults
                 .Where(linkedLicenceNumber =>
-                    linkedLicenceNumber.MatchedLabel?.Name == $"{sectionName}LinkedLicenceNumber")
+                    linkedLicenceNumber.MatchedLabelName == $"{sectionName}LinkedLicenceNumber")
                 .ToList();
 
             foreach (var linkedLicenceNumber in linkedLicenceNumbers)
@@ -1794,7 +1803,7 @@ public static class WalSchemaConverter
         var licenceHistoryLinkedLicenceNumbers = licenceHistorySection
             .SubResults
             .Where(linkedLicenceNumber =>
-                linkedLicenceNumber.MatchedLabel?.Name == "LicenceHistoryLinkedLicenceNumber")
+                linkedLicenceNumber.MatchedLabelName == "LicenceHistoryLinkedLicenceNumber")
             .ToList();
 
         var returnList = new List<LinkedLicence>();
@@ -1868,14 +1877,14 @@ public static class WalSchemaConverter
         foreach (var purposePointGroup in purposeSection.SubResults)
         {
             var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purposes")
+                .Where(x => x.MatchedLabelName == "Purposes")
                 .ToList();
 
             foreach (var purpose in purposes)
             {
                 var purposeLinkedLicenceNumber = purpose.SubResults
                     .Where(linkedLicenceNumber =>
-                        linkedLicenceNumber.MatchedLabel?.Name == "PurposeLinkedLicenceNumber")
+                        linkedLicenceNumber.MatchedLabelName == "PurposeLinkedLicenceNumber")
                     .ToList();
 
                 foreach (var linkedLicenceNumber in purposeLinkedLicenceNumber)
@@ -1915,14 +1924,14 @@ public static class WalSchemaConverter
         foreach (var pointPurposeGroup in pointsSection.SubResults)
         {
             var points = pointPurposeGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Point")
+                .Where(x => x.MatchedLabelName == "Point")
                 .ToList();
 
             foreach (var point in points)
             {
                 var linkedLicenceNumbers = point.SubResults
                     .Where(linkedLicenceNumber =>
-                        linkedLicenceNumber.MatchedLabel?.Name == "LinkedLicenceNumber")
+                        linkedLicenceNumber.MatchedLabelName == "LinkedLicenceNumber")
                     .ToList();
 
                 foreach (var linkedLicenceNumber in linkedLicenceNumbers)
@@ -2135,12 +2144,12 @@ public static class WalSchemaConverter
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults
-            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPoint")
+            .Where(res => res.MatchedLabelName == "AbstractionLimitPoint")
             .ToList();
 
         var abstractionLimitPointSubs = abstractionLimitPoints?
             .SelectMany(res => res.SubResults)
-            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
+            .Where(res => res.MatchedLabelName == "AbstractionLimitPointSub")
             .ToList();
 
         if (abstractionLimitPointSubs == null)
@@ -2199,7 +2208,7 @@ public static class WalSchemaConverter
         var individualGroups = new List<AbstractionLimitGroup>();
 
         var limitPointTable = abstractionLimitPointSub.SubResults
-            .FirstOrDefault(x => x.MatchedLabel?.Name == "LimitPointTable");
+            .FirstOrDefault(x => x.MatchedLabelName == "LimitPointTable");
 
         // NE0260034052 has one
         if (noneSchemaData.ContainsKey(TemplateFeatures.LimitPointsTable))
@@ -2231,7 +2240,7 @@ public static class WalSchemaConverter
         };
         
         var documentIdentifier = abstractionLimitPointSub.SubResults
-            .FirstOrDefault(sr => sr.MatchedLabel?.Name == "DocumentIdentifier")?
+            .FirstOrDefault(sr => sr.MatchedLabelName == "DocumentIdentifier")?
             .Text?
             .FirstOrDefault()?
             .Text;
@@ -2319,11 +2328,11 @@ public static class WalSchemaConverter
         var siblings = abstractionLimitPointSub.SubResults;
         
         var purposeCondition = siblings
-            .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeCondition");
+            .FirstOrDefault(x => x.MatchedLabelName == "PurposeCondition");
                 
         var purposeConditionSub = purposeCondition?
             .SubResults
-            .Where(x => x.MatchedLabel?.Name == "PurposeConditionSub")
+            .Where(x => x.MatchedLabelName == "PurposeConditionSub")
             .ToList();
                 
         var limitPurposes = purposeConditionSub?.Count > 0 ?
@@ -2332,11 +2341,11 @@ public static class WalSchemaConverter
             : null;
                 
         var pointCondition = siblings
-            .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition");
+            .FirstOrDefault(x => x.MatchedLabelName == "PointCondition");
 
         var pointConditionSub = pointCondition?
             .SubResults
-            .Where(x => x.MatchedLabel?.Name == "PointConditionSub")
+            .Where(x => x.MatchedLabelName == "PointConditionSub")
             .ToList();
                 
         var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
@@ -2393,14 +2402,14 @@ public static class WalSchemaConverter
         }
         
         var datePurposesTimePeriods = siblings
-            .Where(sibling => sibling.MatchedLabel?.Name == "DatePurposeRough")
+            .Where(sibling => sibling.MatchedLabelName == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
         
         var timeCutoff = GetTimeCutoff(
-            siblings.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
+            siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var valueResults = siblings
-            .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabel?.RelatedName))
+            .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabelRelatedName))
             .ToList();
 
         var anyPointsSpecified = limitPoints?.Count > 1;
@@ -2432,7 +2441,7 @@ public static class WalSchemaConverter
         }
 
         var linkedLicenceNumbers1 = siblings
-            .Where(sibling => sibling.MatchedLabel?.Name == "LinkedLicenceNumber")
+            .Where(sibling => sibling.MatchedLabelName == "LinkedLicenceNumber")
             .ToList();
 
         var linkedLicenceNumbers = new List<LinkedLicence>();
@@ -2570,7 +2579,7 @@ public static class WalSchemaConverter
                                  && vr.PageNumber == valueResult.PageNumber
                                  && vr.LineNumber == valueResult.LineNumber)
                     .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
-                        sibling.MatchedLabel?.Name == vr.MatchedLabel?.RelatedName)))
+                        sibling.MatchedLabelName == vr.MatchedLabelRelatedName)))
                     .ToList();
 
                 var bestResult = allDuplicates
@@ -2592,17 +2601,17 @@ public static class WalSchemaConverter
                     continue;
                 }
 
-                if (!relatedNamesDict.TryAdd(valueResult.MatchedLabel?.RelatedName!, 0))
+                if (!relatedNamesDict.TryAdd(valueResult.MatchedLabelRelatedName!, 0))
                 {
-                    relatedNamesDict[valueResult.MatchedLabel?.RelatedName!] += 1;
+                    relatedNamesDict[valueResult.MatchedLabelRelatedName!] += 1;
                 }
 
                 var allUnits = siblings?
                     .Where(sibling =>
-                        sibling.MatchedLabel?.Name == valueResult.MatchedLabel?.RelatedName)
+                        sibling.MatchedLabelName == valueResult.MatchedLabelRelatedName)
                     .ToList();
 
-                var unitPosition = relatedNamesDict[valueResult.MatchedLabel?.RelatedName!];
+                var unitPosition = relatedNamesDict[valueResult.MatchedLabelRelatedName!];
 
                 var units = allUnits!.Count > unitPosition
                     ? allUnits[unitPosition]
@@ -2733,7 +2742,7 @@ public static class WalSchemaConverter
         var pointsLoop = aggregateAbstractionLimits.First().Points;
         var purposesLoop = aggregateAbstractionLimits.First().Purposes;
         var timePeriod = GetTimePeriod(
-            siblings?.FirstOrDefault(s => s.MatchedLabel?.Name == "DateOnly"));
+            siblings?.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var aggregate = new Aggregate
         {
@@ -2816,7 +2825,7 @@ public static class WalSchemaConverter
             return 0;
         }
 
-        if (line.MatchedLabel?.Name == "PerYearValue")
+        if (line.MatchedLabelName == "PerYearValue")
         {
             return 0;
         }
@@ -2851,12 +2860,12 @@ public static class WalSchemaConverter
 
         var abstractionLimitPoints = abstractionLimitsSection?
             .SubResults
-            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPoint")
+            .Where(res => res.MatchedLabelName == "AbstractionLimitPoint")
             .ToList();
 
         var abstractionLimitPointSubs = abstractionLimitPoints?
             .SelectMany(res => res.SubResults)
-            .Where(res => res.MatchedLabel?.Name == "AbstractionLimitPointSub")
+            .Where(res => res.MatchedLabelName == "AbstractionLimitPointSub")
             .ToList();
 
         if (abstractionLimitPointSubs != null)
@@ -2864,7 +2873,7 @@ public static class WalSchemaConverter
             foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
             {
                 var definition = abstractionLimitPointSub.SubResults
-                    .SingleOrDefault(sr => sr.MatchedLabel?.Name == "AYearDefinitionLine");
+                    .SingleOrDefault(sr => sr.MatchedLabelName == "AYearDefinitionLine");
 
                 if (definition == null)
                 {
@@ -2912,7 +2921,7 @@ public static class WalSchemaConverter
             return returnList.ToArray();
         }
 
-        if (periodResults.MatchedLabel?.Name == "DuringTheMonthsXToYOnlyText")
+        if (periodResults.MatchedLabelName == "DuringTheMonthsXToYOnlyText")
         {
             if (periodResults.SubResults.Count != 2)
             {
@@ -2936,10 +2945,10 @@ public static class WalSchemaConverter
         foreach (var pointResult in periodResults.SubResults)
         {
             var periodPeriodNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodPeriodNumber");
+                .FirstOrDefault(x => x.MatchedLabelName == "PeriodPeriodNumber");
 
             var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PeriodTextWithoutPurposeAndPoint")?
+                .FirstOrDefault(x => x.MatchedLabelName == "PeriodTextWithoutPurposeAndPoint")?
                 .Text?
                 .Select(t => t.Text)
                 .ToList();
@@ -3034,7 +3043,7 @@ public static class WalSchemaConverter
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults
-                .FirstOrDefault(subResult => subResult.MatchedLabel?.Name == "TextWithoutNumber")?
+                .FirstOrDefault(subResult => subResult.MatchedLabelName == "TextWithoutNumber")?
                 .Text?
                 .Select(t => t.Text);
 
@@ -3132,7 +3141,7 @@ public static class WalSchemaConverter
                 "PurposeGroupName");
 
             var purposeIds = purposeGroupName?.SubResults
-                .Where(x => x.MatchedLabel?.Name == "PurposeGroupSub")
+                .Where(x => x.MatchedLabelName == "PurposeGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
@@ -3158,7 +3167,7 @@ public static class WalSchemaConverter
                 }
 
                 var pointTextWithoutPurposeAndPoint = point.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PointTextWithoutPurposeAndPoint");
+                    .FirstOrDefault(x => x.MatchedLabelName == "PointTextWithoutPurposeAndPoint");
                 
                 var tLines = pointTextWithoutPurposeAndPoint?
                     .Text?
@@ -3406,17 +3415,17 @@ public static class WalSchemaConverter
             var pointCount = 0;
             
             var pointGroupName = purposePointGroup.SubResults
-                .FirstOrDefault(x => x.MatchedLabel?.Name == "PointGroupName");
+                .FirstOrDefault(x => x.MatchedLabelName == "PointGroupName");
 
             var pointIds = pointGroupName?.SubResults
-                .Where(x => x.MatchedLabel?.Name == "PointGroupSub")
+                .Where(x => x.MatchedLabelName == "PointGroupSub")
                 .Select(x => x.Text?.FirstOrDefault()?.Text)
                 .Where(x => !string.IsNullOrEmpty(x))
                 .Select(x => x!)
                 .ToArray();
 
             var purposes = purposePointGroup.SubResults
-                .Where(x => x.MatchedLabel!.Name == "Purposes")
+                .Where(x => x.MatchedLabelName == "Purposes")
                 .ToList();
 
             foreach (var purpose in purposes)
@@ -3424,10 +3433,10 @@ public static class WalSchemaConverter
                 pointCount += 1;
                 
                 var purposeNumber = purpose.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "PurposeNumber");
+                    .FirstOrDefault(x => x.MatchedLabelName == "PurposeNumber");
 
                 var pointTextWithoutPurposeAndPoint = purpose.SubResults
-                    .FirstOrDefault(x => x.MatchedLabel?.Name == "TextWithoutPoints");
+                    .FirstOrDefault(x => x.MatchedLabelName == "TextWithoutPoints");
                 
                 var tLines = pointTextWithoutPurposeAndPoint?
                     .Text?

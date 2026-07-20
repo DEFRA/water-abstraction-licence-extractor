@@ -22,23 +22,50 @@ public class LabelGroupResult
     public string? ServiceName { get; init; }
     
     public string? LabelGroupName { get; set; }
-    
-    [JsonIgnore]
-    public LabelToMatch? MatchedLabel { get; set; }
 
-    private string? _matchedLabelName;
+    [JsonIgnore]
+    public LabelToMatch? MatchedLabel
+    {
+        get;
+        set
+        {
+            if (value != null)
+            {
+                MatchedLabelName = value.Name;
+                MatchedLabelRelatedName = value.RelatedName;
+            }
+            
+            field = value;
+        }
+    }
+
     public string? MatchedLabelName
     {
-        get => MatchedLabel?.Name ?? _matchedLabelName;
+        get => MatchedLabel?.Name ?? field;
         set
         {
             if (value == null || MatchedLabel != null)
             {
-                _matchedLabelName = null;
+                field = null;
                 return;
             }
             
-            _matchedLabelName = value;
+            field = value;
+        }
+    }
+    
+    public string? MatchedLabelRelatedName
+    {
+        get => MatchedLabel?.RelatedName ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
         }
     }
 

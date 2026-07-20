@@ -6,14 +6,12 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class LabelToMatch
 {
-    private IReadOnlyList<TextToMatch>? _textStart;
-    
     public IReadOnlyList<TextToMatch>? TextStart
     {
-        get => _textStart;
+        get;
         set
         {
-            _textStart = value;
+            field = value;
             TextToMatch = value?
                 .Where(t => !t.SingleLinePerItem)
                 .ToList();

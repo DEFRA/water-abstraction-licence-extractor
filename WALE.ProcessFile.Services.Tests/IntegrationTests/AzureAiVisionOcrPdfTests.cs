@@ -94,12 +94,12 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
         else if (number == 5) pdfFolder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

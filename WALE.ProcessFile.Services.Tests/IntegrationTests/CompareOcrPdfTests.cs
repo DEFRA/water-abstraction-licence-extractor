@@ -163,12 +163,12 @@ public class CompareOcrPdfTests
             _ => throw new Exception("Provider name not recognized")
         };
 
-        return await provider.GetMatchesAsync(
+        return (await provider.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

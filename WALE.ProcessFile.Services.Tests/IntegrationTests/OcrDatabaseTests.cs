@@ -70,7 +70,7 @@ public class OcrDatabaseTests
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return await _pdfDataExtractorCombined.GetMatchesAsync(
+        return (await _pdfDataExtractorCombined.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             new LookupConfiguration(
@@ -80,7 +80,7 @@ public class OcrDatabaseTests
                 CacheService,
                 3),
             [fileName],
-            0);
+            0)).Item;
     }
 
     [Fact(Skip = "UsedAsAUtilityOnly")]

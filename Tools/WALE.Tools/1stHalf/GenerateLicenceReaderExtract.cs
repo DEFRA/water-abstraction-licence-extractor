@@ -289,17 +289,19 @@ public static class GenerateLicenceReaderExtract
         return dmsExtractInfo;
     }
 
-    private static Task<MatchesResult> GetMatchesAsync(
+    private static async Task<MatchesResult> GetMatchesAsync(
         TemplateFinderInput fileMetadata,
         IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
     {
-        return pdfDataExtractor.GetMatchesAsync(
+        var data = await pdfDataExtractor.GetMatchesAsync(
             fileMetadata.FileName!,
             new DmsFileData { FileId = fileMetadata.FileId },
             configuration,
             [fileMetadata.FileName!],
             0);
+
+        return data.Item;
     }
 
     private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(

@@ -229,16 +229,22 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
+        if (matchesFull.AlreadySaved)
+        {
+            // Everything already saved, should have licence sets etc...
+            return [];
+        }
+        
         var matchResultId = await outputService.SaveMatchResultAsync(
-            matchesFull,
+            matchesFull.Item,
             dmsDataForFile.FileId,
             processRun.ProcessRunId);
 
         var dtStartSaveMatches = DateTime.Now;
 
-        if (matchesFull.Matches != null)
+        if (matchesFull.Item.Matches != null)
         {
-            var matches = matchesFull.Matches
+            var matches = matchesFull.Item.Matches
                 .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
                 .ToList();
 
@@ -254,7 +260,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
-            matchesFull,
+            matchesFull.Item,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,

@@ -26,7 +26,7 @@ public class PdfDataExtractorService(
     public bool InUse { get; set; } = false;
     private string Name => noOcrPdfDocumentService.Name!;
     
-    public async Task<MatchesResult> GetMatchesAsync(
+    public async Task<(bool AlreadySaved, MatchesResult Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
@@ -45,7 +45,7 @@ public class PdfDataExtractorService(
         
         if (matchesResult != null)
         {
-            return matchesResult;
+            return (true, matchesResult);
         }
 
         await outputService.SaveStubMatchesResultAsync(
@@ -53,12 +53,12 @@ public class PdfDataExtractorService(
             dmsDataForFile.FileId,
             processRunId);
         
-        return await GetMatchesInternalAsync(
+        return (false, await GetMatchesInternalAsync(
             pdfFileName,
             dmsDataForFile.FileId,
             configuration,
             previouslyParsedFiles,
-            processRunId);
+            processRunId));
     }
 
     private async Task<MatchesResult?> LockProcessAsync(Guid fileId, int processRunId)
@@ -1111,10 +1111,12 @@ public class PdfDataExtractorService(
                 previouslyParsedFiles,
                 processRunId);
 
+            // TODO check if we already had it
+            
             var labelResult = new LabelGroupResult
             {
                 MatchedLabel = label,
-                SubResults = relatedFileMatches.Matches!,
+                SubResults = relatedFileMatches.Item.Matches!,
                 PageNumber = line.PageNumber
             };
             

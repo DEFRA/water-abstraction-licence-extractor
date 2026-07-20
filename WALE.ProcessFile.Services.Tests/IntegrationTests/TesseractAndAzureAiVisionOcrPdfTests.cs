@@ -119,12 +119,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
              fileName,
              new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]
@@ -1038,7 +1038,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             [TestConfig.PdfFolder3 + fileName],
             0);
 
-        Assert.Single(resultFull.Matches!);
+        Assert.Single(resultFull.Item.Matches!);
     }
     
     [Fact]

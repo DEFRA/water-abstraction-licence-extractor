@@ -8,7 +8,7 @@ public interface IPdfDataExtractorService
     public int Id { get; set; }
     public bool InUse { get; set; }
     
-    public Task<MatchesResult> GetMatchesAsync(
+    public Task<(bool AlreadySaved, MatchesResult Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,

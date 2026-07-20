@@ -94,12 +94,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         if (useExtractor == 4) folder = TestConfig.PdfFolder4;
         if (useExtractor == 5) folder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(folder, regionCode),
             [fileName],
-            0);
+            0)).Item;
     }
     
     [Fact]

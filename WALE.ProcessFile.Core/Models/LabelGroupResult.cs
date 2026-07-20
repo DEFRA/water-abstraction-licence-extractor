@@ -108,24 +108,34 @@ public class LabelGroupResult
         {
             if (MatchedLabel == null)
             {
-                return null;
+                return field ?? null;
             }
 
+            double? confidencePer100;
+            double confidentForLines;
+            
             switch (MatchedLabel.ConfidenceType)
             {
                 case ConfidenceType.Static:
-                    return MatchedLabel.ConfidenceIfMatched;
+                    return field = MatchedLabel.ConfidenceIfMatched;
                 case ConfidenceType.OcrConfidencePassthrough:
-                    return GetAverageConfidence();
+                    return field = GetAverageConfidence();
                 case ConfidenceType.OcrConfidencePassthroughMinusNPerLine:
-                    return GetAverageConfidence() - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                    confidentForLines = (Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine;
+                    
+                    return field = GetAverageConfidence() - confidentForLines;
                 case ConfidenceType.OcrConfidenceMultiplied:
-                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                    confidencePer100 = MatchedLabel.ConfidenceIfMatched / 100.0;
+                    
+                    return field = confidencePer100 * (GetAverageConfidence() ?? 1);
                 case ConfidenceType.OcrConfidenceMultipliedMinusNPerLine:
-                    var returnFull = (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
-                    return returnFull - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                    confidencePer100 = MatchedLabel.ConfidenceIfMatched / 100.0;
+                    var returnFull = confidencePer100 * (GetAverageConfidence() ?? 1);
+                    confidentForLines = (Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine;
+                    
+                    return field = returnFull - confidentForLines;
                 case ConfidenceType.NotSet:
-                    return null;
+                    return field = null;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

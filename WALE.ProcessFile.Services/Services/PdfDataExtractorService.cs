@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -9,7 +8,6 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
-using JetBrains.Profiler.Api;
 using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 
 namespace WALE.ProcessFile.Services.Services;

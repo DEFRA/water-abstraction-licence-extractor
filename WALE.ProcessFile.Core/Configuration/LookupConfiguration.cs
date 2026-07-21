@@ -13,7 +13,8 @@ public class LookupConfiguration(
     int currentLockRetryCount = 0,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
-    object? naldLinkedLicenceHelper = null)
+    object? naldLinkedLicenceHelper = null,
+    bool useLockExclusivity = true)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
     
@@ -35,6 +36,8 @@ public class LookupConfiguration(
 
     public int CurrentLockRetryCount { get; set; } = currentLockRetryCount;
     
+    public bool UseLockExclusivity { get; set; } = useLockExclusivity;
+    
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -47,6 +50,7 @@ public class LookupConfiguration(
             CurrentLockRetryCount,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
-            NaldLinkedLicenceHelper);
+            NaldLinkedLicenceHelper,
+            UseLockExclusivity);
     }
 }

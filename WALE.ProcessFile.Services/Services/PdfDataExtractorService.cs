@@ -41,40 +41,37 @@ public class PdfDataExtractorService(
             pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
         }
 
-        var (stopExecution, matchesResult) = await CheckExclusiveAccess(
-            dmsDataForFile,
-            configuration.RegionId,
-            pdfFileName,
-            processRunId,
-            configuration.CurrentLockRetryCount);
-
-        if (stopExecution)
+        if (configuration.UseLockExclusivity)
         {
-            return (true, null, null);
-        }
-        
-        if (matchesResult != null)
-        {
-            return (false, true, matchesResult);
+            var (stopExecution, matchesResult) = await CheckExclusiveAccess(
+                dmsDataForFile,
+                configuration.RegionId,
+                pdfFileName,
+                processRunId,
+                configuration.CurrentLockRetryCount);
+
+            if (stopExecution)
+            {
+                return (true, null, null);
+            }
+
+            if (matchesResult != null)
+            {
+                return (false, true, matchesResult);
+            }
+
+            await outputService.SaveStubMatchesResultAsync(
+                pdfFileName,
+                dmsDataForFile.FileId,
+                processRunId);
         }
 
-        await outputService.SaveStubMatchesResultAsync(
-            pdfFileName,
-            dmsDataForFile.FileId,
-            processRunId);
-        
-        MeasureProfiler.StartCollectingData();
-        
-        var returnItem = (false, false, await GetMatchesInternalAsync(
+        return (false, false, await GetMatchesInternalAsync(
             pdfFileName,
             dmsDataForFile.FileId,
             configuration,
             previouslyParsedFiles,
             processRunId));
-
-        MeasureProfiler.SaveData();
-        
-        return returnItem;
     }
 
     private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(

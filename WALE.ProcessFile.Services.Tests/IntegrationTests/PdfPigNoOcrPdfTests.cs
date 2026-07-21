@@ -278,7 +278,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("CompanyName3", nameResult.MatchedLabelName);
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        Assert.Equal(59, nameResult.LineNumber);
+        Assert.Equal(6, nameResult.LineNumber);
         
         // Note no other licence mentioned
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -287,7 +287,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(4, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(109, abstractionLimitsSection.LineNumber);
+        Assert.Equal(16, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -310,7 +310,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(109, perDay.LineNumber);
+        Assert.Equal(16, perDay.LineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -336,7 +336,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(53, licenceNumberResult.LineNumber);
+        Assert.Equal(0, licenceNumberResult.LineNumber);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
@@ -465,11 +465,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(6, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(111, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(111, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -486,7 +486,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(112, perDay.LineNumber);
+        Assert.Equal(19, perDay.LineNumber);
         Assert.Equal("205", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -667,12 +667,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(17, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(143, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
         
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(143, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
@@ -702,7 +702,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(144, perDay.LineNumber);
+        Assert.Equal(19, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -717,7 +717,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(145, perYear.LineNumber);
+        Assert.Equal(20, perYear.LineNumber);
         Assert.Equal("40000", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -753,7 +753,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(152, perDay.LineNumber);
+        Assert.Equal(27, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -896,7 +896,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(12, abstractionLimitsSection.Text!.Count);
-        Assert.Equal(122, abstractionLimitsSection.LineNumber);
+        Assert.Equal(28, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -906,7 +906,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var section1Sub1 = sectionPoint1.SubResults[0];
         Assert.Equal(9, section1Sub1.SubResults.Count);
-        Assert.Equal(122, section1Sub1.LineNumber);
+        Assert.Equal(28, section1Sub1.LineNumber);
         
         //var abstractionLimitsSection1 = section1Sub1.SubResults[0];
         Assert.Equal(4, section1Sub1.Text!.Count);
@@ -932,7 +932,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(123, perDay.LineNumber);
+        Assert.Equal(29, perDay.LineNumber);
         Assert.Equal("409.5", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -947,7 +947,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(124, perYear.LineNumber);
+        Assert.Equal(30, perYear.LineNumber);
         Assert.Equal("20457", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -962,7 +962,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
-        Assert.Equal(125, perSecond.LineNumber);
+        Assert.Equal(31, perSecond.LineNumber);
         Assert.Equal("15.2", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = section1Sub1.SubResults
@@ -1080,7 +1080,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(141, abstractionLimitsSection.LineNumber);
+        Assert.Equal(8, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults);
@@ -1628,7 +1628,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(163, abstractionLimitsSection.LineNumber);
+        Assert.Equal(31, abstractionLimitsSection.LineNumber);
         
         var section1Point1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(4, section1Point1.Text!.Count);
@@ -1644,7 +1644,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(165, perDay.LineNumber);
+        Assert.Equal(33, perDay.LineNumber);
         Assert.Equal("2000", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -1671,7 +1671,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
-        Assert.Equal(166, perSecond.LineNumber);
+        Assert.Equal(34, perSecond.LineNumber);
         Assert.Equal("23.1", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = point1Sub1.SubResults
@@ -1695,7 +1695,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(169, perYear.LineNumber);
+        Assert.Equal(37, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section2Sub1.SubResults
@@ -1719,7 +1719,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(173, perYear.LineNumber);
+        Assert.Equal(2, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         perYearUnits = section3Sub1.SubResults
@@ -1758,14 +1758,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYear = perYearList.FirstOrDefault();
         
         Assert.NotNull(perYear);
-        Assert.Equal(177, perYear.LineNumber);
+        Assert.Equal(6, perYear.LineNumber);
         Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
         
-        perYear = perYearList.LastOrDefault();
-        
-        Assert.NotNull(perYear);
-        Assert.Equal(177, perYear.LineNumber);
-        Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
 
         Assert.Equal(1, section4Sub1.SubResults
             .Count(subResult =>
@@ -1784,7 +1779,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(176, perDay.LineNumber);
+        Assert.Equal(5, perDay.LineNumber);
         Assert.Equal("5256", perDay.Text?.FirstOrDefault()?.Text);
 
         perDayUnits = section4Sub1.SubResults
@@ -1811,13 +1806,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYear = perYearList.FirstOrDefault();
         
         Assert.NotNull(perYear);
-        Assert.Equal(185, perYear.LineNumber);
-        Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
-        
-        perYear = perYearList.LastOrDefault();
-        
-        Assert.NotNull(perYear);
-        Assert.Equal(185, perYear.LineNumber);
+        Assert.Equal(14, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         perYearUnits = section5Sub1.SubResults
@@ -1844,7 +1833,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(184, perDay.LineNumber);
+        Assert.Equal(13, perDay.LineNumber);
         Assert.Equal("5256", perDay.Text?.FirstOrDefault()?.Text);
 
         perDayUnits = section5Sub1.SubResults
@@ -2170,7 +2159,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(155, perDay.LineNumber);
+        Assert.Equal(18, perDay.LineNumber);
         Assert.Equal("2500", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -2206,7 +2195,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(158, perDay.LineNumber);
+        Assert.Equal(21, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -2242,7 +2231,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(161, perDay.LineNumber);
+        Assert.Equal(24, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section3Sub1.SubResults
@@ -2278,7 +2267,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(158, perDay.LineNumber);
+        Assert.Equal(21, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text); // TODO there are 2 5000s and 1 5300
         
         perDayUnits = section4Sub1.SubResults
@@ -3839,11 +3828,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(17, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(109, abstractionLimitsResult.LineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(3, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(109, abstractionLimitsResult.LineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);

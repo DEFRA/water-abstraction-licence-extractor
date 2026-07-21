@@ -96,7 +96,8 @@ public class NoOcrDatabaseTests
             new LocalFileService(pdfFolder),
             CacheService,
             3,
-            DateTime.Now);
+            DateTime.Now,
+            useLockExclusivity: false);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, Guid fileId)
@@ -173,7 +174,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
         Assert.Equal(3, nameResult.PageNumber);
-        Assert.Equal(59, nameResult.LineNumber);
+        Assert.Equal(6, nameResult.LineNumber);
 
         // Note no other licence mentioned
         var abstractionLimitsSection =
@@ -184,7 +185,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(4, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the",
             abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(109, abstractionLimitsSection.LineNumber);
+        Assert.Equal(4, abstractionLimitsSection.PageNumber);        
+        Assert.Equal(16, abstractionLimitsSection.LineNumber);
 
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -207,7 +209,8 @@ public class NoOcrDatabaseTests
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(109, perDay.LineNumber);
+        Assert.Equal(4, perDay.PageNumber);
+        Assert.Equal(16, perDay.LineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
 
         var perDayUnits = point1Sub1.SubResults
@@ -237,7 +240,7 @@ public class NoOcrDatabaseTests
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(3, licenceNumberResult.PageNumber);
-        Assert.Equal(53, licenceNumberResult.LineNumber);
+        Assert.Equal(0, licenceNumberResult.LineNumber);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 

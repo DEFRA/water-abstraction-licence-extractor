@@ -117,4 +117,8 @@ public interface IDatabaseReadService
     Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
     
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
+
+    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 }

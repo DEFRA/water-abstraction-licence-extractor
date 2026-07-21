@@ -105,4 +105,8 @@ public interface IOutputService
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
    
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
+
+    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 }

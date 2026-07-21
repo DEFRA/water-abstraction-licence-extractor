@@ -61,8 +61,10 @@ function ListPage() {
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
-
-    const fetchOutputList = useCallback(async () => {
+    const [issuers, setIssuers] = useState<string[]>([]);
+    const [issueDates, setIssueDates] = useState<string[]>([]);
+    const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
+    const fetchOutputList = useCallback(async (force: boolean = false) => {
         try {
             const currentQuery: ProcessRunQuery = {
                 ...query,
@@ -89,7 +91,7 @@ function ListPage() {
                 currentQuery.verificationType;
 
             // @ts-ignore
-            if (filterKey == window.lastFilterKey) {
+            if (!force && filterKey == window.lastFilterKey) {
                 return;
             }
             
@@ -118,6 +120,9 @@ function ListPage() {
             );
 
             setOutputList(listDataItems.records);
+            setShortLicenceIds(listDataItems.licenceSetIds ?? []);
+            setIssuers(listDataItems.issuers ?? []);
+            setIssueDates(listDataItems.issueDates ?? []);
             const totalRecords = listDataItems.totalRecords;
             setTotalLicences(totalRecords);
             setTotalPages(totalRecords > 0 ? Math.ceil(totalRecords / currentQuery.take) : 0);
@@ -252,9 +257,12 @@ function ListPage() {
                     <table id="licencesTable">
                         <thead>
                         <ProcessRunLicenceFilters
-                            data={filteredData}
                             query={query}
-                            updateQuery={updateQuery}
+                            setQuery={setQuery}
+                            issuers={issuers}
+                            shortLicenceIds={shortLicenceIds}
+                            issueDates={issueDates}
+                            setPageNumber={setPageNumber}
                         />
                         <LicencesTableHeaders
                             data={outputList}
@@ -317,7 +325,7 @@ function ListPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onRefresh={fetchOutputList}
+                onRefresh={() => fetchOutputList(true)}
                 /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);

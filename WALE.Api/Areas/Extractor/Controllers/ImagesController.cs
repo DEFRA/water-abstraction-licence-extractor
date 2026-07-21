@@ -104,7 +104,7 @@ public class ImagesController(
         
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
+        if (!file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
             && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
         {
             return BadRequest();

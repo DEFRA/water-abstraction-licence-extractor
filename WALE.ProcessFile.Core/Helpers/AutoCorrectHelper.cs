@@ -192,8 +192,8 @@ public static class AutoCorrectHelper
         const int maxLengthDifference = 3;
 
         // No matter the confidence, these are wrong
-        if (word.Text.Contains("fallons", StringComparison.InvariantCultureIgnoreCase)
-            || word.Text.Contains("pallons", StringComparison.InvariantCultureIgnoreCase))
+        if (word.Text.Contains("fallons", StringComparison.OrdinalIgnoreCase)
+            || word.Text.Contains("pallons", StringComparison.OrdinalIgnoreCase))
         {
             word.Text = "gallons";
             word.Autocorrected = true;
@@ -201,7 +201,7 @@ public static class AutoCorrectHelper
             return word;
         }
         
-        if (word.Text.Contains("dayof", StringComparison.InvariantCultureIgnoreCase))
+        if (word.Text.Contains("dayof", StringComparison.OrdinalIgnoreCase))
         {
             word.Text = "day-of";
             word.Autocorrected = true;
@@ -209,7 +209,7 @@ public static class AutoCorrectHelper
             return word;
         }
         
-        if (word.Text.Contains("MARCI", StringComparison.InvariantCultureIgnoreCase))
+        if (word.Text.Contains("MARCI", StringComparison.OrdinalIgnoreCase))
         {
             word.Text = "march";
             word.Autocorrected = true;
@@ -286,7 +286,7 @@ public static class AutoCorrectHelper
                     && wordText.Length >= 1
                     && char.IsLower(wordText[0])
                     && !CompanyNameHelper.CompanyWords.Any(companyWord =>
-                        companyWord.Contains($"{wordText} ", StringComparison.InvariantCultureIgnoreCase)))
+                        companyWord.Contains($"{wordText} ", StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
@@ -295,7 +295,7 @@ public static class AutoCorrectHelper
             const string esqTitle = "esq";
             
             // TO DO make more generic
-            if (wordText.Equals(esqTitle, StringComparison.InvariantCultureIgnoreCase))
+            if (wordText.Equals(esqTitle, StringComparison.OrdinalIgnoreCase))
             {
                 newWords.Add(word);
                 continue;
@@ -374,8 +374,8 @@ public static class AutoCorrectHelper
                     && word.OcrConfidence < 90
                     && !string.IsNullOrEmpty(topSuggestion = GetTopSuggestion(wordText)))
                 {
-                    if (topSuggestion.Equals($"{wordText}s", StringComparison.InvariantCultureIgnoreCase)
-                        || $"{topSuggestion}s".Equals(wordText, StringComparison.InvariantCultureIgnoreCase))
+                    if (topSuggestion.Equals($"{wordText}s", StringComparison.OrdinalIgnoreCase)
+                        || $"{topSuggestion}s".Equals(wordText, StringComparison.OrdinalIgnoreCase))
                     {
                         newWords.Add(word);
                         continue;
@@ -429,7 +429,7 @@ public static class AutoCorrectHelper
 
         if (!customSuggestions.Any())
         {
-            if (word.Contains('w', StringComparison.InvariantCultureIgnoreCase))
+            if (word.Contains('w', StringComparison.OrdinalIgnoreCase))
             {
                 var letterMSwappedWithW = word
                     .Replace('w', 'm')
@@ -438,7 +438,7 @@ public static class AutoCorrectHelper
                 return GetTopSuggestion(letterMSwappedWithW);
             }
             
-            if (word.Contains('q', StringComparison.InvariantCultureIgnoreCase))
+            if (word.Contains('q', StringComparison.OrdinalIgnoreCase))
             {
                 var letterQSwappedWithG = word
                     .Replace('q', 'g')

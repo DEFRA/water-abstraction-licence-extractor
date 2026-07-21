@@ -896,8 +896,8 @@ public static class FormattingHelper
                 
                 section4 = $"S/{rest}";
             }
-            else if (section4.EndsWith("S", StringComparison.InvariantCultureIgnoreCase)
-                || section4.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
+            else if (section4.EndsWith("S", StringComparison.OrdinalIgnoreCase)
+                || section4.EndsWith("G", StringComparison.OrdinalIgnoreCase))
             {
                 var indexOfSlash = section4.IndexOf('/');
 

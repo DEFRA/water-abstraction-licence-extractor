@@ -331,7 +331,7 @@ public static class GenerateLicenceReaderExtract
                 .Select(existingResult => existingResult.FileId));
 
         var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
-            .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToDictionary(fileMetadata => fileMetadata.Filename, fileMetadata => fileMetadata);
 

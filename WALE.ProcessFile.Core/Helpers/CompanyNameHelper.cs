@@ -16,7 +16,7 @@ public static class CompanyNameHelper
             return _firstNames;
         }
         
-        var returnList = new HashSet<string>();
+        var returnList = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var dtStart = DateTime.Now;
 
         var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -59,7 +59,7 @@ public static class CompanyNameHelper
         
         return Prefixes
             .Any(prefix => text.StartsWith(prefix,
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.OrdinalIgnoreCase));
     }
     
     public static bool EndsWithCompanyOrPersonalSuffix(string? text)
@@ -71,7 +71,7 @@ public static class CompanyNameHelper
         
         return CompanySuffixes
             .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.OrdinalIgnoreCase));
     }
     
     private static readonly List<string> Prefixes =

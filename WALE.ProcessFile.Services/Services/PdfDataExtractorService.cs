@@ -377,7 +377,7 @@ public class PdfDataExtractorService(
             {
                 var imageReference = pageImages[imageNumber - 1];
 
-                if (imageReference.Contains("-error-", StringComparison.InvariantCultureIgnoreCase))
+                if (imageReference.Contains("-error-", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Skipping missing image {imageReference}");
                     continue;
@@ -1315,7 +1315,7 @@ public class PdfDataExtractorService(
 
                     if (FormattingHelper.IsLineEmpty(partialLine)
                         && label.TextToMatch?.Any(text =>
-                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
+                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
                         && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
                     {
                         partialLine = null;
@@ -1759,7 +1759,7 @@ public class PdfDataExtractorService(
                 {
                     var startIndexOfMatch =
                         partialLine.Text.IndexOf(resultText,
-                            StringComparison.InvariantCultureIgnoreCase);
+                            StringComparison.OrdinalIgnoreCase);
 
                     var endIndexOfMatch = startIndexOfMatch + resultText.Length;
 

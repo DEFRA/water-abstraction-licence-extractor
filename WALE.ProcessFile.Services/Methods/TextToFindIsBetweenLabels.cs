@@ -53,9 +53,9 @@ public static class TextToFindIsBetweenLabels
         
         var beforeTextContainsLabel = request.label.TextToMatch?.Any(labelText =>
             (labelText is { LineMustStartWith: false, ColumnMustStartWith: false }
-             && relevantLineText.Contains(labelText.Text, StringComparison.InvariantCultureIgnoreCase))
+             && relevantLineText.Contains(labelText.Text, StringComparison.OrdinalIgnoreCase))
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
-                    && relevantLineText.StartsWith(labelText.Text, StringComparison.InvariantCultureIgnoreCase)));
+                    && relevantLineText.StartsWith(labelText.Text, StringComparison.OrdinalIgnoreCase)));
 
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
@@ -132,7 +132,7 @@ public static class TextToFindIsBetweenLabels
             var result = foundEndTag && containsText.Any(containsInstance =>
             {
                 var matchResult = string.IsNullOrEmpty(containsInstance) || betweenText.Any(line =>
-                    line.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase));
+                    line.Text.Contains(containsInstance, StringComparison.OrdinalIgnoreCase));
 
                 if (!matchResult)
                 {

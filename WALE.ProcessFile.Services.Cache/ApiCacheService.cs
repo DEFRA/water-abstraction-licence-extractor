@@ -208,7 +208,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
             $"&extension={extension}&processRunId={processRunId}";
 
-        var contentType = extension.Equals("png", StringComparison.InvariantCultureIgnoreCase)
+        var contentType = extension.Equals("png", StringComparison.OrdinalIgnoreCase)
             ? "image/png"
             : "image/jpeg";
         

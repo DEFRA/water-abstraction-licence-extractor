@@ -29,7 +29,7 @@ public static class LabelMatchingHelper
 
     private static bool TextContainsText(string? text, string subText)
     {
-        return text?.Contains(subText, StringComparison.InvariantCultureIgnoreCase) == true;
+        return text?.Contains(subText, StringComparison.OrdinalIgnoreCase) == true;
     }
     
     public static bool PotentialMatchOnLabelLine(
@@ -76,7 +76,7 @@ public static class LabelMatchingHelper
         {
             labelCharPosition = lineForPosition.Text.IndexOf(
                 match.Value,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
 
             if (labelCharPosition is -1 or 0)
             {
@@ -94,7 +94,24 @@ public static class LabelMatchingHelper
         }
 
         return false;
+    }
 
+    private static bool LookingForStartOfBlock(string labelText)
+    {
+        return labelText.Equals(PositionConstants.StartOfBlockMarker);
+    }
+
+    private static bool ColumnStartsWithLabel(DocumentLineColumn column, string labelTextWithoutMarkers, ref bool? resultOut)
+    {
+        if (resultOut.HasValue)
+        {
+            return resultOut.Value;
+        }
+        
+        var result = column.Text.StartsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
+
+        resultOut = result;
+        return result;
     }
     
     public static bool LineContainsLabel(
@@ -138,34 +155,36 @@ public static class LabelMatchingHelper
                 return regexResult.HasValue;
             }
             
-            if (combinedText?.Contains(labelText, StringComparison.InvariantCultureIgnoreCase) == true)
+            var combinedTextPosition = combinedText?.IndexOf(labelText,
+                StringComparison.InvariantCultureIgnoreCase);
+            
+            if (combinedTextPosition > -1)
             {
-                var position2 = combinedText.IndexOf(labelText,
-                    StringComparison.InvariantCultureIgnoreCase);
-                var endPoint = position2 + labelText.Length;
+                var endPoint = combinedTextPosition + labelText.Length;
 
-                if (endPoint > lineToCheck.Text.Length && lineToCheck.Text.Length > position2)
+                if (endPoint > lineToCheck.Text.Length && lineToCheck.Text.Length > combinedTextPosition)
                 {
                     lineToCheck = lineToCheck.Clone();
                     lineToCheck.Columns.AddRange(nextLineToContinueOnto!.Columns);
                 }
             }
             
-            var lineMustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
-            var labelTextWithoutMarkers = labelText
-                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
-                .Replace(PositionConstants.EndOfLineMarker, string.Empty);
-            
-            var firstLine = lineCount == 0;
-            var isStartOfBlock = labelText.Equals(PositionConstants.StartOfBlockMarker);
-        
-            if (firstLine && isStartOfBlock)
+            var isFirstLine = lineCount == 0;
+
+            if (isFirstLine && LookingForStartOfBlock(labelText))
             {
                 matchedText = labelTextOption;
                 labelCharPosition = 0;
                 
                 return true;
             }
+            
+            var mustContainEndOfColumnMarker = labelText.Contains(PositionConstants.EndOfColumnMarker);
+            var mustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
+
+            var labelTextWithoutMarkers = labelText
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty);
             
             var lineStartsWithLabel =
                 lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
@@ -180,15 +199,14 @@ public static class LabelMatchingHelper
                 lineToCheck.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase);
             var lineEndsWithLabel =
                 lineToCheck.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+            var lineEndsWithMarker =
+                lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
             
             foreach (var column in lineToCheck.Columns)
             {
-                var columnStartsWithLabel =
-                    column.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
+                var columnStartsWithLabel = (bool?)null;
 
-                var columnMustContainEndOfColumnMarker = labelText.Contains(PositionConstants.EndOfColumnMarker);
-                
-                if (columnMustContainEndOfColumnMarker)
+                if (mustContainEndOfColumnMarker)
                 {
                     var columnEndsWithMarker =
                         column.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
@@ -197,7 +215,7 @@ public static class LabelMatchingHelper
                     {
                         if (labelTextOption.ColumnMustStartWith)
                         {
-                            if (columnStartsWithLabel)
+                            if (ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel))
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
                                 return true;
@@ -218,16 +236,13 @@ public static class LabelMatchingHelper
                         }
                     }
                 }
-                else if (lineMustContainEndOfLineMarker)
+                else if (mustContainEndOfLineMarker)
                 {
-                    var lineEndsWithMarker =
-                        lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);                    
-                    
                     if (lineEndsWithMarker)
                     {
                         if (labelTextOption.ColumnMustStartWith)
                         {
-                            if (columnStartsWithLabel)
+                            if (ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel))
                             {
                                 matchedText = labelTextOption.Clone(labelTextWithoutMarkers);
                                 return true;
@@ -250,14 +265,9 @@ public static class LabelMatchingHelper
                 }
                 else
                 {
-                    var columnStartsWithLabelWithSpaceBefore =
-                        column.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase);
-                    var columnEndsWithLabel =
-                        column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
-
                     if (labelTextOption.ColumnMustStartWith)
                     {
-                        if (columnStartsWithLabel)
+                        if (ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel))
                         {
                             matchedText = labelTextOption;
                             return true;
@@ -271,12 +281,12 @@ public static class LabelMatchingHelper
                             return true;
                         }
                     }
-                    else if (columnStartsWithLabel
-                        || lineStartsWithLabel
-                        || columnStartsWithLabelWithSpaceBefore
+                    else if (lineStartsWithLabel
                         || lineStartsWithLabelWithSpaceBefore
-                        || columnEndsWithLabel
-                        || lineEndsWithLabel)
+                        || lineEndsWithLabel
+                        || ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel)
+                        || column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase)
+                        || column.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase))
                     {
                         matchedText = labelTextOption;
                         return true;

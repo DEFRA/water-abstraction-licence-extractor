@@ -1467,7 +1467,7 @@ public static class WalSchemaConverter
             return null;
         }
 
-        var isFrom = value.Contains("From ", StringComparison.InvariantCultureIgnoreCase);
+        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
         var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
         
         if (!isFrom && !isUntil)

@@ -47,7 +47,7 @@ try
     var outputFolder = args[9];
     var tessDataPath = args[10];
 
-    var isFileMode = bytesMode.Equals("file", StringComparison.InvariantCultureIgnoreCase);
+    var isFileMode = bytesMode.Equals("file", StringComparison.OrdinalIgnoreCase);
     
     var tesseractService = GetTesseractService(
         isFileMode,

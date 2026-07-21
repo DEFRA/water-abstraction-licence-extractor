@@ -51,7 +51,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var imagePath = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
         
         var imageFilenameDeflated = imagePath.Replace(".jpg", "-deflated.jpg",
-            StringComparison.InvariantCultureIgnoreCase);
+            StringComparison.OrdinalIgnoreCase);
         await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
 
         return deflated;

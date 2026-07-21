@@ -187,12 +187,12 @@ public static partial class DataHelper
 
                         if (countOfNumbers >= 2)
                         {
-                            if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                            if (returnStr.Contains(textToMatch.Text, StringComparison.OrdinalIgnoreCase))
                             {
                                 returnStr = returnStr.Replace(
                                     textToMatch.Text,
                                     string.Empty,
-                                    StringComparison.InvariantCultureIgnoreCase);
+                                    StringComparison.OrdinalIgnoreCase);
                             }
 
                             removesUsedList.Add(textToMatch.Text);
@@ -201,7 +201,7 @@ public static partial class DataHelper
                         continue;
                     }
 
-                    if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                    if (returnStr.Contains(textToMatch.Text, StringComparison.OrdinalIgnoreCase))
                     {
                         returnStr = ReplaceFirst(returnStr, textToMatch.Text, string.Empty);
                     }
@@ -218,7 +218,7 @@ public static partial class DataHelper
                     continue;
                 }
 
-                if (returnStr.Contains(textToMatch.Text, StringComparison.InvariantCultureIgnoreCase))
+                if (returnStr.Contains(textToMatch.Text, StringComparison.OrdinalIgnoreCase))
                 {
                     var anyFound = false;
                     var loopIdx = 0;
@@ -227,7 +227,7 @@ public static partial class DataHelper
                     {
                         var indexOf = returnStr.IndexOf(
                             textToMatch.Text,
-                            StringComparison.InvariantCultureIgnoreCase);
+                            StringComparison.OrdinalIgnoreCase);
 
                         if (indexOf == -1)
                         {
@@ -263,7 +263,7 @@ public static partial class DataHelper
     
     private static string ReplaceFirst(string text, string search, string replace)
     {
-        var pos = text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+        var pos = text.IndexOf(search, StringComparison.OrdinalIgnoreCase);
         
         if (pos < 0)
         {
@@ -322,16 +322,16 @@ public static partial class DataHelper
         var firstWord = word;
         
         if (char.IsDigit(firstWord.Text[0])
-            && (firstWord.Text.EndsWith("st", StringComparison.InvariantCultureIgnoreCase)
-                || firstWord.Text.EndsWith("nd", StringComparison.InvariantCultureIgnoreCase)
-                || firstWord.Text.EndsWith("rd", StringComparison.InvariantCultureIgnoreCase)            
-                || firstWord.Text.EndsWith("th", StringComparison.InvariantCultureIgnoreCase)))
+            && (firstWord.Text.EndsWith("st", StringComparison.OrdinalIgnoreCase)
+                || firstWord.Text.EndsWith("nd", StringComparison.OrdinalIgnoreCase)
+                || firstWord.Text.EndsWith("rd", StringComparison.OrdinalIgnoreCase)            
+                || firstWord.Text.EndsWith("th", StringComparison.OrdinalIgnoreCase)))
         {
             return false;
         }
         
         // TODO - why? shouldnt need to
-        if (word.Text.Equals("per", StringComparison.InvariantCultureIgnoreCase))
+        if (word.Text.Equals("per", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -410,8 +410,8 @@ public static partial class DataHelper
 
         var firstWord = words[0]!;
         if (char.IsDigit(firstWord.Text[0])
-            && (firstWord.Text.EndsWith("st", StringComparison.InvariantCultureIgnoreCase)
-                || firstWord.Text.EndsWith("nd", StringComparison.InvariantCultureIgnoreCase)
+            && (firstWord.Text.EndsWith("st", StringComparison.OrdinalIgnoreCase)
+                || firstWord.Text.EndsWith("nd", StringComparison.OrdinalIgnoreCase)
                 || firstWord.Text.EndsWith("rd", StringComparison.InvariantCultureIgnoreCase)            
                 || firstWord.Text.EndsWith("th", StringComparison.InvariantCultureIgnoreCase)))
         {

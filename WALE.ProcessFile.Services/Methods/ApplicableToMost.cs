@@ -27,7 +27,7 @@ public static class ApplicableToMost
         }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
-            && request.line?.Text.Equals(request.label.TextToMatch?.FirstOrDefault()?.Text, StringComparison.InvariantCultureIgnoreCase) == true)
+            && request.line?.Text.Equals(request.label.TextToMatch?.FirstOrDefault()?.Text, StringComparison.OrdinalIgnoreCase) == true)
         {
             request.textBeforeAtAndAfterLabel = [
                 new()
@@ -74,7 +74,7 @@ public static class ApplicableToMost
             {
                 var column = request.line!.Columns
                     .FirstOrDefault(c =>
-                        c.Text.Contains(labelText, StringComparison.InvariantCultureIgnoreCase));
+                        c.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase));
 
                 if (column != null)
                 {
@@ -176,7 +176,7 @@ public static class ApplicableToMost
             if (request.isCompanyType
                 && !string.IsNullOrEmpty(outputText)
                 && (char.IsLower(outputText[0])
-                    || outputText.StartsWith("trading as", StringComparison.InvariantCultureIgnoreCase)))
+                    || outputText.StartsWith("trading as", StringComparison.OrdinalIgnoreCase)))
             {
                 over2Lines = true;
                 outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
@@ -375,8 +375,8 @@ public static class ApplicableToMost
 
                 foreach (var possibility in matchedLabel.Possibilities)
                 {
-                    if (!outputText.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase)
-                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility.Text, StringComparison.InvariantCultureIgnoreCase)))
+                    if (!outputText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility.Text, StringComparison.OrdinalIgnoreCase)))
                     {
                         continue;
                     }
@@ -613,7 +613,7 @@ public static class ApplicableToMost
             var matches = label.MustContain.Any(containsInstance =>
                 !string.IsNullOrEmpty(containsInstance)
                 && result.Text?.Any(t =>
-                    t.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase)) == true);
+                    t.Text.Contains(containsInstance, StringComparison.OrdinalIgnoreCase)) == true);
 
             if (matches)
             {
@@ -634,7 +634,7 @@ public static class ApplicableToMost
         var matches = label.MustContain.Any(containsInstance =>
             !string.IsNullOrEmpty(containsInstance)
             && result.Text?.Any(t =>
-                t.Text.Contains(containsInstance, StringComparison.InvariantCultureIgnoreCase)) == true);
+                t.Text.Contains(containsInstance, StringComparison.OrdinalIgnoreCase)) == true);
 
         return matches ? result : null;
     }

@@ -160,6 +160,8 @@ public class DatabaseOutputService(
         
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.Filename,
+            licence.Status.ToString(),
             licenceStr,
             licence.DmsFileId,
             licence.DmsPermitNumber,
@@ -191,6 +193,11 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    {
+        return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
+    }
+    
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
@@ -269,7 +276,9 @@ public class DatabaseOutputService(
                 GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
 
             var licence =
-                await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceAsync(
+                    licenceTransformed,
+                    processRun.ProcessRunId);
 
             if (licence == null)
             {
@@ -298,10 +307,20 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetLicenceAsync(fileId, processRunId);
     }
-    
-    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
+
+    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        return databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         return databaseReadService.GetMatchesResult(fileId);
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
+    {
+        return databaseReadService.GetMatchesResult(fileId, processRunId);
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
@@ -400,8 +419,23 @@ public class DatabaseOutputService(
             {
                 var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licenceId = (int)l.NoneSchemaData["licenceId"]!;
-                    return licenceId == licenceSetLicence.LicenceId || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
+                    if (!l.NoneSchemaData.TryGetValue("licenceId", out var licenceIdObj))
+                    {
+                        return false;
+                    }
+
+                    int licenceId;
+                    if (licenceIdObj is JsonElement jsonElement)
+                    {
+                        licenceId = jsonElement.GetInt32();
+                    }
+                    else
+                    {
+                        licenceId = (int)licenceIdObj!;
+                    }
+                    
+                    return licenceId == licenceSetLicence.LicenceId
+                        || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
                 });
 
                 if (licence == null)

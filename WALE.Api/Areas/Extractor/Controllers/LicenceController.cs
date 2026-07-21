@@ -22,6 +22,24 @@ public class LicenceController(IOutputService outputService) : Controller
         return Ok(licences);
     }
     
+    [HttpGet]
+    public async Task<IActionResult> GetByFileIdAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await outputService.GetLicenceAsync(fileId, processRunId);
+        return Ok(licence);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetByLicenceNumberAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int processRunId)
+    {
+        var licence = await outputService.GetLicenceAsync(licenceNumber, processRunId);
+        return Ok(licence);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> SaveAsync(
         [FromBody] SaveLicenceRequest request)

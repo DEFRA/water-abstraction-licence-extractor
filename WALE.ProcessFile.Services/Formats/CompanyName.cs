@@ -86,7 +86,7 @@ public static class CompanyName
                 
                 // It's only the company suffix with nothing else
                 if (CompanyNameHelper.CompanySuffixes.Any(companySuffix =>
-                    companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.InvariantCultureIgnoreCase)))
+                    companySuffix.Trim().Equals(companyOrPersonalName, StringComparison.OrdinalIgnoreCase)))
                 {
                     newColumns.Add(column);
 
@@ -238,7 +238,7 @@ public static class CompanyName
             if (containsDelimitter)
             {
                 text = text[..(text.IndexOf(delimiter!,
-                    StringComparison.InvariantCultureIgnoreCase) + delimiter!.Length)];
+                    StringComparison.OrdinalIgnoreCase) + delimiter!.Length)];
             }
             
             matchedCompanyOrPersonalName = text;
@@ -259,7 +259,7 @@ public static class CompanyName
         return false;
     }
     
-    private static bool ContainsCompanyOrPersonalWord(string? text, HashSet<string> firstNamesCsv)
+    private static bool ContainsCompanyOrPersonalWord(string? text, HashSet<string> firstNames)
     {
         if (text == null)
         {
@@ -267,20 +267,23 @@ public static class CompanyName
         }
 
         var textParts = text.Split(' ');
-        var secondWordString = textParts.Length >= 2 ? text[textParts[0].Length..].Trim() : null;
+        var firstWord = textParts.Length >= 2 ? textParts[0] : null; // There needs to be at least 2 parts as we need a space after
         
-        foreach (var name in firstNamesCsv)
+        if (firstWord != null && firstNames.Contains(firstWord))
         {
-            if (text.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase)
-                || secondWordString?.StartsWith($"{name} ", StringComparison.InvariantCultureIgnoreCase) == true)
-            {
-                return true;
-            }
+            return true;
+        }
+
+        var secondWord = textParts.Length >= 3 ? textParts[1] : null; // There needs to be at least 3 parts as we need a space after
+        
+        if (secondWord != null && firstNames.Contains(secondWord))
+        {
+            return true;
         }
         
         return CompanyNameHelper.CompanyWords
             .Any(companyWord => text.Contains(companyWord,
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.OrdinalIgnoreCase));
     }
     
     private static bool ContainsCompanyOrPersonalSuffixDelimitter(
@@ -299,7 +302,7 @@ public static class CompanyName
             .Any(companySuffix =>
             {
                 var contains = text.Contains(companySuffix,
-                    StringComparison.InvariantCultureIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase);
 
                 if (contains)
                 {
@@ -324,9 +327,9 @@ public static class CompanyName
         const string grantsthis = "grants this";
         const string aagency = "a agency";
 
-        return text.Contains(hereinafter, StringComparison.InvariantCultureIgnoreCase)
-               || text.Contains(grantsthis, StringComparison.InvariantCultureIgnoreCase)
-               || text.Contains(aagency, StringComparison.InvariantCultureIgnoreCase);
+        return text.Contains(hereinafter, StringComparison.OrdinalIgnoreCase)
+               || text.Contains(grantsthis, StringComparison.OrdinalIgnoreCase)
+               || text.Contains(aagency, StringComparison.OrdinalIgnoreCase);
     }
     
     private static bool EndsWithNoneCompanyOrPersonalSuffix(string? text)
@@ -338,7 +341,7 @@ public static class CompanyName
         
         return Suffixes
             .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase)
+                StringComparison.OrdinalIgnoreCase)
                 || char.IsDigit(text.Last()));
     }
     

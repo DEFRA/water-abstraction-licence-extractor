@@ -70,11 +70,11 @@ public static class AfterTextContainsAnotherMatch
         foreach (var result in results)
         {
             var afterTextInOriginalLinePosition = originalText.IndexOf(afterText,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             var valueInAfterTextPosition = afterText.IndexOf(result.Text!.First().Text,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             var labelInAfterTextPosition = afterText.IndexOf(result.MatchedLabel!.TextToMatch!.First().Text,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             
             result.CharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
             

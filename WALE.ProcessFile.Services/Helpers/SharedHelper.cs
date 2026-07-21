@@ -1,3 +1,4 @@
+using System.Text.Json;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -106,10 +107,6 @@ public static class SharedHelper
         IOutputService outputService,
         ProcessRun processRun)
     {
-        var savedLicenceNumbers = new Dictionary<string, int>();
-        var savedLicenceFilenames = new Dictionary<string, int>();
-        var savedNotFoundLicences = new Dictionary<string, int>();
-
         var savedLicenceSetIds = new HashSet<string>();
 
         foreach (var licenceSetGroup in licenceSetGroups)
@@ -125,74 +122,54 @@ public static class SharedHelper
             {
                 foreach (var licenceLoop in licenceSetLoop.Licences)
                 {
-                    var filename = licenceLoop.Filename;
-                    var licenceFound = licenceLoop.Status == LicenceStatus.Ok;
+                    var hasFileId = licenceLoop.DmsFileId.HasValue;
+
+                    var existingSavedLicenceByFileId = hasFileId
+                        ? await outputService.GetLicenceAsync(
+                            licenceLoop.DmsFileId!.Value,
+                            processRun.ProcessRunId)
+                        : null;
+                    
                     var licenceNumber = licenceLoop.LicenceNumber?.Value;
-                    var isLicenceNumberNull = string.IsNullOrEmpty(licenceNumber);
-                    var existingLicenceId = -1;
+                    var hasLicenceNumber = !string.IsNullOrEmpty(licenceNumber);
                     
-                    var previouslySavedAsNotFound = !isLicenceNumberNull
-                        && savedNotFoundLicences.TryGetValue(licenceNumber!, out existingLicenceId);
+                    var existingSavedLicenceByLicenceNumber = hasLicenceNumber
+                        && existingSavedLicenceByFileId == null
+                        ? await outputService.GetLicenceAsync(
+                            licenceNumber!,
+                            processRun.ProcessRunId)
+                        : null;
 
-                    var foundButPreviouslySavedAsNotFound = previouslySavedAsNotFound && licenceFound;
-                    var licenceNumberPresentNotYetSaved = !isLicenceNumberNull
-                        && !savedLicenceNumbers.TryGetValue(licenceNumber!, out _);
-
-                    var notYetSavedByFilename = isLicenceNumberNull
-                        && !string.IsNullOrEmpty(filename)
-                        && !savedLicenceFilenames.TryGetValue(filename, out _);
+                    var existingLicence = existingSavedLicenceByFileId ?? existingSavedLicenceByLicenceNumber;
+                    var existingLicenceId = existingLicence?.NoneSchemaData.ContainsKey("licenceId") == true
+                        ? GetInt32(existingLicence.NoneSchemaData["licenceId"]!)
+                        : (int?)null;
                     
-                    if (licenceNumberPresentNotYetSaved || foundButPreviouslySavedAsNotFound)
+                    var previouslySaved = existingLicenceId != null;
+                    
+                    if (previouslySaved)
                     {
-                        int loopLicenceId;
-
-                        if (foundButPreviouslySavedAsNotFound)
+                        var licenceFoundLocally = licenceLoop.Status == LicenceStatus.Ok;
+                        var previouslySavedAsNotFound = existingLicence!.Status == LicenceStatus.NotFound;
+                        
+                        if (licenceFoundLocally && previouslySavedAsNotFound)
                         {
-                            // TODO this appears to never happen - look into it
-                            
                             await outputService.UpdateLicenceAsync(
                                 licenceLoop,
-                                existingLicenceId,
-                                processRun.ProcessRunId);
-
-                            loopLicenceId = existingLicenceId;
-                        }
-                        else
-                        {
-                            loopLicenceId = await outputService.SaveLicenceAsync(
-                                licenceLoop,
+                                existingLicenceId!.Value,
                                 processRun.ProcessRunId);
                         }
-
-                        savedLicenceNumbers.TryAdd(licenceNumber!, loopLicenceId);
-
-                        if (!string.IsNullOrWhiteSpace(filename))
-                        {
-                            savedLicenceFilenames.TryAdd(filename, loopLicenceId);
-                        }
-
-                        if (!licenceFound)
-                        {
-                            savedNotFoundLicences.TryAdd(licenceNumber!, loopLicenceId);
-                        }
-                        else
-                        {
-                            savedNotFoundLicences.Remove(licenceNumber!);
-                        }
-
-                        licenceLoop.NoneSchemaData["licenceId"] = loopLicenceId;
                     }
-                    else if (notYetSavedByFilename)
+                    else
                     {
-                        var loopLicenceId = await outputService.SaveLicenceAsync(
+                        var licenceId = await outputService.SaveLicenceAsync(
                             licenceLoop,
                             processRun.ProcessRunId);
-
-                        savedLicenceFilenames.Add(filename!, loopLicenceId);
-                        licenceLoop.NoneSchemaData.Add("licenceId", loopLicenceId);
+                        
+                        licenceLoop.NoneSchemaData["licenceId"] = licenceId;
                     }
-
-                    var licenceSetsLoop = SharedHelper.GetLicenceSetsForLicenceSetIds(
+                    
+                    var licenceSetsLoop = GetLicenceSetsForLicenceSetIds(
                         licenceLoop.LicenceSets,
                         allLicenceSets);
 
@@ -215,5 +192,21 @@ public static class SharedHelper
                 }
             }
         }
+    }
+
+    private static int GetInt32(object jsonObject)
+    {
+        if (jsonObject is JsonElement jsonElement)
+        {
+            return jsonElement.GetInt32();
+        }
+        
+        return (int)jsonObject;
+    }
+
+    public static Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(
+        ICacheService cacheService)
+    {
+        return cacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
     }
 }

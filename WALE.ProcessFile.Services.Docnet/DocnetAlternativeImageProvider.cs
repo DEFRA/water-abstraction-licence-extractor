@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Docnet.Core.Models;
 using Docnet.Core.Readers;
 using SkiaSharp;
@@ -8,7 +9,7 @@ namespace WALE.ProcessFile.Services.Docnet;
 public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
     private IDocReader? _docReader;
-    private readonly SemaphoreSlim _docReaderLock = new(1, 1);
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _dictDocReaderLock = new();
     
     public async Task<SKBitmap> GetPageAsSkBitmapAsync(
         IFileService fileService,
@@ -17,7 +18,13 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
         int pageDimensionHeight,
         int pageNumber)
     {
-        await _docReaderLock.WaitAsync();
+        var docReaderLock = _dictDocReaderLock.TryGetValue(
+            pdfFilename,
+            out var tDocReaderLock)
+                ? tDocReaderLock
+                : _dictDocReaderLock[pdfFilename] = new SemaphoreSlim(1, 1);
+        
+        await docReaderLock.WaitAsync();
 
         try
         {
@@ -33,7 +40,8 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
         }
         finally
         {
-            _docReaderLock.Release();            
+            docReaderLock.Release();
+            _dictDocReaderLock.TryRemove(pdfFilename, out _);
         }
 
         using var pageReader = _docReader.GetPageReader(pageNumber - 1);

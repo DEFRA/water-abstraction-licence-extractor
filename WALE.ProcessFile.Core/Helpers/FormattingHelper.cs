@@ -1,11 +1,15 @@
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
+    private static readonly Dictionary<string, DmsFileData?> DmsFileDataCache = new();
+    private static readonly Dictionary<string, NaldData?> NaldDataCache = new();
+    
     public static string? RemoveSeperators(string? licenceNumber)
     {
         return licenceNumber?
@@ -41,24 +45,45 @@ public static class FormattingHelper
         ];
     }
 
-    public static bool GetDmsFileData(
-        string? licenceNumber,
-        int regionCode,
-        Dictionary<string, DmsFileData>? licenceNumberMapping,
-        out DmsFileData? dmsFileData)
+    public static async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, ICacheService cacheService)
     {
-        var strippedOptions = StripForComparisonMultipleOptions(licenceNumber, regionCode);
-        dmsFileData = null;
-            
-        foreach (var stripped in strippedOptions)
+        if (string.IsNullOrEmpty(licenceNumber))
         {
-            if (licenceNumberMapping?.TryGetValue(stripped, out dmsFileData) == true)
-            {
-                return true;
-            }
+            return null;
         }
+        
+        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData))
+        {
+            return cachedData;
+        }
+        
+        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
+        DmsFileDataCache.Add(licenceNumber, dmsFileData);
+        
+        return dmsFileData;
+    }
+    
+    public static async Task<NaldData?> GetNaldDataLineAsync(
+        ICacheService cacheService,
+        string? licenceNumber,
+        int regionCode)
+    {
+        var key = $"{regionCode}|{licenceNumber}";
+        
+        if (string.IsNullOrEmpty(key))
+        {
+            return null;
+        }
+        
+        if (NaldDataCache.TryGetValue(key, out var cachedData))
+        {
+            return cachedData;
+        }
+        
+        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
+        NaldDataCache.Add(key, naldData);
 
-        return false;
+        return naldData;
     }
 
     public static string? StripForComparison(
@@ -176,6 +201,8 @@ public static class FormattingHelper
 
     private static string? ToFullLicenceNumber_NE(string? licenceNumber)
     {
+        const int regionCode = 3; // NE
+        
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return licenceNumber;
@@ -440,7 +467,7 @@ public static class FormattingHelper
                 }
                 else
                 {
-                    return NotNe_ToNaldLicenceNumber(licenceNumber);
+                    return NotNe_ToNaldLicenceNumber(licenceNumber, regionCode);
                 }
                 
                 parts.Add(part3);
@@ -567,7 +594,7 @@ public static class FormattingHelper
         }
         else
         {
-            return NotNe_ToNaldLicenceNumber(licenceNumber);
+            return NotNe_ToNaldLicenceNumber(licenceNumber, regionCode);
         }
 
         if (origLicenceNumber.Contains('/'))
@@ -718,7 +745,7 @@ public static class FormattingHelper
             //return Yorkshire1_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
         }
         
-        return NotNe_ToNaldLicenceNumber(noneSeperatedLicenceNumber);
+        return NotNe_ToNaldLicenceNumber(noneSeperatedLicenceNumber, regionCode);
     }
 
     public static string? FormatLicenceNumber(string? licenceNumber, int regionCode)
@@ -754,15 +781,21 @@ public static class FormattingHelper
         {
             licenceNumber = '1' + licenceNumber[1..];
         }
-        if (licenceNumber.StartsWith('4'))
-        {
-            licenceNumber = '1' + licenceNumber[1..];
-        }
-        if (licenceNumber.StartsWith('7'))
-        {
-            licenceNumber = '1' + licenceNumber[1..];
-        }
         
+        // TODO dodgy!
+        if (regionCode != 1)
+        {
+            if (licenceNumber.StartsWith('4'))
+            {
+                licenceNumber = '1' + licenceNumber[1..];
+            }
+
+            if (licenceNumber.StartsWith('7'))
+            {
+                licenceNumber = '1' + licenceNumber[1..];
+            }
+        }
+
         var numberOfSlashes = licenceNumber.Count(c => c == '/');
         
         if (numberOfSlashes is 1 or 2)
@@ -778,7 +811,7 @@ public static class FormattingHelper
         return NotNE_PadLicenceNumber(licenceNumber, regionCode);
     }
 
-    private static string? NotNe_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber)
+    private static string? NotNe_ToNaldLicenceNumber(string? noneSeperatedLicenceNumber, int regionCode)
     {
         if (string.IsNullOrEmpty(noneSeperatedLicenceNumber))
         {
@@ -787,7 +820,8 @@ public static class FormattingHelper
         
         var section1 = noneSeperatedLicenceNumber[0].ToString();
 
-        if (section1 == "J" || section1 == "4" || section1 == "7")
+        // TODO - dodgy!
+        if (section1 == "J" || (regionCode != 1 && (section1 == "4" || section1 == "7")))
         {
             section1 = "1";
         }
@@ -862,8 +896,8 @@ public static class FormattingHelper
                 
                 section4 = $"S/{rest}";
             }
-            else if (section4.EndsWith("S", StringComparison.InvariantCultureIgnoreCase)
-                || section4.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
+            else if (section4.EndsWith("S", StringComparison.OrdinalIgnoreCase)
+                || section4.EndsWith("G", StringComparison.OrdinalIgnoreCase))
             {
                 var indexOfSlash = section4.IndexOf('/');
 

@@ -7,18 +7,15 @@ using WRADI.Services.ProcessFile;
 
 namespace WRADI.FileProcess.CmdLine.BackgroundServices;
 
-public sealed class FileProcessOrchestrationService(
+public sealed class FileProcessOrchestrationHostedService(
     IAmazonSQS sqsClient,
     IFileProcessOrchestrator fileProcessOrchestrator,
     FileProcessAppSettings settings,
-    ILogger<FileProcessOrchestrationService> logger)
+    ILogger<FileProcessOrchestrationHostedService> logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Orchestration SQS worker started. Queue: {QueueUrl}",
-            settings.SqsQueueOrchestrationUrl);
-
         var request = new ReceiveMessageRequest
         {
             QueueUrl = settings.SqsQueueOrchestrationUrl,
@@ -30,6 +27,10 @@ public sealed class FileProcessOrchestrationService(
         {
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
+        
+        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
+            nameof(FileProcessOrchestrationHostedService),
+            request.QueueUrl);
         
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -43,14 +44,15 @@ public sealed class FileProcessOrchestrationService(
                 }
 
                 foreach (var message in response.Messages
-                    .TakeWhile(message => !cancellationToken.IsCancellationRequested))
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested))
                 {
                     try
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
-                        var result =  await fileProcessOrchestrator.RunAsync(cancellationToken);
+                        var result = await fileProcessOrchestrator.RunAsync(
+                            cancellationToken);
 
                         if (!result)
                         {
@@ -60,7 +62,7 @@ public sealed class FileProcessOrchestrationService(
                         await sqsClient.DeleteMessageAsync(
                             new DeleteMessageRequest
                             {
-                                QueueUrl = settings.SqsQueueOrchestrationUrl,
+                                QueueUrl = request.QueueUrl,
                                 ReceiptHandle = message.ReceiptHandle
                             },
                             cancellationToken);
@@ -85,6 +87,6 @@ public sealed class FileProcessOrchestrationService(
             }
         }
 
-        logger.LogInformation("Orchestation SQS worker stopped.");
+        logger.LogInformation("{ServiceName} stopped.", nameof(FileProcessOrchestrationHostedService));
     }
 }

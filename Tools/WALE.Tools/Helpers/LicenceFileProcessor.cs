@@ -217,7 +217,7 @@ public class LicenceFileProcessor
 
                 return destinationPropertyName.Equals(
                     columnMappingPropertyName,
-                    StringComparison.InvariantCultureIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase);
             });
 
             if (!existsInColumnMapping)

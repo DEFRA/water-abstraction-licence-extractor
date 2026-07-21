@@ -47,7 +47,7 @@ public static class Units
 
                     foreach (var possibility in label.Possibilities!)
                     {
-                        if (!column.Text.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase))
+                        if (!column.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
@@ -93,7 +93,7 @@ public static class Units
 
                     foreach (var possibility in label.Possibilities!)
                     {
-                        if (!multipleLineText.Contains(possibility.Text, StringComparison.InvariantCultureIgnoreCase))
+                        if (!multipleLineText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }

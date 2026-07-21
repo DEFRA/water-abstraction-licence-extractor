@@ -1,3 +1,4 @@
+using FakeItEasy;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -19,6 +20,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureOpenAiOcrPdfTests
 {
+    private static readonly ICacheService CacheService;
+
+    static AzureOpenAiOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -37,12 +46,12 @@ public class AzureOpenAiOcrPdfTests
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
         LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -58,9 +67,10 @@ public class AzureOpenAiOcrPdfTests
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
     private string PdfFolder => TestConfig.PdfFolder;
 
@@ -68,23 +78,22 @@ public class AzureOpenAiOcrPdfTests
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
-            4); // TODO - whatever Hampshire & IOW is
+            4,
+            DateTime.Now); // TODO - whatever Hampshire & IOW is
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName)
     {
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(PdfFolder),
             
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -166,8 +175,6 @@ public class AzureOpenAiOcrPdfTests
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            new NaldLicenceStatusData(),
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));

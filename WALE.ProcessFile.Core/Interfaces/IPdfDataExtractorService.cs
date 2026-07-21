@@ -8,7 +8,7 @@ public interface IPdfDataExtractorService
     public int Id { get; set; }
     public bool InUse { get; set; }
     
-    public Task<MatchesResult> GetMatchesAsync(
+    public Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
@@ -21,7 +21,6 @@ public interface IPdfDataExtractorService
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,

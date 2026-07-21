@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -19,6 +20,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [EnableParallelization] // TODO remove this if it causes an issue
 public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static AwsTextractOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -37,11 +46,11 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -52,20 +61,20 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() { { "", new DmsFileData() } };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            regionCode,
+            DateTime.Now);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
@@ -73,12 +82,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
         if (number == 5) pdfFolder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -192,8 +201,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            new NaldLicenceStatusData(),
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
@@ -229,8 +236,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         
         var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            new NaldLicenceStatusData(),
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -255,8 +260,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            new NaldLicenceStatusData(),
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder));

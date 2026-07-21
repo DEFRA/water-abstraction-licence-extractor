@@ -13,8 +13,6 @@ public class AddendumFileTypeRule : IRule<FileTypeResult>
     public string? Region { get; set; }
     public int Priority => 100;
 
-    private readonly string[] _addendumTerms = { "Please keep this addendum with" };
-
     public bool CanApply(MatchesResult content)
     {
         return content.Matches?

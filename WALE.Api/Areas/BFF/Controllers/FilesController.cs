@@ -52,7 +52,7 @@ public class FilesController(IFileService fileService) : Controller
         
         foreach (var file in Request.Form.Files)
         {
-            if (!file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -60,7 +60,7 @@ public class FilesController(IFileService fileService) : Controller
             var lowercaseFileName = file.FileName.ToLowerInvariant();
             var fileExtension = Path.GetExtension(lowercaseFileName);
             
-            if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -100,13 +100,13 @@ public class FilesController(IFileService fileService) : Controller
 
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("application/octet-stream", StringComparison.InvariantCultureIgnoreCase))
+        if (!file.ContentType.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Expects binary stream.");
         }
 
         var fileExtension = Path.GetExtension(filename);
-        if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+        if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Only PDF files are allowed.");
         }

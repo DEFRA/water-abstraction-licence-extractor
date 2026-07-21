@@ -5,8 +5,6 @@ namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface ICacheService
 {
-    public bool UsesDatabase { get; set; }
-    
     public string? CacheFolderOrUrl { get; set; }
     
     public Task SetupAsync();
@@ -110,7 +108,6 @@ public interface ICacheService
         int take);
     
     Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
-    
     Task<(
             HashSet<(string, int)> Live,
             HashSet<(string, int)> Lapsed,
@@ -120,6 +117,8 @@ public interface ICacheService
         GetNaldLicenceNumbersAsync(short? regionCode);
 
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
+    
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
     
@@ -154,4 +153,12 @@ public interface ICacheService
     Task ClearVersionFilesToDownloadAsync();
 
     Task<HashSet<string>> GetFirstNamesAsync();
+    
+    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
+    
+    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
+    
+    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
+    
+    Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
 }

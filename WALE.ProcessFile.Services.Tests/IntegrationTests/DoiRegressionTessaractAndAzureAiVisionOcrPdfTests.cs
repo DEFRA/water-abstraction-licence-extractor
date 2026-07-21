@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -21,6 +22,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 2")]
 public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static DoiRegressionTessaractAndAzureAiVisionOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -39,11 +48,11 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined5 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -60,9 +69,10 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
 
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new();
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
@@ -71,18 +81,17 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            regionCode,
+            DateTime.Now);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
@@ -98,12 +107,12 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractorCombined5.GetMatchesAsync(
+        return (await _pdfDataExtractorCombined5.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -124,8 +133,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -156,8 +163,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -185,8 +190,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -215,8 +218,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -245,8 +246,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -275,8 +274,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -305,8 +302,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -335,8 +330,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -365,8 +358,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -395,8 +386,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -425,8 +414,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -455,8 +442,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -485,8 +470,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -515,8 +498,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));
@@ -547,8 +528,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5));

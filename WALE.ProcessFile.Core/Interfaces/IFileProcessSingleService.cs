@@ -5,6 +5,6 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IFileProcessSingleService
 {
     Task<bool> RunAsync(
-        SingleFileProcessRequest singleFileProcessRequest,
+        FileProcessSingleRequest fileProcessSingleRequest,
         CancellationToken cancellationToken);
 }

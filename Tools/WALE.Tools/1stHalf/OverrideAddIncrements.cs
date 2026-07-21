@@ -42,7 +42,7 @@ public class OverrideAddIncrements
             
             fileProcessor.GenerateExcel(
                 newFormatOverrides,
-                oldFile.Key.Replace(".xlsx", $"_{DateTime.Now:yyyyMMdd}.xlsx", StringComparison.InvariantCultureIgnoreCase),
+                oldFile.Key.Replace(".xlsx", $"_{DateTime.Now:yyyyMMdd}.xlsx", StringComparison.OrdinalIgnoreCase),
                 new Dictionary<string, string>
                 {
                     { "PermitNumber", "Permit Number"},

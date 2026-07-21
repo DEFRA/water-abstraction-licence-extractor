@@ -9,9 +9,9 @@ string workflow;
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-workflow = "CopyS3Files";
+//workflow = "CopyS3Files";
 
 const int processRunId = 89;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;

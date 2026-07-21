@@ -994,6 +994,7 @@ public class PdfDataExtractorService(
 
         var lines = StandardiseLines(documentLines);
         var wrappedLines = WrapLines(lines, false);
+        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -1006,7 +1007,7 @@ public class PdfDataExtractorService(
             {
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
                 
-                if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
+                if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
                 {
                     continue;
                 }
@@ -2243,7 +2244,7 @@ public class PdfDataExtractorService(
     
     private static bool LabelIsInDocument(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> lines)
+        string joinedLines)
     {
         var labelText = label.TextToMatch!
             .Select(labelTextMatch => labelTextMatch.Text
@@ -2255,8 +2256,6 @@ public class PdfDataExtractorService(
         {
             return true;
         }
-
-        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
         return labelText.Any(text => joinedLines.Contains(text,
             StringComparison.InvariantCultureIgnoreCase));

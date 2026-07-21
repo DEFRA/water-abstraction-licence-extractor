@@ -135,10 +135,7 @@ public static class LabelMatchingHelper
                     ref labelCharPosition,
                     ref matchedText);
 
-                if (regexResult != null)
-                {
-                    return regexResult.Value;
-                }
+                return regexResult.HasValue;
             }
             
             if (combinedText?.Contains(labelText, StringComparison.InvariantCultureIgnoreCase) == true)

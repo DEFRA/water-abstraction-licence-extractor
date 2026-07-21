@@ -363,6 +363,18 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            """;
 
         return (await QueryAsync<NaldLicenceQuantitiesDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                AabvAablId = abvAablId,
+                AabvIssueNo = issueNumber,
+                AabvIncrNo = incrementNumber
+            })).ToList();
+    }
+    
     public async Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -387,11 +399,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
-                RegionCode = regionCode,
-                AabvAablId = abvAablId,
-                AabvIssueNo = issueNumber,
-                AabvIncrNo = incrementNumber
-            })).ToList();
+                ProcessRunId = processRunId
+            });
+        
+        return issueDate.ToList();
     }
 
     private async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(
@@ -601,12 +612,6 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 RegionCode = regionCode,
                 AablId = aablId
             })).ToList();
-    }
-
-                ProcessRunId = processRunId
-            });
-
-        return issueDate.ToList();
     }
 
     public async Task<int> GetTotalLicenceCountAsync(

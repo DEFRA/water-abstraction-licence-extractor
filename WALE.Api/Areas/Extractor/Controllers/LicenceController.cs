@@ -56,6 +56,22 @@ public class LicenceController(IOutputService outputService) : Controller
     }
     
     [HttpPost]
+    public async Task<IActionResult> UpdateAsync(
+        [FromBody] UpdateLicenceRequest request)
+    {
+        var licence = JsonSerializer.Deserialize<Licence>(
+            request.licence!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await outputService.UpdateLicenceAsync(
+            licence,
+            request.licenceId,
+            request.processRunId);
+
+        return Ok();
+    }
+    
+    [HttpPost]
     public async Task<IActionResult> SaveLicenceSetAsync(
         [FromBody] SaveLicenceSetRequest request)
     {

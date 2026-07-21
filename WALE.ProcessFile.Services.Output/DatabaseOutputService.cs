@@ -160,6 +160,7 @@ public class DatabaseOutputService(
         
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.Filename,
             licence.Status.ToString(),
             licenceStr,
             licence.DmsFileId,

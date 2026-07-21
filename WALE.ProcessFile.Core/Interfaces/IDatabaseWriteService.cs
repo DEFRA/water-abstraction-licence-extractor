@@ -21,6 +21,7 @@ public interface IDatabaseWriteService
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        string? filename,
         string status,
         string licenceData,
         Guid? fileId,

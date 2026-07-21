@@ -207,6 +207,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
 
     public async Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        string? filename,
         string status,
         string licenceData,
         Guid? fileId,
@@ -215,8 +216,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (file_id, licence_number, status, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
+                           INSERT INTO licence (file_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
+                           VALUES (@FileId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -227,6 +228,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new {
                 FileId = fileId,
                 LicenceNumber = licenceNumber,
+                Filename = filename,
                 Status = status,
                 Data = licenceData,
                 ProcessRunId = processRunId,

@@ -24,17 +24,18 @@ public sealed class FileProcessSingleFileHostedService(
             MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
             WaitTimeSeconds = settings.SqsWaitTimeSeconds
         };
-        
-        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
-            nameof(FileProcessSingleFileHostedService),
-            request.QueueUrl);
 
         if (settings.SqsVisibilityTimeoutSeconds.HasValue)
         {
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
         
+        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
+            nameof(FileProcessSingleFileHostedService),
+            request.QueueUrl);
+        
         var handleMessageTasks = new List<Task>();
+        var maxParallelBeforeProcessingMore = Math.Ceiling(settings.SqsMaxNumberOfMessages / 2.0);
         
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -46,7 +47,7 @@ public sealed class FileProcessSingleFileHostedService(
                     .Where(handleMessageTask => !handleMessageTask.IsCompleted)
                     .ToList();
                 
-                if (handleMessageTasks.Count >= 5)
+                if (handleMessageTasks.Count >= maxParallelBeforeProcessingMore)
                 {
                     await Task.WhenAny(handleMessageTasks);
                     
@@ -72,7 +73,9 @@ public sealed class FileProcessSingleFileHostedService(
             catch (Exception exception)
             {
                 logger.LogError(exception, "Unhandled error while polling SQS");
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+
+                const int exceptionRepollingDelaySeconds = 5;
+                await Task.Delay(TimeSpan.FromSeconds(exceptionRepollingDelaySeconds), cancellationToken);
             }
         }
 

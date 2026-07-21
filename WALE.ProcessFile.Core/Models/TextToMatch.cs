@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace WALE.ProcessFile.Core.Models;
 
 public class TextToMatch(string text)
@@ -18,10 +20,8 @@ public class TextToMatch(string text)
 
     public int InstanceNumber { get; init; } = 1;
     
-    public bool IsRegularExpression { get; init; }
+    public Regex? Regex { get; init; }
     
-    public bool RegularExpressionIsCaseInsensitive { get; init; }
-
     public bool ExceptWhenInsideWord { get; set; }
     
     public bool SingleLinePerItem { get; set; }
@@ -37,8 +37,7 @@ public class TextToMatch(string text)
             ColumnMustHave2SequentialNumbers = ColumnMustHave2SequentialNumbers,
             RemoveWholeLine = RemoveWholeLine,
             InstanceNumber = InstanceNumber,
-            IsRegularExpression = IsRegularExpression,
-            RegularExpressionIsCaseInsensitive = RegularExpressionIsCaseInsensitive,
+            Regex = Regex,
             ExceptWhenInsideWord = ExceptWhenInsideWord,
             SingleLinePerItem = SingleLinePerItem
         };

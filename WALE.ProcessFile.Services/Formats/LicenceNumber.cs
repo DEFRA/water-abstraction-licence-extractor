@@ -449,7 +449,7 @@ public partial class LicenceNumber : ILicenceNumberService
     }
 
     [GeneratedRegex(YorkshireRegexPatten)]
-    private static partial Regex LicenceNumbersRegex();
+    public static partial Regex LicenceNumbersRegex();
 
     [GeneratedRegex(@"/ (?=\d)")]
     private static partial Regex SlashSpaceDigitRegex();

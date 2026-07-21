@@ -9,6 +9,7 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
+using JetBrains.Profiler.Api;
 using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 
 namespace WALE.ProcessFile.Services.Services;
@@ -62,12 +63,18 @@ public class PdfDataExtractorService(
             dmsDataForFile.FileId,
             processRunId);
         
-        return (false, false, await GetMatchesInternalAsync(
+        MeasureProfiler.StartCollectingData();
+        
+        var returnItem = (false, false, await GetMatchesInternalAsync(
             pdfFileName,
             dmsDataForFile.FileId,
             configuration,
             previouslyParsedFiles,
             processRunId));
+
+        MeasureProfiler.SaveData();
+        
+        return returnItem;
     }
 
     private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(
@@ -1002,7 +1009,7 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                var isRegularExpression = label.TextToMatch?.Any(text => text.IsRegularExpression) == true;
+                var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
                 
                 if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
                 {
@@ -1983,17 +1990,11 @@ public class PdfDataExtractorService(
             return returnItems;
         }
 
-        if (label.TextToMatch?.FirstOrDefault()?.IsRegularExpression == true &&
+        if (label.TextToMatch?.FirstOrDefault()?.Regex != null &&
             label.Position == LabelPosition.LabelIsActuallyResult)
         {
-            var options = label.TextToMatch.First().RegularExpressionIsCaseInsensitive
-                ? RegexOptions.IgnoreCase
-                : RegexOptions.None;
-
-            var matches = Regex.Matches(
-                lineText,
-                label.TextToMatch!.FirstOrDefault()!.Text,
-                options);
+            var regex = label.TextToMatch.FirstOrDefault()!.Regex;
+            var matches = regex!.Matches(lineText);
 
             foreach (var match in matches.AsQueryable())
             {

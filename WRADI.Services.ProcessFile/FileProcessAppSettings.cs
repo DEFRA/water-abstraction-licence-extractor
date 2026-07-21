@@ -3,18 +3,18 @@ namespace WRADI.Services.ProcessFile;
 public class FileProcessAppSettings
 {
     public bool RefreshCache { get; set; }
-    public string DotnetPath { get; set; } = "";
-    public string ApiBaseUrl { get; set; } = "";
-    public string PdfFolderPath { get; set; } = "";
+    public string DotnetPath { get; set; } = string.Empty;
+    public string ApiBaseUrl { get; set; } = string.Empty;
+    public string PdfFolderPath { get; set; } = string.Empty;
     
     // Tesseract settings
-    public string TesseractExeName { get; set; } = "";
-    public string TesseractExeDirectory { get; set; } = "";
-    public string TessDataPrefix { get; set; } = "";
+    public string TesseractExeName { get; set; } = string.Empty;
+    public string TesseractExeDirectory { get; set; } = string.Empty;
+    public string TessDataPrefix { get; set; } = string.Empty;
     
     // Azure AI Vision settings
-    public string AzureAiVisionEndpoint { get; set; } = "";
-    public string AzureAiVisionKey { get; set; } = "";
+    public string AzureAiVisionEndpoint { get; set; } = string.Empty;
+    public string AzureAiVisionKey { get; set; } = string.Empty;
 
     // General AWS settings
     public string? AwsSessionToken { get; set; }

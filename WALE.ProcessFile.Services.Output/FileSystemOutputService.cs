@@ -137,7 +137,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(-1);
     }
     
     public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
@@ -323,7 +323,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
-        throw new NotImplementedException();
+        return Task.FromResult<MatchesResult?>(null);
     }
 
     public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)

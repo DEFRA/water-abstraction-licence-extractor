@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
@@ -22,7 +23,7 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
 [Collection("First Names 4")]
-public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
+public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;
 
@@ -1126,10 +1127,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 Format = "Text",
                 Text =
                 [
-                    new(".*Yorkshire.* River.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = YorkshireRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -1139,4 +1139,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             }
         ];
     }
+    
+    [GeneratedRegex(".*Yorkshire.* River.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex YorkshireRiverAuthorityRegex();
 }

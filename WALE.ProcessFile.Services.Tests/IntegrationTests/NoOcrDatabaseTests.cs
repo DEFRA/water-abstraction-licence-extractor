@@ -99,11 +99,11 @@ public class NoOcrDatabaseTests
             DateTime.Now);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, Guid fileId)
     {
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
-            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
+            new DmsFileData { FileId = fileId },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
@@ -133,20 +133,20 @@ public class NoOcrDatabaseTests
         await SetupLicenceNumbersAsync(3);
         
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
-        var someGuid = Guid.NewGuid(); // TODO
+        var someGuid = Guid.NewGuid();
         
         await CacheService.ClearCacheAsync(someGuid);
         
-        await ProcessAsync(filename); // Uncached
-        await ProcessAsync(filename); // Cached
+        await ProcessAsync(filename, someGuid); // Uncached
+        await ProcessAsync(filename, someGuid); // Cached
     }
 
-    private async Task ProcessAsync(string filename)
+    private async Task ProcessAsync(string filename, Guid fileId)
     {
         await SetupLicenceNumbersAsync(3);
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, fileId);
         var resultList = resultFull.Matches!;
 
         // Assert
@@ -172,6 +172,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
+        Assert.Equal(3, nameResult.PageNumber);
         Assert.Equal(59, nameResult.LineNumber);
 
         // Note no other licence mentioned
@@ -235,6 +236,7 @@ public class NoOcrDatabaseTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
+        Assert.Equal(3, licenceNumberResult.PageNumber);
         Assert.Equal(53, licenceNumberResult.LineNumber);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");

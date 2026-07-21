@@ -56,6 +56,47 @@ public static class LabelMatchingHelper
 
         return false;
     }
+
+    private static bool? LineContainsLabelRegex(
+        TextToMatch labelTextOption,
+        DocumentLine lineToCheck,
+        DocumentLine lineForPosition,
+        ref int labelCharPosition,
+        ref TextToMatch? matchedText)
+    {
+        var matches = labelTextOption.Regex!.Matches(lineToCheck.Text);
+
+        if (matches.Count <= 0)
+        {
+            return null;
+        }
+        
+        matchedText = labelTextOption.Clone(labelTextOption.Text);
+
+        foreach (var match in matches.AsQueryable())
+        {
+            labelCharPosition = lineForPosition.Text.IndexOf(
+                match.Value,
+                StringComparison.InvariantCultureIgnoreCase);
+
+            if (labelCharPosition is -1 or 0)
+            {
+                return true;
+            }
+
+            var previousChar = lineForPosition.Text[labelCharPosition - 1];
+            var firstChar = match.Value[0];
+                        
+            if (previousChar is ' ' or ',' or '.'
+                || firstChar is ' ' or ',' or '.')
+            {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
     
     public static bool LineContainsLabel(
         DocumentLine lineToCheck,
@@ -86,43 +127,18 @@ public static class LabelMatchingHelper
         {
             var labelText = labelTextOption.Text;
 
-            if (labelTextOption.IsRegularExpression)
+            if (labelTextOption.Regex != null)
             {
-                var options = labelTextOption.RegularExpressionIsCaseInsensitive
-                    ? RegexOptions.IgnoreCase
-                    : RegexOptions.None;
-                
-                var matches = Regex.Matches(
-                    lineToCheck.Text,
-                    labelTextOption.Text,
-                    options);
-                
-                if (matches.Count > 0)
+                var regexResult = LineContainsLabelRegex(
+                    labelTextOption,
+                    lineToCheck,
+                    lineForPosition,
+                    ref labelCharPosition,
+                    ref matchedText);
+
+                if (regexResult != null)
                 {
-                    matchedText = labelTextOption.Clone(labelTextOption.Text);
-
-                    foreach (var match in matches.AsQueryable())
-                    {
-                        labelCharPosition = lineForPosition.Text.IndexOf(
-                            match.Value,
-                            StringComparison.InvariantCultureIgnoreCase);
-
-                        if (labelCharPosition is -1 or 0)
-                        {
-                            return true;
-                        }
-
-                        var previousChar = lineForPosition.Text[labelCharPosition - 1];
-                        var firstChar = match.Value[0];
-                        
-                        if (previousChar is ' ' or ',' or '.'
-                            || firstChar is ' ' or ',' or '.')
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
+                    return regexResult.Value;
                 }
             }
             

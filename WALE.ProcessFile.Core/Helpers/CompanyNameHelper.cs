@@ -7,8 +7,15 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class CompanyNameHelper
 {
+    private static HashSet<string>? _firstNames;
+    
     public static async Task<HashSet<string>> GetFirstNamesCsvFromFileAsync()
     {
+        if (_firstNames != null)
+        {
+            return _firstNames;
+        }
+        
         var returnList = new HashSet<string>();
         var dtStart = DateTime.Now;
 
@@ -32,6 +39,8 @@ public static class CompanyNameHelper
         }
 
         ConsoleHelper.WriteLine($"INFO - {nameof(CompanyNameHelper)} - Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+        
+        _firstNames = returnList;
         return returnList;
     }
     

@@ -22,15 +22,15 @@ public sealed class FileProcessOrchestrationHostedService(
             MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
             WaitTimeSeconds = settings.SqsWaitTimeSeconds
         };
-        
-        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
-            nameof(FileProcessOrchestrationHostedService),
-            request.QueueUrl);
 
         if (settings.SqsVisibilityTimeoutSeconds.HasValue)
         {
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
+        
+        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
+            nameof(FileProcessOrchestrationHostedService),
+            request.QueueUrl);
         
         while (!cancellationToken.IsCancellationRequested)
         {

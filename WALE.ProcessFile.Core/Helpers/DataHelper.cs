@@ -153,20 +153,13 @@ public static partial class DataHelper
         {
             foreach (var textToMatch in label.Remove)
             {
-                if (textToMatch.Text.StartsWith('/') && textToMatch.Text.EndsWith('/'))
+                if (textToMatch.Regex != null)
                 {
-                    var pattern = textToMatch.Text.Substring(1, textToMatch.Text.Length - 2);
-                    var options = textToMatch.RegularExpressionIsCaseInsensitive
-                        ? RegexOptions.IgnoreCase
-                        : RegexOptions.None;
-                    
-                    if (Regex.IsMatch(returnStr, pattern, options))
+                    if (textToMatch.Regex.IsMatch(returnStr))
                     {
-                        returnStr = Regex.Replace(
+                        returnStr = textToMatch.Regex.Replace(
                             returnStr,
-                            pattern,
-                            string.Empty,
-                            options);
+                            string.Empty);
 
                         removesUsedList.Add(textToMatch.Text);
                     }

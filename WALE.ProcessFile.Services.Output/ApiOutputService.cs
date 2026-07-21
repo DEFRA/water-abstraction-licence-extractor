@@ -231,9 +231,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
+    public async Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Licence/Update";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            licenceId,
+            processRunId,
+            licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)

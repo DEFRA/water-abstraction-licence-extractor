@@ -306,7 +306,12 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetLicenceAsync(fileId, processRunId);
     }
-    
+
+    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        return databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+    }
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         return databaseReadService.GetMatchesResult(fileId);

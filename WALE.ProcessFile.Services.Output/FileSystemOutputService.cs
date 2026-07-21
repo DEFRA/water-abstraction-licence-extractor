@@ -316,6 +316,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         throw new NotImplementedException();

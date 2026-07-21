@@ -546,9 +546,40 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = $"/Extractor/Licence/GetByFileId?fileId={fileId}&processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        var path = $"/Extractor/Licence/GetByLicenceNumber?licenceNumber={licenceNumber}&processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)

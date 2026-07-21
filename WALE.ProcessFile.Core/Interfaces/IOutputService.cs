@@ -90,6 +90,8 @@ public interface IOutputService
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
+    
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId);
     
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId);

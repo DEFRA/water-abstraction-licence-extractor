@@ -105,7 +105,7 @@ public class ImagesController(
         var file = Request.Form.Files[0];
 
         if (!file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
-            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+            && !file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest();
         }
@@ -142,8 +142,8 @@ public class ImagesController(
         
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
-            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        if (!file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest();
         }
@@ -176,8 +176,8 @@ public class ImagesController(
         
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("image/png", StringComparison.InvariantCultureIgnoreCase)
-            && !file.ContentType.Equals("image/jpeg", StringComparison.InvariantCultureIgnoreCase))
+        if (!file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
+            && !file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest();
         }

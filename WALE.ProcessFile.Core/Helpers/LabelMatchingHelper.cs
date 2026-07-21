@@ -156,7 +156,7 @@ public static class LabelMatchingHelper
             }
             
             var combinedTextPosition = combinedText?.IndexOf(labelText,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             
             if (combinedTextPosition > -1)
             {
@@ -187,20 +187,20 @@ public static class LabelMatchingHelper
                 .Replace(PositionConstants.EndOfLineMarker, string.Empty);
             
             var lineStartsWithLabel =
-                lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
+                lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
             
             labelCharPosition = lineForPosition.Text.IndexOf(
                 labelTextWithoutMarkers,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             
             var labelTextWithSpaceBefore = $" {labelText}";
             
             var lineStartsWithLabelWithSpaceBefore =
-                lineToCheck.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase);
+                lineToCheck.Text.Contains(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase);
             var lineEndsWithLabel =
-                lineToCheck.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase);
+                lineToCheck.Text.EndsWith(labelText, StringComparison.OrdinalIgnoreCase);
             var lineEndsWithMarker =
-                lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
+                lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
             
             foreach (var column in lineToCheck.Columns)
             {
@@ -209,7 +209,7 @@ public static class LabelMatchingHelper
                 if (mustContainEndOfColumnMarker)
                 {
                     var columnEndsWithMarker =
-                        column.Text.EndsWith(labelTextWithoutMarkers, StringComparison.InvariantCultureIgnoreCase);
+                        column.Text.EndsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
                     
                     if (columnEndsWithMarker)
                     {
@@ -285,8 +285,8 @@ public static class LabelMatchingHelper
                         || lineStartsWithLabelWithSpaceBefore
                         || lineEndsWithLabel
                         || ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel)
-                        || column.Text.EndsWith(labelText, StringComparison.InvariantCultureIgnoreCase)
-                        || column.Text.Contains(labelTextWithSpaceBefore, StringComparison.InvariantCultureIgnoreCase))
+                        || column.Text.EndsWith(labelText, StringComparison.OrdinalIgnoreCase)
+                        || column.Text.Contains(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase))
                     {
                         matchedText = labelTextOption;
                         return true;

@@ -602,7 +602,7 @@ public static class GenerateLicenceReaderExtract
             
             var originalFileName = dmsExtractHasPermitRow
                 ? dmsExtractInfo[lowercasePermitNumber]
-                    .FirstOrDefault(dmsFile => dmsFile.FileId.Equals(fileIdString, StringComparison.InvariantCultureIgnoreCase))
+                    .FirstOrDefault(dmsFile => dmsFile.FileId.Equals(fileIdString, StringComparison.OrdinalIgnoreCase))
                     ?.FileName
                 : null;
             
@@ -791,7 +791,7 @@ public static class GenerateLicenceReaderExtract
         };
 
         return fileTypeExcludeTerms
-            .Any(term => filename.Contains(term, StringComparison.InvariantCultureIgnoreCase));;
+            .Any(term => filename.Contains(term, StringComparison.OrdinalIgnoreCase));;
     }
     
     private static string? ExtractPermitNumber(string fileName)

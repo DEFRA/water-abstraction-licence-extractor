@@ -1963,19 +1963,24 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
+    private static bool IsStartOfBlock(LabelToMatch label)
+    {
+        return label.TextToMatch?
+            .Select(t => t.Text)
+            .Contains("[START_OF_BLOCK]") == true;
+    }
+
     private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
 
-        var lineColumns = line.Columns.Select(c => c.Text).ToList();
-        var lineText = line.Text;
-        
-        var isStartOfBlock = label.TextToMatch?.FirstOrDefault()?.Text
-            .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
+        var lineColumns = line.Columns
+            .Select(c => c.Text)
+            .ToList();
 
-        if (label.TextToMatch == null || isStartOfBlock)
+        if (label.TextToMatch == null || IsStartOfBlock(label))
         {
             returnItems.Add(new TextAndLabel
             {
@@ -1986,6 +1991,8 @@ public class PdfDataExtractorService(
             return returnItems;
         }
 
+        var lineText = line.Text;
+        
         if (label.TextToMatch?.FirstOrDefault()?.Regex != null &&
             label.Position == LabelPosition.LabelIsActuallyResult)
         {
@@ -2011,7 +2018,7 @@ public class PdfDataExtractorService(
 
                 var valueStartPositionOnLine = lineText.IndexOf(
                     regexValue,
-                    StringComparison.InvariantCultureIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase);
                 var valueEndPositionOnLine = valueStartPositionOnLine + regexValue.Length;
 
                 var beforeColumns = new List<string>();
@@ -2128,7 +2135,7 @@ public class PdfDataExtractorService(
         {
             var index = lineText.IndexOf(
                 labelText.Text,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
 
             if (index > PositionConstants.PositionNotFound)
             {
@@ -2252,13 +2259,13 @@ public class PdfDataExtractorService(
                 .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
             .ToList();
         
-        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.InvariantCultureIgnoreCase))
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.OrdinalIgnoreCase))
         {
             return true;
         }
         
         return labelText.Any(text => joinedLines.Contains(text,
-            StringComparison.InvariantCultureIgnoreCase));
+            StringComparison.OrdinalIgnoreCase));
     }
     
     public void Dispose()

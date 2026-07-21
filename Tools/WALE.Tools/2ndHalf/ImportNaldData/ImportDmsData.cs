@@ -263,7 +263,7 @@ public static class ImportDmsData
 
         if (dontWorkAroundCombinedDmsFolders)
         {
-            if (dmsRecord.PermitNumber.Contains(andString, StringComparison.InvariantCultureIgnoreCase))
+            if (dmsRecord.PermitNumber.Contains(andString, StringComparison.OrdinalIgnoreCase))
             {
                 // Don't add anything
                 return true;
@@ -278,12 +278,12 @@ public static class ImportDmsData
         const string aAndBString = "AANDB";
         
         dmsRecord.PermitNumber = dmsRecord.PermitNumber
-            .Replace("sandi", sString, StringComparison.InvariantCultureIgnoreCase)
-            .Replace("sandg", sString, StringComparison.InvariantCultureIgnoreCase)
-            .Replace("iands", sString, StringComparison.InvariantCultureIgnoreCase)
-            .Replace("iandg", sString, StringComparison.InvariantCultureIgnoreCase);
+            .Replace("sandi", sString, StringComparison.OrdinalIgnoreCase)
+            .Replace("sandg", sString, StringComparison.OrdinalIgnoreCase)
+            .Replace("iands", sString, StringComparison.OrdinalIgnoreCase)
+            .Replace("iandg", sString, StringComparison.OrdinalIgnoreCase);
 
-        if (dmsRecord.PermitNumber.Contains(aAndBString, StringComparison.InvariantCultureIgnoreCase))
+        if (dmsRecord.PermitNumber.Contains(aAndBString, StringComparison.OrdinalIgnoreCase))
         {
             var parts = dmsRecord.PermitNumber.ToUpper().Split(andString);
             dmsRecord.PermitNumber = parts[0];
@@ -312,21 +312,21 @@ public static class ImportDmsData
             return true;
         }
         
-        if (dmsRecord.PermitNumber.Contains(andString, StringComparison.InvariantCultureIgnoreCase))
+        if (dmsRecord.PermitNumber.Contains(andString, StringComparison.OrdinalIgnoreCase))
         {
             var parts = dmsRecord.PermitNumber.ToUpper().Split(andString);
             var firstPart  = parts[0];
             char splitChar;
             
-            if (firstPart.Contains(gString, StringComparison.InvariantCultureIgnoreCase))
+            if (firstPart.Contains(gString, StringComparison.OrdinalIgnoreCase))
             {
                 splitChar = gString[0];
             }
-            else if (firstPart.Contains(iString, StringComparison.InvariantCultureIgnoreCase))
+            else if (firstPart.Contains(iString, StringComparison.OrdinalIgnoreCase))
             {
                 splitChar = iString[0];
             }
-            else if (firstPart.Contains(sString, StringComparison.InvariantCultureIgnoreCase))
+            else if (firstPart.Contains(sString, StringComparison.OrdinalIgnoreCase))
             {
                 splitChar = sString[0];
             }
@@ -381,7 +381,7 @@ public static class ImportDmsData
         
         return matchingFiles
             .Distinct()
-            .Where(filePath => filePath.Contains(pattern, StringComparison.InvariantCultureIgnoreCase))
+            .Where(filePath => filePath.Contains(pattern, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 }

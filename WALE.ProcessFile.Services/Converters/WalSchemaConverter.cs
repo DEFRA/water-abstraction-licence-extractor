@@ -1468,7 +1468,7 @@ public static class WalSchemaConverter
         }
 
         var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
         
         if (!isFrom && !isUntil)
         {
@@ -1476,8 +1476,8 @@ public static class WalSchemaConverter
         }
 
         var parts = value
-            .Replace("From", "~", StringComparison.InvariantCultureIgnoreCase)
-            .Replace("Until", "~", StringComparison.InvariantCultureIgnoreCase)
+            .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
+            .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
             .Split('~');
 
         var datePart = parts.Length >= 2 ? parts[1] : null;
@@ -1509,16 +1509,16 @@ public static class WalSchemaConverter
 
         value = value.Replace(" and ending on ", " to ");
         
-        var isFrom = value.Contains("From ", StringComparison.InvariantCultureIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.InvariantCultureIgnoreCase);
+        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
         
         if (isFrom || isUntil)
         {
             return null;
         }
         
-        var hasTo = value.Contains(" to ", StringComparison.InvariantCultureIgnoreCase);
-        var hasBeginningOn = value.Contains("beginning on ", StringComparison.InvariantCultureIgnoreCase);
+        var hasTo = value.Contains(" to ", StringComparison.OrdinalIgnoreCase);
+        var hasBeginningOn = value.Contains("beginning on ", StringComparison.OrdinalIgnoreCase);
 
         if (!hasTo && !hasBeginningOn)
         {
@@ -1972,150 +1972,150 @@ public static class WalSchemaConverter
             return null;
         }
 
-        if (text.Contains("lapsed licence", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("lapsed licence", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.LapsedLicence;
         }
 
-        if (text.Contains("discharge and re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("discharge and re-abstraction", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.DischargeAndReabstractionCondition;
         }
 
-        if (text.Contains("simultaneous discharge", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("simultaneous discharge", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.SimultaneousDischargeCondition;
         }
 
-        if (text.Contains("simultaneous abstraction", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("simultaneous abstraction", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.SimultaneousAbstractionCondition;
         }
 
-        if (text.Contains("simultaneous compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("simultaneous compensatory discharge", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.SimultaneousCompensatoryDischargeCondition;
         }
 
-        if (text.Contains("compensatory discharge", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("compensatory discharge", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.CompensatoryDischargeCondition;
         }
         
-        if (text.Contains("compensation flow", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("compensation flow", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.CompensationFlow;
         }
 
-        if (text.Contains("read in conjunction", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("read in conjunction", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReadInConjunction;
         }
 
-        if (text.Contains("The donor licence was", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("The donor licence was", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.DonorLicence;
         }
 
-        if (text.Contains("used in conjunction", StringComparison.InvariantCultureIgnoreCase)
-            || text.Contains("use in conjunction", StringComparison.InvariantCultureIgnoreCase)) // misspelling
+        if (text.Contains("used in conjunction", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("use in conjunction", StringComparison.OrdinalIgnoreCase)) // misspelling
         {
             return LinkReason.UsedInConjunction;
         }
 
-        if (text.Contains("revocation", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("revocation", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.Revocation;
         }
         
-        if (text.Contains("aggregate conditions", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("aggregate conditions", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.AggregateConditions;
         }
 
-        if (text.Contains("emergency circumstances", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("emergency circumstances", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.EmergencyCircumstances;
         }
 
-        if (text.Contains("Dewatering Discharge", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("Dewatering Discharge", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.DewateringDischargeCondition;
         }
 
-        if (text.Contains("when added to", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("when added to", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.WhenAddedTo;
         }
 
-        if (text.Contains("subsequent abstraction", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("subsequent abstraction", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.SubsequentAbstraction;
         }
 
-        if (text.Contains("re-abstraction", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("re-abstraction", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReAbstraction;
         }
 
-        if (text.Contains("readings", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("discharged", StringComparison.InvariantCultureIgnoreCase)
-            && text.Contains("augmentation", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("readings", StringComparison.OrdinalIgnoreCase)
+            && text.Contains("discharged", StringComparison.OrdinalIgnoreCase)
+            && text.Contains("augmentation", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReadingsDischargedAugmentationCondition;
         }
 
-        if (text.Contains("aggregate", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("aggregate", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.AggregateCondition;
         }
         
-        if (text.Contains("in total between", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("in total between", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.AggregateCondition;
         }
 
-        if (text.Contains("in an emergency", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("in an emergency", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.InAnEmergency;
         }
         
-        if (text.Contains("shall not exceed", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("shall not exceed", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ShallNotExceed;
         }
 
-        if (text.Contains("supporting", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("supporting", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.Supporting;
         }
 
-        if (text.Contains("original licence", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("original licence", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.OriginalLicence;
         }
 
-        if (text.Contains("transferred to this", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("transferred to this", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.TransferredToThis;
         }
 
-        if (text.Contains("coincident", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("coincident", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.Coincident;
         }
 
-        if (text.Contains("shall be supported", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("shall be supported", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ShallBeSupported;
         }
 
-        if (text.Contains("residual flow", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("residual flow", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ResidualFlow;
         }
         
-        if (text.Contains("authorised by", StringComparison.InvariantCultureIgnoreCase))
+        if (text.Contains("authorised by", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.AuthorisedBy;
         }
@@ -2362,7 +2362,7 @@ public static class WalSchemaConverter
             var textContainsPointName = documentPointNameSet &&
                 abstractionLimitPointSubText.Contains(
                     documentPoint.Name!,
-                    StringComparison.InvariantCultureIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase);
 
             if (!textContainsPointName || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
             {
@@ -2376,21 +2376,21 @@ public static class WalSchemaConverter
             });
         }
         
-        var wordedAsAggregateButAllPurposes = abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
-            && abstractionLimitPointSubText.Contains("for all purposes", StringComparison.InvariantCultureIgnoreCase)
-            || (abstractionLimitPointSubText.Contains("for the purposes of", StringComparison.InvariantCultureIgnoreCase)
+        var wordedAsAggregateButAllPurposes = abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.OrdinalIgnoreCase)
+            && abstractionLimitPointSubText.Contains("for all purposes", StringComparison.OrdinalIgnoreCase)
+            || (abstractionLimitPointSubText.Contains("for the purposes of", StringComparison.OrdinalIgnoreCase)
                 && allPurposes.Length > 1
                 && limitPurposes?.Count == allPurposes.Length);
         
         var textSuggestsIsAggregate = 
-            (abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.InvariantCultureIgnoreCase)
+            (abstractionLimitPointSubText.Contains("The aggregate quantity", StringComparison.OrdinalIgnoreCase)
                 && !wordedAsAggregateButAllPurposes)
-            || abstractionLimitPointSubText.Contains("The quantities detailed below are in aggregate", StringComparison.InvariantCultureIgnoreCase)
-            || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.InvariantCultureIgnoreCase)
-            || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.InvariantCultureIgnoreCase);
+            || abstractionLimitPointSubText.Contains("The quantities detailed below are in aggregate", StringComparison.OrdinalIgnoreCase)
+            || abstractionLimitPointSubText.Contains("quantity equal to the difference between", StringComparison.OrdinalIgnoreCase)
+            || abstractionLimitPointSubText.Contains("In aggregate with licence", StringComparison.OrdinalIgnoreCase);
 
         var textIsMisleadinglyWordedAsAggregate =
-            abstractionLimitPointSubText.Contains("In aggregate from both sources", StringComparison.InvariantCultureIgnoreCase);
+            abstractionLimitPointSubText.Contains("In aggregate from both sources", StringComparison.OrdinalIgnoreCase);
 
         if (textIsMisleadinglyWordedAsAggregate)
         {
@@ -2712,14 +2712,14 @@ public static class WalSchemaConverter
         const string noneDigitAggregateKey = "Plus a quantity equal to the";
         var containsVagueValue = abstractionLimitPointSubText.Contains(
             noneDigitAggregateKey,
-            StringComparison.InvariantCultureIgnoreCase);
+            StringComparison.OrdinalIgnoreCase);
 
         if (containsVagueValue)
         {
             var abstractionLimitPointSubTemp = abstractionLimitPointSubText.Replace(
                 noneDigitAggregateKey,
                 "±",
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
             
             var parts = abstractionLimitPointSubTemp.Split('±');
 
@@ -2957,7 +2957,7 @@ public static class WalSchemaConverter
             var tKey = "Up to and Including ";
 
             var allTextWithoutNumber = textWithoutNumber?
-                .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                .Where(t => !t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
             if (allTextWithoutNumber == null)
@@ -2966,7 +2966,7 @@ public static class WalSchemaConverter
             }
 
             var upToAndIncludeLine = textWithoutNumber?
-                .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
             TimeCutoff? timeCutoff = null;
 
             if (upToAndIncludeLine != null)
@@ -2988,7 +2988,7 @@ public static class WalSchemaConverter
             //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
 
             var inclusive = text?.Contains("inclusive",
-                StringComparison.InvariantCultureIgnoreCase) ?? false;
+                StringComparison.OrdinalIgnoreCase) ?? false;
 
             var allYear = text == "All year";
 
@@ -3085,7 +3085,7 @@ public static class WalSchemaConverter
 
             var periodType = LimitPeriodType.Unknown;
 
-            if (description?.Contains("second", StringComparison.InvariantCultureIgnoreCase) == true)
+            if (description?.Contains("second", StringComparison.OrdinalIgnoreCase) == true)
             {
                 periodType = LimitPeriodType.PerSecond;
             }
@@ -3172,7 +3172,7 @@ public static class WalSchemaConverter
 
                 const string tKey = "Up to and Including ";
                 var upToAndIncludeLine = tLines?
-                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
 
                 TimeCutoff? timeCutoff = null;
 
@@ -3228,7 +3228,7 @@ public static class WalSchemaConverter
                 }
 
                 var allTextWithoutNumber = tLines?
-                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                    .Where(t => !t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase))
                     .ToArray();
 
                 if (allTextWithoutNumber == null)
@@ -3292,7 +3292,7 @@ public static class WalSchemaConverter
             
             point = points
                 .FirstOrDefault(p =>
-                    p.PointName?.Equals(relevantDescription, StringComparison.InvariantCultureIgnoreCase) == true);
+                    p.PointName?.Equals(relevantDescription, StringComparison.OrdinalIgnoreCase) == true);
         }
 
         if (point is null)
@@ -3449,7 +3449,7 @@ public static class WalSchemaConverter
                 var tKey = "Up to and Including ";
 
                 var allTextWithoutNumber = tLines?
-                    .Where(t => !t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase))
+                    .Where(t => !t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase))
                     .ToArray();
 
                 if (allTextWithoutNumber == null && purposeNumber == null)
@@ -3458,7 +3458,7 @@ public static class WalSchemaConverter
                 }
 
                 var upToAndIncludeLine = tLines?
-                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
                 TimeCutoff? timeCutoff = null;
 
                 if (upToAndIncludeLine != null)

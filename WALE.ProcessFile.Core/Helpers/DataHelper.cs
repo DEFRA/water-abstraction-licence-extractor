@@ -412,8 +412,8 @@ public static partial class DataHelper
         if (char.IsDigit(firstWord.Text[0])
             && (firstWord.Text.EndsWith("st", StringComparison.OrdinalIgnoreCase)
                 || firstWord.Text.EndsWith("nd", StringComparison.OrdinalIgnoreCase)
-                || firstWord.Text.EndsWith("rd", StringComparison.InvariantCultureIgnoreCase)            
-                || firstWord.Text.EndsWith("th", StringComparison.InvariantCultureIgnoreCase)))
+                || firstWord.Text.EndsWith("rd", StringComparison.OrdinalIgnoreCase)            
+                || firstWord.Text.EndsWith("th", StringComparison.OrdinalIgnoreCase)))
         {
             return false;
         }
@@ -628,10 +628,10 @@ public static partial class DataHelper
         
         var suspectedIncorrectWords = wordsSplit.Where(word =>
         {
-            if (word.Equals("th", StringComparison.InvariantCultureIgnoreCase)
-                || word.Equals("rd", StringComparison.InvariantCultureIgnoreCase)
-                || word.Equals("nd", StringComparison.InvariantCultureIgnoreCase)
-                || word.Equals("st", StringComparison.InvariantCultureIgnoreCase))
+            if (word.Equals("th", StringComparison.OrdinalIgnoreCase)
+                || word.Equals("rd", StringComparison.OrdinalIgnoreCase)
+                || word.Equals("nd", StringComparison.OrdinalIgnoreCase)
+                || word.Equals("st", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -698,7 +698,7 @@ public static partial class DataHelper
                        && wordLower != "on"
                        && wordLower != "or"
                        && wordLower != "to"
-                       && !wordLower.StartsWith("ta", StringComparison.InvariantCultureIgnoreCase); // TA is an OS reference
+                       && !wordLower.StartsWith("ta", StringComparison.OrdinalIgnoreCase); // TA is an OS reference
             })
             .ToList();
     }
@@ -773,9 +773,9 @@ public static partial class DataHelper
         }
         
         var containsAPhraseSuggestingItsAMap = documentLines
-            .Any(l => l.Text.Contains("Map accompanying ", StringComparison.InvariantCultureIgnoreCase)
-              || l.Text.Contains("Location Map ", StringComparison.InvariantCultureIgnoreCase)
-              || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.InvariantCultureIgnoreCase));
+            .Any(l => l.Text.Contains("Map accompanying ", StringComparison.OrdinalIgnoreCase)
+              || l.Text.Contains("Location Map ", StringComparison.OrdinalIgnoreCase)
+              || l.Text.Contains("REFERENCE DRAWINGS", StringComparison.OrdinalIgnoreCase));
 
         if (containsAPhraseSuggestingItsAMap)
         {

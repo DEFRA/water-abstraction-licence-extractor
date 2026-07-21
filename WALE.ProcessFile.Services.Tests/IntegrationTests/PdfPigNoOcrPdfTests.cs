@@ -862,7 +862,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -2995,7 +2995,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

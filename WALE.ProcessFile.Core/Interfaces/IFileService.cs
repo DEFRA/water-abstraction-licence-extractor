@@ -19,5 +19,8 @@ public interface IFileService
     public string FolderPath { get; set; }
     
     public Task DeleteAsync(string filename);
+    
     Task<bool> ExistsAsync(string filename);
+    
+    public Task RenameAsync(string originalFilename, string newFilename);
 }

@@ -281,7 +281,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
     catch (Exception ex)
     {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex}");
         return [];
     }
     finally

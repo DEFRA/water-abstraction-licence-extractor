@@ -256,6 +256,27 @@ public class AwsS3FileService(
         }
     }
 
+    public async Task RenameAsync(string originalFilename, string newFilename)
+    {
+        var client = GetS3Client();
+        
+        await client.CopyObjectAsync(
+            new CopyObjectRequest
+            {
+                SourceBucket = FolderPath,
+                SourceKey = originalFilename,
+                DestinationBucket = FolderPath,
+                DestinationKey = newFilename
+            });
+        
+        await client.DeleteObjectAsync(
+            new DeleteObjectRequest
+            {
+                BucketName = FolderPath,
+                Key = originalFilename
+            });
+    }
+
     private AmazonS3Client GetS3Client()
     {
         if (_client != null)

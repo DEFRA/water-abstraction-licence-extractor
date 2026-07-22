@@ -142,7 +142,7 @@ public class PdfDocument(
             3F);
 
         var docnetBitmap = await AlternativeImageProvider!.GetPageAsSkBitmapAsync(
-            FileService,
+            InternalDocument.FileStream,
             PdfFilename,
             1080,
             1920,

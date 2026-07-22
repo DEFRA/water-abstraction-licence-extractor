@@ -12,7 +12,7 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _dictDocReaderLock = new();
     
     public async Task<SKBitmap> GetPageAsSkBitmapAsync(
-        IFileService fileService,
+        Stream fileStream,
         string pdfFilename,
         int pageDimensionWidth,
         int pageDimensionHeight,
@@ -32,9 +32,8 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
             {
                 var docLibInstance = new DocLibInstance();
 
-                _docReader = await docLibInstance.GetDocReaderAsync(
-                    fileService,
-                    pdfFilename,
+                _docReader = docLibInstance.GetDocReader(
+                    fileStream,
                     new PageDimensions(pageDimensionWidth, pageDimensionHeight));
             }
         }

@@ -1,5 +1,8 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -33,6 +36,14 @@ public class FilesController(IFileService fileService) : Controller
     public async Task<ActionResult<string>> DeleteAsync(string filename)
     {
         await fileService.DeleteAsync(filename);
+        return Ok();
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<string>> RenameAsync(
+        [FromBody] RenameRequest request)
+    {
+        await fileService.RenameAsync(request.originalFilename!, request.newFilename!);
         return Ok();
     }
     

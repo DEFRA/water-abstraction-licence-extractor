@@ -151,7 +151,12 @@ public class DatabaseOutputService(
     {
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
         
-        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, licence.DmsFileId!.Value, processRunId);
+        return databaseWriteService.UpdateLicenceAsync(
+            licenceId,
+            licenceStr,
+            licence.DmsFileId!.Value,
+            processRunId,
+            licence.Status.ToString());
     }
 
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId)

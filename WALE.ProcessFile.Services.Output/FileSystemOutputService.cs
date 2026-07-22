@@ -140,11 +140,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(-1);
     }
 
-    public Task<int> SaveStubFinishMatchesResultAsync(string requestFilename, Guid requestFileId, int requestProcessRunId)
-    {
-        return Task.FromResult(-1);
-    }
-
     public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
     {
         return Task.FromResult(-1);

@@ -88,6 +88,31 @@ public class PdfDataExtractorService(
         }
     }
 
+    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    {
+        var matchResultId = await outputService.SaveMatchResultAsync(
+            matchesResult,
+            fileId,
+            processRunId);
+
+        var dtStartSaveMatches = DateTime.Now;
+
+        if (matchesResult.Matches == null)
+        {
+            return;
+        }
+
+        var matches = matchesResult.Matches
+            .Select(match => (matchResultId, match.MatchedLabelName, match.LabelGroupName, match))
+            .ToList();
+
+        await outputService.SaveMatchesAsync(matches);
+
+        var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(PdfDataExtractorService)} - Saved {matches.Count} matches {fileId} in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    }
+
     private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(
         DmsFileData dmsDataForFile,
         int regionId,
@@ -1176,12 +1201,20 @@ public class PdfDataExtractorService(
                     previouslyParsedFiles,
                     processRunId);
 
-                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock for {linkedDmsFileData.FileId}");
+                if (relatedFileMatches.StopExecution)
+                {
+                    continue;
+                }
                 
-                await outputService.SaveStubFinishMatchesResultAsync(
-                    relatedFileName,
-                    linkedDmsFileData.FileId,
-                    processRunId);
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock/saving for {linkedDmsFileData.FileId}");
+
+                if (relatedFileMatches.AlreadySaved != true)
+                {
+                    await SaveMatchResultAsync(
+                        relatedFileMatches.Item!,
+                        linkedDmsFileData.FileId,
+                        processRunId);
+                }
             }
             catch (Exception ex)
             {

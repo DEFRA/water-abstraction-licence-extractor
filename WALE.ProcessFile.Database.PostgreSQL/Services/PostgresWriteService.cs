@@ -288,49 +288,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<int> SaveStubFinishMatchesResultAsync(string filename, Guid fileId, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE matches_result
-                           SET
-                                date_time_utc = @DateTimeUtc,
-                                data = @Data,
-                                status = @Status
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
-                           
-                           SELECT
-                               matches_result_id
-                           FROM
-                                matches_result
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
-                           """;
-
-        const string status = nameof(LicenceStatus.Ok);
-        var data = JsonSerializer.Serialize(new
-        {
-            Filename = filename,
-            Status = status
-        }, JsonHelper.GetSerializerOptions());
-        
-        return await ExecuteScalarAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                Status = status,
-                Data = data,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
     public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
     {
         await using var connection = GetPostgresConnection();

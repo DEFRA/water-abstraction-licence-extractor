@@ -31,7 +31,16 @@ public static class WalSchemaConverter
 
         if (matches == null)
         {
-            throw new Exception("No match object exists to convert");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(WalSchemaConverter)} - No match object exists to " +
+                $"convert, {dmsFileData?.FileId} {naldLicenceNumber}");
+            
+            return new Licence
+            {
+                Filename = matchesResult.Filename,
+                ProcessRunId = processRunId,
+                DmsFileId = dmsFileData!.FileId,
+                Status = LicenceStatus.Error
+            };
         }
 
         var noneSchemaData = new Dictionary<string, object?>();
@@ -1408,12 +1417,20 @@ public static class WalSchemaConverter
                     previouslyParsedFiles,
                     processRunId);
 
-                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock for {dmsFileData!.FileId}");
+                if (relatedFileMatches.StopExecution)
+                {
+                    continue;
+                }
                 
-                await lookupConfiguration.OutputService.SaveStubFinishMatchesResultAsync(
-                    destinationFileName!,
-                    dmsFileData!.FileId,
-                    processRunId);
+                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
+
+                if (relatedFileMatches.AlreadySaved != true)
+                {
+                    await pdfDataExtractorService.SaveMatchResultAsync(
+                        relatedFileMatches.Item!,
+                        dmsFileData.FileId,
+                        processRunId);
+                }
             }
             catch (Exception ex)
             {
@@ -1421,7 +1438,7 @@ public static class WalSchemaConverter
                 
                 await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
                     destinationFileName!,
-                    dmsFileData!.FileId,
+                    dmsFileData.FileId,
                     processRunId,
                     ex.ToString());
                 

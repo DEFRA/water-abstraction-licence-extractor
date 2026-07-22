@@ -39,7 +39,13 @@ public static class WalSchemaConverter
                 Filename = matchesResult.Filename,
                 ProcessRunId = processRunId,
                 DmsFileId = dmsFileData!.FileId,
-                Status = LicenceStatus.Error
+                Status = LicenceStatus.Error,
+                LicenceNumber = new ValueWithConfidence<string>
+                {
+                    Value = naldLicenceNumber,
+                    Confidence = null,
+                    OcrConfidence = null
+                }
             };
         }
 
@@ -1458,6 +1464,11 @@ public static class WalSchemaConverter
                 lookupConfiguration,
                 processRunId);
 
+            if (licence.Status == LicenceStatus.Error)
+            {
+                continue;
+            }
+            
             returnLicences.Add(licence);
         }
 

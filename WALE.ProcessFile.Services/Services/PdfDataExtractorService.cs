@@ -1218,7 +1218,7 @@ public class PdfDataExtractorService(
             }
             catch (Exception ex)
             {
-                ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {linkedDmsFileData.FileId} had error, releasing lock");
+                ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {linkedDmsFileData.FileId} had error, releasing lock. {ex}");
                 
                 await outputService.SaveErrorMatchesResultAsync(
                     relatedFileName,

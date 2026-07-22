@@ -8,13 +8,15 @@ public class LookupConfiguration(
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     ICacheService cacheService,
+    IOutputService outputService,
     int regionId,
     DateTime requestedAt,
     int currentLockRetryCount = 0,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
     object? naldLinkedLicenceHelper = null,
-    bool useLockExclusivity = true)
+    bool useLockExclusivity = true,
+    bool lockInProcess = false)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
     
@@ -23,6 +25,8 @@ public class LookupConfiguration(
     public IFileService FileService { get; set; } = fileService;
     
     public ICacheService CacheService { get; set; } = cacheService;
+    
+    public IOutputService OutputService { get; set; } = outputService;
 
     public int RegionId { get; set; } = regionId;
 
@@ -38,6 +42,8 @@ public class LookupConfiguration(
     
     public bool UseLockExclusivity { get; set; } = useLockExclusivity;
     
+    public bool LockInProcess { get; set; } = lockInProcess;
+    
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -45,12 +51,14 @@ public class LookupConfiguration(
             ValidLowercaseFirstNames,
             FileService,
             CacheService,
+            OutputService,
             RegionId,
             RequestedAt,
             CurrentLockRetryCount,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
             NaldLinkedLicenceHelper,
-            UseLockExclusivity);
+            UseLockExclusivity,
+            LockInProcess);
     }
 }

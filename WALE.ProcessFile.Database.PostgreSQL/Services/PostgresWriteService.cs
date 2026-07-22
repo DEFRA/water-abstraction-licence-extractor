@@ -288,6 +288,67 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public async Task<int> SaveStubFinishMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
+                           VALUES (@FileId, @Status, @Data, @ProcessRunId, @DateTimeUtc)
+                           RETURNING matches_result_id
+                           """;
+
+        const string status = nameof(LicenceStatus.Ok);
+        var data = JsonSerializer.Serialize(new
+        {
+            Filename = filename,
+            Status = status
+        }, JsonHelper.GetSerializerOptions());
+        
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Status = status,
+                Data = data,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
+    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
+                           VALUES (@FileId, @Status, @Data, @ProcessRunId, @DateTimeUtc)
+                           RETURNING matches_result_id
+                           """;
+
+        const string status = nameof(LicenceStatus.Error);
+        var data = JsonSerializer.Serialize(new
+        {
+            Filename = filename,
+            Status = status,
+            Error = error
+        }, JsonHelper.GetSerializerOptions());
+        
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Status = status,
+                Data = data,
+                ProcessRunId = processRunId,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();

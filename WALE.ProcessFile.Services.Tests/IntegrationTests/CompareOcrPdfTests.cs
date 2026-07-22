@@ -148,6 +148,7 @@ public class CompareOcrPdfTests
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             regionCode,
             DateTime.Now);
     }

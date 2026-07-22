@@ -81,6 +81,7 @@ public class AzureOpenAiOcrPdfTests
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is
     }

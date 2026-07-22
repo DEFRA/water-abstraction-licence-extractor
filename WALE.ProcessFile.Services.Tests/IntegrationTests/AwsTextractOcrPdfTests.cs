@@ -73,6 +73,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             regionCode,
             DateTime.Now);
     }

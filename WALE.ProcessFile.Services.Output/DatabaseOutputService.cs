@@ -197,7 +197,17 @@ public class DatabaseOutputService(
     {
         return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
     }
-    
+
+    public Task<int> SaveStubFinishMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    {
+        return databaseWriteService.SaveStubFinishMatchesResultAsync(filename, fileId, processRunId);
+    }
+
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    {
+        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error);
+    }
+
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());

@@ -76,9 +76,11 @@ async Task ProgramAsync()
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
+        services.OutputService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
-        naldLinkedLicenceHelper: naldLinkedLicenceHelper);
+        naldLinkedLicenceHelper: naldLinkedLicenceHelper,
+        lockInProcess: true);
     
     try
     {

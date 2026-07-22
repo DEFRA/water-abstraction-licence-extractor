@@ -190,6 +190,7 @@ public static class GenerateLicenceReaderExtract
             pdfDataExtractors,
             fileService,
             cacheService,
+            outputService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
             await dmsExtractInfoTask,
@@ -312,6 +313,7 @@ public static class GenerateLicenceReaderExtract
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
+        IOutputService outputService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
@@ -454,6 +456,7 @@ public static class GenerateLicenceReaderExtract
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             fileService,
             cacheService,
+            outputService,
             -1,
             DateTime.Now,
             skipFileIfMoreThenPages: 25);

@@ -98,6 +98,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             regionCode,
             DateTime.Now);
     }
@@ -1039,8 +1040,9 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
                 (await LookupConfigurationAsync(3, TestConfig.PdfFolder3)).ValidLowercaseFirstNames,
             new LocalFileService(TestConfig.PdfFolder3),
             CacheService,
-                3,
-                DateTime.Now),
+            OutputService,
+            3,
+            DateTime.Now),
             [TestConfig.PdfFolder3 + fileName],
             0);
 

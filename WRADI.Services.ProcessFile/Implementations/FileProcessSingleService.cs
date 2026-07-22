@@ -59,6 +59,7 @@ public class FileProcessSingleService(
             await firstNamesCsvTask,
             fileService,
             cacheService,
+            outputService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,

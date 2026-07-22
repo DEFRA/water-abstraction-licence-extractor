@@ -46,7 +46,8 @@ public class PdfDataExtractorService(
                 configuration.RegionId,
                 pdfFileName,
                 processRunId,
-                configuration.CurrentLockRetryCount);
+                configuration.CurrentLockRetryCount,
+                configuration.LockInProcess);
 
             if (stopExecution)
             {
@@ -58,18 +59,33 @@ public class PdfDataExtractorService(
                 return (false, true, matchesResult);
             }
 
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result for {dmsDataForFile.FileId}");
+            
             await outputService.SaveStubMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId);
         }
 
-        return (false, false, await GetMatchesInternalAsync(
-            pdfFileName,
-            dmsDataForFile.FileId,
-            configuration,
-            previouslyParsedFiles,
-            processRunId));
+        try
+        {
+            return (false, false, await GetMatchesInternalAsync(
+                pdfFileName,
+                dmsDataForFile.FileId,
+                configuration,
+                previouslyParsedFiles,
+                processRunId));
+        }
+        catch (Exception ex)
+        {
+            await outputService.SaveErrorMatchesResultAsync(
+                pdfFileName,
+                dmsDataForFile.FileId,
+                processRunId,
+                ex.ToString());
+
+            throw;
+        }
     }
 
     private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(
@@ -77,7 +93,8 @@ public class PdfDataExtractorService(
         int regionId,
         string pdfFileName,
         int processRunId,
-        int currentLockRetryCount)
+        int currentLockRetryCount,
+        bool lockInProcess)
     {
         const int maxLockRetries = 5;
         
@@ -98,11 +115,41 @@ public class PdfDataExtractorService(
         {
             return (false, existingLicenceInRun);
         }
-
-        const int delayInSeconds = 5;
-        const int inProcessDelayInMilliseconds = 1000;
         
-        Thread.Sleep(inProcessDelayInMilliseconds);
+        const int delayInSeconds = 5;        
+        
+        if (lockInProcess)
+        {
+            existingLicenceInRun = await
+                outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+
+            ConsoleHelper.WriteLine($"Waiting for {dmsDataForFile.FileId}");
+            
+            const int maxWaitTimeSeconds = 50;
+            var maxFinishDateTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
+            
+            while (existingLicenceInRun?.Status == nameof(LicenceStatus.InProgress)
+                && DateTime.Now <= maxFinishDateTime)
+            {
+                await Task.Delay(delayInSeconds * 1000);
+                ConsoleHelper.WriteLine($"Waiting again for {dmsDataForFile.FileId}");
+                
+                existingLicenceInRun = await
+                    outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+            }
+
+            if (existingLicenceInRun?.Status != nameof(LicenceStatus.InProgress))
+            {
+                ConsoleHelper.WriteLine($"Status now not in progress for {dmsDataForFile.FileId}");
+                return (false, existingLicenceInRun);
+            }
+            
+            ConsoleHelper.WriteLine("Gave up waiting for lock to be released");
+            return (true, null);
+        }
+    
+        const int inProcessDelayInMilliseconds = 1000;
+        await Task.Delay(inProcessDelayInMilliseconds);
         
         await apiMessageQueueService.AddToFileProcessQueue(
             new FileProcessSingleRequest
@@ -1114,26 +1161,46 @@ public class PdfDataExtractorService(
                 
                 break;
             }
+
+            (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
             
-            var relatedFileMatches = await GetMatchesAsync(
-                relatedFileName,
-                linkedDmsFileData,
-                clonedConfig,
-                previouslyParsedFiles,
-                processRunId);
+            try
+            {
+                relatedFileMatches = await GetMatchesAsync(
+                    relatedFileName,
+                    linkedDmsFileData,
+                    clonedConfig,
+                    previouslyParsedFiles,
+                    processRunId);
+
+                await outputService.SaveStubFinishMatchesResultAsync(
+                    relatedFileName,
+                    linkedDmsFileData.FileId,
+                    processRunId);
+            }
+            catch (Exception ex)
+            {
+                await outputService.SaveErrorMatchesResultAsync(
+                    relatedFileName,
+                    linkedDmsFileData.FileId,
+                    processRunId,
+                    ex.ToString());
+                
+                throw;
+            }
             
             if (relatedFileMatches.StopExecution)
             {
                 continue;
             }
-            
+
             var labelResult = new LabelGroupResult
             {
                 MatchedLabel = label,
                 SubResults = relatedFileMatches.Item!.Matches!,
                 PageNumber = line.PageNumber
             };
-            
+
             FormattingHelper.RemoveRemoves(labelResult, []); // TODO do this properly at some point
             returnList.Add(labelResult);
         }

@@ -6,5 +6,6 @@ public enum LicenceStatus
     NotFound,
     PathMissing,
     FileIdMissing,
-    InProgress
+    InProgress,
+    Error
 }

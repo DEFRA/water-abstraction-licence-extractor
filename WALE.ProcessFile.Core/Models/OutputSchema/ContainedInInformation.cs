@@ -15,7 +15,7 @@ public record ContainedInInformation
     
     public string? LinkReason { get; init; }
     
-    public bool? IsBecauseOfAggregate { get; init; }
+    public bool? IsBecauseOfAggregate { get; set; }
     
     public int? LineNumber { get; init; }
     

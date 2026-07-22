@@ -179,13 +179,14 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId)
+    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            UPDATE licence
                            SET
                                file_id = @FileId
+                               status = @Status
                                , data = @Data
                            WHERE
                                 licence_id = @LicenceId
@@ -201,7 +202,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId,
                 LicenceId = licenceId,
                 Data = licenceData,
-                ProcessRunId = processRunId
+                ProcessRunId = processRunId,
+                Status = status
             });
     }
 

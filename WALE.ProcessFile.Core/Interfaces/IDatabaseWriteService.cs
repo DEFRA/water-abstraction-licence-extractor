@@ -17,7 +17,7 @@ public interface IDatabaseWriteService
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId);
+    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,

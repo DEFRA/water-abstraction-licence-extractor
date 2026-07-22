@@ -126,7 +126,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                        uuid(de.file_id) as file_id
                    FROM public.licence_finder_result lfr
                    JOIN public.dms_extract de
-                       ON de.permit_number = lfr.permit_number
+                       ON de.permit_number = lower(lfr.permit_number) -- TODO change this in future for performance
                        AND de.file_id = lfr.file_id
                    WHERE
                        lfr.license_number = @LicenceNumber

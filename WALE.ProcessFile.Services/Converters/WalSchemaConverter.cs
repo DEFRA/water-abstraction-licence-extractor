@@ -2219,6 +2219,20 @@ public static class WalSchemaConverter
         {
             allIndividualGroups.Clear();
         }
+
+        // Set the IsBecauseOfAggregate to true for all aggregates
+        foreach (var aggregate in allAggregates)
+        {
+            if (aggregate.ContainedIn == null)
+            {
+                continue;
+            }
+            
+            foreach (var containedIn in aggregate.ContainedIn)
+            {
+                containedIn.IsBecauseOfAggregate = true;
+            }
+        }
         
         return (
             allAggregates.ToArray(),

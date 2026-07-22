@@ -86,9 +86,6 @@ async Task ProgramAsync()
     {
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
-        var minimumToFreeUp = maxConcurrentScrapers / 3;
-
-        var extractorLock = new Lock();
         
         foreach (var (filePath, (dmsFileData, naldLicence)) in filesToProcess)
         {
@@ -100,25 +97,21 @@ async Task ProgramAsync()
             var loopLookupConfig = lookupConfig.Clone();
             loopLookupConfig.RegionId = naldLicence.RegionCode;
             
+            var pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
+            pdfDataExtractor.InUse = true;
+            
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
                     processCount++,
                     processRun.NumberOfFiles,
-                    outputService,
-                    pdfDataExtractors,
+                    pdfDataExtractor,
                     processRun,
-                    extractorLock,
                     loopLookupConfig,
                     dmsFileData,
                     naldLicence.LicenceNumber));
 
-            if (scrapingTasks.Count != maxConcurrentScrapers)
-            {
-                continue;
-            }
-
-            while (scrapingTasks.Count >= maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
                 await Task.WhenAny(scrapingTasks);
                 var toRemoveList = new List<Task<List<LicenceSet>>>();
@@ -197,27 +190,15 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
     int fileNumber,
     int totalNumber,
-    IOutputService outputService,
-    List<IPdfDataExtractorService> pdfDataExtractors,
+    IPdfDataExtractorService pdfDataExtractor,
     ProcessRun processRun,
-    Lock extractorLock,
     LookupConfiguration lookupConfig,
     DmsFileData dmsDataForFile,
     string naldLicenceNumber)
 {
-    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
-
-    IPdfDataExtractorService pdfDataExtractor;
-
-    lock (extractorLock)
-    {
-        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
-        pdfDataExtractor.InUse = true;
-    }
-
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    
     try
     {
         var previouslyParsedFiles = new List<string>
@@ -255,23 +236,23 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
         ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id}  - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         return licenceSets;
     }
     catch (TooManyPagesException)
     {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd:{pdfDataExtractor.Id}  - Skipped ({fileNumber} of {totalNumber}) as too many pages");
         return [];
     }
     catch (TooManyImagesException)
     {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd:{pdfDataExtractor.Id}  - Skipped ({fileNumber} of {totalNumber}) as too many pages");
         return [];
     }
     catch (Exception ex)
     {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex}");
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd:{pdfDataExtractor.Id}  - {pdfFilename} threw fatal error - {ex}");
         return [];
     }
     finally
@@ -321,7 +302,7 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var delayPerProcessMs = 1000;
+    var delayPerProcessMs = 200; // TODO get from variable
     var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 30);
     
     var fileServiceType = "api";

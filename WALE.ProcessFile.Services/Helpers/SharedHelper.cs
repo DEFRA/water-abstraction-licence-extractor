@@ -60,7 +60,7 @@ public static class SharedHelper
         ICacheService cacheService)
     {
         var dtStart = DateTime.Now;
-        ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started getting NALD data");
+        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - Started getting NALD data");
         
         const int take = 10_000;
         var allNaldData = new NaldDataCollection
@@ -114,7 +114,7 @@ public static class SharedHelper
             if (licenceSetGroup.Count == 0)
             {
                 // This shouldn't happen
-                ConsoleHelper.WriteLine("WARNING - WALE.Cmd - Empty licence set group found");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Empty licence set group found");
                 continue;
             }
 
@@ -146,6 +146,11 @@ public static class SharedHelper
                         : (int?)null;
                     
                     var previouslySaved = existingLicenceId != null;
+
+                    if (existingLicence != null && !previouslySaved)
+                    {
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Licence exists but doesnt have the none schema data set");
+                    }
                     
                     if (previouslySaved)
                     {

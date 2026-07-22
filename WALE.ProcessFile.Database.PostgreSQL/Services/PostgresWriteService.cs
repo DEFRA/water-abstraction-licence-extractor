@@ -186,7 +186,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                            UPDATE licence
                            SET
                                file_id = @FileId
-                               status = @Status
+                               , status = @Status
                                , data = @Data
                            WHERE
                                 licence_id = @LicenceId

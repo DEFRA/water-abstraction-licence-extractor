@@ -178,6 +178,7 @@ public class PdfDataExtractorService(
     {
         if (fileId == Guid.Empty)
         {
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - File Id is empty for {pdfFileName}");
             throw new Exception("FileId is empty");
         }
         
@@ -209,6 +210,8 @@ public class PdfDataExtractorService(
         if (pdfDocument == null)
         {
             returnResult.ErrorMessage = "Could not open pdf document";
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - Could not open pdf document '{pdfFileName}'");
+            
             return returnResult;
         }
         

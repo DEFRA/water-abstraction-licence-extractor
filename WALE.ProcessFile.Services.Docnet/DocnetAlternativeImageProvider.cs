@@ -9,38 +9,21 @@ namespace WALE.ProcessFile.Services.Docnet;
 public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
     private IDocReader? _docReader;
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _dictDocReaderLock = new();
     
-    public async Task<SKBitmap> GetPageAsSkBitmapAsync(
+    public SKBitmap GetPageAsSkBitmap(
         Stream fileStream,
-        string pdfFilename,
         int pageDimensionWidth,
         int pageDimensionHeight,
         int pageNumber)
     {
-        var docReaderLock = _dictDocReaderLock.TryGetValue(
-            pdfFilename,
-            out var tDocReaderLock)
-                ? tDocReaderLock
-                : _dictDocReaderLock[pdfFilename] = new SemaphoreSlim(1, 1);
-        
-        await docReaderLock.WaitAsync();
 
-        try
+        if (_docReader == null)
         {
-            if (_docReader == null)
-            {
-                var docLibInstance = new DocLibInstance();
+            var docLibInstance = new DocLibInstance();
 
-                _docReader = docLibInstance.GetDocReader(
-                    fileStream,
-                    new PageDimensions(pageDimensionWidth, pageDimensionHeight));
-            }
-        }
-        finally
-        {
-            docReaderLock.Release();
-            _dictDocReaderLock.TryRemove(pdfFilename, out _);
+            _docReader = docLibInstance.GetDocReader(
+                fileStream,
+                new PageDimensions(pageDimensionWidth, pageDimensionHeight));
         }
 
         using var pageReader = _docReader.GetPageReader(pageNumber - 1);

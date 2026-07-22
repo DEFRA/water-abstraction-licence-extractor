@@ -24,9 +24,21 @@ public class MatchResultController(IOutputService outputService) : Controller
     public async Task<IActionResult> SaveStubAsync([FromBody] SaveStubMatchResultRequest request)
     {
         var matchResultId = await outputService.SaveStubMatchesResultAsync(
-            request.Filename!,
+            request.filename!,
             request.fileId,
             request.processRunId);
+        
+        return Ok(matchResultId);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> SaveErrorAsync([FromBody] SaveErrorMatchResultRequest request)
+    {
+        var matchResultId = await outputService.SaveErrorMatchesResultAsync(
+            request.filename!,
+            request.fileId,
+            request.processRunId,
+            request.error);
         
         return Ok(matchResultId);
     }

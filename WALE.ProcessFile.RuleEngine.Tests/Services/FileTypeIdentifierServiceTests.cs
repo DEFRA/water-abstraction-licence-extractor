@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using Xunit;
 
@@ -99,6 +100,7 @@ public class FileTypeIdentifierServiceTests
             [],
             new LocalFileService(""),
             new FileSystemCacheService(""),
+            new FileSystemOutputService(""),
             1,
             DateTime.Now);
     }

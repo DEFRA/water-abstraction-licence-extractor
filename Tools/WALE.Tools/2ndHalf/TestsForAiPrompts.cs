@@ -71,6 +71,7 @@ public static class TestsForAiPrompts
 
                 var chatClient = azureClient.GetChatClient(deploymentName);
                 var cacheService = new FileSystemCacheService("Cache/");
+                var outputService = new FileSystemOutputService("Output/");
                 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
@@ -80,6 +81,7 @@ public static class TestsForAiPrompts
                         [],
                         new LocalFileService(KeyConfig.PdfFolder),
                         cacheService,
+                        outputService,
                         -1,
                         DateTime.Now));
                 

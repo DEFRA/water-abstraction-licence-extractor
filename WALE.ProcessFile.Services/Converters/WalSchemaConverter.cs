@@ -31,7 +31,16 @@ public static class WalSchemaConverter
 
         if (matches == null)
         {
-            throw new Exception("No match object exists to convert");
+            ConsoleHelper.WriteLine($"WARNING - {nameof(WalSchemaConverter)} - No match object exists to " +
+                $"convert, {dmsFileData?.FileId} {naldLicenceNumber}");
+            
+            return new Licence
+            {
+                Filename = matchesResult.Filename,
+                ProcessRunId = processRunId,
+                DmsFileId = dmsFileData!.FileId,
+                Status = LicenceStatus.Error
+            };
         }
 
         var noneSchemaData = new Dictionary<string, object?>();
@@ -1397,12 +1406,44 @@ public static class WalSchemaConverter
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
 
-            var relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                destinationFileName!,
-                dmsFileData!,
-                clonedConfig,
-                previouslyParsedFiles,
-                processRunId);
+            (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
+
+            try
+            {
+                relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                    destinationFileName!,
+                    dmsFileData!,
+                    clonedConfig,
+                    previouslyParsedFiles,
+                    processRunId);
+
+                if (relatedFileMatches.StopExecution)
+                {
+                    continue;
+                }
+                
+                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
+
+                if (relatedFileMatches.AlreadySaved != true)
+                {
+                    await pdfDataExtractorService.SaveMatchResultAsync(
+                        relatedFileMatches.Item!,
+                        dmsFileData.FileId,
+                        processRunId);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(WalSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+                
+                await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
+                    destinationFileName!,
+                    dmsFileData.FileId,
+                    processRunId,
+                    ex.ToString());
+                
+                throw;
+            }
 
             if (relatedFileMatches.StopExecution)
             {
@@ -1630,10 +1671,6 @@ public static class WalSchemaConverter
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration)
     {
-        var naldLicenceNumber =
-            (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
-            null;
-
         var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
         
         var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
@@ -1717,10 +1754,6 @@ public static class WalSchemaConverter
             }
 
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-            var naldLinkedLicenceNumber =
-                (string?)generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
-                null;
 
             var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
                 linkedLicenceNumber,
@@ -1807,10 +1840,6 @@ public static class WalSchemaConverter
         foreach (var linkedLicenceNumber in licenceHistoryLinkedLicenceNumbers)
         {
             var lln = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-            var naldLicenceNumber =
-                (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ?? null;
-
             var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
             var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
@@ -2449,7 +2478,7 @@ public static class WalSchemaConverter
             var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
             var naldLicenceNumber =
-                (string?)linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"] ??
+                (string?)JsonHelper.CastFromJsonTypeToNative(linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"]) ??
                 null;
 
             var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(

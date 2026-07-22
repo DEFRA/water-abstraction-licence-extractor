@@ -58,7 +58,7 @@ public static class FormattingHelper
         }
         
         var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
-        DmsFileDataCache.Add(licenceNumber, dmsFileData);
+        DmsFileDataCache.TryAdd(licenceNumber, dmsFileData);
         
         return dmsFileData;
     }
@@ -81,7 +81,7 @@ public static class FormattingHelper
         }
         
         var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
-        NaldDataCache.Add(key, naldData);
+        NaldDataCache.TryAdd(key, naldData);
 
         return naldData;
     }

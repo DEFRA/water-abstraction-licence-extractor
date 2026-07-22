@@ -30,30 +30,36 @@ public static class JsonHelper
             
         foreach (var kvp in inputDictionary)
         {
-            var value = kvp.Value switch
-            {
-                int intValue => intValue,
-                string strValue => strValue,
-                null => null,
-                JsonElement jsonElement => jsonElement.ValueKind switch
-                {
-                    JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
-                    JsonValueKind.Number => GetSomeTypeOfNumber(jsonElement),
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    JsonValueKind.String => jsonElement.GetString(),
-                    JsonValueKind.Object => jsonElement.GetRawText(),
-                    _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
-                },
-                _ => throw new Exception($"Unknown type - {kvp.Value?.GetType().Name}")
-            };
-
+            var value = CastFromJsonTypeToNative(kvp.Value);
             nativeDictionary.Add(kvp.Key, value!);
         }
 
         return nativeDictionary;
     }
 
+    public static object? CastFromJsonTypeToNative(object? input)
+    {
+        return input switch
+        {
+            int intValue => intValue,
+            string strValue => strValue,
+            null => null,
+            JsonElement jsonElement => jsonElement.ValueKind switch
+            {
+                JsonValueKind.Array => jsonElement.EnumerateArray().ToList(),
+                JsonValueKind.Number => GetSomeTypeOfNumber(jsonElement),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.String => jsonElement.GetString(),
+                JsonValueKind.Object => jsonElement.GetRawText(),
+                JsonValueKind.Undefined => null,
+                JsonValueKind.Null => null,
+                _ => throw new Exception($"Unexpected JSON value type {jsonElement.ValueKind}")
+            },
+            _ => throw new Exception($"Unknown type - {input?.GetType().Name}")
+        };
+    }
+    
     private static object GetSomeTypeOfNumber(JsonElement jsonElement)
     {
         if (jsonElement.TryGetInt32(out var intValue))

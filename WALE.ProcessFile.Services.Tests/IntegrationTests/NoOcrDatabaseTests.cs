@@ -95,6 +95,7 @@ public class NoOcrDatabaseTests
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             3,
             DateTime.Now,
             useLockExclusivity: false);

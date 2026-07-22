@@ -8,5 +8,7 @@ public interface IInternalPdfDocument : IDisposable
 
     public SKBitmap GetPageAsSkBitmap(int pageNumber, float scale);
     
+    public Stream FileStream { get; }
+    
     public long SizeBytes { get; }
 }

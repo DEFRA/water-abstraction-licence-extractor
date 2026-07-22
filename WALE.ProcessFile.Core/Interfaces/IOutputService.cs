@@ -48,6 +48,8 @@ public interface IOutputService
     
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
     
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error);
+    
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);

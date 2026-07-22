@@ -76,9 +76,11 @@ async Task ProgramAsync()
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
+        services.OutputService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
-        naldLinkedLicenceHelper: naldLinkedLicenceHelper);
+        naldLinkedLicenceHelper: naldLinkedLicenceHelper,
+        lockInProcess: true);
     
     try
     {
@@ -230,43 +232,31 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
-        if (stopExecution || alreadySaved!.Value)
+        if (stopExecution)
         {
             return [];
         }
-        
-        var matchResultId = await outputService.SaveMatchResultAsync(
-            matchesResult!,
-            dmsDataForFile.FileId,
-            processRun.ProcessRunId);
 
-        var dtStartSaveMatches = DateTime.Now;
-
-        if (matchesResult!.Matches != null)
+        if (alreadySaved != true)
         {
-            var matches = matchesResult.Matches
-                .Select(match => (matchResultId, match.MatchedLabelName, match.LabelGroupName, match))
-                .ToList();
-
-            await outputService.SaveMatchesAsync(matches);
-
-            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
-            ConsoleHelper.WriteLine(
-                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            await pdfDataExtractor.SaveMatchResultAsync(
+                matchesResult!,
+                dmsDataForFile.FileId,
+                processRun.ProcessRunId);
         }
 
-        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
-            matchesResult,
+            matchesResult!,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,
             dmsDataForFile,
             naldLicenceNumber);
 
+        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
         return licenceSets;
     }
     catch (TooManyPagesException)
@@ -281,7 +271,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
     catch (Exception ex)
     {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex}");
         return [];
     }
     finally

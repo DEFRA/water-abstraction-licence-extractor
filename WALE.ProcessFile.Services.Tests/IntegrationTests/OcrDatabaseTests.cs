@@ -81,6 +81,7 @@ public class OcrDatabaseTests
                 await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
                 CacheService,
+                OutputService,
                 3,
                 DateTime.Now),
             [fileName],

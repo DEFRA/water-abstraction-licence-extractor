@@ -302,6 +302,27 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
+    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    {
+        var path = "/Extractor/MatchResult/SaveError";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            filename,
+            fileId,
+            processRunId,
+            error
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
+    }
+
     public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var path = "/Extractor/MatchResult/Save";

@@ -59,6 +59,7 @@ public class FileProcessSingleService(
             await firstNamesCsvTask,
             fileService,
             cacheService,
+            outputService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,
@@ -168,34 +169,17 @@ public class FileProcessSingleService(
                 previouslyParsedFiles,
                 processRun.ProcessRunId);
 
-            if (stopExecution || alreadySaved == true)
+            if (stopExecution)
             {
                 return (stopExecution, []);
             }
-            
-            var matchResultId = await outputService.SaveMatchResultAsync(
-                matchesResult!,
-                dmsDataForFile.FileId,
-                processRun.ProcessRunId);
 
-            var dtStartSaveMatches = DateTime.Now;
-
-            if (matchesResult!.Matches != null)
+            if (alreadySaved != true)
             {
-                var matches = matchesResult.Matches
-                    .Select(match => (
-                        matchResultId,
-                        match.MatchedLabelName,
-                        match.LabelGroupName,
-                        match))
-                    .ToList();
-
-                await outputService.SaveMatchesAsync(matches);
-
-                var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
-                ConsoleHelper.WriteLine(
-                    $"INFO - {nameof(FileProcessSingleService)} - Saved '{pdfFilename}' in {saveDuration}ms " +
-                    $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                await pdfDataExtractor.SaveMatchResultAsync(
+                    matchesResult!,
+                    dmsDataForFile.FileId,
+                    processRun.ProcessRunId);
             }
 
             var duration = (DateTime.Now - dtStart).TotalMilliseconds;
@@ -203,7 +187,7 @@ public class FileProcessSingleService(
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             return (false, await WalSchemaConverter.ToLicenceSetsAsync(
-                matchesResult,
+                matchesResult!,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,

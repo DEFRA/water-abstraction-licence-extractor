@@ -90,6 +90,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             regionCode,
             DateTime.Now);
     }

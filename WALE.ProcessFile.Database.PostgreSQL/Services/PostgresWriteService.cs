@@ -292,9 +292,22 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
-                           VALUES (@FileId, @Status, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING matches_result_id
+                           UPDATE matches_result
+                           SET
+                                date_time_utc = @DateTimeUtc,
+                                data = @Data,
+                                status = @Status
+                           WHERE
+                                file_id = @FileId
+                                AND process_run_id = @ProcessRunId;
+                           
+                           SELECT
+                               matches_result_id
+                           FROM
+                                matches_result
+                           WHERE
+                                file_id = @FileId
+                                AND process_run_id = @ProcessRunId;
                            """;
 
         const string status = nameof(LicenceStatus.Ok);
@@ -322,9 +335,22 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
-                           VALUES (@FileId, @Status, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING matches_result_id
+                           UPDATE matches_result
+                           SET
+                                date_time_utc = @DateTimeUtc,
+                                data = @Data,
+                                status = @Status
+                           WHERE
+                                file_id = @FileId
+                                AND process_run_id = @ProcessRunId;
+                           
+                           SELECT
+                               matches_result_id
+                           FROM
+                                matches_result
+                           WHERE
+                                file_id = @FileId
+                                AND process_run_id = @ProcessRunId;
                            """;
 
         const string status = nameof(LicenceStatus.Error);

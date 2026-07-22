@@ -1407,6 +1407,8 @@ public static class WalSchemaConverter
                     clonedConfig,
                     previouslyParsedFiles,
                     processRunId);
+
+                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock for {dmsFileData!.FileId}");
                 
                 await lookupConfiguration.OutputService.SaveStubFinishMatchesResultAsync(
                     destinationFileName!,
@@ -1415,6 +1417,8 @@ public static class WalSchemaConverter
             }
             catch (Exception ex)
             {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(WalSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+                
                 await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
                     destinationFileName!,
                     dmsFileData!.FileId,

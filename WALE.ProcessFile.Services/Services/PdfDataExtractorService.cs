@@ -59,7 +59,7 @@ public class PdfDataExtractorService(
                 return (false, true, matchesResult);
             }
 
-            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result for {dmsDataForFile.FileId}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock) for {dmsDataForFile.FileId}");
             
             await outputService.SaveStubMatchesResultAsync(
                 pdfFileName,
@@ -123,7 +123,7 @@ public class PdfDataExtractorService(
             existingLicenceInRun = await
                 outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
 
-            ConsoleHelper.WriteLine($"Waiting for {dmsDataForFile.FileId}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Waiting for {dmsDataForFile.FileId}");
             
             const int maxWaitTimeSeconds = 50;
             var maxFinishDateTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
@@ -132,7 +132,7 @@ public class PdfDataExtractorService(
                 && DateTime.Now <= maxFinishDateTime)
             {
                 await Task.Delay(delayInSeconds * 1000);
-                ConsoleHelper.WriteLine($"Waiting again for {dmsDataForFile.FileId}");
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Waiting again for {dmsDataForFile.FileId}");
                 
                 existingLicenceInRun = await
                     outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
@@ -140,11 +140,11 @@ public class PdfDataExtractorService(
 
             if (existingLicenceInRun?.Status != nameof(LicenceStatus.InProgress))
             {
-                ConsoleHelper.WriteLine($"Status now not in progress for {dmsDataForFile.FileId}");
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Lock now released for {dmsDataForFile.FileId}");
                 return (false, existingLicenceInRun);
             }
             
-            ConsoleHelper.WriteLine("Gave up waiting for lock to be released");
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - Gave up waiting for lock to be released for {dmsDataForFile.FileId}");
             return (true, null);
         }
     
@@ -1173,6 +1173,8 @@ public class PdfDataExtractorService(
                     previouslyParsedFiles,
                     processRunId);
 
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock for {linkedDmsFileData.FileId}");
+                
                 await outputService.SaveStubFinishMatchesResultAsync(
                     relatedFileName,
                     linkedDmsFileData.FileId,
@@ -1180,6 +1182,8 @@ public class PdfDataExtractorService(
             }
             catch (Exception ex)
             {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {linkedDmsFileData.FileId} had error, releasing lock");
+                
                 await outputService.SaveErrorMatchesResultAsync(
                     relatedFileName,
                     linkedDmsFileData.FileId,

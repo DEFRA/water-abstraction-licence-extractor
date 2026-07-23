@@ -486,7 +486,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        processRun.EndDateTimeUtc = DateTime.Parse(content).ToUniversalTime();
+        processRun.EndDateTimeUtc = DateTime.Parse(content);
     }
 
     public async Task<List<ProcessRun>> GetProcessRunsAsync()

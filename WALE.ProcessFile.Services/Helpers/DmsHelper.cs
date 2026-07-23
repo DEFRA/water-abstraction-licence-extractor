@@ -75,12 +75,24 @@ public static class DmsHelper
         filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
             //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
             //            || x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-            //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
-            //.Where(x => x.Value.RegionId == 3) // North east
-            .Skip(10)
-            .Take(2)
+            .Where(x => x.Key.Contains("c93e60f4-9263-6aa7-f9e5-103edf7df0a0"))
+            .Where(x => x.Value.Item2.RegionCode == 3) // North east
+            //.Skip(10)
+            //.Take(500)
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-    
+
+        /*var dupedFileIds = filesAndMapping.FilenamesWithLicenceNumbers
+            .Select(filename => filename.Key.Split("__")[1])
+            .GroupBy(f => f)
+            .Where(f => f.Count() > 1)
+            .Select(g => g.First())
+            .ToList();
+
+        var repeatedFileIds = filesAndMapping.FilenamesWithLicenceNumbers
+            .Where(x => dupedFileIds.Any(dfi => x.Key.Contains(dfi)))
+            .Select(x => x.Key)
+            .ToList();*/
+        
         var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
         ConsoleHelper.WriteLine(
@@ -211,10 +223,12 @@ public static class DmsHelper
         var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
         var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
+        var licenceFinderResultsTask = cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        
         var allDestinationFilenames = await fileService.GetAllFilesAsync();
-
         var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
-        var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+
+        var licenceFinderResults = await licenceFinderResultsTask;
 
         foreach (var licenceFinderResult in licenceFinderResults)
         {
@@ -229,10 +243,6 @@ public static class DmsHelper
             {
                 continue;
             }
-
-            // Fix casing
-            destinationFileName = allDestinationFilenames.First(fname =>
-                fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
             
             var (dmsFileData, naldLicence) = LicenceFinderResultToDmsAndNaldData(
                 licenceFinderResult,
@@ -270,7 +280,7 @@ public static class DmsHelper
         var dmsFileData = new DmsFileData
         {
             DestinationFileName = destinationFileName,
-            PermitNumber = licenceFinderResult.PermitNumber,
+            PermitNumber = licenceFinderResult.PermitNumber, // TODO, DmsPermitNumber ?
             DmsPath = licenceFinderResult.FileUrl,
             FileId = Guid.Parse(licenceFinderResult.FileId!)
         };

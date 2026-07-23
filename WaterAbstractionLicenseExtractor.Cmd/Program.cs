@@ -25,6 +25,8 @@ return;
 async Task ProgramAsync()
 {
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started");
+    var startDateTimeUtc = DateTime.UtcNow;
+    
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
@@ -57,7 +59,7 @@ async Task ProgramAsync()
         new ProcessRun
         {
             Description = $"Run using {services.FileService!.FolderPath}",
-            StartDateTimeUtc = DateTime.UtcNow,
+            StartDateTimeUtc = startDateTimeUtc,
             NumberOfFiles = filesToProcess.Count
         });
 

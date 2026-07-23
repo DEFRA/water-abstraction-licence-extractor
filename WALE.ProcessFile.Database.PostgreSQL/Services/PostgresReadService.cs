@@ -126,7 +126,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                        uuid(de.file_id) as file_id
                    FROM public.licence_finder_result lfr
                    JOIN public.dms_extract de
-                       ON de.permit_number = lower(lfr.permit_number) -- TODO change this in future for performance
+                       ON lower(lfr.permit_number) like CONCAT(de.permit_number, '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
                        AND de.file_id = lfr.file_id
                    WHERE
                        lfr.license_number = @LicenceNumber
@@ -293,6 +293,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT
                                permit_number,
+                               dms_permit_number,
                                file_url,
                                rule_used,
                                change_audit_action,
@@ -2316,6 +2317,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT
                                permit_number,
+                               dms_permit_number,
                                file_url,
                                rule_used,
                                change_audit_action,

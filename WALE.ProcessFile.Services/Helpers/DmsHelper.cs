@@ -74,8 +74,8 @@ public static class DmsHelper
         // For debugging uncheck sections of the following
         filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
             //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
-            //            || x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-            .Where(x => x.Key.Contains("c93e60f4-9263-6aa7-f9e5-103edf7df0a0"))
+                //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
+            //.Where(x => x.Key.Contains("c93e60f4-9263-6aa7-f9e5-103edf7df0a0"))
             .Where(x => x.Value.Item2.RegionCode == 3) // North east
             //.Skip(10)
             //.Take(500)

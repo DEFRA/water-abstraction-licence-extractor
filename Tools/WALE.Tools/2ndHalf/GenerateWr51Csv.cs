@@ -12,42 +12,73 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
-using WALE.Tools.Helpers;
+using WALE.Tools.Config;
 using WALE.Tools.Models;
 
 namespace WALE.Tools._2ndHalf;
 
 public static class GenerateWr51Csv
 {
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
-    private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
-    private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
-    
-    
-    private static readonly IPdfDataExtractorService PdfDataExtractor = new PdfDataExtractorService(
-        new PdfPigNoOcrDataExtractorService(),
-        new List<IOcrDataExtractorService>
-        {
-            // TODO mock of an OCR service that errors if called
-        },
-        CacheService,
-        OutputService,
-        DocumentService,
-        DocnetAlternativeDocumentService,
-        MessageQueueService);
-    
+
+    private static IPdfDataExtractorService GetPdfDataExtractor(
+        ICacheService cacheService,
+        IOutputService outputService,
+        IMessageQueueService messageQueueService)
+    {
+        return new PdfDataExtractorService(
+            new PdfPigNoOcrDataExtractorService(),
+            new List<IOcrDataExtractorService>(),
+            cacheService,
+            outputService,
+            DocumentService,
+            DocnetAlternativeDocumentService,
+            messageQueueService);
+    }
+
     public static async Task<int> GenerateCsvAsync()
     {
-        var folderPath = "/Users/ryanbarlow/Downloads/WR51s/";
         ConsoleHelper.WriteLine("Started generating wr51s csv");
         
-        var filesInDirectory = Directory.GetFiles(folderPath);
+        var httpClient = HttpHelper.GetResilientHttpClient(
+            KeyConfig.ApiBaseUrl,
+            100,
+            30);
+        
+        ICacheService cacheService = new ApiCacheService(httpClient);
+        IOutputService outputService = new ApiOutputService(httpClient);
+        IMessageQueueService messageQueueService  = new ApiMessageQueueService(httpClient);
+        var pdfDataExtractor = GetPdfDataExtractor(cacheService, outputService, messageQueueService);
+        
+        const bool useS3Api = true;
+        List<string> files;
+        IFileService fileService;
+        
+        if (useS3Api)
+        {
+            fileService = new ApiFileService(httpClient);
+            files = (await fileService.GetAllFilesAsync())
+                .Where(f => f.StartsWith("wr51__", StringComparison.InvariantCultureIgnoreCase))
+                .ToList();
+        }
+        else
+        {
+            var folderPath = "/Users/ryanbarlow/Downloads/WR51s/";
+            files = Directory.GetFiles(folderPath).ToList();
+            
+            fileService = new LocalFileService(folderPath);
+        }
+
+        files = files.Take(10).ToList();
+        
+        var lookupConfiguration = LookupConfiguration(fileService, cacheService, outputService);
+        
         var uniqueFolder = $"WR51-{DateTime.Today:yyyyMMdd}";
         
         await using var writer = new StreamWriter(
@@ -56,17 +87,40 @@ public static class GenerateWr51Csv
             Encoding.Unicode);
         
         await using var csv = new CsvWriter(writer, new CultureInfo("en-GB"));
-
         var lines = new List<Wr51CsvLine>();
+
+        const int processRunId = -99;
         
-        foreach (var filepath in filesInDirectory)
+        foreach (var filepath in files)
         {
-            var (_, _, internalResults) =
-                await GetMatchesAsync(filepath, folderPath);
+            var fileName = Path.GetFileName(filepath);
+
+            var fileId = FileHelper.ExtractFileId(fileName);
+            if (fileId == null)
+            {
+                ConsoleHelper.WriteLine($"ERROR - {fileName} doesn't contain a fileid guid");
+                continue;
+            }
+            
+            var (_, alreadySaved, internalResults) = await GetMatchesAsync(
+                fileName,
+                fileId.Value,
+                lookupConfiguration,
+                pdfDataExtractor,
+                processRunId);
 
             if (internalResults == null)
             {
                 continue;
+            }
+            
+            if (alreadySaved == false)
+            {
+                await pdfDataExtractor.SaveMatchResultAsync(
+                    internalResults,
+                    fileId.Value,
+                    processRunId,
+                    lookupConfiguration.UseLockExclusivity);
             }
             
             var parsedForm = Wr51SchemaConverter.ToForm(internalResults);
@@ -168,8 +222,15 @@ public static class GenerateWr51Csv
                 MeasurementDetails__WhereKept = parsedForm.MeasurementDetails.WhereKept
             });
         }
-        
-        await ZipFile.CreateFromDirectoryAsync("Images", $"{uniqueFolder}-images.zip");
+
+        var zipFileName = $"{uniqueFolder}-images.zip";
+
+        if (File.Exists(zipFileName))
+        {
+            File.Delete(zipFileName);
+        }
+
+        await ZipFile.CreateFromDirectoryAsync("Images", zipFileName);
         
         await csv.WriteRecordsAsync((IEnumerable)lines);
         ConsoleHelper.WriteLine("Finished generating wr51s csv");
@@ -178,27 +239,31 @@ public static class GenerateWr51Csv
     }
     
     private static Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
-        string filepath,
-        string folderPath)
+        string fileName,
+        Guid fileId,
+        LookupConfiguration lookupConfiguration,
+        IPdfDataExtractorService pdfDataExtractor,
+        int processRunId)
     {
-        var fileName = Path.GetFileName(filepath);
-        
-        return PdfDataExtractor.GetMatchesAsync(
+        return pdfDataExtractor.GetMatchesAsync(
             fileName,
-            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            LookupConfiguration(folderPath),
+            new DmsFileData { FileId = fileId },
+            lookupConfiguration,
             [fileName],
-            -1);
+            processRunId);
     }
     
-    private static LookupConfiguration LookupConfiguration(string pdfFolder)
+    private static LookupConfiguration LookupConfiguration(
+        IFileService fileService,
+        ICacheService cacheService,
+        IOutputService outputService)
     {
         return new LookupConfiguration(
             Wr51LabelConfiguration.GetLabels(),
             [],
-            new LocalFileService(pdfFolder),
-            CacheService,
-            OutputService,
+            fileService,
+            cacheService,
+            outputService,
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             lineHeight: 6,

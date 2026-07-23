@@ -140,12 +140,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(-1);
     }
 
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
     {
         return Task.FromResult(-1);
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         Directory.CreateDirectory($"{outputFolder}/{fileId}");
 

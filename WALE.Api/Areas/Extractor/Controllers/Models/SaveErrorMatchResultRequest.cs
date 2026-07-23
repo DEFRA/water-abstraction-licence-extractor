@@ -9,4 +9,6 @@ public class SaveErrorMatchResultRequest
     public int processRunId { get; set; }
     
     public string? error { get; set; }
+    
+    public bool isUpdate { get; set; }
 }

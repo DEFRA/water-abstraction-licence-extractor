@@ -1435,7 +1435,8 @@ public static class WalSchemaConverter
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         dmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -1446,7 +1447,8 @@ public static class WalSchemaConverter
                     destinationFileName!,
                     dmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }

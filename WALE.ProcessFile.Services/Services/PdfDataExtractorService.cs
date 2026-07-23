@@ -82,18 +82,20 @@ public class PdfDataExtractorService(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
-                ex.ToString());
+                ex.ToString(),
+                configuration.UseLockExclusivity);
 
             throw;
         }
     }
 
-    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesResult,
             fileId,
-            processRunId);
+            processRunId,
+            isUpdate);
 
         var dtStartSaveMatches = DateTime.Now;
 
@@ -1214,7 +1216,8 @@ public class PdfDataExtractorService(
                     await SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         linkedDmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -1225,7 +1228,8 @@ public class PdfDataExtractorService(
                     relatedFileName,
                     linkedDmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }

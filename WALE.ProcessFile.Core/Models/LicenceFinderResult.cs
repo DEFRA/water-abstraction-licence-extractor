@@ -11,6 +11,11 @@ public class LicenceFinderResult
     public string PermitNumber { get; set; } = string.Empty;
 
     /// <summary>
+    /// The DMS permit number folder
+    /// </summary>
+    public string DmsPermitNumber { get; set; } = string.Empty;
+    
+    /// <summary>
     /// The URL of the matched file from DMS extract
     /// </summary>
     public string FileUrl { get; set; } = string.Empty;

@@ -79,11 +79,13 @@ public class ProcessRunController(IOutputService outputService) : Controller
     [HttpPost]
     public async Task<IActionResult> FinishAsync([FromBody] ProcessRunEndRequest request)
     {
-        await outputService.FinishProcessRunAsync(new ProcessRun
+        var processRun = new ProcessRun
         {
-            ProcessRunId = request.processRunId
-        });
-
-        return Ok(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            ProcessRunId = request.processRunId,
+            EndDateTimeUtc = DateTime.UtcNow
+        };
+        
+        await outputService.FinishProcessRunAsync(processRun);
+        return Ok(processRun.EndDateTimeUtc.Value.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 }

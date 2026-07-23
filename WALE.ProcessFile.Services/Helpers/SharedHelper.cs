@@ -122,37 +122,53 @@ public static class SharedHelper
             {
                 foreach (var licenceLoop in licenceSetLoop.Licences)
                 {
-                    var hasFileId = licenceLoop.DmsFileId.HasValue;
-
-                    var existingSavedLicenceByFileId = hasFileId
-                        ? await outputService.GetLicenceAsync(
-                            licenceLoop.DmsFileId!.Value,
-                            processRun.ProcessRunId)
-                        : null;
-                    
                     var licenceNumber = licenceLoop.LicenceNumber?.Value;
                     var hasLicenceNumber = !string.IsNullOrEmpty(licenceNumber);
-                    
-                    var existingSavedLicenceByLicenceNumber = hasLicenceNumber
-                        && existingSavedLicenceByFileId == null
-                        ? await outputService.GetLicenceAsync(
-                            licenceNumber!,
-                            processRun.ProcessRunId)
-                        : null;
 
-                    var existingLicence = existingSavedLicenceByFileId ?? existingSavedLicenceByLicenceNumber;
+                    Licence? existingLicence = null;
+                    
+                    if (hasLicenceNumber)
+                    {
+                        existingLicence = await outputService.GetLicenceAsync(
+                            licenceNumber!,
+                            processRun.ProcessRunId);
+                    }
+                    
                     var existingLicenceId = existingLicence?.NoneSchemaData.ContainsKey("licenceId") == true
                         ? GetInt32(existingLicence.NoneSchemaData["licenceId"]!)
                         : (int?)null;
                     
-                    var previouslySaved = existingLicenceId != null;
-
-                    if (existingLicence != null && !previouslySaved)
+                    var previouslySavedForLicenceNumber = existingLicenceId != null;
+                    
+                    if (existingLicence != null && !previouslySavedForLicenceNumber)
                     {
-                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Licence exists but doesnt have the none schema data set");
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Licence exists (by filename) but doesnt have the none schema data set");
+                    }
+
+                    var hasFileId = licenceLoop.DmsFileId.HasValue;
+                    var previouslySavedForFileIdOnly = false;
+                    
+                    if (existingLicence == null && !hasLicenceNumber && hasFileId)
+                    {
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - No licence number, looking up by fileid ({licenceLoop.DmsFileId})");
+                        
+                        existingLicence = await outputService.GetLicenceAsync(
+                            licenceLoop.DmsFileId!.Value,
+                            processRun.ProcessRunId);
+                        
+                        existingLicenceId = existingLicence?.NoneSchemaData.ContainsKey("licenceId") == true
+                            ? GetInt32(existingLicence.NoneSchemaData["licenceId"]!)
+                            : null;
+                        
+                        previouslySavedForFileIdOnly = existingLicenceId != null;
+                        
+                        if (existingLicence != null && !previouslySavedForFileIdOnly)
+                        {
+                            ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Licence exists (by file id) but doesnt have the none schema data set");
+                        }
                     }
                     
-                    if (previouslySaved)
+                    if (previouslySavedForLicenceNumber || previouslySavedForFileIdOnly)
                     {
                         var licenceFoundLocally = licenceLoop.Status == LicenceStatus.Ok;
                         var previouslySavedAsNotFound = existingLicence!.Status == LicenceStatus.NotFound;

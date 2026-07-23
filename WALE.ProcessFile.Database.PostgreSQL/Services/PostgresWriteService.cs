@@ -264,8 +264,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
-                           VALUES (@FileId, @Status, @Data, @ProcessRunId, @DateTimeUtc)
+                           INSERT INTO matches_result (file_id, filename, status, data, process_run_id, date_time_utc)
+                           VALUES (@FileId, @Filename, @Status, @Data, @ProcessRunId, @DateTimeUtc)
                            RETURNING matches_result_id
                            """;
 
@@ -283,6 +283,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 FileId = fileId,
+                Filename = filename,
                 Status = status,
                 Data = data,
                 ProcessRunId = processRunId,
@@ -693,7 +694,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 processRun.SuccessCount,
                 processRun.ProcessRunId,
-                EndDateTimeUtc = DateTime.UtcNow,
+                processRun.EndDateTimeUtc
                 
             });
     }
@@ -1048,6 +1049,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            INSERT INTO licence_finder_result (
                                     permit_number,
+                                    dms_permit_number,
                                     file_url,
                                     rule_used,
                                     change_audit_action,
@@ -1080,6 +1082,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                                     we_have_downloaded)
                                VALUES (
                                     @PermitNumber,
+                                    @DmsPermitNumber,
                                     @FileUrl,
                                     @RuleUsed,
                                     @ChangeAuditAction,

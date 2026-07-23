@@ -26,6 +26,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -36,7 +37,8 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
     private async Task<LookupConfiguration> LookupConfigurationAsync(
         int regionCode,
@@ -45,31 +47,26 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
     {
         return new LookupConfiguration(
             isAbstractionLicence ? WalLabelConfiguration.GetLabels() : Wr51LabelConfiguration.GetLabels(),
-            [],
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             regionCode,
+            DateTime.Now,
             lineHeight: isAbstractionLicence ? 9 : 6,
             minimumRowsForDigital: 40);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
     {
-        var isWr51 = folderNumber == -99;
-        
-        var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
-        if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
-        if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
-        if (isWr51) pdfFolder = TestConfig.PdfFolderWr51;
-        
-        return await _pdfDataExtractor.GetMatchesAsync(
+        var matches = await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder, !isWr51),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolderWr51, false),
             [fileName],
             0);
+
+        return matches.Item!;
     }
     
     [Fact]

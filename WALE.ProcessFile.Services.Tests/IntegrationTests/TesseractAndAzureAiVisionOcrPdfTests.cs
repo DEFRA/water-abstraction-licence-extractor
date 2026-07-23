@@ -486,14 +486,6 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal("2/27/22/027", licenceNumberResult.Text!.FirstOrDefault()?.Text);
 
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
-        config.AllDmsData.Add(
-            "2_27_22_210",
-            new DmsFileData
-            {
-                DestinationFileName = "22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf",
-                DmsPath = "TEST_FAKE_PATH",
-                FileId = GuidHelper.GetConsistentFileIdFromFilename("22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf")
-            });
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,

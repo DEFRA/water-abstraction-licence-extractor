@@ -210,7 +210,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
-            FileId = dmsDataForFile.FileId,
+            FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(LicenceStatus.Ok),
             ServicesUsed =

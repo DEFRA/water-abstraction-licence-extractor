@@ -27,6 +27,8 @@ public static class GenerateWr51Csv
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
+    
     
     private static readonly IPdfDataExtractorService PdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -37,7 +39,8 @@ public static class GenerateWr51Csv
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
     public static async Task<int> GenerateCsvAsync()
     {
@@ -58,7 +61,14 @@ public static class GenerateWr51Csv
         
         foreach (var filepath in filesInDirectory)
         {
-            var internalResults = await GetMatchesAsync(filepath, folderPath);
+            var (_, _, internalResults) =
+                await GetMatchesAsync(filepath, folderPath);
+
+            if (internalResults == null)
+            {
+                continue;
+            }
+            
             var parsedForm = Wr51SchemaConverter.ToForm(internalResults);
 
             if (parsedForm.Images.Count > 0)
@@ -167,7 +177,9 @@ public static class GenerateWr51Csv
         return 1;
     }
     
-    private static Task<MatchesResult> GetMatchesAsync(string filepath, string folderPath)
+    private static Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
+        string filepath,
+        string folderPath)
     {
         var fileName = Path.GetFileName(filepath);
         
@@ -184,11 +196,11 @@ public static class GenerateWr51Csv
         return new LookupConfiguration(
             Wr51LabelConfiguration.GetLabels(),
             [],
-            [],
-            [],
             new LocalFileService(pdfFolder),
             CacheService,
+            OutputService,
             GeneralConstants.UnsetRegionCode,
+            DateTime.Now,
             lineHeight: 6,
             minimumRowsForDigital: 40);
     }

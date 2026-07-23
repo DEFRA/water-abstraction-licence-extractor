@@ -22,7 +22,9 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
-            if (DateTime.TryParse($"{rawInspectionDate} {rawInspectionTime}", out var tIinspectionDateTime))
+            var rawInspectionDateWithWordsRemove = rawInspectionDate.Replace("Time:", string.Empty);
+            
+            if (DateTime.TryParse($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}", out var tIinspectionDateTime))
             {
                 inspectionDateTime = tIinspectionDateTime;
             }

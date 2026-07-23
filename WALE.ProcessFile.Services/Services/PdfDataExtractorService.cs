@@ -1591,13 +1591,21 @@ public class PdfDataExtractorService(
                         partialLineT.Columns = newColumns;
                         lineForPosition = partialLineT;
 
-                        textBeforeAtAndAfterLabel = [ 
-                            new TextAndLabel
-                            {
-                                ColumnsText = [partialLineT.Columns[0].Text],
-                                Label = matchedLabel
-                            }
-                        ];
+                        if (partialLineT.Columns.Count == 0)
+                        {
+                            textBeforeAtAndAfterLabel = [];
+                        }
+                        else
+                        {
+                            textBeforeAtAndAfterLabel =
+                            [
+                                new TextAndLabel
+                                {
+                                    ColumnsText = [partialLineT.Columns[0].Text],
+                                    Label = matchedLabel
+                                }
+                            ];
+                        }
 
                         var newNextLines = new List<DocumentLine>();
 

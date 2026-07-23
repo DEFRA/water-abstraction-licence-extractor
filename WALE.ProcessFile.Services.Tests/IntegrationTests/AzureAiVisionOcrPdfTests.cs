@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -21,6 +22,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 3")]
 public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static AzureAiVisionOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -39,11 +48,11 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -58,9 +67,10 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
@@ -69,18 +79,18 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            OutputService,
+            regionCode,
+            DateTime.Now);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
@@ -89,12 +99,12 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         if (number == 3) pdfFolder = TestConfig.PdfFolder3;
         else if (number == 5) pdfFolder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, pdfFolder),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -174,8 +184,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -239,8 +247,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
@@ -278,8 +284,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
@@ -368,8 +372,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
@@ -410,7 +412,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("MID CHESHIRE WATER BOARD", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.OrdinalIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
@@ -479,8 +481,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
@@ -517,7 +517,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("SHERBORNE SCHOOL", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("authority hereby licence", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.OrdinalIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchedPosition.OnOrNearNextLine, nameResult.MatchedPosition);
         
@@ -605,8 +605,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
@@ -680,8 +678,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
@@ -705,8 +701,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -806,8 +800,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -918,8 +910,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -979,8 +969,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1040,8 +1028,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1078,8 +1064,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1258,8 +1242,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1503,8 +1485,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1570,8 +1550,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
@@ -1599,8 +1577,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder2));
@@ -1625,8 +1601,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
@@ -1651,8 +1625,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
@@ -1677,8 +1649,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder));

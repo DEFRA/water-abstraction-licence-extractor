@@ -62,6 +62,8 @@ public interface IDatabaseReadService
     Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
     
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
+    
+    Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
 
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
@@ -106,5 +108,17 @@ public interface IDatabaseReadService
     
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
   
+    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
+    
+    Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
+    
+    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
+    
     Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
+    
+    Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
+
+    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 }

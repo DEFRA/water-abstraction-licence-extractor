@@ -39,11 +39,11 @@ public static class FileHelper
     {
         return Directory
             .GetFiles(folder)
-            .Where(fileName => fileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            .Where(fileName => fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             .Where(fileName => !fileName.Contains("WR179"))
-            .Where(fileName => !fileName.Contains("Warning", StringComparison.InvariantCultureIgnoreCase))
-            .Where(fileName => !fileName.Contains("Determination", StringComparison.InvariantCultureIgnoreCase))
-            .Where(fileName => !fileName.Contains("Compliance", StringComparison.InvariantCultureIgnoreCase))
+            .Where(fileName => !fileName.Contains("Warning", StringComparison.OrdinalIgnoreCase))
+            .Where(fileName => !fileName.Contains("Determination", StringComparison.OrdinalIgnoreCase))
+            .Where(fileName => !fileName.Contains("Compliance", StringComparison.OrdinalIgnoreCase))
             .ToDictionary(k => k, string? (_) => null);
     }
     
@@ -61,5 +61,36 @@ public static class FileHelper
         }
 
         return extension;
+    }
+    
+    public static string? ExtractPermitNumber(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return string.Empty;
+        }
+
+        var underscoreIndex = fileName.IndexOf("__", StringComparison.Ordinal);
+        
+        return underscoreIndex >= 0 
+            ? fileName[..underscoreIndex].Trim() 
+            : null;
+    }
+    
+    public static Guid? ExtractFileId(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return null;
+        }
+
+        var filenameParts = fileName.Split("__");
+        var fileIdWithExtension = filenameParts.LastOrDefault()?.Trim();
+        
+        var fileIdString = fileIdWithExtension!.Split('.')[0];
+        
+        return Guid.TryParse(fileIdString, out var fileIdOut)
+            ? fileIdOut
+            : null;
     }
 }

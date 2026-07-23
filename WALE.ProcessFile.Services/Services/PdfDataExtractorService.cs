@@ -1,8 +1,7 @@
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -20,15 +19,14 @@ public class PdfDataExtractorService(
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
+    IMessageQueueService  apiMessageQueueService,
     int id = -1) : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
     private string Name => noOcrPdfDocumentService.Name!;
-
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new();
     
-    public async Task<MatchesResult> GetMatchesAsync(
+    public async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
@@ -40,49 +38,172 @@ public class PdfDataExtractorService(
             Console.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - Pdf file name should not contain full path");
             pdfFileName = FileHelper.GetFilenameWithExtension(pdfFileName)!;
         }
-        
-        var dtStart = DateTime.Now;
-        
-        var pathLock = PathLocks.GetOrAdd(
-            dmsDataForFile.FileId.ToString(),
-            _ => new SemaphoreSlim(1, 1));
-        
-        await pathLock.WaitAsync();
+
+        if (configuration.UseLockExclusivity)
+        {
+            var (stopExecution, matchesResult) = await CheckExclusiveAccess(
+                dmsDataForFile,
+                configuration.RegionId,
+                pdfFileName,
+                processRunId,
+                configuration.CurrentLockRetryCount,
+                configuration.LockInProcess);
+
+            if (stopExecution)
+            {
+                return (true, null, null);
+            }
+
+            if (matchesResult != null)
+            {
+                return (false, true, matchesResult);
+            }
+
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock) for {dmsDataForFile.FileId}");
+            
+            await outputService.SaveStubMatchesResultAsync(
+                pdfFileName,
+                dmsDataForFile.FileId,
+                processRunId);
+        }
 
         try
         {
-            var lockWaitDuration = DateTime.Now.Subtract(dtStart);
-
-            if (lockWaitDuration.TotalMilliseconds > 1000)
-            {
-                ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(PdfDataExtractorService)} - Waited at lock for {lockWaitDuration.TotalMilliseconds}ms - {dmsDataForFile.FileId} {pdfFileName}");
-            }
-
-            return await GetMatchesInternalAsync(
+            return (false, false, await GetMatchesInternalAsync(
                 pdfFileName,
-                dmsDataForFile,
+                dmsDataForFile.FileId,
                 configuration,
                 previouslyParsedFiles,
-                processRunId);
+                processRunId));
         }
-        finally
+        catch (Exception ex)
         {
-            pathLock.Release();
+            await outputService.SaveErrorMatchesResultAsync(
+                pdfFileName,
+                dmsDataForFile.FileId,
+                processRunId,
+                ex.ToString());
+
+            throw;
         }
+    }
+
+    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    {
+        var matchResultId = await outputService.SaveMatchResultAsync(
+            matchesResult,
+            fileId,
+            processRunId);
+
+        var dtStartSaveMatches = DateTime.Now;
+
+        if (matchesResult.Matches == null)
+        {
+            return;
+        }
+
+        var matches = matchesResult.Matches
+            .Select(match => (matchResultId, match.MatchedLabelName, match.LabelGroupName, match))
+            .ToList();
+
+        await outputService.SaveMatchesAsync(matches);
+
+        var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(PdfDataExtractorService)} - Saved {matches.Count} matches {fileId} in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    }
+
+    private async Task<(bool ShouldStopExecution, MatchesResult? Item)> CheckExclusiveAccess(
+        DmsFileData dmsDataForFile,
+        int regionId,
+        string pdfFileName,
+        int processRunId,
+        int currentLockRetryCount,
+        bool lockInProcess)
+    {
+        const int maxLockRetries = 5;
+        
+        if (currentLockRetryCount > maxLockRetries)
+        {
+            return (true, null);
+        }
+        
+        var existingLicenceInRun = await
+            outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+        
+        if (existingLicenceInRun == null)
+        {
+            return (false ,null);
+        }
+        
+        if (existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
+        {
+            return (false, existingLicenceInRun);
+        }
+        
+        const int delayInSeconds = 5;        
+        
+        if (lockInProcess)
+        {
+            existingLicenceInRun = await
+                outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Waiting for {dmsDataForFile.FileId}");
+            
+            const int maxWaitTimeSeconds = 50;
+            var maxFinishDateTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
+            
+            while (existingLicenceInRun?.Status == nameof(LicenceStatus.InProgress)
+                && DateTime.Now <= maxFinishDateTime)
+            {
+                await Task.Delay(delayInSeconds * 1000);
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Waiting again for {dmsDataForFile.FileId}");
+                
+                existingLicenceInRun = await
+                    outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
+            }
+
+            if (existingLicenceInRun?.Status != nameof(LicenceStatus.InProgress))
+            {
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Lock now released for {dmsDataForFile.FileId}");
+                return (false, existingLicenceInRun);
+            }
+            
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - Gave up waiting for lock to be released for {dmsDataForFile.FileId}");
+            return (true, null);
+        }
+    
+        const int inProcessDelayInMilliseconds = 1000;
+        await Task.Delay(inProcessDelayInMilliseconds);
+        
+        await apiMessageQueueService.AddToFileProcessQueue(
+            new FileProcessSingleRequest
+            {
+                DelayInSeconds = delayInSeconds,
+                DestinationFileName = dmsDataForFile.DestinationFileName,
+                DmsPath = dmsDataForFile.DmsPath,
+                FileId = dmsDataForFile.FileId,
+                FilePath = pdfFileName,
+                PermitNumber = dmsDataForFile.PermitNumber,
+                ProcessRunId = processRunId,
+                RegionId = regionId,
+                RequestedAt = DateTime.Now,
+                LockRetryCount = currentLockRetryCount + 1
+            });
+
+        return (true, null);
     }
 
     private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFileName,
-        DmsFileData? dmsDataForFile,
+        Guid fileId,
         LookupConfiguration configuration,
         List<string> previouslyParsedPaths,
         int processRunId)
     {
-        ArgumentNullException.ThrowIfNull(dmsDataForFile);
-
-        if (dmsDataForFile.FileId == Guid.Empty)
+        if (fileId == Guid.Empty)
         {
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - File Id is empty for {pdfFileName}");
             throw new Exception("FileId is empty");
         }
         
@@ -91,6 +212,7 @@ public class PdfDataExtractorService(
             Filename = pdfFileName,
             FileId = dmsDataForFile.FileId,
             RegionCode = configuration.RegionId,
+            Status = nameof(LicenceStatus.Ok),
             ServicesUsed =
             [
                 noOcrDataExtractorService.Name,
@@ -103,7 +225,7 @@ public class PdfDataExtractorService(
         
         var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
             pdfFileName,
-            dmsDataForFile.FileId,
+            fileId,
             outputService,
             cacheService,
             noOcrPdfDocumentService,
@@ -114,6 +236,8 @@ public class PdfDataExtractorService(
         if (pdfDocument == null)
         {
             returnResult.ErrorMessage = "Could not open pdf document";
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - Could not open pdf document '{pdfFileName}'");
+            
             return returnResult;
         }
         
@@ -157,7 +281,6 @@ public class PdfDataExtractorService(
             configuration.Labels,
             isOcr,
             noOcrDataExtractorService.Name,
-            configuration.AllDmsData,
             previouslyParsedPaths,
             configuration.RegionId,
             processRunId,
@@ -191,7 +314,7 @@ public class PdfDataExtractorService(
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
             {
-                FileId = dmsDataForFile.FileId,
+                FileId = fileId,
                 NoOcrServiceName = Name
             });
 
@@ -242,7 +365,7 @@ public class PdfDataExtractorService(
                     if (image == null)
                     {
                         ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not" +
-                            $" found, P{page} I{imageNumber} {dmsDataForFile.FileId}");
+                            $" found, P{page} I{imageNumber} {fileId}");
                         
                         continue;
                     }
@@ -300,7 +423,7 @@ public class PdfDataExtractorService(
             var breakPageLoop = false;
 
             var pageImages = page.Images.ToList(); // They are ordered earlier
-            var servicesUsed = new List<string>();
+            var servicesUsed = new Dictionary<string, double>();
             
             if (pageImages.Count > 10)
             {
@@ -330,7 +453,7 @@ public class PdfDataExtractorService(
             {
                 var imageReference = pageImages[imageNumber - 1];
 
-                if (imageReference.Contains("-error-", StringComparison.InvariantCultureIgnoreCase))
+                if (imageReference.Contains("-error-", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Skipping missing image {imageReference}");
                     continue;
@@ -344,10 +467,8 @@ public class PdfDataExtractorService(
                 foreach (var ocrService in ocrDataExtractorServices
                     .OrderBy(service => service.HasDirectCost))
                 {
-                    if (!servicesUsed.Contains(ocrService.Name))
-                    {
-                        servicesUsed.Add(ocrService.Name);
-                    }
+                    servicesUsed.TryAdd(ocrService.Name, 0);
+                    var serviceStartTimeUtc = DateTime.UtcNow;
                     
                     if (!returnResult.ServicesUsed.Contains(ocrService.Name))
                     {
@@ -369,6 +490,9 @@ public class PdfDataExtractorService(
                     {
                         ConsoleHelper.WriteLine($"ERROR - {ocrService.Name} - {ex} - {imageReference}");
                         // TODO proper logging somewhere
+
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
                         
                         // Don't rethrow - just carry on with the other providers and pages
                         continue;
@@ -377,6 +501,9 @@ public class PdfDataExtractorService(
                     // No lines found, no point processing that with the other services
                     if (serviceImageLines.Count == 0)
                     {
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
 
@@ -398,6 +525,9 @@ public class PdfDataExtractorService(
                         outputPage.LikelyMapPage = true;
                         serviceImageLines = [];
 
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
                     
@@ -409,7 +539,6 @@ public class PdfDataExtractorService(
                         unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
-                        configuration.AllDmsData,
                         previouslyParsedPaths,
                         configuration.RegionId,
                         processRunId,
@@ -421,6 +550,9 @@ public class PdfDataExtractorService(
                     
                     if (noMatchesFound)
                     {
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         continue;
                     }
                     
@@ -460,8 +592,14 @@ public class PdfDataExtractorService(
                         breakImageLoop = true;
                         breakPageLoop = true;
 
+                        var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                        servicesUsed[ocrService.Name] += serviceDurationMs;
+                        
                         break;
                     }
+                    
+                    var serviceDurationMs1 = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
+                    servicesUsed[ocrService.Name] += serviceDurationMs1;
                 }
                 
                 documentLines.AddRange(serviceImageLines);
@@ -538,12 +676,13 @@ public class PdfDataExtractorService(
         int pageNumber,
         int numberOfImages,
         PdfDocument pdfDocument,
-        List<string> servicesUsed)
+        Dictionary<string, double> servicesUsed)
     {
         var duration = DateTime.Now - dtStart;
+        var servicesUsedStr = servicesUsed.Select(su => $"{su.Key} ({su.Value}ms)");
         
         ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Page number {pageNumber} ({numberOfImages} images) took {duration.TotalMilliseconds} milliseconds" +
-            $". Services used {string.Join(", ", servicesUsed)} - {pdfDocument.PdfFilename}");
+            $". Services used {string.Join(", ", servicesUsedStr)} - {pdfDocument.PdfFilename}");
     }
     
     private static bool IsPageScan(int imageWidth, int imageHeight)
@@ -916,7 +1055,6 @@ public class PdfDataExtractorService(
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -932,6 +1070,7 @@ public class PdfDataExtractorService(
 
         var lines = StandardiseLines(documentLines);
         var wrappedLines = WrapLines(lines, false);
+        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -942,9 +1081,9 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                var isRegularExpression = label.TextToMatch?.Any(text => text.IsRegularExpression) == true;
+                var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
                 
-                if (!isRegularExpression && !LabelIsInDocument(label, documentLines))
+                if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
                 {
                     continue;
                 }
@@ -956,7 +1095,6 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     labelGroupMatches,
-                    licenceNumberMapping,
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,
@@ -992,7 +1130,6 @@ public class PdfDataExtractorService(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,
         LabelToMatch label,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedFiles,
         int regionCode,
         int processRunId,
@@ -1014,16 +1151,14 @@ public class PdfDataExtractorService(
                 continue;
             }
             
-            if (!FormattingHelper.GetDmsFileData(
-                licenceNumber.Text,
-                regionCode,
-                licenceNumberMapping,
-                out var dmsFileData))
+            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(licenceNumber.Text, cacheService);
+                    
+            if (dmsFileData == null)
             {
                 continue;
             }
             
-            var destinationFilenames = dmsFileData!.DestinationFileName!;
+            var destinationFilenames = dmsFileData.DestinationFileName!;
                 
             if (previouslyParsedFiles.Contains(destinationFilenames))
             {
@@ -1042,14 +1177,11 @@ public class PdfDataExtractorService(
             }
 
             var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.AllDmsData = licenceNumberMapping;
             clonedConfig.RegionId = regionCode;
             
-            FormattingHelper.GetDmsFileData(
+            var linkedDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                 relatedLicenceNumber,
-                regionCode,
-                lookupConfiguration.AllDmsData,
-                out var linkedDmsFileData);
+                cacheService);
 
             if (linkedDmsFileData == null)
             {
@@ -1058,21 +1190,58 @@ public class PdfDataExtractorService(
                 
                 break;
             }
+
+            (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
             
-            var relatedFileMatches = await GetMatchesAsync(
-                relatedFileName,
-                linkedDmsFileData,
-                clonedConfig,
-                previouslyParsedFiles,
-                processRunId);
+            try
+            {
+                relatedFileMatches = await GetMatchesAsync(
+                    relatedFileName,
+                    linkedDmsFileData,
+                    clonedConfig,
+                    previouslyParsedFiles,
+                    processRunId);
+
+                if (relatedFileMatches.StopExecution)
+                {
+                    continue;
+                }
+                
+                ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock/saving for {linkedDmsFileData.FileId}");
+
+                if (relatedFileMatches.AlreadySaved != true)
+                {
+                    await SaveMatchResultAsync(
+                        relatedFileMatches.Item!,
+                        linkedDmsFileData.FileId,
+                        processRunId);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {linkedDmsFileData.FileId} had error, releasing lock. {ex}");
+                
+                await outputService.SaveErrorMatchesResultAsync(
+                    relatedFileName,
+                    linkedDmsFileData.FileId,
+                    processRunId,
+                    ex.ToString());
+                
+                throw;
+            }
+            
+            if (relatedFileMatches.StopExecution)
+            {
+                continue;
+            }
 
             var labelResult = new LabelGroupResult
             {
                 MatchedLabel = label,
-                SubResults = relatedFileMatches.Matches!,
+                SubResults = relatedFileMatches.Item!.Matches!,
                 PageNumber = line.PageNumber
             };
-            
+
             FormattingHelper.RemoveRemoves(labelResult, []); // TODO do this properly at some point
             returnList.Add(labelResult);
         }
@@ -1190,7 +1359,6 @@ public class PdfDataExtractorService(
         string? serviceName,
         string labelGroupName,
         IReadOnlyList<LabelGroupResult> siblingMatches,
-        Dictionary<string, DmsFileData> licenceNumberMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -1241,7 +1409,6 @@ public class PdfDataExtractorService(
                                 partialLine,
                                 siblingMatches,
                                 label,
-                                licenceNumberMapping,
                                 previouslyParsedPaths,
                                 regionCode,
                                 processRunId,
@@ -1256,7 +1423,7 @@ public class PdfDataExtractorService(
 
                     if (FormattingHelper.IsLineEmpty(partialLine)
                         && label.TextToMatch?.Any(text =>
-                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase)) != true
+                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
                         && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
                     {
                         partialLine = null;
@@ -1469,7 +1636,6 @@ public class PdfDataExtractorService(
                         label = matchedLabel,
                         labelGroupName = labelGroupName,
                         labelGroupResult = labelGroupResult,
-                        licenceNumberMapping = licenceNumberMapping,
                         pdfDataExtractorService = this,
                         previouslyParsedPaths = previouslyParsedPaths,
                         previousLines = previousLines,
@@ -1762,7 +1928,7 @@ public class PdfDataExtractorService(
                 {
                     var startIndexOfMatch =
                         partialLine.Text.IndexOf(resultText,
-                            StringComparison.InvariantCultureIgnoreCase);
+                            StringComparison.OrdinalIgnoreCase);
 
                     var endIndexOfMatch = startIndexOfMatch + resultText.Length;
 
@@ -1900,7 +2066,6 @@ public class PdfDataExtractorService(
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,
@@ -1927,7 +2092,6 @@ public class PdfDataExtractorService(
                     serviceName,
                     labelGroupName,
                     subResults,
-                    licenceMapping,
                     previouslyParsedPaths,
                     regionCode,
                     processRunId,
@@ -1968,19 +2132,24 @@ public class PdfDataExtractorService(
         return subResults;
     }
 
+    private static bool IsStartOfBlock(LabelToMatch label)
+    {
+        return label.TextToMatch?
+            .Select(t => t.Text)
+            .Contains("[START_OF_BLOCK]") == true;
+    }
+
     private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
         var returnItems = new List<TextAndLabel>();
 
-        var lineColumns = line.Columns.Select(c => c.Text).ToList();
-        var lineText = line.Text;
-        
-        var isStartOfBlock = label.TextToMatch?.FirstOrDefault()?.Text
-            .Equals("[START_OF_BLOCK]", StringComparison.InvariantCultureIgnoreCase) == true;
+        var lineColumns = line.Columns
+            .Select(c => c.Text)
+            .ToList();
 
-        if (label.TextToMatch == null || isStartOfBlock)
+        if (label.TextToMatch == null || IsStartOfBlock(label))
         {
             returnItems.Add(new TextAndLabel
             {
@@ -1991,17 +2160,13 @@ public class PdfDataExtractorService(
             return returnItems;
         }
 
-        if (label.TextToMatch?.FirstOrDefault()?.IsRegularExpression == true &&
+        var lineText = line.Text;
+        
+        if (label.TextToMatch?.FirstOrDefault()?.Regex != null &&
             label.Position == LabelPosition.LabelIsActuallyResult)
         {
-            var options = label.TextToMatch.First().RegularExpressionIsCaseInsensitive
-                ? RegexOptions.IgnoreCase
-                : RegexOptions.None;
-
-            var matches = Regex.Matches(
-                lineText,
-                label.TextToMatch!.FirstOrDefault()!.Text,
-                options);
+            var regex = label.TextToMatch.FirstOrDefault()!.Regex;
+            var matches = regex!.Matches(lineText);
 
             foreach (var match in matches.AsQueryable())
             {
@@ -2022,7 +2187,7 @@ public class PdfDataExtractorService(
 
                 var valueStartPositionOnLine = lineText.IndexOf(
                     regexValue,
-                    StringComparison.InvariantCultureIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase);
                 var valueEndPositionOnLine = valueStartPositionOnLine + regexValue.Length;
 
                 var beforeColumns = new List<string>();
@@ -2139,7 +2304,7 @@ public class PdfDataExtractorService(
         {
             var index = lineText.IndexOf(
                 labelText.Text,
-                StringComparison.InvariantCultureIgnoreCase);
+                StringComparison.OrdinalIgnoreCase);
 
             if (index > PositionConstants.PositionNotFound)
             {
@@ -2255,7 +2420,7 @@ public class PdfDataExtractorService(
     
     private static bool LabelIsInDocument(
         LabelToMatch label,
-        IReadOnlyList<DocumentLine> lines)
+        string joinedLines)
     {
         var labelText = label.TextToMatch!
             .Select(labelTextMatch => labelTextMatch.Text
@@ -2263,15 +2428,13 @@ public class PdfDataExtractorService(
                 .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
             .ToList();
         
-        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.InvariantCultureIgnoreCase))
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.OrdinalIgnoreCase))
         {
             return true;
         }
-
-        var joinedLines = string.Join(',', lines.Select(line => line.Text));
         
         return labelText.Any(text => joinedLines.Contains(text,
-            StringComparison.InvariantCultureIgnoreCase));
+            StringComparison.OrdinalIgnoreCase));
     }
     
     public void Dispose()

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -6,29 +5,30 @@ namespace WALE.ProcessFile.Core.Configuration;
 
 public class LookupConfiguration(
     List<(string LabelGroupName, List<LabelToMatch> Labels)> labels,
-    Dictionary<string, DmsFileData> allDmsData,
-    ConcurrentDictionary<Guid, List<DmsFileIdInformation>> dmsFileIds,
     HashSet<string> validLowercaseFirstNames,
     IFileService fileService,
     ICacheService cacheService,
+    IOutputService outputService,
     int regionId,
+    DateTime requestedAt,
+    int currentLockRetryCount = 0,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
     int lineHeight = 9,
     int minimumRowsForDigital = 100,
-    object? naldLinkedLicenceHelper = null)
+    object? naldLinkedLicenceHelper = null,
+    bool useLockExclusivity = true,
+    bool lockInProcess = false)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
-
-    public Dictionary<string, DmsFileData> AllDmsData { get; set; } = allDmsData;
     
-    public ConcurrentDictionary<Guid, List<DmsFileIdInformation>> DmsFileIds { get; set; } = dmsFileIds;
-
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
     
     public IFileService FileService { get; set; } = fileService;
     
     public ICacheService CacheService { get; set; } = cacheService;
+    
+    public IOutputService OutputService { get; set; } = outputService;
 
     public int RegionId { get; set; } = regionId;
 
@@ -37,6 +37,14 @@ public class LookupConfiguration(
     public readonly int SkipFileWhenMoreThenPages = skipFileIfMoreThenPages;
 
     public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
+
+    public DateTime RequestedAt { get; set; } = requestedAt;
+
+    public int CurrentLockRetryCount { get; set; } = currentLockRetryCount;
+    
+    public bool UseLockExclusivity { get; set; } = useLockExclusivity;
+    
+    public bool LockInProcess { get; set; } = lockInProcess;
     
     public int LineHeight { get; set; } = lineHeight;
     
@@ -46,16 +54,19 @@ public class LookupConfiguration(
     {
         return new LookupConfiguration(
             Labels,
-            AllDmsData,
-            DmsFileIds,
             ValidLowercaseFirstNames,
             FileService,
             CacheService,
+            OutputService,
             RegionId,
+            RequestedAt,
+            CurrentLockRetryCount,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
             LineHeight,
             MinimumRowsForDigital,
-            NaldLinkedLicenceHelper);
+            NaldLinkedLicenceHelper,
+            UseLockExclusivity,
+            LockInProcess);
     }
 }

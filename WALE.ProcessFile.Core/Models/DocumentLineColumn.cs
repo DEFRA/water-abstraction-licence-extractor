@@ -137,7 +137,7 @@ public class DocumentLineColumn
             }
 
             var position = inputWordsTrimmedCopy.FindIndex(lw =>
-                lw.Text.Contains(inputTextWordTrimmedText, StringComparison.InvariantCultureIgnoreCase));
+                lw.Text.Contains(inputTextWordTrimmedText, StringComparison.OrdinalIgnoreCase));
                 
             if (position == -1)
             {
@@ -145,15 +145,15 @@ public class DocumentLineColumn
                 throw new Exception($"Words don't contain input text '{inputTextWordTrimmedText}';\n\nWords - '{inputWordsForDisplay}'\nText  - '{inputText}'");
             }
 
-            var startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase);
+            var startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.OrdinalIgnoreCase);
 
             if (startPos == -1)
             {
                 position = inputWordsCopy.FindIndex(
-                    lw => lw.Text.StartsWith(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase)
-                          || lw.Text.EndsWith(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase));
+                    lw => lw.Text.StartsWith(inputTextWord.Text, StringComparison.OrdinalIgnoreCase)
+                          || lw.Text.EndsWith(inputTextWord.Text, StringComparison.OrdinalIgnoreCase));
 
-                startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.InvariantCultureIgnoreCase);
+                startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.OrdinalIgnoreCase);
                 
                 if (startPos == -1)
                 {
@@ -176,7 +176,7 @@ public class DocumentLineColumn
         var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
         
         System.Diagnostics.Debug.Assert(
-            inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.InvariantCultureIgnoreCase),
+            inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.OrdinalIgnoreCase),
             $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
         
         return outputWords;

@@ -263,10 +263,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             documentLines.AddRange(pageLinesTransformed);
         }
         
-        // Update line numbers, now in one big list
-        var lineNumber = 0;
-        documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
-        
         return Task.FromResult(documentLines);
     }
 
@@ -354,11 +350,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             },
             pagesMetadataList);
 
-        // Update line numbers, now in one big list
-        var lineNumber = 0;
-        
-        documentLines.ForEach(documentLine => documentLine.LineNumber = lineNumber++);
-        
+        documentLines = documentLines
+            .OrderBy(documentLine => documentLine.PageNumber)
+            .ThenBy(documentLine => documentLine.LineNumber)
+            .ToList();
+
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Saving screenshots and getting document text lines took {(DateTime.Now - dtStart).TotalSeconds} seconds" +
             $" ({(DateTime.Now - dtMetadataStart).TotalMilliseconds}ms was for saving metadata, " +

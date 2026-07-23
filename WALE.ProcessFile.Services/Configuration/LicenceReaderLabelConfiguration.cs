@@ -1,9 +1,10 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
-public static class LicenceReaderConfiguration
+public static partial class LicenceReaderConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -83,11 +84,10 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new("Environment.* Agency")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
-                    }   
+                        Regex = EnvironmentAgencyRegex()
+                    }
                 ],
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
@@ -107,10 +107,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Yorkshire.* Water Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = YorkshireWaterAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -124,10 +123,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Yorkshire.* River.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = YorkshireRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -141,10 +139,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Northumbrian.* Water.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthumbrianWaterAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -158,10 +155,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Northumbrian.* River.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthumbrianRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -182,10 +178,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*National.* River.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NationalRiverAuthorityRegex()
                     }    
                 ],
                 PreviousLinesToFetch = 0,
@@ -206,10 +201,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Northumbria.* Yorkshire.* Region.*")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthumbriaYorkshireRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -223,9 +217,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Licence.* Serial.*")   {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                    new(string.Empty)
+                    {
+                        Regex = LicenceSerialRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -246,10 +240,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Yorkshire.* Region.*")   
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = YorkshireRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -263,9 +256,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Serial.* .*No.*")   {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                    new(string.Empty)
+                    {
+                        Regex = SerialNoRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -286,10 +279,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Northumbria.* .*Region.*")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthumbriaRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -303,10 +295,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Licence.* .*No.*")   
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LicenceNoRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -327,10 +318,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Anglian.*Water.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = AnglianWaterAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -344,10 +334,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*NORFOLK.*AND.*SUFFOLK.*RIVER.*DIVISION")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NofolkAndSuffolkRiverDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -361,10 +350,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*LINCOLN DIVISION")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LincolnDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -378,10 +366,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*LINCOLNSHIRE.*RIVER.*DIVISION")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LincolnshireRiverDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -395,10 +382,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*NORWICH.*DIVISION")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorwichDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -412,10 +398,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Great.*Ouse.*River.*Division")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = GreatOuseRiverDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -429,10 +414,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Colchester.*division")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = ColchesterDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -446,10 +430,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*N\\.R\\.A.*UNIT")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NraUnitRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -463,10 +446,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Cambridge.*Division")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = CambridgeDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -480,10 +462,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*WELLAND.*AND.*NENE.*RIVER.*DIVISION")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = WellandAndNeneRiverDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -497,10 +478,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Lincoln.*Water.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LincolnWaterAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -514,10 +494,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Lincolnshire.*River.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LincolnshireRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -531,10 +510,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Welland.*and.*Nene.*River.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = WellandAndNeneRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -548,10 +526,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Oundle.*division")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = OundleDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -565,10 +542,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*East.*Suffolk.*and.*Norfolk.*River.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = EastSuffolkAndNorfolkRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -582,10 +558,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Essex.*River.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = EssexRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -599,10 +574,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Great.*Ouse.*River.*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = GreatOuseRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -612,6 +586,7 @@ public static class LicenceReaderConfiguration
             }
         ];
     }
+    
     private static List<LabelToMatch> GetNRAAnglianModern1Labels()
     {
         return
@@ -622,10 +597,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Anglian.* Region.*")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = AnglianRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -639,9 +613,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Licence.* Number.*")   {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                    new(string.Empty)
+                    {
+                        Regex = LicenceNumberRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -664,8 +638,7 @@ public static class LicenceReaderConfiguration
                 [
                     new(".*Anglian.* Region.*")   
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = AnglianRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -679,9 +652,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Serial.* .*No.*")   {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                    new(".*Serial.* .*No.*")
+                    {
+                        Regex = SerialNoRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -702,10 +675,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Mersey .*and .*Weaver .*River .*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = MerseyAndWeaverRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -719,10 +691,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Lancaster .*River .*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LancasterRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -736,10 +707,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*North .*West .*Water .*Authority.* -.*River .*Division")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthWestWaterAuthorityRiverDivisionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -753,10 +723,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Cumberland .*River .*Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = CumberlandRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -777,10 +746,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*North.* West.* Region.*")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NorthWestRegionRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -794,9 +762,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*Licence.* Number.*")   {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                    new(".*Licence.* Number.*")
+                    {
+                        Regex = LicenceNumberRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -806,7 +774,6 @@ public static class LicenceReaderConfiguration
             }
         ];
     }
-    
     
     private static List<LabelToMatch> GetNRANWOldLabels()
     {
@@ -818,10 +785,9 @@ public static class LicenceReaderConfiguration
                 Format = "Text",
                 Text =
                 [
-                    new(".*National.* .*Rivers.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = NationalRiversAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -837,8 +803,7 @@ public static class LicenceReaderConfiguration
                 [
                     new(".*Licence.* .*No.*")   
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = LicenceNoRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -848,4 +813,115 @@ public static class LicenceReaderConfiguration
             }
         ];
     }
+    
+    [GeneratedRegex("Environment.* Agency", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex EnvironmentAgencyRegex();
+    
+    [GeneratedRegex(".*Yorkshire.* Water Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex YorkshireWaterAuthorityRegex();
+    
+    [GeneratedRegex(".*Yorkshire.* River.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex YorkshireRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*Northumbrian.* Water.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthumbrianWaterAuthorityRegex();
+    
+    [GeneratedRegex(".*Northumbrian.* River.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthumbrianRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*National.* River.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NationalRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*Northumbria.* Yorkshire.* Region.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthumbriaYorkshireRegionRegex();
+    
+    [GeneratedRegex(".*Licence.* Serial.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LicenceSerialRegex();
+    
+    [GeneratedRegex(".*Yorkshire.* Region.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex YorkshireRegionRegex();
+    
+    [GeneratedRegex(".*Serial.* .*No.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex SerialNoRegex();
+    
+    [GeneratedRegex(".*Northumbria.* .*Region.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthumbriaRegionRegex();
+    
+    [GeneratedRegex(".*Licence.* .*No.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LicenceNoRegex();
+
+    [GeneratedRegex(".*Anglian.*Water.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex AnglianWaterAuthorityRegex();
+    
+    [GeneratedRegex(".*NORFOLK.*AND.*SUFFOLK.*RIVER.*DIVISION", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NofolkAndSuffolkRiverDivisionRegex();
+    
+    [GeneratedRegex(".*LINCOLN DIVISION", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LincolnDivisionRegex();
+    
+    [GeneratedRegex(".*LINCOLNSHIRE.*RIVER.*DIVISION", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LincolnshireRiverDivisionRegex();
+    
+    [GeneratedRegex(".*NORWICH.*DIVISION", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorwichDivisionRegex();
+
+    [GeneratedRegex(".*Great.*Ouse.*River.*Division", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex GreatOuseRiverDivisionRegex();
+    
+    [GeneratedRegex(".*Colchester.*division", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex ColchesterDivisionRegex();
+    
+    [GeneratedRegex(".*N\\.R\\.A.*UNIT", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NraUnitRegex();
+    
+    [GeneratedRegex(".*Cambridge.*Division", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex CambridgeDivisionRegex();
+
+    [GeneratedRegex(".*WELLAND.*AND.*NENE.*RIVER.*DIVISION", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex WellandAndNeneRiverDivisionRegex();
+    
+    [GeneratedRegex(".*Lincoln.*Water.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LincolnWaterAuthorityRegex();
+    
+    [GeneratedRegex(".*Lincolnshire.*River.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LincolnshireRiverAuthorityRegex(); 
+    
+    [GeneratedRegex(".*Welland.*and.*Nene.*River.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex WellandAndNeneRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*Oundle.*division", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex OundleDivisionRegex(); 
+    
+    [GeneratedRegex(".*East.*Suffolk.*and.*Norfolk.*River.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex EastSuffolkAndNorfolkRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*Essex.*River.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex EssexRiverAuthorityRegex(); 
+    
+    [GeneratedRegex(".*Great.*Ouse.*River.*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex GreatOuseRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*Anglian.* Region.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex AnglianRegionRegex(); 
+    
+    [GeneratedRegex(".*Licence.* Number.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LicenceNumberRegex();
+    
+    [GeneratedRegex(".*Mersey .*and .*Weaver .*River .*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex MerseyAndWeaverRiverAuthorityRegex(); 
+    
+    [GeneratedRegex(".*Lancaster .*River .*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex LancasterRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*North .*West .*Water .*Authority.* -.*River .*Division", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthWestWaterAuthorityRiverDivisionRegex(); 
+    
+    [GeneratedRegex(".*Cumberland .*River .*Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex CumberlandRiverAuthorityRegex();
+    
+    [GeneratedRegex(".*North.* West.* Region.*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NorthWestRegionRegex(); 
+    
+    [GeneratedRegex(".*National.* .*Rivers.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex NationalRiversAuthorityRegex();
 }

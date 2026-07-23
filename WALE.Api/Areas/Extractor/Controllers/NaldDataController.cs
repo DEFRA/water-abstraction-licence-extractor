@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -24,6 +25,14 @@ public class NaldDataController(ICacheService cacheService) : Controller
             take);
         
         return Ok(naldData);
+    }
+
+    [OutputCache(Duration=60)] // Doesn't change often at all
+    [HttpGet]
+    public async Task<IActionResult> GetImpoundmentAndAbstractionLicencesAsync()
+    {
+        var naldLicences = await cacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        return Ok(naldLicences);
     }
 
     [HttpGet]
@@ -69,5 +78,14 @@ public class NaldDataController(ICacheService cacheService) : Controller
     {
         var incrementNumber = await cacheService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
         return Ok(incrementNumber);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int regionCode)
+    {
+        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
+        return Ok(naldData);
     }
 }

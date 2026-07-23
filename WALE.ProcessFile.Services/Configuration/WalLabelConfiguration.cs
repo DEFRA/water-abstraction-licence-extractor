@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
@@ -6,7 +7,7 @@ using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
-public static class WalLabelConfiguration
+public static partial class WalLabelConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -2576,7 +2577,7 @@ public static class WalLabelConfiguration
             [
                 new(LicenceNumber.YorkshireRegexPatten)
                 {
-                    IsRegularExpression = true
+                    Regex = LicenceNumber.LicenceNumbersRegex()
                 }
             ],
             Format = LicenceNumber.Constant,
@@ -2632,10 +2633,9 @@ public static class WalLabelConfiguration
     
     private const string LicenceNumberHeaderLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
-        new(@"/Page \d* of \d*/")
+        new(string.Empty)
         {
-            IsRegularExpression = true,
-            RegularExpressionIsCaseInsensitive = true
+            Regex = PageXOfYRegex()
         };
     private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
         new("708 506 506"); // Only this bit matches the pattern (excludes first number)
@@ -2646,5 +2646,14 @@ public static class WalLabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
         new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/") { IsRegularExpression = true };
+        new(string.Empty)
+        {
+            Regex = LicenceNumberInHeaderRegex()
+        };
+    
+    [GeneratedRegex(@"Page \d* of \d*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex PageXOfYRegex();
+    
+    [GeneratedRegex($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/", RegexOptions.None, "en-GB")]
+    private static partial Regex LicenceNumberInHeaderRegex();
 }

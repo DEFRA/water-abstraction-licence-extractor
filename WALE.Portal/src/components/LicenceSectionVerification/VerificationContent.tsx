@@ -112,13 +112,12 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
             )}
 
             {activeSubTab === 'scraped' && (
-                <div key={scrapedResetKey}>
+                <div>
                     <ScrapedLicenceSection 
                         title="Linked Licences" 
                         itemType="linked licence"
                         licenceFileId={licence.dmsFileId!} 
                         processRunId={processRunId}
-                        onRefresh={onRefresh}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
                     >

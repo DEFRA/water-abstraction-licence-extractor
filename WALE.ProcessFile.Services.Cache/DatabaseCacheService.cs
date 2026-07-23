@@ -12,8 +12,6 @@ public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
     IDatabaseWriteService databaseWriteService) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true;
-
     public string? CacheFolderOrUrl { get; set; } = null;
 
     public Task SetupAsync()
@@ -309,6 +307,11 @@ public class DatabaseCacheService(
         return databaseReadService.GetDmsFileIdInformationAsync();
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        return databaseReadService.GetDmsFileIdInformationAsync(fileId);
+    }
+
     public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         return databaseWriteService.AddDmsFileIdInformationAsync(newDmsFileIdInformation);
@@ -392,5 +395,25 @@ public class DatabaseCacheService(
     public Task<HashSet<string>> GetFirstNamesAsync()
     {
         throw new NotImplementedException();
+    }
+
+    public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
+    }
+
+    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    {
+        return databaseReadService.GetNaldLicenceAsync(licenceNumber, regionCode);
+    }
+
+    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        return databaseReadService.GetLicenceFinderResultAsync(fileId);
+    }
+
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
+    {
+        return databaseReadService.GetDmsFileDataAsync(licenceNumber);
     }
 }

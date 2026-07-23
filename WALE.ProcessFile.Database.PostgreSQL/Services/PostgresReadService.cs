@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
@@ -82,144 +83,591 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 PageNumber = pageNumber
             });
     }
-
-    public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
+    
+    public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
+
         const string sql =
             """
-            SELECT count(1)
+            SELECT DISTINCT
+                   data::jsonb -> 'licenceVersion' ->> 'issuer' AS issuer
             FROM licence
             WHERE process_run_id = @ProcessRunId
-            AND data::jsonb ->> 'status' = 'Ok'
-            AND (
-                @SearchTerm IS NULL
-                OR trim(@SearchTerm) = ''
-                OR data::jsonb ->> 'id' ILIKE '%' || @SearchTerm || '%'
-                OR data::jsonb ->> 'filename' ILIKE '%' || @SearchTerm || '%'
-                OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @SearchTerm || '%'
-                OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @SearchTerm || '%'
-            )
-            AND (
-                @Issuer IS NULL
-                OR trim(@Issuer) = ''
-                OR data::jsonb -> 'licenceVersion' ->> 'issuer' = @Issuer
-            )
-            AND (
-                @OcrScan IS NULL
-                OR (
-                    @OcrScan = true
-                    AND data::jsonb -> 'noneSchemaData' ->> 'ocr' = 'OCR'
-                )
-                OR (
-                    @OcrScan = false
-                    AND COALESCE(data::jsonb -> 'noneSchemaData' ->> 'ocr', '') <> 'OCR'
-                )
-            )
-            AND (
-                @MeansFound IS NULL
-                OR (
-                    @MeansFound = true
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) > 0
-                )
-                OR (
-                    @MeansFound = false
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) = 0
-                )
-            )
-            AND (
-                @PointsEmpty IS NULL
-                OR (
-                    @PointsEmpty = true
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) = 0
-                )
-                OR (
-                    @PointsEmpty = false
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) > 0
-                )
-            )
-            AND (
-                @PurposesEmpty IS NULL
-                OR (
-                    @PurposesEmpty = true
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) = 0
-                )
-                OR (
-                    @PurposesEmpty = false
-                    AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) > 0
-                )
-            )
-            AND (
-                @LimitsEmpty IS NULL
-                OR (
-                    @LimitsEmpty = true
-                    AND NOT EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(
-                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
-                        ) individual_item
-                        WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
-                    )
-                )
-                OR (
-                    @LimitsEmpty = false
-                    AND EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(
-                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
-                        ) individual_item
-                        WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
-                    )
-                )
-            )
-            AND (
-                @AggregatesEmpty IS NULL
-                OR (
-                    @AggregatesEmpty = true
-                    AND NOT EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(
-                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
-                        ) aggregate_item
-                        WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
-                    )
-                )
-                OR (
-                    @AggregatesEmpty = false
-                    AND EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(
-                            COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
-                        ) aggregate_item
-                        WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
-                    )
-                )
-            )
-            AND (
-                @IssueYear IS NULL
-                OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
-            )
+              AND data::jsonb ->> 'status' = 'Ok'
+              AND NULLIF(
+                    trim(data::jsonb -> 'licenceVersion' ->> 'issuer'),
+                    ''
+                  ) IS NOT NULL
+            ORDER BY issuer;
             """;
 
-        return await QuerySingleOrDefaultAsync<int>(
+        var issuers = await QueryAsync<string>(
             connection,
             sql,
             0,
             new
             {
-                ProcessRunId = processRunId,
-                SearchTerm = processRunQuery.SearchTermClean,
-                processRunQuery.Issuer,
-                processRunQuery.MeansFound,
-                processRunQuery.OcrScan,
-                processRunQuery.AggregatesEmpty,
-                processRunQuery.LimitsEmpty,
-                processRunQuery.PointsEmpty,
-                processRunQuery.PurposesEmpty,
-                processRunQuery.IssueYear
+                ProcessRunId = processRunId
             });
+
+        return issuers.ToList();
     }
 
+    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
+    {
+        await using var connection = GetPostgresConnection();
+        
+        var sql = """
+                   SELECT
+                       lfr.permit_number,
+                       de.file_url as dmsPath,
+                       concat(lower(lfr.permit_number), '__', lower(lfr.file_id), '.pdf') as destinationFileName,
+                       uuid(de.file_id) as file_id
+                   FROM public.licence_finder_result lfr
+                   JOIN public.dms_extract de
+                       ON lower(lfr.permit_number) like CONCAT(de.permit_number, '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
+                       AND de.file_id = lfr.file_id
+                   WHERE
+                       lfr.license_number = @LicenceNumber
+                   LIMIT 1;
+               """;
+        
+        return await QueryFirstOrDefaultAsync<DmsFileData>(
+            connection,
+            sql,
+            0,
+            new { LicenceNumber = licenceNumber });
+    }
+
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        var licenceNumbers = new List<string> { licenceNumber };
+        
+        var sql = """
+               SELECT
+                   "ID" AS Id,
+                   "LIC_NO" AS LicenceNo,
+                   "AREP_SUC_CODE" AS ArepSucCode,
+                   "AREP_AREA_CODE" AS ArepAreaCode,
+                   "SUSP_FROM_BILLING" AS SuspFromBilling,
+                   "AREP_LEAP_CODE" AS ArepLeapCode,
+                   "EXPIRY_DATE" AS ExpiryDate,
+                   "LAPSED_DATE" AS LapsedDate,
+                   "ORIG_EFF_DATE" AS OrigEffectiveDate,
+                   "ORIG_SIG_DATE" AS OrigSignatureDate,
+                   "ORIG_APP_NO" AS OrigAppNo,
+                   "ORIG_LIC_NO" AS OrigLicNo,
+                   "NOTES" AS Notes,
+                   "REV_DATE" AS RevDate,
+                   "LAPSED_DATE" AS LapsedDate,
+                   "SUSP_FROM_RETURNS" AS SuspFromReturns,
+                   "AREP_CAMS_CODE" AS ArepCamsCode,
+                   "X_REG_IND" AS XRegInd,
+                   "PREV_LIC_NO" AS PrevLicNo,
+                   "FOLL_LIC_NO" AS FollLicNo,
+                   "AREP_EIUC_CODE" AS ArepEiucCode,
+                   "FGAC_REGION_CODE" AS FgacRegionCode
+               FROM nald."NALD_ABS_LICENCES"
+               WHERE "FGAC_REGION_CODE" = @RegionCode
+                    AND (
+               """;
+
+        var idx = 0;
+        foreach (var _ in licenceNumbers)
+        {
+            if (idx > 0)
+            {
+                sql += " OR ";
+            }
+            
+            sql += $"\"LIC_NO\" = @LicNo{idx++}\n";
+        }
+
+        sql += """
+               )
+               ORDER BY
+                   "ID",
+                   "FGAC_REGION_CODE"
+               LIMIT 1
+               """;
+
+        var paramsObj = new DynamicParameters();
+        paramsObj.Add("@RegionCode", regionCode);
+        
+        idx = 0;
+        
+        foreach (var licenceNumberLoop in licenceNumbers)
+        {
+            paramsObj.Add($"@LicNo{idx++}", licenceNumberLoop);
+        }
+        
+        var dataLine = await QueryFirstOrDefaultAsync<NaldAbstractionLicenceDataLine>(
+            connection,
+            sql,
+            0,
+            paramsObj);
+
+        if (dataLine == null)
+        {
+            return null;
+        }
+        
+        var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
+
+        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
+        versions = versions
+            .OrderByDescending(v => v.IssueNo)
+            .ThenBy(v => v.IncrNo)
+            .ToList();
+        
+        foreach (var version in versions)
+        {
+            NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);
+            break;
+        }
+
+        var purposesTask = GetNaldLicencePurposesAsync(
+            naldData!.Id,
+            naldData.IssueNo!.Value,
+            naldData.IncrNo!.Value,
+            regionCode);
+        
+        var quantitiesTask = GetNaldLicenceQuantitiesAsync(
+            naldData.Id,
+            naldData.IssueNo!.Value,
+            naldData.IncrNo!.Value,
+            regionCode);
+        
+        var purposes = await purposesTask;
+        
+        foreach (var purpose in purposes)
+        {
+            NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);
+            
+            var points = await GetNaldLicencePointsAsync(purpose.Id!, regionCode);
+            
+            foreach (var point in points)
+            {
+                NaldHelper.AddNaldAbstractionLicencePointsData(point, naldData);               
+            }
+        }
+        
+        var quantities = await quantitiesTask;
+        
+        foreach (var quantity in quantities)
+        {
+            NaldHelper.AddNaldAbstractionLicenceQuantitiesData(quantity, naldData);               
+        }
+        
+        return naldData;
+    }
+
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               file_id,
+                               dms_file_path,
+                               process_run_id,
+                               status,
+                               status_date_utc
+                           FROM sharepoint_fileid
+                           WHERE file_id = @FileId
+                           """;
+
+        var results = await QueryAsync<DmsFileIdInformation>(
+            connection,
+            sql,
+            0,
+            new { FileId = fileId });
+
+        return results.ToList();
+    }
+
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               permit_number,
+                               dms_permit_number,
+                               file_url,
+                               rule_used,
+                               change_audit_action,
+                               license_number,
+                               document_date,
+                               signature_date,
+                               date_of_issue,
+                               other_reference,
+                               file_size,
+                               disclosure_status,
+                               region,
+                               nald_id,
+                               nald_issue_no,
+                               nald_increment_no,
+                               primary_template,
+                               secondary_template,
+                               number_of_pages,
+                               doi_signature_date_match,
+                               included_in_version_match,
+                               single_licence_in_version_match,
+                               version_match_file_url,
+                               duplicate_licence_in_version_match_result,
+                               nald_issue,
+                               file_id,
+                               file_id_status,
+                               file_id_status_change_date,
+                               is_water_company,
+                               folder_name_auto_correct,
+                               seen_in_dms_extract,
+                               we_have_downloaded
+                           FROM public.licence_finder_result
+                           WHERE file_id = @FileId
+                           """;
+
+        var result = await QueryFirstOrDefaultAsync<LicenceFinderResult>(
+            connection,
+            sql,
+            0,
+            new { FileId = fileId.ToString() });
+
+        return result!;
+    }
+
+    private async Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(
+        int abvAablId,
+        int issueNumber,
+        int incrementNumber,
+        int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               "ID" AS Id,
+                               "AABV_AABL_ID" AS AabvAablId,
+                               "AABV_ISSUE_NO" AS AabvIssueNo,
+                               "AABV_INCR_NO" AS AabvIncrNo,
+                               "MAX_ANNUAL_QTY" AS MaxAnnualQty,
+                               "MAX_DAILY_QTY" AS MaxDailyQty,
+                               "AGGREGATED_IND" AS AggregatedInd,
+                               "PURP_POINTS_IND" AS PurpPointsInd,
+                               "USER_VALID_IND" AS UserValidInd,
+                               "FGAC_REGION_CODE" AS FgacRegionCode
+                           FROM nald."NALD_ABS_LIC_QUANTITIES"
+                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                                AND "AABV_AABL_ID" = @AabvAablId
+                                AND "AABV_ISSUE_NO" = @AabvIssueNo
+                                AND "AABV_INCR_NO" = @AabvIncrNo     
+                           """;
+
+        return (await QueryAsync<NaldLicenceQuantitiesDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                AabvAablId = abvAablId,
+                AabvIssueNo = issueNumber,
+                AabvIncrNo = incrementNumber
+            })).ToList();
+    }
+    
+    public async Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT
+                   LEFT(data::jsonb -> 'licenceVersion' ->> 'issueDate', 4) AS issue_year
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND data::jsonb ->> 'status' = 'Ok'
+              AND NULLIF(
+                    trim(data::jsonb -> 'licenceVersion' ->> 'issueDate'),
+                    ''
+                  ) IS NOT NULL
+            ORDER BY issue_year;
+            """;
+
+        var issueDate = await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+        
+        return issueDate.ToList();
+    }
+
+    private async Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(
+        string purposeId,
+        int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               pp."AABP_ID" AS AabpId,
+                               pp."AAIP_ID" AS AaipId,
+                               pp."AMOA_CODE" AS AmoaCode,
+                               pp."NOTES" AS Notes,
+                               pp."FGAC_REGION_CODE" AS FgacRegionCode,
+                               p."NGR1_SHEET" AS Ngr1Sheet,
+                               p."NGR1_EAST" AS Ngr1East,
+                               p."NGR1_NORTH" AS Ngr1North,
+                               p."CART1_EAST" AS Cart1East,
+                               p."CART1_NORTH" AS Cart1North,
+                               p."LOCAL_NAME" AS LocalName,
+                               p."ASRC_CODE" AS AsrcCode,
+                               p."DISABLED" AS Disabled,
+                               p."LOCAL_NAME_WELSH" AS LocalNameWelsh,
+                               p."NGR2_SHEET" AS Ngr2Sheet,
+                               p."NGR2_EAST" AS Ngr2East,
+                               p."NGR2_NORTH" AS Ngr2North,
+                               p."CART2_EAST" AS Cart2East,
+                               p."CART2_NORTH" AS Cart2North,
+                               p."NGR3_SHEET" AS Ngr3Sheet,
+                               p."NGR3_EAST" AS Ngr3East,
+                               p."NGR3_NORTH" AS Ngr3North,
+                               p."CART3_EAST" AS Cart3East,
+                               p."CART3_NORTH" AS Cart3North,
+                               p."NGR4_SHEET" AS Ngr4Sheet,
+                               p."NGR4_EAST" AS Ngr4East,
+                               p."NGR4_NORTH" AS Ngr4North,
+                               p."CART4_EAST" AS Cart4East,
+                               p."CART4_NORTH" AS Cart4North,
+                               p."AAPC_CODE" AS AapcCode,
+                               p."AAPT_APTP_CODE" AS AaptAptpCode,
+                               p."AAPT_APTS_CODE" AS AaptAptsCode,
+                               p."ABAN_CODE" AS AbanCode,
+                               p."LOCATION_TEXT" AS LocationText,
+                               p."AADD_ID" AS AaddId,
+                               p."DEPTH" AS Depth,
+                               p."WRB_NO" AS WrbNo,
+                               p."BGS_NO" AS BgsNo,
+                               p."REG_WELL_INDEX_REF" AS RegWellIndexRef,
+                               p."HYDRO_REF" AS HydroRef,
+                               p."HYDRO_INTERCEPT_DIST" AS HydroInterceptDist,
+                               p."HYDRO_GW_OFFSET_DIST" AS HydroGwOffsetDist,
+                               p."NOTES" AS PointNotes
+                           FROM nald."NALD_ABS_PURP_POINTS" pp
+                           JOIN nald."NALD_POINTS" p
+                               ON pp."AAIP_ID" = p."ID"
+                               AND pp."FGAC_REGION_CODE" = p."FGAC_REGION_CODE"
+                           WHERE pp."FGAC_REGION_CODE" = @RegionCode
+                                AND pp."AABP_ID" = @PurposeId;
+                           """;
+
+        return (await QueryAsync<NaldLicencePointDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                PurposeId = int.Parse(purposeId)
+            })).ToList();
+    }
+
+    private async Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(
+        int abvAablId,
+        int issueNumber,
+        int incrementNumber,
+        int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               p."ID" AS Id,
+                               p."AABV_AABL_ID" AS AabvAablId,
+                               p."AABV_ISSUE_NO" AS AabvIssueNo,
+                               p."AABV_INCR_NO" AS AabvIncrNo,
+                               p."APUR_APPR_CODE" AS ApurApprCode,
+                               p."APUR_APSE_CODE" AS ApurApseCode,
+                               p."APUR_APUS_CODE" AS ApurApusCode,
+                               p."PERIOD_ST_DAY" AS PeriodStartDay,
+                               p."PERIOD_ST_MONTH" AS PeriodStartMonth,
+                               p."PERIOD_END_DAY" AS PeriodEndDay,
+                               p."PERIOD_END_MONTH" AS PeriodEndMonth,
+                               p."AMOM_CODE" AS AmomCode,
+                               p."ANNUAL_QTY" AS AnnualQty,
+                               p."ANNUAL_QTY_USABILITY" AS AnnualQtyUsability,
+                               p."DAILY_QTY" AS DailyQty,
+                               p."DAILY_QTY_USABILITY" AS DailyQtyUsability,
+                               p."HOURLY_QTY" AS HourlyQty,
+                               p."HOURLY_QTY_USABILITY" AS HourlyQtyUsability,
+                               p."INST_QTY" AS InstQty,
+                               p."INST_QTY_USABILITY" AS InstQtyUsability,
+                               p."TIMELTD_ST_DATE" AS TimeLtdStartDate,
+                               p."TIMELTD_END_DATE" AS TimeLtdEndDate,
+                               p."LANDS" AS Lands,
+                               p."AREC_CODE" AS ArecCode,
+                               p."DISP_ORD" AS DispOrd,
+                               p."NOTES" AS Notes,
+                               p."FGAC_REGION_CODE" AS FgacRegionCode,
+                               pp."DESCR" AS PurpPrimDescr,
+                               ps."DESCR" AS PurpSecDescr,
+                               pu."DESCR" AS PurpUseDescr
+                           FROM nald."NALD_ABS_LIC_PURPOSES" p
+                           JOIN nald."NALD_PURP_PRIMS" pp
+                               ON p."APUR_APPR_CODE" = pp."CODE"
+                           JOIN nald."NALD_PURP_SECS" ps
+                               ON p."APUR_APSE_CODE" = ps."CODE"
+                           JOIN nald."NALD_PURP_USES" pu
+                               ON p."APUR_APUS_CODE" = pu."CODE"
+                           WHERE p."FGAC_REGION_CODE" = @RegionCode
+                                AND p."AABV_AABL_ID" = @AabvAablId
+                                AND p."AABV_ISSUE_NO" = @AabvIssueNo
+                                AND p."AABV_INCR_NO" = @AabvIncrNo
+                           """;
+
+        return (await QueryAsync<NaldLicencePurposeDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                AabvAablId = abvAablId,
+                AabvIssueNo = issueNumber,
+                AabvIncrNo = incrementNumber
+            })).ToList();
+    }
+
+    private async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(
+        int aablId,
+        int regionCode)
+    {
+        await using var connection = GetPostgresConnection();
+        var sql = """
+                           SELECT
+                             "AABL_ID" AS AablId,
+                             "ISSUE_NO" AS IssueNo,
+                             "INCR_NO" AS IncrNo,
+                             "AABV_TYPE" AS AabvType,
+                             "EFF_ST_DATE" AS EffStDate,
+                             "STATUS" AS Status,
+                             "RETURNS_REQ" AS ReturnsReq,
+                             "CHARGEABLE" AS Chargeable,
+                             "ASRC_CODE" AS AsrcCode,
+                             "ACON_APAR_ID" AS AconAparId,
+                             "ACON_AADD_ID" AS AconAaddId,
+                             "ALTY_CODE" AS AltyCode,
+                             "ACCL_CODE" AS AcclCode,
+                             "MULTIPLE_LH" AS MultipleLh,
+                             "LIC_SIG_DATE" AS LicSigDate,
+                             "APP_NO" AS AppNo,
+                             "LIC_DOC_FLAG" AS LicDocFlag,
+                             "EFF_END_DATE" AS EffEndDate,
+                             "EXPIRY_DATE1" AS ExpiryDate1,
+                             "WA_ALTY_CODE" AS WaAltyCode,
+                             "VOL_CONV" AS VolConv,
+                             "WRT_CODE" AS WrtCode,
+                             "DEREG_CODE" AS DeregCode,
+                             "FGAC_REGION_CODE" AS FgacRegionCode
+                           FROM nald."NALD_ABS_LIC_VERSIONS"
+                           WHERE "FGAC_REGION_CODE" = @RegionCode
+                                 AND "AABL_ID" = @AablId 
+                           """;
+
+        if (true)
+        {
+            sql += """
+                    AND "ISSUE_NO" = (
+                        SELECT max(lic_ver_subquery."ISSUE_NO")
+                        FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
+                        WHERE lic_ver_subquery."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                          AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                          AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                          AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
+                          AND lic_ver_subquery."STATUS" <> 'DRAFT'
+                    )
+                    AND "INCR_NO" = (
+                          SELECT max(lic_ver_subquery_2."INCR_NO")
+                          FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery_2
+                          WHERE lic_ver_subquery_2."AABL_ID" = "NALD_ABS_LIC_VERSIONS"."AABL_ID"
+                            AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_ABS_LIC_VERSIONS"."FGAC_REGION_CODE"
+                            AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                            AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
+                            AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
+                      )
+                    """;
+        }
+            
+        sql += """
+            AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN');
+        """;
+
+        return (await QueryAsync<NaldLicenceVersionDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                AablId = aablId
+            })).ToList();
+    }
+
+    public async Task<int> GetTotalLicenceCountAsync(
+        int processRunId,
+        ProcessRunQuery query)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND data::jsonb ->> 'status' = 'Ok'
+            """);
+
+        var parameters = new DynamicParameters();
+        parameters.Add("ProcessRunId", processRunId);
+
+        AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
+        AddIssuerFilter(sql, parameters, query.Issuer);
+        AddOcrScanFilter(sql, parameters, query.OcrScan);
+        AddMeansFoundFilter(sql, parameters, query.MeansFound);
+
+        AddArrayEmptyFilter(sql, query.PointsEmpty, "points");
+        AddArrayEmptyFilter(sql, query.PurposesEmpty, "purposes");
+
+        AddNestedLimitsFilter(
+            sql,
+            query.LimitsEmpty,
+            "individual");
+
+        AddNestedLimitsFilter(
+            sql,
+            query.AggregatesEmpty,
+            "aggregates");
+
+        AddIssueYearFilter(sql, parameters, query.IssueYear);
+        
+        AddIssueYearFilter(
+            sql,
+            parameters,
+            query.IssueYear);
+
+        AddLinkedLicencesTypeFilter(
+            sql,
+            parameters,
+            query.LinkedLicencesType);
+
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0,
+            parameters);
+    }
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
@@ -541,188 +989,88 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query)
+    public async Task<List<Licence>> GetLicencesSearchAsync(
+        int processRunId,
+        ProcessRunQuery query)
     {
-        // TODO SQL short circuiting doesnt work as you might imagine so we should change this to use cases
-        // Also pull out some of the common searched things (status, licenceVersion etc into db columns)
-        
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           SELECT data, licence_id
-                           FROM licence
-                           WHERE process_run_id = @ProcessRunId
-                             AND data::jsonb ->> 'status' = 'Ok'
-                             AND (
-                                 @SearchTerm IS NULL
-                                 OR trim(@SearchTerm) = ''
-                                 OR data::jsonb ->> 'id' ILIKE '%' || @SearchTerm || '%'
-                                 OR data::jsonb ->> 'filename' ILIKE '%' || @SearchTerm || '%'
-                                 OR data::jsonb -> 'licenceNumber' ->> 'value' ILIKE '%' || @SearchTerm || '%'
-                                 OR data::jsonb -> 'noneSchemaData' ->> 'issuedTo' ILIKE '%' || @SearchTerm || '%'
-                             )
-                           AND (
-                               @Issuer IS NULL
-                               OR trim(@Issuer) = ''
-                               OR data::jsonb -> 'licenceVersion' ->> 'issuer' = @Issuer
-                           )
-                           AND (
-                               @OcrScan IS NULL
-                               OR (
-                                   @OcrScan = true
-                                   AND data::jsonb -> 'noneSchemaData' ->> 'ocr' = 'OCR'
-                               )
-                               OR (
-                                   @OcrScan = false
-                                   AND COALESCE(data::jsonb -> 'noneSchemaData' ->> 'ocr', '') <> 'OCR'
-                               )
-                           )
-                           AND (
-                               @MeansFound IS NULL
-                               OR (
-                                   @MeansFound = true
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) > 0
-                               )
-                               OR (
-                                   @MeansFound = false
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'meansOfAbstraction', '[]'::jsonb)) = 0
-                               )
-                           )
-                           AND (
-                               @PointsEmpty IS NULL
-                               OR (
-                                   @PointsEmpty = true
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) = 0
-                               )
-                               OR (
-                                   @PointsEmpty = false
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'points', '[]'::jsonb)) > 0
-                               )
-                           )
-                           AND (
-                               @PurposesEmpty IS NULL
-                               OR (
-                                   @PurposesEmpty = true
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) = 0
-                               )
-                               OR (
-                                   @PurposesEmpty = false
-                                   AND jsonb_array_length(COALESCE(data::jsonb -> 'purposes', '[]'::jsonb)) > 0
-                               )
-                           )
-                           AND (
-                               @LimitsEmpty IS NULL
-                               OR (
-                                   @LimitsEmpty = true
-                                   AND NOT EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
-                                       ) individual_item
-                                       WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
-                                   )
-                               )
-                               OR (
-                                   @LimitsEmpty = false
-                                   AND EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'individual', '[]'::jsonb)
-                                       ) individual_item
-                                       WHERE jsonb_array_length(COALESCE(individual_item -> 'limits', '[]'::jsonb)) > 0
-                                   )
-                               )
-                           )
-                           AND (
-                               @AggregatesEmpty IS NULL
-                               OR (
-                                   @AggregatesEmpty = true
-                                   AND NOT EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
-                                       ) aggregate_item
-                                       WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
-                                   )
-                               )
-                               OR (
-                                   @AggregatesEmpty = false
-                                   AND EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'abstractionLimits' -> 'aggregates', '[]'::jsonb)
-                                       ) aggregate_item
-                                       WHERE jsonb_array_length(COALESCE(aggregate_item -> 'limits', '[]'::jsonb)) > 0
-                                   )
-                               )
-                           )
-                           AND (
-                               @IssueYear IS NULL
-                               OR data::jsonb -> 'licenceVersion' ->> 'issueDate' LIKE @IssueYear::text || '%'
-                           )
-                           AND (
-                               @LinkedLicencesType IS NULL
-                               OR trim(@LinkedLicencesType) = ''
-                               OR (
-                                   @LinkedLicencesType = 'ImplicitBackLink'
-                                   AND EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
-                                       ) linked_licence
-                                       CROSS JOIN jsonb_array_elements(
-                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
-                                       ) contained
-                                       WHERE contained ->> 'direction' = 'Incoming'
-                                   )
-                               )
-                               OR (
-                                   @LinkedLicencesType <> 'ImplicitBackLink'
-                                   AND EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements(
-                                           COALESCE(data::jsonb -> 'linkedLicences', '[]'::jsonb)
-                                       ) linked_licence
-                                       CROSS JOIN jsonb_array_elements(
-                                           COALESCE(linked_licence -> 'containedIn', '[]'::jsonb)
-                                       ) contained
-                                       WHERE contained ->> 'direction' = 'Outgoing'
-                                         AND contained ->> 'sectionName' = @LinkedLicencesType
-                                   )
-                               )
-                           )
-                           ORDER BY licence_id
-                           LIMIT @take
-                           OFFSET @skip;
-                           """;
+
+        var sql = new StringBuilder(
+            """
+            SELECT data, licence_id
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND data::jsonb ->> 'status' = 'Ok'
+            """);
+
+        var parameters = new DynamicParameters();
+
+        parameters.Add("ProcessRunId", processRunId);
+        parameters.Add("Skip", query.Skip);
+        parameters.Add("Take", query.Take);
+
+        AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
+        AddIssuerFilter(sql, parameters, query.Issuer);
+        AddOcrScanFilter(sql, parameters, query.OcrScan);
+        AddMeansFoundFilter(sql, parameters, query.MeansFound);
+
+        AddArrayEmptyFilter(
+            sql,
+            query.PointsEmpty,
+            "points");
+
+        AddArrayEmptyFilter(
+            sql,
+            query.PurposesEmpty,
+            "purposes");
+
+        AddNestedLimitsFilter(
+            sql,
+            query.LimitsEmpty,
+            "individual");
+
+        AddNestedLimitsFilter(
+            sql,
+            query.AggregatesEmpty,
+            "aggregates");
+
+        AddIssueYearFilter(
+            sql,
+            parameters,
+            query.IssueYear);
+
+        AddLinkedLicencesTypeFilter(
+            sql,
+            parameters,
+            query.LinkedLicencesType);
+
+        sql.AppendLine(
+            """
+            ORDER BY licence_id
+            LIMIT @Take
+            OFFSET @Skip;
+            """);
 
         var results = await QueryAsync<(string Data, int LicenceId)>(
             connection,
-            sql,
+            sql.ToString(),
             0,
-            new
+            parameters);
+
+        return results
+            .Select(result =>
             {
-                ProcessRunId = processRunId,
-                query.Skip,
-                query.Take,
-                SearchTerm = !string.IsNullOrEmpty(query.SearchTermClean) ? query.SearchTermClean : null,
-                query.Issuer,
-                query.OcrScan,
-                query.MeansFound,
-                query.AggregatesEmpty,
-                query.LimitsEmpty,
-                query.PointsEmpty,
-                query.PurposesEmpty,
-                query.IssueYear,
-                query.LinkedLicencesType
-            });
+                var licence = JsonSerializer.Deserialize<Licence>(
+                    result.Data,
+                    GetSerializerOptions())!;
 
-     return results.Select(r =>
-        {
-            var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
-            licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+                licence.NoneSchemaData.TryAdd(
+                    "licenceId",
+                    result.LicenceId);
 
-            return licence;
-        }).ToList();
+                return licence;
+            })
+            .ToList();
     }
 
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
@@ -1009,6 +1357,34 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             sql,
             0,
             new { FileId = fileId });
+
+        return result == null
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+    }
+
+    public async Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data 
+                           FROM matches_result 
+                           WHERE
+                               file_id = @FileId
+                                and process_run_id = @ProcessRunId
+                           ORDER BY process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                ProcessRunId = processRunId
+            });
 
         return result == null
             ? null
@@ -1410,6 +1786,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                "SUSP_FROM_BILLING" AS SuspFromBilling,
                                "AREP_LEAP_CODE" AS ArepLeapCode,
                                "EXPIRY_DATE" AS ExpiryDate,
+                               "LAPSED_DATE" AS LapsedDate,
                                "ORIG_EFF_DATE" AS OrigEffectiveDate,
                                "ORIG_SIG_DATE" AS OrigSignatureDate,
                                "ORIG_APP_NO" AS OrigAppNo,
@@ -1940,6 +2317,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT
                                permit_number,
+                               dms_permit_number,
                                file_url,
                                rule_used,
                                change_audit_action,
@@ -2235,6 +2613,303 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         }
 
         return conn;
+    }
+    
+    private static void AddLicenceSearchTermFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND (
+                  data::jsonb
+                      -> 'licenceNumber'
+                      ->> 'value'
+                      ILIKE '%' || @SearchTerm || '%'
+
+                  OR EXISTS (
+                      SELECT 1
+                      FROM jsonb_array_elements(
+                          COALESCE(
+                              data::jsonb -> 'linkedLicences',
+                              '[]'::jsonb
+                          )
+                      ) AS linked_licence
+                      WHERE linked_licence ->> 'licenceNumber'
+                            ILIKE '%' || @SearchTerm || '%'
+                  )
+              )
+            """);
+
+        parameters.Add("SearchTerm", searchTerm.Trim());
+    }
+    private static void AddIssuerFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string? issuer)
+    {
+        if (string.IsNullOrWhiteSpace(issuer))
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND data::jsonb -> 'licenceVersion' ->> 'issuer' = @Issuer
+            """);
+
+        parameters.Add("Issuer", issuer);
+    }
+    
+    private static void AddOcrScanFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        bool? ocrScan)
+    {
+        if (!ocrScan.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            ocrScan.Value
+                ? """
+                    AND data::jsonb -> 'noneSchemaData' ->> 'ocr' = 'OCR'
+                  """
+                : """
+                    AND COALESCE(
+                        data::jsonb -> 'noneSchemaData' ->> 'ocr',
+                        ''
+                    ) <> 'OCR'
+                  """);
+
+        parameters.Add("OcrScan", ocrScan.Value);
+    }
+    
+    private static void AddMeansFoundFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        bool? meansFound)
+    {
+        if (!meansFound.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            meansFound.Value
+                ? """
+                    AND jsonb_array_length(
+                        COALESCE(
+                            data::jsonb -> 'meansOfAbstraction',
+                            '[]'::jsonb
+                        )
+                    ) > 0
+                  """
+                : """
+                    AND jsonb_array_length(
+                        COALESCE(
+                            data::jsonb -> 'meansOfAbstraction',
+                            '[]'::jsonb
+                        )
+                    ) = 0
+                  """);
+    }
+    
+    private static void AddArrayEmptyFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string parameterName,
+        bool? empty,
+        string jsonProperty)
+    {
+        if (!empty.HasValue)
+        {
+            return;
+        }
+
+        var comparison = empty.Value ? "= 0" : "> 0";
+
+        sql.AppendLine(
+            $"""
+               AND jsonb_array_length(
+                   COALESCE(
+                       data::jsonb -> '{jsonProperty}',
+                       '[]'::jsonb
+                   )
+               ) {comparison}
+             """);
+    }
+    
+    private static void AddArrayEmptyFilter(
+        StringBuilder sql,
+        bool? empty,
+        string jsonProperty)
+    {
+        if (!empty.HasValue)
+        {
+            return;
+        }
+
+        var comparison = empty.Value ? "= 0" : "> 0";
+
+        sql.AppendLine(
+            $"""
+               AND jsonb_array_length(
+                   COALESCE(
+                       data::jsonb -> '{jsonProperty}',
+                       '[]'::jsonb
+                   )
+               ) {comparison}
+             """);
+    }
+    
+    private static void AddNestedLimitsFilter(
+        StringBuilder sql,
+        bool? empty,
+        string collectionName)
+    {
+        if (!empty.HasValue)
+        {
+            return;
+        }
+
+        var existsKeyword = empty.Value
+            ? "NOT EXISTS"
+            : "EXISTS";
+
+        sql.AppendLine(
+            $"""
+               AND {existsKeyword} (
+                   SELECT 1
+                   FROM jsonb_array_elements(
+                       COALESCE(
+                           data::jsonb
+                               -> 'abstractionLimits'
+                               -> '{collectionName}',
+                           '[]'::jsonb
+                       )
+                   ) item
+                   WHERE jsonb_array_length(
+                       COALESCE(
+                           item -> 'limits',
+                           '[]'::jsonb
+                       )
+                   ) > 0
+               )
+             """);
+    }
+    
+    private static void AddLinkedLicencesTypeFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string? linkedLicencesType)
+    {
+        if (string.IsNullOrWhiteSpace(linkedLicencesType))
+        {
+            return;
+        }
+        
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "NoRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND jsonb_array_length(
+                      COALESCE(
+                          data::jsonb -> 'linkedLicences',
+                          '[]'::jsonb
+                      )
+                  ) = 0
+                """);
+
+            return;
+        }
+
+        if (string.Equals(
+                linkedLicencesType,
+                "ImplicitBackLink",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND EXISTS (
+                      SELECT 1
+                      FROM jsonb_array_elements(
+                          COALESCE(
+                              data::jsonb -> 'linkedLicences',
+                              '[]'::jsonb
+                          )
+                      ) linked_licence
+                      CROSS JOIN jsonb_array_elements(
+                          COALESCE(
+                              linked_licence -> 'containedIn',
+                              '[]'::jsonb
+                          )
+                      ) contained
+                      WHERE contained ->> 'direction' = 'Incoming'
+                  )
+                """);
+
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND EXISTS (
+                  SELECT 1
+                  FROM jsonb_array_elements(
+                      COALESCE(
+                          data::jsonb -> 'linkedLicences',
+                          '[]'::jsonb
+                      )
+                  ) linked_licence
+                  CROSS JOIN jsonb_array_elements(
+                      COALESCE(
+                          linked_licence -> 'containedIn',
+                          '[]'::jsonb
+                      )
+                  ) contained
+                  WHERE contained ->> 'direction' = 'Outgoing'
+                    AND contained ->> 'sectionName' = @LinkedLicencesType
+              )
+            """);
+
+        parameters.Add(
+            "LinkedLicencesType",
+            linkedLicencesType.Trim());
+    }
+    
+    private static void AddIssueYearFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        int? issueYear)
+    {
+        if (!issueYear.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND data::jsonb
+                  -> 'licenceVersion'
+                  ->> 'issueDate'
+                  LIKE @IssueYearPattern
+            """);
+
+        parameters.Add(
+            "IssueYearPattern",
+            $"{issueYear.Value}%");
     }
 
     // TODO move to a 'Core' layer

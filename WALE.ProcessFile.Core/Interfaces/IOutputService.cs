@@ -46,6 +46,10 @@ public interface IOutputService
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
     
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
+    
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error);
+    
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
     
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId);
@@ -81,12 +85,18 @@ public interface IOutputService
     Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId);
+    
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
+    
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
-    Task<MatchesResult?> GetMatchesResult(Guid fileId);
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
+    
+    Task<MatchesResult?> GetMatchesResultAsync(Guid fileId);
+    
+    Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 
@@ -99,4 +109,8 @@ public interface IOutputService
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId);
    
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
+
+    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 }

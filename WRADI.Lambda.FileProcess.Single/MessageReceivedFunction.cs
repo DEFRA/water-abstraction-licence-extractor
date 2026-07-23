@@ -55,7 +55,7 @@ public class MessageReceivedFunction
                 context.Logger.LogInformation($"Body: {record.Body}");
                 
                 var singleFileProcessRequest =
-                    JsonConvert.DeserializeObject<SingleFileProcessRequest>(record.Body);
+                    JsonConvert.DeserializeObject<FileProcessSingleRequest>(record.Body);
 
                 if (singleFileProcessRequest?.FilePath == null)
                 {

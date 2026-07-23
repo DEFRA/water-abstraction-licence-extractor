@@ -33,14 +33,19 @@ public class BaseFixture : IDisposable
         }
     }
     
-    private readonly Lock _firstNamesLock = new();
-    private Task<HashSet<string>>? _firstNamesCsvTask;
+    private static readonly SemaphoreSlim FirstNamesLock = new(1, 1);
     
-    public Task<HashSet<string>> FirstNamesCsvTask()
+    public async Task<HashSet<string>> FirstNamesCsvTask()
     {
-        lock (_firstNamesLock)
+        await FirstNamesLock.WaitAsync();
+        
+        try
         {
-            return _firstNamesCsvTask ??= CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+            return await CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+        }
+        finally
+        {
+            FirstNamesLock.Release();
         }
     }
     

@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -42,6 +43,7 @@ public class NoOcrDatabaseTests
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
 
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -49,7 +51,8 @@ public class NoOcrDatabaseTests
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
 
     public NoOcrDatabaseTests()
     {
@@ -89,22 +92,23 @@ public class NoOcrDatabaseTests
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            FileLicenceMapping,
-            [],            
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
-            3);
+            OutputService,
+            3,
+            DateTime.Now,
+            useLockExclusivity: false);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, Guid fileId)
     {
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
-            new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
+            new DmsFileData { FileId = fileId },
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -131,20 +135,20 @@ public class NoOcrDatabaseTests
         await SetupLicenceNumbersAsync(3);
         
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
-        var someGuid = Guid.NewGuid(); // TODO
+        var someGuid = Guid.NewGuid();
         
         await CacheService.ClearCacheAsync(someGuid);
         
-        await ProcessAsync(filename); // Uncached
-        await ProcessAsync(filename); // Cached
+        await ProcessAsync(filename, someGuid); // Uncached
+        await ProcessAsync(filename, someGuid); // Cached
     }
 
-    private async Task ProcessAsync(string filename)
+    private async Task ProcessAsync(string filename, Guid fileId)
     {
         await SetupLicenceNumbersAsync(3);
         
         // Act
-        var resultFull = await GetMatchesAsync(filename);
+        var resultFull = await GetMatchesAsync(filename, fileId);
         var resultList = resultFull.Matches!;
 
         // Assert
@@ -170,7 +174,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        Assert.Equal(59, nameResult.LineNumber);
+        Assert.Equal(3, nameResult.PageNumber);
+        Assert.Equal(6, nameResult.LineNumber);
 
         // Note no other licence mentioned
         var abstractionLimitsSection =
@@ -181,7 +186,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(4, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the",
             abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(109, abstractionLimitsSection.LineNumber);
+        Assert.Equal(4, abstractionLimitsSection.PageNumber);        
+        Assert.Equal(16, abstractionLimitsSection.LineNumber);
 
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -204,7 +210,8 @@ public class NoOcrDatabaseTests
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(109, perDay.LineNumber);
+        Assert.Equal(4, perDay.PageNumber);
+        Assert.Equal(16, perDay.LineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
 
         var perDayUnits = point1Sub1.SubResults
@@ -233,7 +240,8 @@ public class NoOcrDatabaseTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(53, licenceNumberResult.LineNumber);
+        Assert.Equal(3, licenceNumberResult.PageNumber);
+        Assert.Equal(0, licenceNumberResult.LineNumber);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
@@ -266,8 +274,6 @@ public class NoOcrDatabaseTests
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            new NaldLicenceStatusData(),
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder));

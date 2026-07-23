@@ -7,7 +7,7 @@ namespace WALE.ProcessFile.Services.Methods;
 
 public static class BaseMethod
 {
-    public static List<LabelGroupResult> FilterIntoFormat(
+    public static async Task<List<LabelGroupResult>> FilterIntoFormatAsync(
         FunctionInputModel request,
         LabelGroupResult labelGroupResult,
         List<DocumentLine> lines,
@@ -132,11 +132,11 @@ public static class BaseMethod
 
                         foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            if (!FormattingHelper.GetDmsFileData(
+                            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                                 licenceNumberLine.Text,
-                                request.regionCode,
-                                request.licenceNumberMapping,
-                                out var dmsFileData))
+                                request.cacheService!);
+                    
+                            if (dmsFileData == null)
                             {
                                 continue;
                             }
@@ -257,7 +257,6 @@ public static class BaseMethod
                 request.isOcr,
                 request.serviceName,
                 request.labelGroupName!,
-                request.licenceNumberMapping!,
                 request.previouslyParsedPaths!,
                 request.regionCode,
                 request.processRunId,

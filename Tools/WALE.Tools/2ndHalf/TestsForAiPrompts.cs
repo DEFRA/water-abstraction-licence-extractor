@@ -71,6 +71,7 @@ public static class TestsForAiPrompts
 
                 var chatClient = azureClient.GetChatClient(deploymentName);
                 var cacheService = new FileSystemCacheService("Cache/");
+                var outputService = new FileSystemOutputService("Output/");
                 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
@@ -78,11 +79,11 @@ public static class TestsForAiPrompts
                     new LookupConfiguration(
                         [],
                         [],
-                        [],
-                        [],
                         new LocalFileService(KeyConfig.PdfFolder),
                         cacheService,
-                        -1));
+                        outputService,
+                        -1,
+                        DateTime.Now));
                 
                 ConsoleHelper.WriteLine($"Getting all document text from {imagePrompts.Count} pages");
                 

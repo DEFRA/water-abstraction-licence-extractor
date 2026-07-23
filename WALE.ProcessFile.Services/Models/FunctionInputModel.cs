@@ -27,7 +27,6 @@ public class FunctionInputModel
     public bool isOcr { get; set; }
     public string? serviceName { get; set; }
     public string? labelGroupName { get; set; }
-    public Dictionary<string, DmsFileData>? licenceNumberMapping { get; set; }
     public List<string>? previouslyParsedPaths { get; set; }
     public IOutputService? outputService { get; set; }
     public ICacheService? cacheService { get; set; }
@@ -61,7 +60,6 @@ public class FunctionInputModel
             isOcr = isOcr,
             serviceName = serviceName,
             labelGroupName = labelGroupName,
-            licenceNumberMapping = licenceNumberMapping,
             previouslyParsedPaths = previouslyParsedPaths,
             outputService = outputService,
             cacheService = cacheService,

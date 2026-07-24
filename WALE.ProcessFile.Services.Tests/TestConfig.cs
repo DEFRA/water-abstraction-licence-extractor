@@ -104,6 +104,22 @@ public static class TestConfig
         }
     }
     
+    private static string? _pdfFolderWr51;
+
+    public static string PdfFolderWr51
+    {
+        get
+        {
+            if (_pdfFolderWr51 != null)
+            {
+                return _pdfFolderWr51;
+            }
+            
+            _pdfFolderWr51 = Config["PdfFolderWr51"]!;
+            return _pdfFolderWr51;
+        }
+    }
+    
     private static string? _aiVisionEndpoint;
 
     public static string AiVisionEndpoint

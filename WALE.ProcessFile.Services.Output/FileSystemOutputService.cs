@@ -140,12 +140,12 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult(-1);
     }
 
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
     {
         return Task.FromResult(-1);
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         Directory.CreateDirectory($"{outputFolder}/{fileId}");
 
@@ -187,17 +187,18 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
         
         var images = await pdfDocument.GetPageAsSkBitmapAsync(pageNumber, noOcrServiceName);
-
+        var size = 0;
+        
         foreach (var (provider, bitmap) in images)
         {
             var imgOutputFilename = imagePaths
                 .First(x => x.ProviderName == provider)
                 .ImageReference!;
             
-            await SaveAsJpegAsync(bitmap, imgOutputFilename);
+            size += await SaveAsJpegAsync(bitmap, imgOutputFilename);
         }
 
-        return images.Sum(i => i.Bitmap.ByteCount);
+        return size;
     }
 
     public Task SavePageScreenshotInternalAsync(
@@ -210,7 +211,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    private static async Task SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
+    private static async Task<int> SaveAsJpegAsync(SKBitmap bitmap, string filePath, int quality = 80)
     {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
@@ -224,7 +225,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         data.SaveTo(stream);
         
         await stream.FlushAsync();
+        
+        var streamLength = stream.Length;
         stream.Close();
+
+        return (int)streamLength;
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName, int processRunId)
@@ -372,6 +377,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         throw new NotImplementedException();
     }

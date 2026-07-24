@@ -9,4 +9,6 @@ public class SaveMatchResultRequest
     public MatchesResult? matches { get; set; }
         
     public int processRunId { get; set; }
+    
+    public bool isUpdate { get; set; }
 }

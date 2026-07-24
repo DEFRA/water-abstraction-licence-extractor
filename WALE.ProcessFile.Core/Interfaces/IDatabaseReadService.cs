@@ -121,4 +121,6 @@ public interface IDatabaseReadService
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
+    
+    Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
 }

@@ -17,7 +17,6 @@ namespace WALE.ProcessFile.Services.PdfPig;
 public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 {
     public string Name => "PdfPig";
-    private const int LineHeight = 9;
     
     public async Task<PdfDocument?> GetPdfDocumentAsync(
         string pdfFileName,
@@ -57,12 +56,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 metadata!.PagesMetadata!,
                 fileId,
                 outputService,
-                configuration.SkipFileWhenMoreThenPages);
+                configuration.SkipFileWhenMoreThenPages,
+                configuration.SkipFileWhenMoreThenImages);
             
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
         
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
                 pdfDocument,
+                configuration,
                 metadata.PagesMetadata,
                 metadata.AllDocumentLines!);
         
@@ -76,6 +77,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         await PopulateImageDataAndDocumentLinesAsync(
             pdfDocument,
+            configuration,
             cacheService,
             outputService,
             processRunId);
@@ -101,7 +103,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         Dictionary<string, object> pagesTextMetadata,
         Guid fileId,
         IOutputService outputService,
-        int skipFileWhenMoreThenPages)
+        int skipFileWhenMoreThenPages,
+        int skipFileIfMoreThenImages)
     {
         var pageArray = ((JsonElement)pagesTextMetadata["pages"])
             .EnumerateArray()
@@ -135,7 +138,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     .ToList()!
             };
             
-            if (pdfPage.NumberOfImages  > PdfDocument.SkipFileIfMoreThenImages)
+            if (pdfPage.NumberOfImages > skipFileIfMoreThenImages)
             {
                 throw new TooManyImagesException(
                     "Too many images in this file - it is being skipped",
@@ -164,12 +167,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     private async Task PopulateImageDataAndDocumentLinesAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId)
     {
         var documentLinesTask = GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             pdfDocument,
+            configuration,
             cacheService,
             outputService,
             processRunId);
@@ -216,6 +221,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     private Task<List<DocumentLine>> GetCachedTextLinesAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         Dictionary<string, object>? pagesTextMetadata,
         Dictionary<int, string> allPagesTextLines)
     {
@@ -248,7 +254,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
             var pageLinesTransformed = FormatPageLines(
                 pageLines,
-                pageNumber);
+                pageNumber,
+                configuration.LineHeight);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -263,6 +270,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
     public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
         PdfDocument pdfDocument,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId)
@@ -286,6 +294,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 ProcessPageAsync(
                     pdfDocument,
                     page,
+                    configuration,
                     cacheService,
                     outputService,
                     processRunId,
@@ -360,6 +369,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private async Task<IReadOnlyList<DocumentLine>> ProcessPageAsync(
         PdfDocument pdfDocument,
         PdfPage page,
+        LookupConfiguration configuration,
         ICacheService cacheService,
         IOutputService outputService,
         int processRunId,
@@ -401,7 +411,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - GetPageLinesAsync took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
         
-        var pageLines = pdfPigPageLines.Select(MinimalTextBlock.FromPdfPigTextBlock).ToList();
+        var pageLines = pdfPigPageLines
+            .Select(MinimalTextBlock.FromPdfPigTextBlock)
+            .ToList();
+        
         var serialisedPageLines = JsonSerializer.Serialize(pageLines, JsonHelper.GetSerializerOptions());
         
         dtStart = DateTime.Now;
@@ -418,7 +431,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         dtStart = DateTime.Now;
         var pageLinesFormatted = FormatPageLines(
             pageLines,
-            page.Number);
+            page.Number,
+            configuration.LineHeight);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -593,7 +607,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
-        int pageNumber)
+        int pageNumber,
+        int lineHeight)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -610,38 +625,58 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(textLine => textLine.Words)
             .OrderByDescending(word => LineSnappingHelper.RoundToNearestN(
                 word.BoundingBox.Bottom,
-                LineHeight,
+                lineHeight,
                 word.Text))
             .ThenBy(line => line.BoundingBox.CentroidX)
             .ToList();
+
+        if (orderedPageWords.Count == 0)
+        {
+            return [];
+        }
         
-        MinimalWord? previousWord = null;
+        // We are keeping track of when a line starts in the Y axis, so we can see if we need to start a new line
+        var lineIndexOffsets = new Dictionary<int, double>
+        {
+            {
+                0,
+                LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                    orderedPageWords[0].Text,
+                    orderedPageWords[0].BoundingBox.Bottom,
+                    lineHeight)
+            }
+        };
+
         var lineIndex = 0;
         
         var returnList = orderedPageWords
             .GroupBy(word =>
             {
-                previousWord ??= word;
+                var thisOffset = LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
+                    word.Text,
+                    word.BoundingBox.Bottom,
+                    lineHeight);
                 
                 var yDiff =
-                    LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        previousWord.Text,
-                        previousWord.BoundingBox.Bottom)
-                    - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        word.Text,
-                        word.BoundingBox.Bottom);
-                
-                if (yDiff >= LineHeight)
-                {
-                    lineIndex += 1;
-                }
+                    lineIndexOffsets[lineIndex]
+                    - thisOffset;
 
-                previousWord = word;
+                if (!(yDiff >= lineHeight))
+                {
+                    return lineIndex;
+                }
+                
+                lineIndexOffsets.Add(
+                    ++lineIndex,
+                    thisOffset);
+
                 return lineIndex;
             })
             .SelectMany(lineWords =>
             {
-                var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
+                var orderedWords = lineWords
+                    .OrderBy(w => w.BoundingBox.Left)
+                    .ToList();
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -676,10 +711,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 foreach (var word in orderedWords)
                 {
                     previousWord2 ??= word;
-                    
+
+                    var maxXDiff = lineHeight == 6 ? 15 : 18;
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
                     
-                    if (xDiff >= 18)
+                    if (xDiff >= maxXDiff)
                     {
                         columns.Add(new DocumentLineColumn());
                     }
@@ -708,6 +744,77 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 return resultList;
             })
         .ToList();
+        
+        DocumentLine? previousLine = null;
+        
+        // Add in missing columns
+        foreach (var line in returnList)
+        {
+            if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
+            {
+                var previousLineSecondColumn = previousLine.Columns[1].Words.FirstOrDefault()?.Coordinates.Left;
+                var thisLineFirstColumnLeft = line.Columns[0].Words.FirstOrDefault()?.Coordinates.Left;
+
+                const double xLeeway = 10;
+                
+                if (thisLineFirstColumnLeft + xLeeway >= previousLineSecondColumn)
+                {
+                    line.Columns.Insert(0, new DocumentLineColumn());
+                }
+            }
+            
+            previousLine = line;
+        }
+        
+        //Remove weird spaces in some words
+        foreach (var line in returnList)
+        {
+            foreach (var column in line.Columns)
+            {
+                var countSingleCharWords = column.Words.Count(w => w.Text.Length == 1);
+
+                if (countSingleCharWords < 4)
+                {
+                    continue;
+                }
+                
+                DocumentLineWord? prevWord = null;
+                var totalGapSize = column.Words.Sum(w =>
+                {
+                    if (prevWord == null)
+                    {
+                        prevWord = w;
+                        return 0;
+                    }
+
+                    var gap = w.Coordinates.Left - prevWord.Coordinates.Right;
+                    prevWord = w;
+                    
+                    return gap;
+                });
+
+                if (totalGapSize > (0.3 * column.Words.Count))
+                {
+                    continue;
+                }
+                
+                var originalColumnText = column.Text;
+                var columnText = originalColumnText.Replace(" ", string.Empty);
+                
+                var newWords = new List<DocumentLineWord>
+                {
+                    new(
+                        columnText,
+                        column.OcrConfidence,
+                        column.Words[0].Coordinates,
+                        column.Words[0].HandwrittenOrTyped)
+                };
+
+                column.Words = newWords;
+            }
+            
+            previousLine = line;
+        }
 
         AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
         return returnList;

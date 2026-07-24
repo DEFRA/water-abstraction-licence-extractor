@@ -12,7 +12,8 @@ string workflow;
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 //workflow = "CopyS3Files";
-workflow = "ForceLowercaseS3Files";
+workflow = "GenerateWr51Csv";
+//workflow = "ForceLowercaseS3Files";
 
 const int processRunId = 89;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -45,6 +46,9 @@ switch (workflow)
             duplicateResultsFilePath,
             localPdfFolder,
             false);
+    
+    case "GenerateWr51Csv": // SPIKE for reading WR51 files
+        return await GenerateWr51Csv.GenerateCsvAsync();
     
     case "GenerateAggregatesCsvForTesting": // INFREQUENT - A file to give to James and team
         return await GenerateAggregatesCsvForTesting.GenerateCsvForTestingAsync(processRunId);

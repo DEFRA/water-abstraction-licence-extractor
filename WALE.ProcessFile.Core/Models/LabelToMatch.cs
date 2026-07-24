@@ -76,6 +76,11 @@ public class LabelToMatch
 
     public double OcrConfidenceMinusNPerLine { get; init; } = 1;
     public IReadOnlyList<int> SkipLineNumbers { get; set; } = [];
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
+
+    public int LimitToColumnIndex { get; set; }
 
     public LabelToMatch Clone()
     {
@@ -116,7 +121,9 @@ public class LabelToMatch
             ConfidenceIfMatched = ConfidenceIfMatched,
             OcrConfidenceMinusNPerLine = OcrConfidenceMinusNPerLine,
             ConfidenceType = ConfidenceType,
-            NoOcrConfidence = NoOcrConfidence
+            NoOcrConfidence = NoOcrConfidence,
+            LimitTo = LimitTo,
+            LimitToColumnIndex = LimitToColumnIndex
         };
     }    
 }

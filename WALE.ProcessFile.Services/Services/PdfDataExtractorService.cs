@@ -82,18 +82,20 @@ public class PdfDataExtractorService(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
-                ex.ToString());
+                ex.ToString(),
+                configuration.UseLockExclusivity);
 
             throw;
         }
     }
 
-    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesResult,
             fileId,
-            processRunId);
+            processRunId,
+            isUpdate);
 
         var dtStartSaveMatches = DateTime.Now;
 
@@ -210,6 +212,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(LicenceStatus.Ok),
             ServicesUsed =
@@ -321,7 +324,7 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= configuration.MinimumRowsForDigital;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -1213,7 +1216,8 @@ public class PdfDataExtractorService(
                     await SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         linkedDmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -1224,7 +1228,8 @@ public class PdfDataExtractorService(
                     relatedFileName,
                     linkedDmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }
@@ -1474,7 +1479,6 @@ public class PdfDataExtractorService(
                                 partialLine = null;
                                 continue;
                             }
-
                         }
                     }
                     
@@ -1502,6 +1506,7 @@ public class PdfDataExtractorService(
                             continue;
                         }
                     }
+                    // If there is no text, only possibilities
                     else if (label.Possibilities?.Any() == true && label.Format == "Text")
                     {
                         var matchedPossibilities =
@@ -1560,6 +1565,75 @@ public class PdfDataExtractorService(
                     
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
+
+                    var lineForPosition = fullLine;
+                    var partialLineT = partialLine.Clone();
+                    
+                    if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
+                    {
+                        var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
+                        var newColumns = new List<DocumentLineColumn>();
+
+                        var columnIndex = 0;
+                        
+                        foreach (var column in partialLineT.Columns)
+                        {
+                            if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                            {
+                                columnIndex += 1;
+                                continue;
+                            }
+                            
+                            newColumns.Add(column);
+                            break;
+                        }
+                        
+                        partialLineT.Columns = newColumns;
+                        lineForPosition = partialLineT;
+
+                        if (partialLineT.Columns.Count == 0)
+                        {
+                            textBeforeAtAndAfterLabel = [];
+                        }
+                        else
+                        {
+                            textBeforeAtAndAfterLabel =
+                            [
+                                new TextAndLabel
+                                {
+                                    ColumnsText = [partialLineT.Columns[0].Text],
+                                    Label = matchedLabel
+                                }
+                            ];
+                        }
+
+                        var newNextLines = new List<DocumentLine>();
+
+                        if (label.LimitTo == LimitTo.SpecifiedColumn)
+                        {
+                            columnIndex = label.LimitToColumnIndex;
+                        }
+                        
+                        foreach (var nextLine in nextLines)
+                        {
+                            var newNextLine = nextLine.Clone();
+                            var columnToKeep = nextLine.Columns.Count > columnIndex
+                                ? nextLine.Columns[columnIndex]
+                                : null;
+
+                            if (columnToKeep == null)
+                            {
+                                continue;
+                            }
+                            
+                            newNextLine.Columns.Clear();
+                            newNextLine.Columns.Add(columnToKeep);
+                            
+                            newNextLines.Add(newNextLine);
+                        }
+                        
+                        nextLines = newNextLines;
+                    }
                     
                     var request = new FunctionInputModel
                     {
@@ -1584,8 +1658,8 @@ public class PdfDataExtractorService(
                         cacheService = cacheService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
-                        line = partialLine,
-                        lineForPosition = fullLine,
+                        line = partialLineT,
+                        lineForPosition = lineForPosition,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
                         regionCode = regionCode,

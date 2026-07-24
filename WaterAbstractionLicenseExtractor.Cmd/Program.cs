@@ -225,7 +225,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             await pdfDataExtractor.SaveMatchResultAsync(
                 matchesResult!,
                 dmsDataForFile.FileId,
-                processRun.ProcessRunId);
+                processRun.ProcessRunId,
+                lookupConfig.UseLockExclusivity);
         }
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(

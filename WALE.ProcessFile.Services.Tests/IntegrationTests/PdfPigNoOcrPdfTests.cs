@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
@@ -201,16 +202,21 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return returnList;
     }
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(
+        int regionCode,
+        int fileLicenceMapping,
+        string pdfFolder,
+        bool isAbstractionLicence = true)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            isAbstractionLicence ? WalLabelConfiguration.GetLabels() : Wr51LabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
             regionCode,
-            DateTime.Now);
+            DateTime.Now,
+            lineHeight: isAbstractionLicence ? 9 : 6);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(
@@ -220,11 +226,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         int fileLicenceMapping = 1,
         ICacheService? cacheService = null)
     {
+        var isWr51 = folderNumber == -99;
+        
         var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
         if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
+        if (isWr51) pdfFolder = TestConfig.PdfFolderWr51;
 
-        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder);
+        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder, !isWr51);
         
         if (cacheService != null)
         {

@@ -586,6 +586,8 @@ public static class ApplicableToMost
                         .First()
                         .Coordinates;
                     
+                    // TODO shouldn't be able to get here if we had possiblities that werent matched
+                    
                     documentLine.Columns[0].Words.Clear();
                     documentLine.Columns[0].Words.AddRange(
                         DocumentLineColumn.TextToWords(outputText, null, coords));

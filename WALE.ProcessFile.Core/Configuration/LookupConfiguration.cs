@@ -14,6 +14,9 @@ public class LookupConfiguration(
     int currentLockRetryCount = 0,
     int maxPagesToProcessWhenOcrNeeded = 20,
     int skipFileIfMoreThenPages = 30,
+    int skipFileIfMoreThenImages = 50,
+    int lineHeight = 9,
+    int minimumRowsForDigital = 100,
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
     bool lockInProcess = false)
@@ -34,6 +37,8 @@ public class LookupConfiguration(
     
     public readonly int SkipFileWhenMoreThenPages = skipFileIfMoreThenPages;
 
+    public readonly int SkipFileWhenMoreThenImages = skipFileIfMoreThenImages;
+    
     public object? NaldLinkedLicenceHelper { get; set; } = naldLinkedLicenceHelper;
 
     public DateTime RequestedAt { get; set; } = requestedAt;
@@ -43,6 +48,10 @@ public class LookupConfiguration(
     public bool UseLockExclusivity { get; set; } = useLockExclusivity;
     
     public bool LockInProcess { get; set; } = lockInProcess;
+    
+    public int LineHeight { get; set; } = lineHeight;
+    
+    public int MinimumRowsForDigital  { get; set; } = minimumRowsForDigital;
     
     public LookupConfiguration Clone()
     {
@@ -57,6 +66,9 @@ public class LookupConfiguration(
             CurrentLockRetryCount,
             MaxPagesToProcessWhenOcrNeeded,
             SkipFileWhenMoreThenPages,
+            SkipFileWhenMoreThenImages,
+            LineHeight,
+            MinimumRowsForDigital,
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
             LockInProcess);

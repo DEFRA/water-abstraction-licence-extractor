@@ -175,9 +175,22 @@ public static class BaseMethod
 
                 break;
             case Text.Constant:
-                var result = RestrictToPossibility(request, labelGroupResult);
-                if (result?.Text != null) returnList.Add(result);
+                var result = RestrictToPossibility(request, lines);
 
+                if (result.HasPossiblites)
+                {
+                    if (result.LabelGroupResult?.Text != null)
+                    {
+                        labelGroupResult.Text = [result.LabelGroupResult];
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                else
+                {
+                    labelGroupResult.Text = lines;
+                    returnList.Add(labelGroupResult);
+                }
+                
                 break;
         }
 
@@ -262,40 +275,42 @@ public static class BaseMethod
         return results;
     }
     
-    private static LabelGroupResult? RestrictToPossibility(
+    private static (bool HasPossiblites, DocumentLine? LabelGroupResult) RestrictToPossibility(
         FunctionInputModel request,
-        LabelGroupResult result)
+        List<DocumentLine> lines)
     {
         if (request.label!.Possibilities?.Any() != true)
         {
-            return result;
+            return (false, null);
         }
 
-        var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text) == true);
-
-        if (possiblityFound)
+        foreach (var line in lines)
         {
+            var possiblityFound = request.label.Possibilities.Any(possibility =>
+                line.Text.Contains(possibility.Text));
+
+            if (!possiblityFound)
+            {
+                continue;
+            }
+
             var possibility = request.label.Possibilities
-                .First(possibility => result.Text!.First().Text.Contains(possibility.Text));
-            
-            var possibilityWords = result.Text!.First().Columns
+                .First(possibility => line.Text.Contains(possibility.Text));
+
+            var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
-            
+
             possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
-            
-            var clonedLine = result.Text!.First().Clone();
+
+            var clonedLine = line.Clone();
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
-            var clonedResult = result.Clone();
-            clonedResult.Text = [clonedLine];
-            
-            return clonedResult;
+            return (true, clonedLine);
         }
 
-        return null;
+        return (true, null);
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(

@@ -9,22 +9,20 @@ public class DocLibInstance
     private static readonly DocLib Instance = DocLib.Instance;
     
     public IDocReader GetDocReader(
-        Stream stream,
+        Stream sourceStream,
         PageDimensions pageDimensions)
     {
-        if (stream == null)
+        if (sourceStream == null)
         {
-            throw new NullReferenceException(nameof(stream));
+            throw new NullReferenceException(nameof(sourceStream));
         }
         
-        var bytes = GetByteArray(stream);
+        var bytes = GetByteArray(sourceStream);
         return Instance.GetDocReader(bytes, pageDimensions);
     }
     
     private static byte[] GetByteArray(Stream stream)
     {
-        stream.Position = 0;
-        
         if (stream is MemoryStream memStream)
         {
             return memStream.ToArray();

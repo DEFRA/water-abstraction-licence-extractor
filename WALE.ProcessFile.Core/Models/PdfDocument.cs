@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
@@ -66,23 +67,22 @@ public class PdfDocument(
         return true;
     }
 
-    private IReadOnlyList<PdfPage>? _pages;
-    
+    [field: AllowNull, MaybeNull]
     public IReadOnlyList<PdfPage> Pages
     {
         get
         {
-            if (_pages != null)
+            if (field != null)
             {
-                return _pages;
+                return field;
             }
-            
+
             if (FromCache && InternalDocument == null)
             {
                 throw new Exception("PdfDocument not initialized correctly");
             }
-            
-            _pages = InternalDocument!.GetPages()
+
+            field = InternalDocument!.GetPages()
                 .Select(page =>
                 {
                     if (page.NumberOfImages > SkipFileIfMoreThenImages)
@@ -92,12 +92,12 @@ public class PdfDocument(
                             page.NumberOfImages,
                             page.NumberOfImages);
                     }
-                    
+
                     var screenshotPaths = OutputService.GetPageScreenshotReferences(
                         page.Number,
                         "PdfPig",
                         FileId);
-                    
+
                     var pdfPage = new PdfPage
                     {
                         InternalPage = page,
@@ -117,14 +117,14 @@ public class PdfDocument(
                             Text = [page.Text!]
                         });
                     }
-                    
+
                     return pdfPage;
                 })
                 .ToList();
-            
-            return _pages!;
+
+            return field!;
         }
-        set => _pages = value;
+        set;
     }
 
     public async Task<List<(string Provider, SKBitmap Bitmap)>> GetPageAsSkBitmapAsync(

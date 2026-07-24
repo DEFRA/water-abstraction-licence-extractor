@@ -210,7 +210,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             CacheService,
             OutputService,
             regionCode,
-            DateTime.Now);
+            DateTime.Now,
+            useLockExclusivity: false);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(

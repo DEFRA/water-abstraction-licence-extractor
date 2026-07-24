@@ -23,6 +23,8 @@ public class DocLibInstance
     
     private static byte[] GetByteArray(Stream stream)
     {
+        stream.Position = 0;
+        
         if (stream is MemoryStream memStream)
         {
             return memStream.ToArray();

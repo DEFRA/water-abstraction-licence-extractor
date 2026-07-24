@@ -29,7 +29,9 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
             });
 
         document.AddSkiaPageFactory();
-        return new PdfPigInternalPdfDocument(document, fileStream, sizeBytes);
+        
+        var syncStream = Stream.Synchronized(fileStream);
+        return new PdfPigInternalPdfDocument(document, syncStream, sizeBytes);
     }
 
     public string? Name { get; set; } = GeneralConstants.PdfPigDataExtractorServiceName;

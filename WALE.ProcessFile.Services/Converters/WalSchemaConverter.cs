@@ -1430,7 +1430,7 @@ public static class WalSchemaConverter
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
 
-                if (relatedFileMatches.AlreadySaved != true)
+                if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,

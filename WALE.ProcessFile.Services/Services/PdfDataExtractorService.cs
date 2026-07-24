@@ -1208,7 +1208,7 @@ public class PdfDataExtractorService(
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock/saving for {linkedDmsFileData.FileId}");
 
-                if (relatedFileMatches.AlreadySaved != true)
+                if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
                     await SaveMatchResultAsync(
                         relatedFileMatches.Item!,

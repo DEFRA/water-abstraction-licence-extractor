@@ -16,7 +16,6 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
         int pageDimensionHeight,
         int pageNumber)
     {
-
         if (_docReader == null)
         {
             var docLibInstance = new DocLibInstance();

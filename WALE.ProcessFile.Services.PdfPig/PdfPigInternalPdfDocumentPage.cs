@@ -14,7 +14,7 @@ public class PdfPigInternalPdfDocumentPage(Page page) : IInternalPdfDocumentPage
     {
         return page
             .GetImages()
-            .Select(IInternalPdfImage (i) => new PdfPigInternalPdfImage(i))
+            .Select(IInternalPdfImage (img) => new PdfPigInternalPdfImage(img))
             .ToList();
     }
 }

@@ -531,7 +531,13 @@ public static partial class WalLabelConfiguration
                             new("10.9"),
                             new("10.10"),
                             new("1)") { LineMustStartWith = true },
+                            new("(1)") { LineMustStartWith = true },
                             new("2)") { LineMustStartWith = true },
+                            new("(2)") { LineMustStartWith = true },
+                            new("3)") { LineMustStartWith = true },
+                            new("(3)") { LineMustStartWith = true },
+                            new("4)") { LineMustStartWith = true },
+                            new("(4)") { LineMustStartWith = true },                            
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -546,6 +552,13 @@ public static partial class WalLabelConfiguration
                             new("10.10"),
                             new("10.11"),
                             new("2)") { LineMustStartWith = true },
+                            new("(2)") { LineMustStartWith = true },
+                            new("3)") { LineMustStartWith = true },
+                            new("(3)") { LineMustStartWith = true },
+                            new("4)") { LineMustStartWith = true },
+                            new("(4)") { LineMustStartWith = true },
+                            new("5)") { LineMustStartWith = true },
+                            new("(5)") { LineMustStartWith = true },                            
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,

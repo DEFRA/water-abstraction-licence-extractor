@@ -51,6 +51,9 @@ public static class Wr51SchemaConverter
 
         var documentTemplateVerison = GetMultilineText(matchesResult, "DocumentTemplateVersion");
         var isNewTemplate = documentTemplateVerison == "2026_07_10_v1";
+
+        var documentHeader = GetMultilineText(matchesResult, "DocumentHeader");
+        if (!string.IsNullOrWhiteSpace(documentHeader)) documentHeader = $"Form WR - {documentHeader}";
         
         string? maintenanceYesNo = null;
 
@@ -121,6 +124,7 @@ public static class Wr51SchemaConverter
             Metadata = new Wr51FormMetadata
             {
                 DocumentTemplateVerison = documentTemplateVerison,
+                DocumentHeader = documentHeader,
                 Filename = matchesResult.Filename,
                 FileId = matchesResult.FileId,
                 IsScan = matchesResult.ScannedFile,

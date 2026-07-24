@@ -58,6 +58,7 @@ public static class Wr51LabelConfiguration
             ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 1)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
+            ("DocumentHeader", TextAfterLabel("Form WR - ", "DocumentHeader", 0)),
             ("GeneralComments", TextToFindIsBetweenLabels(
                 "General comments, details / dates of occupation changes, actions required etc.",
                 "Form sent to",

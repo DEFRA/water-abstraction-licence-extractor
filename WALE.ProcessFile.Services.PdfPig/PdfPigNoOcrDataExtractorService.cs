@@ -56,7 +56,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 metadata!.PagesMetadata!,
                 fileId,
                 outputService,
-                configuration.SkipFileWhenMoreThenPages);
+                configuration.SkipFileWhenMoreThenPages,
+                configuration.SkipFileWhenMoreThenImages);
             
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
         
@@ -102,7 +103,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         Dictionary<string, object> pagesTextMetadata,
         Guid fileId,
         IOutputService outputService,
-        int skipFileWhenMoreThenPages)
+        int skipFileWhenMoreThenPages,
+        int skipFileIfMoreThenImages)
     {
         var pageArray = ((JsonElement)pagesTextMetadata["pages"])
             .EnumerateArray()
@@ -136,7 +138,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     .ToList()!
             };
             
-            if (pdfPage.NumberOfImages  > PdfDocument.SkipFileIfMoreThenImages)
+            if (pdfPage.NumberOfImages > skipFileIfMoreThenImages)
             {
                 throw new TooManyImagesException(
                     "Too many images in this file - it is being skipped",

@@ -6,6 +6,8 @@ public class Wr51FormMetadata
     
     public Guid? FileId { get; set; }
     
+    public string? DocumentHeader { get; set; }
+    
     public string? DocumentTemplateVerison { get; set; }
     
     public bool? IsScan { get; set; }

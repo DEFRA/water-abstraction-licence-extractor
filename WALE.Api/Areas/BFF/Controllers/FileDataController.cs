@@ -13,6 +13,14 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class FileDataController(IOutputService outputService) : Controller
 {
     [HttpGet]
+    public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
+        [FromQuery] int processRunId)
+    {
+        var result = await outputService.GetSimpleMatchResults(processRunId);
+        return Ok(result);
+    }
+    
+    [HttpGet]
     public async Task<ActionResult<MatchesResult?>> MatchesResult([FromQuery] Guid fileId)
     {
         var result = await outputService.GetMatchesResultAsync(fileId);

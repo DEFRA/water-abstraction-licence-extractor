@@ -733,5 +733,18 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
+    public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
+    {
+        var path = $"/BFF/FileData/GetSimpleMatchResults?processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<MatchResultSimple>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     private static bool _showAllLogs = false;
 }

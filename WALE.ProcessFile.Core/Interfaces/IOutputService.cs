@@ -113,4 +113,6 @@ public interface IOutputService
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
+    
+    Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
 }

@@ -380,4 +380,9 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 }

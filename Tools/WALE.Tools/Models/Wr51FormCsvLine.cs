@@ -6,6 +6,8 @@ public class Wr51CsvLine
     
     public string? Metadata__DocumentTemplateVerison { get; set; }
     
+    public string? Metadata__DocumentHeader { get; set; }
+    
     public bool? Metadata__IsScan { get; set; }
     
     public string? Metadata__FormSentTo { get; set; }
@@ -31,6 +33,8 @@ public class Wr51CsvLine
     public string? InspectingOfficer { get; set; }
     
     public string? InspectionDate__DateTime { get; set; }
+    
+    public string? InspectionDate__Year { get; set; }
     
     public string? InspectionDate__RawDate { get; set; }
     

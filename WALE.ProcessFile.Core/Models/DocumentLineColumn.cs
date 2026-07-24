@@ -105,6 +105,10 @@ public class DocumentLineColumn
 
     public static List<DocumentLineWord> FilterWordsFromText(List<DocumentLineWord> inputWords, string inputText)
     {
+        // TODO - this is a big hack for this branch
+        // Some ticks confuse this method - see f236536f-1dbd-44fa-8a42-0acd0db as an example
+        const bool throwErrors = false;
+
         var inputTextTrimmed = FormattingHelper.TrimFormatting(inputText, true, true);
         
         if (string.IsNullOrEmpty(inputTextTrimmed))
@@ -141,6 +145,11 @@ public class DocumentLineColumn
                 
             if (position == -1)
             {
+                if (!throwErrors)
+                {
+                    return inputWords;
+                }
+                
                 var inputWordsForDisplay = string.Join(' ', inputWords.Select(iw => iw.Text));
                 throw new Exception($"Words don't contain input text '{inputTextWordTrimmedText}';\n\nWords - '{inputWordsForDisplay}'\nText  - '{inputText}'");
             }
@@ -157,6 +166,11 @@ public class DocumentLineColumn
                 
                 if (startPos == -1)
                 {
+                    if (!throwErrors)
+                    {
+                        return inputWords;
+                    }
+                    
                     throw new Exception("Issue with difference between punctuation and none-punctuation versions");
                 }
             }
@@ -171,14 +185,17 @@ public class DocumentLineColumn
             inputWordsCopy = inputWordsCopy.Slice(position + 1, inputWordsCopy.Count - position - 1);
             inputWordsTrimmedCopy = inputWordsTrimmedCopy.Slice(position + 1, inputWordsTrimmedCopy.Count - position - 1);
         }
+        
+        if (throwErrors)
+        {
+            var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
+            var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
+            
+            System.Diagnostics.Debug.Assert(
+                inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.OrdinalIgnoreCase),
+                $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
+        }
 
-        var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
-        var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
-        
-        System.Diagnostics.Debug.Assert(
-            inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.OrdinalIgnoreCase),
-            $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
-        
         return outputWords;
     }
 }

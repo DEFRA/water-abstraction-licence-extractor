@@ -37,7 +37,7 @@ public class PdfDocument(
 
     int SkipFileIfMoreThenPages { get; set; } = configuration.SkipFileWhenMoreThenPages;
 
-    public static int SkipFileIfMoreThenImages { get; set; } = 50;
+    int SkipFileIfMoreThenImages { get; set; } = configuration.SkipFileWhenMoreThenImages;
 
     public async Task<bool> OpenInternalDocumentAsync()
     {

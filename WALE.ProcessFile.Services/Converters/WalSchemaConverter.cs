@@ -3760,6 +3760,7 @@ public static class WalSchemaConverter
             "total annual quantity" => LimitPeriodType.InTotal,
             "consecutive five year" => LimitPeriodType.Per5Years,
             "five consecutive years" => LimitPeriodType.Per5Years,
+            "over any 5-year period" => LimitPeriodType.Per5Years,            
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

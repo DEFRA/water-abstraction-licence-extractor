@@ -2204,7 +2204,8 @@ public static partial class WalLabelConfiguration
                         Text =
                         [
                             new("consecutive five year"),
-                            new("five consecutive years")
+                            new("five consecutive years"),
+                            new("over any 5-year period")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                         Format = "Units",
@@ -2427,7 +2428,8 @@ public static partial class WalLabelConfiguration
                         Text =
                         [
                             new("consecutive five year"),
-                            new("five consecutive years")
+                            new("five consecutive years"),
+                            new("over any 5-year period")
                         ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",

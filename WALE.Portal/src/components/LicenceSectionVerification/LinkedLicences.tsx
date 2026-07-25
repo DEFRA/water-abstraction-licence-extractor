@@ -17,9 +17,9 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
 
-        const noneOutgoingVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(
-            v => v.licenceSectionItemId === 'None Outgoing'
-        );
+        const noneOutgoingVerification = outputListDataItem?.licenceSectionVerifications
+            ?.find(v => v.licenceSectionName === 'Linked Licences')
+            ?.licenceSectionItems?.find(v => v.licenceSectionItemId === 'None Outgoing');
 
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
@@ -66,7 +66,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     setScrapedData(results?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
-                        const verifications = [...(outputListDataItem?.latestLicenceSectionVerifications || [])]
+                        const verifications = [...(outputListDataItem?.licenceSectionVerifications?.find(v => v.licenceSectionName === 'Linked Licences')?.licenceSectionItems || [])]
                             .sort((a, b) => (b.createdDateTimeUtc?.getTime() || 0) - (a.createdDateTimeUtc?.getTime() || 0));
 
                         const outgoingLinkedLicences = [...(results || [])];

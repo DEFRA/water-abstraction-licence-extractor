@@ -51,36 +51,17 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>
-                {((item.latestLicenceSectionVerifications?.length ?? 0) > 0 ?
-                    Object.entries(
-                        item.latestLicenceSectionVerifications!.reduce((acc, v) => {
-                            const key = v.licenceSectionName ?? "Unknown";
-                            if (!acc[key]) acc[key] = [];
-                            acc[key].push(v);
-                            return acc;
-                        }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
-                    ).map(([sectionName, verifications]) => (
-                        <div key={sectionName} style={{ marginBottom: '10px' }}>
-                            <strong>{sectionName}</strong>
+                {((item.licenceSectionVerifications?.length ?? 0) > 0 ?
+                    item.licenceSectionVerifications!.map((section) => (
+                        <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>
+                            <strong>{section.licenceSectionName}</strong>
                             <UnorderedListOfStrings items={
-                                Object.entries(
-                                    verifications!.reduce((acc, v) => {
-                                        const key = v.licenceSectionItemId ?? "Unknown";
-                                        if (!acc[key]) acc[key] = [];
-                                        acc[key].push(v);
-                                        return acc;
-                                    }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
-                                ).map(([itemId, itemVerifications]) => {
-                                    const sortedVerifications = [...itemVerifications!].sort((a, b) => {
-                                        const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
-                                        const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
-                                        return dateA - dateB;
-                                    });
-
+                                (section.licenceSectionItems || []).map((v) => {
+                                    const itemId = v.licenceSectionItemId ?? "Unknown";
                                     return (
                                         <span key={itemId}>
                                             {itemId}{' '}
-                                            {sortedVerifications.map((v, i) => {
+                                            {(() => {
                                                 let color = 'inherit';
                                                 let initials = '';
                                                 if (v.verificationType === 'Confirmed') { color = 'inherit'; initials = '✅'; }
@@ -92,7 +73,7 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                                                 else if (v.verificationType === 'AutoWarn') { color = 'darkorange'; initials = 'AW'; }
 
                                                 return (
-                                                    <span key={i}>
+                                                    <span>
                                                         <span title={v.verificationType ?? ''} style={{
                                                             backgroundColor: color,
                                                             color: 'white',
@@ -106,10 +87,10 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                                                         }}>
                                                             {initials}
                                                         </span>
-                                                        {i === sortedVerifications.length-1 && v.scrapedDataIsDifferent && '🚩'}
+                                                        {v.scrapedDataIsDifferent && '🚩'}
                                                     </span>
                                                 );
-                                            })}
+                                            })()}
                                         </span>
                                     );
                                 })

@@ -282,9 +282,9 @@ export const LinkedLicenceItem = ({
                         const licenceNumber = linkedLicence.licenceNumber;
                         if (!licenceNumber || isEditing) return null;
                         
-                        const latestVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(v => 
-                            v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber
-                        );
+                        const latestVerification = outputListDataItem?.licenceSectionVerifications
+                            ?.find(v => v.licenceSectionName === 'Linked Licences')
+                            ?.licenceSectionItems?.find(v => v.licenceSectionItemId === licenceNumber);
                         
                         if (!latestVerification) return null;
                         

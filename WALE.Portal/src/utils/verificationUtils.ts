@@ -15,3 +15,45 @@ export const getVerificationTypeColor = (type: string): string => {
             return 'inherit';
     }
 };
+
+export const getVerificationTypeBackgroundColor = (type: string): string => {
+    switch (type) {
+        case 'Confirmed':
+            return 'inherit';
+        case 'AutoConfirm':
+            return 'green';
+        case 'Removed':
+            return 'inherit';
+        case 'AutoFail':
+            return 'red';
+        case 'Edited':
+            return 'inherit';
+        case 'AutoWarn':
+            return 'darkorange';
+        case 'Added':
+            return 'inherit';
+        default:
+            return 'inherit';
+    }
+};
+
+export const getVerificationTypeInitials = (type: string): string => {
+    switch (type) {
+        case 'Confirmed':
+            return '✅';
+        case 'AutoConfirm':
+            return 'AC';
+        case 'Removed':
+            return '❌';
+        case 'Edited':
+            return '✏️';
+        case 'Added':
+            return '➕';
+        case 'AutoFail':
+            return 'AF';
+        case 'AutoWarn':
+            return 'AW';
+        default:
+            return '';
+    }
+};

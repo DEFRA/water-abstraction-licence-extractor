@@ -1,4 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -61,36 +62,22 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                                     return (
                                         <span key={itemId}>
                                             {itemId}{' '}
-                                            {(() => {
-                                                let color = 'inherit';
-                                                let initials = '';
-                                                if (v.verificationType === 'Confirmed') { color = 'inherit'; initials = '✅'; }
-                                                else if (v.verificationType === 'AutoConfirm') { color = 'green'; initials = 'AC'; }
-                                                else if (v.verificationType === 'Removed') { color = 'inherit'; initials = '❌'; }
-                                                else if (v.verificationType === 'Edited') { color = 'inherit'; initials = '✏️'; }
-                                                else if (v.verificationType === 'Added') { color = 'inherit'; initials = '➕'; }
-                                                else if (v.verificationType === 'AutoFail') { color = 'red'; initials = 'AF'; }
-                                                else if (v.verificationType === 'AutoWarn') { color = 'darkorange'; initials = 'AW'; }
-
-                                                return (
-                                                    <span>
-                                                        <span title={v.verificationType ?? ''} style={{
-                                                            backgroundColor: color,
-                                                            color: 'white',
-                                                            fontSize: '0.7em',
-                                                            padding: '1px 3px',
-                                                            borderRadius: '3px',
-                                                            marginRight: '2px',
-                                                            verticalAlign: 'middle',
-                                                            fontWeight: 'bold',
-                                                            fontFamily: 'sans-serif'
-                                                        }}>
-                                                            {initials}
-                                                        </span>
-                                                        {v.scrapedDataIsDifferent && '🚩'}
-                                                    </span>
-                                                );
-                                            })()}
+                                            {(v.verificationTypes || []).map((vt: string, idx: number) => (
+                                                <span key={idx} title={vt ?? ''} style={{
+                                                    backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                    color: 'white',
+                                                    fontSize: '0.7em',
+                                                    padding: '1px 3px',
+                                                    borderRadius: '3px',
+                                                    marginRight: '2px',
+                                                    verticalAlign: 'middle',
+                                                    fontWeight: 'bold',
+                                                    fontFamily: 'sans-serif'
+                                                }}>
+                                                    {getVerificationTypeInitials(vt)}
+                                                </span>
+                                            ))}
+                                            {v.scrapedDataIsDifferent && '🚩'}
                                         </span>
                                     );
                                 })

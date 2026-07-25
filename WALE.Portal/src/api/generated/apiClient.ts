@@ -5710,6 +5710,7 @@ export interface ILicenceFinderResult {
 export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     licenceSectionItemId!: string;
     verificationTypes!: string[];
+    scrapedDataIsDifferent?: boolean;
 
     [key: string]: any;
 
@@ -5737,6 +5738,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 for (let item of _data["verificationTypes"])
                     this.verificationTypes!.push(item);
             }
+            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
         }
     }
 
@@ -5759,6 +5761,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
             for (let item of this.verificationTypes)
                 data["verificationTypes"].push(item);
         }
+        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         return data;
     }
 }
@@ -5766,6 +5769,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
 export interface ILicenceSectionItemSummary {
     licenceSectionItemId: string;
     verificationTypes: string[];
+    scrapedDataIsDifferent?: boolean;
 
     [key: string]: any;
 }

@@ -78,7 +78,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                                             l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing)))
                 {
                     // Flag this because the verification confirmed there are zero outgoing LLs but actually there are some
-                    verification.ScrapedDataIsDifferent = true;
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
                     foreach (var linkedLicence in linkedLicences)
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
@@ -98,7 +98,10 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
                 var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
 
-                verification.ScrapedDataIsDifferent = wasScrapedThisRun != wasScrapedOnVerificationRun;
+                if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+                {
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
+                }
             }
 
             // Apply verification
@@ -180,12 +183,35 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                 VerificationTypes = [verification.VerificationType!]
             });
         }
-        else if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+        else
         {
-            existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                .Append(verification.VerificationType!)
-                .ToArray();
+            if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            {
+                existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                    .Append(verification.VerificationType!)
+                    .ToArray();
+            }
+
+            if (verification.VerificationType is not ("AutoWarn" or "AutoFail"))
+            {
+                // Clear the flag, it'll be re-calculated for this verification later
+                existingSummary.ScrapedDataIsDifferent = false;
+            }
         }
+    }
+
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    {
+        var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
+
+        if (summary != null)
+        {
+            summary.ScrapedDataIsDifferent = true;
+            return;
+        }
+
+        ConsoleHelper.WriteLine(
+            $"ERROR - {nameof(LinkedLicencesVerificationOutputStrategy)} - Flag was not set - no summary found for {itemId}");
     }
 
     private static void ProcessIncomingVerifications(IEnumerable<LicenceSectionVerification> incomingVerifications,

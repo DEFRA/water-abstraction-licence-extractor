@@ -28,47 +28,33 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             return;
         }
 
-        var incomingOnlyLinkedLicences = (listRow.linkedLicences ?? [])
-            .Where(x => x.ContainedIn?.All(c => c.Direction != InformationDirection.Outgoing) == true)
-            .ToList();
-
-        var outgoingLinkedLicences = (listRow.linkedLicences ?? [])
-            .Where(x => x.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) == true)
-            .ToList();
+        var linkedLicences = listRow.linkedLicences?.ToList() ?? [];
 
         if (hasOutgoingVerifications)
         {
             var sectionSummaries = new List<LicenceSectionItemSummary>();
-            ProcessOutgoingVerifications(outgoingVerifications!, listRow, outgoingLinkedLicences, sectionSummaries,
-                incomingOnlyLinkedLicences);
+            ProcessOutgoingVerifications(outgoingVerifications!, listRow, sectionSummaries, linkedLicences);
 
             var summaries = listRow.licenceSectionVerifications?.ToList() ?? [];
-            LicenceSectionVerificationSummary summary = new()
+            summaries.Add(new LicenceSectionVerificationSummary
             {
                 LicenceSectionName = SectionName,
                 LicenceSectionItems = sectionSummaries.ToArray()
-            };
-
-            summaries.Add(summary);
+            });
             listRow.licenceSectionVerifications = summaries.ToArray();
         }
 
         if (hasIncomingVerifications)
         {
-            ProcessIncomingVerifications(incomingVerifications!, incomingOnlyLinkedLicences,
-                fileIdToLicenceNumberMapping, outgoingLinkedLicences);
+            ProcessIncomingVerifications(incomingVerifications!, fileIdToLicenceNumberMapping, linkedLicences);
         }
 
-        listRow.linkedLicences = incomingOnlyLinkedLicences
-            .Union(outgoingLinkedLicences)
-            .ToArray();
+        listRow.linkedLicences = linkedLicences.Where(ll => ll.ContainedIn?.Length > 0).ToArray();
     }
 
     private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications,
-        OutputListDataItem listRow,
-        List<LinkedLicence> outgoingLinkedLicences,
-        List<LicenceSectionItemSummary> sectionSummaries,
-        List<LinkedLicence> incomingOnlyLinkedLicences)
+        OutputListDataItem listRow, List<LicenceSectionItemSummary> sectionSummaries,
+        List<LinkedLicence> linkedLicences)
     {
         var orderedVerifications = verifications
             .Where(v => v.LicenceSectionItemId is not null)
@@ -88,11 +74,15 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
             if (verification.LicenceSectionItemId == NoneOutgoing)
             {
-                if (outgoingLinkedLicences.Count > 0)
+                if (linkedLicences.Any(l => true ==
+                                            l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing)))
                 {
-                    // Flag this because the verification confirmed there are zero LLs but actually there are some
+                    // Flag this because the verification confirmed there are zero outgoing LLs but actually there are some
                     verification.ScrapedDataIsDifferent = true;
-                    outgoingLinkedLicences.Clear();
+                    foreach (var linkedLicence in linkedLicences)
+                    {
+                        RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
+                    }
                 }
 
                 continue;
@@ -135,13 +125,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     continue;
                 }
 
-                var existingOutgoingLinkedLicence =
-                    outgoingLinkedLicences.FirstOrDefault(x =>
-                        x.LicenceNumber == verification.LicenceSectionItemId);
-
-                var existingIncomingLinkedLicence =
-                    incomingOnlyLinkedLicences.FirstOrDefault(x =>
-                        x.LicenceNumber == verification.LicenceSectionItemId);
+                var existingLinkedLicence =
+                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId);
 
                 switch (verification.VerificationType)
                 {
@@ -149,22 +134,22 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
-                        if (existingIncomingLinkedLicence != null)
+                        linkedLicences.Add(verificationLicence);
+                        if (existingLinkedLicence != null)
                         {
-                            incomingOnlyLinkedLicences.Remove(existingIncomingLinkedLicence);
+                            // Merge the Incoming (and Unknown) links with the overridden Outgoing links
+                            verificationLicence.ContainedIn = (verificationLicence.ContainedIn ?? [])
+                                .Where(c => c.Direction == InformationDirection.Outgoing)
+                                .Union(existingLinkedLicence.ContainedIn?.Where(c =>
+                                    c.Direction != InformationDirection.Outgoing) ?? []).ToArray();
+                            linkedLicences.Remove(existingLinkedLicence);
                         }
 
-                        if (existingOutgoingLinkedLicence != null)
-                        {
-                            outgoingLinkedLicences.Remove(existingOutgoingLinkedLicence);
-                        }
-
-                        outgoingLinkedLicences.Add(verificationLicence);
                         break;
                     case "Removed":
-                        if (existingOutgoingLinkedLicence != null)
+                        if (existingLinkedLicence != null)
                         {
-                            outgoingLinkedLicences.Remove(existingOutgoingLinkedLicence);
+                            RemoveAllLinksForDirection(existingLinkedLicence, InformationDirection.Outgoing);
                         }
 
                         break;
@@ -176,6 +161,10 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             }
         }
     }
+
+    private static void RemoveAllLinksForDirection(LinkedLicence linkedLicence, InformationDirection directionToRemove)
+        => linkedLicence.ContainedIn = linkedLicence.ContainedIn?
+            .Where(c => c.Direction != directionToRemove).ToArray();
 
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
@@ -200,8 +189,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     }
 
     private static void ProcessIncomingVerifications(IEnumerable<LicenceSectionVerification> incomingVerifications,
-        List<LinkedLicence> incomingOnlyLinkedLicences, Dictionary<Guid, string> fileIdToLicenceNumberMapping,
-        List<LinkedLicence> outgoingLinkedLicences)
+        Dictionary<Guid, string> fileIdToLicenceNumberMapping, List<LinkedLicence> linkedLicences)
     {
         var orderedVerifications = incomingVerifications
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -246,13 +234,32 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     continue;
                 }
 
-                var existingOutgoingLinkedLicence =
-                    outgoingLinkedLicences.FirstOrDefault(x =>
-                        x.LicenceNumber == sourceLicenceNumber);
+                var existingLinkedLicence =
+                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == sourceLicenceNumber);
 
-                var existingIncomingLinkedLicence =
-                    incomingOnlyLinkedLicences.FirstOrDefault(x =>
-                        x.LicenceNumber == sourceLicenceNumber);
+                // TODO: We need to convert the verification licence to an incoming link - use the logic in WalSchemaConverter - but much of this will require looking up
+                var convertedToIncoming = new LinkedLicence
+                {
+                    LicenceNumber = sourceLicenceNumber,
+                    DmsFileId = fileId,
+                    ContainedIn = verificationLicence.ContainedIn?.Select(c => new ContainedInInformation
+                    {
+                        Source = InformationSource.OtherDocument,
+                        Direction = InformationDirection.Incoming,
+                        SectionName = c.SectionName,
+                        LinkReason = c.LinkReason,
+                        LineNumber = c.LineNumber,
+                        PageNumber = c.PageNumber
+                    }).ToArray(),
+                    /*RegionId = verificationLicence.RegionId,
+                    RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
+                    DmsPermitNumber = dmsFileData?.PermitNumber,
+                    DmsPath = dmsFileData?.DmsPath,
+                    Filename = filename,
+                    NaldStatus = naldStatus,
+                    LicenceType = licenceType,
+                    LicenceVersion = licenceVersion*/
+                };
 
                 switch (verification.VerificationType)
                 {
@@ -260,22 +267,24 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
-                        if (existingIncomingLinkedLicence == null && existingOutgoingLinkedLicence == null)
+                        if (existingLinkedLicence == null)
                         {
-                            incomingOnlyLinkedLicences.Add(verificationLicence);
+                            linkedLicences.Add(convertedToIncoming);
+                        }
+                        else
+                        {
+                            // Merge the Outgoing (and Unknown) links with the overridden Incoming links
+                            existingLinkedLicence.ContainedIn = (existingLinkedLicence.ContainedIn ?? [])
+                                .Where(c => c.Direction != InformationDirection.Incoming)
+                                .Union(convertedToIncoming.ContainedIn?.Where(c =>
+                                    c.Direction == InformationDirection.Incoming) ?? []).ToArray();
                         }
 
                         break;
                     case "Removed":
-                        if (existingIncomingLinkedLicence != null)
+                        if (existingLinkedLicence != null)
                         {
-                            incomingOnlyLinkedLicences.Remove(existingIncomingLinkedLicence);
-                        }
-
-                        if (existingOutgoingLinkedLicence != null)
-                        {
-                            existingOutgoingLinkedLicence.ContainedIn = existingOutgoingLinkedLicence.ContainedIn!
-                                .Where(c => c.Direction != InformationDirection.Incoming).ToArray();
+                            RemoveAllLinksForDirection(existingLinkedLicence, InformationDirection.Incoming);
                         }
 
                         break;

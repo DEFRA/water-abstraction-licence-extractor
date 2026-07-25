@@ -2940,10 +2940,15 @@ export class Client {
     }
 
     /**
+     * @param maxProcessRunId (optional) 
      * @return OK
      */
-    getLatestLicenceSectionVerifications(): Promise<LicenceSectionVerification[]> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetLatestLicenceSectionVerifications";
+    getAllVerifications(maxProcessRunId: number | undefined): Promise<LicenceSectionVerification[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetAllVerifications?";
+        if (maxProcessRunId === null)
+            throw new globalThis.Error("The parameter 'maxProcessRunId' cannot be null.");
+        else if (maxProcessRunId !== undefined)
+            url_ += "maxProcessRunId=" + encodeURIComponent("" + maxProcessRunId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -2954,11 +2959,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetLatestLicenceSectionVerifications(_response);
+            return this.processGetAllVerifications(_response);
         });
     }
 
-    protected processGetLatestLicenceSectionVerifications(response: Response): Promise<LicenceSectionVerification[]> {
+    protected processGetAllVerifications(response: Response): Promise<LicenceSectionVerification[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -5702,6 +5707,69 @@ export interface ILicenceFinderResult {
     [key: string]: any;
 }
 
+export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
+    licenceSectionItemId!: string;
+    verificationTypes!: string[];
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceSectionItemSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.verificationTypes = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceSectionItemId = _data["licenceSectionItemId"];
+            if (Array.isArray(_data["verificationTypes"])) {
+                this.verificationTypes = [] as any;
+                for (let item of _data["verificationTypes"])
+                    this.verificationTypes!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceSectionItemSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceSectionItemSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceSectionItemId"] = this.licenceSectionItemId;
+        if (Array.isArray(this.verificationTypes)) {
+            data["verificationTypes"] = [];
+            for (let item of this.verificationTypes)
+                data["verificationTypes"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceSectionItemSummary {
+    licenceSectionItemId: string;
+    verificationTypes: string[];
+
+    [key: string]: any;
+}
+
 export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
@@ -5790,6 +5858,69 @@ export interface ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+
+    [key: string]: any;
+}
+
+export class LicenceSectionVerificationSummary implements ILicenceSectionVerificationSummary {
+    licenceSectionName!: string;
+    licenceSectionItems!: LicenceSectionItemSummary[];
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceSectionVerificationSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.licenceSectionItems = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceSectionName = _data["licenceSectionName"];
+            if (Array.isArray(_data["licenceSectionItems"])) {
+                this.licenceSectionItems = [] as any;
+                for (let item of _data["licenceSectionItems"])
+                    this.licenceSectionItems!.push(LicenceSectionItemSummary.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceSectionVerificationSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceSectionVerificationSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceSectionName"] = this.licenceSectionName;
+        if (Array.isArray(this.licenceSectionItems)) {
+            data["licenceSectionItems"] = [];
+            for (let item of this.licenceSectionItems)
+                data["licenceSectionItems"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceSectionVerificationSummary {
+    licenceSectionName: string;
+    licenceSectionItems: LicenceSectionItemSummary[];
 
     [key: string]: any;
 }
@@ -6772,7 +6903,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
+    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
 
     [key: string]: any;
 
@@ -6823,10 +6954,10 @@ export class OutputListDataItem implements IOutputListDataItem {
                 for (let item of _data["licenceSets"])
                     this.licenceSets!.push(OutputListDataItemLicenceSet.fromJS(item));
             }
-            if (Array.isArray(_data["latestLicenceSectionVerifications"])) {
-                this.latestLicenceSectionVerifications = [] as any;
-                for (let item of _data["latestLicenceSectionVerifications"])
-                    this.latestLicenceSectionVerifications!.push(LicenceSectionVerification.fromJS(item));
+            if (Array.isArray(_data["licenceSectionVerifications"])) {
+                this.licenceSectionVerifications = [] as any;
+                for (let item of _data["licenceSectionVerifications"])
+                    this.licenceSectionVerifications!.push(LicenceSectionVerificationSummary.fromJS(item));
             }
         }
     }
@@ -6876,10 +7007,10 @@ export class OutputListDataItem implements IOutputListDataItem {
             for (let item of this.licenceSets)
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.latestLicenceSectionVerifications)) {
-            data["latestLicenceSectionVerifications"] = [];
-            for (let item of this.latestLicenceSectionVerifications)
-                data["latestLicenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.licenceSectionVerifications)) {
+            data["licenceSectionVerifications"] = [];
+            for (let item of this.licenceSectionVerifications)
+                data["licenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -6902,7 +7033,7 @@ export interface IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
+    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
 
     [key: string]: any;
 }

@@ -106,6 +106,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             licence={licence} 
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
+                            history={history}
                         />
                     </LicenceSection>
                 </div>
@@ -126,6 +127,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}
+                            history={history}
                         />
                     </ScrapedLicenceSection>
                 </div>

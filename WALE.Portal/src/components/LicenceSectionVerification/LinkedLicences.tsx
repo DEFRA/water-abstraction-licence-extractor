@@ -1,5 +1,10 @@
 import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
-import {type Licence, LinkedLicence, InformationDirection} from "../../api/generated/apiClient.ts";
+import {
+    type Licence,
+    LinkedLicence,
+    InformationDirection,
+    LicenceSectionVerification
+} from "../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
@@ -9,10 +14,11 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
+    history?: LicenceSectionVerification[];
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView}, ref) => {
+    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
@@ -203,6 +209,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             }}
                             outputListDataItem={outputListDataItem}
                             scrapedView={scrapedView}
+                            history={history}
                         />
                     ))}
                 </div>

@@ -1,4 +1,4 @@
-import { LinkedLicence, InformationDirection, ContainedInInformation, InformationSource, OutputListDataItem } from "../../api/generated/apiClient.ts";
+import { LinkedLicence, InformationDirection, ContainedInInformation, InformationSource, OutputListDataItem, LicenceSectionVerification } from "../../api/generated/apiClient.ts";
 import { LicenceSectionVerificationInfo } from "./LicenceSectionVerificationInfo.tsx";
 import NaldStatusTag from "../NaldStatusTag.tsx";
 
@@ -15,6 +15,7 @@ interface LinkedLicenceItemProps {
     onOverride?: () => void;
     outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
+    history?: LicenceSectionVerification[];
 }
 
 export const LinkedLicenceItem = ({ 
@@ -28,7 +29,8 @@ export const LinkedLicenceItem = ({
     onReject,
     onOverride,
     outputListDataItem,
-    scrapedView
+    scrapedView,
+    history
 }: LinkedLicenceItemProps) => {
     const linkedLicence = linkedLicenceProp;
 

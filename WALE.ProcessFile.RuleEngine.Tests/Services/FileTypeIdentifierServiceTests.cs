@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using Xunit;
 
@@ -96,12 +97,12 @@ public class FileTypeIdentifierServiceTests
     {
         return new LookupConfiguration(
             [],
-            new Dictionary<string, DmsFileData>(),
-            [],
             [],
             new LocalFileService(""),
             new FileSystemCacheService(""),
-            1);
+            new FileSystemOutputService(""),
+            1,
+            DateTime.Now);
     }
 
     private static MatchesResult CreateMockMatchesResult(string content)

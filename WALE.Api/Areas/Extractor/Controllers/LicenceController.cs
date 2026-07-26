@@ -22,6 +22,24 @@ public class LicenceController(IOutputService outputService) : Controller
         return Ok(licences);
     }
     
+    [HttpGet]
+    public async Task<IActionResult> GetByFileIdAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await outputService.GetLicenceAsync(fileId, processRunId);
+        return Ok(licence);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetByLicenceNumberAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int processRunId)
+    {
+        var licence = await outputService.GetLicenceAsync(licenceNumber, processRunId);
+        return Ok(licence);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> SaveAsync(
         [FromBody] SaveLicenceRequest request)
@@ -35,6 +53,22 @@ public class LicenceController(IOutputService outputService) : Controller
             request.processRunId);
 
         return Ok(returnId);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> UpdateAsync(
+        [FromBody] UpdateLicenceRequest request)
+    {
+        var licence = JsonSerializer.Deserialize<Licence>(
+            request.licence!,
+            JsonHelper.GetSerializerOptions())!;
+        
+        await outputService.UpdateLicenceAsync(
+            licence,
+            request.licenceId,
+            request.processRunId);
+
+        return Ok();
     }
     
     [HttpPost]

@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -22,6 +23,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 2")]
 public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static TessaractOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -40,11 +49,11 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
 
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined1 = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -69,16 +78,16 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
         {
             "28_39_28_312", new DmsFileData
             {
                 DmsPath = "ABC",
-                DestinationFileName = "something",
-                RegionId = 1
+                DestinationFileName = "something"
             }
         }
     };
@@ -91,18 +100,27 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+
+    private static readonly Dictionary<string, List<NaldData>> _naldData = new()
+    {
+        {
+            "28/39/28/312", [new NaldData
+            {
+                FgacRegionCode = 1
+            }]
+        }
+    };
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            OutputService,
+            regionCode,
+            DateTime.Now);
     }
     
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
@@ -124,12 +142,12 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractorCombined1.GetMatchesAsync(
+        return (await _pdfDataExtractorCombined1.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -238,8 +256,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -296,8 +312,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
@@ -360,8 +374,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -427,8 +439,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -487,8 +497,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -548,8 +556,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -613,8 +619,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -682,8 +686,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -749,8 +751,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -818,8 +818,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -878,8 +876,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -924,8 +920,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -984,8 +978,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1033,8 +1025,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1072,8 +1062,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1138,8 +1126,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1183,7 +1169,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(nameResult);
         Assert.True(nameResult.IsOcr);
         Assert.Equal("Three Valleys Water Plc", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.InvariantCultureIgnoreCase);
+        Assert.Contains("hereby grant a licence to", nameResult.MatchedLabel!.Text?.Select(x => x.Text)!, StringComparer.OrdinalIgnoreCase);
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchedPosition.OnOrNearNextLine, nameResult.MatchedPosition);
         
@@ -1191,8 +1177,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1242,8 +1226,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1287,8 +1269,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1333,8 +1313,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1393,8 +1371,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1448,8 +1424,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1505,8 +1479,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1563,8 +1535,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1605,8 +1575,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1655,8 +1623,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1728,8 +1694,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1776,8 +1740,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1824,8 +1786,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder));
@@ -1879,8 +1839,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder4));

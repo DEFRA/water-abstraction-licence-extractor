@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using ExcelDataReader;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -30,10 +31,18 @@ public static class DmsHelper
 
         return dmsFileIdInformationDict;
     }
-    
-    public static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers,
-            Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
-        GetDmsFilesAndMappingAsync(
+
+    public static async Task<(DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)>
+        GetDmsAndNaldFileData(ICacheService cacheService, Guid fileId)
+    {
+        var licenceFinderResult = await cacheService.GetLicenceFinderResultAsync(fileId);
+        return LicenceFinderResultToDmsAndNaldData(licenceFinderResult, null);
+    }
+
+    public static async Task<(
+            Dictionary<string, (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence)> LicenceNumbersWithFilenames)>
+        GetDmsAndNaldFilesAndMappingAsync(
             IFileService fileService,
             string dmsReportPath,
             bool getFromFile,
@@ -42,8 +51,8 @@ public static class DmsHelper
         var dtStartGetDms = DateTime.Now;
         
         //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
-        (Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
-            LicenceNumbersWithFilenames) filesAndMapping;
+        (Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames) filesAndMapping;
     
         if (getFromFile)
         {
@@ -63,16 +72,27 @@ public static class DmsHelper
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
         // For debugging uncheck sections of the following
-    
         filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-            //.Where(x => x.Key.Contains("22722027", StringComparison.InvariantCultureIgnoreCase)
-            //            || x.Key.Contains("1asdssdds", StringComparison.InvariantCultureIgnoreCase))
-            //.Where(x => /*x.Key.Contains("12100063") || x.Key.Contains("12504175r01__bf7b7908-fa43-61ef-b29e-475502aa2f94"))
-            //.Where(x => x.Value.RegionId == 3) // North east
-            //.Skip(155)
-            .Take(20)
+            //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
+                //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
+            //.Where(x => x.Key.Contains("c93e60f4-9263-6aa7-f9e5-103edf7df0a0"))
+            .Where(x => x.Value.Item2.RegionCode == 3) // North east
+            //.Skip(10)
+            //.Take(500)
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-    
+
+        /*var dupedFileIds = filesAndMapping.FilenamesWithLicenceNumbers
+            .Select(filename => filename.Key.Split("__")[1])
+            .GroupBy(f => f)
+            .Where(f => f.Count() > 1)
+            .Select(g => g.First())
+            .ToList();
+
+        var repeatedFileIds = filesAndMapping.FilenamesWithLicenceNumbers
+            .Where(x => dupedFileIds.Any(dfi => x.Key.Contains(dfi)))
+            .Select(x => x.Key)
+            .ToList();*/
+        
         var saveDuration = (DateTime.Now - dtStartGetDms).TotalMilliseconds;
 
         ConsoleHelper.WriteLine(
@@ -81,13 +101,14 @@ public static class DmsHelper
         return filesAndMapping;
     }
     
-    private static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData> LicenceNumbersWithFilenames)>
+    private static async Task<(Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames)>
         GetFilesAndMappingFromExcelDownloadInfoFileAsync(
             IFileService fileService,
             string dmsReportPath)
     {
-        var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
-        var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
+        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
+        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -168,16 +189,23 @@ public static class DmsHelper
                     var dmsFileData = new DmsFileData
                     {
                         DestinationFileName = destinationFileName,
-                        NaldLicenceRef = naldLicenceRef,
                         PermitNumber = permitNumber,
                         DmsPath = dmsPath,
-                        StrippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, -1)!,
-                        FileId = fileId,
-                        RegionId = GeneralConstants.UnsetRegionCode
+                        FileId = fileId
                     };
 
-                    filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-                    licenceNumbersWithFilenames.Add(dmsFileData.StrippedLicenceNumber, dmsFileData);
+                    var regionCode = -1; // TODO
+                    
+                    var naldLicence = new NaldLicenceSimple
+                    {
+                        LicenceNumber = naldLicenceRef,
+                        RegionCode = (short)regionCode
+                    };
+
+                    var strippedLicenceNumber = FormattingHelper.StripForComparison(naldLicenceRef, regionCode)!;
+                    
+                    filenamesWithLicenceNumbers.Add(destinationFileName, (dmsFileData, naldLicence));
+                    licenceNumbersWithFilenames.Add(strippedLicenceNumber, (dmsFileData, naldLicence));
                 }
             }
         }
@@ -188,17 +216,19 @@ public static class DmsHelper
         );
     }
     
-    private static async Task<(Dictionary<string, DmsFileData> FilenamesWithLicenceNumbers, Dictionary<string, DmsFileData>
-        LicenceNumbersWithFilenames)>
+    private static async Task<(Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
+            Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames)>
     GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
     {
-        var filenamesWithLicenceNumbers = new Dictionary<string, DmsFileData>();
-        var licenceNumbersWithFilenames = new Dictionary<string, DmsFileData>();
+        var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
+        var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
+        var licenceFinderResultsTask = cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        
         var allDestinationFilenames = await fileService.GetAllFilesAsync();
-
         var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
-        var licenceFinderResults = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+
+        var licenceFinderResults = await licenceFinderResultsTask;
 
         foreach (var licenceFinderResult in licenceFinderResults)
         {
@@ -213,33 +243,48 @@ public static class DmsHelper
             {
                 continue;
             }
-
-            // Fix casing
-            destinationFileName = allDestinationFilenames.First(fname =>
-                fname.Equals(destinationFileName, StringComparison.CurrentCultureIgnoreCase));
             
-            var regionId = RegionHelper.GetRegionId(licenceFinderResult.Region);
+            var (dmsFileData, naldLicence) = LicenceFinderResultToDmsAndNaldData(
+                licenceFinderResult,
+                destinationFileName);
             
-            var dmsFileData = new DmsFileData
-            {
-                DestinationFileName = destinationFileName,
-                NaldLicenceRef = licenceFinderResult.LicenseNumber,
-                PermitNumber = licenceFinderResult.PermitNumber,
-                DmsPath = licenceFinderResult.FileUrl,
-                StrippedLicenceNumber = FormattingHelper.StripForComparison(
-                    licenceFinderResult.LicenseNumber,
-                    regionId)!,
-                FileId = Guid.Parse(licenceFinderResult.FileId!),
-                RegionId = regionId
-            };
-
-            filenamesWithLicenceNumbers.Add(destinationFileName, dmsFileData);
-            licenceNumbersWithFilenames.TryAdd(dmsFileData.StrippedLicenceNumber, dmsFileData);
+            var strippedLicenceNumber = FormattingHelper.StripForComparison(
+                licenceFinderResult.LicenseNumber,
+                naldLicence.RegionCode)!;
+            
+            filenamesWithLicenceNumbers.Add(destinationFileName, (dmsFileData, naldLicence));
+            licenceNumbersWithFilenames.TryAdd(strippedLicenceNumber, (dmsFileData, naldLicence));
         }
         
         return (
             filenamesWithLicenceNumbers,
             licenceNumbersWithFilenames
         );
+    }
+
+    private static (DmsFileData DmsFileData, NaldLicenceSimple NaldLicence) LicenceFinderResultToDmsAndNaldData(
+        LicenceFinderResult licenceFinderResult,
+        string? destinationFileName)
+    {
+        if (string.IsNullOrEmpty(destinationFileName))
+        {
+            destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
+        }
+        
+        var naldLicence = new NaldLicenceSimple
+        {
+            RegionCode = (short)RegionHelper.GetRegionId(licenceFinderResult.Region),
+            LicenceNumber = licenceFinderResult.LicenseNumber
+        };
+        
+        var dmsFileData = new DmsFileData
+        {
+            DestinationFileName = destinationFileName,
+            PermitNumber = licenceFinderResult.PermitNumber, // TODO, DmsPermitNumber ?
+            DmsPath = licenceFinderResult.FileUrl,
+            FileId = Guid.Parse(licenceFinderResult.FileId!)
+        };
+
+        return (dmsFileData, naldLicence);
     }
 }

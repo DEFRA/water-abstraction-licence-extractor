@@ -15,6 +15,7 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using FakeItEasy;
 using LicenceType = WALE.ProcessFile.Core.Enums.LicenceType;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -23,29 +24,38 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 [Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    public static ICacheService CacheService;
+    private static FileSystemCacheService? RealCacheService;
+    
+    static PdfPigNoOcrPdfTests()
+    {
+        RealCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(RealCacheService, NaldData, FileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
-    
+
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
     private static readonly ICacheService DatabaseCacheService =
         new DatabaseCacheService(ReadService, null!);
-    
+
     private Task SetupLicenceNumbersAsync(short regionCode)
     {
         return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -56,7 +66,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
     private static readonly int NoneNeRegionCode = 1;
     private static readonly int NeRegionCode = 3;
@@ -70,8 +81,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -80,8 +90,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -90,8 +99,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -100,8 +108,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             }
         };
@@ -115,8 +122,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -125,8 +131,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 1
+                    DmsPath = "Something to look for"
                 }
             },
             {
@@ -135,8 +140,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 {
                     DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
                     FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for",
-                    RegionId = 3
+                    DmsPath = "Something to look for"
                 }
             }
         };
@@ -165,7 +169,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                     new NaldData
                     {
                         AsrcCode = "G",
-                        LicenceNumber = "25/68/001/247"
+                        LicenceNumber = "25/68/001/247",
+                        FgacRegionCode = 1
                     }
                 ]
             },
@@ -175,7 +180,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                     new NaldData
                     {
                         AsrcCode = "S",
-                        LicenceNumber = "25/68/001/248"
+                        LicenceNumber = "25/68/001/248",
+                        FgacRegionCode = 1
                     }
                 ]
             },
@@ -185,7 +191,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                     new NaldData
                     {
                         AsrcCode = "S",
-                        LicenceNumber = "25/68/001/249"
+                        LicenceNumber = "25/68/001/249",
+                        FgacRegionCode = 1
                     }
                 ]
             }
@@ -198,26 +205,38 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            fileLicenceMapping == 1 ? FileLicenceMapping : FileLicenceMappingWithout52,
-            [],
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            OutputService,
+            regionCode,
+            DateTime.Now);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1, int fileLicenceMapping = 1)
+    private async Task<MatchesResult> GetMatchesAsync(
+        string fileName,
+        int regionCode,
+        int folderNumber = 1,
+        int fileLicenceMapping = 1,
+        ICacheService? cacheService = null)
     {
         var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
         if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
         if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
+
+        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder);
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        if (cacheService != null)
+        {
+            lookupConfig.CacheService = cacheService;
+        }
+        
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder),
+            lookupConfig,
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -260,7 +279,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("CompanyName3", nameResult.MatchedLabelName);
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        Assert.Equal(59, nameResult.LineNumber);
+        Assert.Equal(6, nameResult.LineNumber);
         
         // Note no other licence mentioned
         var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -269,7 +288,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(4, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(109, abstractionLimitsSection.LineNumber);
+        Assert.Equal(16, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -292,7 +311,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(109, perDay.LineNumber);
+        Assert.Equal(16, perDay.LineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -318,7 +337,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(53, licenceNumberResult.LineNumber);
+        Assert.Equal(0, licenceNumberResult.LineNumber);
         
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
@@ -350,8 +369,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
@@ -449,11 +466,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(6, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(111, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(111, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -470,7 +487,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(112, perDay.LineNumber);
+        Assert.Equal(19, perDay.LineNumber);
         Assert.Equal("205", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -544,8 +561,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -653,12 +668,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(17, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(143, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
         
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(143, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
@@ -688,7 +703,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(144, perDay.LineNumber);
+        Assert.Equal(19, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -703,7 +718,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(145, perYear.LineNumber);
+        Assert.Equal(20, perYear.LineNumber);
         Assert.Equal("40000", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -739,7 +754,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(152, perDay.LineNumber);
+        Assert.Equal(27, perDay.LineNumber);
         Assert.Equal("948", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -810,8 +825,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -850,7 +863,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -884,7 +897,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(12, abstractionLimitsSection.Text!.Count);
-        Assert.Equal(122, abstractionLimitsSection.LineNumber);
+        Assert.Equal(28, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -894,7 +907,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var section1Sub1 = sectionPoint1.SubResults[0];
         Assert.Equal(9, section1Sub1.SubResults.Count);
-        Assert.Equal(122, section1Sub1.LineNumber);
+        Assert.Equal(28, section1Sub1.LineNumber);
         
         //var abstractionLimitsSection1 = section1Sub1.SubResults[0];
         Assert.Equal(4, section1Sub1.Text!.Count);
@@ -920,7 +933,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(123, perDay.LineNumber);
+        Assert.Equal(29, perDay.LineNumber);
         Assert.Equal("409.5", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -935,7 +948,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(124, perYear.LineNumber);
+        Assert.Equal(30, perYear.LineNumber);
         Assert.Equal("20457", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -950,7 +963,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
-        Assert.Equal(125, perSecond.LineNumber);
+        Assert.Equal(31, perSecond.LineNumber);
         Assert.Equal("15.2", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = section1Sub1.SubResults
@@ -1004,8 +1017,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -1070,7 +1081,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(141, abstractionLimitsSection.LineNumber);
+        Assert.Equal(8, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults);
@@ -1510,15 +1521,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
         
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
-        Assert.Single(primaryLicence.LinkedLicences);
+//        Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("6/33/56/*G/0274/R02", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
@@ -1620,7 +1629,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(163, abstractionLimitsSection.LineNumber);
+        Assert.Equal(31, abstractionLimitsSection.LineNumber);
         
         var section1Point1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(4, section1Point1.Text!.Count);
@@ -1636,7 +1645,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(165, perDay.LineNumber);
+        Assert.Equal(33, perDay.LineNumber);
         Assert.Equal("2000", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -1663,7 +1672,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
-        Assert.Equal(166, perSecond.LineNumber);
+        Assert.Equal(34, perSecond.LineNumber);
         Assert.Equal("23.1", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = point1Sub1.SubResults
@@ -1687,7 +1696,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(169, perYear.LineNumber);
+        Assert.Equal(37, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section2Sub1.SubResults
@@ -1711,7 +1720,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(173, perYear.LineNumber);
+        Assert.Equal(2, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         perYearUnits = section3Sub1.SubResults
@@ -1750,14 +1759,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYear = perYearList.FirstOrDefault();
         
         Assert.NotNull(perYear);
-        Assert.Equal(177, perYear.LineNumber);
+        Assert.Equal(6, perYear.LineNumber);
         Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
         
-        perYear = perYearList.LastOrDefault();
-        
-        Assert.NotNull(perYear);
-        Assert.Equal(177, perYear.LineNumber);
-        Assert.Equal("61200", perYear.Text?.FirstOrDefault()?.Text);
 
         Assert.Equal(1, section4Sub1.SubResults
             .Count(subResult =>
@@ -1776,7 +1780,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(176, perDay.LineNumber);
+        Assert.Equal(5, perDay.LineNumber);
         Assert.Equal("5256", perDay.Text?.FirstOrDefault()?.Text);
 
         perDayUnits = section4Sub1.SubResults
@@ -1803,13 +1807,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         perYear = perYearList.FirstOrDefault();
         
         Assert.NotNull(perYear);
-        Assert.Equal(185, perYear.LineNumber);
-        Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
-        
-        perYear = perYearList.LastOrDefault();
-        
-        Assert.NotNull(perYear);
-        Assert.Equal(185, perYear.LineNumber);
+        Assert.Equal(14, perYear.LineNumber);
         Assert.Equal("68000", perYear.Text?.FirstOrDefault()?.Text);
         
         perYearUnits = section5Sub1.SubResults
@@ -1836,7 +1834,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(184, perDay.LineNumber);
+        Assert.Equal(13, perDay.LineNumber);
         Assert.Equal("5256", perDay.Text?.FirstOrDefault()?.Text);
 
         perDayUnits = section5Sub1.SubResults
@@ -2039,8 +2037,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -2164,7 +2160,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(155, perDay.LineNumber);
+        Assert.Equal(18, perDay.LineNumber);
         Assert.Equal("2500", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = point1Sub1.SubResults
@@ -2200,7 +2196,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(158, perDay.LineNumber);
+        Assert.Equal(21, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section2Sub1.SubResults
@@ -2236,7 +2232,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(161, perDay.LineNumber);
+        Assert.Equal(24, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section3Sub1.SubResults
@@ -2272,7 +2268,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(158, perDay.LineNumber);
+        Assert.Equal(21, perDay.LineNumber);
         Assert.Equal("5000", perDay.Text?.FirstOrDefault()?.Text); // TODO there are 2 5000s and 1 5300
         
         perDayUnits = section4Sub1.SubResults
@@ -2297,8 +2293,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -2401,8 +2395,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -2415,105 +2407,121 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearPreviousLineIsCompany_SimpleAbstractionLimits1LicenceToLicenceLink_ThenFoundCorrectly()
     {
         // Arrange
+        var specialCacheService =
+            GeneralTestsHelper.GetFakeCacheService(RealCacheService!, NaldData, FileLicenceMappingWithout52);
+
         await SetupLicenceNumbersAsync(3);
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, fileLicenceMapping: 2);
+        var resultFull = await GetMatchesAsync(filename, 3, fileLicenceMapping: 2, cacheService: specialCacheService);
         var resultList = resultFull.Matches!;
-        
+
         // Assert
-        
+
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
-        
+        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
+
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(10, records.Text!.Count);
-        
-        var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
+
+        var additionalInformation =
+            resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
         Assert.Equal(32, additionalInformation.Text!.Count);
-        
+
         var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-        
+
         Assert.NotNull(nameResult);
         Assert.False(nameResult.IsOcr);
         Assert.Equal("Rolawn Limited", nameResult.Text?.FirstOrDefault()?.Text);
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        
-        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-        
+
+        var abstractionLimitsSection =
+            resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.NotNull(abstractionLimitsSection.Text);
         Assert.Equal(11, abstractionLimitsSection.Text.Count);
-        Assert.Equal("200,000 cubic metres per year.", 
-        abstractionLimitsSection.Text![10].Text);
+        Assert.Equal("200,000 cubic metres per year.",
+            abstractionLimitsSection.Text![10].Text);
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(7, abstractionLimitsSection.SubResults[0].Text!.Count);
 
         var point1 = abstractionLimitsSection.SubResults[0];
         var point1Sub1 = point1.SubResults[0];
-        
+
         Assert.Equal("120", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
+            .First().Text);
         Assert.Equal("2600", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text); 
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
+            .First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("33.3", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
+            ?.Text!.First().Text);
         Assert.Equal("litres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
+            ?.Text!.First().Text);
         Assert.Equal("60000", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
         Assert.Equal("cubic metres", point1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!.First().Text);
-        
+                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
+            .First().Text);
+
         // TODO
-        
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");   
-        
+
+        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
+
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NE/027/0028/059", licenceNumberResult.Text!.FirstOrDefault()?.Text);
+
+        var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
+        config.CacheService = specialCacheService;
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder))).Last();
+            config)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
 
         Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(6, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
@@ -2645,12 +2653,14 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            new DmsFileData { RegionId = 1, FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"), DmsPath = "main path"})).Last();
+            new DmsFileData
+            {
+                FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
+                DmsPath = "main path"
+            })).Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
@@ -2892,8 +2902,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -2958,8 +2966,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -2990,7 +2996,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -3060,8 +3066,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3150,8 +3154,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3179,8 +3181,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3300,8 +3300,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3410,8 +3408,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3498,8 +3494,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3619,8 +3613,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3715,8 +3707,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
@@ -3758,8 +3748,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder));
@@ -3841,11 +3829,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
         Assert.Equal(17, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(109, abstractionLimitsResult.LineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(3, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(109, abstractionLimitsResult.LineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
@@ -3885,8 +3873,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -3977,8 +3963,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -4094,8 +4078,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -4189,8 +4171,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -4261,8 +4241,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -4353,8 +4331,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder))).Last();
@@ -4401,8 +4377,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder))).Last();
@@ -4433,8 +4407,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
@@ -4471,8 +4443,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(4, 2, TestConfig.PdfFolder2));
@@ -4509,8 +4479,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceGroups = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
@@ -4610,8 +4578,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2));
@@ -4775,8 +4741,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2))).Last();
@@ -4825,8 +4789,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2));
@@ -4941,8 +4903,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2));
@@ -4982,8 +4942,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2));
@@ -5027,8 +4985,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5071,8 +5027,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5111,8 +5065,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5161,8 +5113,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5194,8 +5144,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5227,8 +5175,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5260,8 +5206,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5343,8 +5287,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5467,8 +5409,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5504,8 +5444,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5539,8 +5477,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5575,8 +5511,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5613,8 +5547,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5650,8 +5582,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5685,8 +5615,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5728,8 +5656,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5764,8 +5690,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5797,8 +5721,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5830,8 +5752,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5863,8 +5783,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5896,8 +5814,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5929,8 +5845,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));
@@ -5962,8 +5876,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            NaldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3));

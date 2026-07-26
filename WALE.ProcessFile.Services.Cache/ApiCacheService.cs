@@ -10,7 +10,6 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = true; // Because its back by a DB
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
     public Task SetupAsync()
@@ -209,7 +208,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             $"&noOcrServiceName={noOcrServiceName}&imageNumber={imageNumber}&pageNumber={pageNumber}" +
             $"&extension={extension}&processRunId={processRunId}";
 
-        var contentType = extension.Equals("png", StringComparison.InvariantCultureIgnoreCase)
+        var contentType = extension.Equals("png", StringComparison.OrdinalIgnoreCase)
             ? "image/png"
             : "image/jpeg";
         
@@ -524,6 +523,40 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        var path = $"/Extractor/Dms/GetFileIdInformation?fileId={fileId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DmsFileIdInformation>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+    
+    public async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
+    {
+        var path = $"/Extractor/Dms/GetFileData?licenceNumber={licenceNumber}";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
+        
+        var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+        
+        return JsonSerializer.Deserialize<DmsFileData>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         var path = "/Extractor/Dms/AddFileIdInformation";
@@ -739,5 +772,53 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return JsonSerializer.Deserialize<HashSet<string>>(
             content,
             JsonHelper.GetSerializerOptions())!; 
+    }
+
+    public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        var path = "/Extractor/NaldData/GetImpoundmentAndAbstractionLicences";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<NaldLicence>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    {
+        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+        
+        return JsonSerializer.Deserialize<NaldData>(
+            content,
+            JsonHelper.GetSerializerOptions());
+    }
+
+    public async Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        var path = $"/Extractor/LicenceFinder/Get?fileId={fileId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+
+        var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        
+        return JsonSerializer.Deserialize<LicenceFinderResult>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
     }
 }

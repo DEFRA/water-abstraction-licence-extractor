@@ -127,7 +127,9 @@ public class PdfDocument(
         set => _pages = value;
     }
 
-    public async Task<List<(string Provider, SKBitmap Bitmap)>> GetPageAsSkBitmapAsync(int pageNumber, string noOcrServiceName)
+    public async Task<List<(string Provider, SKBitmap Bitmap)>> GetPageAsSkBitmapAsync(
+        int pageNumber,
+        string noOcrServiceName)
     {
         if (FromCache && InternalDocument == null)
         {
@@ -141,9 +143,8 @@ public class PdfDocument(
             pageNumber,
             3F);
 
-        var docnetBitmap = await AlternativeImageProvider!.GetPageAsSkBitmapAsync(
-            FileService,
-            PdfFilename,
+        var docnetBitmap = AlternativeImageProvider!.GetPageAsSkBitmap(
+            InternalDocument.FileStream,
             1080,
             1920,
             pageNumber);

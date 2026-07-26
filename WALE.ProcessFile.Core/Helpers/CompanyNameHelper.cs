@@ -7,9 +7,16 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class CompanyNameHelper
 {
+    private static HashSet<string>? _firstNames;
+    
     public static async Task<HashSet<string>> GetFirstNamesCsvFromFileAsync()
     {
-        var returnList = new HashSet<string>();
+        if (_firstNames != null)
+        {
+            return _firstNames;
+        }
+        
+        var returnList = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var dtStart = DateTime.Now;
 
         var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -32,6 +39,8 @@ public static class CompanyNameHelper
         }
 
         ConsoleHelper.WriteLine($"INFO - {nameof(CompanyNameHelper)} - Loading FirstNamesCsv took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+        
+        _firstNames = returnList;
         return returnList;
     }
     
@@ -50,7 +59,7 @@ public static class CompanyNameHelper
         
         return Prefixes
             .Any(prefix => text.StartsWith(prefix,
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.OrdinalIgnoreCase));
     }
     
     public static bool EndsWithCompanyOrPersonalSuffix(string? text)
@@ -62,7 +71,7 @@ public static class CompanyNameHelper
         
         return CompanySuffixes
             .Any(suffix => text.EndsWith(suffix,
-                StringComparison.InvariantCultureIgnoreCase));
+                StringComparison.OrdinalIgnoreCase));
     }
     
     private static readonly List<string> Prefixes =

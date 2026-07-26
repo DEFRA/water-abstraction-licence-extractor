@@ -44,7 +44,7 @@ public static partial class Date
             return false;
         }
 
-        var tweakedText = text.Replace("o", "0", StringComparison.InvariantCultureIgnoreCase);
+        var tweakedText = text.Replace("o", "0", StringComparison.OrdinalIgnoreCase);
         
         return YearRegex().IsMatch(tweakedText)
             || ContainsMonth(tweakedText)
@@ -193,12 +193,12 @@ public static partial class Date
     {
         output = input;
 
-        if (!input.Contains(match, StringComparison.InvariantCultureIgnoreCase))
+        if (!input.Contains(match, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
         
-        output = input.Replace(match, replaceWith, StringComparison.InvariantCultureIgnoreCase);
+        output = input.Replace(match, replaceWith, StringComparison.OrdinalIgnoreCase);
     }
     
     private static bool ContainsMonthWord(string? input, out string? matchedWord, out int monthPosition)
@@ -215,171 +215,171 @@ public static partial class Date
         ReplaceIfContains(input, "NAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
         ReplaceIfContains(input, "HAY", "MAY", out input); // misreading of TH - TODO should use autocorrect
         
-        if (input.Contains("january", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("january", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "january";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("february", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("february", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "february";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("march", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("march", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "march";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("april", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("april", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "april";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("may", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("may", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "may";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("june", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("june", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "june";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("july", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("july", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "july";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("august", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("august", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "august";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("september", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("september", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "september";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("october", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("october", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "october";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("november", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("november", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "november";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("december", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("december", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "december";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("jan", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("jan", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "jan";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("feb", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("feb", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "feb";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("mar", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("mar", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "mar";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("apr", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("apr", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "apr";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("may", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("may", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "may";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("jun", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("jun", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "jun";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("jul", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("jul", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "jul";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("aug", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("aug", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "aug";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("sep", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("sep", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "sep";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("oct", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("oct", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "oct";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("nov", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("nov", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "nov";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
         
-        if (input.Contains("dec", StringComparison.InvariantCultureIgnoreCase))
+        if (input.Contains("dec", StringComparison.OrdinalIgnoreCase))
         {
             matchedWord = "dec";
-            monthPosition = input.IndexOf(matchedWord, StringComparison.InvariantCultureIgnoreCase);
+            monthPosition = input.IndexOf(matchedWord, StringComparison.OrdinalIgnoreCase);
             return true;
         }
 
@@ -415,7 +415,7 @@ public static partial class Date
             " December"
         };
         
-        return months.Any(m => text.Contains(m, StringComparison.InvariantCultureIgnoreCase));
+        return months.Any(m => text.Contains(m, StringComparison.OrdinalIgnoreCase));
     }
     
     [GeneratedRegex(@"18 ?\d\d|19 ?\d\d|20 ?\d\d")]

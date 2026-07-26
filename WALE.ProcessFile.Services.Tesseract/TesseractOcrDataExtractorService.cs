@@ -6,6 +6,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Services.Cache;
 
 namespace WALE.ProcessFile.Services.Tesseract;
 
@@ -104,8 +105,7 @@ public class TesseractOcrDataExtractorService(
                     imageReference,
                     pdfDocument.FileId,
                     isPageScreenshot,
-                    processRunId,
-                    cacheService.UsesDatabase);
+                    processRunId);
 
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
@@ -178,8 +178,7 @@ public class TesseractOcrDataExtractorService(
         string imageReference,
         Guid fileId,
         bool isPageScreenshot,
-        int processRunId,
-        bool isDbBased)
+        int processRunId)
     {
         try
         {
@@ -190,7 +189,7 @@ public class TesseractOcrDataExtractorService(
                 ConsoleHelper.WriteLine($"INFO - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - External process called");
             }
             
-            var fileMode = isDbBased ? "Database" : "File";
+            var fileMode = cacheService is ApiCacheService or DatabaseCacheService ? "Database" : "File";
 
             if (string.IsNullOrWhiteSpace(cacheService.CacheFolderOrUrl))
             {

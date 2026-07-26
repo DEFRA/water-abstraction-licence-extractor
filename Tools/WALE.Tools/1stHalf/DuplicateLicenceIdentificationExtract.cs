@@ -299,8 +299,8 @@ public static class DuplicateLicenceIdentificationExtract
         
         return filesForPermitAndSize
             .Where(
-                f => f.FileSize?.Equals(file.FileSize, StringComparison.InvariantCultureIgnoreCase) == true
-                    && f.FileUrl?.Equals(file.FileUrl, StringComparison.InvariantCultureIgnoreCase) != true)
+                f => f.FileSize?.Equals(file.FileSize, StringComparison.OrdinalIgnoreCase) == true
+                    && f.FileUrl?.Equals(file.FileUrl, StringComparison.OrdinalIgnoreCase) != true)
             .ToList();
     }
 

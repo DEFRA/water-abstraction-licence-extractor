@@ -8,7 +8,7 @@ namespace WALE.ProcessFile.Services.Services;
 
 public class ApiMessageQueueService(HttpClient httpClient) : IMessageQueueService
 {
-    public async Task AddToFileProcessQueue(SingleFileProcessRequest request)
+    public async Task AddToFileProcessQueue(FileProcessSingleRequest request)
     {
         var path = "/BFF/Message/SendFileProcessSingleMessage";
         var json = JsonSerializer.Serialize(request, JsonHelper.GetSerializerOptions());

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Amazon.SQS;
+using Amazon.SQS.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
@@ -15,33 +16,50 @@ public class MessageController(
     IAmazonSQS sqsClient) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync()
+    public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
+        [FromQuery] int delayInSeconds = 0)
     {
-        var payload = new
+        var payload = JsonSerializer.Serialize(new
         {
             RequestedAt = DateTime.UtcNow
-        };
+        });
 
-        var messageBody = JsonSerializer.Serialize(payload);
-
-        await sqsClient.SendMessageAsync(awsQueueConfig.Value.OrchestratorQueue, messageBody);
+        await sqsClient.SendMessageAsync(
+            new SendMessageRequest
+            {
+                QueueUrl = awsQueueConfig.Value.OrchestratorQueue,
+                MessageBody = payload,
+                DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
+            });
+        
         return Ok();
     }
     
     [HttpPost]
     public async Task<IActionResult> SendFileProcessSingleMessageAsync(
-        [FromBody] SendFileProcessSingleMessageRequest request)
+        [FromBody] FileProcessSingleRequest request)
     {
-        var payload = new
+        var payload = JsonSerializer.Serialize(new
         {
+            request.DestinationFileName,
+            request.DmsPath,
+            request.FileId,
             request.FilePath,
+            request.PermitNumber,
+            request.RegionId,
             request.ProcessRunId,
-            RequestedAt = DateTime.UtcNow
-        };
-
-        var messageBody = JsonSerializer.Serialize(payload);
-
-        await sqsClient.SendMessageAsync(awsQueueConfig.Value.FileProcessQueue, messageBody);
+            request.RequestedAt,
+            request.LockRetryCount
+        });
+        
+        await sqsClient.SendMessageAsync(
+            new SendMessageRequest
+            {
+                QueueUrl = awsQueueConfig.Value.FileProcessQueue,
+                MessageBody = payload,
+                DelaySeconds = request.DelayInSeconds > 0 ? request.DelayInSeconds : null
+            });
+        
         return Ok();
     }
 }

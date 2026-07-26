@@ -91,9 +91,9 @@ public class AzureOpenAiOcrDataExtractorService(
         }
 
         if (string.IsNullOrEmpty(response)
-            || response.Contains("I am unable", StringComparison.InvariantCultureIgnoreCase)
-            || response.Contains("I am not able", StringComparison.InvariantCultureIgnoreCase)
-            || response.StartsWith("I'm sorry", StringComparison.InvariantCultureIgnoreCase))
+            || response.Contains("I am unable", StringComparison.OrdinalIgnoreCase)
+            || response.Contains("I am not able", StringComparison.OrdinalIgnoreCase)
+            || response.StartsWith("I'm sorry", StringComparison.OrdinalIgnoreCase))
         {
             return new List<DocumentLine>();
         }

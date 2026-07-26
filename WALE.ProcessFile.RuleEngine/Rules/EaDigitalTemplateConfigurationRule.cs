@@ -12,8 +12,7 @@ public class EaDigitalTemplateConfigurationRule : IRule<TemplateFinderResult>
 
     public bool CanApply(MatchesResult content)
     {
-        return content.ServicesUsed.Count == 1
-               && content.ServicesUsed.First().Contains("pig", StringComparison.OrdinalIgnoreCase);
+        return !content.ScannedFile;
     }
 
     public TemplateFinderResult Apply(MatchesResult content)

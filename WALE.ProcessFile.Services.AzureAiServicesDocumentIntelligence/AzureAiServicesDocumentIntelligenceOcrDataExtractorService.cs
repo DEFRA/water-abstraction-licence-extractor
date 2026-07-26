@@ -147,7 +147,7 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
             {
                 var errorCode = ocrEx.Message;
 
-                if (errorCode.Contains("InvalidContentDimensions", StringComparison.InvariantCultureIgnoreCase))
+                if (errorCode.Contains("InvalidContentDimensions", StringComparison.OrdinalIgnoreCase))
                 {
                     var dataEmpty = JsonSerializer.Serialize(
                         new List<DocumentIntelligenceLineWithWords>(),
@@ -168,8 +168,8 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
                 throw;
             }
             
-            if (!imageReference.Contains(".jpg", StringComparison.InvariantCultureIgnoreCase)
-                && !imageReference.Contains("-jpg", StringComparison.InvariantCultureIgnoreCase))
+            if (!imageReference.Contains(".jpg", StringComparison.OrdinalIgnoreCase)
+                && !imageReference.Contains("-jpg", StringComparison.OrdinalIgnoreCase))
             {
                 throw;
             }

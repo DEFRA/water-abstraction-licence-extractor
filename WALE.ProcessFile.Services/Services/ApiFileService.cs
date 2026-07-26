@@ -172,4 +172,20 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         var content = await response.Content.ReadAsStringAsync();
         return "true".Equals(content, StringComparison.OrdinalIgnoreCase);
     }
+
+    public async Task RenameAsync(string originalFilename, string newFilename)
+    {
+        var path = "/BFF/Files/Rename";
+       
+        var json = JsonSerializer.Serialize(new
+        {
+            originalFilename,
+            newFilename
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
 }

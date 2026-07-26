@@ -75,9 +75,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
-        response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
 
         processRun.ProcessRunId = int.Parse(content);
         return processRun;
@@ -231,9 +231,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
+    public async Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = "/Extractor/Licence/Update";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            licenceId,
+            processRunId,
+            licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
@@ -269,6 +282,47 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    {
+        var path = "/Extractor/MatchResult/SaveStub";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            filename,
+            fileId,
+            ProcessRunId = processRunId
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
+    }
+
+    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    {
+        var path = "/Extractor/MatchResult/SaveError";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            filename,
+            fileId,
+            processRunId,
+            error
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return int.Parse(content);
+    }
+
     public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var path = "/Extractor/MatchResult/Save";
@@ -283,9 +337,10 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
-        response.EnsureSuccessStatusCode();
-
+        
         var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        
         return int.Parse(content);
     }
 
@@ -431,7 +486,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        processRun.EndDateTimeUtc = DateTime.Parse(content).ToUniversalTime();
+        processRun.EndDateTimeUtc = DateTime.Parse(content);
     }
 
     public async Task<List<ProcessRun>> GetProcessRunsAsync()
@@ -525,14 +580,58 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    {
+        var path = $"/Extractor/Licence/GetByFileId?fileId={fileId}&processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        var path = $"/Extractor/Licence/GetByLicenceNumber?licenceNumber={licenceNumber}&processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         throw new NotImplementedException();
     }
 
-    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
+    public async Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/GetMatchesResult?fileId={fileId}&processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return string.IsNullOrEmpty(content)
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)

@@ -117,14 +117,19 @@ export class Client {
 
     /**
      * @param permitNumber (optional) 
+     * @param filterContainedIn (optional) 
      * @return OK
      */
-    getOutgoing(permitNumber: string | undefined): Promise<LinkedLicence[]> {
+    getOutgoing(permitNumber: string | undefined, filterContainedIn: boolean | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/GetOutgoing?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
         else if (permitNumber !== undefined)
             url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
+        if (filterContainedIn === null)
+            throw new globalThis.Error("The parameter 'filterContainedIn' cannot be null.");
+        else if (filterContainedIn !== undefined)
+            url_ += "filterContainedIn=" + encodeURIComponent("" + filterContainedIn) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

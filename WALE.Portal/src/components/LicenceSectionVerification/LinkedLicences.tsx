@@ -61,54 +61,15 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setIsLoading(true);
                 setError(null);
                 try {
-                    const results = await waleApiClient.getOutgoing(permitNumber);
-                    setLinkedLicences(results || []);
-                    setScrapedData(results?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                    const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
+                    setLinkedLicences(scrapeResults || []);
+                    setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
-                        const verifications = [...(outputListDataItem?.licenceSectionVerifications?.find(v => v.licenceSectionName === 'Linked Licences')?.licenceSectionItems || [])]
-                            .sort((a, b) => (b.createdDateTimeUtc?.getTime() || 0) - (a.createdDateTimeUtc?.getTime() || 0));
+                        const currentOutgoingLinkedLicences = [...(outputListDataItem?.linkedLicences || [])];
 
-                        const outgoingLinkedLicences = [...(results || [])];
-
-                        verifications.forEach(verification => {
-                            if (verification.licenceSectionItemId === 'None Outgoing') {
-                                return;
-                            }
-
-                            try {
-                                const rawValue = verification.licenceSectionOverrideValue 
-                                    ?? verification.licenceSectionSnapshotValue
-                                    ?? verification.licenceSectionScrapedValue;
-                                if (!rawValue) return;
-
-                                const overrideLicence = LinkedLicence.fromJS(JSON.parse(rawValue));
-                                const existingIndex = outgoingLinkedLicences.findIndex(x => x.licenceNumber === verification.licenceSectionItemId);
-
-                                switch (verification.verificationType) {
-                                    case "Confirmed":
-                                    case "AutoConfirm":
-                                    case "Edited":
-                                    case "Added":
-                                        if (existingIndex === -1) {
-                                            outgoingLinkedLicences.push(overrideLicence);
-                                        } else {
-                                            outgoingLinkedLicences.splice(existingIndex, 1, overrideLicence);
-                                        }
-                                        break;
-                                    case "Removed":
-                                        if (existingIndex !== -1) {
-                                            outgoingLinkedLicences.splice(existingIndex, 1);
-                                        }
-                                        break;
-                                }
-                            } catch (e) {
-                                console.error("Failed to process verification", verification, e);
-                            }
-                        });
-
-                        setLinkedLicences(outgoingLinkedLicences);
-                        setSnapshotData(outgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                        setLinkedLicences(currentOutgoingLinkedLicences);
+                        setSnapshotData(currentOutgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
                     }
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);

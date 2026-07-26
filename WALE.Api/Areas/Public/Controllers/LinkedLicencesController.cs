@@ -20,10 +20,10 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         {
             return NotFound();
         }
-        
+
         return Ok(linkedLicences);
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetIncomingAsync([FromQuery] string permitNumber)
     {
@@ -37,12 +37,13 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
 
         var filtered = linkedLicences
             .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == InformationDirection.Incoming));
-        
+
         return Ok(filtered);
     }
-    
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetOutgoingAsync([FromQuery] string permitNumber)
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetOutgoingAsync([FromQuery] string permitNumber,
+        [FromQuery] bool filterContainedIn = false)
     {
         var linkedLicences =
             await outputService.GetLinkedLicencesAsync(permitNumber);
@@ -51,13 +52,24 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         {
             return NotFound();
         }
-        
+
         var filtered = linkedLicences
-            .Where(ll => ll.ContainedIn!.Any(cc => cc.Direction == InformationDirection.Outgoing));
-        
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.Outgoing) == true);
+
+        if (filterContainedIn)
+        {
+            // Only return the outgoing links even if there are also incoming links for the same licence
+            foreach (var licence in filtered)
+            {
+                licence.ContainedIn = licence.ContainedIn!
+                    .Where(c => c.Direction == InformationDirection.Outgoing)
+                    .ToArray();
+            }
+        }
+
         return Ok(filtered);
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetAbstractionAsync([FromQuery] string permitNumber)
     {
@@ -68,15 +80,15 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         {
             return NotFound();
         }
-        
+
         var filtered = linkedLicences
             .Where(ll => ll.LicenceType is LicenceType.SurfaceWaterAbstraction
                 or LicenceType.GroundWaterAbstraction
                 or LicenceType.Abstraction);
-        
+
         return Ok(filtered);
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetImpoundmentAsync([FromQuery] string permitNumber)
     {
@@ -87,10 +99,10 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
         {
             return NotFound();
         }
-        
+
         var filtered = linkedLicences
             .Where(ll => ll.LicenceType == LicenceType.Impoundment);
-        
+
         return Ok(filtered);
     }
 }

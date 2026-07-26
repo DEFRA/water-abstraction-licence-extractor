@@ -202,11 +202,12 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
 
         const string sql = """
-                           SELECT licence_number, file_id
+                           SELECT max(licence_number) AS licence_number, file_id
                            FROM licence
                            WHERE process_run_id = @ProcessRunId
                              AND licence_number IS NOT NULL
-                             AND file_id IS NOT NULL;
+                             AND file_id IS NOT NULL
+                           GROUP BY file_id;
                            """;
 
         var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(

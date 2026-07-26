@@ -1,5 +1,5 @@
 import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
-import {type Licence, LinkedLicence} from "../../api/generated/apiClient.ts";
+import {type Licence, LinkedLicence, InformationDirection} from "../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
@@ -66,10 +66,17 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
-                        const currentOutgoingLinkedLicences = [...(outputListDataItem?.linkedLicences || [])];
+                        const currentOutgoingLinkedLicences = (outputListDataItem?.linkedLicences || [])
+                            .filter(ll => ll.containedIn?.some(c => c.direction === InformationDirection.Outgoing))
+                            .map(ll => {
+                                const licence = LinkedLicence.fromJS(ll);
+                                licence.containedIn = (licence.containedIn || [])
+                                    .filter(c => c.direction === InformationDirection.Outgoing);
+                                return licence;
+                            });
 
                         setLinkedLicences(currentOutgoingLinkedLicences);
-                        setSnapshotData(currentOutgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                        setSnapshotData(currentOutgoingLinkedLicences.map(ll => LinkedLicence.fromJS(ll)));
                     }
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);

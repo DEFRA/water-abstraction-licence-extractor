@@ -48,15 +48,15 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var completeNumber = 1;
         var fileNumber = 1;
         
-        var allLatestLicenceSectionVerificationsTask =
-            outputService.GetLatestLicenceSectionVerificationsAsync();
+        var verificationsBySectionTask = outputService.GetVerificationLookupsBySectionNameAsync(processRunId);
+        var fileIdTask = outputService.GetLicenceFileIdsAsync(processRunId);
 
         var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
         var licences = await outputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences); 
         
-        var allLatestLicenceSectionVerifications =
-            (await allLatestLicenceSectionVerificationsTask).ToList();
+        var verificationsBySection = await verificationsBySectionTask;
+        var fileIdToLicenceNumberMapping = await fileIdTask;
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == LicenceStatus.Ok)
@@ -71,7 +71,8 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
             processRunId,
-            allLatestLicenceSectionVerifications);
+            verificationsBySection,
+            fileIdToLicenceNumberMapping);
 
         // TODO we've really got to do this in SQL as it will be broken now
         if (!string.IsNullOrEmpty(query.ShortLicenceSetId))
@@ -87,13 +88,15 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
             if (query.VerificationType == "NoVerification")
             {
                 paginationListData = paginationListData
-                    .Where(x => x.latestLicenceSectionVerifications ==null || x.latestLicenceSectionVerifications.Count == 0)
+                    .Where(x => x.licenceSectionVerifications == null || x.licenceSectionVerifications.Length == 0)
                     .ToList();
             }
             paginationListData = paginationListData
-                .Where(x => x.latestLicenceSectionVerifications?
-                    .Any(item => item.VerificationType?.Equals(query.VerificationType) == true) == true)
+                .Where(x => x.licenceSectionVerifications?
+                    .Any(item => item.LicenceSectionItems
+                        .Any(i => i.VerificationTypes.Contains(query.VerificationType))) == true)
                 .ToList();
+            ;
         }
 
         var processRun = new ProcessRunResponse

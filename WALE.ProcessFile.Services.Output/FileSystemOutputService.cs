@@ -346,7 +346,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public
+        Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
     {
         throw new NotImplementedException();
     }
@@ -372,6 +378,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

@@ -92,7 +92,7 @@ public interface IDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
 
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
@@ -121,4 +121,6 @@ public interface IDatabaseReadService
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
+
+    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
 }

@@ -5,8 +5,6 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IVerificationOutputStrategy
 {
     string SectionName { get; }
-    void HandleVerifications(
-        IEnumerable<LicenceSectionVerification> verifications,
-        OutputListDataItem listRow,
-        IEnumerable<InvertedLicenceSectionVerification> invertedVerifications);
+    void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups sectionVerificationLookups,
+        Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping);
 }

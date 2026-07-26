@@ -668,6 +668,28 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             parameters);
     }
+    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT max(licence_number) AS licence_number, file_id
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                             AND licence_number IS NOT NULL
+                             AND file_id IS NOT NULL
+                           GROUP BY file_id;
+                           """;
+
+        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
+
+        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
+    }
+
     public async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
         await using var connection = GetPostgresConnection();
@@ -2169,11 +2191,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new { LicenceFileId = licenceFileId });
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT DISTINCT ON (licence_file_id, licence_section_name, licence_section_item_id, verification_type)
+                           SELECT
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
                                process_run_id AS ProcessRunId,
@@ -2186,18 +2208,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                notes AS Notes,
                                created_date_time_utc AS CreatedDateTimeUtc
                            FROM licence_section_verification
+                           WHERE process_run_id <= @MaxProcessRunId
                            ORDER BY 
                                licence_file_id, 
                                licence_section_name, 
-                               licence_section_item_id,
-                               verification_type,
-                               created_date_time_utc DESC
+                               created_date_time_utc DESC,
+                               licence_section_verification_id DESC
                            """;
 
         return await QueryAsync<LicenceSectionVerification>(
             connection,
             sql,
-            0);
+            0,
+            new { MaxProcessRunId = maxProcessRunId });
     }
 
     public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)

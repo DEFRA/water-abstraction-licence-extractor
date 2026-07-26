@@ -92,10 +92,10 @@ public static class JsOutputHelper
         };
     }
 
-    public static IReadOnlyList<OutputListDataItem> ToListData(
-        List<IntermediateOutputLicence> outputLines,
+    public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
         int processRunId,
-        List<LicenceSectionVerification> allLatestLicenceSectionVerifications)
+        Dictionary<string, LicenceVerificationLookups> verificationLookups,
+        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -105,27 +105,12 @@ public static class JsOutputHelper
                 new LinkedLicencesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
 
-        var verificationsByFileId = allLatestLicenceSectionVerifications
-            .GroupBy(lsv => lsv.LicenceFileId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-        
-        var invertedVerificationsByItemId = allLatestLicenceSectionVerifications
-            .Where(lsv => lsv.LicenceSectionItemId != null)
-            .Join(outputLines,
-                lsv => lsv.LicenceFileId,
-                ol => ol.DmsFileId,
-                (lsv, ol) => new InvertedLicenceSectionVerification
-                {
-                    Verification = lsv,
-                    SourceLicenceNumber = ol.LicenceNumber
-                })
-            .GroupBy(x => x.Verification.LicenceSectionItemId!)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        var verificationSectionNames = verificationLookups.Keys.ToList();
 
         var orderedOutputLines = outputLines
             .OrderBy(ol => ol.Filename)
             .ToList();
-        
+
         foreach (var outputLine in orderedOutputLines)
         {
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
@@ -156,18 +141,6 @@ public static class JsOutputHelper
                 })
                 .ToArray() ?? [];
 
-            var latestLicenceSectionVerifications =
-                outputLine.DmsFileId.HasValue && verificationsByFileId != null &&
-                    verificationsByFileId.TryGetValue(outputLine.DmsFileId.Value, out var fileVerifications)
-                ? fileVerifications
-                : null;
-            
-            var invertedLatestLicenceSectionVerifications =
-                outputLine.LicenceNumber != null && invertedVerificationsByItemId != null &&
-                    invertedVerificationsByItemId.TryGetValue(outputLine.LicenceNumber, out var invertedItemVerifications)
-                ? invertedItemVerifications
-                : null;
-            
             var listRow = new OutputListDataItem
             {
                 processRunId = processRunId,
@@ -187,39 +160,19 @@ public static class JsOutputHelper
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
-                licenceSets = licenceSets,
-                latestLicenceSectionVerifications = latestLicenceSectionVerifications
+                licenceSets = licenceSets
             };
 
-            var groupedVerifications = (listRow.latestLicenceSectionVerifications ?? [])
-                .Where(verification =>
-                    verification.ProcessRunId <= processRunId &&
-                    verification.LicenceSectionName != null)
-                .GroupBy(verification => verification.LicenceSectionName!)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var groupedInvertedVerifications = (invertedLatestLicenceSectionVerifications ?? [])
-                .Where(x =>
-                    x.Verification.ProcessRunId <= processRunId &&
-                    x.Verification.LicenceSectionName != null)
-                .GroupBy(x => x.Verification.LicenceSectionName!)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var allSectionNames = groupedVerifications.Keys.Union(groupedInvertedVerifications.Keys);
-
-            foreach (var sectionName in allSectionNames)
+            foreach (var sectionName in verificationSectionNames)
             {
-                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy))
+                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy)
+                    || !verificationLookups.TryGetValue(sectionName, out var sectionVerificationLookups))
                 {
                     continue;
                 }
 
-                var sectionVerifications =
-                    groupedVerifications.GetValueOrDefault(sectionName) ?? [];
-                var sectionInvertedVerifications =
-                    groupedInvertedVerifications.GetValueOrDefault(sectionName) ?? [];
-
-                strategy.HandleVerifications(sectionVerifications, listRow, sectionInvertedVerifications);
+                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
+                    outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);
             }
 
             listData.Add(listRow);

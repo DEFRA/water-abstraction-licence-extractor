@@ -16,6 +16,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
     const notes = verification.notes;
     const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleDateString() : 'N/A';
     const dateTime = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleString() : 'N/A';
+    const itemId = verification.licenceSectionItemId;
 
     return (
         <div className="licence-section-verification-history" style={{ border: '1px solid #ccc', marginBottom: '10px', borderRadius: '4px' }}>
@@ -32,7 +33,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
-                    {sectionName} - <span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span> - {date}
+                    {sectionName} - <span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span>{itemId && (<> -  {itemId}</>)} - {date}
                 </h3>
                 <div className="licence-section-actions">
                     <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>

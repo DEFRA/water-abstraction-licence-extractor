@@ -658,7 +658,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return licenceSectionVerifications;
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
     {
         var path = $"/BFF/FileData/GetLatestLicenceSectionVerifications";
         
@@ -675,6 +675,12 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         }
         
         return licenceSectionVerifications;
+    }
+
+    public
+        Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
+    {
+        throw new NotImplementedException();
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
@@ -727,6 +733,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     }
 
     public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

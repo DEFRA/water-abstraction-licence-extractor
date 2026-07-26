@@ -74,9 +74,9 @@ public class FileDataController(IOutputService outputService) : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetAllVerificationsAsync([FromQuery] int maxProcessRunId = int.MaxValue)
     {
-        var results = await outputService.GetLatestLicenceSectionVerificationsAsync();
+        var results = await outputService.GetAllVerificationsAsync(maxProcessRunId);
         return Ok(results);
     }
 

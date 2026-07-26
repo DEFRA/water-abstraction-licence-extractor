@@ -23,9 +23,13 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
 
-        const noneOutgoingVerification = outputListDataItem?.licenceSectionVerifications
-            ?.find(v => v.licenceSectionName === 'Linked Licences')
-            ?.licenceSectionItems?.find(v => v.licenceSectionItemId === 'None Outgoing');
+        const noneOutgoingVerification = (history || [])
+            .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === 'None Outgoing')
+            .sort((a, b) => {
+                const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+                const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+                return dateB - dateA;
+            })[0];
 
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);

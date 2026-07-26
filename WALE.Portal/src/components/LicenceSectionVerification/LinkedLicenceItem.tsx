@@ -284,9 +284,13 @@ export const LinkedLicenceItem = ({
                         const licenceNumber = linkedLicence.licenceNumber;
                         if (!licenceNumber || isEditing) return null;
                         
-                        const latestVerification = outputListDataItem?.licenceSectionVerifications
-                            ?.find(v => v.licenceSectionName === 'Linked Licences')
-                            ?.licenceSectionItems?.find(v => v.licenceSectionItemId === licenceNumber);
+                        const latestVerification = (history || [])
+                            .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber)
+                            .sort((a, b) => {
+                                const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+                                const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+                                return dateB - dateA;
+                            })[0];
                         
                         if (!latestVerification) return null;
                         

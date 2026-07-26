@@ -44,10 +44,8 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
     };
 
     useEffect(() => {
-        if (activeSubTab === 'history') {
-            fetchHistory();
-        }
-    }, [activeSubTab, fetchHistory]);
+        fetchHistory();
+    }, [fetchHistory]);
 
     return (
         <div id="properties" style={{ padding: '10px' }}>

@@ -27,19 +27,20 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
+            var datesToTry = new List<string>();
+            
             // We sometimes get some weird stuff
             var rawInspectionDateWithWordsRemove = RemoveSpecialCharacters(rawInspectionDate);
             
             rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove
-                .Replace("Time:", string.Empty)
                 .Replace("n/a", string.Empty) // This presumably comes from a later column
                 .Replace("N/A", string.Empty) // This presumably comes from a later column                
                 .Replace("Quantities:", string.Empty) // This shouldn't have really come through
+                .Replace("Q u a n t i t i e s", string.Empty) // This shouldn't have really come through + still has the weird spaces issue
                 .Replace("Date of certificate or", string.Empty) // This shouldn't have really come through
                 .Replace("Desktop Review", string.Empty) // Don't know why we get this
                 .Replace("NI", string.Empty) // Don't know why we get this
                 .Replace("\r", string.Empty)
-                .Replace("\n", " ")
                 .Replace("  ", " ");
             
             if (rawInspectionDateWithWordsRemove.Contains('&'))
@@ -63,11 +64,20 @@ public static class Wr51SchemaConverter
             {
                 var parts = rawInspectionDateWithWordsRemove.Split("Inspecting Officer");
                 rawInspectionDateWithWordsRemove = parts[0].Trim();
+
+                var lastLine = parts.Last().Split('\n').Last();
+                datesToTry.Add(lastLine);
             }
             
             if (rawInspectionDateWithWordsRemove.Contains("Land"))
             {
                 var parts = rawInspectionDateWithWordsRemove.Split("Land");
+                rawInspectionDateWithWordsRemove = parts[0].Trim();
+            }
+            
+            if (rawInspectionDateWithWordsRemove.Contains("Time"))
+            {
+                var parts = rawInspectionDateWithWordsRemove.Split("Time");
                 rawInspectionDateWithWordsRemove = parts[0].Trim();
             }
 
@@ -76,22 +86,23 @@ public static class Wr51SchemaConverter
                 .Replace("st", string.Empty)
                 .Replace("rd", string.Empty)
                 .Replace("nd", string.Empty)
+                .Replace("\n", " ")
                 .Replace("  ", " ")
                 .Trim();
 
-            rawInspectionDate = rawInspectionDateWithWordsRemove;
+            if (rawInspectionDateWithWordsRemove.EndsWith(" :"))
+            {
+                rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove[..^2];
+            }
             
             if (rawInspectionTime?.Length == 4 && !rawInspectionDateWithWordsRemove.Contains(':'))
             {
                 rawInspectionTime = $"{rawInspectionTime[..2]}:{rawInspectionTime[2..]}";
             }
-            
-            var datesToTry = new List<string>
-            {
-                $"{rawInspectionDateWithWordsRemove} {rawInspectionTime}",
-                rawInspectionDateWithWordsRemove
-            };
 
+            datesToTry.Add($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}");
+            datesToTry.Add(rawInspectionDateWithWordsRemove);
+            
             foreach (var dateToTry in datesToTry)
             {
                 if (!DateTime.TryParse(dateToTry, out var tInspectionDateTime))

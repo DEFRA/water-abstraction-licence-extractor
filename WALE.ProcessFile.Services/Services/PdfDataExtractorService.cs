@@ -1613,6 +1613,13 @@ public class PdfDataExtractorService(
                         {
                             columnIndex = label.LimitToColumnIndex;
                         }
+
+                        var firstLineColumnLeftPosition = newColumns
+                            .FirstOrDefault()?
+                            .Words
+                            .FirstOrDefault()?
+                            .Coordinates
+                            .Left;
                         
                         foreach (var nextLine in nextLines)
                         {
@@ -1622,6 +1629,17 @@ public class PdfDataExtractorService(
                                 : null;
 
                             if (columnToKeep == null)
+                            {
+                                continue;
+                            }
+                            
+                            var columnLeftPosition = columnToKeep
+                                .Words
+                                .FirstOrDefault()?
+                                .Coordinates
+                                .Left;
+
+                            if (columnLeftPosition > firstLineColumnLeftPosition + 100)
                             {
                                 continue;
                             }

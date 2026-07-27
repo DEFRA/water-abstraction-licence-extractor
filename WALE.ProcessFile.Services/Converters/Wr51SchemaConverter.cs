@@ -19,14 +19,32 @@ public static class Wr51SchemaConverter
         var rawInspectionDate = GetMultilineText(matchesResult, "InspectionDate");
         var rawInspectionTime = GetMultilineText(matchesResult, "Time");
 
+        var currentDay = DateTime.Today;
+        var currentYear = currentDay.Year;
+        var currentYearLast2Digits = currentYear.ToString()[2..];
+        
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
             var rawInspectionDateWithWordsRemove = rawInspectionDate.Replace("Time:", string.Empty);
             
-            if (DateTime.TryParse($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}", out var tIinspectionDateTime))
+            if (DateTime.TryParse($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}",
+                out var tIinspectionDateTime))
             {
-                inspectionDateTime = tIinspectionDateTime;
+                // If we pulled a date that wasn't the current year, we must have contained a year
+                var containsYear = tIinspectionDateTime.Year != currentYear;
+
+                if (!containsYear)
+                {
+                    containsYear = rawInspectionDateWithWordsRemove.Contains(currentYear.ToString())
+                        || rawInspectionDateWithWordsRemove.EndsWith(currentYearLast2Digits);
+                }
+                
+                // Needs to contain a year and should never be today
+                if (containsYear && tIinspectionDateTime.Date != DateTime.Today)
+                {
+                    inspectionDateTime = tIinspectionDateTime;
+                }
             }
         }
 

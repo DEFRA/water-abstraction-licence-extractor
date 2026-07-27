@@ -68,18 +68,22 @@ public static class GenerateWr51Csv
         
         const int processRunId = -99;
         
-        // Filter out ones we've already done (useful for speed only - results in a file that isnt right)
+        // Filter out ones we've already done (useful for speed only - results in a file that isn't right)
         /*var existingMatchResultsList = await outputService.GetSimpleMatchResults(processRunId);
         var existingMatchResultsDict = existingMatchResultsList.ToDictionary(
             item => item.Filename!,
             item => item.Status!);
-
+            
+        // Part of filtering above (usually should be commented out)
         files = files
             .Where(f => !existingMatchResultsDict.ContainsKey(f))
             .ToList();*/
         
-        // Debug helper line below
-        //files = files.Take(20).ToList();
+        // Debugging helper lines below
+        /*files = files
+            .Where(f => f == "wr51__03280030052gr__b8180772-8ba3-d92e-a5c9-d66b2cf9d5ef.pdf")
+            .Take(20)
+            .ToList();*/
         
         var lookupConfiguration = LookupConfiguration(fileService, cacheService, outputService);
         var uniqueFolder = $"WR51-{DateTime.Today:yyyyMMdd}";

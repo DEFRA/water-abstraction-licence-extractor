@@ -77,7 +77,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -274,7 +274,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(5, generalComments.Text.Count);
@@ -283,7 +289,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("No RTW", generalComments.Text[4].Text);
         Assert.EndsWith("inspection.", generalComments.Text[4].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -305,7 +311,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -327,7 +333,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
@@ -407,7 +413,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("11:20", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(2583, json.Length);
+        Assert.Equal(2621, json.Length);
     }
     
     [Fact]
@@ -418,7 +424,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -613,7 +619,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(15, generalComments.Text.Count);
@@ -622,7 +634,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("weeks", generalComments.Text[14].Text);
         Assert.EndsWith("invoice.", generalComments.Text[14].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -644,7 +656,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -666,7 +678,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("31/01/2017", inspectionDate.Text[0].Text);
@@ -680,7 +692,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -875,7 +887,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(12, generalComments.Text.Count);
@@ -884,7 +902,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("purpose", generalComments.Text[11].Text);
         Assert.EndsWith("chickens.", generalComments.Text[11].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -906,7 +924,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -928,7 +946,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2024", inspectionDate.Text[0].Text);
@@ -942,7 +960,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -1136,7 +1154,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(16, generalComments.Text.Count);
@@ -1145,7 +1169,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("them", generalComments.Text[15].Text);
         Assert.EndsWith("payment.", generalComments.Text[15].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -1167,7 +1191,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -1189,7 +1213,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);
@@ -1203,7 +1227,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -1397,7 +1421,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(4, generalComments.Text.Count);
@@ -1406,7 +1436,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("the", generalComments.Text[3].Text);
         Assert.EndsWith("volume.", generalComments.Text[3].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -1428,7 +1458,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -1450,7 +1480,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);
@@ -1464,7 +1494,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -1659,7 +1689,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(19, generalComments.Text.Count);
@@ -1668,7 +1704,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("There", generalComments.Text[18].Text);
         Assert.EndsWith("time.", generalComments.Text[18].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -1690,7 +1726,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -1712,7 +1748,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
@@ -1727,7 +1763,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -1925,7 +1961,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(2, generalComments.Text.Count);
@@ -1934,7 +1976,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("Same", generalComments.Text[1].Text);
         Assert.EndsWith("licence).", generalComments.Text[1].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -1956,7 +1998,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -1978,7 +2020,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("18/12/2023", inspectionDate.Text[0].Text);
@@ -1992,7 +2034,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -2188,7 +2230,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(3, generalComments.Text.Count);
@@ -2197,7 +2245,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("All", generalComments.Text[2].Text);
         Assert.EndsWith("limit.", generalComments.Text[2].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -2219,7 +2267,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -2241,7 +2289,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("18/12/2023", inspectionDate.Text[0].Text);
@@ -2255,7 +2303,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -2449,7 +2497,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(10, generalComments.Text.Count);
@@ -2458,7 +2512,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("practicably", generalComments.Text[9].Text);
         Assert.EndsWith("possible.", generalComments.Text[9].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -2480,7 +2534,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -2502,7 +2556,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("13/04/2022", inspectionDate.Text[0].Text);
@@ -2516,7 +2570,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(41, resultFull.Matches!.Count);
+        Assert.Equal(42, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -2710,8 +2764,14 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.NotNull(documentTemplateVersion);
         Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
+
+        var documentHeader = resultFull.Matches[37];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches[37];
+        var generalComments = resultFull.Matches[38];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(10, generalComments.Text.Count);
@@ -2720,7 +2780,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("Action", generalComments.Text[9].Text);
         Assert.EndsWith("returns.", generalComments.Text[9].Text);
         
-        var maintenance = resultFull.Matches[38];
+        var maintenance = resultFull.Matches[39];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(3, maintenance.Text[0].Columns.Count);
@@ -2742,7 +2802,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches[39];
+        var readingsTaken = resultFull.Matches[40];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(3, readingsTaken.Text[0].Columns.Count);
@@ -2764,7 +2824,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[40];
+        var inspectionDate = resultFull.Matches[41];
         Assert.NotNull(inspectionDate);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
         Assert.Equal("06/12/2024", inspectionDate.Text[0].Text);
@@ -2778,7 +2838,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(35, resultFull.Matches!.Count);
+        Assert.Equal(36, resultFull.Matches!.Count);
         
         var sourceOfSupply = resultFull.Matches[0];
         Assert.NotNull(sourceOfSupply);
@@ -2941,7 +3001,13 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("Date", date.LabelGroupName);
         Assert.Equal("3 June 2026", date.Text[0].Text);
         
-        var generalComments = resultFull.Matches[31];
+        var documentHeader = resultFull.Matches[31];
+        Assert.NotNull(documentHeader);
+        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Single(documentHeader.Text);
+        Assert.Equal("51", documentHeader.Text[0].Text);
+        
+        var generalComments = resultFull.Matches[32];
         Assert.NotNull(generalComments);
         Assert.Equal("GeneralComments", generalComments.LabelGroupName);
         Assert.Equal(38, generalComments.Text.Count);
@@ -2950,7 +3016,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.StartsWith("Ple", generalComments.Text[37].Text);
         Assert.EndsWith("ly.", generalComments.Text[37].Text);
         
-        var maintenance = resultFull.Matches[32];
+        var maintenance = resultFull.Matches[33];
         Assert.NotNull(maintenance);
         Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
         Assert.Equal(4, maintenance.Text[0].Columns.Count);
@@ -2972,7 +3038,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Empty(byWhomSubLabel.Text);
         
-        var readingsTaken = resultFull.Matches[33];
+        var readingsTaken = resultFull.Matches[34];
         Assert.NotNull(readingsTaken);
         Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
         Assert.Equal(4, readingsTaken.Text[0].Columns.Count);
@@ -2994,7 +3060,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Empty(byWhomSubLabel.Text);
         
-        var inspectionDate = resultFull.Matches[34];
+        var inspectionDate = resultFull.Matches[35];
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
@@ -3071,7 +3137,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
         Assert.Equal("10:00", converted.InspectionDate.RawTime);
 
         var json = JsonSerializer.Serialize(converted, JsonHelper.GetSerializerOptions());
-        Assert.Equal(5235, json.Length);
+        Assert.Equal(5273, json.Length);
     }
     
     [Fact]
@@ -3082,7 +3148,7 @@ public class Wr51PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtur
 
         // Act
         var resultFull = await GetMatchesAsync(filename, GeneralConstants.UnsetRegionCode, -99);
-        Assert.Equal(40, resultFull.Matches!.Count);
+        Assert.Equal(41, resultFull.Matches!.Count);
         
         var converted = Wr51SchemaConverter.ToForm(resultFull);
         Assert.NotNull(converted);

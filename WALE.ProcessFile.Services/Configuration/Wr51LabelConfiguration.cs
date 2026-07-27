@@ -67,7 +67,7 @@ public static class Wr51LabelConfiguration
                 LimitTo.WholeLine)),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
             ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine")),
-            ("InspectionDate", TextAfterLabelWithSpecifiedColumn("Inspection Date:", "InspectionDate", 2, 1)),
+            ("InspectionDate", TextToFindIsBetweenLabels("Inspection Date:", "Quantities", "InspectionDate", 2, LimitTo.SameColumn)),
             ("Email", TextToFindIsBetweenLabels("Email", "Position:", "Email", 1, LimitTo.SameColumn)),
         ];
     }
@@ -154,18 +154,20 @@ public static class Wr51LabelConfiguration
         ];
     }
     
-    private static List<LabelToMatch> TextAfterLabelWithSpecifiedColumn(
+    /*private static List<LabelToMatch> TextAfterLabelWithSpecifiedColumn(
         string text,
         string labelName,
         int nextLinesToFetch,
-        int columnIndex)
+        int columnIndex,
+        string[] mustContain)
     {
         var label = TextAfterLabel(text, labelName, nextLinesToFetch, []);
         label[0].LimitTo = LimitTo.SpecifiedColumn;
         label[0].LimitToColumnIndex = columnIndex;
+        label[0].MustContain = mustContain;
         
         return label;
-    }
+    }*/
     
     private static List<LabelToMatch> TextAfterLabel(
         string text,

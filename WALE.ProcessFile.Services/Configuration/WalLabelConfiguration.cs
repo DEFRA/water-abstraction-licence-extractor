@@ -2136,6 +2136,7 @@ public static partial class WalLabelConfiguration
                         NextLinesToFetch = 1,
                         Possibilities = new List<TextToMatch>
                         {
+                            // This is actually (unintentionally) the order of preference when on the same line
                             new("megalitres"),
                             new("litres"),
                             new("thousand cubic metres"),

@@ -15,6 +15,11 @@ public static class RelatedCategoryPosition
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
+        if (request.label.Name == "PerYearValue")
+        {
+            
+        }
+        
         var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
             false,
@@ -148,10 +153,24 @@ public static class RelatedCategoryPosition
 
                     if (labelIndexStart == -1)
                     {
-                        return matchIndexEnd;
+                        return matchIndexEnd * 1;
                     }
                     
-                    var diff = matchIndexEnd - labelIndexStart;
+                    var relatedTextOrLabelText = labelText;
+
+                    if (relevantCategoryItems.Count == 1)
+                    {
+                        var relatedText = relevantCategoryItems[0].Text?.FirstOrDefault()?.Text;
+
+                        if (!string.IsNullOrWhiteSpace(relatedText))
+                        {
+                            relatedTextOrLabelText = relatedText; // TODO check logic around here on existing tests
+                        }
+                    }
+                    
+                    var relatedTextOrLabelTextIndexStart = lineText.IndexOf(relatedTextOrLabelText, StringComparison.Ordinal);
+                    
+                    var diff = matchIndexEnd - relatedTextOrLabelTextIndexStart;
                     if (diff > 0) diff = -diff - 100;
                     
                     return diff;

@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -8,8 +9,11 @@ using System.Text.Json;
 
 public interface ILicenceListItemModelService
 {
-    LicenceListItemAggregate Create(OutputListDataItem source);
+    UpsertLicenceListItem ConvertToUpsertLicenceListItem(OutputListDataItem source);
 
-    IReadOnlyList<LicenceListItemAggregate> CreateMany(
+    IReadOnlyList<UpsertLicenceListItem> ConvertToUpsertLicenceListItems(
         IEnumerable<OutputListDataItem> source);
+    
+    IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(
+        IEnumerable<LicenceListItemAggregate> source);
 }

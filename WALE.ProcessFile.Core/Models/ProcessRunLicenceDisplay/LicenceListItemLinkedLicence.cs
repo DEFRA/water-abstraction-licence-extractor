@@ -20,10 +20,13 @@ public sealed class LicenceListItemLinkedLicence
 
     public string? LicenceVersionId { get; set; }
 
-    public DateTime? EffectiveDate { get; set; }
+    public DateOnly? EffectiveDate { get; set; }
 
-    public DateTime? IssueDate { get; set; }
+    public DateOnly? IssueDate { get; set; }
 
+    public DateOnly? ExpiryDate { get; init; }
+
+    public DateOnly? OriginalIssueDate { get; init; }
     public string? Issuer { get; set; }
 
     public string? NaldStatus { get; set; }
@@ -33,6 +36,27 @@ public sealed class LicenceListItemLinkedLicence
     public int? RegionId { get; set; }
 
     public string? SourceData { get; set; }
+    
+    
+    public DateTime? NaldRevocationDate { get; init; }
 
-    public List<LicenceListItemLinkLocation> Locations { get; init; } = [];
+    public DateTime? NaldExpiryDate { get; init; }
+
+    public DateTime? NaldOrigEffectiveDate { get; init; }
+
+    public DateTime? NaldOrigSignatureDate { get; init; }
+
+    public DateTime? NaldSignatureDate { get; init; }
+
+    public DateTime? NaldEffectiveStartDate { get; init; }
+
+    public DateTime? NaldEffectiveEndDate { get; init; }
+
+    public int? NaldIssueNumber { get; init; }
+
+    public int? NaldIncrementNumber { get; init; }
+
+    public string? NaldUpdateReason { get; init; }
+
+    public List<LicenceListItemLinkLocation> Locations { get; set; } = [];
 }

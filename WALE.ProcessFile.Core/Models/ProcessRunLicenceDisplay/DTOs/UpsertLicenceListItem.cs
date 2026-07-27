@@ -2,21 +2,21 @@ using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 
-public sealed class CreateLicenceListItem
+public sealed class UpsertLicenceListItem
 {
     public int ProcessRunId { get; init; }
 
     public Guid FileId { get; init; }
 
-    public required string Filename { get; init; }
+    public string Filename { get; init; } = string.Empty;
 
     public string? LicenceNumber { get; init; }
 
     public string? LicenceHolder { get; init; }
 
-    public string[] Purposes { get; init; } = [];
+    public string? Purposes { get; init; }
 
-    public string[] Points { get; init; } = [];
+    public string? Points { get; init; }
 
     public int LimitsCount { get; init; }
 
@@ -32,9 +32,9 @@ public sealed class CreateLicenceListItem
 
     public string? Status { get; init; }
 
-    public CreateLinkedLicence[] LinkedLicences { get; init; } = [];
+    public UpsertLinkedLicenceItem[] LinkedLicences { get; init; } = [];
 
-    public CreateLicenceSet[] LicenceSets { get; init; } = [];
+    public UpsertLicenceSetItem[] LicenceSets { get; init; } = [];
 
     public LicenceSectionVerificationSummary[] LicenceSectionVerifications { get; init; } = [];
 

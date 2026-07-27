@@ -94,6 +94,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
+        .AddTransient<ILicenceListRepository, DatabaseOutputService>()
         .AddTransient<ICacheService>(sp => new DatabaseCacheService(
             sp.GetRequiredService<IDatabaseReadService>(),
             sp.GetRequiredService<IDatabaseWriteService>()));

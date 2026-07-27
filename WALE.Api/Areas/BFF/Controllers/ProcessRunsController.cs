@@ -12,7 +12,11 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class ProcessRunsController(IOutputService outputService, IMemoryCache memoryCache, ILicenceListItemModelService licenceListItemModelService) : Controller
+public class ProcessRunsController(
+    IOutputService outputService,
+    IMemoryCache memoryCache, 
+    ILicenceListItemModelService licenceListItemModelService,
+    ILicenceListRepository licenceListRepository) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProcessRun>>> GetProcessRuns()
@@ -39,7 +43,8 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
 
         return Ok(licenceSets);
     }
-[HttpGet("{processRunId:int}")]
+    
+    [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
@@ -47,6 +52,27 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var processRun = await GetProcessRunResponse(processRunId, query);
 
         return Ok(processRun);
+    }
+    
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
+        [FromRoute] int processRunId,
+        [FromQuery] ProcessRunQuery query)
+    {
+        var licenceListItems = await licenceListRepository.GetLicencesListSearchAsync(processRunId, query);
+
+       var outputList = licenceListItemModelService.ConvertToOutputListDataItems(licenceListItems);
+       
+       var processRun = new ProcessRunResponse
+       {
+           TotalRecords = outputList.Count,
+           Records = outputList.OrderBy(x => x.licenceNumber).ToList(),
+           Issuers = await GetDistinctListIssuers(processRunId),
+           LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
+           IssueDates =  await GetDistinctListDates(processRunId),
+       };
+       return Ok(processRun);
+ 
     }
 
     private async Task<ProcessRunResponse> GetProcessRunResponse(int processRunId, ProcessRunQuery query)
@@ -125,13 +151,20 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
 
         var processRun = await GetProcessRunResponse(processRunId, query);
         var dbItems = licenceListItemModelService
-            .CreateMany(processRun.Records)
+            .ConvertToUpsertLicenceListItems(processRun.Records)
             .ToList();
 
+        var licenceNumbers = processRun.Records.Select(x => x.licenceNumber).Distinct().ToList();
+        var stringList = string.Join(", ", licenceNumbers);
         // Replace this with your repository insert.
-        var total = dbItems.Count;
+        foreach (var batch in dbItems.Chunk(50))
+        {
+            await licenceListRepository.UpsertLicenceListItemManyAsync(
+                batch,
+                 CancellationToken.None);
+        }
 
-        return Ok(total);
+        return Ok();
     }
 
     [HttpGet]
@@ -141,6 +174,25 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         return Ok(total);
     }
 
+    private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)
+    {
+        var cacheKey = $"licence-list-set-ids:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow =
+                    TimeSpan.FromMinutes(10);
+
+
+
+                var setIds = await licenceListRepository.GetLicenceListLicenceSetIdsAsync(processRunId);
+
+                return setIds.ToArray();
+            }) ?? [];
+    }
+    
     private async Task<string[]> GetLicenceSetIds(int processRunId)
     {
         var cacheKey = $"licence-set-ids:{processRunId}";
@@ -202,6 +254,44 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
                    })
                ?? [];
     }
+    
+    private async Task<string[]> GetDistinctListIssuers(int processRunId)
+    {
+        var cacheKey = $"licence-list-issuers:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromMinutes(10);
+                       
+                       var issuers =  await licenceListRepository.GetLicenceListLicenceSetIdsAsync(processRunId);
+                       
+                       return issuers.ToArray();
+                   })
+               ?? [];
+    }
+    
+    private async Task<string[]> GetDistinctListDates(int processRunId)
+    {
+        var cacheKey = $"licence-list-dates:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromMinutes(10);
+                       
+                       var issuers =  await licenceListRepository.GetLicenceListIssueYearsAsync(processRunId);
+                       
+                       return issuers.ToArray();
+                   })
+               ?? [];
+    }
+    
+    
     
     private async Task<string[]> GetIssueDates(int processRunId)
     {

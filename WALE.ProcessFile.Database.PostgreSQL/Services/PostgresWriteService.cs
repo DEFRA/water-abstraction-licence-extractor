@@ -1,16 +1,22 @@
+using System.Text.Json;
 using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
+public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, JsonSerializerOptions? jsonSerializerOptions = null)
     : IDatabaseWriteService
 {
+    
+    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
+    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();
@@ -852,6 +858,1001 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId
             });
     }
+
+  public async Task<long> UpsertLicenceListItemAsync(
+        UpsertLicenceListItem item,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        ValidateItem(item);
+
+        await using var connection = GetPostgresConnection();
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            var licenceListItemId =
+                await UpsertLicenceListItemInternalAsync(
+                    connection,
+                    transaction,
+                    item,
+                    cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return licenceListItemId;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyCollection<long>>
+        UpsertLicenceListItemManyAsync(
+            IReadOnlyCollection<UpsertLicenceListItem> items,
+            CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        if (items.Count == 0)
+        {
+            return Array.Empty<long>();
+        }
+
+        foreach (var item in items)
+        {
+            ValidateItem(item);
+        }
+
+        await using var connection = GetPostgresConnection();
+
+        await connection.OpenAsync(cancellationToken);
+        
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        var savedIds = new List<long>(items.Count);
+
+        try
+        {
+            foreach (var item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var licenceListItemId =
+                    await UpsertLicenceListItemInternalAsync(
+                        connection,
+                        transaction,
+                        item,
+                        cancellationToken);
+
+                savedIds.Add(licenceListItemId);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return savedIds;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private static async Task<long>
+        UpsertLicenceListItemInternalAsync(
+            NpgsqlConnection connection,
+            NpgsqlTransaction transaction,
+            UpsertLicenceListItem item,
+            CancellationToken cancellationToken)
+    {
+        var summary = CreateSummary(item);
+
+        var licenceListItemId =
+            await UpsertParentAsync(
+                connection,
+                transaction,
+                item,
+                summary,
+                cancellationToken);
+        
+
+        await ReplaceLinkedLicencesAsync(
+            connection,
+            transaction,
+            licenceListItemId,
+            item.LinkedLicences,
+            cancellationToken);
+
+        await ReplaceLicenceSetsAsync(
+            connection,
+            transaction,
+            item.ProcessRunId,
+            licenceListItemId,
+            item.LicenceSets,
+            cancellationToken);
+
+        await ReplaceVerificationsAsync(
+            connection,
+            transaction,
+            item.ProcessRunId,
+            licenceListItemId,
+            item.LicenceSectionVerifications,
+            cancellationToken);
+
+        return licenceListItemId;
+    }
+
+    private static async Task<long> UpsertParentAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        UpsertLicenceListItem item,
+        LicenceListItemSummary summary,
+        CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            INSERT INTO licence_list_item
+            (
+                process_run_id,
+                file_id,
+                filename,
+                licence_number,
+                licence_holder,
+                limits_count,
+                aggregates_count,
+                ocr,
+                issue_date,
+                issue_year,
+                issuer,
+                means_found,
+                status,
+                purposes_count,
+                points_count,
+                purposes,
+               points,
+                linked_licences_count,
+                licence_sets_count,
+                verification_sections_count,
+                verification_items_count,
+                has_verifications,
+                search_text,
+                source_data,
+                created_date_time_utc,
+                updated_date_time_utc
+            )
+            VALUES
+            (
+                @ProcessRunId,
+                @FileId,
+                @Filename,
+                @LicenceNumber,
+                @LicenceHolder,
+                @LimitsCount,
+                @AggregatesCount,
+                @Ocr,
+                @IssueDate,
+                @IssueYear,
+                @Issuer,
+                @MeansFound,
+                @Status,
+                @PurposesCount,
+                @PointsCount,
+             @Purposes,
+             @Points,
+                @LinkedLicencesCount,
+                @LicenceSetsCount,
+                @VerificationSectionsCount,
+                @VerificationItemsCount,
+                @HasVerifications,
+                @SearchText,
+                CAST(@SourceData AS jsonb),
+                NOW(),
+                NOW()
+            )
+            ON CONFLICT
+            (
+                process_run_id,
+                file_id,
+                licence_number
+            )
+            DO UPDATE SET
+                filename = EXCLUDED.filename,
+                licence_holder = EXCLUDED.licence_holder,
+                limits_count = EXCLUDED.limits_count,
+                aggregates_count = EXCLUDED.aggregates_count,
+                ocr = EXCLUDED.ocr,
+                issue_date = EXCLUDED.issue_date,
+                issue_year = EXCLUDED.issue_year,
+                issuer = EXCLUDED.issuer,
+                means_found = EXCLUDED.means_found,
+                status = EXCLUDED.status,
+                purposes_count = EXCLUDED.purposes_count,
+                points_count = EXCLUDED.points_count,
+                purposes = EXCLUDED.purposes,
+               points = EXCLUDED.points,
+                linked_licences_count =
+                    EXCLUDED.linked_licences_count,
+                licence_sets_count =
+                    EXCLUDED.licence_sets_count,
+                verification_sections_count =
+                    EXCLUDED.verification_sections_count,
+                verification_items_count =
+                    EXCLUDED.verification_items_count,
+                has_verifications =
+                    EXCLUDED.has_verifications,
+                search_text = EXCLUDED.search_text,
+                source_data = EXCLUDED.source_data,
+                updated_date_time_utc = NOW()
+            RETURNING licence_list_item_id;
+            """;
+
+        var parameters = new
+        {
+            item.ProcessRunId,
+            item.FileId,
+            item.Filename,
+            item.LicenceNumber,
+            item.LicenceHolder,
+            item.LimitsCount,
+            item.AggregatesCount,
+            item.Ocr,
+            IssueDate = ToDateTime(item.IssueDate),
+            IssueYear = item.IssueDate?.Year,
+            item.Issuer,
+            item.MeansFound,
+            item.Status,
+            summary.PurposesCount,
+            summary.PointsCount,
+            item.Purposes,
+            item.Points,
+            summary.LinkedLicencesCount,
+            summary.LicenceSetsCount,
+            summary.VerificationSectionsCount,
+            summary.VerificationItemsCount,
+            summary.HasVerifications,
+            summary.SearchText,
+            SourceData = NullIfWhiteSpace(item.SourceData)
+        };
+
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+
+    private static DateTime? ToDateTime(DateOnly? value)
+    {
+        return value?.ToDateTime(TimeOnly.MinValue);
+    }
+
+    private static DateTime ToDateTime(DateOnly value)
+    {
+        return value.ToDateTime(TimeOnly.MinValue);
+    }
+    
+    private static async Task ReplaceLinkedLicencesAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long licenceListItemId,
+        IReadOnlyCollection<UpsertLinkedLicenceItem> linkedLicences,
+        CancellationToken cancellationToken)
+    {
+        const string deleteSql =
+            """
+            DELETE FROM licence_list_item_linked_licence
+            WHERE licence_list_item_id = @LicenceListItemId;
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                deleteSql,
+                new
+                {
+                    LicenceListItemId = licenceListItemId
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+
+        foreach (var linkedLicence in linkedLicences)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var linkedLicenceId =
+                await InsertLinkedLicenceAsync(
+                    connection,
+                    transaction,
+                    licenceListItemId,
+                    linkedLicence,
+                    cancellationToken);
+
+            await InsertLinkLocationsAsync(
+                connection,
+                transaction,
+                linkedLicenceId,
+                linkedLicence.ContainedIn,
+                cancellationToken);
+        }
+    }
+
+    private static async Task<long> InsertLinkedLicenceAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long licenceListItemId,
+        UpsertLinkedLicenceItem linkedLicence,
+        CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            INSERT INTO licence_list_item_linked_licence
+            (
+                licence_list_item_id,
+                licence_number,
+                raw_scraped_licence_number,
+                dms_permit_number,
+                dms_path,
+                dms_file_id,
+                filename,
+                licence_version_id,
+                effective_date,
+                expiry_date,
+                issue_date,
+                original_issue_date,
+                issuer,
+                nald_status,
+                licence_type,
+                region_id,
+                condition_data,
+                nald_revocation_date,
+                nald_expiry_date,
+                nald_orig_effective_date,
+                nald_orig_signature_date,
+                nald_signature_date,
+                nald_effective_start_date,
+                nald_effective_end_date,
+                nald_issue_number,
+                nald_increment_number,
+                nald_update_reason,
+                source_data
+            )
+            VALUES
+            (
+                @LicenceListItemId,
+                @LicenceNumber,
+                @RawScrapedLicenceNumber,
+                @DmsPermitNumber,
+                @DmsPath,
+                @DmsFileId,
+                @Filename,
+                @LicenceVersionId,
+                @EffectiveDate,
+                @ExpiryDate,
+                @IssueDate,
+                @OriginalIssueDate,
+                @Issuer,
+                @NaldStatus,
+                @LicenceType,
+                @RegionId,
+                CAST(@ConditionData AS jsonb),
+                @NaldRevocationDate,
+                @NaldExpiryDate,
+                @NaldOrigEffectiveDate,
+                @NaldOrigSignatureDate,
+                @NaldSignatureDate,
+                @NaldEffectiveStartDate,
+                @NaldEffectiveEndDate,
+                @NaldIssueNumber,
+                @NaldIncrementNumber,
+                @NaldUpdateReason,
+               CAST(@SourceData AS jsonb)
+            )
+            RETURNING linked_licence_id;
+            """;
+
+        var parameters = new
+        {
+            LicenceListItemId = licenceListItemId,
+            linkedLicence.LicenceNumber,
+            linkedLicence.RawScrapedLicenceNumber,
+            linkedLicence.DmsPermitNumber,
+            linkedLicence.DmsFileId,
+            linkedLicence.Filename,
+            linkedLicence.DmsPath,
+            linkedLicence.LicenceVersionId,
+            EffectiveDate = ToDateTime(linkedLicence.EffectiveDate),
+            ExpiryDate = ToDateTime(linkedLicence.ExpiryDate),
+            IssueDate = ToDateTime(linkedLicence.IssueDate),
+            OriginalIssueDate = ToDateTime(linkedLicence.OriginalIssueDate),
+            linkedLicence.Issuer,
+            linkedLicence.NaldStatus,
+            linkedLicence.LicenceType,
+            linkedLicence.RegionId,
+            ConditionData =
+                NullIfWhiteSpace(linkedLicence.ConditionData),
+            linkedLicence.NaldRevocationDate,
+            linkedLicence.NaldExpiryDate,
+            linkedLicence.NaldOrigEffectiveDate,
+            linkedLicence.NaldOrigSignatureDate,
+            linkedLicence.NaldSignatureDate,
+            linkedLicence.NaldEffectiveStartDate,
+            linkedLicence.NaldEffectiveEndDate,
+            linkedLicence.NaldIssueNumber,
+            linkedLicence.NaldIncrementNumber,
+            linkedLicence.NaldUpdateReason,
+            SourceData =
+                NullIfWhiteSpace(linkedLicence.SourceData)
+        };
+
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task InsertLinkLocationsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long linkedLicenceId,
+        IReadOnlyCollection<UpsertContainedInInformation> locations,
+        CancellationToken cancellationToken)
+    {
+        var values = locations
+            .Select(location => new
+            {
+                LinkedLicenceId = linkedLicenceId,
+                location.Source,
+                location.Direction,
+                location.SectionName,
+                location.LinkReason,
+                location.IsBecauseOfAggregate,
+                location.LineNumber,
+                location.PageNumber
+            })
+            .ToArray();
+
+        if (values.Length == 0)
+        {
+            return;
+        }
+
+        const string sql =
+            """
+            INSERT INTO licence_list_item_link_location
+            (
+                linked_licence_id,
+                source,
+                direction,
+                section_name,
+                link_reason,
+                is_because_of_aggregate,
+                line_number,
+                page_number
+            )
+            VALUES
+            (
+                @LinkedLicenceId,
+                @Source,
+                @Direction,
+                @SectionName,
+                @LinkReason,
+                @IsBecauseOfAggregate,
+                @LineNumber,
+                @PageNumber
+            );
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                values,
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task ReplaceLicenceSetsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        int processRunId,
+        long licenceListItemId,
+        IReadOnlyCollection<UpsertLicenceSetItem> licenceSets,
+        CancellationToken cancellationToken)
+    {
+        const string deleteSql =
+            """
+            DELETE FROM licence_list_item_licence_set
+            WHERE licence_list_item_id = @LicenceListItemId;
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                deleteSql,
+                new
+                {
+                    LicenceListItemId = licenceListItemId
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+
+        var distinctLicenceSets = licenceSets
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x.LicenceSetId))
+            .GroupBy(
+                x => x.LicenceSetId.Trim(),
+                StringComparer.OrdinalIgnoreCase)
+            .Select(MergeLicenceSets)
+            .ToArray();
+
+        foreach (var licenceSet in distinctLicenceSets)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var licenceSetRowId =
+                await InsertLicenceSetAsync(
+                    connection,
+                    transaction,
+                    processRunId,
+                    licenceListItemId,
+                    licenceSet,
+                    cancellationToken);
+
+            await InsertLicenceSetTypesAsync(
+                connection,
+                transaction,
+                licenceSetRowId,
+                licenceSet.LicenceSetTypes,
+                cancellationToken);
+        }
+    }
+    private static UpsertLicenceSetItem MergeLicenceSets(
+        IGrouping<string, UpsertLicenceSetItem> group)
+    {
+        var first = group.First();
+
+        return new UpsertLicenceSetItem
+        {
+            LicenceSetId = group.Key,
+
+            ShortLicenceSetId = group
+                .Select(x => x.ShortLicenceSetId)
+                .FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x)),
+
+            LicenceSetType = group
+                .Select(x => x.LicenceSetType)
+                .FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x)),
+
+            LicenceSetTypes = group
+                .SelectMany(x => x.LicenceSetTypes ?? [])
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+        };
+    }
+    
+    
+    private static async Task<long> InsertLicenceSetAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        int processRunId,
+        long licenceListItemId,
+        UpsertLicenceSetItem licenceSet,
+        CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            INSERT INTO licence_list_item_licence_set
+            (
+                process_run_id,
+                licence_list_item_id,
+                licence_set_id,
+                short_licence_set_id,
+                licence_set_type
+            )
+            VALUES
+            (
+                @ProcessRunId,
+                @LicenceListItemId,
+                @LicenceSetId,
+                @ShortLicenceSetId,
+                @LicenceSetType
+            )
+            RETURNING licence_list_item_licence_set_id;
+            """;
+
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(
+                sql,
+                new
+                {
+                    ProcessRunId = processRunId,
+                    LicenceListItemId = licenceListItemId,
+                    licenceSet.LicenceSetId,
+                    licenceSet.ShortLicenceSetId,
+                    licenceSet.LicenceSetType
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task InsertLicenceSetTypesAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long licenceSetRowId,
+        IReadOnlyCollection<string> licenceSetTypes,
+        CancellationToken cancellationToken)
+    {
+        var values = licenceSetTypes
+            .Distinct()
+            .Select(type => new
+            {
+                LicenceListItemLicenceSetId = licenceSetRowId,
+                LicenceSetType = type
+            })
+            .ToArray();
+
+        if (values.Length == 0)
+        {
+            return;
+        }
+
+        const string sql =
+            """
+            INSERT INTO licence_list_item_licence_set_type
+            (
+                licence_list_item_licence_set_id,
+                licence_set_type
+            )
+            VALUES
+            (
+                @LicenceListItemLicenceSetId,
+                @LicenceSetType
+            );
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                values,
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task ReplaceVerificationsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        int processRunId,
+        long licenceListItemId,
+        IReadOnlyCollection<LicenceSectionVerificationSummary> sections,
+        CancellationToken cancellationToken)
+    {
+        const string deleteSql =
+            """
+            DELETE FROM licence_list_item_verification_section
+            WHERE licence_list_item_id = @LicenceListItemId;
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                deleteSql,
+                new
+                {
+                    LicenceListItemId = licenceListItemId
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+
+        var groupedSections = sections
+            .Where(section =>
+                !string.IsNullOrWhiteSpace(section.LicenceSectionName))
+            .GroupBy(
+                section => section.LicenceSectionName.Trim(),
+                StringComparer.OrdinalIgnoreCase);
+
+        foreach (var sectionGroup in groupedSections)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var sectionId =
+                await InsertVerificationSectionAsync(
+                    connection,
+                    transaction,
+                    processRunId,
+                    licenceListItemId,
+                    sectionGroup.Key,
+                    cancellationToken);
+
+            var items = sectionGroup
+                .SelectMany(section =>
+                    section.LicenceSectionItems ?? [])
+                .Where(item =>
+                    !string.IsNullOrWhiteSpace(
+                        item.LicenceSectionItemId))
+                .GroupBy(
+                    item => item.LicenceSectionItemId.Trim(),
+                    StringComparer.OrdinalIgnoreCase);
+
+            foreach (var itemGroup in items)
+            {
+                var verificationItemId =
+                    await InsertVerificationItemAsync(
+                        connection,
+                        transaction,
+                        sectionId,
+                        itemGroup.Key,
+                        cancellationToken);
+
+                var verificationTypes = itemGroup
+                    .SelectMany(item =>
+                        item.VerificationTypes ?? [])
+                    .Where(type =>
+                        !string.IsNullOrWhiteSpace(type))
+                    .Select(type => type.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                await InsertVerificationTypesAsync(
+                    connection,
+                    transaction,
+                    verificationItemId,
+                    verificationTypes,
+                    cancellationToken);
+            }
+        }
+    }
+
+    private static async Task<long>
+        InsertVerificationSectionAsync(
+            NpgsqlConnection connection,
+            NpgsqlTransaction transaction,
+            int processRunId,
+            long licenceListItemId,
+            string licenceSectionName,
+            CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            INSERT INTO licence_list_item_verification_section
+            (
+                process_run_id,
+                licence_list_item_id,
+                licence_section_name
+            )
+            VALUES
+            (
+                @ProcessRunId,
+                @LicenceListItemId,
+                @LicenceSectionName
+            )
+            RETURNING verification_section_id;
+            """;
+
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(
+                sql,
+                new
+                {
+                    ProcessRunId = processRunId,
+                    LicenceListItemId = licenceListItemId,
+                    LicenceSectionName = licenceSectionName
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task<long>
+        InsertVerificationItemAsync(
+            NpgsqlConnection connection,
+            NpgsqlTransaction transaction,
+            long verificationSectionId,
+            string licenceSectionItemId,
+            CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            INSERT INTO licence_list_item_verification_item
+            (
+                verification_section_id,
+                licence_section_item_id
+            )
+            VALUES
+            (
+                @VerificationSectionId,
+                @LicenceSectionItemId
+            )
+            RETURNING verification_item_id;
+            """;
+
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(
+                sql,
+                new
+                {
+                    VerificationSectionId = verificationSectionId,
+                    LicenceSectionItemId = licenceSectionItemId
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static async Task InsertVerificationTypesAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long verificationItemId,
+        IReadOnlyCollection<string> verificationTypes,
+        CancellationToken cancellationToken)
+    {
+        var values = verificationTypes
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(type => new
+            {
+                VerificationItemId = verificationItemId,
+                VerificationType = type
+            })
+            .ToArray();
+
+        if (values.Length == 0)
+        {
+            return;
+        }
+
+        const string sql =
+            """
+            INSERT INTO licence_list_item_verification_type
+            (
+                verification_item_id,
+                verification_type
+            )
+            VALUES
+            (
+                @VerificationItemId,
+                @VerificationType
+            );
+            """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                values,
+                transaction,
+                cancellationToken: cancellationToken));
+    }
+
+    private static LicenceListItemSummary CreateSummary(
+        UpsertLicenceListItem item)
+    {
+        var purposes = item.Purposes?.Split(',')
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var points = item.Points?.Split(',')
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .ToArray();
+
+        var verificationSections = item
+            .LicenceSectionVerifications
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(
+                    x.LicenceSectionName))
+            .ToArray();
+
+        var verificationItemsCount =
+            verificationSections.Sum(
+                section => section.LicenceSectionItems.Count(
+                    itemSummary =>
+                        !string.IsNullOrWhiteSpace(
+                            itemSummary.LicenceSectionItemId)));
+
+        var searchParts = new List<string?>
+        {
+            item.LicenceNumber,
+        };
+        
+        searchParts.AddRange(
+            item.LinkedLicences.SelectMany(linked => new[]
+            {
+                linked.LicenceNumber,
+                linked.RawScrapedLicenceNumber,
+            }));
+
+        var searchText = string.Join(
+            " ",
+            searchParts
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!.Trim()));
+
+        return new LicenceListItemSummary(
+            PurposesCount: purposes?.Length ?? 0,
+            PointsCount: points?.Length ?? 0,
+            LinkedLicencesCount: item.LinkedLicences.Length,
+            LicenceSetsCount: item.LicenceSets.Length,
+            VerificationSectionsCount:
+                verificationSections.Length,
+            VerificationItemsCount:
+                verificationItemsCount,
+            HasVerifications:
+                verificationItemsCount > 0,
+            SearchText:
+                searchText);
+    }
+
+    private static void ValidateItem(
+        UpsertLicenceListItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        if (item.ProcessRunId <= 0)
+        {
+            throw new ArgumentException(
+                "ProcessRunId must be greater than zero.",
+                nameof(item));
+        }
+
+        if (item.FileId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "FileId must not be empty.",
+                nameof(item));
+        }
+
+        if (string.IsNullOrWhiteSpace(item.Filename))
+        {
+            throw new ArgumentException(
+                "Filename must not be empty.",
+                nameof(item));
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.SourceData))
+        {
+            try
+            {
+                using var document =
+                    JsonDocument.Parse(item.SourceData);
+            }
+            catch (JsonException exception)
+            {
+                throw new ArgumentException(
+                    "SourceData must contain valid JSON.",
+                    nameof(item),
+                    exception);
+            }
+        }
+    }
+
+    private static string? NullIfWhiteSpace(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value;
+    }
+
+    private sealed record LicenceListItemSummary(
+        int PurposesCount,
+        int PointsCount,
+        int LinkedLicencesCount,
+        int LicenceSetsCount,
+        int VerificationSectionsCount,
+        int VerificationItemsCount,
+        bool HasVerifications,
+        string SearchText);
 
     private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
     {

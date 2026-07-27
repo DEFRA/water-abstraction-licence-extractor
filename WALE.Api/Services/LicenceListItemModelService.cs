@@ -1,14 +1,19 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WALE.Api.Services;
 
 using System.Globalization;
 using System.Text.Json;
 
-public class LicenceListItemModelService
+public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOptions = null)
     : ILicenceListItemModelService
 {
     private static readonly string[] SupportedDateFormats =
@@ -20,452 +25,339 @@ public class LicenceListItemModelService
         "yyyy-MM-ddTHH:mm:ss.FFFFFFFK"
     ];
 
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
+                                                                    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
-    public LicenceListItemModelService(
-        JsonSerializerOptions? jsonSerializerOptions = null)
-    {
-        _jsonSerializerOptions =
-            jsonSerializerOptions
-            ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
-    }
-
-    public IReadOnlyList<LicenceListItemAggregate> CreateMany(
+    public IReadOnlyList<UpsertLicenceListItem> ConvertToUpsertLicenceListItems(
         IEnumerable<OutputListDataItem> source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         return source
-            .Select(Create)
+            .Select(ConvertToUpsertLicenceListItem)
             .ToArray();
     }
 
-    public LicenceListItemAggregate Create(
+    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(IEnumerable<LicenceListItemAggregate> source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source
+            .Select(ConvertFromAggregate)
+            .ToArray();
+    }
+
+    public UpsertLicenceListItem ConvertToUpsertLicenceListItem(
         OutputListDataItem source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        var processRunId = source.processRunId
-            ?? throw new InvalidOperationException(
-                $"ProcessRunId is required for file '{source.filename}'.");
-
-        if (source.fileId == Guid.Empty)
-        {
-            throw new InvalidOperationException(
-                $"FileId is required for file '{source.filename}'.");
+        var purposes = string.Empty;
+        if (source.purposes != null)
+        { 
+            purposes = string.Join(",", source.purposes);
+        }
+        
+        var points = string.Empty;
+        if (source.points != null)
+        { 
+            points = string.Join(",", source.points);
         }
 
-        if (string.IsNullOrWhiteSpace(source.filename))
+
+        return new UpsertLicenceListItem
         {
-            throw new InvalidOperationException(
-                $"Filename is required for file ID '{source.fileId}'.");
-        }
+            ProcessRunId = source.processRunId!.Value,
+            FileId = source.fileId,
+            Filename = source.filename ?? string.Empty,
+            LicenceNumber = source.licenceNumber,
+            LicenceHolder = source.licenceHolder,
 
-        var purposes = NormaliseStrings(source.purposes);
-        var points = NormaliseStrings(source.points);
+            Purposes = purposes,
 
-        var linkedLicenceSources =
-            source.linkedLicences ?? [];
+            Points = points,
 
-        var licenceSetSources =
-            source.licenceSets?
-                .Where(x => x is not null)
-                .Select(x => x!)
-                .ToArray()
-            ?? [];
+            LimitsCount = source.limitsCount,
+            AggregatesCount = source.aggregatesCount,
+            Ocr = source.ocr,
+            IssueDate = ParseDateOnly(source.issueDate),
+            Issuer = source.issuer,
+            MeansFound = source.meansFound,
+            Status = source.status,
 
-        var verificationSources =
-            source.LicenceSectionItems ?? [];
+            LinkedLicences = source.linkedLicences?
+                .Select(ToUpsertLinkedLicence)
+                .ToArray() ?? [],
 
-        var issueDate = ParseDate(source.issueDate);
+            LicenceSets = source.licenceSets?
+                .OfType<OutputListDataItemLicenceSet>()
+                .Select(ToUpsertLicenceSet)
+                .ToArray() ?? [],
 
-        var aggregate = new LicenceListItemAggregate
-        {
-            Licence = new LicenceListItem
-            {
-                ProcessRunId = processRunId,
-                FileId = source.fileId,
-                Filename = source.filename.Trim(),
-                LicenceNumber = Normalise(source.licenceNumber),
-                LicenceHolder = Normalise(source.licenceHolder),
-
-                LimitsCount = source.limitsCount,
-                AggregatesCount = source.aggregatesCount,
-                Ocr = source.ocr,
-
-                IssueDate = issueDate,
-                IssueYear = issueDate is null
-                    ? null
-                    : checked((short)issueDate.Value.Year),
-
-                Issuer = Normalise(source.issuer),
-                MeansFound = source.meansFound,
-                Status = Normalise(source.status),
-
-                PurposesCount = purposes.Length,
-                PointsCount = points.Length,
-                LinkedLicencesCount = linkedLicenceSources.Length,
-                LicenceSetsCount = licenceSetSources.Length,
-
-                VerificationSectionsCount =
-                    verificationSources.Count,
-
-                VerificationItemsCount =
-                    verificationSources.Sum(
-                        x => x.LicenceSectionItems?.Length ?? 0),
-
-                HasVerifications =
-                    verificationSources.Any(
-                        section =>
-                            section.LicenceSectionItems is { Length: > 0 }),
-
-                SearchText = BuildSearchText(source),
-
-                SourceData = JsonSerializer.Serialize(
-                    source,
-                    _jsonSerializerOptions)
-            }
+            LicenceSectionVerifications =
+                (source.latestLicenceSectionVerifications?.Any() == true 
+                    ? source.latestLicenceSectionVerifications.Select(ToLicenceSectionVerifications).ToArray() 
+                    : source.LicenceSectionItems?.Any() == true ? source.LicenceSectionItems?.ToArray() : []) ?? [],
         };
-
-        aggregate.Purposes.AddRange(
-            CreatePurposes(purposes));
-
-        aggregate.Points.AddRange(
-            CreatePoints(points));
-
-        aggregate.LinkedLicences.AddRange(
-            linkedLicenceSources.Select(
-                CreateLinkedLicence));
-
-        aggregate.LicenceSets.AddRange(
-            licenceSetSources.Select(
-                x => CreateLicenceSet(
-                    processRunId,
-                    x)));
-
-        aggregate.VerificationSections.AddRange(
-            verificationSources.Select(
-                x => CreateVerificationSection(
-                    processRunId,
-                    x)));
-
-        return aggregate;
     }
 
-    private static IEnumerable<LicenceListItemPurpose> CreatePurposes(
-        IReadOnlyList<string> purposes)
+    private static LicenceSectionVerificationSummary ToLicenceSectionVerifications(LicenceSectionVerification licenceSectionVerification)
     {
-        return purposes.Select(
-            (purpose, index) =>
-                new LicenceListItemPurpose
-                {
-                    Purpose = purpose,
-                    SortOrder = index
-                });
+        return new LicenceSectionVerificationSummary
+        {
+LicenceSectionName =  licenceSectionVerification.LicenceSectionName,
+LicenceSectionItems = []
+        };
     }
 
-    private static IEnumerable<LicenceListItemPoint> CreatePoints(
-        IReadOnlyList<string> points)
-    {
-        return points.Select(
-            (point, index) =>
-                new LicenceListItemPoint
-                {
-                    Point = point,
-                    SortOrder = index
-                });
-    }
-
-    private LicenceListItemLinkedLicence CreateLinkedLicence(
-        LinkedLicence source)
+    private static OutputListDataItem ConvertFromAggregate(LicenceListItemAggregate source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        var linkedLicence = new LicenceListItemLinkedLicence
+        var licence = source.Licence;
+
+        return new OutputListDataItem
         {
-            LicenceNumber =
-                Normalise(source.LicenceNumber),
+            processRunId = licence.ProcessRunId,
+            fileId = licence.FileId,
+            filename = licence.Filename,
+            licenceNumber = licence.LicenceNumber,
+            licenceHolder = licence.LicenceHolder,
 
-            RawScrapedLicenceNumber =
-                Normalise(source.RawScrapedLicenceNumber),
+            purposes = licence.Purposes?.Split(','),
+            points = licence.Points?.Split(','),
 
-            DmsPermitNumber =
-                Normalise(source.DmsPermitNumber),
+            limitsCount = licence.LimitsCount,
+            aggregatesCount = licence.AggregatesCount,
+            ocr = licence.Ocr,
+            issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
+            issuer = licence.Issuer,
+            meansFound = licence.MeansFound,
+            status = licence.Status,
 
-            DmsFileId =
-                ParseGuid(source.DmsFileId.ToString()),
+            linkedLicences = source.LinkedLicences
+                .Select(ToOutputLinkedLicence)
+                .ToArray(),
 
-            Filename =
-                Normalise(source.Filename),
+            licenceSets = source.LicenceSets
+                .Select(ToOutputLicenceSet)
+                .ToArray(),
+            
+        };
+    }
 
-            DmsPath =
-                Normalise(source.DmsPath),
+    private static LinkedLicence ToOutputLinkedLicence(LicenceListItemLinkedLicence source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return new LinkedLicence
+        {
+            LicenceNumber = source.LicenceNumber,
+            RawScrapedLicenceNumber = source.RawScrapedLicenceNumber,
+            DmsPermitNumber = source.DmsPermitNumber,
+            DmsPath = source.DmsPath,
+            DmsFileId = source.DmsFileId,
+            Filename = source.Filename,
+            RegionId =  source.RegionId,
+            NaldStatus = ParseEnum<NaldLicenceStatus>(source.NaldStatus),
+            LicenceType = ParseEnum<LicenceType>(source.LicenceType),
+            LicenceVersion = new LicenceVersion
+            { 
+                EffectiveDate = source.EffectiveDate?.ToDateTime(TimeOnly.MinValue),
+                Issuer = source.Issuer,
+                NaldStatus = source.NaldStatus,
+                IssueDate = source.IssueDate?.ToDateTime(TimeOnly.MinValue),
+                OriginalIssueDate = source.OriginalIssueDate?.ToDateTime(TimeOnly.MinValue),
+                ExpiryDate = source.ExpiryDate?.ToDateTime(TimeOnly.MinValue),
+            },
+            ContainedIn = source.Locations
+                .Select(GetContainedInformation)
+                .ToArray()
+        };
+    }
+
+    private static ContainedInInformation GetContainedInformation(LicenceListItemLinkLocation source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return new ContainedInInformation
+        {
+            LinkReason = source.LinkReason,
+            IsBecauseOfAggregate =  source.IsBecauseOfAggregate,
+            LineNumber =  source.LineNumber,
+            PageNumber =   source.PageNumber,
+            SectionName =  source.SectionName,
+            Source = ParseEnum<InformationSource>(source.Source),
+            Direction = ParseEnum<InformationDirection>(source.Direction),
+        };
+    }
+    
+    private static TEnum ParseEnum<TEnum>(string? value) where TEnum : struct, Enum
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return default(TEnum);
+        }
+        
+        if (value != null && Enum.TryParse<TEnum>(value, ignoreCase: true, out var result))
+        {
+            return result;
+        }
+
+        throw new InvalidOperationException($"Unrecognized {typeof(TEnum).Name} value: '{value}'");
+    }
+    
+    private static OutputListDataItemLicenceSet ToOutputLicenceSet(LicenceListItemLicenceSet source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return new OutputListDataItemLicenceSet
+        {
+            LicenceSetId =  source.LicenceSetId,
+            LicenceSetType = source.LicenceSetType,
+            ShortLicenceSetId =  source.ShortLicenceSetId,
+            LicenceSetTypes =  source.LicenceSetTypes
+                .Select(x => x.LicenceSetType)
+                .ToArray(),
+        };
+    }
+
+    private static IEnumerable<LicenceSectionVerification> ToOutputLicenceSectionVerifications(
+        Guid licenceFileId,
+        LicenceListItemVerificationSection section) =>
+        section.LicenceSectionItems.SelectMany(item =>
+            item.VerificationTypes.Select(type => new LicenceSectionVerification
+            {
+                LicenceSectionVerificationId = (int)type.VerificationItemId,
+                LicenceFileId = licenceFileId,
+                ProcessRunId = section.ProcessRunId,
+                LicenceSectionName = section.LicenceSectionName,
+                LicenceSectionItemId = item.LicenceSectionItemId,
+                VerificationType = type.VerificationType,
+
+                // Unrecoverable from LicenceListItemAggregate — no source field anywhere
+                // in VerificationSection → VerificationItem → VerificationType.
+                LicenceSectionScrapedValue = null,
+                LicenceSectionSnapshotValue = null,
+                LicenceSectionOverrideValue = null,
+                Notes = null,
+                ScrapedDataIsDifferent = false,
+            }));
+    
+    private static UpsertLicenceSetItem ToUpsertLicenceSet(
+        OutputListDataItemLicenceSet source)
+    {
+        return new UpsertLicenceSetItem
+        {
+            LicenceSetType = source.LicenceSetType.ToString(),
+            LicenceSetTypes = source.LicenceSetTypes.Select(x => x.ToString()).ToArray(),
+           LicenceSetId  = source.LicenceSetId,
+            ShortLicenceSetId = source.ShortLicenceSetId
+        };
+    }
+
+    private static UpsertLinkedLicenceItem ToUpsertLinkedLicence(
+        LinkedLicence source)
+    {
+        return new UpsertLinkedLicenceItem
+        {
+            LicenceNumber = source.LicenceNumber,
+            RawScrapedLicenceNumber = source.RawScrapedLicenceNumber,
+            DmsPermitNumber = source.DmsPermitNumber,
+            DmsPath = source.DmsPath,
+            DmsFileId = source.DmsFileId,
+            Filename = source.Filename,
 
             LicenceVersionId =
-                Normalise(
-                    source.LicenceVersion?.LicenceVersionId),
+                source.LicenceVersion?.LicenceVersionId
+                ?? LicenceVersion.UnknownVersion,
 
-            EffectiveDate = source.LicenceVersion?.EffectiveDate,
+            EffectiveDate = ToDateOnly(
+                source.LicenceVersion?.EffectiveDate),
 
-            IssueDate = 
-                    source.LicenceVersion?.IssueDate,
+            ExpiryDate = ToDateOnly(
+                source.LicenceVersion?.ExpiryDate),
+
+            IssueDate = ToDateOnly(
+                source.LicenceVersion?.IssueDate),
+
+            OriginalIssueDate = ToDateOnly(
+                source.LicenceVersion?.OriginalIssueDate),
             
-            Issuer =
-                Normalise(
-                    source.LicenceVersion?.Issuer),
+            NaldExpiryDate = source.LicenceVersion?.NaldExpiryDate,
+            
+            NaldEffectiveStartDate = source.LicenceVersion?.NaldEffectiveStartDate,
+             NaldOrigEffectiveDate = source.LicenceVersion?.NaldOrigEffectiveDate,
+             NaldOrigSignatureDate = source.LicenceVersion?.NaldOrigSignatureDate,
+             NaldEffectiveEndDate =  source.LicenceVersion?.NaldEffectiveEndDate,
+             NaldRevocationDate =  source.LicenceVersion?.NaldRevocationDate,
+             NaldSignatureDate =  source.LicenceVersion?.NaldSignatureDate,
+NaldIncrementNumber =   source.LicenceVersion?.NaldIncrementNumber,
+NaldIssueNumber =   source.LicenceVersion?.NaldIssueNumber,
+NaldUpdateReason =   source.LicenceVersion?.NaldUpdateReason,
+
+            Issuer = source.LicenceVersion?.Issuer,
 
             NaldStatus = source.NaldStatus.ToString(),
+            LicenceType = source.LicenceType.ToString(),
+            RegionId = source.RegionId,
 
-            LicenceType =
-                Normalise(source.LicenceType.ToString()),
+            ContainedIn = source.ContainedIn?
+                .Select(ToUpsertContainedInInformation)
+                .ToArray() ?? [],
 
-            RegionId =
-                source.RegionId,
+            ConditionData = source.Condition is null
+                ? null
+                : JsonSerializer.Serialize(
+                    source.Condition,
+                    JsonHelper.GetSerializerOptions()),
 
             SourceData = JsonSerializer.Serialize(
                 source,
-                _jsonSerializerOptions)
+                JsonHelper.GetSerializerOptions())
         };
-
-        var locations = source.ContainedIn ?? [];
-
-        linkedLicence.Locations.AddRange(
-            locations.Select(
-                location =>
-                    new LicenceListItemLinkLocation
-                    {
-                        Source =
-                            Normalise(location.Source.ToString()),
-
-                        Direction =
-                            Normalise(location.Direction.ToString()),
-
-                        SectionName =
-                            Normalise(location.SectionName),
-
-                        LinkReason =
-                            Normalise(location.LinkReason),
-
-                        IsBecauseOfAggregate =
-                            location.IsBecauseOfAggregate,
-
-                        LineNumber =
-                            location.LineNumber,
-
-                        PageNumber =
-                            location.PageNumber
-                    }));
-
-        return linkedLicence;
     }
 
-    private static LicenceListItemLicenceSet CreateLicenceSet(
-        int processRunId,
-        OutputListDataItemLicenceSet source)
+    private static UpsertContainedInInformation
+        ToUpsertContainedInInformation(
+            ContainedInInformation source)
     {
-        if (string.IsNullOrWhiteSpace(source.LicenceSetId))
+        return new UpsertContainedInInformation
         {
-            throw new InvalidOperationException(
-                "LicenceSetId is required.");
-        }
-
-        var licenceSet = new LicenceListItemLicenceSet
-        {
-            ProcessRunId = processRunId,
-
-            LicenceSetId =
-                source.LicenceSetId.Trim(),
-
-            ShortLicenceSetId =
-                Normalise(source.ShortLicenceSetId),
-
-            LicenceSetType =
-                source.LicenceSetType
+            Source = source.Source.ToString(),
+            Direction = source.Direction.ToString(),
+            SectionName = source.SectionName,
+            LinkReason = source.LinkReason,
+            IsBecauseOfAggregate = source.IsBecauseOfAggregate,
+            LineNumber = source.LineNumber,
+            PageNumber = source.PageNumber
         };
-
-        var types = source.LicenceSetTypes?
-                        .Select(x => x)
-            .Distinct()
-            .ToArray()
-            ?? [];
-
-        licenceSet.LicenceSetTypes.AddRange(
-            types.Select(
-                type =>
-                    new LicenceListItemLicenceSetType
-                    {
-                        LicenceSetType = type
-                    }));
-
-        return licenceSet;
     }
 
-    private static LicenceListItemVerificationSection
-        CreateVerificationSection(
-            int processRunId,
-            LicenceSectionVerificationSummary source)
+    private static DateOnly? ToDateOnly(DateTime? value)
     {
-        ArgumentNullException.ThrowIfNull(source);
-
-        if (string.IsNullOrWhiteSpace(
-                source.LicenceSectionName))
-        {
-            throw new InvalidOperationException(
-                "LicenceSectionName is required.");
-        }
-
-        var section =
-            new LicenceListItemVerificationSection
-            {
-                ProcessRunId = processRunId,
-
-                LicenceSectionName =
-                    source.LicenceSectionName.Trim()
-            };
-
-        var items =
-            source.LicenceSectionItems ?? [];
-
-        section.LicenceSectionItems.AddRange(
-            items.Select(CreateVerificationItem));
-
-        return section;
-    }
-
-    private static LicenceListItemVerificationItem
-        CreateVerificationItem(
-            LicenceSectionItemSummary source)
-    {
-        ArgumentNullException.ThrowIfNull(source);
-
-        if (string.IsNullOrWhiteSpace(
-                source.LicenceSectionItemId))
-        {
-            throw new InvalidOperationException(
-                "LicenceSectionItemId is required.");
-        }
-
-        var item =
-            new LicenceListItemVerificationItem
-            {
-                LicenceSectionItemId =
-                    source.LicenceSectionItemId.Trim()
-            };
-
-        var verificationTypes =
-            NormaliseStrings(source.VerificationTypes);
-
-        item.VerificationTypes.AddRange(
-            verificationTypes.Select(
-                type =>
-                    new LicenceListItemVerificationType
-                    {
-                        VerificationType = type
-                    }));
-
-        return item;
-    }
-
-    private static string BuildSearchText(
-        OutputListDataItem source)
-    {
-        var linkedLicenceNumbers =
-            source.linkedLicences?
-                .Select(x => x.LicenceNumber)
-            ?? [];
-
-        return string.Join(
-            " ",
-            new[]
-            {
-                source.filename,
-                source.licenceNumber,
-                source.licenceHolder
-            }
-            .Concat(linkedLicenceNumbers)
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x!.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static string[] NormaliseStrings(
-        IEnumerable<string?>? values)
-    {
-        return values?
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x!.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray()
-            ?? [];
-    }
-
-    private static string? Normalise(
-        string? value)
-    {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
-    }
-
-    private static Guid? ParseGuid(
-        string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return Guid.TryParse(value, out var result)
-            ? result
+        return value.HasValue
+            ? DateOnly.FromDateTime(value.Value)
             : null;
     }
 
-    private static DateOnly? ParseDate(
-        string? value)
+    private static DateOnly? ParseDateOnly(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             return null;
         }
 
-        if (DateOnly.TryParseExact(
-                value,
-                SupportedDateFormats,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces,
-                out var dateOnly))
+        if (DateOnly.TryParse(value, out var result))
         {
-            return dateOnly;
+            return result;
         }
 
-        if (DateTimeOffset.TryParse(
-                value,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces
-                | DateTimeStyles.AssumeUniversal,
-                out var dateTimeOffset))
+        if (DateTime.TryParse(value, out var dateTime))
         {
-            return DateOnly.FromDateTime(
-                dateTimeOffset.UtcDateTime);
+            return DateOnly.FromDateTime(dateTime);
         }
 
-        throw new FormatException(
-            $"The date value '{value}' is invalid.");
-    }
-
-    private static int? ConvertLicenceSetType<T>(
-        T? value)
-        where T : struct
-    {
-        return value switch
-        {
-            null => null,
-            Enum enumValue => Convert.ToInt32(
-                enumValue,
-                CultureInfo.InvariantCulture),
-            _ => Convert.ToInt32(
-                value,
-                CultureInfo.InvariantCulture)
-        };
+        return null;
     }
 }

@@ -26,24 +26,86 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
-            var rawInspectionDateWithWordsRemove = rawInspectionDate.Replace("Time:", string.Empty);
+            var rawInspectionDateWithWordsRemove = rawInspectionDate
+                .Replace("Time:", string.Empty)
+                .Replace("n/a", string.Empty) // This presumably comes from a later column
+                .Replace("N/A", string.Empty) // This presumably comes from a later column                
+                .Replace("✓", string.Empty) // This shouldn't have really come through
+                .Replace("Quantities:", string.Empty) // This shouldn't have really come through
+                .Replace("Date of certificate or", string.Empty) // This shouldn't have really come through
+                .Replace("ü", string.Empty) // Don't know why we get this
+                .Replace("Ö", string.Empty) // Don't know why we get this
+                .Replace("Desktop Review", string.Empty) // Don't know why we get this
+                .Replace("NI", string.Empty) // Don't know why we get this
+                .Replace("th", string.Empty)
+                .Replace("st", string.Empty)
+                .Replace("rd", string.Empty)
+                .Replace("nd", string.Empty)
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty)                
+                .Replace("  ", " ");
             
-            if (DateTime.TryParse($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}",
-                out var tIinspectionDateTime))
+            if (rawInspectionDateWithWordsRemove.Contains('&'))
             {
+                var parts = rawInspectionDateWithWordsRemove.Split("&");
+                rawInspectionDateWithWordsRemove = parts[1].Trim();
+            }
+            
+            if (rawInspectionDateWithWordsRemove.Contains('+'))
+            {
+                var parts = rawInspectionDateWithWordsRemove.Split("+");
+                rawInspectionDateWithWordsRemove = parts[1].Trim();
+            }
+
+            if (rawInspectionDateWithWordsRemove.EndsWith(" P"))
+            {
+                rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove[..^2].Trim();
+            }
+            
+            if (rawInspectionDateWithWordsRemove.Contains("Inspecting Officer"))
+            {
+                var parts = rawInspectionDateWithWordsRemove.Split("Inspecting Officer");
+                rawInspectionDateWithWordsRemove = parts[0].Trim();
+            }
+            
+            if (rawInspectionDateWithWordsRemove.Contains("Land"))
+            {
+                var parts = rawInspectionDateWithWordsRemove.Split("Land");
+                rawInspectionDateWithWordsRemove = parts[0].Trim();
+            }
+            
+            if (rawInspectionTime?.Length == 4 && !rawInspectionDateWithWordsRemove.Contains(':'))
+            {
+                rawInspectionTime = $"{rawInspectionTime[..2]}:{rawInspectionTime[2..]}";
+            }
+            
+            var datesToTry = new List<string>
+            {
+                $"{rawInspectionDateWithWordsRemove} {rawInspectionTime}",
+                rawInspectionDateWithWordsRemove
+            };
+
+            foreach (var dateToTry in datesToTry)
+            {
+                if (!DateTime.TryParse(dateToTry, out var tInspectionDateTime))
+                {
+                    continue;
+                }
+                
                 // If we pulled a date that wasn't the current year, we must have contained a year
-                var containsYear = tIinspectionDateTime.Year != currentYear;
+                var containsYear = tInspectionDateTime.Year != currentYear;
 
                 if (!containsYear)
                 {
                     containsYear = rawInspectionDateWithWordsRemove.Contains(currentYear.ToString())
                         || rawInspectionDateWithWordsRemove.EndsWith(currentYearLast2Digits);
                 }
-                
+                    
                 // Needs to contain a year and should never be today
-                if (containsYear && tIinspectionDateTime.Date != DateTime.Today)
+                if (containsYear && tInspectionDateTime.Date != DateTime.Today)
                 {
-                    inspectionDateTime = tIinspectionDateTime;
+                    inspectionDateTime = tInspectionDateTime;
+                    break;
                 }
             }
         }

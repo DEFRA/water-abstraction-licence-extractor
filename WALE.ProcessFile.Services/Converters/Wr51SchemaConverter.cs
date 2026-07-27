@@ -27,12 +27,12 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
-            var datesToTry = new List<string>();
+            var potentialDates = new List<string>();
             
             // We sometimes get some weird stuff
-            var rawInspectionDateWithWordsRemove = RemoveSpecialCharacters(rawInspectionDate);
+            var rawInspectionDateTweaked = RemoveSpecialCharacters(rawInspectionDate);
             
-            rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove
+            rawInspectionDateTweaked = rawInspectionDateTweaked
                 .Replace("n/a", string.Empty) // This presumably comes from a later column
                 .Replace("N/A", string.Empty) // This presumably comes from a later column                
                 .Replace("Quantities:", string.Empty) // This shouldn't have really come through
@@ -43,45 +43,45 @@ public static class Wr51SchemaConverter
                 .Replace("\r", string.Empty)
                 .Replace("  ", " ");
             
-            if (rawInspectionDateWithWordsRemove.Contains('&'))
+            if (rawInspectionDateTweaked.Contains('&'))
             {
-                var parts = rawInspectionDateWithWordsRemove.Split("&");
-                rawInspectionDateWithWordsRemove = parts[1].Trim();
+                var parts = rawInspectionDateTweaked.Split("&");
+                rawInspectionDateTweaked = parts[1].Trim();
             }
             
-            if (rawInspectionDateWithWordsRemove.Contains('+'))
+            if (rawInspectionDateTweaked.Contains('+'))
             {
-                var parts = rawInspectionDateWithWordsRemove.Split("+");
-                rawInspectionDateWithWordsRemove = parts[1].Trim();
+                var parts = rawInspectionDateTweaked.Split("+");
+                rawInspectionDateTweaked = parts[1].Trim();
             }
 
-            if (rawInspectionDateWithWordsRemove.EndsWith(" P"))
+            if (rawInspectionDateTweaked.EndsWith(" P"))
             {
-                rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove[..^2].Trim();
+                rawInspectionDateTweaked = rawInspectionDateTweaked[..^2].Trim();
             }
             
-            if (rawInspectionDateWithWordsRemove.Contains("Inspecting Officer"))
+            if (rawInspectionDateTweaked.Contains("Inspecting Officer"))
             {
-                var parts = rawInspectionDateWithWordsRemove.Split("Inspecting Officer");
-                rawInspectionDateWithWordsRemove = parts[0].Trim();
+                var parts = rawInspectionDateTweaked.Split("Inspecting Officer");
+                rawInspectionDateTweaked = parts[0].Trim();
 
                 var lastLine = parts.Last().Split('\n').Last();
-                datesToTry.Add(lastLine);
+                potentialDates.Add(lastLine);
             }
             
-            if (rawInspectionDateWithWordsRemove.Contains("Land"))
+            if (rawInspectionDateTweaked.Contains("Land"))
             {
-                var parts = rawInspectionDateWithWordsRemove.Split("Land");
-                rawInspectionDateWithWordsRemove = parts[0].Trim();
+                var parts = rawInspectionDateTweaked.Split("Land");
+                rawInspectionDateTweaked = parts[0].Trim();
             }
             
-            if (rawInspectionDateWithWordsRemove.Contains("Time"))
+            if (rawInspectionDateTweaked.Contains("Time"))
             {
-                var parts = rawInspectionDateWithWordsRemove.Split("Time");
-                rawInspectionDateWithWordsRemove = parts[0].Trim();
+                var parts = rawInspectionDateTweaked.Split("Time");
+                rawInspectionDateTweaked = parts[0].Trim();
             }
 
-            rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove
+            rawInspectionDateTweaked = rawInspectionDateTweaked
                 .Replace("th", string.Empty)
                 .Replace("st", string.Empty)
                 .Replace("rd", string.Empty)
@@ -90,35 +90,62 @@ public static class Wr51SchemaConverter
                 .Replace("  ", " ")
                 .Trim();
 
-            if (rawInspectionDateWithWordsRemove.EndsWith(" :"))
+            if (rawInspectionDateTweaked.EndsWith(" :"))
             {
-                rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove[..^2];
+                rawInspectionDateTweaked = rawInspectionDateTweaked[..^2];
             }
             
-            if (rawInspectionTime?.Length == 4 && !rawInspectionDateWithWordsRemove.Contains(':'))
+            if (rawInspectionTime?.Length == 4 && !rawInspectionDateTweaked.Contains(':'))
             {
                 rawInspectionTime = $"{rawInspectionTime[..2]}:{rawInspectionTime[2..]}";
             }
 
-            datesToTry.Add($"{rawInspectionDateWithWordsRemove} {rawInspectionTime}");
-            datesToTry.Add(rawInspectionDateWithWordsRemove);
-            
-            foreach (var dateToTry in datesToTry)
+            potentialDates.Add($"{rawInspectionDateTweaked} {rawInspectionTime}");
+            potentialDates.Add(rawInspectionDateTweaked);
+
+            if (rawInspectionDateTweaked.Count(c => c == '-') == 1)
             {
-                if (!DateTime.TryParse(dateToTry, out var tInspectionDateTime))
+                var parts = rawInspectionDateTweaked.Split('-');
+                potentialDates.Add(parts[0].Trim());
+            }
+            
+            if (rawInspectionDateTweaked.Count(c => c == '.') == 1
+                && rawInspectionDateTweaked.Count(c => c == ':') == 1
+                && rawInspectionDateTweaked.All(c => c != '/')
+                && rawInspectionDateTweaked.All(c => c != ' '))
+            {
+                potentialDates.Add(rawInspectionDateTweaked.Replace(".", ":"));
+            }
+
+            var words = rawInspectionDateTweaked.Split(' ');
+
+            if (words.Length == 4)
+            {
+                potentialDates.Add($"{words[0]} {words[1]} {words[2]}");
+                potentialDates.Add($"{words[1]} {words[2]} {words[3]}");
+            }
+            
+            foreach (var potentialDate in potentialDates)
+            {
+                if (!DateTime.TryParse(potentialDate, out var tInspectionDateTime))
                 {
                     continue;
                 }
                 
                 // If we pulled a date that wasn't the current year, we must have contained a year
-                var containsYear = tInspectionDateTime.Year != currentYear;
-
-                if (!containsYear)
-                {
-                    containsYear = rawInspectionDateWithWordsRemove.Contains(currentYear.ToString())
-                        || rawInspectionDateWithWordsRemove.EndsWith(currentYearLast2Digits);
-                }
-                    
+                var year = tInspectionDateTime.Year.ToString();
+                var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
+                var containsYear = potentialDate.Contains($"/{year2Digits}")
+                    || potentialDate.Contains($"/{year}")
+                    || potentialDate.Contains($".{year2Digits}")
+                    || potentialDate.Contains($".{year}")
+                    || potentialDate.Contains($":{year2Digits}")
+                    || potentialDate.Contains($":{year}")
+                    || potentialDate.Contains($"-{year2Digits}")
+                    || potentialDate.Contains($"-{year}")
+                    || potentialDate.Contains($" {year2Digits}")
+                    || potentialDate.Contains($" {year}");
+                        
                 // Needs to contain a year and should never be today
                 if (!containsYear || tInspectionDateTime.Date == DateTime.Today)
                 {

@@ -126,7 +126,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                        uuid(de.file_id) as file_id
                    FROM public.licence_finder_result lfr
                    JOIN public.dms_extract de
-                       ON lower(lfr.permit_number) like CONCAT(de.permit_number, '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
+                       ON lower(lfr.permit_number) like CONCAT(lower(de.permit_number), '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
                        AND de.file_id = lfr.file_id
                    WHERE
                        lfr.license_number = @LicenceNumber

@@ -100,7 +100,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
             CacheService,
             OutputService,
             regionCode,
-            DateTime.Now);
+            DateTime.Now,
+            useLockExclusivity: false);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)

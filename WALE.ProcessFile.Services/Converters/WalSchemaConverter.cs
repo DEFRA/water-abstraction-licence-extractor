@@ -1430,7 +1430,7 @@ public static class WalSchemaConverter
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
 
-                if (relatedFileMatches.AlreadySaved != true)
+                if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,
@@ -3760,6 +3760,7 @@ public static class WalSchemaConverter
             "total annual quantity" => LimitPeriodType.InTotal,
             "consecutive five year" => LimitPeriodType.Per5Years,
             "five consecutive years" => LimitPeriodType.Per5Years,
+            "over any 5-year period" => LimitPeriodType.Per5Years,            
             _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
         };
     }

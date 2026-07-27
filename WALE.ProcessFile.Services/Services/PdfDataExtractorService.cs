@@ -1208,7 +1208,7 @@ public class PdfDataExtractorService(
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Finished/released lock/saving for {linkedDmsFileData.FileId}");
 
-                if (relatedFileMatches.AlreadySaved != true)
+                if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
                     await SaveMatchResultAsync(
                         relatedFileMatches.Item!,
@@ -1429,6 +1429,11 @@ public class PdfDataExtractorService(
                         continue;
                     }
 
+                    if (partialLine.Text.Contains("over any 5") && label.Name == "Per5YearUnits")
+                    {
+                        
+                    }
+                    
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
 

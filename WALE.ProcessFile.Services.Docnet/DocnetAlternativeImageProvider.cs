@@ -9,6 +9,7 @@ namespace WALE.ProcessFile.Services.Docnet;
 public class DocnetAlternativeImageProvider : IAlternativeImageProvider
 {
     private IDocReader? _docReader;
+    private readonly Lock _lock = new();
     
     public SKBitmap GetPageAsSkBitmap(
         Stream fileStream,
@@ -16,14 +17,17 @@ public class DocnetAlternativeImageProvider : IAlternativeImageProvider
         int pageDimensionHeight,
         int pageNumber)
     {
-
         if (_docReader == null)
         {
-            var docLibInstance = new DocLibInstance();
-
-            _docReader = docLibInstance.GetDocReader(
-                fileStream,
-                new PageDimensions(pageDimensionWidth, pageDimensionHeight));
+            lock (_lock)
+            {
+                var docLibInstance = new DocLibInstance();
+                fileStream.Position = 0;
+                
+                _docReader = docLibInstance.GetDocReader(
+                    fileStream,
+                    new PageDimensions(pageDimensionWidth, pageDimensionHeight));   
+            }
         }
 
         using var pageReader = _docReader.GetPageReader(pageNumber - 1);

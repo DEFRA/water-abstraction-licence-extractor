@@ -1,3 +1,4 @@
+using System.Text;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Enums.Wr51;
 using WALE.ProcessFile.Services.Models.OutputSchema.Wr51;
@@ -26,23 +27,19 @@ public static class Wr51SchemaConverter
         DateTime? inspectionDateTime = null;
         if (!string.IsNullOrWhiteSpace(rawInspectionDate))
         {
-            var rawInspectionDateWithWordsRemove = rawInspectionDate
+            // We sometimes get some weird stuff
+            var rawInspectionDateWithWordsRemove = RemoveSpecialCharacters(rawInspectionDate);
+            
+            rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove
                 .Replace("Time:", string.Empty)
                 .Replace("n/a", string.Empty) // This presumably comes from a later column
                 .Replace("N/A", string.Empty) // This presumably comes from a later column                
-                .Replace("✓", string.Empty) // This shouldn't have really come through
                 .Replace("Quantities:", string.Empty) // This shouldn't have really come through
                 .Replace("Date of certificate or", string.Empty) // This shouldn't have really come through
-                .Replace("ü", string.Empty) // Don't know why we get this
-                .Replace("Ö", string.Empty) // Don't know why we get this
                 .Replace("Desktop Review", string.Empty) // Don't know why we get this
                 .Replace("NI", string.Empty) // Don't know why we get this
-                .Replace("th", string.Empty)
-                .Replace("st", string.Empty)
-                .Replace("rd", string.Empty)
-                .Replace("nd", string.Empty)
                 .Replace("\r", string.Empty)
-                .Replace("\n", string.Empty)                
+                .Replace("\n", " ")
                 .Replace("  ", " ");
             
             if (rawInspectionDateWithWordsRemove.Contains('&'))
@@ -73,6 +70,16 @@ public static class Wr51SchemaConverter
                 var parts = rawInspectionDateWithWordsRemove.Split("Land");
                 rawInspectionDateWithWordsRemove = parts[0].Trim();
             }
+
+            rawInspectionDateWithWordsRemove = rawInspectionDateWithWordsRemove
+                .Replace("th", string.Empty)
+                .Replace("st", string.Empty)
+                .Replace("rd", string.Empty)
+                .Replace("nd", string.Empty)
+                .Replace("  ", " ")
+                .Trim();
+
+            rawInspectionDate = rawInspectionDateWithWordsRemove;
             
             if (rawInspectionTime?.Length == 4 && !rawInspectionDateWithWordsRemove.Contains(':'))
             {
@@ -102,11 +109,13 @@ public static class Wr51SchemaConverter
                 }
                     
                 // Needs to contain a year and should never be today
-                if (containsYear && tInspectionDateTime.Date != DateTime.Today)
+                if (!containsYear || tInspectionDateTime.Date == DateTime.Today)
                 {
-                    inspectionDateTime = tInspectionDateTime;
-                    break;
+                    continue;
                 }
+
+                inspectionDateTime = tInspectionDateTime;
+                break;
             }
         }
 
@@ -309,6 +318,32 @@ public static class Wr51SchemaConverter
         }
         
         return string.Join("\n", matchedLabel.Text.Select(t => t.Text)!);
+    }
+    
+    private static string RemoveSpecialCharacters(this string str)
+    {
+        var sb = new StringBuilder();
+        
+        foreach (var c in str)
+        {
+            if (c is >= '0' and <= '9'
+                or >= 'A' and <= 'Z'
+                or >= 'a' and <= 'z'
+                or '.'
+                or '/'
+                or '-'
+                or ':'
+                or '+'
+                or '&'                
+                or '\r'
+                or '\n'                
+                or ' ')
+            {
+                sb.Append(c);
+            }
+        }
+        
+        return sb.ToString();
     }
     
     private static InOrderStatus GetInOrderStatus(MatchesResult matchesResult,  string name)

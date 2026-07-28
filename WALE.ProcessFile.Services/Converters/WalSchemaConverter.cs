@@ -2386,28 +2386,37 @@ public static class WalSchemaConverter
             .Where(x => x.MatchedLabelName is "PurposeConditionSub" or "PurposeConditionSingleLineSub")
             .ToList();
                 
-        var limitPurposes = purposeConditionSub?.Count > 0 ?
-            purposeConditionSub.Select(pcs =>
-                new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text }).ToList()
+        var limitPurposes = purposeConditionSub.Count > 0 ?
+            purposeConditionSub
+                .Select(pcs =>
+                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text })
+                .GroupBy(x => x.Id)
+                .Select(x => x.First())
+                .ToList()
             : null;
-                
-        var pointCondition = siblings
-            .FirstOrDefault(x => x.MatchedLabelName == "PointCondition");
 
-        var pointConditionSub = pointCondition?
-            .SubResults
-            .Where(x => x.MatchedLabelName == "PointConditionSub")
+        var pointCondition = siblings
+            .Where(x => x.MatchedLabelName is "PointCondition" or "PointConditionSingleLine")
+            .ToList();
+
+        var pointConditionSub = pointCondition
+            .SelectMany(pc => pc.SubResults)
+            .Where(x => x.MatchedLabelName is "PointConditionSub" or "PointConditionSingleLineSub")
             .ToList();
                 
         var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
             .Select(l => l.Text) ?? []);
         
-        var limitPoints = pointConditionSub?.Count > 0 ?
-            pointConditionSub.Select(pcs =>
-                new Point
-                {
-                    Id = pcs.Text!.FirstOrDefault()?.Text
-                }).ToList()
+        var limitPoints = pointConditionSub.Count > 0 ?
+            pointConditionSub
+                .Select(pcs =>
+                    new Point
+                    {
+                        Id = pcs.Text!.FirstOrDefault()?.Text
+                    })
+                .GroupBy(x => x.Id)
+                .Select(x => x.First())
+                .ToList()
             : null;
 
         foreach (var documentPoint in allPoints)

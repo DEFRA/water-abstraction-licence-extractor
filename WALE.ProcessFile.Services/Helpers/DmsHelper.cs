@@ -46,7 +46,8 @@ public static class DmsHelper
             IFileService fileService,
             string dmsReportPath,
             bool getFromFile,
-            ICacheService cacheService)
+            ICacheService cacheService,
+            bool checkWeHaveFile = true)
     {
         var dtStartGetDms = DateTime.Now;
         
@@ -64,9 +65,10 @@ public static class DmsHelper
         {
             filesAndMapping = await GetFilesAndMappingFromLicenceFinderResultsAsync(
                 fileService,
-                cacheService);
+                cacheService,
+                checkWeHaveFile);
         }
-    
+
         filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
             .OrderBy(filePath => filePath.Key)
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
@@ -208,15 +210,25 @@ public static class DmsHelper
     
     private static async Task<(Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
             Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames)>
-    GetFilesAndMappingFromLicenceFinderResultsAsync(IFileService fileService, ICacheService cacheService)
+    GetFilesAndMappingFromLicenceFinderResultsAsync(
+        IFileService fileService,
+        ICacheService cacheService,
+        bool checkWeHaveFile)
     {
         var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
         var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
 
         var licenceFinderResultsTask = cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+
+        HashSet<string>? lowercaseFilesInFolder = null;
         
-        var allDestinationFilenames = await fileService.GetAllFilesAsync();
-        var lowercaseFilesInFolder = allDestinationFilenames.Select(f => f.ToLower()).ToHashSet();
+        if (checkWeHaveFile)
+        {
+            var allDestinationFilenames = await fileService.GetAllFilesAsync();
+            lowercaseFilesInFolder = allDestinationFilenames
+                .Select(f => f.ToLower())
+                .ToHashSet();
+        }
 
         var licenceFinderResults = await licenceFinderResultsTask;
 
@@ -229,7 +241,7 @@ public static class DmsHelper
             
             var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
             
-            if (!lowercaseFilesInFolder.Contains(destinationFileName))
+            if (checkWeHaveFile && !lowercaseFilesInFolder!.Contains(destinationFileName))
             {
                 continue;
             }

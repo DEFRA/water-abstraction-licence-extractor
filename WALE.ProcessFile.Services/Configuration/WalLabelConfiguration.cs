@@ -1950,27 +1950,27 @@ public static partial class WalLabelConfiguration
                         ],
                         MustContain = 
                         [
-                            ("4.1"),
-                            ("4.2"),
-                            ("4.3"),
-                            ("4.4"),
-                            ("4.5"),
-                            ("4.6"),
-                            ("4.7"),
-                            ("4.8"),
-                            ("4.9"),
-                            ("(1)"),
-                            ("(2)"),
-                            ("(3)"),
-                            ("(4)"),
-                            ("(a)"),
-                            ("(b)"),
-                            ("(c)"),
-                            ("(d)"),
-                            ("spray irrigation"), // TODO add more types here
-                            ("trickle irrigation"),
-                            ("mineral washing"),
-                            ("groundwater augmentation")
+                            "4.1",
+                            "4.2",
+                            "4.3",
+                            "4.4",
+                            "4.5",
+                            "4.6",
+                            "4.7",
+                            "4.8",
+                            "4.9",
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)",
+                            "(a)",
+                            "(b)",
+                            "(c)",
+                            "(d)",
+                            "spray irrigation", // TODO add more types here
+                            "trickle irrigation",
+                            "mineral washing",
+                            "groundwater augmentation"
                         ],
                         SubLabels =
                         [
@@ -1988,7 +1988,11 @@ public static partial class WalLabelConfiguration
                         Name = "PurposeConditionSingleLine",
                         Text =
                         [
-                            new("*For purpose ")
+                            new("*For Purpose ")
+                            {
+                                LineMustStartWith = true
+                            },
+                            new("For Purpose ")
                             {
                                 LineMustStartWith = true
                             }
@@ -2138,6 +2142,42 @@ public static partial class WalLabelConfiguration
                             }
                         ]
                     },
+                    new()
+                    {
+                        Name = "PointConditionSingleLine",
+                        Text =
+                        [
+                            new("From borehole ")
+                            {
+                                LineMustStartWith = true
+                            }
+                        ],
+                        TextEnd =
+                        [
+                            new("[END_OF_LINE]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        Possibilities =
+                        [
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PointConditionSingleLineSub",
+                                Text = [new("and ")],
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },                    
                     GetLinkedLicenceNumber("LinkedLicenceNumber"),
                     new()
                     {

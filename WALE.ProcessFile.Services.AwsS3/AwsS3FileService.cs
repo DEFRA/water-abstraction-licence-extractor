@@ -2,7 +2,6 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -17,6 +16,8 @@ public class AwsS3FileService(
 {
     public async Task<List<string>> GetAllFilesAsync()
     {
+        // TODO use an approach of reading a file with a list of filenames in it instead
+        
         var client = GetS3Client();
         var response = await client.ListObjectsV2Async(
             new ListObjectsV2Request

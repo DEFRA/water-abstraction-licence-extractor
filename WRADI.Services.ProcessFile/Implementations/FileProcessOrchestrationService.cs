@@ -25,7 +25,7 @@ public class FileProcessOrchestrationService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
-        var (dmsFilesToProcess, allDmsData) =
+        var (dmsFilesToProcess, _) =
             await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
                 fileService,
                 string.Empty,

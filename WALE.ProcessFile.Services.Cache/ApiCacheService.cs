@@ -647,6 +647,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
+        var dtStart = DateTime.UtcNow;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Started getting licence finder results");
+        
         var path = $"/Extractor/LicenceFinder/GetResults?skip={skip}&take={take}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -654,9 +657,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<LicenceFinderResult>>(
+        var list = JsonSerializer.Deserialize<List<LicenceFinderResult>>(
             content,
             JsonHelper.GetSerializerOptions())!;
+        
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Finished getting {list.Count} licence finder results in {tsDuration} seconds");
+        
+        return list;
     }
 
     public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
@@ -761,6 +769,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
     public async Task<HashSet<string>> GetFirstNamesAsync()
     {
+        var dtStart = DateTime.UtcNow;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Started getting first names");
+        
         var path = "/Extractor/FirstNames/GetAll";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -769,13 +780,21 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var content = await response.Content.ReadAsStringAsync();
         
-        return JsonSerializer.Deserialize<HashSet<string>>(
+        var hashSet = JsonSerializer.Deserialize<HashSet<string>>(
             content,
             JsonHelper.GetSerializerOptions())!; 
+        
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Finished getting {hashSet.Count} first names in {tsDuration} seconds");
+        
+        return hashSet;
     }
 
     public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
     {
+        var dtStart = DateTime.UtcNow;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Started getting abstraction licences");
+        
         var path = "/Extractor/NaldData/GetImpoundmentAndAbstractionLicences";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -783,9 +802,14 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<NaldLicence>>(
+        var list = JsonSerializer.Deserialize<List<NaldLicence>>(
             content,
             JsonHelper.GetSerializerOptions())!;
+        
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Finished getting {list.Count} abstraction licences in {tsDuration} seconds");
+        
+        return list;
     }
 
     public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)

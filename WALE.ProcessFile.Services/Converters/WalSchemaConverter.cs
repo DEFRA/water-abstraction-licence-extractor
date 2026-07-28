@@ -2670,6 +2670,12 @@ public static class WalSchemaConverter
                         .Text
                     : null;
 
+                // We can't give a value that has no units (this fixes an issue on 12100068)
+                if (string.IsNullOrEmpty(units))
+                {
+                    continue;
+                }
+                
                 var text = valueResult.MatchedLabelTextFirstLine;
 
                 var abstractionLimit = new AbstractionLimit
@@ -2755,11 +2761,13 @@ public static class WalSchemaConverter
 
         if (!isExcludedLinkReason)
         {
-            allIndividualGroups.AddRange(notIncludedList.Where(grp => grp.Limits.Count > 0));
+            allIndividualGroups.AddRange(
+                notIncludedList.Where(grp => grp.Limits.Count > 0));
         }
 
         if (aggregateAbstractionLimits.Count == 0)
         {
+            sectionLinkedLicences.AddRange(linkedLicenceNumbers);
             return;
         }
 

@@ -71,16 +71,6 @@ public static class DmsHelper
             .OrderBy(filePath => filePath.Key)
             .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
 
-        // For debugging uncheck sections of the following
-        filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
-            //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
-                //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-            .Where(x => x.Key.Contains("83c306"))
-            //.Where(x => x.Value.Item2.RegionCode == 3) // North east
-            //.Skip(10)
-            //.Take(500)
-            .ToDictionary(filePath => filePath.Key, filePath => filePath.Value);
-
         /*var dupedFileIds = filesAndMapping.FilenamesWithLicenceNumbers
             .Select(filename => filename.Key.Split("__")[1])
             .GroupBy(f => f)

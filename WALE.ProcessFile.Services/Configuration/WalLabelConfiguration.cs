@@ -1945,8 +1945,10 @@ public static partial class WalLabelConfiguration
                             "(2)",
                             "(3)",
                             "(4)",
-                            "spray irrigation",
-                            "trickle irrigation"
+                            "spray irrigation", // TODO add more types here
+                            "trickle irrigation",
+                            "mineral washing",
+                            "groundwater augmentation"                             
                         ],
                         SubLabels =
                         [

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -7,8 +8,8 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    private static readonly Dictionary<string, DmsFileData?> DmsFileDataCache = new();
-    private static readonly Dictionary<string, NaldData?> NaldDataCache = new();
+    private static readonly ConcurrentDictionary<string, DmsFileData?> DmsFileDataCache = new();
+    private static readonly ConcurrentDictionary<string, NaldData?> NaldDataCache = new();
     
     public static string? RemoveSeperators(string? licenceNumber)
     {

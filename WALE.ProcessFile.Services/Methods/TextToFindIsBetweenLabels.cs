@@ -85,6 +85,10 @@ public static class TextToFindIsBetweenLabels
 
             if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
             {
+                var lineNumberOfLabelText = request.line?.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase) == true
+                    ? request.line.LineNumber
+                    : betweenText[0].LineNumber;
+                
                 var firstBetweenLine = betweenText[0];
                 var firstColumn = firstBetweenLine.Columns.Count > 0 ? firstBetweenLine.Columns[0] : null;
                 var firstColumnText = firstColumn != null ?
@@ -93,33 +97,49 @@ public static class TextToFindIsBetweenLabels
 
                 var words = DocumentLineColumn.TextToWords(labelText, null);
                 
-                if (!string.IsNullOrEmpty(firstColumnText))
+                if (lineNumberOfLabelText == betweenText[0].LineNumber)
                 {
-                    text += $" {firstColumnText}";
-                    words.AddRange(firstBetweenLine.Columns[0].Words);
-                }
-                
-                if (request.label.IncludeEndLabelText)
-                {
-                    var endText = matchedEndText?.matchedEndText.Text;
+                    if (!string.IsNullOrEmpty(firstColumnText))
+                    {
+                        text += $" {firstColumnText}";
+                        words.AddRange(firstBetweenLine.Columns[0].Words);
+                    }
 
-                    text += $" {endText}";
-                    words.Add(new(
-                        endText!,
-                        null,
-                        DocumentLineWordCoordinates.NotKnown(),
-                        null));
-                }
+                    if (request.label.IncludeEndLabelText)
+                    {
+                        var endText = matchedEndText?.matchedEndText.Text;
 
-                if (betweenText[0].Columns.Count == 0)
-                {
-                    betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
+                        text += $" {endText}";
+                        words.Add(new(
+                            endText!,
+                            null,
+                            DocumentLineWordCoordinates.NotKnown(),
+                            null));
+                    }
+
+                    if (betweenText[0].Columns.Count == 0)
+                    {
+                        betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
+                    }
+                    else
+                    {
+                        var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
+                        betweenText[0].Columns[0] = new DocumentLineColumn(textWords);
+                    }
                 }
                 else
                 {
-                    var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
-                    
-                    betweenText[0].Columns[0] = new DocumentLineColumn(textWords);   
+                    betweenText.Insert(0, new DocumentLine
+                    {
+                        Columns =
+                        [
+                            new DocumentLineColumn
+                            {
+                                Words = words
+                            }
+                        ],
+                        LineNumber = lineNumberOfLabelText
+                    });
                 }
             }
         }

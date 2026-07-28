@@ -183,11 +183,11 @@ public class NoOcrDatabaseTests
 
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(4, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the",
-            abstractionLimitsSection.Text![2].Text);
+            abstractionLimitsSection.Text![3].Text);
         Assert.Equal(4, abstractionLimitsSection.PageNumber);        
-        Assert.Equal(16, abstractionLimitsSection.LineNumber);
+        Assert.Equal(15, abstractionLimitsSection.LineNumber);
 
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);

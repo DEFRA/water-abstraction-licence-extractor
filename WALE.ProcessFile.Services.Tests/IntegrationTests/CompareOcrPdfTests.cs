@@ -357,7 +357,7 @@ public class CompareOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResultTesseractSparseTextOsd);
         Assert.True(abstractionLimitsResultTesseractSparseTextOsd.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
         
         var abstractionLimitsResultTesseractAutoOsd = resultListTesseractAutoOsd.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
@@ -369,19 +369,19 @@ public class CompareOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResultTextract);
         Assert.True(abstractionLimitsResultTextract.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultTextract.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResultTextract.Text?.Count);
         
         var abstractionLimitsResultDocumentIntelligence = resultListDocumentIntelligence.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultDocumentIntelligence);
         Assert.True(abstractionLimitsResultDocumentIntelligence.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultDocumentIntelligence.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResultDocumentIntelligence.Text?.Count);
         
         var abstractionLimitsResultAiVision = resultListAiVision.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultAiVision);
         Assert.True(abstractionLimitsResultAiVision.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultAiVision.Text?.Count);
+        Assert.Equal(5, abstractionLimitsResultAiVision.Text?.Count);
     }
     
     [Fact]
@@ -1038,12 +1038,12 @@ public class CompareOcrPdfTests
         var abstractionLimitsResultDocumentIntelligence = resultListDocumentIntelligence.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResultDocumentIntelligence);
         Assert.True(abstractionLimitsResultDocumentIntelligence.IsOcr);
-        Assert.Equal(3, abstractionLimitsResultDocumentIntelligence.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResultDocumentIntelligence.Text?.Count);
         
         var abstractionLimitsResultAiVision = resultListAiVision.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResultAiVision);
         Assert.True(abstractionLimitsResultAiVision.IsOcr);
-        Assert.Equal(3, abstractionLimitsResultAiVision.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResultAiVision.Text?.Count);
         
         // Linked licence counts
         

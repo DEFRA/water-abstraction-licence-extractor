@@ -1735,16 +1735,17 @@ public static partial class WalLabelConfiguration
                     {
                         Name = "AbstractionLimitPoint",
                         TextStart = [
-                            new("6.1"),
-                            new("6.2"),
-                            new("6.3"),
-                            new("6.4"),
-                            new("6.5"),
-                            new("6.6"),
-                            new("6.7"),
-                            new("6.8"),
-                            new("6.9"),
-                            new("6.10"),
+                            new("6.1") { LineMustStartWith = true },
+                            new("6.2") { LineMustStartWith = true },
+                            new("6.3") { LineMustStartWith = true },
+                            new("6.4") { LineMustStartWith = true },
+                            new("6.5") { LineMustStartWith = true },
+                            new("6.6") { LineMustStartWith = true },
+                            new("6.7") { LineMustStartWith = true },
+                            new("6.8") { LineMustStartWith = true },
+                            new("6.9") { LineMustStartWith = true },
+                            new("6.10") { LineMustStartWith = true },
+                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
                             new("(1)") { LineMustStartWith = true },
                             new("(2)") { LineMustStartWith = true },
                             new("(3)") { LineMustStartWith = true },
@@ -1755,15 +1756,16 @@ public static partial class WalLabelConfiguration
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
-                            new("6.2"),
-                            new("6.3"),
-                            new("6.4"),
-                            new("6.5"),
-                            new("6.6"),
-                            new("6.7"),
-                            new("6.8"),
-                            new("6.9"),
-                            new("6.10"),
+                            new("6.2") { LineMustStartWith = true },
+                            new("6.3") { LineMustStartWith = true },
+                            new("6.4") { LineMustStartWith = true },
+                            new("6.5") { LineMustStartWith = true },
+                            new("6.6") { LineMustStartWith = true },
+                            new("6.7") { LineMustStartWith = true },
+                            new("6.8") { LineMustStartWith = true },
+                            new("6.9") { LineMustStartWith = true },
+                            new("6.10") { LineMustStartWith = true },
+                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("(2)") { LineMustStartWith = true},
                             new("(3)") { LineMustStartWith = true},
                             new("(4)") { LineMustStartWith = true},
@@ -1773,6 +1775,9 @@ public static partial class WalLabelConfiguration
                             new("*In aggregate") { LineMustStartWith = true },
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[END_OF_BLOCK]")
+                        ],
+                        Remove = [
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED")
                         ],
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,

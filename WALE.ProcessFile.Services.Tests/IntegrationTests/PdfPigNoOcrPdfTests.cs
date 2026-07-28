@@ -287,9 +287,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(4, abstractionLimitsSection.Text!.Count);
-        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(16, abstractionLimitsSection.LineNumber);
+        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
+        Assert.Equal("A day means any period of 24 consecutive hours and a year means the", abstractionLimitsSection.Text![3].Text);
+        Assert.Equal(15, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -466,12 +466,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(18, abstractionLimitsResult.LineNumber);
+        Assert.Equal(7, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(17, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(18, abstractionLimitsResult.LineNumber);
+        Assert.Equal(17, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(2, abstractionLimitsSection1.Text!.Count);
@@ -668,13 +668,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(18, abstractionLimitsResult.LineNumber);
+        Assert.Equal(18, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(17, abstractionLimitsResult.LineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
         
         Assert.Equal(2, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(18, abstractionLimitsResult.LineNumber);
+        Assert.Equal(17, abstractionLimitsResult.LineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
@@ -897,8 +897,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(12, abstractionLimitsSection.Text!.Count);
-        Assert.Equal(28, abstractionLimitsSection.LineNumber);
+        Assert.Equal(13, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(27, abstractionLimitsSection.LineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -1078,11 +1078,11 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(49, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(50, abstractionLimitsSection.Text!.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(10, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(8, abstractionLimitsSection.LineNumber);
+        Assert.Equal(7, abstractionLimitsSection.LineNumber);
         
         var point1 = abstractionLimitsSection.SubResults[0];
         Assert.Single(point1.SubResults);
@@ -1624,13 +1624,13 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(28, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(29, abstractionLimitsSection.Text!.Count);
         Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults[0].Text!.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(31, abstractionLimitsSection.LineNumber);
+        Assert.Equal(30, abstractionLimitsSection.LineNumber);
         
         var section1Point1 = abstractionLimitsSection.SubResults[0];
         Assert.Equal(4, section1Point1.Text!.Count);
@@ -2143,7 +2143,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(60, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(61, abstractionLimitsSection.Text!.Count);
         Assert.Equal(8, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults[0].Text!.Count);        
         
@@ -2357,7 +2357,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
 
-        Assert.Equal(27, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(28, abstractionLimitsSection.Text!.Count);
         
         Assert.Equal(4, abstractionLimitsSection.SubResults.Count);
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -2450,9 +2450,9 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.NotNull(abstractionLimitsSection.Text);
-        Assert.Equal(11, abstractionLimitsSection.Text.Count);
+        Assert.Equal(12, abstractionLimitsSection.Text.Count);
         Assert.Equal("200,000 cubic metres per year.",
-            abstractionLimitsSection.Text![10].Text);
+            abstractionLimitsSection.Text![11].Text);
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(7, abstractionLimitsSection.SubResults[0].Text!.Count);
 
@@ -2593,8 +2593,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimits);
         Assert.False(abstractionLimits.IsOcr);
-        Assert.Equal(9, abstractionLimits.Text!.Count);
-        Assert.Equal("The aggregate quality of water authorised to be abstracted under this licence", abstractionLimits.Text![3].Text);
+        Assert.Equal(10, abstractionLimits.Text!.Count);
+        Assert.Equal("The aggregate quality of water authorised to be abstracted under this licence", abstractionLimits.Text![4].Text);
         Assert.Single(abstractionLimits.SubResults);
 
         var abstractionLimitsPoint = abstractionLimits.SubResults[0];
@@ -2861,7 +2861,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(4, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -2950,7 +2950,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(10, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(11, abstractionLimitsSection.Text!.Count);
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3024,7 +3024,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(7, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(8, abstractionLimitsSection.Text!.Count);
 
         Assert.Single(abstractionLimitsSection.SubResults);
 
@@ -3113,7 +3113,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(9, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(10, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var sectionPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3249,7 +3249,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(25, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(26, abstractionLimitsSection.Text!.Count);
 
         Assert.Equal(3, abstractionLimitsSection.SubResults.Count);
 
@@ -3367,7 +3367,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(9, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(10, abstractionLimitsSection.Text!.Count);
         Assert.Single(abstractionLimitsSection.SubResults);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3457,7 +3457,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(27, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(28, abstractionLimitsSection.Text!.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -3552,7 +3552,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(19, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(20, abstractionLimitsSection.Text!.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];

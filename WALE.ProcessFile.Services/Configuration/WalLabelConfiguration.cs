@@ -816,6 +816,7 @@ public static partial class WalLabelConfiguration
                     new("MEANS OF ABSTRACTION"),
                     new("MEAN OF ABSTRACTION"),
                     new("Land(s) on which water is authorised to be used"),
+                    new("Quantity(ies) of Water Authorised to be Abstracted"),
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =
@@ -854,6 +855,7 @@ public static partial class WalLabelConfiguration
                             new("2. POINT(S) OF ABSTRACTION"),
                             new("2. POINTS OF ABSTRACTION"),
                             new("1. SOURCE OF SUPPLY"),
+                            new("Source of Supply and authorised Place(s) of abstraction"),
                             new("SOURCE OF SUPPLY"),
                             new("Point Reference")
                         ],
@@ -1678,6 +1680,7 @@ public static partial class WalLabelConfiguration
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
+                    new("Quantity(ies) of Water Authorised to be Abstracted During a Period or Periods Specified"),                    
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED NOT EXCEEDING"),
                     new("QUANTITY OF WATER AUTHORISED TO BE ABSTRACTED DURING THE PERIOD"),

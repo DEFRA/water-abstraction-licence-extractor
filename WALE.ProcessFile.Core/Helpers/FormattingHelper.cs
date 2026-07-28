@@ -1213,7 +1213,10 @@ public static class FormattingHelper
         }
         
         labelGroupResult.MatchedLabel.Remove =
-            labelGroupResult.MatchedLabel.Remove!.Where(removeLine => removedLines?.Contains(removeLine.Text) == true).ToList();
+            labelGroupResult.MatchedLabel.Remove!
+                .Where(removeLine =>
+                    removedLines?.Any(rl => rl.Equals(removeLine.Text, StringComparison.OrdinalIgnoreCase)) == true)
+                .ToList();
 
         if (labelGroupResult.MatchedLabel.Remove.Count == 0)
         {

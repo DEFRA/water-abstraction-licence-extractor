@@ -1917,18 +1917,23 @@ public static partial class WalLabelConfiguration
                             new("purposes specified in "),
                             new("purposes of "),
                             new("purpose of "),
+                            new("for purpose ")
                         ],
                         TextEnd =
                         [
                             new("shall not exceed"),
-                            new(":")
+                            new(":"),
+                            //new("[END_OF_BLOCK]") // Maybe include
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
                         Remove =
                         [
                             new("(above)"),
-                            new("numbers")
+                            new("numbers"),
+                            new("conditions"),
+                            new("condition"),
+                            new("purpose")
                         ],
                         MustContain =
                         [
@@ -1945,6 +1950,10 @@ public static partial class WalLabelConfiguration
                             "(2)",
                             "(3)",
                             "(4)",
+                            "(a)",
+                            "(b)",
+                            "(c)",
+                            "(d)",
                             "spray irrigation", // TODO add more types here
                             "trickle irrigation",
                             "mineral washing",

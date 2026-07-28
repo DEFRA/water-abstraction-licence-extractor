@@ -1689,7 +1689,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(3, section2Sub1.SubResults.Count);
+        Assert.Equal(4, section2Sub1.SubResults.Count);
         
         var perYear = section2Sub1.SubResults
             .FirstOrDefault(subResult =>

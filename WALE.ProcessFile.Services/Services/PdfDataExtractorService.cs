@@ -2047,23 +2047,38 @@ public class PdfDataExtractorService(
             .Where(x => x.Count() > 1)
             .ToList();
 
-        if (groups.Any())
+        foreach (var group in groups)
         {
-            foreach (var group in groups)
-            {
-                var anyDidntStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
-                
-                var anyDidStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
+            // If we found some with an implicit start label, then we don't want others
+            // we found with a start of block
+            
+            var anyDidntStartAtStartOfBlock = group.Any(subResult =>
+                subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
+            
+            var anyDidStartAtStartOfBlock = group.Any(subResult =>
+                subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
 
-                if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+            if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+            {
+                var newGroupSubResults = group
+                    .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
+                    .ToList();
+
+                var subResultsToKeep = new List<LabelGroupResult>();
+                
+                foreach (var newGroupSubResult in newGroupSubResults)
                 {
-                    subResults = subResults
-                        .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
-                        .ToList();
-                }                
-            }
+                    foreach (var subResult in subResults)
+                    {
+                        if (newGroupSubResult == subResult)
+                        {
+                            subResultsToKeep.Add(subResult);
+                        }
+                    }
+                }
+
+                subResults = subResultsToKeep;
+            }                
         }
 
         return subResults;

@@ -15,3 +15,16 @@ public class LicenceSectionVerification
     public bool ScrapedDataIsDifferent { get; set; }
     public DateTime CreatedDateTimeUtc { get; set; }
 }
+
+public record LicenceSectionVerificationSummary
+{
+    public required string LicenceSectionName { get; set; }
+    public required LicenceSectionItemSummary[] LicenceSectionItems { get; set; }
+}
+
+public record LicenceSectionItemSummary
+{
+    public required string LicenceSectionItemId { get; set; }
+    public required string[] VerificationTypes { get; set; }
+    public bool ScrapedDataIsDifferent { get; set; }
+}

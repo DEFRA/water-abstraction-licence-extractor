@@ -1,6 +1,4 @@
-﻿using Amazon;
-using Amazon.Runtime;
-using Amazon.SQS;
+﻿using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +6,7 @@ using WALE.ProcessFile.Services.AwsSqs;
 using WRADI.FileProcess.CmdLine.BackgroundServices;
 using WRADI.Services.ProcessFile;
 
-// NOTE - This is used rather then running the lambdas locally to process messages
+// NOTE - This is used locally rather than running the lambdas to process messages
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
@@ -21,8 +19,8 @@ await Host.CreateDefaultBuilder(args)
     {
         services
             .AddFileProcessServices(context.Configuration)
-            .AddHostedService<FileProcessOrchestrationService>()
-            .AddHostedService<FileProcessSingleFileService>()
+            .AddHostedService<FileProcessOrchestrationHostedService>()
+            .AddHostedService<FileProcessSingleFileHostedService>()
             .AddSingleton<IAmazonSQS>(sp =>
             {
                 var settings = sp.GetRequiredService<FileProcessAppSettings>();

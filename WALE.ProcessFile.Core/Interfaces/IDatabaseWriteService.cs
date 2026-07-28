@@ -8,21 +8,23 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IDatabaseWriteService
 {
     public Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun);
-
+    
     public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
-
+    
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile);
-
+    
     public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId);
+    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        string? filename,
+        string status,
         string licenceData,
         Guid? fileId,
         string? permitNumber,
@@ -30,23 +32,25 @@ public interface IDatabaseWriteService
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
 
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
+    
+    Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error);
+    
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId);
 
     public Task SavePageScreenshotAsync(
         int pageNumber,
         string noOcrServiceName,
-        Guid fileId,
+        Guid fileId, 
         byte[] data,
         int processRunId);
 
-    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data,
-        int processRunId);
-
+    Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
+    
     Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
-
-    Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request,
-        string dataStr, int processRunId);
-
+    
+    Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadata(NoOcrServiceMetadataCacheRequest request, string dataStr, int processRunId);
+   
     Task SaveAllPagesTextAsync(string documentLinesStr, Guid fileId, string noOcrServiceName, int processRunId);
 
     Task SaveImageOnPageAsync(
@@ -61,35 +65,33 @@ public interface IDatabaseWriteService
         int processRunId);
 
     Task SaveOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
-
+    
     Task SaveOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
-
+    
     Task SaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
-
+    
     Task SaveTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request, string data, int processRunId);
-
+    
     Task ClearCacheAsync();
-
+    
     Task ClearCacheAsync(Guid fileId);
-
+    
     Task UpdateProcessRunAsync(ProcessRun processRun);
-
+    
     Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence);
-
-    Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber, string licenceVersionId,
-        int processRunId);
+    
+    Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber, string licenceVersionId, int processRunId);
 
     Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId);
-
-    Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize,
-        int processRunId);
+    
+    Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
 
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
-
+    
     Task SaveImportRunDateAsync(string dataSource);
 
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
@@ -99,7 +101,7 @@ public interface IDatabaseWriteService
     Task ClearVersionFilesAsync();
 
     Task ClearVersionFilesToDownloadAsync();
-
+    
     Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
 
     Task SaveVersionFilesAsync(List<VersionFile> results);

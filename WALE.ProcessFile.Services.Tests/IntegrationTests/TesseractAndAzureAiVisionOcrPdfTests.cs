@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -21,8 +23,16 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
 [Collection("First Names 4")]
-public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
+public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
+    private static readonly ICacheService CacheService;
+
+    static TesseractAndAzureAiVisionOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -40,12 +50,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
     {
         return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -62,29 +72,36 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
-    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new()
     {
-        LiveLicences = [],
-        LapsedLicences = [],
-        ExpiredLicences = [],
-        RevokedLicences = [],
-        ImpoundmentLicences = []
+        {
+            "2_27_22_210", 
+            new DmsFileData
+            {
+                DestinationFileName = "22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf",
+                DmsPath = "TEST_FAKE_PATH",
+                FileId = Guid.NewGuid(),
+            }
+        }
     };
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+
+    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
+    
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            OutputService,
+            regionCode,
+            DateTime.Now,
+            useLockExclusivity: false);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
@@ -109,12 +126,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 throw new Exception("Number not known");
         }
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
              fileName,
              new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(regionCode, f),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -321,8 +338,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
@@ -422,7 +437,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(7, section1Sub1.SubResults!.Count);
+        Assert.Equal(8, section1Sub1.SubResults.Count);
 
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -472,19 +487,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         Assert.Equal("2/27/22/027", licenceNumberResult.Text!.FirstOrDefault()?.Text);
 
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
-        config.AllDmsData.Add(
-            "2_27_22_210",
-            new DmsFileData
-            {
-                DestinationFileName = "22722210__Application Formal Variation Issued Licence - 27.03.2025.pdf",
-                DmsPath = "TEST_FAKE_PATH",
-                FileId = Guid.NewGuid(),
-            });
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             config
@@ -511,11 +516,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
 
         var licenceSetGroups1 = new List<IReadOnlyList<LicenceSet>> { agreedSchemaLicenceGroup };
 
-        var licenceSetGroups = WalSchemaConverter.AddAdditionalLicenceSets(
+        var licenceSetGroups = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups1,
-            new NaldLicenceStatusData(),
-            [],
-            []);
+            config);
         
         WalSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
         
@@ -618,8 +621,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
@@ -710,8 +711,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder));
@@ -787,8 +786,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -838,8 +835,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -851,8 +846,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -950,8 +943,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -983,8 +974,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -1017,8 +1006,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
@@ -1051,16 +1038,16 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             new LookupConfiguration(
                 GetYorkshireLabels(),
-                _fileLicenceMapping,
-                [],
                 (await LookupConfigurationAsync(3, TestConfig.PdfFolder3)).ValidLowercaseFirstNames,
             new LocalFileService(TestConfig.PdfFolder3),
             CacheService,
-                3),
+            OutputService,
+            3,
+            DateTime.Now),
             [TestConfig.PdfFolder3 + fileName],
             0);
 
-        Assert.Single(resultFull.Matches!);
+        Assert.Single(resultFull.Item!.Matches!);
     }
     
     [Fact]
@@ -1110,8 +1097,6 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, TestConfig.PdfFolder4));
@@ -1145,10 +1130,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
                 Format = "Text",
                 Text =
                 [
-                    new(".*Yorkshire.* River.* Authority")
+                    new(string.Empty)
                     {
-                        IsRegularExpression = true,
-                        RegularExpressionIsCaseInsensitive = true
+                        Regex = YorkshireRiverAuthorityRegex()
                     }
                 ],
                 PreviousLinesToFetch = 0,
@@ -1158,4 +1142,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture fir
             }
         ];
     }
+    
+    [GeneratedRegex(".*Yorkshire.* River.* Authority", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex YorkshireRiverAuthorityRegex();
 }

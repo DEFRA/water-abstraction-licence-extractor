@@ -117,14 +117,19 @@ export class Client {
 
     /**
      * @param permitNumber (optional) 
+     * @param filterContainedIn (optional) 
      * @return OK
      */
-    getOutgoing(permitNumber: string | undefined): Promise<LinkedLicence[]> {
+    getOutgoing(permitNumber: string | undefined, filterContainedIn: boolean | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/GetOutgoing?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
         else if (permitNumber !== undefined)
             url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
+        if (filterContainedIn === null)
+            throw new globalThis.Error("The parameter 'filterContainedIn' cannot be null.");
+        else if (filterContainedIn !== undefined)
+            url_ += "filterContainedIn=" + encodeURIComponent("" + filterContainedIn) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -312,6 +317,44 @@ export class Client {
     }
 
     /**
+     * @param licenceNumber (optional) 
+     * @return OK
+     */
+    getFileData(licenceNumber: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Dms/GetFileData?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFileData(_response);
+        });
+    }
+
+    protected processGetFileData(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     getFileIds(): Promise<void> {
@@ -330,6 +373,44 @@ export class Client {
     }
 
     protected processGetFileIds(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @return OK
+     */
+    getFileIdInformation(fileId: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Dms/GetFileIdInformation?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetFileIdInformation(_response);
+        });
+    }
+
+    protected processGetFileIdInformation(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1128,6 +1209,92 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getByFileId(fileId: string | undefined, processRunId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Licence/GetByFileId?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetByFileId(_response);
+        });
+    }
+
+    protected processGetByFileId(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Licence/GetByLicenceNumber?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetByLicenceNumber(_response);
+        });
+    }
+
+    protected processGetByLicenceNumber(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     save(body: SaveLicenceRequest): Promise<void> {
@@ -1150,6 +1317,43 @@ export class Client {
     }
 
     protected processSave(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    update(body: UpdateLicenceRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Licence/Update";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdate(_response);
+        });
+    }
+
+    protected processUpdate(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1224,6 +1428,44 @@ export class Client {
     }
 
     protected processSaveLicenceSets(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @return OK
+     */
+    get2(fileId: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/LicenceFinder/Get?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet2(_response);
+        });
+    }
+
+    protected processGet2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1496,11 +1738,85 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    saveStub(body: SaveStubMatchResultRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/MatchResult/SaveStub";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSaveStub(_response);
+        });
+    }
+
+    protected processSaveStub(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    saveError(body: SaveErrorMatchResultRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/MatchResult/SaveError";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSaveError(_response);
+        });
+    }
+
+    protected processSaveError(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    get2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    get3(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Metadata/Get?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -1519,11 +1835,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet2(_response);
+            return this.processGet3(_response);
         });
     }
 
-    protected processGet2(response: Response): Promise<void> {
+    protected processGet3(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1577,6 +1893,39 @@ export class Client {
     }
 
     protected processGetAll5(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getImpoundmentAndAbstractionLicences(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetImpoundmentAndAbstractionLicences";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetImpoundmentAndAbstractionLicences(_response);
+        });
+    }
+
+    protected processGetImpoundmentAndAbstractionLicences(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1658,6 +2007,49 @@ export class Client {
     }
 
     protected processGetCurrentIncrementNumber(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @param regionCode (optional) 
+     * @return OK
+     */
+    get4(licenceNumber: string | undefined, regionCode: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/Get?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (regionCode === null)
+            throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
+        else if (regionCode !== undefined)
+            url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet4(_response);
+        });
+    }
+
+    protected processGet4(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2304,8 +2696,8 @@ export class Client {
     /**
      * @return OK
      */
-    completeProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/CompleteProcessRunFile";
+    markProcessRunFileComplete(body: ProcessRunFileRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunFileComplete";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -2319,11 +2711,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCompleteProcessRunFile(_response);
+            return this.processMarkProcessRunFileComplete(_response);
         });
     }
 
-    protected processCompleteProcessRunFile(response: Response): Promise<void> {
+    protected processMarkProcessRunFileComplete(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2662,6 +3054,53 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getMatchesResult(fileId: string | undefined, processRunId: number | undefined): Promise<MatchesResult2> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetMatchesResult?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMatchesResult(_response);
+        });
+    }
+
+    protected processGetMatchesResult(response: Response): Promise<MatchesResult2> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MatchesResult2.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MatchesResult2>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @return OK
      */
     matchesResultString(fileId: string | undefined): Promise<string> {
@@ -2940,10 +3379,15 @@ export class Client {
     }
 
     /**
+     * @param maxProcessRunId (optional) 
      * @return OK
      */
-    getLatestLicenceSectionVerifications(): Promise<LicenceSectionVerification[]> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetLatestLicenceSectionVerifications";
+    getAllVerifications(maxProcessRunId: number | undefined): Promise<LicenceSectionVerification[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetAllVerifications?";
+        if (maxProcessRunId === null)
+            throw new globalThis.Error("The parameter 'maxProcessRunId' cannot be null.");
+        else if (maxProcessRunId !== undefined)
+            url_ += "maxProcessRunId=" + encodeURIComponent("" + maxProcessRunId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -2954,11 +3398,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetLatestLicenceSectionVerifications(_response);
+            return this.processGetAllVerifications(_response);
         });
     }
 
-    protected processGetLatestLicenceSectionVerifications(response: Response): Promise<LicenceSectionVerification[]> {
+    protected processGetAllVerifications(response: Response): Promise<LicenceSectionVerification[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3148,6 +3592,48 @@ export class Client {
     }
 
     protected processDelete(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    rename(body: RenameRequest): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/Files/Rename";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRename(_response);
+        });
+    }
+
+    protected processRename(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3452,10 +3938,15 @@ export class Client {
     }
 
     /**
+     * @param delayInSeconds (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage";
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
+        if (delayInSeconds === null)
+            throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
+        else if (delayInSeconds !== undefined)
+            url_ += "delayInSeconds=" + encodeURIComponent("" + delayInSeconds) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3487,7 +3978,7 @@ export class Client {
     /**
      * @return OK
      */
-    sendFileProcessSingleMessage(body: SendFileProcessSingleMessageRequest): Promise<void> {
+    sendFileProcessSingleMessage(body: FileProcessSingleRequest): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessSingleMessage";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -5173,6 +5664,90 @@ export interface IFileMetadata {
     [key: string]: any;
 }
 
+export class FileProcessSingleRequest implements IFileProcessSingleRequest {
+    filePath?: string | undefined;
+    permitNumber?: string | undefined;
+    dmsPath?: string | undefined;
+    destinationFileName?: string | undefined;
+    fileId?: string;
+    regionId?: number;
+    processRunId?: number | undefined;
+    delayInSeconds?: number | undefined;
+    requestedAt?: Date;
+    lockRetryCount?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IFileProcessSingleRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.filePath = _data["filePath"];
+            this.permitNumber = _data["permitNumber"];
+            this.dmsPath = _data["dmsPath"];
+            this.destinationFileName = _data["destinationFileName"];
+            this.fileId = _data["fileId"];
+            this.regionId = _data["regionId"];
+            this.processRunId = _data["processRunId"];
+            this.delayInSeconds = _data["delayInSeconds"];
+            this.requestedAt = _data["requestedAt"] ? new Date(_data["requestedAt"].toString()) : undefined as any;
+            this.lockRetryCount = _data["lockRetryCount"];
+        }
+    }
+
+    static fromJS(data: any): FileProcessSingleRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new FileProcessSingleRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["filePath"] = this.filePath;
+        data["permitNumber"] = this.permitNumber;
+        data["dmsPath"] = this.dmsPath;
+        data["destinationFileName"] = this.destinationFileName;
+        data["fileId"] = this.fileId;
+        data["regionId"] = this.regionId;
+        data["processRunId"] = this.processRunId;
+        data["delayInSeconds"] = this.delayInSeconds;
+        data["requestedAt"] = this.requestedAt ? this.requestedAt.toISOString() : undefined as any;
+        data["lockRetryCount"] = this.lockRetryCount;
+        return data;
+    }
+}
+
+export interface IFileProcessSingleRequest {
+    filePath?: string | undefined;
+    permitNumber?: string | undefined;
+    dmsPath?: string | undefined;
+    destinationFileName?: string | undefined;
+    fileId?: string;
+    regionId?: number;
+    processRunId?: number | undefined;
+    delayInSeconds?: number | undefined;
+    requestedAt?: Date;
+    lockRetryCount?: number;
+
+    [key: string]: any;
+}
+
 export enum InformationDirection {
     Unknown = "Unknown",
     Incoming = "Incoming",
@@ -5196,6 +5771,9 @@ export class LabelGroupResult implements ILabelGroupResult {
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
     matchedLabelName?: string | undefined;
+    matchedLabelRelatedName?: string | undefined;
+    matchedLabelPosition?: NullableOfLabelPosition | undefined;
+    matchedLabelTextFirstLine?: string | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
@@ -5230,6 +5808,9 @@ export class LabelGroupResult implements ILabelGroupResult {
             this.serviceName = _data["serviceName"];
             this.labelGroupName = _data["labelGroupName"];
             this.matchedLabelName = _data["matchedLabelName"];
+            this.matchedLabelRelatedName = _data["matchedLabelRelatedName"];
+            this.matchedLabelPosition = _data["matchedLabelPosition"];
+            this.matchedLabelTextFirstLine = _data["matchedLabelTextFirstLine"];
             this.confidence = _data["confidence"];
             if (Array.isArray(_data["subResults"])) {
                 this.subResults = [] as any;
@@ -5270,6 +5851,9 @@ export class LabelGroupResult implements ILabelGroupResult {
         data["serviceName"] = this.serviceName;
         data["labelGroupName"] = this.labelGroupName;
         data["matchedLabelName"] = this.matchedLabelName;
+        data["matchedLabelRelatedName"] = this.matchedLabelRelatedName;
+        data["matchedLabelPosition"] = this.matchedLabelPosition;
+        data["matchedLabelTextFirstLine"] = this.matchedLabelTextFirstLine;
         data["confidence"] = this.confidence;
         if (Array.isArray(this.subResults)) {
             data["subResults"] = [];
@@ -5295,6 +5879,9 @@ export interface ILabelGroupResult {
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
     matchedLabelName?: string | undefined;
+    matchedLabelRelatedName?: string | undefined;
+    matchedLabelPosition?: NullableOfLabelPosition | undefined;
+    matchedLabelTextFirstLine?: string | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
@@ -5536,6 +6123,7 @@ export interface ILicenceFinderCreateRequest {
 
 export class LicenceFinderResult implements ILicenceFinderResult {
     permitNumber?: string;
+    dmsPermitNumber?: string;
     fileUrl?: string;
     ruleUsed?: string;
     changeAuditAction?: string;
@@ -5585,6 +6173,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
                     this[property] = _data[property];
             }
             this.permitNumber = _data["permitNumber"];
+            this.dmsPermitNumber = _data["dmsPermitNumber"];
             this.fileUrl = _data["fileUrl"];
             this.ruleUsed = _data["ruleUsed"];
             this.changeAuditAction = _data["changeAuditAction"];
@@ -5632,6 +6221,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
                 data[property] = this[property];
         }
         data["permitNumber"] = this.permitNumber;
+        data["dmsPermitNumber"] = this.dmsPermitNumber;
         data["fileUrl"] = this.fileUrl;
         data["ruleUsed"] = this.ruleUsed;
         data["changeAuditAction"] = this.changeAuditAction;
@@ -5668,6 +6258,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
 
 export interface ILicenceFinderResult {
     permitNumber?: string;
+    dmsPermitNumber?: string;
     fileUrl?: string;
     ruleUsed?: string;
     changeAuditAction?: string;
@@ -5698,6 +6289,73 @@ export interface ILicenceFinderResult {
     folderNameAutoCorrect?: boolean | undefined;
     seenInDmsExtract?: boolean;
     weHaveDownloaded?: boolean | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
+    licenceSectionItemId!: string;
+    verificationTypes!: string[];
+    scrapedDataIsDifferent?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceSectionItemSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.verificationTypes = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceSectionItemId = _data["licenceSectionItemId"];
+            if (Array.isArray(_data["verificationTypes"])) {
+                this.verificationTypes = [] as any;
+                for (let item of _data["verificationTypes"])
+                    this.verificationTypes!.push(item);
+            }
+            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
+        }
+    }
+
+    static fromJS(data: any): LicenceSectionItemSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceSectionItemSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceSectionItemId"] = this.licenceSectionItemId;
+        if (Array.isArray(this.verificationTypes)) {
+            data["verificationTypes"] = [];
+            for (let item of this.verificationTypes)
+                data["verificationTypes"].push(item);
+        }
+        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
+        return data;
+    }
+}
+
+export interface ILicenceSectionItemSummary {
+    licenceSectionItemId: string;
+    verificationTypes: string[];
+    scrapedDataIsDifferent?: boolean;
 
     [key: string]: any;
 }
@@ -5790,6 +6448,69 @@ export interface ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+
+    [key: string]: any;
+}
+
+export class LicenceSectionVerificationSummary implements ILicenceSectionVerificationSummary {
+    licenceSectionName!: string;
+    licenceSectionItems!: LicenceSectionItemSummary[];
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceSectionVerificationSummary) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.licenceSectionItems = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceSectionName = _data["licenceSectionName"];
+            if (Array.isArray(_data["licenceSectionItems"])) {
+                this.licenceSectionItems = [] as any;
+                for (let item of _data["licenceSectionItems"])
+                    this.licenceSectionItems!.push(LicenceSectionItemSummary.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceSectionVerificationSummary {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceSectionVerificationSummary();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceSectionName"] = this.licenceSectionName;
+        if (Array.isArray(this.licenceSectionItems)) {
+            data["licenceSectionItems"] = [];
+            for (let item of this.licenceSectionItems)
+                data["licenceSectionItems"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceSectionVerificationSummary {
+    licenceSectionName: string;
+    licenceSectionItems: LicenceSectionItemSummary[];
 
     [key: string]: any;
 }
@@ -5949,6 +6670,8 @@ export enum LicenceStatus {
     NotFound = "NotFound",
     PathMissing = "PathMissing",
     FileIdMissing = "FileIdMissing",
+    InProgress = "InProgress",
+    Error = "Error",
 }
 
 export enum LicenceType {
@@ -6209,6 +6932,7 @@ export enum MatchedPosition {
 export class MatchesResult implements IMatchesResult {
     filename?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -6236,6 +6960,7 @@ export class MatchesResult implements IMatchesResult {
             }
             this.filename = _data["filename"];
             this.regionCode = _data["regionCode"];
+            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -6273,6 +6998,7 @@ export class MatchesResult implements IMatchesResult {
         }
         data["filename"] = this.filename;
         data["regionCode"] = this.regionCode;
+        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -6299,6 +7025,7 @@ export class MatchesResult implements IMatchesResult {
 export interface IMatchesResult {
     filename?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -6313,6 +7040,7 @@ export interface IMatchesResult {
 export class MatchesResult2 implements IMatchesResult2 {
     filename?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -6340,6 +7068,7 @@ export class MatchesResult2 implements IMatchesResult2 {
             }
             this.filename = _data["filename"];
             this.regionCode = _data["regionCode"];
+            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -6377,6 +7106,7 @@ export class MatchesResult2 implements IMatchesResult2 {
         }
         data["filename"] = this.filename;
         data["regionCode"] = this.regionCode;
+        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -6403,6 +7133,7 @@ export class MatchesResult2 implements IMatchesResult2 {
 export interface IMatchesResult2 {
     filename?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -6749,6 +7480,20 @@ export enum NullableOfCutoffType {
     From = "From",
 }
 
+export enum NullableOfLabelPosition {
+    ApplicableToMost = "ApplicableToMost",
+    LabelIsBeforeTextToFind = "LabelIsBeforeTextToFind",
+    LabelIsAfterTextToFind = "LabelIsAfterTextToFind",
+    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore",
+    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter",
+    LabelIsInMiddleOfTextToFind = "LabelIsInMiddleOfTextToFind",
+    ContractIsSuccession = "ContractIsSuccession",
+    TextToFindIsBetweenLabels = "TextToFindIsBetweenLabels",
+    RelatedCategoryPosition = "RelatedCategoryPosition",
+    SplitAtLabel = "SplitAtLabel",
+    LabelIsActuallyResult = "LabelIsActuallyResult",
+}
+
 export enum NullableOfSubType {
     NotSet = "NotSet",
     PurposeToPurpose = "PurposeToPurpose",
@@ -6772,7 +7517,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
+    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
 
     [key: string]: any;
 
@@ -6823,10 +7568,10 @@ export class OutputListDataItem implements IOutputListDataItem {
                 for (let item of _data["licenceSets"])
                     this.licenceSets!.push(OutputListDataItemLicenceSet.fromJS(item));
             }
-            if (Array.isArray(_data["latestLicenceSectionVerifications"])) {
-                this.latestLicenceSectionVerifications = [] as any;
-                for (let item of _data["latestLicenceSectionVerifications"])
-                    this.latestLicenceSectionVerifications!.push(LicenceSectionVerification.fromJS(item));
+            if (Array.isArray(_data["licenceSectionVerifications"])) {
+                this.licenceSectionVerifications = [] as any;
+                for (let item of _data["licenceSectionVerifications"])
+                    this.licenceSectionVerifications!.push(LicenceSectionVerificationSummary.fromJS(item));
             }
         }
     }
@@ -6876,10 +7621,10 @@ export class OutputListDataItem implements IOutputListDataItem {
             for (let item of this.licenceSets)
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.latestLicenceSectionVerifications)) {
-            data["latestLicenceSectionVerifications"] = [];
-            for (let item of this.latestLicenceSectionVerifications)
-                data["latestLicenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.licenceSectionVerifications)) {
+            data["licenceSectionVerifications"] = [];
+            for (let item of this.licenceSectionVerifications)
+                data["licenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -6902,7 +7647,7 @@ export interface IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
+    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
 
     [key: string]: any;
 }
@@ -7884,6 +8629,58 @@ export interface IPurposeOfAbstraction {
     [key: string]: any;
 }
 
+export class RenameRequest implements IRenameRequest {
+    originalFilename?: string | undefined;
+    newFilename?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IRenameRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.originalFilename = _data["originalFilename"];
+            this.newFilename = _data["newFilename"];
+        }
+    }
+
+    static fromJS(data: any): RenameRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new RenameRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["originalFilename"] = this.originalFilename;
+        data["newFilename"] = this.newFilename;
+        return data;
+    }
+}
+
+export interface IRenameRequest {
+    originalFilename?: string | undefined;
+    newFilename?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
     fileId?: string;
     documentLines?: string | undefined;
@@ -7988,6 +8785,66 @@ export class SaveDateRequest implements ISaveDateRequest {
 
 export interface ISaveDateRequest {
     dataSource?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class SaveErrorMatchResultRequest implements ISaveErrorMatchResultRequest {
+    filename?: string | undefined;
+    fileId?: string;
+    processRunId?: number;
+    error?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveErrorMatchResultRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
+            this.processRunId = _data["processRunId"];
+            this.error = _data["error"];
+        }
+    }
+
+    static fromJS(data: any): SaveErrorMatchResultRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveErrorMatchResultRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
+        data["processRunId"] = this.processRunId;
+        data["error"] = this.error;
+        return data;
+    }
+}
+
+export interface ISaveErrorMatchResultRequest {
+    filename?: string | undefined;
+    fileId?: string;
+    processRunId?: number;
+    error?: string | undefined;
 
     [key: string]: any;
 }
@@ -8520,6 +9377,62 @@ export interface ISaveOcrImageTextRequest {
     [key: string]: any;
 }
 
+export class SaveStubMatchResultRequest implements ISaveStubMatchResultRequest {
+    filename?: string | undefined;
+    fileId?: string;
+    processRunId?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ISaveStubMatchResultRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
+            this.processRunId = _data["processRunId"];
+        }
+    }
+
+    static fromJS(data: any): SaveStubMatchResultRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveStubMatchResultRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
+        data["processRunId"] = this.processRunId;
+        return data;
+    }
+}
+
+export interface ISaveStubMatchResultRequest {
+    filename?: string | undefined;
+    fileId?: string;
+    processRunId?: number;
+
+    [key: string]: any;
+}
+
 export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageTextRequest {
     fileId?: string;
     processRunId?: number;
@@ -8584,58 +9497,6 @@ export interface ISaveTemporaryOcrImageTextRequest {
     imageNumber?: number;
     ocrServiceName?: string | undefined;
     text?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class SendFileProcessSingleMessageRequest implements ISendFileProcessSingleMessageRequest {
-    filePath?: string | undefined;
-    processRunId?: number | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: ISendFileProcessSingleMessageRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.filePath = _data["filePath"];
-            this.processRunId = _data["processRunId"];
-        }
-    }
-
-    static fromJS(data: any): SendFileProcessSingleMessageRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new SendFileProcessSingleMessageRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["filePath"] = this.filePath;
-        data["processRunId"] = this.processRunId;
-        return data;
-    }
-}
-
-export interface ISendFileProcessSingleMessageRequest {
-    filePath?: string | undefined;
-    processRunId?: number | undefined;
 
     [key: string]: any;
 }
@@ -8748,6 +9609,62 @@ export interface ITimePeriod {
     startDate?: string | undefined;
     endDate?: string | undefined;
     inclusive?: boolean | undefined;
+
+    [key: string]: any;
+}
+
+export class UpdateLicenceRequest implements IUpdateLicenceRequest {
+    licence?: string | undefined;
+    licenceId?: number;
+    processRunId?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IUpdateLicenceRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licence = _data["licence"];
+            this.licenceId = _data["licenceId"];
+            this.processRunId = _data["processRunId"];
+        }
+    }
+
+    static fromJS(data: any): UpdateLicenceRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateLicenceRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licence"] = this.licence;
+        data["licenceId"] = this.licenceId;
+        data["processRunId"] = this.processRunId;
+        return data;
+    }
+}
+
+export interface IUpdateLicenceRequest {
+    licence?: string | undefined;
+    licenceId?: number;
+    processRunId?: number;
 
     [key: string]: any;
 }

@@ -15,7 +15,16 @@ public class FileDataController(IOutputService outputService) : Controller
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> MatchesResult([FromQuery] Guid fileId)
     {
-        var result = await outputService.GetMatchesResult(fileId);
+        var result = await outputService.GetMatchesResultAsync(fileId);
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<MatchesResult?>> GetMatchesResultAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var result = await outputService.GetMatchesResultAsync(fileId, processRunId);
         return Ok(result);
     }
     
@@ -23,7 +32,7 @@ public class FileDataController(IOutputService outputService) : Controller
     [HttpGet]
     public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
     {
-        var result = await outputService.GetMatchesResult(fileId);
+        var result = await outputService.GetMatchesResultAsync(fileId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
     
@@ -65,9 +74,9 @@ public class FileDataController(IOutputService outputService) : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetLatestLicenceSectionVerificationsAsync()
+    public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetAllVerificationsAsync([FromQuery] int maxProcessRunId = int.MaxValue)
     {
-        var results = await outputService.GetLatestLicenceSectionVerificationsAsync();
+        var results = await outputService.GetAllVerificationsAsync(maxProcessRunId);
         return Ok(results);
     }
 

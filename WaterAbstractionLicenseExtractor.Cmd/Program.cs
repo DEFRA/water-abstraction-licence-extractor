@@ -25,6 +25,8 @@ return;
 async Task ProgramAsync()
 {
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started");
+    var startDateTimeUtc = DateTime.UtcNow;
+    
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
@@ -43,87 +45,87 @@ async Task ProgramAsync()
 
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
-    var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
-    var naldDataTask = SharedHelper.GetNaldDataAsync(null, cacheService);
-
-    var dmsFileIdInformationListTask = cacheService.GetDmsFileIdInformationAsync();
-    var (dmsFilesToProcess, allDmsData) =
-        await DmsHelper.GetDmsFilesAndMappingAsync(
+    var abstractionAndImpoundmentLicencesTask =
+        SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
+    
+    var (filesToProcess, _) =
+        await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
             cacheService);
     
+    // For debugging uncheck sections of the following
+    filesToProcess = filesToProcess
+        //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
+        //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
+        .Where(x => x.Key.Contains("12100068"))
+        //.Where(x => x.Value.Item2.RegionCode == 3) // North east
+        //.Skip(10)
+        //.Take(500)
+        .ToDictionary(
+            filePath => filePath.Key,
+            filePath => filePath.Value);
+    
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
             Description = $"Run using {services.FileService!.FolderPath}",
-            StartDateTimeUtc = DateTime.UtcNow,
-            NumberOfFiles = dmsFilesToProcess.Count
+            StartDateTimeUtc = startDateTimeUtc,
+            NumberOfFiles = filesToProcess.Count
         });
 
-    var naldLicenceStatusData  = await naldLicenceStatusDataTask;
     var firstNamesCsv = await firstNamesTask;
     var processRun = await processRunTask;
 
-    var allNaldData =  await naldDataTask;
+    var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
-    LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
-
+    LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
-    var naldData = ExternalDataHelper.TransformNaldData(allNaldData, allDmsData);
 
-    var dmsFileIdInformationDict = DmsHelper.TranformDmsFileIdInformation(
-        await dmsFileIdInformationListTask);
-
-    const int unsetRegionCode = GeneralConstants.UnsetRegionCode;
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
         WalLabelConfiguration.GetLabels(),
-        allDmsData,
-        dmsFileIdInformationDict,
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
-        unsetRegionCode,
-        naldLinkedLicenceHelper: naldLinkedLicenceHelper);
+        services.OutputService!,
+        GeneralConstants.UnsetRegionCode,
+        DateTime.Now,
+        naldLinkedLicenceHelper: naldLinkedLicenceHelper,
+        lockInProcess: true);
     
     try
     {
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
-        var minimumToFreeUp = maxConcurrentScrapers / 3;
-
-        var extractorLock = new Lock();
         
-        foreach (var (filePath, dmsDataForFile) in dmsFilesToProcess)
+        foreach (var (filePath, (dmsFileData, naldLicence)) in filesToProcess)
         {
             if (services.DelayPerProcessMs > 0)
             {
                 await Task.Delay(services.DelayPerProcessMs);
             }
 
+            var loopLookupConfig = lookupConfig.Clone();
+            loopLookupConfig.RegionId = naldLicence.RegionCode;
+            
+            var pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
+            pdfDataExtractor.InUse = true;
+            
             scrapingTasks.Add(
                 ScrapeDocumentAsync(
                     filePath,
                     processCount++,
                     processRun.NumberOfFiles,
-                    naldLicenceStatusData,
-                    naldData,
-                    outputService,
-                    pdfDataExtractors,
+                    pdfDataExtractor,
                     processRun,
-                    extractorLock,
-                    lookupConfig,
-                    dmsDataForFile));
+                    loopLookupConfig,
+                    dmsFileData,
+                    naldLicence.LicenceNumber));
 
-            if (scrapingTasks.Count != maxConcurrentScrapers)
-            {
-                continue;
-            }
-
-            while (scrapingTasks.Count >= maxConcurrentScrapers - minimumToFreeUp)
+            while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
                 await Task.WhenAny(scrapingTasks);
                 var toRemoveList = new List<Task<List<LicenceSet>>>();
@@ -177,11 +179,9 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = WalSchemaConverter.AddAdditionalLicenceSets(
+    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
-        naldLicenceStatusData,
-        naldData,
-        allDmsData);
+        lookupConfig);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -204,28 +204,15 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string pdfFilename,
     int fileNumber,
     int totalNumber,
-    NaldLicenceStatusData naldLicenceStatusData,
-    Dictionary<string, List<NaldData>> naldData,
-    IOutputService outputService,
-    List<IPdfDataExtractorService> pdfDataExtractors,
+    IPdfDataExtractorService pdfDataExtractor,
     ProcessRun processRun,
-    Lock extractorLock,
     LookupConfiguration lookupConfig,
-    DmsFileData dmsDataForFile)
+    DmsFileData dmsDataForFile,
+    string naldLicenceNumber)
 {
-    var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(pdfFilename);
-
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started {filenameNoExtension} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
-
-    IPdfDataExtractorService pdfDataExtractor;
-
-    lock (extractorLock)
-    {
-        pdfDataExtractor = pdfDataExtractors.First(extractor => !extractor.InUse);
-        pdfDataExtractor.InUse = true;
-    }
-
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    
     try
     {
         var previouslyParsedFiles = new List<string>
@@ -233,64 +220,53 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfFilename
         };
 
-        lookupConfig = lookupConfig.Clone();
-        lookupConfig.RegionId = dmsDataForFile.RegionId;
-
-        var matchesFull = await pdfDataExtractor.GetMatchesAsync(
+        var (stopExecution, alreadySaved, matchesResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFilename,
             dmsDataForFile,
             lookupConfig,
             previouslyParsedFiles,
             processRun.ProcessRunId);
 
-        var matchResultId = await outputService.SaveMatchResultAsync(
-            matchesFull,
-            dmsDataForFile.FileId,
-            processRun.ProcessRunId);
-
-        var dtStartSaveMatches = DateTime.Now;
-
-        if (matchesFull.Matches != null)
+        if (stopExecution)
         {
-            var matches = matchesFull.Matches
-                .Select(match => (matchResultId, match.MatchedLabel?.Name, match.LabelGroupName, match))
-                .ToList();
-
-            await outputService.SaveMatchesAsync(matches);
-
-            var saveDuration = (DateTime.Now - dtStartSaveMatches).TotalMilliseconds;
-            ConsoleHelper.WriteLine(
-                $"INFO - WALE.Cmd - Saved ({fileNumber} of {totalNumber}) in {saveDuration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            return [];
         }
 
-        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
-        ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd - Finished ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        if (alreadySaved != true)
+        {
+            await pdfDataExtractor.SaveMatchResultAsync(
+                matchesResult!,
+                dmsDataForFile.FileId,
+                processRun.ProcessRunId);
+        }
 
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
-            matchesFull,
-            naldLicenceStatusData,
-            naldData,
+            matchesResult!,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,
-            dmsDataForFile);
+            dmsDataForFile,
+            naldLicenceNumber);
 
+        var duration = (DateTime.Now - dtStart).TotalMilliseconds;
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id}  - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
         return licenceSets;
     }
     catch (TooManyPagesException)
     {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd:{pdfDataExtractor.Id}  - Skipped ({fileNumber} of {totalNumber}) as too many pages");
         return [];
     }
     catch (TooManyImagesException)
     {
-        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd - Skipped ({fileNumber} of {totalNumber}) as too many pages");
+        ConsoleHelper.WriteLine($"WARNING - WALE.Cmd:{pdfDataExtractor.Id}  - Skipped ({fileNumber} of {totalNumber}) as too many pages");
         return [];
     }
     catch (Exception ex)
     {
-        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd - {pdfFilename} threw fatal error - {ex.Message}");
+        ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd:{pdfDataExtractor.Id}  - {pdfFilename} threw fatal error - {ex}");
         return [];
     }
     finally
@@ -340,7 +316,7 @@ ConfiguredServices ConfigureServices()
     var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
                          ?? throw new NullReferenceException("ApiBaseUrl");
 
-    var delayPerProcessMs = 1000;
+    var delayPerProcessMs = 200; // TODO get from variable
     var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 30);
     
     var fileServiceType = "api";
@@ -387,6 +363,7 @@ ConfiguredServices ConfigureServices()
     
     var cacheService = new ApiCacheService(httpClient);
     var outputService = new ApiOutputService(httpClient);
+    var messageQueueService = new ApiMessageQueueService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
     var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
@@ -438,6 +415,7 @@ ConfiguredServices ConfigureServices()
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,
+            messageQueueService,
             id);
 
         pdfDataExtractors.Add(pdfDataExtractor);

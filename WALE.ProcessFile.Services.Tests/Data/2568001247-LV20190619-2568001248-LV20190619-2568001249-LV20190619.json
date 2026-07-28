@@ -39,8 +39,8 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "isBecauseOfAggregate": true,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ]
@@ -75,8 +75,8 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "isBecauseOfAggregate": true,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ]
@@ -111,8 +111,8 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "isBecauseOfAggregate": true,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ]
@@ -201,7 +201,7 @@
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 107,
+                "lineNumber": 14,
                 "pageNumber": 4
               }
             ]
@@ -222,7 +222,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 141,
+                "lineNumber": 14,
                 "pageNumber": 5
               }
             ]
@@ -259,8 +259,8 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": false,
-                "lineNumber": 111,
+                "isBecauseOfAggregate": true,
+                "lineNumber": 18,
                 "pageNumber": 4
               }
             ]
@@ -290,7 +290,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -298,7 +298,7 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
@@ -328,7 +328,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -336,12 +336,12 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown",
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction",
           "regionId": 1
         }
       ],
@@ -401,7 +401,7 @@
       "licenceType": "GroundWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/247",
-        "confidence": 85
+        "confidence": 100
       },
       "dmsPath": "Something to look for",
       "dmsFileId": "fc901013-3c0e-008d-117a-b48fa58d8feb",
@@ -474,7 +474,7 @@
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 107,
+                "lineNumber": 14,
                 "pageNumber": 4
               }
             ]
@@ -495,7 +495,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 141,
+                "lineNumber": 14,
                 "pageNumber": 5
               }
             ]
@@ -532,8 +532,8 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": false,
-                "lineNumber": 111,
+                "isBecauseOfAggregate": true,
+                "lineNumber": 18,
                 "pageNumber": 4
               }
             ]
@@ -563,7 +563,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -571,12 +571,12 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
-          "naldStatus": "Unknown",
-          "licenceType": "Unknown",
+          "naldStatus": "Live",
+          "licenceType": "SurfaceWaterAbstraction",
           "regionId": 1
         },
         {
@@ -599,7 +599,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -607,13 +607,13 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "Abstraction",
-          "regionId": 0
+          "licenceType": "SurfaceWaterAbstraction",
+          "regionId": 1
         }
       ],
       "licenceSets": [
@@ -668,11 +668,11 @@
     {
       "id": "2568001248-LV20190619",
       "status": "Ok",
-      "naldStatus": "Unknown",
-      "licenceType": "Unknown",
+      "naldStatus": "Live",
+      "licenceType": "SurfaceWaterAbstraction",
       "licenceNumber": {
         "value": "25/68/001/248",
-        "confidence": 85
+        "confidence": 100
       },
       "dmsPath": "Something to look for",
       "dmsFileId": "e0f2960b-0ec4-38c2-3c50-878691bcdef4",
@@ -745,7 +745,7 @@
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 107,
+                "lineNumber": 14,
                 "pageNumber": 4
               }
             ]
@@ -766,7 +766,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "isBecauseOfAggregate": false,
-                "lineNumber": 141,
+                "lineNumber": 14,
                 "pageNumber": 5
               }
             ]
@@ -803,8 +803,8 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": false,
-                "lineNumber": 111,
+                "isBecauseOfAggregate": true,
+                "lineNumber": 18,
                 "pageNumber": 4
               }
             ]
@@ -834,7 +834,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -842,7 +842,7 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
@@ -870,7 +870,7 @@
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
               "isBecauseOfAggregate": false,
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             },
             {
@@ -878,13 +878,13 @@
               "direction": "Incoming",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "lineNumber": 111,
+              "lineNumber": 18,
               "pageNumber": 4
             }
           ],
           "naldStatus": "Live",
-          "licenceType": "Abstraction",
-          "regionId": 0
+          "licenceType": "SurfaceWaterAbstraction",
+          "regionId": 1
         }
       ],
       "licenceSets": [

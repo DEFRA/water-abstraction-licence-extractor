@@ -44,10 +44,8 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
     };
 
     useEffect(() => {
-        if (activeSubTab === 'history') {
-            fetchHistory();
-        }
-    }, [activeSubTab, fetchHistory]);
+        fetchHistory();
+    }, [fetchHistory]);
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
@@ -106,6 +104,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             licence={licence} 
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
+                            history={history}
                         />
                     </LicenceSection>
                 </div>
@@ -126,6 +125,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}
+                            history={history}
                         />
                     </ScrapedLicenceSection>
                 </div>

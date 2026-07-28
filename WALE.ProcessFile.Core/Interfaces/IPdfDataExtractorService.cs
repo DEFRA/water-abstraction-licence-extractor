@@ -8,12 +8,14 @@ public interface IPdfDataExtractorService
     public int Id { get; set; }
     public bool InUse { get; set; }
     
-    public Task<MatchesResult> GetMatchesAsync(
+    public Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item)> GetMatchesAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId);
+
+    public Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
 
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
         LabelToMatch label,
@@ -21,7 +23,6 @@ public interface IPdfDataExtractorService
         bool isOcr,
         string? serviceName,
         string labelGroupName,
-        Dictionary<string, DmsFileData> licenceMapping,
         List<string> previouslyParsedPaths,
         int regionCode,
         int processRunId,

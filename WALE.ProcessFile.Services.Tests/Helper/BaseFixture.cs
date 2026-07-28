@@ -10,22 +10,36 @@ public class BaseFixture : IDisposable
 {
     private readonly ConcurrentDictionary<short, List<NaldLicence>> _licencesAlternateFormatValues = [];
     private static readonly SemaphoreSlim SetupLicenceNumbersLock = new(1, 1);
+    private static LicenceNumber? _licenceNumber;
     
     public async Task SetupLicenceNumbersAsync(short regionCode, ICacheService cacheService)
     {
-        await SetupLicenceNumbersLock.WaitAsync();
+        if (_licenceNumber != null)
+        {
+            LicenceNumber.Instance = _licenceNumber;
+            return;
+        }
 
+        await SetupLicenceNumbersLock.WaitAsync();
+        
         try
         {
+            if (_licenceNumber != null)
+            {
+                LicenceNumber.Instance = _licenceNumber;
+                return;
+            }
+            
             if (!_licencesAlternateFormatValues.TryGetValue(regionCode, out var licences))
             {
                 var allNaldData = await cacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
                 licences = allNaldData.AbstractionAndImpoundmentLicences!;
-            
+
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);
             }
-        
-            LicenceNumber.Instance = new LicenceNumber(licences);
+
+            _licenceNumber = new LicenceNumber(licences);
+            LicenceNumber.Instance = _licenceNumber;
         }
         finally
         {
@@ -33,14 +47,19 @@ public class BaseFixture : IDisposable
         }
     }
     
-    private readonly Lock _firstNamesLock = new();
-    private Task<HashSet<string>>? _firstNamesCsvTask;
+    private static readonly SemaphoreSlim FirstNamesLock = new(1, 1);
     
-    public Task<HashSet<string>> FirstNamesCsvTask()
+    public async Task<HashSet<string>> FirstNamesCsvTask()
     {
-        lock (_firstNamesLock)
+        await FirstNamesLock.WaitAsync();
+        
+        try
         {
-            return _firstNamesCsvTask ??= CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+            return await CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+        }
+        finally
+        {
+            FirstNamesLock.Release();
         }
     }
     

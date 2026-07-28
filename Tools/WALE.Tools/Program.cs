@@ -11,7 +11,8 @@ string workflow;
 //workflow = "ClearCacheMultiple";
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-workflow = "CopyS3Files";
+//workflow = "CopyS3Files";
+workflow = "ForceLowercaseS3Files";
 
 const int processRunId = 89;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -103,6 +104,10 @@ switch (workflow)
     case "CopyS3Files": // UNCOMMONLY USED - Promotion of S3 files between environments
         await CopyS3Files.RunAsync();
         break;
+    
+    case "ForceLowercaseS3Files": // UNCOMMONLY USED - Fix casing of S3 files
+        await ForceLowercaseS3Files.RunAsync();
+        break;    
 }
 
 return 0;

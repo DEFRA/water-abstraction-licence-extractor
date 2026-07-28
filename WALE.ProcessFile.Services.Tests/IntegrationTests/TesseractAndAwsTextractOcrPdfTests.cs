@@ -1,3 +1,4 @@
+using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
@@ -22,6 +23,14 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     : IClassFixture<SingletonAwsTextractFixture>
 {
+    private static readonly ICacheService CacheService;
+
+    static TesseractAndAwsTextractOcrPdfTests()
+    {
+        var realCacheService = new FileSystemCacheService("Cache/");
+        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+    }
+    
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
         new(TestConfig.PostgresHost,
             TestConfig.PostgresPort,
@@ -39,12 +48,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
     }
-
-    private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
+    private static readonly IMessageQueueService MessageQueueService = A.Fake<IMessageQueueService>(); 
     
     private readonly IPdfDataExtractorService _pdfDataExtractor = new PdfDataExtractorService(
         new PdfPigNoOcrDataExtractorService(),
@@ -57,9 +66,10 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         CacheService,
         OutputService,
         DocumentService,
-        DocnetAlternativeDocumentService);
+        DocnetAlternativeDocumentService,
+        MessageQueueService);
     
-    private readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
+    private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};    
     private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
     {
         LiveLicences = [],
@@ -69,18 +79,18 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         ImpoundmentLicences = []
     };
     
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder, int regionCode)
     {
         return new(
             WalLabelConfiguration.GetLabels(),
-            _fileLicenceMapping,
-            [],            
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
-            regionCode);
+            OutputService,
+            regionCode,
+            DateTime.Now);
     }
 
     private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
@@ -89,12 +99,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         if (useExtractor == 4) folder = TestConfig.PdfFolder4;
         if (useExtractor == 5) folder = TestConfig.PdfFolder5;
         
-        return await _pdfDataExtractor.GetMatchesAsync(
+        return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             await LookupConfigurationAsync(folder, regionCode),
             [fileName],
-            0);
+            0)).Item!;
     }
     
     [Fact]
@@ -147,7 +157,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(4, section1Sub1.SubResults.Count);
+        Assert.Equal(5, section1Sub1.SubResults.Count);
         // TODO fix for this
         
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
@@ -170,8 +180,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
@@ -238,8 +246,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
@@ -328,8 +334,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
@@ -406,8 +410,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            [],
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
@@ -455,8 +457,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
@@ -502,8 +502,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
-            _naldLicenceStatusData,
-            _naldData,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));

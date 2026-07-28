@@ -14,7 +14,7 @@ public static class RelatedCategoryPosition
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-
+        
         var ary = DataHelper.RemoveExcludesAndNotContains(request.label,
             [request.line!],
             false,
@@ -65,7 +65,7 @@ public static class RelatedCategoryPosition
             labelGroupResult.Text = matchedValues;
             labelGroupResult.MatchedLabel = request.label;
             
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 matchedValues,
@@ -148,10 +148,33 @@ public static class RelatedCategoryPosition
 
                     if (labelIndexStart == -1)
                     {
-                        return matchIndexEnd;
+                        return matchIndexEnd * 1;
                     }
                     
-                    var diff = matchIndexEnd - labelIndexStart;
+                    var relatedTextOrLabelText = labelText;
+                    var relevantLineText = lineText;
+                    
+                    if (relevantCategoryItems.Count == 1)
+                    {
+                        var relatedText = relevantCategoryItems[0].Text?.FirstOrDefault()?.Text;
+
+                        if (!string.IsNullOrWhiteSpace(relatedText))
+                        {
+                            relatedTextOrLabelText = relatedText;
+                        }
+                    }
+
+                    var indexes = relevantLineText.IndexesOf(relatedTextOrLabelText)
+                        .OrderBy(index =>
+                        {
+                            var diffFromLabelTextPos = labelIndexStart - index;
+                            if (diffFromLabelTextPos < 0) diffFromLabelTextPos = Math.Abs(-diffFromLabelTextPos - 100);
+                            
+                            return diffFromLabelTextPos;
+                        })
+                        .ToList();
+                    
+                    var diff = matchIndexEnd - (indexes.Count >= 1 ? indexes[0] : -1);
                     if (diff > 0) diff = -diff - 100;
                     
                     return diff;
@@ -219,7 +242,7 @@ public static class RelatedCategoryPosition
             // TODO should set match type
             FormattingHelper.RemoveRemoves(labelGroupResult, []); // TODO probably do something else
 
-            returnList.AddRange(FilterIntoFormat(
+            returnList.AddRange(await FilterIntoFormatAsync(
                 request,
                 labelGroupResult,
                 [line],
@@ -227,6 +250,28 @@ public static class RelatedCategoryPosition
         }
 
         return await ProcessSubLabelsAsync(request, returnList);
+    }
+    
+    private static List<int> IndexesOf(this string str, string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ArgumentException("The string to find cannot be null", nameof(value));
+        }
+
+        var indexes = new List<int>();
+
+        for (var index = 0;; index += value.Length)
+        {
+            index = str.IndexOf(value, index, StringComparison.Ordinal);
+
+            if (index == -1)
+            {
+                return indexes;
+            }
+
+            indexes.Add(index);
+        }
     }
 
     private static List<DocumentLine> GetMatches(
@@ -242,7 +287,11 @@ public static class RelatedCategoryPosition
         {
             foreach (var column in previousLine.Columns)
             {
-                if (Number.AnyIsNumber([column.AsDocumentLine(previousLine)], label, isOcr, out var numberLines))
+                if (Number.AnyIsNumber(
+                    [column.AsDocumentLine(previousLine)],
+                    label,
+                    isOcr,
+                    out var numberLines))
                 {
                     matches.AddRange(numberLines);
                 }                

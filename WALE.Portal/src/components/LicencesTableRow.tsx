@@ -1,4 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -51,65 +52,32 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
                 />
             </td>
             <td>
-                {((item.latestLicenceSectionVerifications?.length ?? 0) > 0 ?
-                    Object.entries(
-                        item.latestLicenceSectionVerifications!.reduce((acc, v) => {
-                            const key = v.licenceSectionName ?? "Unknown";
-                            if (!acc[key]) acc[key] = [];
-                            acc[key].push(v);
-                            return acc;
-                        }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
-                    ).map(([sectionName, verifications]) => (
-                        <div key={sectionName} style={{ marginBottom: '10px' }}>
-                            <strong>{sectionName}</strong>
+                {((item.licenceSectionVerifications?.length ?? 0) > 0 ?
+                    item.licenceSectionVerifications!.map((section) => (
+                        <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>
+                            <strong>{section.licenceSectionName}</strong>
                             <UnorderedListOfStrings items={
-                                Object.entries(
-                                    verifications!.reduce((acc, v) => {
-                                        const key = v.licenceSectionItemId ?? "Unknown";
-                                        if (!acc[key]) acc[key] = [];
-                                        acc[key].push(v);
-                                        return acc;
-                                    }, {} as Record<string, typeof item.latestLicenceSectionVerifications>)
-                                ).map(([itemId, itemVerifications]) => {
-                                    const sortedVerifications = [...itemVerifications!].sort((a, b) => {
-                                        const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
-                                        const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
-                                        return dateA - dateB;
-                                    });
-
+                                (section.licenceSectionItems || []).map((v) => {
+                                    const itemId = v.licenceSectionItemId ?? "Unknown";
                                     return (
                                         <span key={itemId}>
                                             {itemId}{' '}
-                                            {sortedVerifications.map((v, i) => {
-                                                let color = 'inherit';
-                                                let initials = '';
-                                                if (v.verificationType === 'Confirmed') { color = 'inherit'; initials = '✅'; }
-                                                else if (v.verificationType === 'AutoConfirm') { color = 'green'; initials = 'AC'; }
-                                                else if (v.verificationType === 'Removed') { color = 'inherit'; initials = '❌'; }
-                                                else if (v.verificationType === 'Edited') { color = 'inherit'; initials = '✏️'; }
-                                                else if (v.verificationType === 'Added') { color = 'inherit'; initials = '➕'; }
-                                                else if (v.verificationType === 'AutoFail') { color = 'red'; initials = 'AF'; }
-                                                else if (v.verificationType === 'AutoWarn') { color = 'darkorange'; initials = 'AW'; }
-
-                                                return (
-                                                    <span key={i}>
-                                                        <span title={v.verificationType ?? ''} style={{
-                                                            backgroundColor: color,
-                                                            color: 'white',
-                                                            fontSize: '0.7em',
-                                                            padding: '1px 3px',
-                                                            borderRadius: '3px',
-                                                            marginRight: '2px',
-                                                            verticalAlign: 'middle',
-                                                            fontWeight: 'bold',
-                                                            fontFamily: 'sans-serif'
-                                                        }}>
-                                                            {initials}
-                                                        </span>
-                                                        {i === sortedVerifications.length-1 && v.scrapedDataIsDifferent && '🚩'}
-                                                    </span>
-                                                );
-                                            })}
+                                            {(v.verificationTypes || []).map((vt: string, idx: number) => (
+                                                <span key={idx} title={vt ?? ''} style={{
+                                                    backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                    color: 'white',
+                                                    fontSize: '0.7em',
+                                                    padding: '1px 3px',
+                                                    borderRadius: '3px',
+                                                    marginRight: '2px',
+                                                    verticalAlign: 'middle',
+                                                    fontWeight: 'bold',
+                                                    fontFamily: 'sans-serif'
+                                                }}>
+                                                    {getVerificationTypeInitials(vt)}
+                                                </span>
+                                            ))}
+                                            {v.scrapedDataIsDifferent && '🚩'}
                                         </span>
                                     );
                                 })

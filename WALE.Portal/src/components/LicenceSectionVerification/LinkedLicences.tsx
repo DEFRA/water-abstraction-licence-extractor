@@ -1,5 +1,10 @@
 import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
-import {type Licence, LinkedLicence} from "../../api/generated/apiClient.ts";
+import {
+    type Licence,
+    LinkedLicence,
+    InformationDirection,
+    LicenceSectionVerification
+} from "../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
@@ -9,17 +14,22 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
+    history?: LicenceSectionVerification[];
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView}, ref) => {
+    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
 
-        const noneOutgoingVerification = outputListDataItem?.latestLicenceSectionVerifications?.find(
-            v => v.licenceSectionItemId === 'None Outgoing'
-        );
+        const noneOutgoingVerification = (history || [])
+            .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === 'None Outgoing')
+            .sort((a, b) => {
+                const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+                const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+                return dateB - dateA;
+            })[0];
 
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
@@ -61,54 +71,22 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setIsLoading(true);
                 setError(null);
                 try {
-                    const results = await waleApiClient.getOutgoing(permitNumber);
-                    setLinkedLicences(results || []);
-                    setScrapedData(results?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                    const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
+                    setLinkedLicences(scrapeResults || []);
+                    setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
-                        const verifications = [...(outputListDataItem?.latestLicenceSectionVerifications || [])]
-                            .sort((a, b) => (b.createdDateTimeUtc?.getTime() || 0) - (a.createdDateTimeUtc?.getTime() || 0));
+                        const currentOutgoingLinkedLicences = (outputListDataItem?.linkedLicences || [])
+                            .filter(ll => ll.containedIn?.some(c => c.direction === InformationDirection.Outgoing))
+                            .map(ll => {
+                                const licence = LinkedLicence.fromJS(ll);
+                                licence.containedIn = (licence.containedIn || [])
+                                    .filter(c => c.direction === InformationDirection.Outgoing);
+                                return licence;
+                            });
 
-                        const outgoingLinkedLicences = [...(results || [])];
-
-                        verifications.forEach(verification => {
-                            if (verification.licenceSectionItemId === 'None Outgoing') {
-                                return;
-                            }
-
-                            try {
-                                const rawValue = verification.licenceSectionOverrideValue 
-                                    ?? verification.licenceSectionSnapshotValue
-                                    ?? verification.licenceSectionScrapedValue;
-                                if (!rawValue) return;
-
-                                const overrideLicence = LinkedLicence.fromJS(JSON.parse(rawValue));
-                                const existingIndex = outgoingLinkedLicences.findIndex(x => x.licenceNumber === verification.licenceSectionItemId);
-
-                                switch (verification.verificationType) {
-                                    case "Confirmed":
-                                    case "AutoConfirm":
-                                    case "Edited":
-                                    case "Added":
-                                        if (existingIndex === -1) {
-                                            outgoingLinkedLicences.push(overrideLicence);
-                                        } else {
-                                            outgoingLinkedLicences.splice(existingIndex, 1, overrideLicence);
-                                        }
-                                        break;
-                                    case "Removed":
-                                        if (existingIndex !== -1) {
-                                            outgoingLinkedLicences.splice(existingIndex, 1);
-                                        }
-                                        break;
-                                }
-                            } catch (e) {
-                                console.error("Failed to process verification", verification, e);
-                            }
-                        });
-
-                        setLinkedLicences(outgoingLinkedLicences);
-                        setSnapshotData(outgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                        setLinkedLicences(currentOutgoingLinkedLicences);
+                        setSnapshotData(currentOutgoingLinkedLicences.map(ll => LinkedLicence.fromJS(ll)));
                     }
                 } catch (err) {
                     console.error("Error fetching linked licences:", err);
@@ -235,6 +213,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             }}
                             outputListDataItem={outputListDataItem}
                             scrapedView={scrapedView}
+                            history={history}
                         />
                     ))}
                 </div>

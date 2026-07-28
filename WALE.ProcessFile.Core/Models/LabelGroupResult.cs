@@ -22,23 +22,83 @@ public class LabelGroupResult
     public string? ServiceName { get; init; }
     
     public string? LabelGroupName { get; set; }
-    
-    [JsonIgnore]
-    public LabelToMatch? MatchedLabel { get; set; }
 
-    private string? _matchedLabelName;
+    [JsonIgnore]
+    public LabelToMatch? MatchedLabel
+    {
+        get;
+        set
+        {
+            if (value != null)
+            {
+                MatchedLabelName = value.Name;
+                MatchedLabelRelatedName = value.RelatedName;
+                MatchedLabelPosition = value.Position;
+                MatchedLabelTextFirstLine = value.Text?.FirstOrDefault()?.Text;
+            }
+            
+            field = value;
+        }
+    }
+
     public string? MatchedLabelName
     {
-        get => MatchedLabel?.Name ?? _matchedLabelName;
+        get => MatchedLabel?.Name ?? field;
         set
         {
             if (value == null || MatchedLabel != null)
             {
-                _matchedLabelName = null;
+                field = null;
                 return;
             }
             
-            _matchedLabelName = value;
+            field = value;
+        }
+    }
+    
+    public string? MatchedLabelRelatedName
+    {
+        get => MatchedLabel?.RelatedName ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
+        }
+    }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LabelPosition? MatchedLabelPosition
+    {
+        get => MatchedLabel?.Position ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
+        }
+    }
+    
+    public string? MatchedLabelTextFirstLine
+    {
+        get => MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text ?? field;
+        set
+        {
+            if (value == null || MatchedLabel != null)
+            {
+                field = null;
+                return;
+            }
+            
+            field = value;
         }
     }
 
@@ -48,24 +108,34 @@ public class LabelGroupResult
         {
             if (MatchedLabel == null)
             {
-                return null;
+                return field ?? null;
             }
 
+            double? confidencePer100;
+            double confidentForLines;
+            
             switch (MatchedLabel.ConfidenceType)
             {
                 case ConfidenceType.Static:
-                    return MatchedLabel.ConfidenceIfMatched;
+                    return field = MatchedLabel.ConfidenceIfMatched;
                 case ConfidenceType.OcrConfidencePassthrough:
-                    return GetAverageConfidence();
+                    return field = GetAverageConfidence();
                 case ConfidenceType.OcrConfidencePassthroughMinusNPerLine:
-                    return GetAverageConfidence() - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                    confidentForLines = (Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine;
+                    
+                    return field = GetAverageConfidence() - confidentForLines;
                 case ConfidenceType.OcrConfidenceMultiplied:
-                    return (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
+                    confidencePer100 = MatchedLabel.ConfidenceIfMatched / 100.0;
+                    
+                    return field = confidencePer100 * (GetAverageConfidence() ?? 1);
                 case ConfidenceType.OcrConfidenceMultipliedMinusNPerLine:
-                    var returnFull = (MatchedLabel.ConfidenceIfMatched / 100.0) * (GetAverageConfidence() ?? 1);
-                    return returnFull - ((Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine);
+                    confidencePer100 = MatchedLabel.ConfidenceIfMatched / 100.0;
+                    var returnFull = confidencePer100 * (GetAverageConfidence() ?? 1);
+                    confidentForLines = (Text?.Count ?? 0) * MatchedLabel.OcrConfidenceMinusNPerLine;
+                    
+                    return field = returnFull - confidentForLines;
                 case ConfidenceType.NotSet:
-                    return null;
+                    return field = null;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

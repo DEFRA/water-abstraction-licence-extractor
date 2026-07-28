@@ -41,7 +41,8 @@ public static class GenerateLicenceReaderExtract
         ICacheService cacheService,
         IOutputService outputService,
         INoOcrPdfDocumentService documentService,
-        INoOcrAlternativePdfDocumentService alternativeDocumentService)
+        INoOcrAlternativePdfDocumentService alternativeDocumentService,
+        IMessageQueueService messageQueueService)
     {
         var dotnetPath = KeyConfig.DotnetPath;
         var tesseractExeName = KeyConfig.TesseractExeName;
@@ -79,7 +80,8 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             documentService,
-            alternativeDocumentService);
+            alternativeDocumentService,
+            messageQueueService);
     }
 
     public static async Task<int> GenerateLicenceReaderExtractAsync(bool includeVersionMatch)
@@ -97,8 +99,9 @@ public static class GenerateLicenceReaderExtract
         //var maxConcurrentScrapers = 6;
         var maxConcurrentScrapers = 10;
         
-        var cacheService = new ApiCacheService(httpClient);
+        var cacheService = (ICacheService)new ApiCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
+        var messageQueueService = (IMessageQueueService)new ApiMessageQueueService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
@@ -169,7 +172,8 @@ public static class GenerateLicenceReaderExtract
                     cacheService,
                     outputService,
                     pdfPigDocumentService,
-                    docnetAlternativeDocumentService));
+                    docnetAlternativeDocumentService,
+                    messageQueueService));
         }
 
         var fileServiceType = "api";
@@ -186,6 +190,7 @@ public static class GenerateLicenceReaderExtract
             pdfDataExtractors,
             fileService,
             cacheService,
+            outputService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
             await dmsExtractInfoTask,
@@ -289,23 +294,26 @@ public static class GenerateLicenceReaderExtract
         return dmsExtractInfo;
     }
 
-    private static Task<MatchesResult> GetMatchesAsync(
+    private static async Task<MatchesResult> GetMatchesAsync(
         TemplateFinderInput fileMetadata,
         IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
     {
-        return pdfDataExtractor.GetMatchesAsync(
+        var data = await pdfDataExtractor.GetMatchesAsync(
             fileMetadata.FileName!,
             new DmsFileData { FileId = fileMetadata.FileId },
             configuration,
             [fileMetadata.FileName!],
             0);
+
+        return data.Item!;
     }
 
     private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
+        IOutputService outputService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
@@ -325,11 +333,11 @@ public static class GenerateLicenceReaderExtract
                 .Select(existingResult => existingResult.FileId));
 
         var allPdfFilesInS3 = (await fileService.GetAllFilesWithMetadataAsync(string.Empty, int.MaxValue))
-            .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            .Where(fileMetadata => fileMetadata.Filename.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToDictionary(fileMetadata => fileMetadata.Filename, fileMetadata => fileMetadata);
 
-        // TODO - Need to implement paging above
+        // TODO - May need to implement paging above
         
         var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
@@ -384,9 +392,12 @@ public static class GenerateLicenceReaderExtract
             .Where(templateFinderInput => licenceFinderResultsByFileId.ContainsKey(templateFinderInput.FileId))
             .ToList();
 
+        var versionFilesCount = 0;
+        
         if (includeVersionMatch)
         {
             var versionFiles = await cacheService.GetVersionFilesAsync();
+            versionFilesCount =  versionFiles.Count;
 
             foreach (var versionFile in versionFiles)
             {
@@ -415,6 +426,8 @@ public static class GenerateLicenceReaderExtract
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {licenceFinderResultsByFileId.Count} live licences to look at {DateTime.Now}");
+        ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {versionFilesCount} version files to look at {DateTime.Now}");
+
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Already in CSV (completed or previously crashed): {existingResults.Count} files");
 
         var excludedCount = allPdfFilesInS3.Count(fileMetadata => ExcludedFiles.Contains(fileMetadata.Value.Filename));
@@ -440,12 +453,12 @@ public static class GenerateLicenceReaderExtract
         
         var originalConfiguration = new LookupConfiguration(
             LicenceReaderConfiguration.GetLabels(),
-            DmsFileData,
-            [], // Don't need
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             fileService,
             cacheService,
+            outputService,
             -1,
+            DateTime.Now,
             skipFileIfMoreThenPages: 25);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {originalConfiguration.Labels.Count} label groups from configuration");
@@ -470,7 +483,7 @@ public static class GenerateLicenceReaderExtract
             { 5, new TemplateTypeIdentifierService("South West") },
             { 6, new TemplateTypeIdentifierService("Southern") },
             { 7, new TemplateTypeIdentifierService("Thames") },
-            { 8, new TemplateTypeIdentifierService("Wales") },
+            { 8, new TemplateTypeIdentifierService("Wales") }
         };
         
         var fileTypeService = new FileTypeIdentifierService();
@@ -592,7 +605,7 @@ public static class GenerateLicenceReaderExtract
             
             var originalFileName = dmsExtractHasPermitRow
                 ? dmsExtractInfo[lowercasePermitNumber]
-                    .FirstOrDefault(dmsFile => dmsFile.FileId.Equals(fileIdString, StringComparison.InvariantCultureIgnoreCase))
+                    .FirstOrDefault(dmsFile => dmsFile.FileId.Equals(fileIdString, StringComparison.OrdinalIgnoreCase))
                     ?.FileName
                 : null;
             
@@ -781,7 +794,7 @@ public static class GenerateLicenceReaderExtract
         };
 
         return fileTypeExcludeTerms
-            .Any(term => filename.Contains(term, StringComparison.InvariantCultureIgnoreCase));;
+            .Any(term => filename.Contains(term, StringComparison.OrdinalIgnoreCase));;
     }
     
     private static string? ExtractPermitNumber(string fileName)

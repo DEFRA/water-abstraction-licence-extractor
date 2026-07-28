@@ -1,5 +1,8 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -36,6 +39,14 @@ public class FilesController(IFileService fileService) : Controller
         return Ok();
     }
     
+    [HttpPost]
+    public async Task<ActionResult<string>> RenameAsync(
+        [FromBody] RenameRequest request)
+    {
+        await fileService.RenameAsync(request.originalFilename!, request.newFilename!);
+        return Ok();
+    }
+    
     [HttpPut]
     [DisableRequestSizeLimit]
     [RequestFormLimits(
@@ -52,7 +63,7 @@ public class FilesController(IFileService fileService) : Controller
         
         foreach (var file in Request.Form.Files)
         {
-            if (!file.ContentType.Equals("application/pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -60,7 +71,7 @@ public class FilesController(IFileService fileService) : Controller
             var lowercaseFileName = file.FileName.ToLowerInvariant();
             var fileExtension = Path.GetExtension(lowercaseFileName);
             
-            if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+            if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -100,13 +111,13 @@ public class FilesController(IFileService fileService) : Controller
 
         var file = Request.Form.Files[0];
 
-        if (!file.ContentType.Equals("application/octet-stream", StringComparison.InvariantCultureIgnoreCase))
+        if (!file.ContentType.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Expects binary stream.");
         }
 
         var fileExtension = Path.GetExtension(filename);
-        if (!fileExtension.Equals(".pdf", StringComparison.InvariantCultureIgnoreCase))
+        if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Only PDF files are allowed.");
         }

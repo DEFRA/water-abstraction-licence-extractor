@@ -1,6 +1,6 @@
-using Amazon;
-using Amazon.Runtime;
+using System.IO.Compression;
 using Amazon.SQS;
+using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Services;
@@ -17,8 +17,21 @@ builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
 });
 
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.AddOutputCache();
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
@@ -34,9 +47,11 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseResponseCaching();
 app.UseResponseCompression();
+app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
 app.Run();
+
 return;
 
 static void ConfigureServices(IServiceCollection services, IConfigurationRoot config)

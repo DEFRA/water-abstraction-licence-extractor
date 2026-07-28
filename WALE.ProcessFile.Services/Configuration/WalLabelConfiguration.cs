@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
@@ -6,7 +7,7 @@ using WALE.ProcessFile.Services.Formats;
 
 namespace WALE.ProcessFile.Services.Configuration;
 
-public static class WalLabelConfiguration
+public static partial class WalLabelConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -530,7 +531,13 @@ public static class WalLabelConfiguration
                             new("10.9"),
                             new("10.10"),
                             new("1)") { LineMustStartWith = true },
+                            new("(1)") { LineMustStartWith = true },
                             new("2)") { LineMustStartWith = true },
+                            new("(2)") { LineMustStartWith = true },
+                            new("3)") { LineMustStartWith = true },
+                            new("(3)") { LineMustStartWith = true },
+                            new("4)") { LineMustStartWith = true },
+                            new("(4)") { LineMustStartWith = true },                            
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -545,6 +552,13 @@ public static class WalLabelConfiguration
                             new("10.10"),
                             new("10.11"),
                             new("2)") { LineMustStartWith = true },
+                            new("(2)") { LineMustStartWith = true },
+                            new("3)") { LineMustStartWith = true },
+                            new("(3)") { LineMustStartWith = true },
+                            new("4)") { LineMustStartWith = true },
+                            new("(4)") { LineMustStartWith = true },
+                            new("5)") { LineMustStartWith = true },
+                            new("(5)") { LineMustStartWith = true },                            
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1728,10 +1742,10 @@ public static class WalLabelConfiguration
                             new("6.8"),
                             new("6.9"),
                             new("6.10"),
-                            new("(1)"),
-                            new("(2)"),
-                            new("(3)"),
-                            new("(4)"),
+                            new("(1)") { LineMustStartWith = true},
+                            new("(2)") { LineMustStartWith = true},
+                            new("(3)") { LineMustStartWith = true},
+                            new("(4)") { LineMustStartWith = true},
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[START_OF_BLOCK]")
                         ],
@@ -1745,10 +1759,10 @@ public static class WalLabelConfiguration
                             new("6.8"),
                             new("6.9"),
                             new("6.10"),
-                            new("(2)"),
-                            new("(3)"),
-                            new("(4)"),
-                            new("(5)"),
+                            new("(2)") { LineMustStartWith = true},
+                            new("(3)") { LineMustStartWith = true},
+                            new("(4)") { LineMustStartWith = true},
+                            new("(5)") { LineMustStartWith = true},
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[END_OF_BLOCK]")
                         ],
@@ -2122,6 +2136,7 @@ public static class WalLabelConfiguration
                         NextLinesToFetch = 1,
                         Possibilities = new List<TextToMatch>
                         {
+                            // This is actually (unintentionally) the order of preference when on the same line
                             new("megalitres"),
                             new("litres"),
                             new("thousand cubic metres"),
@@ -2203,7 +2218,8 @@ public static class WalLabelConfiguration
                         Text =
                         [
                             new("consecutive five year"),
-                            new("five consecutive years")
+                            new("five consecutive years"),
+                            new("over any 5-year period")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                         Format = "Units",
@@ -2426,7 +2442,8 @@ public static class WalLabelConfiguration
                         Text =
                         [
                             new("consecutive five year"),
-                            new("five consecutive years")
+                            new("five consecutive years"),
+                            new("over any 5-year period")
                         ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",
@@ -2576,7 +2593,7 @@ public static class WalLabelConfiguration
             [
                 new(LicenceNumber.YorkshireRegexPatten)
                 {
-                    IsRegularExpression = true
+                    Regex = LicenceNumber.LicenceNumbersRegex()
                 }
             ],
             Format = LicenceNumber.Constant,
@@ -2632,10 +2649,9 @@ public static class WalLabelConfiguration
     
     private const string LicenceNumberHeaderLine = "Licence Serial No: ";
     private static readonly TextToMatch PageNumberPattern =
-        new(@"/Page \d* of \d*/")
+        new(string.Empty)
         {
-            IsRegularExpression = true,
-            RegularExpressionIsCaseInsensitive = true
+            Regex = PageXOfYRegex()
         };
     private static readonly TextToMatch EnvironmentAgencyTelephone1Pattern =
         new("708 506 506"); // Only this bit matches the pattern (excludes first number)
@@ -2646,5 +2662,14 @@ public static class WalLabelConfiguration
     private static readonly TextToMatch EnvironmentAgencyTelephone4Pattern =
         new("845 988 1188"); // Only this bit matches the pattern (excludes first number)
     private static readonly TextToMatch LicenceNumberInHeaderPattern =
-        new($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/") { IsRegularExpression = true };
+        new(string.Empty)
+        {
+            Regex = LicenceNumberInHeaderRegex()
+        };
+    
+    [GeneratedRegex(@"Page \d* of \d*", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex PageXOfYRegex();
+    
+    [GeneratedRegex($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/", RegexOptions.None, "en-GB")]
+    private static partial Regex LicenceNumberInHeaderRegex();
 }

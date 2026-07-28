@@ -16,13 +16,13 @@ public class DatabaseOutputService(
     IDatabaseWriteService databaseWriteService) : IOutputService, ILicenceListRepository
 {
     public string? OutputFolder { get; set; } = null;
-    
+
     public Task SetupAsync()
     {
         // Nothing to do in this case
         return Task.CompletedTask;
     }
-    
+
 
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
@@ -46,13 +46,14 @@ public class DatabaseOutputService(
             pageNumber,
             fileId,
             pdfServiceName);
-        
+
         var bytes2 = await databaseReadService.GetPageScreenshotAsync(
             pageNumber,
             fileId,
-            GeneralConstants.DocnetExtractorServiceName);// TODO tidy this up
-        
-        return [
+            GeneralConstants.DocnetExtractorServiceName); // TODO tidy this up
+
+        return
+        [
             bytes1!,
             bytes2!
         ];
@@ -82,7 +83,7 @@ public class DatabaseOutputService(
     {
         return databaseWriteService.ReportErrorProcessRunFileAsync(processRunFile);
     }
-    
+
     public async Task SaveLicenceSetsAsync(Dictionary<string, LicenceSet> licenceSets, Guid? fileId, int processRunId)
     {
         foreach (var licenceSetKvp in licenceSets)
@@ -93,37 +94,37 @@ public class DatabaseOutputService(
 
     public async Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
     {
-        var existingList =  await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
+        var existingList = await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
 
         if (existingList.Any(x =>
-            x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
+                x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
         {
             return;
         }
-        
+
         var licenceSetId = await databaseWriteService.SaveLicenceSetAsync(
             licenceSet.LicenceSetId,
             licenceSet.ShortLicenceSetId,
-            processRunId);   
-        
+            processRunId);
+
         foreach (var licence in licenceSet.Licences)
         {
             var licenceId = licence.NoneSchemaData.TryGetValue("licenceId", out var licenceIdOut)
                 ? (int?)licenceIdOut
                 : null;
-            
+
             if (string.IsNullOrEmpty(licence.LicenceNumber?.Value) && licenceId == null)
             {
                 // TODO log
                 continue;
             }
-            
+
             await databaseWriteService.InsertLicenceSetLicenceAsync(
                 licenceSetId,
                 licenceId,
                 licence.LicenceNumber?.Value,
                 licence.LicenceVersion.LicenceVersionId,
-                processRunId);   
+                processRunId);
         }
 
         foreach (var licenceSetType in licenceSet.LicenceSetTypes)
@@ -131,14 +132,14 @@ public class DatabaseOutputService(
             await databaseWriteService.SaveLicenceSetTypeAsync(
                 licenceSetId,
                 (int)licenceSetType,
-                processRunId);   
+                processRunId);
         }
 
         if (licenceSet.AggregateSets == null)
         {
             return;
         }
-        
+
         foreach (var aggregateSet in licenceSet.AggregateSets)
         {
             await databaseWriteService.SaveAggregateSetAsync(
@@ -152,54 +153,72 @@ public class DatabaseOutputService(
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
-        
-        return databaseWriteService.UpdateLicenceAsync(licenceId, licenceStr, licence.DmsFileId!.Value, processRunId);
+
+        return databaseWriteService.UpdateLicenceAsync(
+            licenceId,
+            licenceStr,
+            licence.DmsFileId!.Value,
+            processRunId,
+            licence.Status.ToString());
     }
 
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId)
     {
         var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
-        
+
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.Filename,
+            licence.Status.ToString(),
             licenceStr,
             licence.DmsFileId,
             licence.DmsPermitNumber,
             processRunId);
     }
-    
-    public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+
+    public async Task SaveMatchesAsync(
+        List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
     {
         var tasks = new List<Task>();
-        
+
         foreach (var match in matches)
         {
             tasks.Add(SaveMatchAsync(match.matchesResultId, match.labelName, match.labelGroupName, match.data));
-                
+
             if (tasks.Count == 5)
             {
                 await Task.WhenAll(tasks);
                 tasks.Clear();
             }
         }
-        
+
         await Task.WhenAll(tasks);
         tasks.Clear();
     }
-    
+
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)
     {
         var matchStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    {
+        return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
+    }
+
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    {
+        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error);
+    }
+
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
     {
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
-        
+
         return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId);
     }
-    
+
     public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
     {
         // Don't need to, as it can just get it on the fly
@@ -226,7 +245,7 @@ public class DatabaseOutputService(
                 bytes,
                 processRunId);
         }
-        
+
         return images.Sum(i => i.Bitmap.ByteCount);
     }
 
@@ -245,7 +264,8 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName, int processRunId)
+    public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName,
+        int processRunId)
     {
         var documentLinesStr = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions());
         await databaseWriteService.SaveAllPagesTextAsync(documentLinesStr, fileId, noOcrServiceName, processRunId);
@@ -265,24 +285,26 @@ public class DatabaseOutputService(
             {
                 continue;
             }
-            
+
             var licenceTransformed = FormattingHelper.FormatLicenceNumber(
                 missingLicenceId.LicenceNumber,
                 GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
 
             var licence =
-                await databaseReadService.GetLicenceAsync(licenceTransformed, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceAsync(
+                    licenceTransformed,
+                    processRun.ProcessRunId);
 
             if (licence == null)
             {
                 // TODO log - shouldn't happen
                 continue;
             }
-            
+
             missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
             await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
         }
-        
+
         await databaseWriteService.UpdateProcessRunAsync(processRun);
     }
 
@@ -300,10 +322,19 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetLicenceAsync(fileId, processRunId);
     }
-    
-    public Task<MatchesResult?> GetMatchesResult(Guid fileId)
+public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    {
+        return databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         return databaseReadService.GetMatchesResult(fileId);
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
+    {
+        return databaseReadService.GetMatchesResult(fileId, processRunId);
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
@@ -317,9 +348,27 @@ public class DatabaseOutputService(
         return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId);
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLatestLicenceSectionVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
     {
-        return databaseReadService.GetLatestLicenceSectionVerificationsAsync();
+        return databaseReadService.GetAllVerificationsAsync(maxProcessRunId);
+    }
+
+    public async Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
+    {
+        var all = (await GetAllVerificationsAsync(maxProcessRunId)).ToList();
+
+        return all
+                .Where(v => !string.IsNullOrEmpty(v.LicenceSectionName))
+                .GroupBy(v => v.LicenceSectionName)
+                .ToDictionary(g => g.Key!, g =>
+                    new LicenceVerificationLookups
+                    {
+                        ByFileId = g.GroupBy(v => v.LicenceFileId)
+                            .ToDictionary(gf => gf.Key, gf => gf.ToList()),
+                        ByItemId = g.GroupBy(v => v.LicenceSectionItemId)
+                            .Where(gi => gi.Key != null)
+                            .ToDictionary(gi => gi.Key!, gi => gi.ToList())
+                    });
     }
 
     public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
@@ -327,7 +376,8 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);
     }
 
-    public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
+    public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
+        int processRunId)
     {
         return databaseWriteService.SavePageScreenshotThumbnailAsync(
             pageNumber,
@@ -361,7 +411,7 @@ public class DatabaseOutputService(
             licence.NoneSchemaData = JsonHelper.MakeJsonElementDictionaryNative(
                 licence.NoneSchemaData);
         }
-        
+
         return licences;
     }
 
@@ -369,7 +419,7 @@ public class DatabaseOutputService(
     {
         throw new NotImplementedException();
     }
-    
+
     public async Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         return await databaseReadService.GetLicencesSearchAsync(processRunId, processRunQuery);
@@ -386,43 +436,59 @@ public class DatabaseOutputService(
         var allLicenceSetLicences = await allLicenceSetLicencesTask;
         var allLicenceSetTypes = await allLicenceSetTypesTask;
         var allAggregateSets = await allAggregateSetsTask;
-        
+
         var returnList = new Dictionary<string, LicenceSet>();
-        
+
         foreach (var licenceSetSimple in licenceSets)
         {
             var licenceSet = new LicenceSet();
-            
+
             var licenceSetLicenceIds = allLicenceSetLicences
                 .Where(lsl => lsl.LicenceSetId == licenceSetSimple.LicenceSetId);
-            
+
             var licences = new List<Licence>();
 
             foreach (var licenceSetLicence in licenceSetLicenceIds)
             {
                 var licence = allLicences.FirstOrDefault(l =>
                 {
-                    var licenceId = (int)l.NoneSchemaData["licenceId"]!;
-                    return licenceId == licenceSetLicence.LicenceId || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
+                    if (!l.NoneSchemaData.TryGetValue("licenceId", out var licenceIdObj))
+                    {
+                        return false;
+                    }
+
+                    int licenceId;
+                    if (licenceIdObj is JsonElement jsonElement)
+                    {
+                        licenceId = jsonElement.GetInt32();
+                    }
+                    else
+                    {
+                        licenceId = (int)licenceIdObj!;
+                    }
+                    
+                    return licenceId == licenceSetLicence.LicenceId
+                        ||
+                           l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
                 });
 
                 if (licence == null)
                 {
                     continue;
                 }
-                
+
                 licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
                 licences.Add(licence);
             }
 
             licenceSet.Licences = licences
                 .ToArray();
-            
+
             licenceSet.LicenceSetTypes = allLicenceSetTypes
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
                 .Select(lst => lst.Type)
                 .ToArray();
-            
+
             licenceSet.AggregateSets = allAggregateSets
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
                 .Select(lst => lst.AggregateSet)
@@ -433,23 +499,24 @@ public class DatabaseOutputService(
 
         return returnList;
     }
-    
+
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         var processRun = (await databaseReadService.GetMostRecentProcessRunAsync(fileId))!;
-        
+
         var licenceSets = await databaseReadService.GetLicenceSetsSimpleAsync(
             fileId,
             processRun.ProcessRunId);
-        
+
         var returnList = new List<LicenceSet>();
-        
+
         foreach (var licenceSetSimple in licenceSets)
         {
             var licenceSet = new LicenceSet();
-            
+
             var licenceSetLicenceIds =
-                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId, processRun.ProcessRunId);
+                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId,
+                    processRun.ProcessRunId);
 
             var licences = new List<Licence>();
 
@@ -457,14 +524,14 @@ public class DatabaseOutputService(
             {
                 var licence = new Licence
                 {
-                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber) 
+                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber)
                         ? new ValueWithConfidence<string>(
                             licenceSetLicence.LicenceNumber,
                             -1, // TODO
                             -1) // TODO
                         : null
                 };
-                
+
                 licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
                 licences.Add(licence);
             }
@@ -472,11 +539,16 @@ public class DatabaseOutputService(
             licenceSet.Licences = licences.ToArray();
             licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId);
             licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
-            
+
             returnList.Add(licenceSet);
         }
 
         return returnList;
+    }
+
+    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        return databaseReadService.GetLicenceFileIdsAsync(processRunId);
     }
 
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
@@ -487,17 +559,17 @@ public class DatabaseOutputService(
         {
             throw new FileNotFoundException("Could not load image");
         }
-        
+
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, quality);
 
         if (data == null)
         {
             throw new FileNotFoundException("Could not encode image");
         }
-        
+
         await using var stream = new MemoryStream();
         data.SaveTo(stream);
-        
+
         await stream.FlushAsync();
 
         stream.Position = 0;

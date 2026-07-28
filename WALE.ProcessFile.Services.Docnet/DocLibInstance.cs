@@ -1,7 +1,6 @@
 using Docnet.Core;
 using Docnet.Core.Models;
 using Docnet.Core.Readers;
-using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.ProcessFile.Services.Docnet;
 
@@ -9,18 +8,16 @@ public class DocLibInstance
 {
     private static readonly DocLib Instance = DocLib.Instance;
     
-    public async Task<IDocReader> GetDocReaderAsync(
-        IFileService fileService,
-        string pdfFilename,
+    public IDocReader GetDocReader(
+        Stream sourceStream,
         PageDimensions pageDimensions)
     {
-        var stream = await fileService.GetFileAsStreamAsync(pdfFilename);
-        if (stream == null)
+        if (sourceStream == null)
         {
-            throw new NullReferenceException(nameof(stream));
+            throw new NullReferenceException(nameof(sourceStream));
         }
         
-        var bytes = GetByteArray(stream);
+        var bytes = GetByteArray(sourceStream);
         return Instance.GetDocReader(bytes, pageDimensions);
     }
     

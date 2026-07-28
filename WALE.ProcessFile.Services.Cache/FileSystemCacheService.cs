@@ -9,8 +9,6 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class FileSystemCacheService(string cacheFolder) : ICacheService
 {
-    public bool UsesDatabase { get; set; } = false;
-
     public string? CacheFolderOrUrl { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
     public Task SetupAsync()
@@ -53,7 +51,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         var imagePath = $"{outputFolderFull}/page-{pageNumber}-image-{imageNumber}.jpg";
         
         var imageFilenameDeflated = imagePath.Replace(".jpg", "-deflated.jpg",
-            StringComparison.InvariantCultureIgnoreCase);
+            StringComparison.OrdinalIgnoreCase);
         await File.WriteAllBytesAsync(imageFilenameDeflated, deflated);
 
         return deflated;
@@ -501,6 +499,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
+    {
+        return Task.FromResult(new List<DmsFileIdInformation>());
+    }
+
     public Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         return Task.CompletedTask;
@@ -584,6 +587,26 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     public Task<HashSet<string>> GetFirstNamesAsync()
     {
         return CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
+    }
+
+    public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
+    {
+        throw new NotImplementedException();
     }
 
     private string GetFolderPath(Guid fileId)

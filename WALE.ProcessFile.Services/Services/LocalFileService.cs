@@ -73,4 +73,9 @@ public class LocalFileService(string folderPath) : IFileService
     {
         throw new NotImplementedException();
     }
+
+    public Task RenameAsync(string originalFilename, string newFilename)
+    {
+        throw new NotImplementedException();
+    }
 }

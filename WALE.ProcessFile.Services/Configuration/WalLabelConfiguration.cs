@@ -1746,11 +1746,13 @@ public static partial class WalLabelConfiguration
                             new("6.9") { LineMustStartWith = true },
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
+                            new("From borehole (1)") { LineMustStartWith = true }, // Specificity matters here else you can start and being on same line (e.g. between text starts 'From borehole' and ends straight away with '(1)')
+                            new("From borehole (2)") { LineMustStartWith = true },
+                            new("From borehole") { LineMustStartWith = true },
                             new("(1)") { LineMustStartWith = true },
                             new("(2)") { LineMustStartWith = true },
                             new("(3)") { LineMustStartWith = true },
                             new("(4)") { LineMustStartWith = true },
-                            new("From borehole") { LineMustStartWith = true },
                             new("*For Purpose") { LineMustStartWith = true },
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[START_OF_BLOCK]")
@@ -1766,11 +1768,12 @@ public static partial class WalLabelConfiguration
                             new("6.9") { LineMustStartWith = true },
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
+                            new("From borehole (2)") { LineMustStartWith = true },
+                            new("From borehole") { LineMustStartWith = true },
                             new("(2)") { LineMustStartWith = true},
                             new("(3)") { LineMustStartWith = true},
                             new("(4)") { LineMustStartWith = true},
                             new("(5)") { LineMustStartWith = true},
-                            new("From borehole") { LineMustStartWith = true },
                             new("*For Purpose") { LineMustStartWith = true },
                             new("*In aggregate") { LineMustStartWith = true },
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },

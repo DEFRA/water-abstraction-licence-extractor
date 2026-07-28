@@ -2473,18 +2473,37 @@ public static class WalSchemaConverter
             && g.Purposes.Length != allPurposes.Length);
 
         var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
-                
+        
+        // Need to see if there are any limits that were for a single point or purpose and this has
+        // multiple points or purposes
+        var alreadyHadSpecificLimitsForAPointOrPurpose = allIndividualGroups.Any(
+            ig => ig.Purposes?.Length < allPurposes.Length
+                || ig.Points?.Length < allPoints.Length);
+
+        var purposesAppliesToCount = limitPurposes?.Count ?? allPurposes.Length;
+        var pointsAppliesToCount = limitPoints?.Count ?? allPoints.Length;
+        
+        var lessSpecificThenPrevious = alreadyHadSpecificLimitsForAPointOrPurpose
+            && allIndividualGroups.Any(
+                ig => purposesAppliesToCount > ig.Purposes?.Length
+                      || pointsAppliesToCount > ig.Points?.Length);
+        
         var meetsAggregateConditions = 
             (textSuggestsIsAggregate
             && (limitedByPoints
                 || thisLimitedByPurpose
-                || containsUnderThisLicenceText))
+                || (containsUnderThisLicenceText && lessSpecificThenPrevious)))
             || (multiplePurposesSpecified && othersLimitedByPurpose);
 
-        // We are limited by points - its an aggregated
+        // We are limited by points or purposes - its an aggregate
         if (!meetsAggregateConditions)
         {
             if (limitPoints?.Count > 1 && limitPoints.Count < allPoints.Length)
+            {
+                meetsAggregateConditions = true;
+            }
+            
+            if (limitPurposes?.Count > 1 && limitPurposes.Count < allPurposes.Length)
             {
                 meetsAggregateConditions = true;
             }

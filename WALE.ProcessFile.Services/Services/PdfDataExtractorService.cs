@@ -1428,11 +1428,6 @@ public class PdfDataExtractorService(
                         partialLine = null;
                         continue;
                     }
-
-                    if (partialLine.Text.Contains("over any 5") && label.Name == "Per5YearUnits")
-                    {
-                        
-                    }
                     
                     TextToMatch? matchedStartText = null;
                     var labelCharPosition = 0;
@@ -1479,7 +1474,6 @@ public class PdfDataExtractorService(
                                 partialLine = null;
                                 continue;
                             }
-
                         }
                     }
                     

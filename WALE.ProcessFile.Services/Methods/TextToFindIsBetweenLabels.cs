@@ -317,6 +317,13 @@ public static class TextToFindIsBetweenLabels
                         
                         var i = combinedText.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
+                        // TOOD this should look at which actually matched, not just the first label to end on
+                        if (label.TextToMatch?.FirstOrDefault()?.Text == "[END_OF_LINE]"
+                            && matchedEndTextTemp.Text == string.Empty)
+                        {
+                            i = combinedText.Length;
+                        }
+                        
                         if (i > -1)
                         {
                             var t = combinedText[..i];

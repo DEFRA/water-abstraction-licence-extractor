@@ -2377,12 +2377,13 @@ public static class WalSchemaConverter
 
         var siblings = abstractionLimitPointSub.SubResults;
         
-        var purposeCondition = siblings
-            .FirstOrDefault(x => x.MatchedLabelName == "PurposeCondition");
+        var purposeConditions = siblings
+            .Where(x => x.MatchedLabelName is "PurposeCondition" or "PurposeConditionSingleLine")
+            .ToList();
                 
-        var purposeConditionSub = purposeCondition?
-            .SubResults
-            .Where(x => x.MatchedLabelName == "PurposeConditionSub")
+        var purposeConditionSub = purposeConditions
+            .SelectMany(pc => pc.SubResults)
+            .Where(x => x.MatchedLabelName is "PurposeConditionSub" or "PurposeConditionSingleLineSub")
             .ToList();
                 
         var limitPurposes = purposeConditionSub?.Count > 0 ?

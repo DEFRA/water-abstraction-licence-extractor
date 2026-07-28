@@ -1972,6 +1972,42 @@ public static partial class WalLabelConfiguration
                     },
                     new()
                     {
+                        Name = "PurposeConditionSingleLine",
+                        Text =
+                        [
+                            new("*For purpose ")
+                            {
+                                LineMustStartWith = true
+                            }
+                        ],
+                        TextEnd =
+                        [
+                            new("[END_OF_LINE]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 0,
+                        Possibilities = 
+                        [
+                            new("(a)"),
+                            new("(b)"),
+                            new("(c)"),
+                            new("(d)")
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PurposeConditionSingleLineSub",
+                                Text = [new("and ")],
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },
+                    new()
+                    {
                         Name = "PointCondition",
                         Text =
                         [

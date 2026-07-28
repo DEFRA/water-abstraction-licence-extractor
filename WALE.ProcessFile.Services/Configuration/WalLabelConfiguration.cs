@@ -1922,8 +1922,7 @@ public static partial class WalLabelConfiguration
                         TextEnd =
                         [
                             new("shall not exceed"),
-                            new(":"),
-                            //new("[END_OF_BLOCK]") // Maybe include
+                            new(":")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -1933,31 +1932,32 @@ public static partial class WalLabelConfiguration
                             new("numbers"),
                             new("conditions"),
                             new("condition"),
+                            new("for purpose"),
                             new("purpose")
                         ],
-                        MustContain =
+                        MustContain = 
                         [
-                            "4.1",
-                            "4.2",
-                            "4.3",
-                            "4.4",
-                            "4.5",
-                            "4.6",
-                            "4.7",
-                            "4.8",
-                            "4.9",
-                            "(1)",
-                            "(2)",
-                            "(3)",
-                            "(4)",
-                            "(a)",
-                            "(b)",
-                            "(c)",
-                            "(d)",
-                            "spray irrigation", // TODO add more types here
-                            "trickle irrigation",
-                            "mineral washing",
-                            "groundwater augmentation"                             
+                            ("4.1"),
+                            ("4.2"),
+                            ("4.3"),
+                            ("4.4"),
+                            ("4.5"),
+                            ("4.6"),
+                            ("4.7"),
+                            ("4.8"),
+                            ("4.9"),
+                            ("(1)"),
+                            ("(2)"),
+                            ("(3)"),
+                            ("(4)"),
+                            ("(a)"),
+                            ("(b)"),
+                            ("(c)"),
+                            ("(d)"),
+                            ("spray irrigation"), // TODO add more types here
+                            ("trickle irrigation"),
+                            ("mineral washing"),
+                            ("groundwater augmentation")
                         ],
                         SubLabels =
                         [

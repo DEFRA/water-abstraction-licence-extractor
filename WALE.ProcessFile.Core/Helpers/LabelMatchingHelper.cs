@@ -194,9 +194,12 @@ public static class LabelMatchingHelper
                 StringComparison.OrdinalIgnoreCase);
             
             var labelTextWithSpaceBefore = $" {labelText}";
+            var labelTextWithAsteriskBefore = $"*{labelText}";            
             
             var lineStartsWithLabelWithSpaceBefore =
                 lineToCheck.Text.Contains(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase);
+            var lineStartsWithLabelWithAsterickBefore =
+                lineToCheck.Text.Contains(labelTextWithAsteriskBefore, StringComparison.OrdinalIgnoreCase);            
             var lineEndsWithLabel =
                 lineToCheck.Text.EndsWith(labelText, StringComparison.OrdinalIgnoreCase);
             var lineEndsWithMarker =
@@ -283,10 +286,12 @@ public static class LabelMatchingHelper
                     }
                     else if (lineStartsWithLabel
                         || lineStartsWithLabelWithSpaceBefore
+                        || lineStartsWithLabelWithAsterickBefore
                         || lineEndsWithLabel
                         || ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel)
                         || column.Text.EndsWith(labelText, StringComparison.OrdinalIgnoreCase)
-                        || column.Text.Contains(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase))
+                        || column.Text.Contains(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase)
+                        || column.Text.Contains(labelTextWithAsteriskBefore, StringComparison.OrdinalIgnoreCase))
                     {
                         matchedText = labelTextOption;
                         return true;

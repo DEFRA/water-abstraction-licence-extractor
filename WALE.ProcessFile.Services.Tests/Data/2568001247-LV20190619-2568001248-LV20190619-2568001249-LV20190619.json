@@ -55,6 +55,12 @@
               "lineNumber": 18,
               "pageNumber": 4
             }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
+            }
           ]
         },
         {
@@ -103,6 +109,12 @@
               "lineNumber": 18,
               "pageNumber": 4
             }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
+            }
           ]
         },
         {
@@ -150,6 +162,12 @@
               "isBecauseOfAggregate": true,
               "lineNumber": 18,
               "pageNumber": 4
+            }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
             }
           ]
         }
@@ -346,6 +364,12 @@
                 "isBecauseOfAggregate": true,
                 "lineNumber": 18,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
               }
             ]
           }
@@ -668,6 +692,12 @@
                 "lineNumber": 18,
                 "pageNumber": 4
               }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
             ]
           }
         ]
@@ -986,6 +1016,12 @@
                 "isBecauseOfAggregate": true,
                 "lineNumber": 18,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
               }
             ]
           }

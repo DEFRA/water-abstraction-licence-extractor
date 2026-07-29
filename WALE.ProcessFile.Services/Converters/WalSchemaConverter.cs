@@ -2924,7 +2924,7 @@ public static class WalSchemaConverter
                 aggregateLimit.Points = null;
             }
         }
-        else
+        else if (aggregate.Points.Length == 0)
         {
             aggregate.Points = null;
         }

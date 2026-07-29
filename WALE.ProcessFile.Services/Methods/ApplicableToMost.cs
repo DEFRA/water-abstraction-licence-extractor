@@ -56,6 +56,9 @@ public static class ApplicableToMost
             MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                 or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
         
+        var hasToBePossibility = false;
+        var isPossiblity = false;
+        
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
@@ -359,9 +362,7 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
-            var hasToBePossibility = false;
-            var isPossiblity = false;
-            
+            var loopIsPossiblity = false;
             var matchedPossibility = (TextToMatch?)null;
             
             if (matchedLabel.Possibilities?.Any() == true)
@@ -385,7 +386,13 @@ public static class ApplicableToMost
                     }
                     
                     outputText = possibility.Text;
-                    isPossiblity = true;
+                    loopIsPossiblity = true;
+
+                    if (loopIsPossiblity)
+                    {
+                        isPossiblity = true;
+                    }
+                    
                     matchedPossibility = possibility;
                     
                     break;
@@ -394,7 +401,7 @@ public static class ApplicableToMost
 
             if (request.isUnitsLookup)
             {
-                if (isPossiblity)
+                if (loopIsPossiblity)
                 {
                     var dLineWords = documentLine.Columns
                         .SelectMany(c => c.Words)
@@ -509,7 +516,7 @@ public static class ApplicableToMost
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
-                if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
+                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
                 {
                     labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
@@ -544,7 +551,7 @@ public static class ApplicableToMost
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
-                if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
+                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
                 {
                     labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
@@ -558,11 +565,6 @@ public static class ApplicableToMost
                 
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
-
-            /*if (hasToBePossibility && !isPossiblity)
-            {
-                return [];
-            }*/
             
             if (!string.IsNullOrWhiteSpace(outputText))
             {
@@ -603,6 +605,11 @@ public static class ApplicableToMost
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
             }
+        }
+        
+        if (hasToBePossibility && !isPossiblity)
+        {
+            return [];
         }
         
         return CheckContains(request.label, returnListTop);

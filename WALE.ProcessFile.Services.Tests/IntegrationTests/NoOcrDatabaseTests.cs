@@ -291,14 +291,16 @@ public class NoOcrDatabaseTests
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(90.91, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Single(limit.Points!);
+        Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
 
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(33182, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Single(limit.Points!);
+        Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
 
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);

@@ -387,14 +387,16 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(90.91, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Equal(1, limit.Points.Length);
+        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
         
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(33182, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Equal(1, limit.Points.Length);
+        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
         
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
@@ -584,14 +586,16 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(LimitPeriodType.PerHour, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(41, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Equal(4, limit.Points.Length);
+        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
 
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(205, limit.Value);
-        Assert.Null(limit.Points);
+        Assert.Equal(4, limit.Points.Length);
+        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Purposes);
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
@@ -4050,10 +4054,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.Equal(38640, aggregate.Limits[0].Value);
         Assert.Null(aggregate.Limits[0].Purposes);
-        Assert.Null(aggregate.Limits[0].Points);
+        Assert.Equal(5, aggregate.Limits[0].Points.Length);
+        Assert.Equal(0, aggregate.Limits[0].Points.Count(c => c.IsImplicit != true));
         Assert.Equal(10140000, aggregate.Limits[1].Value);
         Assert.Null(aggregate.Limits[1].Purposes);
-        Assert.Null(aggregate.Limits[1].Points);
+        Assert.Equal(5, aggregate.Limits[1].Points.Length);
+        Assert.Equal(0, aggregate.Limits[1].Points.Count(c => c.IsImplicit != true));
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
@@ -4213,7 +4219,8 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var limit = limitG.Limits[0];
         
         Assert.Null(limit.Purposes!);
-        Assert.Null(limit.Points!);
+        Assert.Equal(21, limit.Points!.Length);
+        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
         Assert.Equal(5840000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);

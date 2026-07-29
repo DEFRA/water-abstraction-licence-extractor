@@ -362,7 +362,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].SectionName);
         Assert.Null( agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].LinkReason);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!);
+        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!.Length);
+        Assert.Equal(0, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!.Count(p => p.IsImplicit != true));
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Units);
@@ -370,7 +371,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal("OtherConditions", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].SectionName);
         Assert.Equal("ShallNotExceed", agreedSchemaLicence.AbstractionLimits.Aggregates![1].ContainedIn![0].LinkReason);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].LinkedLicences);
-        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Points!);
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Points!); // TODO this looks wrong
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits[0].Units);

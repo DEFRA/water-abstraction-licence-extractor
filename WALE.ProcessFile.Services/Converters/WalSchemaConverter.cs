@@ -2443,7 +2443,8 @@ public static class WalSchemaConverter
             limitPoints ??= [];
             limitPoints.Add(new Point
             {
-                Id = documentPoint.Name
+                Id = documentPoint.Name,
+                IsImplicit = false
             });
         }
         

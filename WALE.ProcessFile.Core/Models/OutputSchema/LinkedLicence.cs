@@ -21,6 +21,8 @@ public class LinkedLicence
     
     public Condition? Condition { get; set; }
     
+    public bool? IsBecauseOfAggregate { get; set; }
+    
     public ContainedInInformation[]? ContainedIn { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]

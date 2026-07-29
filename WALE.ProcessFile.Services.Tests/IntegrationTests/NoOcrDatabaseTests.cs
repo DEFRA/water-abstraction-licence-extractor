@@ -293,7 +293,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(90.91, limit.Value);
         Assert.Single(limit.Points!);
         Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
-        Assert.Null(limit.Purposes);
+        Assert.Equal(0, limit.Purposes!.Count(c => c.IsImplicit != true));
 
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
@@ -301,7 +301,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(33182, limit.Value);
         Assert.Single(limit.Points!);
         Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
-        Assert.Null(limit.Purposes);
+        Assert.Equal(0, limit.Purposes!.Count(c => c.IsImplicit != true));
 
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
         Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);

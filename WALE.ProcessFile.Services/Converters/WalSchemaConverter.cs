@@ -385,6 +385,7 @@ public static class WalSchemaConverter
             individual,
             aggregates,
             points,
+            purposes,
             licenceNumber,
             licenceVersion.LicenceVersionId,
             naldDataLine);
@@ -437,21 +438,31 @@ public static class WalSchemaConverter
             AbstractionLimitGroup[] individuals,
             Aggregate[] aggregates,
             PointOfAbstraction[] points,
+            PurposeOfAbstraction[] purposes,
             string? licenceNumber,
             string? licenceVersionId,
             NaldData? naldDataLine)
     {
+        // TODO should eventually do this for periods
+        
         var multiplePointsInDocument = points.Length > 1;
+        var multiplePurposesInDocument = purposes.Length > 1;
 
-        if (!multiplePointsInDocument)
+        if (!multiplePointsInDocument && !multiplePurposesInDocument)
         {
             return (individuals, aggregates);
         }
         
-        var anyMultiplePointAggregate = aggregates.Any(a =>
-            a.Points?.Count(p => p.IsImplicit != true) > 1);
+        var anyExplicitMultiplePointAggregateThatIsNotAll = aggregates.Any(a =>
+            a.Points?.Count(p => p.IsImplicit != true) > 1
+                && a.Points.Length != points.Length);
+        
+        var anyExplicitMultiplePurposeAggregateThatIsNotAll = aggregates.Any(a =>
+            a.Purposes?.Count(p => p.IsImplicit != true) > 1
+                && a.Purposes.Length != purposes.Length);
 
-        if (!anyMultiplePointAggregate)
+        if (!anyExplicitMultiplePointAggregateThatIsNotAll
+            && !anyExplicitMultiplePurposeAggregateThatIsNotAll)
         {
             return (individuals, aggregates);
         }
@@ -461,39 +472,80 @@ public static class WalSchemaConverter
         
         foreach (var individual in individuals)
         {
-            var individualPointsCount = individual.Points?.Count(p => p.IsImplicit != true);
-            var isAllPoints = individual.Points == null || individualPointsCount == 0;
-            
-            if (isAllPoints || individualPointsCount == points.Length)
+            if (multiplePointsInDocument && anyExplicitMultiplePointAggregateThatIsNotAll)
             {
-                var pointsLoop = individual.Points;
+                var individualPointsCount = individual.Points?.Length;
+                var multipleIndividualPointsSet = individualPointsCount >= 2;
+                
+                if (multipleIndividualPointsSet)
+                {
+                    var pointsLoop = individual.Points;
+                    var isAllPoints = individual.Points?.Length == points.Length;
+                    
+                    if (isAllPoints)
+                    {
+                        pointsLoop = points
+                            .Select(Point (p) => p)
+                            .ToArray();
+                    }
 
-                if (isAllPoints)
-                {
-                    pointsLoop = points
-                        .Select(Point (p) => p)
-                        .ToArray();
+                    newAggregates.Add(new Aggregate
+                    {
+                        Points = pointsLoop,
+                        Purposes = individual.Purposes,
+                        TimePeriod = individual.TimePeriod,
+                        TimeCutoff = individual.TimeCutoff,
+                        DocumentIdentifier = individual.DocumentIdentifier,
+                        Limits = individual.Limits,
+                        ContainedIn = individual.ContainedIn,
+                        SourceLicenceNumber = licenceNumber,
+                        SourceLicenceVersionId = licenceVersionId,
+                        PrimaryType = PrimaryType.InLicence,
+                        NaldType = GetNaldType(naldDataLine),
+                        AggregateSetId = PositionConstants.ReplacementMarker
+                    });
+
+                    continue;
                 }
-                
-                newAggregates.Add(new Aggregate
-                {
-                    Points = pointsLoop,
-                    Purposes = individual.Purposes,
-                    TimePeriod = individual.TimePeriod,
-                    TimeCutoff = individual.TimeCutoff,
-                    DocumentIdentifier = individual.DocumentIdentifier,
-                    Limits = individual.Limits,
-                    ContainedIn = individual.ContainedIn,
-                    SourceLicenceNumber = licenceNumber,
-                    SourceLicenceVersionId = licenceVersionId,
-                    PrimaryType = PrimaryType.InLicence,
-                    NaldType = GetNaldType(naldDataLine),
-                    AggregateSetId = PositionConstants.ReplacementMarker
-                });
-                
-                continue;
             }
-            
+
+            if (multiplePurposesInDocument && anyExplicitMultiplePurposeAggregateThatIsNotAll)
+            {
+                var individualPurposesCount = individual.Purposes?.Length;
+                var multipleIndividualPurposesSet = individualPurposesCount >= 2;
+
+                if (multipleIndividualPurposesSet)
+                {
+                    var purposesLoop = individual.Purposes;
+                    var isAllPurposes = individual.Purposes?.Length == purposes.Length;
+                    
+                    if (isAllPurposes)
+                    {
+                        purposesLoop = purposes
+                            .Select(Purpose (p) => p)
+                            .ToArray();
+                    }
+
+                    newAggregates.Add(new Aggregate
+                    {
+                        Points = individual.Points,
+                        Purposes = purposesLoop,
+                        TimePeriod = individual.TimePeriod,
+                        TimeCutoff = individual.TimeCutoff,
+                        DocumentIdentifier = individual.DocumentIdentifier,
+                        Limits = individual.Limits,
+                        ContainedIn = individual.ContainedIn,
+                        SourceLicenceNumber = licenceNumber,
+                        SourceLicenceVersionId = licenceVersionId,
+                        PrimaryType = PrimaryType.InLicence,
+                        NaldType = GetNaldType(naldDataLine),
+                        AggregateSetId = PositionConstants.ReplacementMarker
+                    });
+
+                    continue;
+                }
+            }
+
             newIndividuals.Add(individual);
         }
 
@@ -2221,20 +2273,6 @@ public static class WalSchemaConverter
         {
             allIndividualGroups.Clear();
         }
-
-        // Set the IsBecauseOfAggregate to true for all aggregates
-        foreach (var aggregate in allAggregates)
-        {
-            if (aggregate.ContainedIn == null)
-            {
-                continue;
-            }
-            
-            foreach (var containedIn in aggregate.ContainedIn)
-            {
-                containedIn.IsBecauseOfAggregate = true;
-            }
-        }
         
         return (
             allAggregates.ToArray(),
@@ -2283,7 +2321,6 @@ public static class WalSchemaConverter
             {
                 Source = InformationSource.Document,
                 Direction = InformationDirection.Outgoing,
-                IsBecauseOfAggregate = false,
                 SectionName = sectionName,
                 LinkReason = linkReason,
                 PageNumber = abstractionLimitPointSub.PageNumber,
@@ -2487,15 +2524,15 @@ public static class WalSchemaConverter
         var thisLimitedByPurpose = multiplePurposesSpecified && limitPurposes!.Count != allPurposes.Length;
                 
         var othersLimitedByPurpose = allIndividualGroups.Any(g =>
-            g.Purposes?.Length > 0
-            && g.Purposes.Length != allPurposes.Length);
+            g.Purposes?.Count(p => p.IsImplicit != true) > 0
+            && g.Purposes?.Count(p => p.IsImplicit != true) != allPurposes.Length);
 
         var containsUnderThisLicenceText = abstractionLimitPointSubText.Contains("under this licence");
         
         // Need to see if there are any limits that were for a single point or purpose and this has
         // multiple points or purposes
         var alreadyHadSpecificLimitsForAPointOrPurpose = allIndividualGroups.Any(
-            ig => ig.Purposes?.Length < allPurposes.Length
+            ig => ig.Purposes?.Count(p => p.IsImplicit != true) < allPurposes.Length
                 || ig.Points?.Count(p => p.IsImplicit != true) < allPoints.Length);
 
         var countPurposesAppliesTo = limitPurposes?.Count ?? allPurposes.Length;
@@ -2566,13 +2603,13 @@ public static class WalSchemaConverter
                 NaldStatus = naldStatus,
                 LicenceType = licenceType,
                 Condition = condition,
+                IsBecauseOfAggregate = meetsAggregateConditions,
                 ContainedIn =
                 [
                     new ContainedInInformation
                     {
                         Source = InformationSource.Document,
                         SectionName = sectionName,
-                        IsBecauseOfAggregate = meetsAggregateConditions,
                         LinkReason = GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LineNumber,
@@ -2611,13 +2648,13 @@ public static class WalSchemaConverter
         // If purposes is null, then get all the purposes from the document implicitly
         if (limitPurposes == null || limitPurposes.Count == 0)
         {
-            /*limitPurposes = allPurposes
+            limitPurposes = allPurposes
                 .Select(p => new Purpose
                 {
                     Id = p.Id,
                     IsImplicit = true
                 })
-                .ToList();*/
+                .ToList();
         }
         
         if (timeCutoff != null && !isAggregate)
@@ -2629,7 +2666,7 @@ public static class WalSchemaConverter
                 ContainedIn = containedIn,
                 Limits = [],
                 Points = limitPoints.ToArray(),
-                Purposes = limitPurposes?.ToArray()
+                Purposes = limitPurposes.ToArray()
             });
         }
         else if (datePurposesTimePeriods.Count >= 1)
@@ -2638,7 +2675,7 @@ public static class WalSchemaConverter
             {
                 Limits = [],
                 Points = limitPoints.ToArray(),
-                Purposes = limitPurposes?.ToArray(),
+                Purposes = limitPurposes.ToArray(),
                 DocumentIdentifier = documentIdentifier,
                 ContainedIn = containedIn
             });
@@ -2665,7 +2702,7 @@ public static class WalSchemaConverter
                 DocumentIdentifier = documentIdentifier,
                 ContainedIn = containedIn,
                 Points = limitPoints.ToArray(),
-                Purposes = limitPurposes?.ToArray()
+                Purposes = limitPurposes.ToArray()
             });
         }
         else if (individualGroups.Count == 0)
@@ -2765,11 +2802,11 @@ public static class WalSchemaConverter
                     ? string.Join(',', abstractionLimit.Points.Select(p => p.Id))
                     : string.Empty;
 
-                var groupPurposesStr = individualGroup.Purposes?.Length > 0
+                var groupPurposesStr = individualGroup.Purposes?.Count(p => p.IsImplicit != true) > 0
                     ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
                     : string.Empty;
 
-                var limitPurposesStr = abstractionLimit.Purposes?.Length > 0
+                var limitPurposesStr = abstractionLimit.Purposes?.Count(p => p.IsImplicit != true) > 0
                     ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
                     : string.Empty;
 
@@ -2782,7 +2819,7 @@ public static class WalSchemaConverter
                             ? string.Join(',', ig.Points.Select(p => p.Id))
                             : string.Empty;
 
-                        groupPurposesStr = ig.Purposes?.Length > 0
+                        groupPurposesStr = ig.Purposes?.Count(p => p.IsImplicit != true) > 0
                             ? string.Join(',', ig.Purposes.Select(p => p.Id))
                             : string.Empty;
 
@@ -2912,7 +2949,7 @@ public static class WalSchemaConverter
                 aggregateLimit.Purposes = null;
             }
         }
-        else
+        else if (aggregate.Purposes.Length == 0)
         {
             aggregate.Purposes = null;
         }

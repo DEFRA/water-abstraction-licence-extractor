@@ -1393,7 +1393,7 @@ public class PdfDataExtractorService(
                     
                     previousPartialLine = partialLine;
                     
-                    var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
+                    var textBeforeAtAndAfterLabel = new List<TextAndLabelAndPosition>();
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
@@ -2091,11 +2091,11 @@ public class PdfDataExtractorService(
             .Contains("[START_OF_BLOCK]") == true;
     }
 
-    private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
+    private static List<TextAndLabelAndPosition> GetLineBeforeAtAndAfterText(
         DocumentLine line,
         LabelToMatch label)
     {
-        var returnItems = new List<TextAndLabel>();
+        var returnItems = new List<TextAndLabelAndPosition>();
 
         var lineColumns = line.Columns
             .Select(c => c.Text)
@@ -2103,10 +2103,11 @@ public class PdfDataExtractorService(
 
         if (label.TextToMatch == null || IsStartOfBlock(label))
         {
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
                 ColumnsText = lineColumns,
-                Label = label
+                Label = label,
+                Position = "StartOfBlock"
             });
 
             return returnItems;
@@ -2220,17 +2221,19 @@ public class PdfDataExtractorService(
                     var beforeLabel = label.Clone();
                     beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
                     
-                    returnItems.Add(new TextAndLabel
+                    returnItems.Add(new TextAndLabelAndPosition
                     {
                         ColumnsText = beforeColumns,
-                        Label = beforeLabel
+                        Label = beforeLabel,
+                        Position = "BeforeLabel"
                     });
                 }
                 
-                returnItems.Add(new TextAndLabel
+                returnItems.Add(new TextAndLabelAndPosition
                 {
                     ColumnsText = valueColumns,
-                    Label = label
+                    Label = label,
+                    Position = "AtLabel"
                 });
 
                 if (afterColumns.Count > 1 || !string.IsNullOrWhiteSpace(afterColumns.FirstOrDefault()))
@@ -2238,10 +2241,11 @@ public class PdfDataExtractorService(
                     var afterLabel = label.Clone();
                     afterLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
 
-                    returnItems.Add(new TextAndLabel
+                    returnItems.Add(new TextAndLabelAndPosition
                     {
                         ColumnsText = afterColumns,
-                        Label = afterLabel
+                        Label = afterLabel,
+                        Position = "AfterLabel"
                     });
                 }
             }
@@ -2298,22 +2302,25 @@ public class PdfDataExtractorService(
                 ? LabelPosition.LabelIsAfterTextToFind
                 : label.Position;
 
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
                 ColumnsText = [textBeforeLabel.Trim()],
-                Label = returnLabel
+                Label = returnLabel,
+                Position = "BeforeLabel"
             });
         }
 
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
+        if (!string.IsNullOrEmpty(textAtLabel) &&
+            (label.IncludeStartLabelText || label.Possibilities?.Any() == true))
         {
             var returnLabel = label.Clone();
             returnLabel.Position = LabelPosition.LabelIsActuallyResult;
 
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition()
             {
                 ColumnsText = [textAtLabel.Trim()],
-                Label = returnLabel
+                Label = returnLabel,
+                Position = "AtLabel"
             });
         }
 
@@ -2336,11 +2343,11 @@ public class PdfDataExtractorService(
                 ? LabelPosition.LabelIsBeforeTextToFind
                 : label.Position;
 
-
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
                 ColumnsText = [textAfterLabel.Trim()],
-                Label = returnLabel
+                Label = returnLabel,
+                Position = "AfterLabel"
             });
         }
 

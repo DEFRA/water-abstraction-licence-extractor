@@ -1127,6 +1127,7 @@ public static partial class WalLabelConfiguration
                     new("LAND ON WHICH LICENCE AUTHORISES USE OF WATER"),
                     new("Quantities of water authorised to be abstracted"),
                     new("QUANTITY(IES) OF WATER AUTHORISED"),
+                    new("QUANTITY (IES) OF WATER AUTHORISED"),                    
                     new("The quantity of water authorised to be abstracted shall be"),
                     new("During the months") { LineMustStartWith = true},
                     new("the months of"), // For some licence with bad scanning
@@ -1216,12 +1217,20 @@ public static partial class WalLabelConfiguration
                                     new("4.2"),
                                     new("4.3"),
                                     new("4.4"),
+                                    new("(a)"),
+                                    new("(b)"),
+                                    new("(c)"),
+                                    new("(d)"),
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
                                     new("4.2"),
                                     new("4.3"),
                                     new("4.4"),
+                                    new("(b)"),
+                                    new("(c)"),
+                                    new("(d)"),                                    
+                                    new("(e)"),
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1236,10 +1245,15 @@ public static partial class WalLabelConfiguration
                                         Possibilities = [
                                             new("4.1"),
                                             new("4.2"),
-                                            new("4.3")
+                                            new("4.3"),
+                                            new("(a)"),
+                                            new("(b)"),
+                                            new("(c)"),
+                                            new("(d)"),
+                                            new("(e)"),
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
-                                        Format = "Number",
+                                        Format = "Text",
                                         PreviousLinesToFetch = 0,
                                         NextLinesToFetch = 0
                                     },
@@ -1260,7 +1274,12 @@ public static partial class WalLabelConfiguration
                                             new("4.1"),
                                             new("4.2"),
                                             new("4.3"),
-                                            new("4.4")
+                                            new("4.4"),
+                                            new("(a)"),
+                                            new("(b)"),
+                                            new("(c)"),
+                                            new("(d)"),
+                                            new("(e)"),
                                         ],
                                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,

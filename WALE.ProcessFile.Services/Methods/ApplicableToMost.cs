@@ -359,11 +359,14 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
+            var hasToBePossibility = false;
             var isPossiblity = false;
+            
             var matchedPossibility = (TextToMatch?)null;
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
+                hasToBePossibility = true;
                 var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
                 
                 var autoCorrectedOutput = request.isOcr
@@ -520,7 +523,7 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
             
-            var trimmedWords = outputText!.Trim().Split(' ');
+            var trimmedWords = outputText.Trim().Split(' ');
 
             if (trimmedWords.Length == 1
                 && !string.IsNullOrEmpty(trimmedWords[0])
@@ -547,6 +550,7 @@ public static class ApplicableToMost
                 }
 
                 labelGroupResult = CheckContains(request.label, labelGroupResult);
+                
                 if (labelGroupResult == null)
                 {
                     return [];
@@ -555,6 +559,11 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
+            /*if (hasToBePossibility && !isPossiblity)
+            {
+                return [];
+            }*/
+            
             if (!string.IsNullOrWhiteSpace(outputText))
             {
                 if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)

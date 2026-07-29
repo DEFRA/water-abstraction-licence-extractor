@@ -2389,7 +2389,11 @@ public static class WalSchemaConverter
         var limitPurposes = purposeConditionSub.Count > 0 ?
             purposeConditionSub
                 .Select(pcs =>
-                    new Purpose { Id = pcs.Text!.FirstOrDefault()?.Text })
+                    new Purpose
+                    {
+                        Id = pcs.Text!.FirstOrDefault()?.Text,
+                        IsImplicit = false
+                    })
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
                 .ToList()
@@ -2412,7 +2416,8 @@ public static class WalSchemaConverter
                 .Select(pcs =>
                     new Point
                     {
-                        Id = pcs.Text!.FirstOrDefault()?.Text
+                        Id = pcs.Text!.FirstOrDefault()?.Text,
+                        IsImplicit = false
                     })
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
@@ -3346,6 +3351,8 @@ public static class WalSchemaConverter
                     name = null;
                     gridRef = parts[1].Trim();
                 }
+                
+                gridRef = gridRef?.Replace("point ", string.Empty);
 
                 returnList.Add(new PointOfAbstraction
                 {

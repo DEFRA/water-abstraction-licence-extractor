@@ -80,7 +80,8 @@ public static partial class DataHelper
 
                 var alteredTextWords = DocumentLineColumn.FilterWordsFromText(
                     column.Words,
-                    alteredText);
+                    alteredText,
+                    false);
                 
                 var clonedColumn = new DocumentLineColumn(alteredTextWords);
                 newColumns.Add(clonedColumn);
@@ -106,7 +107,7 @@ public static partial class DataHelper
     }
 
     public static string GetTextBeforeAtAndAfterLabelAsSingleString(
-        List<TextAndLabel>? textBeforeAtAndAfterLabel,
+        List<TextAndLabelAndPosition>? textBeforeAtAndAfterLabel,
         bool includeLabelText)
     {
         var beforeStuff = textBeforeAtAndAfterLabel!

@@ -570,7 +570,7 @@ public class PdfDataExtractorService(
                             if (alreadyOutput.Count >= 1)
                             {
                                 var i = alreadyOutput
-                                    .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                                    .OrderBy(x => ifMultiplePreferLast ? ((x.StartPageNumber * 100) + x.StartLineNumber) : x.Text?.Count)
                                     .First();
                         
                                 labelGroupMatches.Remove(i);
@@ -1238,7 +1238,7 @@ public class PdfDataExtractorService(
             {
                 MatchedLabel = label,
                 SubResults = relatedFileMatches.Item!.Matches!,
-                PageNumber = line.PageNumber
+                StartPageNumber = line.PageNumber
             };
 
             FormattingHelper.RemoveRemoves(labelResult, []); // TODO do this properly at some point
@@ -1445,7 +1445,13 @@ public class PdfDataExtractorService(
                     }
                     
                     TextToMatch? matchedStartText = null;
+
+                    var labelStartPageNumber = partialLine.PageNumber;
+                    var labelStartLineNumber = partialLine.LineNumber;
                     var labelStartCharIndex = 0;
+                    var labelEndPageNumber = partialLine.PageNumber;
+                    var labelEndLineNumber = partialLine.LineNumber;
+                    var labelEndCharIndex = 0;
 
                     var labelTextLookingForSingleLine = label.Text?
                         .Where(t => t.SingleLinePerItem)
@@ -1515,12 +1521,12 @@ public class PdfDataExtractorService(
                             lineCount,
                             totalLineCount,
                             out matchedStartText,
-                            out _,
-                            out _,
+                            out labelStartPageNumber,
+                            out labelStartLineNumber,
                             out labelStartCharIndex,
-                            out _,
-                            out _,
-                            out _))
+                            out labelEndPageNumber,
+                            out labelEndLineNumber,
+                            out labelEndCharIndex))
                         {
                             partialLine = null;
                             continue;
@@ -1576,9 +1582,12 @@ public class PdfDataExtractorService(
                     var labelGroupResult = new LabelGroupResult
                     {
                         IsOcr = isOcr,
-                        LineNumber = partialLine.LineNumber,
-                        CharPosition = labelStartCharIndex,
-                        PageNumber = partialLine.PageNumber,
+                        StartPageNumber = labelStartPageNumber,
+                        StartLineNumber = labelStartLineNumber,
+                        StartCharPosition = labelStartCharIndex,
+                        EndPageNumber = labelEndPageNumber,
+                        EndLineNumber = labelEndLineNumber,
+                        EndCharPosition = labelEndCharIndex,                        
                         ServiceName = serviceName
                     };
                     
@@ -1754,7 +1763,7 @@ public class PdfDataExtractorService(
                     MatchedLabel = returnItem.MatchedLabel!.Clone(),
                     LabelGroupName = returnItem.LabelGroupName,
                     MatchedPosition = returnItem.MatchedPosition,
-                    PageNumber = returnItem.PageNumber,
+                    StartPageNumber = returnItem.StartPageNumber,
                     ServiceName = returnItem.ServiceName,
                     Text = textList
                 }
@@ -1769,8 +1778,8 @@ public class PdfDataExtractorService(
         // De-dupe exact matches
         returnList = returnList
             .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?
-                $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
-                : $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
+                $"{x.StartPageNumber}_{x.StartLineNumber}_{x.StartCharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
+                : $"{x.StartPageNumber}_{x.StartLineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
             .Select(x => x.OrderByDescending(y => y.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
             .ToList();
         
@@ -1789,7 +1798,7 @@ public class PdfDataExtractorService(
         {
             var i = alreadyOutput
                 .OrderBy(x =>
-                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                    ifMultiplePreferLast ? ((x.StartPageNumber * 100) + x.StartLineNumber) : x.Text?.Count)
                 .First();
 
             returnList.Remove(i);
@@ -1824,9 +1833,9 @@ public class PdfDataExtractorService(
         {
             var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
 
-            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
+            if (newLineNumber.HasValue && newLineNumber != result.StartLineNumber)
             {
-                result.LineNumber = newLineNumber.Value;
+                result.StartLineNumber = newLineNumber.Value;
             }
         }
 
@@ -1882,7 +1891,7 @@ public class PdfDataExtractorService(
         {
             var result = results[0];
 
-            if (result.LineNumber == partialLine.LineNumber)
+            if (result.StartLineNumber == partialLine.LineNumber)
             {
                 var resultText = result.Text?.FirstOrDefault()?.Text;
 

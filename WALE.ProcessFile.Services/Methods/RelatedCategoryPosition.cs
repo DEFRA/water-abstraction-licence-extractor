@@ -26,7 +26,7 @@ public static class RelatedCategoryPosition
         
         var categoryItems = request.siblingMatches!
             .Where(match => match.MatchedLabel!.CategoryName == request.label.RelatedCategoryName)
-            .OrderBy(match => match.LineNumber)
+            .OrderBy(match => match.StartLineNumber)
             .ToList();
 
         var modifiedPreviousLines = DataHelper.RemoveExcludesAndNotContains(
@@ -99,7 +99,7 @@ public static class RelatedCategoryPosition
                 }
             }
 
-            matchedLabelLineNumbers.Add(categoryItem.LineNumber);
+            matchedLabelLineNumbers.Add(categoryItem.StartLineNumber);
             relevantCategoryItems.Add(categoryItem);
 
             valueBeforeLabel =
@@ -201,7 +201,7 @@ public static class RelatedCategoryPosition
         }
 
         var categoryItemsOnLine = relevantCategoryItems
-            .Where(x => x.LineNumber == matchedLabelLineNumber)
+            .Where(x => x.StartLineNumber == matchedLabelLineNumber)
             .ToList();
         
         var howManyResults = request.label.FindMultipleOnSingleLine ?
@@ -236,7 +236,7 @@ public static class RelatedCategoryPosition
             if (categoryItemsOnLine.Count >= lineCount + 2)
             {
                 var categoryItem = categoryItemsOnLine[lineCount++];
-                labelGroupResult.CharPosition = categoryItem.CharPosition;
+                labelGroupResult.StartCharPosition = categoryItem.StartCharPosition;
             }
 
             // TODO should set match type

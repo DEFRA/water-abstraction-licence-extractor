@@ -194,6 +194,11 @@ public static class LabelMatchingHelper
             if (combinedTextStartCharIndex > -1)
             {
                 var startsOnLine1 = combinedTextStartCharIndex < lineToCheck.Text.Length;
+
+                if (!startsOnLine1)
+                {
+                    continue;
+                }
                 
                 labelStartCharIndex = startsOnLine1
                     ? combinedTextStartCharIndex.Value

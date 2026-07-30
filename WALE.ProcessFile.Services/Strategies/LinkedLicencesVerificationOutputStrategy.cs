@@ -172,6 +172,18 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
     {
+        // Clear the review item as soon as we have any other later verification
+        if (verification.LicenceSectionItemId != Review)
+        {
+            var existingReviewSummary =
+                sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == Review);
+
+            if (existingReviewSummary != null)
+            {
+                sectionSummaries.Remove(existingReviewSummary);
+            }
+        }
+
         var existingSummary =
             sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == verification.LicenceSectionItemId);
 

@@ -1276,6 +1276,11 @@ public class PdfDataExtractorService(
                 lineCount,
                 PositionConstants.UnknownLinesTotal,
                 out _,
+                out _,
+                out _,
+                out _,          
+                out _,
+                out _,
                 out _))
             {
                 continue;
@@ -1300,6 +1305,11 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
+                    out _,
+                    out _,
+                    out _,          
+                    out _,
                     out _,
                     out _))
                 {
@@ -1326,6 +1336,11 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
+                    out _,
+                    out _,
+                    out _,          
+                    out _,
                     out _,
                     out _))
                 {
@@ -1430,7 +1445,7 @@ public class PdfDataExtractorService(
                     }
                     
                     TextToMatch? matchedStartText = null;
-                    var labelCharPosition = 0;
+                    var labelStartCharIndex = 0;
 
                     var labelTextLookingForSingleLine = label.Text?
                         .Where(t => t.SingleLinePerItem)
@@ -1486,6 +1501,11 @@ public class PdfDataExtractorService(
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
 
+                        if (label.Name == "DocumentAbstractionLimitsSection" && partialLine.Text.Contains("MAXIMUM QU"))
+                        {
+            
+                        }
+                        
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -1495,7 +1515,12 @@ public class PdfDataExtractorService(
                             lineCount,
                             totalLineCount,
                             out matchedStartText,
-                            out labelCharPosition))
+                            out _,
+                            out _,
+                            out labelStartCharIndex,
+                            out _,
+                            out _,
+                            out _))
                         {
                             partialLine = null;
                             continue;
@@ -1552,7 +1577,7 @@ public class PdfDataExtractorService(
                     {
                         IsOcr = isOcr,
                         LineNumber = partialLine.LineNumber,
-                        CharPosition = labelCharPosition,
+                        CharPosition = labelStartCharIndex,
                         PageNumber = partialLine.PageNumber,
                         ServiceName = serviceName
                     };
@@ -2049,6 +2074,13 @@ public class PdfDataExtractorService(
 
         foreach (var group in groups)
         {
+            var groupLabel = group.First().MatchedLabel!;
+
+            if (!groupLabel.RemoveStartOfBlockSectionsWhenMultiple)
+            {
+                continue;
+            }
+            
             // If we found some with an implicit start label, then we don't want others
             // we found with a start of block
             

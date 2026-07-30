@@ -1696,7 +1696,10 @@ public static partial class WalLabelConfiguration
                 Name = "DocumentAbstractionLimitsSection",
                 TextStart =
                 [
-                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)") { IfMultiplePreferLongest = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIODS") { IfMultiplePreferLongest = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD") { IfMultiplePreferLongest = true },                    
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of Water Authorised to be Abstracted During a Period or Periods Specified"),                    
@@ -1789,6 +1792,7 @@ public static partial class WalLabelConfiguration
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
+                            new("(1)") { LineMustStartWith = true},
                             new("(2)") { LineMustStartWith = true},
                             new("(3)") { LineMustStartWith = true},
                             new("(4)") { LineMustStartWith = true},
@@ -1801,6 +1805,7 @@ public static partial class WalLabelConfiguration
                         Remove = [
                             new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED")
                         ],
+                        RemoveStartOfBlockSectionsWhenMultiple = false,
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",

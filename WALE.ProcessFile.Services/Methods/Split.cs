@@ -34,6 +34,11 @@ public static class Split
             UnknownLinesTotal,
             int.MaxValue,
             out _,
+            out _,
+            out _,
+            out _,          
+            out _,
+            out _,
             out _);
         
         if (!lineContainsLabel)
@@ -53,6 +58,11 @@ public static class Split
                     LabelPosition.SplitAtLabel,
                     UnknownLinesTotal,
                     int.MaxValue,
+                    out _,
+                    out _,
+                    out _,
+                    out _,          
+                    out _,
                     out _,
                     out _);
 

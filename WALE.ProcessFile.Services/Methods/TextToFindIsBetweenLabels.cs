@@ -34,6 +34,11 @@ public static class TextToFindIsBetweenLabels
             0,
             0,
             out _,
+            out _,
+            out _,
+            out _,
+            out _,
+            out _,
             out _);
         
         var labelLineAlreadyIncluded = false;
@@ -56,7 +61,7 @@ public static class TextToFindIsBetweenLabels
              && relevantLineText.Contains(labelText.Text, StringComparison.OrdinalIgnoreCase))
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
                     && relevantLineText.StartsWith(labelText.Text, StringComparison.OrdinalIgnoreCase)));
-
+        
         var betweenText = GetTextBetween(
             request.label.TextEnd!,
             relevantLineText,
@@ -291,7 +296,7 @@ public static class TextToFindIsBetweenLabels
                 : null;
 
             count += 1;
-            
+
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                 line,
                 nextLine,
@@ -301,6 +306,11 @@ public static class TextToFindIsBetweenLabels
                 lineCount++,
                 totalLines,
                 out var matchedEndTextTemp,
+                out _,
+                out _,
+                out _,
+                out _,
+                out _,
                 out _);
 
             if (lineContainsLabel)

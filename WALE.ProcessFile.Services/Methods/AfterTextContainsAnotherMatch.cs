@@ -57,6 +57,11 @@ public static class AfterTextContainsAnotherMatch
             0,
             PositionConstants.UnknownLinesTotal,
             out _,
+            out _,
+            out _,
+            out _,
+            out _,
+            out _,
             out _))
         {
             return returnListTop;

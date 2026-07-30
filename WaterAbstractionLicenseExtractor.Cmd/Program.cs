@@ -60,7 +60,7 @@ async Task ProgramAsync()
     filesToProcess = filesToProcess
         //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Key.Contains("22722395a"))
+        .Where(x => x.Key.Contains("22723435"))
         //.Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
         //.Take(500)

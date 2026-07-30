@@ -78,6 +78,11 @@ public static class TextToFindIsBetweenLabels
             out var foundEndTag,
             out var matchedEndText);
         
+        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
+        {
+            
+        }
+        
         if (betweenText == null)
         {
             return [];
@@ -98,6 +103,10 @@ public static class TextToFindIsBetweenLabels
                 var lineNumberOfLabelText = request.line?.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase) == true
                     ? request.line.LineNumber
                     : betweenText[0].LineNumber;
+                
+                var pageNumberOfLabelText = request.line?.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase) == true
+                    ? request.line.PageNumber
+                    : betweenText[0].PageNumber;
                 
                 var firstBetweenLine = betweenText[0];
                 var firstColumn = firstBetweenLine.Columns.Count > 0 ? firstBetweenLine.Columns[0] : null;
@@ -148,12 +157,18 @@ public static class TextToFindIsBetweenLabels
                                 Words = words
                             }
                         ],
-                        LineNumber = lineNumberOfLabelText
+                        LineNumber = lineNumberOfLabelText,
+                        PageNumber = pageNumberOfLabelText
                     });
                 }
             }
         }
 
+        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
+        {
+            
+        }
+        
         if (request.label.MustContain?.Count > 0)
         {
             var containsText = request.label.MustContain;
@@ -194,7 +209,13 @@ public static class TextToFindIsBetweenLabels
         betweenText = betweenText
             .Where(betweenLine => !DataHelper.IsCorruptedLine(betweenLine.Text, request.isOcr))
             .ToList();
+
+        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
+        {
+            
+        }
         
+        var origBetweenText = betweenText;
         betweenText = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             betweenText,
@@ -202,6 +223,11 @@ public static class TextToFindIsBetweenLabels
             false,
             out var isForbidden,
             out var removedLines);
+        
+        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
+        {
+            
+        }
         
         if (isForbidden && betweenText.Count == 0)
         {
@@ -239,6 +265,11 @@ public static class TextToFindIsBetweenLabels
         }
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+        
+        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
+        {
+            
+        }
         
         var returnList = await FilterIntoFormatAsync(request, labelGroupResult, betweenText, false);
         return await ProcessSubLabelsAsync(request, returnList);

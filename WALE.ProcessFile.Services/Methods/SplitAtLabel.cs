@@ -7,7 +7,7 @@ using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
 namespace WALE.ProcessFile.Services.Methods;
 
-public static class Split
+public static class SplitAtLabel
 {
     private const int UnknownLinesTotal = -1;
     

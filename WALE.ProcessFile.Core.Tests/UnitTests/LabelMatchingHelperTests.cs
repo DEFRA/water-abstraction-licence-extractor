@@ -711,6 +711,49 @@ public class LabelMatchingHelperTests
         Assert.Equal(-1, labelEndCharIndex);        
     }
     
+    [Fact]
+    public void WhenTwoLinesWith3WordsInputSplitAtLabel_WhenLastLine_ThenReturn2Lines()
+    {
+        // Arrange
+        var line1 = SingleColumn3Words();
+        var line2 = SingleColumn3Words(pageNumber: 3);
+        var line1ForPosition = line1.Clone();
+        var labelTextToMatch = new List<TextToMatch>
+        {
+            new("SOMETHING_THAT_WONT_BE_FOUND")
+        };
+        var labelPosition = LabelPosition.SplitAtLabel;
+        var lineCount = 2;
+        var howManyLinesTotal = 3;
+        
+        // Act
+        var result = LabelMatchingHelper.LineContainsLabel(
+            line1,
+            line2,
+            line1ForPosition,
+            labelTextToMatch,
+            labelPosition,
+            lineCount,
+            howManyLinesTotal,
+            out var matchedText,
+            out var labelStartPageNumber,
+            out var labelStartLineNumber,
+            out var labelStartCharIndex,
+            out var labelEndPageNumber,
+            out var labelEndLineNumber,
+            out var labelEndCharIndex);
+
+        // Assert
+        Assert.True(result);
+        Assert.Null(matchedText);
+        Assert.Equal(2, labelStartPageNumber);
+        Assert.Equal(1, labelStartLineNumber);
+        Assert.Equal(5, labelStartCharIndex);
+        Assert.Equal(2, labelEndPageNumber);
+        Assert.Equal(1, labelEndLineNumber);
+        Assert.Equal(5, labelEndCharIndex);        
+    }
+    
     private static DocumentLine SingleColumn3Words(
         string word1 = "A",
         string word2 = "B",

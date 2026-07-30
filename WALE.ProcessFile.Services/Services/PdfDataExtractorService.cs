@@ -1635,6 +1635,11 @@ public class PdfDataExtractorService(
                             partialLine!,
                             singleValueWanted);
 
+                        if (label.Name == "AbstractionLimitPointSub")
+                        {
+                        
+                        }
+                        
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             ConsoleHelper.WriteLine(
@@ -1750,7 +1755,7 @@ public class PdfDataExtractorService(
             }
 
             var returnItem = returnList.First();
-
+            
             return
             [
                 new()
@@ -1759,6 +1764,9 @@ public class PdfDataExtractorService(
                     LabelGroupName = returnItem.LabelGroupName,
                     MatchedPosition = returnItem.MatchedPosition,
                     LabelStartPageNumber = returnItem.LabelStartPageNumber,
+                    LabelStartLineNumber = returnItem.LabelStartLineNumber,
+                    LabelEndPageNumber = returnItem.LabelEndPageNumber,
+                    LabelEndLineNumber = returnItem.LabelEndLineNumber,                    
                     ServiceName = returnItem.ServiceName,
                     Text = textList
                 }
@@ -1941,7 +1949,7 @@ public class PdfDataExtractorService(
             int Order)>
         {
             (LabelPosition.ApplicableToMost, ApplicableToMost.FunctionAsync, 0),
-            (LabelPosition.SplitAtLabel, Split.FunctionAsync, 0),
+            (LabelPosition.SplitAtLabel, SplitAtLabel.FunctionAsync, 0),
             (LabelPosition.RelatedCategoryPosition, RelatedCategoryPosition.FunctionAsync, 0),
             (LabelPosition.TextToFindIsBetweenLabels, TextToFindIsBetweenLabels.FunctionAsync, 0),
             (LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore, LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore.FunctionAsync, -1),

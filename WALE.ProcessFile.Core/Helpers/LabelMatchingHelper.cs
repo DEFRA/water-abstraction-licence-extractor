@@ -198,16 +198,6 @@ public static class LabelMatchingHelper
                     ref labelEndLineNumber,
                     ref labelEndCharIndex);
                 
-                /*
-                 * ,
-                   out int labelStartPageNumber,
-                   out int labelStartLineNumber,
-                   out int labelStartCharIndex,
-                   out int labelEndPageNumber,
-                   out int labelEndLineNumber,
-                   out int labelEndCharIndex
-                 */
-
                 return regexResult.HasValue;
             }
             
@@ -283,11 +273,15 @@ public static class LabelMatchingHelper
             var mustContainEndOfColumnMarker = labelText.Contains(PositionConstants.EndOfColumnMarker);
             var mustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
 
+            var isLastLine = lineIndex == howManyLinesTotal - 1;
+            var isSplitAtLabelAndLast = position == LabelPosition.SplitAtLabel && isLastLine;
+            
             // No special conditions
             if (!string.IsNullOrEmpty(matchedText?.Text)
                 && !mustContainEndOfColumnMarker
                 && !mustContainEndOfLineMarker
-                && labelTextOption is { ColumnMustStartWith: false, LineMustStartWith: false })
+                && labelTextOption is { ColumnMustStartWith: false, LineMustStartWith: false }
+                && !isSplitAtLabelAndLast)
             {
                 return true;
             }
@@ -396,11 +390,16 @@ public static class LabelMatchingHelper
                     }
                 }
             }
-            
-            var isLastLine = lineIndex == howManyLinesTotal - 1;
                 
-            if (position == LabelPosition.SplitAtLabel && isLastLine)
+            if (isSplitAtLabelAndLast)
             {
+                labelStartCharIndex = lineToCheck.Text.Length;
+                labelStartLineNumber = lineToCheck.LineNumber;
+                labelStartPageNumber = lineToCheck.PageNumber;
+                labelEndCharIndex = lineToCheck.Text.Length;
+                labelEndLineNumber = lineToCheck.LineNumber;
+                labelEndPageNumber = lineToCheck.PageNumber;
+                
                 return true;
             }
         }

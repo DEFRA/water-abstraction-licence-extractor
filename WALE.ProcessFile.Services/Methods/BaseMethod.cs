@@ -250,6 +250,11 @@ public static class BaseMethod
                 request.lookupConfiguration!,
                 request.additionalInformationStore);
             
+            if (subResults.Any(l => l.LabelStartPageNumber == -1))
+            {
+            
+            }
+            
             if (request.label!.MinimumSubMatches.HasValue
                 && request.label.MinimumSubMatches.Value > subResults.Count)
             {

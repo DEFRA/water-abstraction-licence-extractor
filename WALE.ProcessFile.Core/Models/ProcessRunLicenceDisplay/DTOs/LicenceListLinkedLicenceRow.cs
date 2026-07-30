@@ -29,6 +29,4 @@ public sealed class LicenceListLinkedLicenceRow
     public string? LicenceType { get; set; }
 
     public int? RegionId { get; set; }
-
-    public LicenceListLinkLocationRow[] ContainedIn { get; set; } = [];
 }

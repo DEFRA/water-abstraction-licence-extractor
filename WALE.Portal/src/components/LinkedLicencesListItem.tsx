@@ -28,7 +28,7 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
         color = "lightseagreen";
     }
 
-    let linkedFilename = getFilename(data, licenceNumber);
+    let linkedFilename = getFileId(data, licenceNumber);
 
     if (linkedFilename) {
         return (
@@ -53,7 +53,7 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
     }
 }
 
-function getFilename(data: OutputListDataItem[], licenceNumber: string | undefined) {
+function getFileId(data: OutputListDataItem[], licenceNumber: string | undefined) {
     if (licenceNumber == undefined) {
         return false;
     }
@@ -62,7 +62,7 @@ function getFilename(data: OutputListDataItem[], licenceNumber: string | undefin
         let item = data[itemNumber];
 
         if (item.licenceNumber === licenceNumber) {
-            return item.filename;
+            return item.fileId;
         }
     }
 

@@ -162,7 +162,7 @@ public class OcrDatabaseTests
         
         Assert.NotNull(abstractionLimitsResult.SubResults);
         Assert.Single(abstractionLimitsResult.SubResults);
-        Assert.Equal(16, abstractionLimitsResult.StartLineNumber);
+        Assert.Equal(16, abstractionLimitsResult.LabelStartLineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(8, abstractionLimitsSection1.Text!.Count);

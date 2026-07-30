@@ -350,7 +350,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "lineNumber": 14,
-                "pageNumber": 5
+                "pageNumber": -1
               }
             ],
             "points": [
@@ -714,7 +714,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "lineNumber": 14,
-                "pageNumber": 5
+                "pageNumber": -1
               }
             ],
             "points": [
@@ -1076,7 +1076,7 @@
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
                 "lineNumber": 14,
-                "pageNumber": 5
+                "pageNumber": -1
               }
             ],
             "points": [

@@ -60,8 +60,13 @@ public static class LabelMatchingHelper
         TextToMatch labelTextOption,
         DocumentLine lineToCheck,
         DocumentLine lineForPosition,
-        ref int labelCharPosition,
-        ref TextToMatch? matchedText)
+        ref TextToMatch? matchedText,
+        ref int labelStartPageNumber,
+        ref int labelStartLineNumber,
+        ref int labelStartCharIndex,
+        ref int labelEndPageNumber,
+        ref int labelEndLineNumber,
+        ref int labelEndCharIndex)
     {
         var matches = labelTextOption.Regex!.Matches(lineToCheck.Text);
 
@@ -74,16 +79,24 @@ public static class LabelMatchingHelper
 
         foreach (var match in matches.AsQueryable())
         {
-            labelCharPosition = lineForPosition.Text.IndexOf(
+            labelStartPageNumber = lineForPosition.PageNumber;
+            labelEndPageNumber = lineForPosition.PageNumber;
+
+            labelStartLineNumber = lineForPosition.LineNumber;
+            labelEndLineNumber = lineForPosition.LineNumber;
+            
+            labelStartCharIndex = lineForPosition.Text.IndexOf(
                 match.Value,
                 StringComparison.OrdinalIgnoreCase);
-
-            if (labelCharPosition is -1 or 0)
+            
+            labelEndCharIndex = labelStartCharIndex + match.Value.Length;
+            
+            if (labelStartCharIndex is -1 or 0)
             {
                 return true;
             }
 
-            var previousChar = lineForPosition.Text[labelCharPosition - 1];
+            var previousChar = lineForPosition.Text[labelStartCharIndex - 1];
             var firstChar = match.Value[0];
                         
             if (previousChar is ' ' or ',' or '.'
@@ -177,8 +190,23 @@ public static class LabelMatchingHelper
                     labelTextOption,
                     lineToCheck,
                     lineForPosition,
+                    ref matchedText,
+                    ref labelStartPageNumber,
+                    ref labelStartLineNumber,
                     ref labelStartCharIndex,
-                    ref matchedText);
+                    ref labelEndPageNumber,
+                    ref labelEndLineNumber,
+                    ref labelEndCharIndex);
+                
+                /*
+                 * ,
+                   out int labelStartPageNumber,
+                   out int labelStartLineNumber,
+                   out int labelStartCharIndex,
+                   out int labelEndPageNumber,
+                   out int labelEndLineNumber,
+                   out int labelEndCharIndex
+                 */
 
                 return regexResult.HasValue;
             }

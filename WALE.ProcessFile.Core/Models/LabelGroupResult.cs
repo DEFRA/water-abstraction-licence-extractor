@@ -13,17 +13,17 @@ public class LabelGroupResult
 
     public bool IsOcr { get; init; }
 
-    public int StartPageNumber { get; init; }
+    public int LabelStartPageNumber { get; init; }
     
-    public int StartLineNumber { get; set; }
+    public int LabelStartLineNumber { get; set; }
     
-    public int StartCharPosition { get; set; }
+    public int LabelStartCharPosition { get; set; }
     
-    public int EndPageNumber { get; init; }
+    public int LabelEndPageNumber { get; init; }
     
-    public int EndLineNumber { get; set; }
+    public int LabelEndLineNumber { get; set; }
     
-    public int EndCharPosition { get; set; }
+    public int LabelEndCharPosition { get; set; }
 
     public string? ServiceName { get; init; }
     
@@ -174,9 +174,9 @@ public class LabelGroupResult
             Text = Text?.ToList(),
             MatchedPosition = MatchedPosition,
             IsOcr = IsOcr,
-            StartLineNumber = StartLineNumber,
-            StartCharPosition = StartCharPosition,
-            StartPageNumber = StartPageNumber,
+            LabelStartLineNumber = LabelStartLineNumber,
+            LabelStartCharPosition = LabelStartCharPosition,
+            LabelStartPageNumber = LabelStartPageNumber,
             ServiceName = ServiceName,
             LabelGroupName = LabelGroupName,
             MatchedLabel = MatchedLabel?.Clone(),

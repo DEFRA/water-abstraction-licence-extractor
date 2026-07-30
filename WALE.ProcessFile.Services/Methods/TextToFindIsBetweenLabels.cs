@@ -25,6 +25,11 @@ public static class TextToFindIsBetweenLabels
 
         var nextLine = request.nextLines?.FirstOrDefault();
 
+        if (request.label.Name == "AbstractionLimitPoint")
+        {
+            
+        }
+        
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
             nextLine,

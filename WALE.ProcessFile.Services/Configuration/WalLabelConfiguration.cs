@@ -1803,7 +1803,12 @@ public static partial class WalLabelConfiguration
                             new("[END_OF_BLOCK]")
                         ],
                         Remove = [
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)"),
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIODS"),
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD"),
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
                             new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED")
+
                         ],
                         RemoveStartOfBlockSectionsWhenMultiple = false,
                         IncludeStartLabelText = true,

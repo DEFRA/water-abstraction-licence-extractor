@@ -18,7 +18,7 @@ public static class Units
         }
 
         var lineGroups = new List<List<DocumentLine>>();
-        var initialLine = lines.FirstOrDefault(l => l.LineNumber == labelGroupResult.StartLineNumber);
+        var initialLine = lines.FirstOrDefault(l => l.LineNumber == labelGroupResult.LabelStartLineNumber);
 
         if (initialLine != null)
         {

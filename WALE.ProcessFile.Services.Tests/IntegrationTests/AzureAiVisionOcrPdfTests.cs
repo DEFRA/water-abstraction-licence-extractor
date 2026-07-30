@@ -1201,12 +1201,12 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         var units1 = section1Sub1.SubResults[1];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
-        Assert.Equal(31, units1.StartLineNumber);
+        Assert.Equal(31, units1.LabelStartLineNumber);
         
         var units2 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
-        Assert.Equal(32, units2.StartLineNumber);
+        Assert.Equal(32, units2.LabelStartLineNumber);
         
         var value1 = section1Sub1.SubResults[3];
         Assert.Equal("45460.92", value1.Text![0].Text);
@@ -1225,12 +1225,12 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
         Assert.Equal("Units", section5Sub1.SubResults[0].MatchedLabel?.Format);
-        Assert.Equal(10, units3.StartLineNumber);
+        Assert.Equal(10, units3.LabelStartLineNumber);
         
         var units4 = section5Sub1.SubResults[1];
         Assert.Equal("cubic metres", units4.Text![0].Text);
         Assert.Equal("PerYearUnits", units4.MatchedLabel!.Name);
-        Assert.Equal(10, units4.StartLineNumber);
+        Assert.Equal(10, units4.LabelStartLineNumber);
         
         var value3 = section5Sub1.SubResults[2];
         Assert.Equal("100000", value3.Text![0].Text);

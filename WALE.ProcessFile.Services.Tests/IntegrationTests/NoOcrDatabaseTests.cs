@@ -174,8 +174,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        Assert.Equal(3, nameResult.StartPageNumber);
-        Assert.Equal(6, nameResult.StartLineNumber);
+        Assert.Equal(3, nameResult.LabelStartPageNumber);
+        Assert.Equal(6, nameResult.LabelStartLineNumber);
 
         // Note no other licence mentioned
         var abstractionLimitsSection =
@@ -186,8 +186,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(5, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the",
             abstractionLimitsSection.Text![3].Text);
-        Assert.Equal(4, abstractionLimitsSection.StartPageNumber);        
-        Assert.Equal(15, abstractionLimitsSection.StartLineNumber);
+        Assert.Equal(4, abstractionLimitsSection.LabelStartPageNumber);        
+        Assert.Equal(15, abstractionLimitsSection.LabelStartLineNumber);
 
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -210,8 +210,8 @@ public class NoOcrDatabaseTests
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(4, perDay.StartPageNumber);
-        Assert.Equal(16, perDay.StartLineNumber);
+        Assert.Equal(4, perDay.LabelStartPageNumber);
+        Assert.Equal(16, perDay.LabelStartLineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
 
         var perDayUnits = point1Sub1.SubResults
@@ -240,8 +240,8 @@ public class NoOcrDatabaseTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(3, licenceNumberResult.StartPageNumber);
-        Assert.Equal(0, licenceNumberResult.StartLineNumber);
+        Assert.Equal(3, licenceNumberResult.LabelStartPageNumber);
+        Assert.Equal(0, licenceNumberResult.LabelStartLineNumber);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 

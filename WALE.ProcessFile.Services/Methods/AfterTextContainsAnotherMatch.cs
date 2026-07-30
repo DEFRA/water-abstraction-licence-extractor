@@ -81,7 +81,7 @@ public static class AfterTextContainsAnotherMatch
             var labelInAfterTextPosition = afterText.IndexOf(result.MatchedLabel!.TextToMatch!.First().Text,
                 StringComparison.OrdinalIgnoreCase);
             
-            result.StartCharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
+            result.LabelStartCharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
             
             result.MatchedLabel.Position = valueInAfterTextPosition > labelInAfterTextPosition ?
                 LabelPosition.LabelIsBeforeTextToFind : LabelPosition.LabelIsAfterTextToFind;

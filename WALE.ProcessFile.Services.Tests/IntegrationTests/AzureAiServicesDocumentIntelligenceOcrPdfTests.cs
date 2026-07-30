@@ -155,13 +155,13 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(abstractionLimitsSection.SubResults);
         
         abstractionLimitsSection   = abstractionLimitsSection.SubResults[0];
-        Assert.Equal(12, abstractionLimitsSection.SubResults.Count);
+        Assert.Equal(11, abstractionLimitsSection.SubResults.Count);
         
         var perDayUnitsAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerDayUnits")
             .ToList();
 
-        Assert.Equal(4, perDayUnitsAll.Count);
+        Assert.Equal(3, perDayUnitsAll.Count);
         
         var perDayValuesAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerDayValue")
@@ -192,7 +192,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Units);
         Assert.Equal(48, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Value);
@@ -1192,12 +1192,12 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var units1 = section1Sub1.SubResults[1];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
-        Assert.Equal(32, units1.StartLineNumber);
+        Assert.Equal(32, units1.LabelStartLineNumber);
         
         var units2 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
-        Assert.Equal(33, units2.StartLineNumber);
+        Assert.Equal(33, units2.LabelStartLineNumber);
         
         var value1 = section1Sub1.SubResults[3];
         Assert.Equal("45460.92", value1.Text![0].Text);
@@ -1216,12 +1216,12 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
         Assert.Equal("Units", section5Sub1.SubResults[0].MatchedLabel?.Format);
-        Assert.Equal(10, units3.StartLineNumber);
+        Assert.Equal(10, units3.LabelStartLineNumber);
         
         var units4 = section5Sub1.SubResults[1];
         Assert.Equal("cubic metres", units4.Text![0].Text);
         Assert.Equal("PerYearUnits", units4.MatchedLabel!.Name);
-        Assert.Equal(10, units4.StartLineNumber);
+        Assert.Equal(10, units4.LabelStartLineNumber);
         
         var value3 = section5Sub1.SubResults[2];
         Assert.Equal("100000", value3.Text![0].Text);

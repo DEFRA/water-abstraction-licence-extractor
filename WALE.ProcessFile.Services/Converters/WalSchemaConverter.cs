@@ -262,8 +262,11 @@ public static class WalSchemaConverter
             linkedLicences.AddRange(list);   
         }
 
-        var licenceHistory = await GetLicenceHistoryLinkedLicencesAsync(
-            matches,
+        var licenceHistorySection = matches
+            .FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
+        
+        var licenceHistoryLinkedLicences = await GetLicenceHistoryLinkedLicencesAsync(
+            licenceHistorySection,
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration);
@@ -282,7 +285,12 @@ public static class WalSchemaConverter
             lookupConfiguration);
 
         var additionalLinkedLicenceCount = 1;
-
+        
+        var licenceHistoryStartPageAndLineCalc = (licenceHistorySection?.LabelStartPageNumber * 100)
+            + licenceHistorySection?.LabelStartLineNumber;
+        var licenceHistoryEndPageAndLineCalc = (licenceHistorySection?.Text?.LastOrDefault()?.PageNumber * 100)
+            + licenceHistorySection?.Text?.LastOrDefault()?.LineNumber;
+        
         foreach (var anywhereInDocumentLinkedLicence in anywhereInDocumentLinkedLicences)
         {
             var paddedAllDocumentLinkedLicenceNumber =
@@ -304,24 +312,26 @@ public static class WalSchemaConverter
                 found = anywhereInDocumentLinkedLicence.LicenceNumber == scrapedLicenceNumber;
             }
 
-            if (!found && licenceHistory.Count > 0)
+            if (!found && licenceHistoryLinkedLicences.Count > 0)
             {
                 // TODO this needs updating so it only excludes them if there from the licnce history line number
 
-                found = licenceHistory
+                found = licenceHistoryLinkedLicences
                     .Any(lhLinkedLicence =>
                     {
                         var paddedLinkedLicenceNumber =
                             FormattingHelper.FormatLicenceNumber(lhLinkedLicence.LicenceNumber, regionCode);
-
-                        var lhLineNumber = lhLinkedLicence.ContainedIn!
-                            .First(ci => ci.SectionName == "LicenceHistory").LineNumber;
-                        var lhPageNumber = lhLinkedLicence.ContainedIn!
-                            .First(ci => ci.SectionName == "LicenceHistory").PageNumber;
-
+                        
                         var onlyInLicenceHistory = anywhereInDocumentLinkedLicence.ContainedIn?
-                            .All(aci =>  aci.PageNumber == lhPageNumber
-                                && IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLineNumber)) == true;
+                            .All(aci =>
+                                {
+                                    var aciPageAndLineCalc = (aci.PageNumber * 100) + aci.LineNumber;
+                                    
+                                    return licenceHistoryStartPageAndLineCalc <= aciPageAndLineCalc
+                                           && licenceHistoryEndPageAndLineCalc >= aciPageAndLineCalc;
+                                }
+                                //&& IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLinkedLicenceCi.LineNumber)
+                                ) == true;
 
                         return onlyInLicenceHistory && LicenceNumberContainsOther(
                             paddedAllDocumentLinkedLicenceNumber,
@@ -1772,8 +1782,8 @@ public static class WalSchemaConverter
                     LinkReason = GetLinkReason(
                         [GetParent(section, linkedLicenceNumber)],
                         linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                    LineNumber = linkedLicenceNumber.StartLineNumber,
-                    PageNumber = linkedLicenceNumber.StartPageNumber
+                    LineNumber = linkedLicenceNumber.LabelStartLineNumber,
+                    PageNumber = linkedLicenceNumber.LabelStartPageNumber
                 }
             ]
         };
@@ -1813,7 +1823,7 @@ public static class WalSchemaConverter
         foreach (var generalLinkedLicenceNumber in generalLinkedLicenceNumbers)
         {
             // Ignore matches near the top of the first page
-            if (generalLinkedLicenceNumber is { StartPageNumber: 1, StartLineNumber: <= 3 })
+            if (generalLinkedLicenceNumber is { LabelStartPageNumber: 1, LabelStartLineNumber: <= 3 })
             {
                 continue;
             }
@@ -1849,10 +1859,10 @@ public static class WalSchemaConverter
                     new ContainedInInformation
                     {
                         Source = InformationSource.Document,
-                        SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.StartPageNumber),
+                        SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.LabelStartPageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
-                        LineNumber = generalLinkedLicenceNumber.StartLineNumber,
-                        PageNumber = generalLinkedLicenceNumber.StartPageNumber
+                        LineNumber = generalLinkedLicenceNumber.LabelStartLineNumber,
+                        PageNumber = generalLinkedLicenceNumber.LabelStartPageNumber
                     }
                 ]
             });
@@ -1879,14 +1889,11 @@ public static class WalSchemaConverter
     }
 
     private static async Task<List<LinkedLicence>> GetLicenceHistoryLinkedLicencesAsync(
-        List<LabelGroupResult> matches,
+        LabelGroupResult? licenceHistorySection,
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration)
     {
-        var licenceHistorySection = matches
-            .FirstOrDefault(result => result.LabelGroupName == "LicenceHistory");
-
         if (licenceHistorySection == null)
         {
             return [];
@@ -1937,8 +1944,8 @@ public static class WalSchemaConverter
                         LinkReason =
                             GetLinkReason([licenceHistorySection],
                                 lln), // We haven't split licence history into sections like the others
-                        LineNumber = linkedLicenceNumber.StartLineNumber,
-                        PageNumber = linkedLicenceNumber.StartPageNumber
+                        LineNumber = linkedLicenceNumber.LabelStartLineNumber,
+                        PageNumber = linkedLicenceNumber.LabelStartPageNumber
                     }
                 ]
             });
@@ -2323,8 +2330,8 @@ public static class WalSchemaConverter
                 Direction = InformationDirection.Outgoing,
                 SectionName = sectionName,
                 LinkReason = linkReason,
-                PageNumber = abstractionLimitPointSub.StartPageNumber,
-                LineNumber = abstractionLimitPointSub.StartLineNumber
+                PageNumber = abstractionLimitPointSub.LabelStartPageNumber,
+                LineNumber = abstractionLimitPointSub.LabelStartLineNumber
             }
         };
         
@@ -2612,8 +2619,8 @@ public static class WalSchemaConverter
                         SectionName = sectionName,
                         LinkReason = GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
-                        LineNumber = linkedLicenceNumber.StartLineNumber,
-                        PageNumber = linkedLicenceNumber.StartPageNumber
+                        LineNumber = linkedLicenceNumber.LabelStartLineNumber,
+                        PageNumber = linkedLicenceNumber.LabelStartPageNumber
                     }
                 ]
             });
@@ -2724,14 +2731,14 @@ public static class WalSchemaConverter
             {
                 var allDuplicates = valueResults
                     .Where(vr => vr.Text?.FirstOrDefault()?.Text == valueResult.Text?.FirstOrDefault()?.Text
-                                 && vr.StartPageNumber == valueResult.StartPageNumber
-                                 && vr.StartLineNumber == valueResult.StartLineNumber)
+                                 && vr.LabelStartPageNumber == valueResult.LabelStartPageNumber
+                                 && vr.LabelStartLineNumber == valueResult.LabelStartLineNumber)
                     .Select(vr => (vr, siblings.FirstOrDefault(sibling =>
                         sibling.MatchedLabelName == vr.MatchedLabelRelatedName)))
                     .ToList();
 
                 var bestResult = allDuplicates
-                    .OrderBy(vrg => vrg.Item2?.StartLineNumber == vrg.vr.StartLineNumber ? 0 : 1)
+                    .OrderBy(vrg => vrg.Item2?.LabelStartLineNumber == vrg.vr.LabelStartLineNumber ? 0 : 1)
                     .First();
 
                 if (!newValueResults.Contains(bestResult.vr))
@@ -2991,7 +2998,7 @@ public static class WalSchemaConverter
         var match = dateLines
             .OrderBy(matchLineNumber =>
             {
-                var diff = matchLineNumber.StartLineNumber - line.StartLineNumber;
+                var diff = matchLineNumber.LabelStartLineNumber - line.LabelStartLineNumber;
 
                 if (0 > diff)
                 {

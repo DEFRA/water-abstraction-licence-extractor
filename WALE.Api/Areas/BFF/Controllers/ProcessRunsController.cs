@@ -59,13 +59,15 @@ public class ProcessRunsController(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
+        
+        var countTask = licenceListRepository.GetLicencesListSearchCountAsync(processRunId,  query);
         var licenceListItems = await licenceListRepository.GetLicencesListSearchAsync(processRunId, query);
 
        var outputList = licenceListItemModelService.ConvertToOutputListDataItems(licenceListItems);
        
        var processRun = new ProcessRunResponse
        {
-           TotalRecords = outputList.Count,
+           TotalRecords = await countTask,
            Records = outputList.OrderBy(x => x.licenceNumber).ToList(),
            Issuers = await GetDistinctListIssuers(processRunId),
            LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
@@ -105,31 +107,7 @@ public class ProcessRunsController(
             processRunId,
             verificationsBySection,
             fileIdToLicenceNumberMapping);
-
-        // TODO we've really got to do this in SQL as it will be broken now
-        if (!string.IsNullOrEmpty(query.ShortLicenceSetId))
-        {
-            paginationListData = paginationListData
-                .Where(x => x.licenceSets?.Any(item => item?.ShortLicenceSetId?.Equals(query.ShortLicenceSetId) == true) == true)
-                .ToList();
-        }
         
-        // TODO we've really got to do this in SQL as it will be broken now
-        if (!string.IsNullOrEmpty(query.VerificationType))
-        {
-            if (query.VerificationType == "NoVerification")
-            {
-                paginationListData = paginationListData
-                    .Where(x => x.licenceSectionVerifications == null || x.licenceSectionVerifications.Length == 0)
-                    .ToList();
-            }
-            paginationListData = paginationListData
-                .Where(x => x.licenceSectionVerifications?
-                    .Any(item => item.LicenceSectionItems
-                        .Any(i => i.VerificationTypes.Contains(query.VerificationType))) == true)
-                .ToList();
-            ;
-        }
 
         var processRun = new ProcessRunResponse
         {
@@ -156,10 +134,7 @@ public class ProcessRunsController(
         var dbItems = licenceListItemModelService
             .ConvertToUpsertLicenceListItems(processRun.Records)
             .ToList();
-
-        var licenceNumbers = processRun.Records.Select(x => x.licenceNumber).Distinct().ToList();
-        var stringList = string.Join(", ", licenceNumbers);
-        // Replace this with your repository insert.
+        
         foreach (var batch in dbItems.Chunk(50))
         {
             await licenceListRepository.UpsertLicenceListItemManyAsync(
@@ -192,7 +167,7 @@ public class ProcessRunsController(
 
                 var setIds = await licenceListRepository.GetLicenceListLicenceSetIdsAsync(processRunId);
 
-                return setIds.ToArray();
+                return setIds.Where(x => x.Contains('-')).OrderDescending().ToArray();
             }) ?? [];
     }
     
@@ -235,7 +210,7 @@ public class ProcessRunsController(
                            setIds.Add(set.ShortLicenceSetId);
                        }
                        
-                       return setIds.ToArray();
+                       return setIds.OrderDescending().ToArray();
                    })
                ?? [];
     }
@@ -269,7 +244,7 @@ public class ProcessRunsController(
                        cacheEntry.AbsoluteExpirationRelativeToNow =
                            TimeSpan.FromMinutes(10);
                        
-                       var issuers =  await licenceListRepository.GetLicenceListLicenceSetIdsAsync(processRunId);
+                       var issuers =  await licenceListRepository.GetLicenceListIssuersAsync(processRunId);
                        
                        return issuers.ToArray();
                    })

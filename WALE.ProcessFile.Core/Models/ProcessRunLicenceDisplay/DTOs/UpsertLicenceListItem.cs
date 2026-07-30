@@ -14,9 +14,9 @@ public sealed class UpsertLicenceListItem
 
     public string? LicenceHolder { get; init; }
 
-    public string? Purposes { get; init; }
+    public string[] Purposes { get; init; } = [];
 
-    public string? Points { get; init; }
+    public string[] Points { get; init; } = [];
 
     public int LimitsCount { get; init; }
 

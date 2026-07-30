@@ -34,9 +34,9 @@ public sealed class LicenceListItem
 
     public int PointsCount { get; set; }
 
-    public string? Purposes { get; set; }
+    public string[] Purposes { get; set; } = [];
 
-    public string? Points { get; set; }
+    public string[] Points { get; set; } = [];
  
     public int LinkedLicencesCount { get; set; }
 

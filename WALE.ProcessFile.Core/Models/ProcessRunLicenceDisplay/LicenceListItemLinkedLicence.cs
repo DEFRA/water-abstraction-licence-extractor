@@ -57,6 +57,11 @@ public sealed class LicenceListItemLinkedLicence
     public int? NaldIncrementNumber { get; init; }
 
     public string? NaldUpdateReason { get; init; }
+    
+    public string? DmsFileIdStatus { get; init; }
 
+    public string? LicenceVersionNaldStatus { get; set; }
+    
+    public DateTime? DmsFileIdStatusDateUtc { get; init; }
     public List<LicenceListItemLinkLocation> Locations { get; set; } = [];
 }

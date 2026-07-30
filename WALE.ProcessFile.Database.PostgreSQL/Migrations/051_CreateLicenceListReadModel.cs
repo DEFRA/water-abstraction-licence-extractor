@@ -3,10 +3,10 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(47)]
+[Migration(51)]
 public sealed class CreateLicenceListReadModel : Migration
 {
-    private const string LicenceListItemTable =
+  private const string LicenceListItemTable =
         "licence_list_item";
 
     private const string LinkedLicenceTable =
@@ -46,7 +46,7 @@ public sealed class CreateLicenceListReadModel : Migration
         CreateVerificationTypeTable();
 
         CreateLicenceListItemIndexes();
-   
+
         CreateLinkedLicenceIndexes();
         CreateLinkLocationIndexes();
 
@@ -144,12 +144,18 @@ public sealed class CreateLicenceListReadModel : Migration
                 .Nullable()
 
             .WithColumn("purposes")
-            .AsCustom("text")
-            .Nullable()
-            
+            .AsCustom("text[]")
+            .NotNullable()
+            .WithDefaultValue(
+                RawSql.Insert(
+                    "ARRAY[]::text[]"))
+
             .WithColumn("points")
-            .AsCustom("text")
-            .Nullable()
+            .AsCustom("text[]")
+            .NotNullable()
+            .WithDefaultValue(
+                RawSql.Insert(
+                    "ARRAY[]::text[]"))
             
             .WithColumn("purposes_count")
                 .AsInt32()
@@ -217,7 +223,8 @@ public sealed class CreateLicenceListReadModel : Migration
             .OnTable(LicenceListItemTable)
             .Columns(
                 "process_run_id",
-                "file_id", "licence_number");
+                "file_id",
+                "licence_number");
 
         Create.UniqueConstraint(
                 "uq_lic_list_run_item")
@@ -255,6 +262,14 @@ public sealed class CreateLicenceListReadModel : Migration
             .AsGuid()
             .Nullable()
 
+            .WithColumn("dms_file_id_status")
+            .AsCustom("text")
+            .Nullable()
+
+            .WithColumn("dms_file_id_status_date_utc")
+            .AsCustom("timestamp with time zone")
+            .Nullable()
+
             .WithColumn("filename")
             .AsCustom("text")
             .Nullable()
@@ -288,6 +303,10 @@ public sealed class CreateLicenceListReadModel : Migration
             .Nullable()
 
             .WithColumn("nald_status")
+            .AsCustom("text")
+            .Nullable()
+
+            .WithColumn("licence_version_nald_status")
             .AsCustom("text")
             .Nullable()
 
@@ -824,4 +843,4 @@ public sealed class CreateLicenceListReadModel : Migration
                 );
             """);
     }
-}
+}   

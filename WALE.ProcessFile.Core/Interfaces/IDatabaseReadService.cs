@@ -135,4 +135,8 @@ public interface IDatabaseReadService
     Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
 
     Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+
+    Task<int> GetLicencesListSearchCountAsync(
+        int processRunId,
+        ProcessRunQuery query);
 }

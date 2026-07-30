@@ -13,4 +13,6 @@ export type ProcessRunQuery = {
     ShortLicenceSetId?: string;
     linkedLicencesType?: string;
     verificationType?: string;
+    sortField?: string;
+    sortAscending?: boolean;
 };

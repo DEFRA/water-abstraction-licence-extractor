@@ -595,6 +595,11 @@ public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
         return await databaseReadService.GetLicencesListSearchAsync(processRunId, query);
     }
 
+    public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
+    {
+         return await databaseReadService.GetLicencesListSearchCountAsync(processRunId, query);
+    }
+
     public async Task<List<string>> GetLicenceListIssuersAsync(int processRunId)
     {
         return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);

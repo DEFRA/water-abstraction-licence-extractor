@@ -17,6 +17,10 @@ public interface ILicenceListRepository
     Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
         int processRunId,
         ProcessRunQuery query);
+    
+    Task<int> GetLicencesListSearchCountAsync(
+        int processRunId,
+        ProcessRunQuery query);
 
     Task<List<string>> GetLicenceListIssuersAsync(int processRunId);
     

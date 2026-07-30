@@ -30,6 +30,8 @@ public sealed class UpsertLinkedLicenceItem
     public string? Issuer { get; init; }
 
     public string? NaldStatus { get; init; }
+    
+    public string? LicenceVersionNaldStatus { get; init; }
 
     public string? LicenceType { get; init; }
 
@@ -52,6 +54,9 @@ public sealed class UpsertLinkedLicenceItem
     public int? NaldIssueNumber { get; set; }
     public int? NaldIncrementNumber { get; set; }
     public string? NaldUpdateReason { get; set; }
-
+    
+    public string? DmsFileIdStatus { get; set; }
+    
+    public DateTime? DmsFileIdStatusDateUtc { get; set; }
     public string? SourceData { get; init; }
 }

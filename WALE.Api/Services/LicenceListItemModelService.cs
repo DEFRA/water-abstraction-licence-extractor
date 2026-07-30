@@ -13,7 +13,7 @@ namespace WALE.Api.Services;
 using System.Globalization;
 using System.Text.Json;
 
-public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOptions = null)
+public class LicenceListItemModelService
     : ILicenceListItemModelService
 {
     private static readonly string[] SupportedDateFormats =
@@ -24,9 +24,6 @@ public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOp
         "yyyy-MM-ddTHH:mm:ssK",
         "yyyy-MM-ddTHH:mm:ss.FFFFFFFK"
     ];
-
-    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
-                                                                    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
     public IReadOnlyList<UpsertLicenceListItem> ConvertToUpsertLicenceListItems(
         IEnumerable<OutputListDataItem> source)
@@ -51,20 +48,8 @@ public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOp
         OutputListDataItem source)
     {
         ArgumentNullException.ThrowIfNull(source);
-
-        var purposes = string.Empty;
-        if (source.purposes != null)
-        { 
-            purposes = string.Join(",", source.purposes);
-        }
         
-        var points = string.Empty;
-        if (source.points != null)
-        { 
-            points = string.Join(",", source.points);
-        }
-
-
+        
         return new UpsertLicenceListItem
         {
             ProcessRunId = source.processRunId!.Value,
@@ -73,9 +58,15 @@ public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOp
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,
 
-            Purposes = purposes,
+            Purposes = source.purposes
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!)
+                .ToArray(),
 
-            Points = points,
+            Points = source.points
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!)
+                .ToArray(),
 
             LimitsCount = source.limitsCount,
             AggregatesCount = source.aggregatesCount,
@@ -94,19 +85,7 @@ public class LicenceListItemModelService(JsonSerializerOptions? jsonSerializerOp
                 .Select(ToUpsertLicenceSet)
                 .ToArray() ?? [],
 
-            LicenceSectionVerifications =
-                (source.latestLicenceSectionVerifications?.Any() == true 
-                    ? source.latestLicenceSectionVerifications.Select(ToLicenceSectionVerifications).ToArray() 
-                    : source.LicenceSectionItems?.Any() == true ? source.LicenceSectionItems?.ToArray() : []) ?? [],
-        };
-    }
-
-    private static LicenceSectionVerificationSummary ToLicenceSectionVerifications(LicenceSectionVerification licenceSectionVerification)
-    {
-        return new LicenceSectionVerificationSummary
-        {
-LicenceSectionName =  licenceSectionVerification.LicenceSectionName,
-LicenceSectionItems = []
+            LicenceSectionVerifications = source.licenceSectionVerifications?.Any() == true ? source.licenceSectionVerifications?.ToArray() : [],
         };
     }
 
@@ -124,8 +103,8 @@ LicenceSectionItems = []
             licenceNumber = licence.LicenceNumber,
             licenceHolder = licence.LicenceHolder,
 
-            purposes = licence.Purposes?.Split(','),
-            points = licence.Points?.Split(','),
+            purposes = licence.Purposes,
+            points = licence.Points,
 
             limitsCount = licence.LimitsCount,
             aggregatesCount = licence.AggregatesCount,
@@ -143,6 +122,8 @@ LicenceSectionItems = []
                 .Select(ToOutputLicenceSet)
                 .ToArray(),
             
+            licenceSectionVerifications = source.VerificationSections.ToArray()
+            
         };
     }
 
@@ -158,17 +139,29 @@ LicenceSectionItems = []
             DmsPath = source.DmsPath,
             DmsFileId = source.DmsFileId,
             Filename = source.Filename,
-            RegionId =  source.RegionId,
+            RegionId = source.RegionId,
             NaldStatus = ParseEnum<NaldLicenceStatus>(source.NaldStatus),
             LicenceType = ParseEnum<LicenceType>(source.LicenceType),
             LicenceVersion = new LicenceVersion
-            { 
+            {
                 EffectiveDate = source.EffectiveDate?.ToDateTime(TimeOnly.MinValue),
                 Issuer = source.Issuer,
-                NaldStatus = source.NaldStatus,
+                NaldStatus = source.LicenceVersionNaldStatus,
                 IssueDate = source.IssueDate?.ToDateTime(TimeOnly.MinValue),
                 OriginalIssueDate = source.OriginalIssueDate?.ToDateTime(TimeOnly.MinValue),
                 ExpiryDate = source.ExpiryDate?.ToDateTime(TimeOnly.MinValue),
+                NaldExpiryDate = source.NaldExpiryDate,
+                NaldEffectiveStartDate = source.NaldEffectiveStartDate,
+                NaldEffectiveEndDate = source.NaldEffectiveEndDate,
+                NaldOrigEffectiveDate = source.NaldOrigEffectiveDate,
+                NaldIncrementNumber = source.NaldIncrementNumber,
+                NaldIssueNumber = source.NaldIssueNumber,
+                NaldOrigSignatureDate = source.NaldOrigSignatureDate,
+                NaldRevocationDate = source.NaldRevocationDate,
+                NaldSignatureDate = source.NaldSignatureDate,
+                NaldUpdateReason = source.NaldUpdateReason,
+                DmsFileIdStatus =  source.DmsFileIdStatus,
+                DmsFileIdStatusDateUtc = source.DmsFileIdStatusDateUtc
             },
             ContainedIn = source.Locations
                 .Select(GetContainedInformation)
@@ -221,28 +214,6 @@ LicenceSectionItems = []
                 .ToArray(),
         };
     }
-
-    private static IEnumerable<LicenceSectionVerification> ToOutputLicenceSectionVerifications(
-        Guid licenceFileId,
-        LicenceListItemVerificationSection section) =>
-        section.LicenceSectionItems.SelectMany(item =>
-            item.VerificationTypes.Select(type => new LicenceSectionVerification
-            {
-                LicenceSectionVerificationId = (int)type.VerificationItemId,
-                LicenceFileId = licenceFileId,
-                ProcessRunId = section.ProcessRunId,
-                LicenceSectionName = section.LicenceSectionName,
-                LicenceSectionItemId = item.LicenceSectionItemId,
-                VerificationType = type.VerificationType,
-
-                // Unrecoverable from LicenceListItemAggregate — no source field anywhere
-                // in VerificationSection → VerificationItem → VerificationType.
-                LicenceSectionScrapedValue = null,
-                LicenceSectionSnapshotValue = null,
-                LicenceSectionOverrideValue = null,
-                Notes = null,
-                ScrapedDataIsDifferent = false,
-            }));
     
     private static UpsertLicenceSetItem ToUpsertLicenceSet(
         OutputListDataItemLicenceSet source)
@@ -283,22 +254,24 @@ LicenceSectionItems = []
 
             OriginalIssueDate = ToDateOnly(
                 source.LicenceVersion?.OriginalIssueDate),
-            
+
             NaldExpiryDate = source.LicenceVersion?.NaldExpiryDate,
-            
+
             NaldEffectiveStartDate = source.LicenceVersion?.NaldEffectiveStartDate,
-             NaldOrigEffectiveDate = source.LicenceVersion?.NaldOrigEffectiveDate,
-             NaldOrigSignatureDate = source.LicenceVersion?.NaldOrigSignatureDate,
-             NaldEffectiveEndDate =  source.LicenceVersion?.NaldEffectiveEndDate,
-             NaldRevocationDate =  source.LicenceVersion?.NaldRevocationDate,
-             NaldSignatureDate =  source.LicenceVersion?.NaldSignatureDate,
-NaldIncrementNumber =   source.LicenceVersion?.NaldIncrementNumber,
-NaldIssueNumber =   source.LicenceVersion?.NaldIssueNumber,
-NaldUpdateReason =   source.LicenceVersion?.NaldUpdateReason,
+            NaldOrigEffectiveDate = source.LicenceVersion?.NaldOrigEffectiveDate,
+            NaldOrigSignatureDate = source.LicenceVersion?.NaldOrigSignatureDate,
+            NaldEffectiveEndDate = source.LicenceVersion?.NaldEffectiveEndDate,
+            NaldRevocationDate = source.LicenceVersion?.NaldRevocationDate,
+            NaldSignatureDate = source.LicenceVersion?.NaldSignatureDate,
+            NaldIncrementNumber = source.LicenceVersion?.NaldIncrementNumber,
+            NaldIssueNumber = source.LicenceVersion?.NaldIssueNumber,
+            NaldUpdateReason = source.LicenceVersion?.NaldUpdateReason,
 
             Issuer = source.LicenceVersion?.Issuer,
-
+            DmsFileIdStatus = source.LicenceVersion?.DmsFileIdStatus,
+            DmsFileIdStatusDateUtc = source.LicenceVersion?.DmsFileIdStatusDateUtc,
             NaldStatus = source.NaldStatus.ToString(),
+            LicenceVersionNaldStatus = source.LicenceVersion?.NaldStatus,
             LicenceType = source.LicenceType.ToString(),
             RegionId = source.RegionId,
 

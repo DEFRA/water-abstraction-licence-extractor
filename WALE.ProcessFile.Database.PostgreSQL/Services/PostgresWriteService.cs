@@ -1074,13 +1074,14 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             item.LicenceSets,
             cancellationToken);
 
-        await ReplaceVerificationsAsync(
+        await UpsertVerificationsAsync(
             connection,
             transaction,
             item.ProcessRunId,
             licenceListItemId,
             item.LicenceSectionVerifications,
             cancellationToken);
+
 
         return licenceListItemId;
     }
@@ -1318,6 +1319,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 nald_issue_number,
                 nald_increment_number,
                 nald_update_reason,
+                dms_file_id_status,
+                dms_file_id_status_date_utc,
+                licence_version_nald_status,
                 source_data
             )
             VALUES
@@ -1349,6 +1353,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 @NaldIssueNumber,
                 @NaldIncrementNumber,
                 @NaldUpdateReason,
+              @DmsFileIdStatus,
+             @DmsFileIdStatusDateUtc,
+             @LicenceVersionNaldStatus,
                CAST(@SourceData AS jsonb)
             )
             RETURNING linked_licence_id;
@@ -1384,6 +1391,9 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             linkedLicence.NaldIssueNumber,
             linkedLicence.NaldIncrementNumber,
             linkedLicence.NaldUpdateReason,
+            linkedLicence.DmsFileIdStatus,
+            linkedLicence.DmsFileIdStatusDateUtc,
+            linkedLicence.LicenceVersionNaldStatus,
             SourceData =
                 NullIfWhiteSpace(linkedLicence.SourceData)
         };
@@ -1625,8 +1635,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 transaction,
                 cancellationToken: cancellationToken));
     }
-
-    private static async Task ReplaceVerificationsAsync(
+    
+    private static async Task UpsertVerificationsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         int processRunId,
@@ -1634,89 +1644,49 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         IReadOnlyCollection<LicenceSectionVerificationSummary> sections,
         CancellationToken cancellationToken)
     {
-        const string deleteSql =
-            """
-            DELETE FROM licence_list_item_verification_section
-            WHERE licence_list_item_id = @LicenceListItemId;
-            """;
-
-        await connection.ExecuteAsync(
-            new CommandDefinition(
-                deleteSql,
-                new
-                {
-                    LicenceListItemId = licenceListItemId
-                },
-                transaction,
-                cancellationToken: cancellationToken));
-
-        var groupedSections = sections
-            .Where(section =>
-                !string.IsNullOrWhiteSpace(section.LicenceSectionName))
-            .GroupBy(
-                section => section.LicenceSectionName.Trim(),
-                StringComparer.OrdinalIgnoreCase);
-
-        foreach (var sectionGroup in groupedSections)
+        foreach (var section in sections)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var sectionId =
-                await InsertVerificationSectionAsync(
+            if (string.IsNullOrWhiteSpace(section.LicenceSectionName))
+            {
+                continue;
+            }
+
+            var verificationSectionId =
+                await UpsertVerificationSectionAsync(
                     connection,
                     transaction,
                     processRunId,
                     licenceListItemId,
-                    sectionGroup.Key,
+                    section.LicenceSectionName,
                     cancellationToken);
 
-            var items = sectionGroup
-                .SelectMany(section =>
-                    section.LicenceSectionItems ?? [])
-                .Where(item =>
-                    !string.IsNullOrWhiteSpace(
-                        item.LicenceSectionItemId))
-                .GroupBy(
-                    item => item.LicenceSectionItemId.Trim(),
-                    StringComparer.OrdinalIgnoreCase);
-
-            foreach (var itemGroup in items)
+            foreach (var item in section.LicenceSectionItems)
             {
-                var verificationItemId =
-                    await InsertVerificationItemAsync(
-                        connection,
-                        transaction,
-                        sectionId,
-                        itemGroup.Key,
-                        cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var verificationTypes = itemGroup
-                    .SelectMany(item =>
-                        item.VerificationTypes ?? [])
-                    .Where(type =>
-                        !string.IsNullOrWhiteSpace(type))
-                    .Select(type => type.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
+                if (string.IsNullOrWhiteSpace(item.LicenceSectionItemId))
+                {
+                    continue;
+                }
 
-                await InsertVerificationTypesAsync(
+                await UpsertVerificationItemAsync(
                     connection,
                     transaction,
-                    verificationItemId,
-                    verificationTypes,
+                    verificationSectionId,
+                    item,
                     cancellationToken);
             }
         }
     }
-
-    private static async Task<long>
-        InsertVerificationSectionAsync(
-            NpgsqlConnection connection,
-            NpgsqlTransaction transaction,
-            int processRunId,
-            long licenceListItemId,
-            string licenceSectionName,
-            CancellationToken cancellationToken)
+    private static Task<long> UpsertVerificationSectionAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        int processRunId,
+        long licenceListItemId,
+        string licenceSectionName,
+        CancellationToken cancellationToken)
     {
         const string sql =
             """
@@ -1732,98 +1702,90 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 @LicenceListItemId,
                 @LicenceSectionName
             )
+            ON CONFLICT
+            (
+                licence_list_item_id,
+                licence_section_name
+            )
+            DO UPDATE SET
+                process_run_id = EXCLUDED.process_run_id
             RETURNING verification_section_id;
             """;
 
-        return await connection.ExecuteScalarAsync<long>(
+        return connection.ExecuteScalarAsync<long>(
             new CommandDefinition(
                 sql,
                 new
                 {
                     ProcessRunId = processRunId,
                     LicenceListItemId = licenceListItemId,
-                    LicenceSectionName = licenceSectionName
+                    LicenceSectionName =
+                        licenceSectionName.Trim()
                 },
                 transaction,
                 cancellationToken: cancellationToken));
     }
-
-    private static async Task<long>
-        InsertVerificationItemAsync(
-            NpgsqlConnection connection,
-            NpgsqlTransaction transaction,
-            long verificationSectionId,
-            string licenceSectionItemId,
-            CancellationToken cancellationToken)
+    
+    private static Task UpsertVerificationItemAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long verificationSectionId,
+        LicenceSectionItemSummary item,
+        CancellationToken cancellationToken)
     {
         const string sql =
             """
             INSERT INTO licence_list_item_verification_item
             (
                 verification_section_id,
-                licence_section_item_id
+                licence_section_item_id,
+                verification_types,
+                scraped_data_is_different
             )
             VALUES
             (
                 @VerificationSectionId,
-                @LicenceSectionItemId
+                @LicenceSectionItemId,
+                @VerificationTypes,
+                @ScrapedDataIsDifferent
             )
-            RETURNING verification_item_id;
+            ON CONFLICT
+            (
+                verification_section_id,
+                licence_section_item_id
+            )
+            DO UPDATE SET
+                verification_types =
+                    EXCLUDED.verification_types,
+                scraped_data_is_different =
+                    EXCLUDED.scraped_data_is_different;
             """;
 
-        return await connection.ExecuteScalarAsync<long>(
+        var verificationTypes =
+            item.VerificationTypes
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        return connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
                 new
                 {
-                    VerificationSectionId = verificationSectionId,
-                    LicenceSectionItemId = licenceSectionItemId
+                    VerificationSectionId =
+                        verificationSectionId,
+
+                    LicenceSectionItemId =
+                        item.LicenceSectionItemId.Trim(),
+
+                    VerificationTypes =
+                        verificationTypes,
+
+                    item.ScrapedDataIsDifferent
                 },
-                transaction,
-                cancellationToken: cancellationToken));
-    }
-
-    private static async Task InsertVerificationTypesAsync(
-        NpgsqlConnection connection,
-        NpgsqlTransaction transaction,
-        long verificationItemId,
-        IReadOnlyCollection<string> verificationTypes,
-        CancellationToken cancellationToken)
-    {
-        var values = verificationTypes
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(type => new
-            {
-                VerificationItemId = verificationItemId,
-                VerificationType = type
-            })
-            .ToArray();
-
-        if (values.Length == 0)
-        {
-            return;
-        }
-
-        const string sql =
-            """
-            INSERT INTO licence_list_item_verification_type
-            (
-                verification_item_id,
-                verification_type
-            )
-            VALUES
-            (
-                @VerificationItemId,
-                @VerificationType
-            );
-            """;
-
-        await connection.ExecuteAsync(
-            new CommandDefinition(
-                sql,
-                values,
                 transaction,
                 cancellationToken: cancellationToken));
     }
@@ -1831,17 +1793,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
     private static LicenceListItemSummary CreateSummary(
         UpsertLicenceListItem item)
     {
-        var purposes = item.Purposes?.Split(',')
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        var points = item.Points?.Split(',')
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .ToArray();
-
         var verificationSections = item
             .LicenceSectionVerifications
             .Where(x =>
@@ -1875,8 +1826,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 .Select(x => x!.Trim()));
 
         return new LicenceListItemSummary(
-            PurposesCount: purposes?.Length ?? 0,
-            PointsCount: points?.Length ?? 0,
+            PurposesCount: item.Purposes.Length,
+            PointsCount: item.Points.Length,
             LinkedLicencesCount: item.LinkedLicences.Length,
             LicenceSetsCount: item.LicenceSets.Length,
             VerificationSectionsCount:

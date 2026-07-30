@@ -4177,9 +4177,11 @@ export class Client {
      * @param shortLicenceSetId (optional) 
      * @param linkedLicencesType (optional) 
      * @param verificationType (optional) 
+     * @param sortField (optional) 
+     * @param sortAscending (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4244,6 +4246,14 @@ export class Client {
             throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
         else if (verificationType !== undefined)
             url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
+        if (sortField === null)
+            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
+        else if (sortField !== undefined)
+            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
+        if (sortAscending === null)
+            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
+        else if (sortAscending !== undefined)
+            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4274,6 +4284,172 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @param searchTerm (optional) 
+     * @param searchTermClean (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @param issuer (optional) 
+     * @param limitsEmpty (optional) 
+     * @param aggregatesEmpty (optional) 
+     * @param ocrScan (optional) 
+     * @param purposesEmpty (optional) 
+     * @param pointsEmpty (optional) 
+     * @param issueYear (optional) 
+     * @param meansFound (optional) 
+     * @param shortLicenceSetId (optional) 
+     * @param linkedLicencesType (optional) 
+     * @param verificationType (optional) 
+     * @param sortField (optional) 
+     * @param sortAscending (optional) 
+     * @return OK
+     */
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        if (searchTerm === null)
+            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
+        else if (searchTerm !== undefined)
+            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (searchTermClean === null)
+            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
+        else if (searchTermClean !== undefined)
+            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "Take=" + encodeURIComponent("" + take) + "&";
+        if (issuer === null)
+            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
+        else if (issuer !== undefined)
+            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (limitsEmpty === null)
+            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
+        else if (limitsEmpty !== undefined)
+            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
+        if (aggregatesEmpty === null)
+            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
+        else if (aggregatesEmpty !== undefined)
+            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (ocrScan === null)
+            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
+        else if (ocrScan !== undefined)
+            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
+        if (purposesEmpty === null)
+            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
+        else if (purposesEmpty !== undefined)
+            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
+        if (pointsEmpty === null)
+            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
+        else if (pointsEmpty !== undefined)
+            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
+        if (issueYear === null)
+            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
+        else if (issueYear !== undefined)
+            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
+        if (meansFound === null)
+            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
+        else if (meansFound !== undefined)
+            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
+        if (shortLicenceSetId === null)
+            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
+        else if (shortLicenceSetId !== undefined)
+            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
+        if (linkedLicencesType === null)
+            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
+        else if (linkedLicencesType !== undefined)
+            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
+        if (verificationType === null)
+            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
+        else if (verificationType !== undefined)
+            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
+        if (sortField === null)
+            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
+        else if (sortField !== undefined)
+            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
+        if (sortAscending === null)
+            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
+        else if (sortAscending !== undefined)
+            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProcessRunList(_response);
+        });
+    }
+
+    protected processGetProcessRunList(response: Response): Promise<ProcessRunResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProcessRunResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    updateLicenceListProcessRun(processRunId: number): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateLicenceListProcessRun(_response);
+        });
+    }
+
+    protected processUpdateLicenceListProcessRun(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
     }
 
     /**
@@ -7263,6 +7439,7 @@ export enum NaldLicenceStatus {
     Expired = "Expired",
     Revoked = "Revoked",
     Live = "Live",
+    Curr = "Curr",
 }
 
 export class NaldNationalGridReference implements INaldNationalGridReference {

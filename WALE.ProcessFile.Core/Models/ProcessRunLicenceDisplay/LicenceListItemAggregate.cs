@@ -8,5 +8,5 @@ public class LicenceListItemAggregate
 
     public List<LicenceListItemLicenceSet> LicenceSets { get; init; } = [];
 
-    public List<LicenceListItemVerificationSection> VerificationSections { get; init; } = [];
+    public List<LicenceSectionVerificationSummary> VerificationSections { get; init; } = [];
 }

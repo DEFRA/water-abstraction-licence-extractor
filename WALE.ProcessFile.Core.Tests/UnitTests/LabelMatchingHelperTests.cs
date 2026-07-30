@@ -393,7 +393,7 @@ public class LabelMatchingHelperTests
     {
         // Arrange
         var line1 = SingleColumn3Words();
-        var line2 = SingleColumn3Words();
+        var line2 = SingleColumn3Words(pageNumber: 3);
         var line1ForPosition = line1.Clone();
         var labelTextToMatch = new List<TextToMatch>
         {
@@ -427,7 +427,7 @@ public class LabelMatchingHelperTests
         Assert.Equal(2, labelStartPageNumber);
         Assert.Equal(1, labelStartLineNumber);
         Assert.Equal(0, labelStartCharIndex);
-        Assert.Equal(2, labelEndPageNumber);
+        Assert.Equal(3, labelEndPageNumber);
         Assert.Equal(1, labelEndLineNumber);
         Assert.Equal(1, labelEndCharIndex);
     }
@@ -437,7 +437,7 @@ public class LabelMatchingHelperTests
     {
         // Arrange
         var line1 = SingleColumn3Words();
-        var line2 = SingleColumn3Words();
+        var line2 = SingleColumn3Words(pageNumber: 3);
         var line1ForPosition = line1.Clone();
         var labelTextToMatch = new List<TextToMatch>
         {
@@ -474,9 +474,150 @@ public class LabelMatchingHelperTests
         Assert.Equal(2, labelStartPageNumber);
         Assert.Equal(1, labelStartLineNumber);
         Assert.Equal(0, labelStartCharIndex);
-        Assert.Equal(2, labelEndPageNumber);
+        Assert.Equal(3, labelEndPageNumber);
         Assert.Equal(1, labelEndLineNumber);
         Assert.Equal(1, labelEndCharIndex);
+    }
+    
+    [Fact]
+    public void WhenTwoLinesWith3WordsInputWithSpaceInfront_WhenSimpleLabelToFindAtStartOfLineWithStartOfLineRestriction_ThenFindsOverBothLine()
+    {
+        // Arrange
+        var line1 = SingleColumn3Words(word1:" A");
+        var line2 = SingleColumn3Words(pageNumber: 3);
+        var line1ForPosition = line1.Clone();
+        var labelTextToMatch = new List<TextToMatch>
+        {
+            new("A B C A")
+            {
+                LineMustStartWith = true
+            }
+        };
+        var labelPosition = LabelPosition.TextToFindIsBetweenLabels;
+        var lineCount = 1;
+        var howManyLinesTotal = 2;
+        
+        // Act
+        var result = LabelMatchingHelper.LineContainsLabel(
+            line1,
+            line2,
+            line1ForPosition,
+            labelTextToMatch,
+            labelPosition,
+            lineCount,
+            howManyLinesTotal,
+            out var matchedText,
+            out var labelStartPageNumber,
+            out var labelStartLineNumber,
+            out var labelStartCharIndex,
+            out var labelEndPageNumber,
+            out var labelEndLineNumber,
+            out var labelEndCharIndex);
+
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(matchedText);
+        Assert.Equal(new TextToMatch("A B C A").Text, matchedText.Text);
+        Assert.Equal(2, labelStartPageNumber);
+        Assert.Equal(1, labelStartLineNumber);
+        Assert.Equal(0, labelStartCharIndex);
+        Assert.Equal(3, labelEndPageNumber);
+        Assert.Equal(1, labelEndLineNumber);
+        Assert.Equal(1, labelEndCharIndex);
+    }
+    
+    [Fact]
+    public void WhenTwoLinesWith3WordsInputWithAsteriskInfront_WhenSimpleLabelToFindAtStartOfLineWithStartOfLineRestriction_ThenFindsOverBothLine()
+    {
+        // Arrange
+        var line1 = SingleColumn3Words("*A");
+        var line2 = SingleColumn3Words(pageNumber: 3);
+        var line1ForPosition = line1.Clone();
+        var labelTextToMatch = new List<TextToMatch>
+        {
+            new("A B C A")
+            {
+                LineMustStartWith = true
+            }
+        };
+        var labelPosition = LabelPosition.TextToFindIsBetweenLabels;
+        var lineCount = 1;
+        var howManyLinesTotal = 2;
+        
+        // Act
+        var result = LabelMatchingHelper.LineContainsLabel(
+            line1,
+            line2,
+            line1ForPosition,
+            labelTextToMatch,
+            labelPosition,
+            lineCount,
+            howManyLinesTotal,
+            out var matchedText,
+            out var labelStartPageNumber,
+            out var labelStartLineNumber,
+            out var labelStartCharIndex,
+            out var labelEndPageNumber,
+            out var labelEndLineNumber,
+            out var labelEndCharIndex);
+
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(matchedText);
+        Assert.Equal(new TextToMatch("A B C A").Text, matchedText.Text);
+        Assert.Equal(2, labelStartPageNumber);
+        Assert.Equal(1, labelStartLineNumber);
+        Assert.Equal(1, labelStartCharIndex);
+        Assert.Equal(3, labelEndPageNumber);
+        Assert.Equal(1, labelEndLineNumber);
+        Assert.Equal(1, labelEndCharIndex);
+    }
+    
+    [Fact]
+    public void WhenTwoLinesWith3WordsInput_WhenSimpleLabelToFindAtStartOfLineWithStartOfColumnRestriction_ThenFindsOverBothLine()
+    {
+        // Arrange
+        var line1 = SingleColumn3Words();
+        var line2 = SingleColumn3Words(pageNumber: 3);
+        var line1ForPosition = line1.Clone();
+        var labelTextToMatch = new List<TextToMatch>
+        {
+            new("A B C")
+            {
+                ColumnMustStartWith = true
+            }
+        };
+        var labelPosition = LabelPosition.TextToFindIsBetweenLabels;
+        var lineCount = 1;
+        var howManyLinesTotal = 2;
+        
+        // Act
+        var result = LabelMatchingHelper.LineContainsLabel(
+            line1,
+            line2,
+            line1ForPosition,
+            labelTextToMatch,
+            labelPosition,
+            lineCount,
+            howManyLinesTotal,
+            out var matchedText,
+            out var labelStartPageNumber,
+            out var labelStartLineNumber,
+            out var labelStartCharIndex,
+            out var labelEndPageNumber,
+            out var labelEndLineNumber,
+            out var labelEndCharIndex);
+
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(matchedText);
+        Assert.Equal(new TextToMatch("A B C").Text, matchedText.Text);
+        Assert.Equal(2, labelStartPageNumber);
+        Assert.Equal(1, labelStartLineNumber);
+        Assert.Equal(0, labelStartCharIndex);
+        Assert.Equal(2, labelEndPageNumber);
+        Assert.Equal(1, labelEndLineNumber);
+        Assert.Equal(5, labelEndCharIndex);
     }
     
     [Fact]
@@ -484,7 +625,7 @@ public class LabelMatchingHelperTests
     {
         // Arrange
         var line1 = SingleColumn3Words();
-        var line2 = SingleColumn3Words();
+        var line2 = SingleColumn3Words(pageNumber: 3);
         var line1ForPosition = line1.Clone();
         var labelTextToMatch = new List<TextToMatch>
         {
@@ -518,7 +659,7 @@ public class LabelMatchingHelperTests
         Assert.Equal(2, labelStartPageNumber);
         Assert.Equal(1, labelStartLineNumber);
         Assert.Equal(4, labelStartCharIndex);
-        Assert.Equal(2, labelEndPageNumber);
+        Assert.Equal(3, labelEndPageNumber);
         Assert.Equal(1, labelEndLineNumber);
         Assert.Equal(1, labelEndCharIndex);
     }
@@ -526,11 +667,12 @@ public class LabelMatchingHelperTests
     private static DocumentLine SingleColumn3Words(
         string word1 = "A",
         string word2 = "B",
-        string word3 = "C")
+        string word3 = "C",
+        int pageNumber = 2)
     {
         return new DocumentLine(
             1,
-            2,
+            pageNumber,
             [
                 new DocumentLineColumn(
                     [

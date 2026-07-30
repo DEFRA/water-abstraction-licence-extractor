@@ -251,7 +251,8 @@ public static class LabelMatchingHelper
             var mustContainEndOfLineMarker = labelText.Contains(PositionConstants.EndOfLineMarker);
 
             // No special conditions
-            if (!mustContainEndOfColumnMarker
+            if (!string.IsNullOrEmpty(matchedText?.Text)
+                && !mustContainEndOfColumnMarker
                 && !mustContainEndOfLineMarker
                 && labelTextOption is { ColumnMustStartWith: false, LineMustStartWith: false })
             {
@@ -260,16 +261,13 @@ public static class LabelMatchingHelper
 
             matchedText = null;
             
-            var lineStartsWithLabel =
-                lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
-            
             var labelTextWithSpaceBefore = $" {labelText}";
             var labelTextWithAsteriskBefore = $"*{labelText}";            
             
-            var lineStartsWithLabelWithSpaceBefore =
-                lineToCheck.Text.StartsWith(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase);
-            var lineStartsWithLabelWithAsteriskBefore =
-                lineToCheck.Text.StartsWith(labelTextWithAsteriskBefore, StringComparison.OrdinalIgnoreCase);
+            var lineStartsWithLabel =  lineToCheck.Text.StartsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase)
+                || lineToCheck.Text.StartsWith(labelTextWithSpaceBefore, StringComparison.OrdinalIgnoreCase) // Might be redundant because of the way wr trim
+                || lineToCheck.Text.StartsWith(labelTextWithAsteriskBefore, StringComparison.OrdinalIgnoreCase);
+            
             var lineEndsWithLabel =
                 lineToCheck.Text.EndsWith(labelTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
             
@@ -354,8 +352,6 @@ public static class LabelMatchingHelper
                         }
                     }
                     else if (lineStartsWithLabel
-                        || lineStartsWithLabelWithSpaceBefore
-                        || lineStartsWithLabelWithAsteriskBefore
                         || lineEndsWithLabel
                         || ColumnStartsWithLabel(column, labelTextWithoutMarkers, ref columnStartsWithLabel)
                         || column.Text.EndsWith(labelText, StringComparison.OrdinalIgnoreCase)

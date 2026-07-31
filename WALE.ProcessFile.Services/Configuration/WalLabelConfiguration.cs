@@ -1715,7 +1715,7 @@ public static partial class WalLabelConfiguration
                 ],
                 TextEnd =
                 [
-                    new("7. "),
+                    new("7. ") { LineMustStartWith = true },
                     new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER ABSTRACTED"),
                     new("MEANS OF MEASUREMENT OR ASSESSMENT OF WATER"), //" ABSTRACTED", -- Its cut off this way in a document, over 2 pages
                     new("MEANS OF MEASUREMENT OF WATER ABSTRACTED"),

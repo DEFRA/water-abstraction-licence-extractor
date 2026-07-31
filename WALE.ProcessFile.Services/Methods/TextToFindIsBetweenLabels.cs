@@ -79,9 +79,16 @@ public static class TextToFindIsBetweenLabels
 
             if (!string.IsNullOrEmpty(labelText1) && labelText1 != "[START_OF_BLOCK]")
             {
-                // TODO, needs to be cleverer but basically do the below
                 relevantLineText = $"{labelText1}{relevantLineText}";
-                textEnd = textEnd.Where(te => te.Text != labelText1).ToList();
+                
+                textEnd = textEnd.Where(te =>
+                {
+                    var teTextWithoutMarkers = te.Text
+                        .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
+                        .Replace(PositionConstants.EndOfLineMarker, string.Empty);
+                    
+                    return teTextWithoutMarkers != labelText1;
+                }).ToList();
             }
         }
         
@@ -95,6 +102,11 @@ public static class TextToFindIsBetweenLabels
             request.label.DoNotTrimLines,
             out var foundEndTag,
             out var matchedEndText);
+
+        if (request.label.Name == "DocumentAbstractionLimitsSection")
+        {
+            
+        }
         
         if (betweenText == null)
         {
@@ -325,7 +337,7 @@ public static class TextToFindIsBetweenLabels
                         var i = combinedText.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
                         // TOOD this should look at which actually matched, not just the first label to end on
-                        if (label.TextToMatch?.FirstOrDefault()?.Text == "[END_OF_LINE]"
+                        if (label.TextToMatch?.FirstOrDefault()?.Text == PositionConstants.EndOfLineMarker
                             && matchedEndTextTemp.Text == string.Empty)
                         {
                             i = combinedText.Length;

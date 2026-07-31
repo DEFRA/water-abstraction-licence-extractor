@@ -146,7 +146,7 @@ public class DocumentLineColumn
             {
                 if (!throwIfMissing)
                 {
-                    return [];
+                    return outputWords;
                 }
                 
                 var inputWordsForDisplay = string.Join(' ', inputWords.Select(iw => iw.Text));

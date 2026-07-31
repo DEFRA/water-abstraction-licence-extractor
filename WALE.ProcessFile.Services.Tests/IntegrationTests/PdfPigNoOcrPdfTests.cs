@@ -3825,21 +3825,23 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(16, abstractionLimitsResult.Text!.Count);
-        Assert.Equal(16, abstractionLimitsResult.LabelStartLineNumber);
+        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
-        Assert.Equal(4, abstractionLimitsResult.SubResults.Count);
-        Assert.Equal(16, abstractionLimitsResult.LabelStartLineNumber);
+        Assert.Equal(3, abstractionLimitsResult.SubResults.Count);
+        Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
-        Assert.Equal(5, abstractionLimitsSection1.Text!.Count);
+        Assert.Equal("6.1", abstractionLimitsSection1.MatchedLabelTextFirstLine); // TODO have a look at why it doesnt find the long label
+        Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
         Assert.NotNull(abstractionLimitsSection1.SubResults);
         Assert.Single(abstractionLimitsSection1.SubResults);
         var section1Sub1 = abstractionLimitsSection1.SubResults[0];
-        Assert.Equal(8, section1Sub1.SubResults.Count);
+        Assert.Equal(9, section1Sub1.SubResults.Count);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
+        Assert.Equal("6.2", abstractionLimitsSection2.MatchedLabelTextFirstLine);
         Assert.Equal(4, abstractionLimitsSection2.Text!.Count);
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -3847,6 +3849,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(9, section2Sub1.SubResults.Count);
         
         var abstractionLimitsSection3 = abstractionLimitsResult.SubResults[2];
+        Assert.Equal("6.3", abstractionLimitsSection3.MatchedLabelTextFirstLine);
         Assert.Equal(7, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);

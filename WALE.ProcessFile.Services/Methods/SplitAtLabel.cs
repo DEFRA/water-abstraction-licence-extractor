@@ -13,6 +13,11 @@ public static class SplitAtLabel
     
     public static async Task<List<LabelGroupResult>> FunctionAsync(FunctionInputModel request)
     {
+        if (request.label.Name == "AbstractionLimitPointSub")
+        {
+            
+        }
+        
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
         

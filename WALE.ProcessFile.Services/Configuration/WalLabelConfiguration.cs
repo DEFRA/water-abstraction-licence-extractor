@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
@@ -1699,7 +1700,8 @@ public static partial class WalLabelConfiguration
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD(S)") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIODS") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD") { IfMultiplePreferLongest = true },                    
-                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED") { IfMultiplePreferLongest = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE") { IfMultiplePreferLongest = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING") { IfMultiplePreferLongest = true },                   
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of Water Authorised to be Abstracted During a Period or Periods Specified"),                    
@@ -1722,7 +1724,6 @@ public static partial class WalLabelConfiguration
                     new("MEANS TO BE USED FOR MEASURING"),
                     new("PERIOD(s) DURING WHICH WATER IS AUTHORIZED TO BE USED"),
                     new("Means of measurement or assessment"),
-                    //new("Schedule of conditions[END_OF_LINE]") { ColumnMustStartWith = true },
                     new("8. MEANS OF ASSESSMENT OF WATER ABSTRACTED"),
                     //new("5. ") { LineMustStartWith = true },
                     new("CONDITIONS[END_OF_LINE]") { LineMustStartWith = true},
@@ -1757,6 +1758,8 @@ public static partial class WalLabelConfiguration
                     {
                         Name = "AbstractionLimitPoint",
                         TextStart = [
+                            new("6.10") { LineMustStartWith = true },
+                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
                             new("6.1") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
@@ -1766,8 +1769,6 @@ public static partial class WalLabelConfiguration
                             new("6.7") { LineMustStartWith = true },
                             new("6.8") { LineMustStartWith = true },
                             new("6.9") { LineMustStartWith = true },
-                            new("6.10") { LineMustStartWith = true },
-                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
                             new("From borehole (1)") { LineMustStartWith = true }, // Specificity matters here else you can start and being on same line (e.g. between text starts 'From borehole' and ends straight away with '(1)')
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
@@ -1807,7 +1808,10 @@ public static partial class WalLabelConfiguration
                             new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIODS"),
                             new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED PERIOD"),
                             new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE SPECIFIED"),
-                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED")
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE"),
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING"),
+                            new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED"),
+                            new("SPECIFIED PERIOD") // TODO going to have to specify this starts and finishes a line
 
                         ],
                         RemoveStartOfBlockSectionsWhenMultiple = false,
@@ -2028,7 +2032,7 @@ public static partial class WalLabelConfiguration
                         ],
                         TextEnd =
                         [
-                            new("[END_OF_LINE]")
+                            new(PositionConstants.EndOfLineMarker)
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -2183,7 +2187,7 @@ public static partial class WalLabelConfiguration
                         ],
                         TextEnd =
                         [
-                            new("[END_OF_LINE]")
+                            new(PositionConstants.EndOfLineMarker)
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",

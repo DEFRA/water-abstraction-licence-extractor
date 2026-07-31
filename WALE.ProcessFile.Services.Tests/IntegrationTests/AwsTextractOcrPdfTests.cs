@@ -133,11 +133,11 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
 
         Assert.NotNull(abstractionLimitsResult.SubResults);
         Assert.Single(abstractionLimitsResult.SubResults);
-        Assert.Equal(16, abstractionLimitsResult.LabelStartLineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
 
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(8, abstractionLimitsSection1.Text!.Count);

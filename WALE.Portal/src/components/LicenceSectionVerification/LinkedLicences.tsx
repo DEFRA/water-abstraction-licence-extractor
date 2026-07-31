@@ -3,12 +3,15 @@ import {
     type Licence,
     LinkedLicence,
     InformationDirection,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    ContainedInInformation,
+    InformationSource
 } from "../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo";
+import {hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -77,7 +80,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
                     if (!scrapedView) {
                         const currentOutgoingLinkedLicences = (outputListDataItem?.linkedLicences || [])
-                            .filter(ll => ll.containedIn?.some(c => c.direction === InformationDirection.Outgoing))
+                            .filter(ll => hasAnyOutgoingSections(ll.containedIn))
                             .map(ll => {
                                 const licence = LinkedLicence.fromJS(ll);
                                 licence.containedIn = (licence.containedIn || [])
@@ -103,7 +106,15 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             const newLicence = new LinkedLicence({
                 licenceNumber: '',
                 permitNumber: '',
-                containedIn: []
+                containedIn: [
+                    new ContainedInInformation({
+                        source: InformationSource.Document,
+                        direction: InformationDirection.Outgoing,
+                        sectionName: '',
+                        linkReason: '',
+                        isBecauseOfAggregate: false
+                    })
+                ]
             });
             const newList = [...linkedLicences, newLicence];
             setLinkedLicences(newList);

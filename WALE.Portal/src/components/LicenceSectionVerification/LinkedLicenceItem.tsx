@@ -8,6 +8,7 @@ import {
 } from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
 import NaldStatusTag from "../NaldStatusTag.tsx";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -295,14 +296,15 @@ export const LinkedLicenceItem = ({
                                             {!scrapedView && (
                                                 <button
                                                     onClick={() => handleRemoveSection(idx)}
+                                                    disabled={hasOnlyOneOutgoingSection(linkedLicence.containedIn)}
                                                     style={{
                                                         padding: '4px 8px',
                                                         fontSize: '0.75rem',
-                                                        backgroundColor: '#ff7875',
-                                                        color: 'white',
-                                                        border: 'none',
+                                                        backgroundColor: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? '#f5f5f5' : '#ff7875',
+                                                        color: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? 'rgba(0, 0, 0, 0.25)' : 'white',
+                                                        border: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? '1px solid #d9d9d9' : 'none',
                                                         borderRadius: '4px',
-                                                        cursor: 'pointer'
+                                                        cursor: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? 'not-allowed' : 'pointer'
                                                     }}
                                                 >
                                                     Remove Section
@@ -357,11 +359,11 @@ export const LinkedLicenceItem = ({
                     status={linkedLicence.naldStatus}/></p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
             </div>
-            {linkedLicence.containedIn && linkedLicence.containedIn.filter(s => s.direction === InformationDirection.Outgoing).length > 0 && (
+            {hasAnyOutgoingSections(linkedLicence.containedIn) && (
                 <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
                     <strong style={{display: 'block', marginBottom: '8px'}}>Contained In:</strong>
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
-                        {linkedLicence.containedIn.map((section, idx) => {
+                        {linkedLicence.containedIn!.map((section, idx) => {
                             if (section.direction !== InformationDirection.Outgoing) {
                                 return null;
                             }

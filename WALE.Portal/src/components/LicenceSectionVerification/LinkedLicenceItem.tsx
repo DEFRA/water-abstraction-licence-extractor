@@ -20,6 +20,8 @@ interface LinkedLicenceItemProps {
     onVerify?: () => void;
     onReject?: () => void;
     onOverride?: () => void;
+    onRequestBusinessReview?: () => void;
+    onCompleteBusinessReview?: () => void;
     outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
@@ -35,6 +37,8 @@ export const LinkedLicenceItem = ({
                                       onVerify,
                                       onReject,
                                       onOverride,
+                                      onRequestBusinessReview,
+                                      onCompleteBusinessReview,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
@@ -410,69 +414,118 @@ export const LinkedLicenceItem = ({
             {!scrapedView && (onVerify || onReject || onOverride) && (
                 <div style={{
                     display: 'flex',
-                    gap: '8px',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
                     marginTop: '16px',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center'
+                    gap: '16px'
                 }}>
-                    {(() => {
-                        const licenceNumber = linkedLicence.licenceNumber;
-                        if (!licenceNumber || isEditing) return null;
+                    <div style={{ flex: 1 }}>
+                        {(() => {
+                            const licenceNumber = linkedLicence.licenceNumber;
+                            if (!licenceNumber || isEditing) return null;
 
-                        const latestVerification = (history || [])
-                            .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber)
-                            .sort((a, b) => {
-                                const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
-                                const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
-                                return dateB - dateA;
-                            })[0];
+                            const latestVerification = (history || [])
+                                .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber)
+                                .sort((a, b) => {
+                                    const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+                                    const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+                                    return dateB - dateA;
+                                })[0];
 
-                        if (!latestVerification) return null;
+                            if (!latestVerification) return null;
 
-                        return <LicenceSectionVerificationInfo verification={latestVerification}/>;
-                    })()}
-                    <button
-                        onClick={onVerify}
-                        style={{
-                            padding: '4px 12px',
-                            backgroundColor: '#52c41a',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        Confirm
-                    </button>
-                    <button
-                        onClick={onReject}
-                        style={{
-                            padding: '4px 12px',
-                            backgroundColor: '#ff4d4f',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        Remove
-                    </button>
-                    <button
-                        onClick={onOverride}
-                        style={{
-                            padding: '4px 12px',
-                            backgroundColor: '#1890ff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        Edit
-                    </button>
+                            return <LicenceSectionVerificationInfo verification={latestVerification}/>;
+                        })()}
+                    </div>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        alignItems: 'flex-end'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center'
+                        }}>
+                            <button
+                                onClick={onVerify}
+                                style={{
+                                    padding: '4px 12px',
+                                    backgroundColor: '#52c41a',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                onClick={onReject}
+                                style={{
+                                    padding: '4px 12px',
+                                    backgroundColor: '#ff4d4f',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Remove
+                            </button>
+                            <button
+                                onClick={onOverride}
+                                style={{
+                                    padding: '4px 12px',
+                                    backgroundColor: '#1890ff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Edit
+                            </button>
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center'
+                        }}>
+                            <button
+                                onClick={onRequestBusinessReview}
+                                style={{
+                                    padding: '4px 12px',
+                                    backgroundColor: 'darkorange',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Request Business Review
+                            </button>
+                            <button
+                                onClick={onCompleteBusinessReview}
+                                style={{
+                                    padding: '4px 12px',
+                                    backgroundColor: 'purple',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                Complete Business Review
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

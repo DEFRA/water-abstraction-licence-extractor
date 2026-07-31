@@ -200,6 +200,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             onJumpToPage={onJumpToPage}
                             onVerify={() => onItemVerificationRequested?.('Confirm', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                             onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                            onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                            onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                             onOverride={() => {
                                 if (editingIndex === index) {
                                     setIsWaitingForVerification(true);

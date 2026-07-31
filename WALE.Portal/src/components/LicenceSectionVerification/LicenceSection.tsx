@@ -25,7 +25,7 @@ export interface ILicenceSectionBody {
 
 export interface LicenceSectionBodyProps {
     onDataChanged?: (data: any) => void;
-    onItemVerificationRequested?: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone', itemId?: string) => void;
+    onItemVerificationRequested?: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => void;
     onVerificationCancelled?: () => void;
     outputListDataItem?: OutputListDataItem;
 }
@@ -59,15 +59,31 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
         setShowVerificationPrompt(true);
     };
 
+    const getVerificationActionText = (type: string | null) => {
+        switch (type) {
+            case 'Edit':
+                return 'save changes for';
+            case 'Added':
+                return 'add';
+            case 'RequestBusinessReview':
+                return 'request a business review of';
+            case 'CompleteBusinessReview':
+                return 'complete a business review of';
+            default:
+                return type?.toLowerCase();
+        }
+    };
+
     const confirmVerification = async () => {
         if (!pendingVerificationType) return;
         
         const isConfirmNone = pendingVerificationType === 'ConfirmNone';
+        const isBusinessReview = pendingVerificationType === 'RequestBusinessReview' || pendingVerificationType === 'CompleteBusinessReview';
         
         if (bodyRef.current) {
-            const data = isConfirmNone ? undefined : bodyRef.current.getData(pendingVerificationItemId);
-            const scrapedData = isConfirmNone ? undefined : bodyRef.current.getScrapedData(pendingVerificationItemId);
-            const snapshotData = isConfirmNone ? undefined : bodyRef.current.getSnapshotData(pendingVerificationItemId);
+            const data = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getData(pendingVerificationItemId);
+            const scrapedData = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getScrapedData(pendingVerificationItemId);
+            const snapshotData = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getSnapshotData(pendingVerificationItemId);
             
             // Map the pending verification type to the required verificationType string
             let verificationType: string;
@@ -97,8 +113,8 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     processRunId: processRunId,
                     licenceSectionName: title,
                     licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
-                    licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone) ? undefined : JSON.stringify(snapshotData),
-                    licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone) ? JSON.stringify(data) : undefined,
+                    licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
+                    licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
                     verificationType: verificationType,
                     licenceSectionItemId: pendingVerificationItemId,
                     notes: verificationNotes
@@ -145,7 +161,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     {cloneElement(children, { 
                         ref: bodyRef,
                         key: resetKey,
-                        onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone', itemId?: string) => handleVerification(type, itemId),
+                        onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => handleVerification(type, itemId),
                         onVerificationCancelled: () => {
                             setPendingVerificationType(null);
                             setPendingVerificationItemId(undefined);
@@ -182,7 +198,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                                 `Are you sure you want to confirm there are no ${title.toLowerCase()} for this licence?`
                             ) : (
                                 <>
-                                    Are you sure you want to {pendingVerificationType === 'Edit' ? 'save changes for' : pendingVerificationType === 'Added' ? 'add' : pendingVerificationType?.toLowerCase()} 
+                                    Are you sure you want to {getVerificationActionText(pendingVerificationType)} 
                                     {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
                                 </>
                             )}

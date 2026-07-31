@@ -66,9 +66,27 @@ public static class TextToFindIsBetweenLabels
              && relevantLineText.Contains(labelText.Text, StringComparison.OrdinalIgnoreCase))
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
                     && relevantLineText.StartsWith(labelText.Text, StringComparison.OrdinalIgnoreCase)));
+
+        var textEnd = request.label.TextEnd!.ToList();
+        
+        if (request.label.IncludeStartLabelText
+            && !labelLineAlreadyIncluded
+            && beforeTextContainsLabel != true)
+        {
+            var labelText1 = request.textBeforeAtAndAfterLabel?
+                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
+                .ColumnsText![0];
+
+            if (!string.IsNullOrEmpty(labelText1) && labelText1 != "[START_OF_BLOCK]")
+            {
+                // TODO, needs to be cleverer but basically do the below
+                relevantLineText = $"{labelText1}{relevantLineText}";
+                textEnd = textEnd.Where(te => te.Text != labelText1).ToList();
+            }
+        }
         
         var betweenText = GetTextBetween(
-            request.label.TextEnd!,
+            textEnd,
             relevantLineText,
             linesToUse,
             request.lineNumber,
@@ -78,95 +96,18 @@ public static class TextToFindIsBetweenLabels
             out var foundEndTag,
             out var matchedEndText);
         
-        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
-        {
-            
-        }
-        
         if (betweenText == null)
         {
             return [];
         }
         
-        // Add label text if asked for
-        if (request.label.IncludeStartLabelText
-            && betweenText.Count >= 1
-            && !labelLineAlreadyIncluded
-            && beforeTextContainsLabel != true)
+        if (request.label.IncludeEndLabelText)
         {
-            var labelText = request.textBeforeAtAndAfterLabel?
-                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
-                .ColumnsText![0];
+            var endText = matchedEndText?.matchedEndText.Text;
+            var wordsToAdd = DocumentLineColumn.TextToWords(endText!, null);
 
-            if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
-            {
-                var lineNumberOfLabelText = request.line?.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase) == true
-                    ? request.line.LineNumber
-                    : betweenText[0].LineNumber;
-                
-                var pageNumberOfLabelText = request.line?.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase) == true
-                    ? request.line.PageNumber
-                    : betweenText[0].PageNumber;
-                
-                var firstBetweenLine = betweenText[0];
-                var firstColumn = firstBetweenLine.Columns.Count > 0 ? firstBetweenLine.Columns[0] : null;
-                var firstColumnText = firstColumn != null ?
-                    FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
-                var text = labelText;
-
-                var words = DocumentLineColumn.TextToWords(labelText, null);
-                
-                if (lineNumberOfLabelText == betweenText[0].LineNumber)
-                {
-                    if (!string.IsNullOrEmpty(firstColumnText))
-                    {
-                        text += $" {firstColumnText}";
-                        words.AddRange(firstBetweenLine.Columns[0].Words);
-                    }
-
-                    if (request.label.IncludeEndLabelText)
-                    {
-                        var endText = matchedEndText?.matchedEndText.Text;
-
-                        text += $" {endText}";
-                        words.Add(new(
-                            endText!,
-                            null,
-                            DocumentLineWordCoordinates.NotKnown(),
-                            null));
-                    }
-
-                    if (betweenText[0].Columns.Count == 0)
-                    {
-                        betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
-                    }
-                    else
-                    {
-                        var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
-                        betweenText[0].Columns[0] = new DocumentLineColumn(textWords);
-                    }
-                }
-                else
-                {
-                    betweenText.Insert(0, new DocumentLine
-                    {
-                        Columns =
-                        [
-                            new DocumentLineColumn
-                            {
-                                Words = words
-                            }
-                        ],
-                        LineNumber = lineNumberOfLabelText,
-                        PageNumber = pageNumberOfLabelText
-                    });
-                }
-            }
-        }
-
-        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
-        {
-            
+            var existingWords = betweenText.LastOrDefault()?.Columns.LastOrDefault()?.Words!;
+            existingWords.AddRange(wordsToAdd);
         }
         
         if (request.label.MustContain?.Count > 0)

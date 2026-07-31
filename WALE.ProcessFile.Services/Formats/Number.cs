@@ -38,12 +38,18 @@ public static class Number
 
             foreach (var word in line!.Text.Split(PositionConstants.SpaceChar))
             {
-                var wordWithoutBrackers = word
+                var wordWithoutBrackets = word
                     .Replace("(", string.Empty)
                     .Replace(")", string.Empty)
-                    .Replace("*", string.Empty);                    
+                    .Replace("*", string.Empty);
+
+                var wordWithoutTrailingPeriod = wordWithoutBrackets;
+                if (wordWithoutTrailingPeriod.EndsWith('.'))
+                {
+                    wordWithoutTrailingPeriod = wordWithoutTrailingPeriod[..^1];
+                }
                 
-                if (!double.TryParse(wordWithoutBrackers, out var numberLineDbl))
+                if (!double.TryParse(wordWithoutTrailingPeriod, out var numberLineDbl))
                 {
                     continue;
                 }

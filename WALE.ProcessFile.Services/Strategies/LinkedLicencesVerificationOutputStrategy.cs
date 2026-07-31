@@ -172,8 +172,9 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
     {
-        // Clear the review item as soon as we have any other later verification
-        if (verification.LicenceSectionItemId != Review)
+        // Clear the review item as soon as we have any other later manual verification
+        if (verification.LicenceSectionItemId != Review &&
+            verification.VerificationType is not ("AutoWarn" or "AutoFail" or "AutoConfirm"))
         {
             var existingReviewSummary =
                 sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == Review);

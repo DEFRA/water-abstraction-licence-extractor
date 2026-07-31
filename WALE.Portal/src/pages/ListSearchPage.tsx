@@ -18,8 +18,9 @@ import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
+import RefreshLicenceListData from "../components/RefreshLicenceListData";
 
-function ListPage() {
+function ListSearchPage() {
     const [searchParams] = useSearchParams();
     const [pageNumber, setPageNumber] = useState(1);
     const [query, setQuery] = useState<ProcessRunQuery>({
@@ -37,10 +38,18 @@ function ListPage() {
         ShortLicenceSetId: '',
         linkedLicencesType: '',
         verificationType: undefined,
-        sortAscending: undefined,
-        sortField: ''
+        sortField: '',
+        sortAscending: undefined
     });
     const processRunId = searchParams.get('processRunId');
+    const parsedProcessRunId = Number(processRunId);
+
+    const processRunIdNumber =
+        processRunId !== null &&
+        Number.isInteger(parsedProcessRunId)
+            ? parsedProcessRunId
+            : 0;
+    
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -102,7 +111,7 @@ function ListPage() {
             
             setLoading(true);
             
-            const listDataItems = await waleApiClient.getProcessRun(
+            const listDataItems = await waleApiClient.getProcessRunList(
                 parseInt(processRunId ?? '0'),
                 currentQuery.searchTerm,
                 '',
@@ -238,8 +247,9 @@ function ListPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
-
+                    <RefreshLicenceListData processRunId={processRunIdNumber} />
                     <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
+                   
                         <Paging
                             pageNumber={pageNumber}
                             totalPages={totalPages}
@@ -335,4 +345,4 @@ function ListPage() {
         </div>);
 }
 
-export default ListPage;
+export default ListSearchPage;

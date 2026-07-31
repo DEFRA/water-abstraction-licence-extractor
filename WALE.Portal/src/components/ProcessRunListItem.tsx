@@ -15,6 +15,13 @@ function ProcessRunListItem({run}: ProcessRunListItemProps) {
                 {run.processRunId} - {run.startDateTimeUtc?.toLocaleString()}
             </Link>
              &nbsp;- {run.description} ({run.numberOfFiles} files)
+            &nbsp;
+            <Link to={{
+                pathname: '/listSearch',
+                search: `?processRunId=${run.processRunId}`,
+            }}>
+               New List Page
+            </Link>
         </li>
     );
 }

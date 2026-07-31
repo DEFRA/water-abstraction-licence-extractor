@@ -6,5 +6,6 @@ public enum NaldLicenceStatus
     Lapsed,
     Expired,
     Revoked,
-    Live
+    Live,
+    Curr
 }

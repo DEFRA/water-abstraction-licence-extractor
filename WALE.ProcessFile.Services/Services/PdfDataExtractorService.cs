@@ -1568,11 +1568,6 @@ public class PdfDataExtractorService(
                         }
                     }
                     
-                    if (label.Name == "PerDayUnits" && partialLine.LineNumber >= 8 && partialLine.LineNumber <= 12)
-                    {
-            
-                    }
-
                     var over2Lines = labelEndPageNumber > labelStartPageNumber
                         || (labelEndPageNumber == labelStartPageNumber && labelEndLineNumber > labelStartLineNumber);
                     
@@ -1653,11 +1648,6 @@ public class PdfDataExtractorService(
                             request,
                             partialLine!,
                             singleValueWanted);
-
-                        if (label.Name == "AbstractionLimitPointSub")
-                        {
-                        
-                        }
                         
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {

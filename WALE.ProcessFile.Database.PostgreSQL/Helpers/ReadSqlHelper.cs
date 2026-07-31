@@ -116,44 +116,42 @@ public static class ReadSqlHelper
         {
             sql.AppendLine(
                 """
-                  AND EXISTS (
-                      SELECT 1
-                      FROM licence_list_item_linked_licence linked
-                      INNER JOIN licence_list_item_link_location location
-                          ON location.process_run_id =
-                             linked.process_run_id
-                         AND location.licence_list_item_id =
-                             linked.licence_list_item_id
-                         AND location.linked_licence_id =
-                             linked.linked_licence_id
-                      WHERE linked.process_run_id =
-                            licence_list_item.process_run_id
-                        AND linked.licence_list_item_id =
-                            licence_list_item.licence_list_item_id
-                        AND location.direction = 'Incoming'
-                  )
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    INNER JOIN licence_list_item_link_location link_location
+                        ON link_location.linked_licence_id =
+                           linked_licence.linked_licence_id
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                      AND link_location.direction = 'Incoming'
+                )
                 """);
 
             return;
         }
 
-        sql.AppendLine(
-            """
-              AND EXISTS (
-                  SELECT 1
-                  FROM licence_list_item_linked_licence linked
-                  WHERE linked.process_run_id =
-                        licence_list_item.process_run_id
-                    AND linked.licence_list_item_id =
-                        licence_list_item.licence_list_item_id
-                    AND linked.linked_licence_type =
-                        @LinkedLicencesType
-              )
-            """);
-
         parameters.Add(
             "LinkedLicencesType",
             linkedLicencesType.Trim());
+
+        sql.AppendLine(
+            """
+            AND EXISTS
+            (
+                SELECT 1
+                FROM licence_list_item_linked_licence linked_licence
+                INNER JOIN licence_list_item_link_location link_location
+                    ON link_location.linked_licence_id =
+                       linked_licence.linked_licence_id
+                WHERE linked_licence.licence_list_item_id =
+                      licence_list_item.licence_list_item_id
+                  AND link_location.direction = 'Outgoing'
+                  AND link_location.section_name =
+                      @LinkedLicencesType
+            )
+            """);
     }
     
     public static void AddLicenceSetFilter(
@@ -201,16 +199,15 @@ public static class ReadSqlHelper
                   SELECT 1
                   FROM licence_list_item_verification_section section
                   INNER JOIN licence_list_item_verification_item item
-                      ON item.process_run_id =
-                         section.process_run_id
-                     AND item.verification_section_id =
+                      ON item.verification_section_id =
                          section.verification_section_id
-                  WHERE section.process_run_id =
-                        licence_list_item.process_run_id
-                    AND section.licence_list_item_id =
+                  WHERE section.licence_list_item_id =
                         licence_list_item.licence_list_item_id
-                    AND item.verification_type =
-                        @VerificationType
+                  AND EXISTS (
+                SELECT 1
+                FROM unnest(item.verification_types) AS verification_type
+                WHERE lower(verification_type) = lower(@VerificationType)
+            )
               )
             """);
 

@@ -155,19 +155,34 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(abstractionLimitsSection.SubResults);
         
         abstractionLimitsSection   = abstractionLimitsSection.SubResults[0];
-        Assert.Equal(11, abstractionLimitsSection.SubResults.Count);
+        Assert.Equal(12, abstractionLimitsSection.SubResults.Count);
         
         var perDayUnitsAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerDayUnits")
             .ToList();
 
-        Assert.Equal(3, perDayUnitsAll.Count);
+        Assert.Equal(4, perDayUnitsAll.Count);
+        Assert.Equal("thousand cubic metres", perDayUnitsAll[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(8, perDayUnitsAll[0].LabelStartLineNumber);
+        Assert.Equal("gallons", perDayUnitsAll[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(9, perDayUnitsAll[1].LabelStartLineNumber);
+        // units on row 11 is missing
+        Assert.Equal("cubic metres", perDayUnitsAll[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(11, perDayUnitsAll[2].LabelStartLineNumber);
         
         var perDayValuesAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerDayValue")
             .ToList();
 
         Assert.Equal(4, perDayValuesAll.Count);
+        Assert.Equal("1", perDayValuesAll[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(8, perDayValuesAll[0].LabelStartLineNumber);
+        Assert.Equal("220000", perDayValuesAll[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(9, perDayValuesAll[1].LabelStartLineNumber);
+        Assert.Equal("384", perDayValuesAll[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(11, perDayValuesAll[2].LabelStartLineNumber);
+        Assert.Equal("84500", perDayValuesAll[3].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(12, perDayValuesAll[3].LabelStartLineNumber);
         
         var perHourUnitsAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerHourUnits")
@@ -192,7 +207,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Units);
         Assert.Equal(48, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits[0].Value);

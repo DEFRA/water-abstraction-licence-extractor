@@ -1568,7 +1568,7 @@ public class PdfDataExtractorService(
                         }
                     }
                     
-                    if (label.Name == "DocumentAbstractionLimitsSection")
+                    if (label.Name == "PerDayUnits" && partialLine.LineNumber >= 8 && partialLine.LineNumber <= 12)
                     {
             
                     }
@@ -2118,23 +2118,26 @@ public class PdfDataExtractorService(
             {
                 
             }
-            
-            // De-dupe exact text matches
-            group = group
-                .GroupBy(g =>
-                {
-                    if (g.Text == null)
-                    {
-                        return string.Empty;
-                    }
 
-                    var text = string.Join(string.Empty, g.Text!.Select(t => t.Text));
-                    return text;
-                })
-                .Select(g => g.Last())
-                .ToList();
-            
             var groupLabel = group.First().MatchedLabel!;
+            
+            if (groupLabel.DeDuplicateResults)
+            {
+                // De-dupe exact text matches
+                group = group
+                    .GroupBy(g =>
+                    {
+                        if (g.Text == null)
+                        {
+                            return string.Empty;
+                        }
+
+                        var text = string.Join(string.Empty, g.Text!.Select(t => t.Text));
+                        return text;
+                    })
+                    .Select(g => g.Last())
+                    .ToList();
+            }
             
             if (!groupLabel.RemoveStartOfBlockSectionsWhenMultiple)
             {

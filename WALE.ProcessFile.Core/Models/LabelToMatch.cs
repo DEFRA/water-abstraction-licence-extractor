@@ -105,6 +105,8 @@ public class LabelToMatch
     
     public bool RemoveStartOfBlockSectionsWhenMultiple { get; set; } = true;
 
+    public bool DeDuplicateResults { get; set; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -145,7 +147,8 @@ public class LabelToMatch
             OcrConfidenceMinusNPerLine = OcrConfidenceMinusNPerLine,
             ConfidenceType = ConfidenceType,
             NoOcrConfidence = NoOcrConfidence,
-            RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple
+            RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple,
+            DeDuplicateResults = DeDuplicateResults
         };
     }    
 }

@@ -1815,6 +1815,7 @@ public static partial class WalLabelConfiguration
 
                         ],
                         RemoveStartOfBlockSectionsWhenMultiple = false,
+                        DeDuplicateResults = true,
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",

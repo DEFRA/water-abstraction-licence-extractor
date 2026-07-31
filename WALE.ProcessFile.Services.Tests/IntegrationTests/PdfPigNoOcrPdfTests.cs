@@ -1390,7 +1390,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection9.SubResults);
 
         var section9Sub1 = abstractionLimitsSection9.SubResults[0];
-        Assert.Equal(7, section9Sub1.SubResults.Count);
+        Assert.Equal(9, section9Sub1.SubResults.Count);
         
         perHour = section9Sub1.SubResults
             .FirstOrDefault(subResult =>

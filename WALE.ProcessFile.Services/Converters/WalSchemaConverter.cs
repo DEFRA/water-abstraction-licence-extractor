@@ -2321,11 +2321,6 @@ public static class WalSchemaConverter
         }
 
         var linkReason = GetLinkReason([abstractionLimitPointSub], " "); // Text to find being a space is a bit of a hack
-
-        if (abstractionLimitPointSub.LabelStartPageNumber == -1 && abstractionLimitPointSub.LabelStartLineNumber == 14)
-        {
-            
-        }
         
         var containedIn = new ContainedInInformation[]
         {

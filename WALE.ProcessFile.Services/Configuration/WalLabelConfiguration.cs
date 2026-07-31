@@ -1982,7 +1982,7 @@ public static partial class WalLabelConfiguration
                             new("for purpose"),
                             new("purpose")
                         ],
-                        MustContain = 
+                        MustContain =
                         [
                             "4.1",
                             "4.2",

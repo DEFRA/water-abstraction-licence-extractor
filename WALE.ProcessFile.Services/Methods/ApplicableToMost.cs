@@ -14,11 +14,6 @@ public static class ApplicableToMost
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
 
-        if (request.label.Name == "PeriodPeriodNumber")
-        {
-            
-        }
-        
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.SplitAtLabel
             or LabelPosition.RelatedCategoryPosition)

@@ -24,11 +24,6 @@ public static class TextToFindIsBetweenLabels
         }
 
         var nextLine = request.nextLines?.FirstOrDefault();
-
-        if (request.label.Name == "AbstractionLimitPoint")
-        {
-            
-        }
         
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
@@ -102,11 +97,6 @@ public static class TextToFindIsBetweenLabels
             request.label.DoNotTrimLines,
             out var foundEndTag,
             out var matchedEndText);
-
-        if (request.label.Name == "DocumentAbstractionLimitsSection")
-        {
-            
-        }
         
         if (betweenText == null)
         {
@@ -121,7 +111,7 @@ public static class TextToFindIsBetweenLabels
             var existingWords = betweenText.LastOrDefault()?.Columns.LastOrDefault()?.Words!;
             existingWords.AddRange(wordsToAdd);
         }
-        
+
         if (request.label.MustContain?.Count > 0)
         {
             var containsText = request.label.MustContain;
@@ -162,13 +152,7 @@ public static class TextToFindIsBetweenLabels
         betweenText = betweenText
             .Where(betweenLine => !DataHelper.IsCorruptedLine(betweenLine.Text, request.isOcr))
             .ToList();
-
-        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
-        {
-            
-        }
         
-        var origBetweenText = betweenText;
         betweenText = DataHelper.RemoveExcludesAndNotContains(
             request.label,
             betweenText,
@@ -176,11 +160,6 @@ public static class TextToFindIsBetweenLabels
             false,
             out var isForbidden,
             out var removedLines);
-        
-        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
-        {
-            
-        }
         
         if (isForbidden && betweenText.Count == 0)
         {
@@ -218,11 +197,6 @@ public static class TextToFindIsBetweenLabels
         }
 
         FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-        
-        if (betweenText?.Any(bt => bt.PageNumber == -1) == true)
-        {
-            
-        }
         
         var returnList = await FilterIntoFormatAsync(request, labelGroupResult, betweenText, false);
         return await ProcessSubLabelsAsync(request, returnList);

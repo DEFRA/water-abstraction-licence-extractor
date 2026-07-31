@@ -1390,7 +1390,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(abstractionLimitsSection9.SubResults);
 
         var section9Sub1 = abstractionLimitsSection9.SubResults[0];
-//        Assert.Equal(7, section9Sub1.SubResults.Count);
+        Assert.Equal(7, section9Sub1.SubResults.Count);
         
         perHour = section9Sub1.SubResults
             .FirstOrDefault(subResult =>
@@ -3833,7 +3833,7 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
-        Assert.Equal("6.1", abstractionLimitsSection1.MatchedLabelTextFirstLine); // TODO have a look at why it doesnt find the long label
+        Assert.Equal("6.1", abstractionLimitsSection1.MatchedLabelTextFirstLine);
         Assert.Equal(4, abstractionLimitsSection1.Text!.Count);
         Assert.NotNull(abstractionLimitsSection1.SubResults);
         Assert.Single(abstractionLimitsSection1.SubResults);

@@ -69,3 +69,13 @@ export const getVerificationTypeInitials = (type: string): string => {
             return '';
     }
 };
+
+export const hasOnlyOneOutgoingSection = (containedIn?: any[]): boolean => {
+    if (!containedIn) return true;
+    return containedIn.filter(s => s.direction === 'Outgoing').length <= 1;
+};
+
+export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
+    if (!containedIn) return false;
+    return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
+};

@@ -11,6 +11,10 @@ export const getVerificationTypeColor = (type: string): string => {
             return 'darkorange';
         case 'Added':
             return 'blue';
+        case 'RequestBusinessReview':
+            return 'darkorange';
+        case 'CompleteBusinessReview':
+            return 'purple';
         default:
             return 'inherit';
     }
@@ -32,6 +36,10 @@ export const getVerificationTypeBackgroundColor = (type: string): string => {
             return 'darkorange';
         case 'Added':
             return 'inherit';
+        case 'RequestBusinessReview':
+            return 'darkorange';
+        case 'CompleteBusinessReview':
+            return 'purple';
         default:
             return 'inherit';
     }
@@ -53,6 +61,10 @@ export const getVerificationTypeInitials = (type: string): string => {
             return 'AF';
         case 'AutoWarn':
             return 'AW';
+        case 'RequestBusinessReview':
+            return 'RBR';
+        case 'CompleteBusinessReview':
+            return 'CBR';
         default:
             return '';
     }

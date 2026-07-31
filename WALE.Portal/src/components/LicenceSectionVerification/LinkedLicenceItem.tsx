@@ -492,7 +492,7 @@ export const LinkedLicenceItem = ({
                             onClick={onRequestBusinessReview}
                             style={{
                                 padding: '4px 12px',
-                                backgroundColor: '#faad14',
+                                backgroundColor: 'darkorange',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -506,7 +506,7 @@ export const LinkedLicenceItem = ({
                             onClick={onCompleteBusinessReview}
                             style={{
                                 padding: '4px 12px',
-                                backgroundColor: '#722ed1',
+                                backgroundColor: 'purple',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',

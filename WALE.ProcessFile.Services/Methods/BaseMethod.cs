@@ -195,9 +195,18 @@ public static class BaseMethod
         
         return lines
             .Where(line => possibilities
-                .Any(possibility => possibility.LineMustStartWith
-                    ? line.Text.StartsWith(possibility.Text, StringComparison.OrdinalIgnoreCase)
-                    : line.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)))
+                .Any(possibility =>
+                {
+                    var possibilityText = possibility.Text;
+                    var possibilityTextWithSpaceInfront = $" {possibility.Text}";
+
+                    var startWith = line.Text.StartsWith(possibilityText, StringComparison.OrdinalIgnoreCase);
+                    
+                    return possibility.LineMustStartWith
+                        ? line.Text.StartsWith(possibilityText, StringComparison.OrdinalIgnoreCase)
+                        : startWith ||
+                            line.Text.Contains(possibilityTextWithSpaceInfront, StringComparison.OrdinalIgnoreCase);
+                }))
             .Select(line =>
             {
                 var possibility = possibilities

@@ -818,6 +818,11 @@ public static partial class WalLabelConfiguration
                     new("MEAN OF ABSTRACTION"),
                     new("Land(s) on which water is authorised to be used"),
                     new("Quantity(ies) of Water Authorised to be Abstracted"),
+                    new("POINT OF ABSTRACTION[END_OF_COLUMN]")
+                    {
+                        ColumnMustStartWith = true,
+                        IfMultiplePreferLast = true
+                    },
                     new("[END_OF_BLOCK]")
                 ],
                 Remove =

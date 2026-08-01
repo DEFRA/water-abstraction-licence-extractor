@@ -222,11 +222,11 @@ public class CompareOcrPdfTests
         
         // Number of matches
 
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
-        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
+        Assert.Equal(11, resultListTesseractSparseTextOsd.Count);
+        Assert.Equal(11, resultListTesseractAutoOsd.Count);
+        Assert.Equal(14, resultListAwsTextract.Count);
+        Assert.Equal(14, resultListDocumentIntelligence.Count);
+        Assert.Equal(14, resultListAiVision.Count);
         
         // Records
 

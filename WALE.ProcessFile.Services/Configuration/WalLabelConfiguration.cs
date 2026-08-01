@@ -21,6 +21,7 @@ public static partial class WalLabelConfiguration
             (DocumentSectionNames.AbstractionLimits, GetAbstractionLimitsLabels()),
             (DocumentSectionNames.Purposes, GetPurposeLabels()),
             (DocumentSectionNames.Points, GetPointsLabels()),
+            (DocumentSectionNames.SourceOfSupply, GetSourceOfSupplyLabels()),
             ("DateOfIssue", SharedLabels.GetDateOfIssueLabels()),
             ("DateOfOriginalIssue", GetDateOfOriginalIssueLabels()),
             ("DateEffective", GetDateEffectiveLabels()),
@@ -807,10 +808,316 @@ public static partial class WalLabelConfiguration
                     new("Source of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
                     new("Source of supply and place of abstraction") { IfMultiplePreferLast = true },
                     new("Source(s) of supply and authorised place(s) of abstraction") { IfMultiplePreferLast = true },
-                    new("Source of supply[END_OF_COLUMN]") { ColumnMustStartWith = true, IfMultiplePreferLast = true },
-                    new("1. Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true },
                     new("Authorised place(s) of abstraction.[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
+                ],
+                TextEnd =
+                [
+                    new("MEANS OF ABSTRACTION"),
+                    new("MEAN OF ABSTRACTION"),
+                    new("Land(s) on which water is authorised to be used"),
+                    new("Quantity(ies) of Water Authorised to be Abstracted"),
+                    new("POINT OF ABSTRACTION[END_OF_COLUMN]")
+                    {
+                        ColumnMustStartWith = true,
+                        IfMultiplePreferLast = true
+                    },
+                    new("[END_OF_BLOCK]")
+                ],
+                Remove =
+                [
+                    PageNumberPattern,
+                    LicenceNumberInHeaderPattern
+                ],
+                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues, // Only here for 'IfMultiplePreferLast'
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                IncludeWholeLine = true,
+                MinimumSubMatches = 1,
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 100,
+                SubLabels = new List<LabelToMatch>
+                {
+                    new()
+                    {
+                        Name = "PointPurposeGroup",
+                        TextStart = [
+                            new("For Purpose "),
+                            new(string.Empty) { SingleLinePerItem = true },
+                            new("[START_OF_BLOCK]")
+                        ],
+                        TextEnd = [
+                            new("For Purpose ") { InstanceNumber = 2 },
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        Format = "Text",
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                        IncludeWholeLine = true,
+                        PreviousLinesToFetch = 0,
+                        NextLinesToFetch = 100,
+                        Remove = [
+                            new("2. POINT OF ABSTRACTION"),
+                            new("2. POINT(S) OF ABSTRACTION"),
+                            new("2. POINTS OF ABSTRACTION"),
+                            new("1. SOURCE OF SUPPLY"),
+                            new("Source of Supply and authorised Place(s) of abstraction"),
+                            new("SOURCE OF SUPPLY"),
+                            new("Point Reference")
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PurposeGroupName",
+                                Text = [
+                                    new("For Purpose ")
+                                ],
+                                Position = LabelPosition.LabelIsBeforeTextToFind,
+                                Format = "Text",
+                                SubLabels =
+                                [
+                                    new()
+                                    {
+                                        Name = "PurposeGroupSub",
+                                        Text = [new("and ")],
+                                        Position = LabelPosition.SplitAtLabel,
+                                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                    }
+                                ]
+                            },
+                            new()
+                            {
+                                Name = "Point",
+                                TextStart = [
+                                    new("2.1"),
+                                    new("2.2"),
+                                    new("2.3"),
+                                    new("2.4"),
+                                    new("2.5"),
+                                    new("2.6"),
+                                    new("2.7"),
+                                    new("2.8"),
+                                    new("2.9"),
+                                    new("2.10"),
+                                    new("(1)"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
+                                    new ("NZ ") { ColumnMustStartWith = true },
+                                    new ("A[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("B[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("C[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("D[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("E[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("F[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("G[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("H[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("I[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("J[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("K[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("L[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("M[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("N[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("O[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("P[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("Q[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("R[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("S[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("T[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("U[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("V[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("W[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("X[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("Y[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new("[START_OF_BLOCK]")
+                                ],
+                                TextEnd = [
+                                    new("2.2"),
+                                    new("2.3"),
+                                    new("2.4"),
+                                    new("2.5"),
+                                    new("2.6"),
+                                    new("2.7"),
+                                    new("2.8"),
+                                    new("2.9"),
+                                    new("2.10"),
+                                    new("2.11"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
+                                    new ("NZ ") { ColumnMustStartWith = true },
+                                    new ("B[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("C[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("D[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("E[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("F[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("G[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("H[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("I[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("J[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("K[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("L[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("M[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("N[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("O[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("P[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("Q[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("R[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("S[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("T[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("U[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("V[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("W[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("X[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("Y[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new ("Z[END_OF_COLUMN]") { ColumnMustStartWith = true },
+                                    new("[END_OF_BLOCK]")
+                                ],
+                                IgnoreMatchIfContains = [
+                                    "At the following National Grid References as marked on the maps"
+                                ],
+                                Position = LabelPosition.TextToFindIsBetweenLabels,
+                                Format = "Text",
+                                PreviousLinesToFetch = 0,
+                                NextLinesToFetch = 100,
+                                IncludeStartLabelText = true,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel,
+                                SubLabels = new List<LabelToMatch>
+                                {
+                                    new()
+                                    {
+                                        Name = "PointTable",
+                                        Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                        TextStart = [
+                                            new("Location Description Map"),
+                                        ],
+                                        TextEnd = [
+                                            new("[END_OF_BLOCK]")
+                                        ],
+                                        Remove = [
+                                            new("Point Reference")
+                                        ],
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 5
+                                    },
+                                    new()
+                                    {
+                                        Name = "PointPointNumber",
+                                        Possibilities = [
+                                            new("2.1"),
+                                            new("2.2"),
+                                            new("2.3"),
+                                            new("2.4"),
+                                            new("2.5"),
+                                            new("2.6"),
+                                            new("2.7"),
+                                            new("2.8"),
+                                            new("2.9"),
+                                            new("2.10"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("A "),
+                                            new("B "),
+                                            new("C "),
+                                            new("D "),
+                                            new("E "),
+                                            new("F "),
+                                            new("G "),
+                                            new("H ")
+                                        ],
+                                        Position = LabelPosition.ApplicableToMost,
+                                        Format = "Text",
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 0,
+                                        IncludeStartLabelText = true
+                                    },
+                                    new()
+                                    {
+                                        Name = "PurposeLink",
+                                        Text = [
+                                            new("For Purpose ")
+                                        ],
+                                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                                        Format = "Text",
+                                        SubLabels =
+                                        [
+                                            new LabelToMatch
+                                            {
+                                                Name = "PurposeLinkSub",
+                                                Text = [new("and ")],
+                                                Position = LabelPosition.SplitAtLabel,
+                                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                                            }
+                                        ]
+                                    },
+                                    new()
+                                    {
+                                        Name = "PointTextWithoutPurposeAndPoint",
+                                        Remove = [
+                                            new("2.1") { ColumnMustStartWith = true },
+                                            new("2.2") { ColumnMustStartWith = true },
+                                            new("2.3") { ColumnMustStartWith = true },
+                                            new("2.4") { ColumnMustStartWith = true },
+                                            new("2.5") { ColumnMustStartWith = true },
+                                            new("2.6") { ColumnMustStartWith = true },
+                                            new("2.7") { ColumnMustStartWith = true },
+                                            new("2.8") { ColumnMustStartWith = true },
+                                            new("2.9") { ColumnMustStartWith = true },
+                                            new("2.10") { ColumnMustStartWith = true },
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("For Purpose 4.1") { RemoveWholeLine = true },
+                                            new("For Purpose 4.2") { RemoveWholeLine = true },
+                                            new("For Purpose 4.3") { RemoveWholeLine = true },
+                                            new("For Purpose 4.4") { RemoveWholeLine = true },
+                                            new("Map 1"),
+                                            new("Map 2"),
+                                            new("Map 3"),
+                                            new("A ") { ColumnMustStartWith = true },
+                                            new("B ") { ColumnMustStartWith = true },
+                                            new("C ") { ColumnMustStartWith = true },
+                                            new("D ") { ColumnMustStartWith = true },
+                                            new("E ") { ColumnMustStartWith = true },
+                                            new("F ") { ColumnMustStartWith = true },
+                                            new("G ") { ColumnMustStartWith = true },
+                                            new("H ") { ColumnMustStartWith = true },
+                                            new("I ") { ColumnMustStartWith = true },
+                                            new("J ") { ColumnMustStartWith = true },                                            
+                                        ],
+                                        Text = [
+                                            new("marked") // TODO ' marked ' doesn't work, change so it does
+                                        ],
+                                        Position = LabelPosition.SplitAtLabel,
+                                        Format = "Text",
+                                        PreviousLinesToFetch = 100,
+                                        NextLinesToFetch = 10,
+                                        DoNotTrimLines = true
+                                    },
+                                    GetLinkedLicenceAbstractionAndOrPointsLimits()
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ];
+    }
+    
+    private static List<LabelToMatch> GetSourceOfSupplyLabels()
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                Name = "SourceOfSupplyAll",
+                TextStart =
+                [
+                    new("Source of supply[END_OF_COLUMN]") { ColumnMustStartWith = true, IfMultiplePreferLast = true },
+                    new("1. Source of supply[END_OF_COLUMN]") { LineMustStartWith = true, IfMultiplePreferLast = true }
                 ],
                 TextEnd =
                 [

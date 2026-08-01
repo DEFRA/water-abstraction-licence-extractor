@@ -10,12 +10,15 @@ public static class GeneralTestsHelper
 {
     public static List<LabelGroupResult> ExcludeSomeMatches(List<LabelGroupResult> matches)
     {
-        return matches.Where(m =>
-            m.LabelGroupName != "LinkedLicenceNumber"
-            && m.LabelGroupName != "ReasonsForConditions"
-            && m.LabelGroupName != "ScheduleOfConditionsA"
-            && m.LabelGroupName != "ScheduleOfConditionsB").ToList();
-    }
+        return matches
+            .Where(m =>
+                m.LabelGroupName != "LinkedLicenceNumber"
+                && m.LabelGroupName != "SourceOfSupply"
+                && m.LabelGroupName != "ReasonsForConditions"
+                && m.LabelGroupName != "ScheduleOfConditionsA"
+                && m.LabelGroupName != "ScheduleOfConditionsB")
+            .ToList();
+        }
 
     public static ICacheService GetFakeCacheService(
         ICacheService realCacheService,

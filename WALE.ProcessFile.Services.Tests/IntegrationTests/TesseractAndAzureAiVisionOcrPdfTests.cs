@@ -147,7 +147,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(13, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -735,7 +735,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7, 0, 1)]
     [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, 1)]
     [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0, 1)]
-    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 6, 0, 1)]
+    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1575", "14/02/1975", 5, 0, 1)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 5, 0, 1)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "2 3rd day of MAY, 19 66", "23/05/1966", 7, 0, 1)]
     [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, 1)]
@@ -744,7 +744,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     [InlineData("12301067__Application New Licence Issued - [1966] - (01081966).pdf", "1st day of AUGUST , 19 66", "01/08/1966", 6, 0, 1)]
     [InlineData("12302006__Licence Document 10031966.pdf", "day of MARCH, 1966", "01/03/1966", 7, 0, 1)]
     [InlineData("12302044__Non-Application Licence Document [Original Licence] (27.05.1966).PDF", "27th day of MAY 1966", "27/05/1966", 7, 0, 1)]
-    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 6, 0, 1)]
+    [InlineData("12302207__1-23-02-207 5822808.PDF", "29th day of June 1976", "29/06/1976", 5, 0, 1)]
     [InlineData("12303008__Non-Application Licence Document [Original Licence] (11051966).PDF", "11 th day of NAY, 19 66", "11/05/1966", 6, 0, 1)]
     [InlineData("12303075__Non-Application Licence Document [Original Licence] (08111966).PDF", "8th day of NOVEMBER, 19 66", "08/11/1966", 7, 0, 1)]
     [InlineData("12202009__Application New Licence 1-22-02-009 5822403.PDF", "13th day of MARCH, 1967:", "13/03/1967", 7, 0, 1)]

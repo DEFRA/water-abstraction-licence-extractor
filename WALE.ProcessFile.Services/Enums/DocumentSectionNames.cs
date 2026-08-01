@@ -16,7 +16,9 @@ public static class DocumentSectionNames
     
     public static readonly string Records = "Records";
 
-    public static readonly string Points = "Points";    
+    public static readonly string Points = "Points";
+    
+    public static readonly string SourceOfSupply = "SourceOfSupply";
     
     public static readonly string Purposes = "Purposes";
     

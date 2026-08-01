@@ -118,7 +118,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, resultList.Count);
 
         var period = resultList
             .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
@@ -136,8 +136,9 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(purpose);
         Assert.Equal("Spray irrigation", purpose.Text!.First().Text);
         
-        var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        var sourceOfSupply = resultList
+            .FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var abstractionLimitsResult = resultList
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
@@ -252,7 +253,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Better then Azure AI Vision
+        Assert.Equal(6, resultList.Count); // Better then Azure AI Vision
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
@@ -1629,7 +1630,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2, 2);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(6, resultFull.Matches!.Count);
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,

@@ -14,6 +14,8 @@ public class PointOfAbstraction : Point
     
     public TimeCutoff? TimeCutoff { get; set; }
     
+    public ContainedInInformation[]? ContainedIn { get; set; }
+    
     public static PointOfAbstraction Template => new()
     {
         Description = string.Empty,

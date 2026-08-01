@@ -85,11 +85,24 @@ public static class WalSchemaConverter
             matches,
             ref noneSchemaData);
 
+        var sourceOfSupply = GetPoints(
+            "SourceOfSupply",
+            matches,
+            naldDataLine,
+            ref noneSchemaData);
+        
         var points = GetPoints(
+            "Points",
             matches,
             naldDataLine,
             ref noneSchemaData);
 
+        if (points.Length == 0 && sourceOfSupply.Length != 0)
+        {
+            // Use source of supply as points (some older documents do this)
+            points = sourceOfSupply;
+        }
+        
         var purposes = GetPurposes(
             matches,
             naldDataLine,
@@ -330,7 +343,6 @@ public static class WalSchemaConverter
                                     return licenceHistoryStartPageAndLineCalc <= aciPageAndLineCalc
                                            && licenceHistoryEndPageAndLineCalc >= aciPageAndLineCalc;
                                 }
-                                //&& IsPlusOrMinusACoupleOfLines(aci.LineNumber, lhLinkedLicenceCi.LineNumber)
                                 ) == true;
 
                         return onlyInLicenceHistory && LicenceNumberContainsOther(
@@ -670,13 +682,6 @@ public static class WalSchemaConverter
         }
 
         return newLinkedLicences;
-    }
-
-    // This is to workaround an outstanding issue where line numbers are sometimes out by one (it can be removed when that is confirmed fixed)
-    private static bool IsPlusOrMinusACoupleOfLines(int? document1LineNumber, int? document2LineNumber)
-    {
-        return document1LineNumber >= document2LineNumber - 2
-            && document1LineNumber <= document2LineNumber + 2;            
     }
     
     private static string? GetDateFormatConsistent(
@@ -3278,13 +3283,14 @@ public static class WalSchemaConverter
     }
 
     private static PointOfAbstraction[] GetPoints(
+        string sectionName,
         List<LabelGroupResult> matches,
         NaldData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
-        noneSchemaData.Add("NaldPointsData", naldDataLine?.Points ?? []);
+        noneSchemaData.Add($"Nald{sectionName}Data", naldDataLine?.Points ?? []);
         
-        var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, "Points");
+        var pointsResults = DataHelper.GetFirstMatchByLabelGroup(matches, sectionName);
         var returnList = new List<PointOfAbstraction>();
 
         if (pointsResults == null)
@@ -3292,13 +3298,13 @@ public static class WalSchemaConverter
             return returnList.ToArray();
         }
         
-        noneSchemaData.Add("Confidence:Points", pointsResults.Confidence);
+        noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
         var pointPurposeGroupCount = -1;
         
         foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
             noneSchemaData.Add(
-                $"Confidence:Points_PointPurposeGroup_{++pointPurposeGroupCount}",
+                $"Confidence:{sectionName}_PointPurposeGroup_{++pointPurposeGroupCount}",
                 pointPurposeGroup.Confidence);
             
             var purposeGroupName = DataHelper.GetFirstMatchByLabel(
@@ -3327,7 +3333,7 @@ public static class WalSchemaConverter
                 if (pointNumber != null)
                 {
                     noneSchemaData.Add(
-                        $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount++}_PointPointNumber",
+                        $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount++}_PointPointNumber",
                         point.Confidence);
                 }
 
@@ -3373,7 +3379,7 @@ public static class WalSchemaConverter
 
                 if (pointTable != null)
                 {
-                    noneSchemaData.Add($"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable", pointTable.Confidence);
+                    noneSchemaData.Add($"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable", pointTable.Confidence);
                     var tableLines = pointTable.Text!;
 
                     foreach (var tableLine in tableLines)

@@ -9,7 +9,7 @@ public record ContainedInInformation
     public InformationSource Source { get; init; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public InformationDirection Direction { get; init; } = InformationDirection.Outgoing;
+    public InformationDirection? Direction { get; init; }
     
     public string? SectionName { get; init; }
     

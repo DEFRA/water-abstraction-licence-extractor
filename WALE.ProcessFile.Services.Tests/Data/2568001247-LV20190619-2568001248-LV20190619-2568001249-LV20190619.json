@@ -214,6 +214,14 @@
       "points": [
         {
           "gridRef": "SJ 5179 4988",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5179 4988"
         }
@@ -581,6 +589,14 @@
       "points": [
         {
           "gridRef": "SJ 5158 5029",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5158 5029"
         }
@@ -946,6 +962,14 @@
       "points": [
         {
           "gridRef": "SJ 5168 5015",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5168 5015"
         }

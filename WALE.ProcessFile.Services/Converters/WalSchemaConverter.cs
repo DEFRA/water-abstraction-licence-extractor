@@ -1783,6 +1783,7 @@ public static class WalSchemaConverter
                 new ContainedInInformation
                 {
                     Source = InformationSource.Document,
+                    Direction = InformationDirection.Outgoing,
                     SectionName = sectionName,
                     LinkReason = GetLinkReason(
                         [GetParent(section, linkedLicenceNumber)],
@@ -1864,6 +1865,7 @@ public static class WalSchemaConverter
                     new ContainedInInformation
                     {
                         Source = InformationSource.Document,
+                        Direction = InformationDirection.Outgoing,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.LabelStartPageNumber),
                         LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LabelStartLineNumber,
@@ -1945,6 +1947,7 @@ public static class WalSchemaConverter
                     new ContainedInInformation
                     {
                         Source = InformationSource.Document,
+                        Direction = InformationDirection.Outgoing,
                         SectionName = DocumentSectionNames.LicenceHistory,
                         LinkReason =
                             GetLinkReason([licenceHistorySection],
@@ -2621,6 +2624,7 @@ public static class WalSchemaConverter
                     new ContainedInInformation
                     {
                         Source = InformationSource.Document,
+                        Direction = InformationDirection.Outgoing,
                         SectionName = sectionName,
                         LinkReason = GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
@@ -3394,7 +3398,14 @@ public static class WalSchemaConverter
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
                             NaldData = GetNaldPointData(naldDataLine,
-                                tableLine.Text) // TODO needs to get the correct point
+                                tableLine.Text), // TODO needs to get the correct point
+                            ContainedIn = [new()
+                            {
+                                Source = InformationSource.Document,
+                                SectionName = sectionName,
+                                PageNumber = tableLine.PageNumber,
+                                LineNumber = tableLine.LineNumber
+                            }]
                         });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -3441,7 +3452,14 @@ public static class WalSchemaConverter
                     Id = pointNumber,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description)
+                    NaldData = GetNaldPointData(naldDataLine, description),
+                    ContainedIn = [new()
+                    {
+                        Source = InformationSource.Document,
+                        SectionName = sectionName,
+                        PageNumber = point.LabelStartPageNumber,
+                        LineNumber = point.LabelStartLineNumber
+                    }]
                 });
             }
         }

@@ -1530,6 +1530,12 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        
+        Assert.Equal(7, primaryLicence.Points.Length);
+        Assert.Equal("National Grid Reference Map Label Map Reference", primaryLicence.Points[0].Description); // TODO wrong
+        Assert.NotNull(primaryLicence.Points[0].ContainedIn);
+        Assert.Single(primaryLicence.Points[0].ContainedIn!);
+        Assert.Equal("Points", primaryLicence.Points[0].ContainedIn![0].SectionName);
     }
 
     [Fact]
@@ -4844,7 +4850,6 @@ public class PdfPigNoOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
 
-        
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);

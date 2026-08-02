@@ -20,6 +20,8 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 await ProgramAsync();
 return;
@@ -371,10 +373,13 @@ ConfiguredServices ConfigureServices()
     }
     
     var cacheService = new ApiCacheService(httpClient);
-    var abstractionLicenceCacheService = (IAbstractionLicenceCacheService?)null; // TODO TODAY
+    
+    var abstractionLicenceCacheService =
+        (IAbstractionLicenceCacheService?)new ApiAbstractionLicenceCacheService(httpClient);
     
     var outputService = new ApiOutputService(httpClient);
-    var abstractionLicenceOutputService = (IAbstractionLicenceOutputService?)null; // TODO TODAY
+    var abstractionLicenceOutputService =
+        (IAbstractionLicenceOutputService?)new ApiAbstractionLicenceOutputService(httpClient);
     
     var messageQueueService = new ApiMessageQueueService(httpClient);
 

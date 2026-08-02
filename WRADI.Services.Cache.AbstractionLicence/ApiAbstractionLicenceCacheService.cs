@@ -10,11 +10,6 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
 {
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
     
-    public Task SetupAsync()
-    {
-        return Task.CompletedTask;
-    }
-
     public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync()
     {
         var path = "/Extractor/LicenceFinder/GetResults";

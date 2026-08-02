@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WRADI.Services.ProcessFile;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
 namespace WRADI.FileProcess.CmdLine.BackgroundServices;

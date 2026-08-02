@@ -21,5 +21,7 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
       <ProjectReference Include="..\WRADI.Core.AbstractionLicence\WRADI.Core.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.AbstractionLicence\WRADI.Services.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\WRADI.Services.Cache.AbstractionLicence\WRADI.Services.Cache.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\WRADI.Services.Output.AbstractionLicence\WRADI.Services.Output.AbstractionLicence.csproj" />
     </ItemGroup>
 </Project>

@@ -12,6 +12,9 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 using WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
 namespace WRADI.Services.ProcessFile.AbstractionLicence;
@@ -55,7 +58,8 @@ public static class FileProcessServiceRegistration
             options.SqsVisibilityTimeoutSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsVisibilityTimeoutSeconds");
         });
 
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<FileProcessAppSettings>>().Value);
+        services.AddSingleton(sp =>
+            sp.GetRequiredService<IOptions<FileProcessAppSettings>>().Value);
        
         services.AddSingleton<IFileService>(sp =>
         {
@@ -111,9 +115,31 @@ public static class FileProcessServiceRegistration
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
             });
+        
+        services
+            .AddHttpClient<IAbstractionLicenceCacheService, ApiAbstractionLicenceCacheService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
 
         services
             .AddHttpClient<IOutputService, ApiOutputService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
+        
+        services
+            .AddHttpClient<IAbstractionLicenceOutputService, ApiAbstractionLicenceOutputService>((sp, client) =>
             {
                 var settings = sp.GetRequiredService<FileProcessAppSettings>();
                 client.BaseAddress = new Uri(settings.ApiBaseUrl);

@@ -3,7 +3,6 @@ using Amazon.SQS.Model;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WALE.ProcessFile.Core.Interfaces;
-using WRADI.Services.ProcessFile;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
 namespace WRADI.FileProcess.CmdLine.BackgroundServices;

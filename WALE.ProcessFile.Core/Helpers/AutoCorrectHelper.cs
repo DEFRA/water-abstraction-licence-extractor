@@ -1,5 +1,4 @@
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WeCantSpell.Hunspell;
 
 namespace WALE.ProcessFile.Core.Helpers;

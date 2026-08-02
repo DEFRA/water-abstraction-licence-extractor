@@ -1,5 +1,4 @@
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -99,30 +98,11 @@ public interface ICacheService
         string noOcrServiceName,
         int processRunId);
     
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
-
-    Task<NaldDataCollection> GetNaldDataAsync(
-        short? regionCode,
-        bool allVersions,
-        int skip,
-        int take);
-    
-    Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
-    Task<(
-            HashSet<(string, int)> Live,
-            HashSet<(string, int)> Lapsed,
-            HashSet<(string, int)> Expired,
-            HashSet<(string, int)> Revoked,
-            HashSet<(string, int)> Impoundment)>
-        GetNaldLicenceNumbersAsync(short? regionCode);
-
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
-    
-    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
@@ -134,31 +114,7 @@ public interface ICacheService
 
     Task<string?> GetImportRunDateAsync(string dataSource);
     
-    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
-    
-    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
-
-    Task ClearLicenceFinderResultsAsync();
-    
-    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
-
-    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
-    
-    Task<List<VersionFile>> GetVersionFilesAsync();
-    
-    Task SaveVersionFilesAsync(List<VersionFile> results);
-    
-    Task ClearVersionFilesAsync();
-
-    Task ClearVersionFilesToDownloadAsync();
-
     Task<HashSet<string>> GetFirstNamesAsync();
-    
-    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
-    
-    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
-    
-    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
 }

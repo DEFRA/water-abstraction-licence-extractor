@@ -1,18 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Helpers;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class ProcessRunsController(IOutputService outputService, IMemoryCache memoryCache) : Controller
+public class ProcessRunsController(
+    IOutputService outputService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
+    IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProcessRun>>> GetProcessRuns()
@@ -34,8 +38,14 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue )
     {
-        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
-        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences);
+        var licences = await abstractionLicenceOutputService.GetLicencesAsync(
+            processRunId,
+            skip,
+            take);
+        
+        var licenceSets = await abstractionLicenceOutputService.GetLicenceSetsAsync(
+            processRunId,
+            licences);
 
         return Ok(licenceSets);
     }
@@ -48,18 +58,20 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var completeNumber = 1;
         var fileNumber = 1;
         
-        var verificationsBySectionTask = outputService.GetVerificationLookupsBySectionNameAsync(processRunId);
-        var fileIdTask = outputService.GetLicenceFileIdsAsync(processRunId);
+        var verificationsBySectionTask =
+            abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
+        var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
 
-        var getTotalsTask = outputService.GetTotalLicenceCountAsync(processRunId, query);
-        var licences = await outputService.GetLicencesSearchAsync(processRunId, query);
-        var licenceSets = await outputService.GetLicenceSetsAsync(processRunId, licences); 
+        var getTotalsTask = abstractionLicenceOutputService.GetTotalLicenceCountAsync(processRunId, query);
+        var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
+        var licenceSets =
+            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
         
         var verificationsBySection = await verificationsBySectionTask;
         var fileIdToLicenceNumberMapping = await fileIdTask;
         
         var paginationOutputLines = licences
-            .Where(licence => licence.Status == LicenceStatus.Ok)
+            .Where(licence => licence.Status == ScrapeStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
                 licence,
                 DateTime.Now,
@@ -114,7 +126,10 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
     [HttpGet]
     public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
     {
-        var total = await outputService.GetTotalLicenceCountAsync(processRunId, new ProcessRunQuery());
+        var total = await abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+            processRunId,
+            new ProcessRunQuery());
+
         return Ok(total);
     }
     
@@ -138,11 +153,11 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
                        var completeNumber = 1;
                        var fileNumber = 1;
                        
-                       var licencesAll = await outputService.GetLicencesSearchAsync(processRunId, processRunQuery);
-                       var licenceSetsAll = await outputService.GetLicenceSetsAsync(processRunId, licencesAll); 
+                       var licencesAll = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, processRunQuery);
+                       var licenceSetsAll = await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licencesAll); 
                        
                        var paginationOutputLines = licencesAll
-                           .Where(licence => licence.Status == LicenceStatus.Ok)
+                           .Where(licence => licence.Status == ScrapeStatus.Ok)
                            .Select(licence => JsOutputHelper.ToOutputLine(
                                licence,
                                DateTime.Now,
@@ -167,17 +182,17 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var cacheKey = $"licence-issuers:{processRunId}";
 
         return await memoryCache.GetOrCreateAsync(
-                   cacheKey,
-                   async cacheEntry =>
-                   {
-                       cacheEntry.AbsoluteExpirationRelativeToNow =
-                           TimeSpan.FromMinutes(10);
-                       
-                       var issuers =  await outputService.GetDistinctIssuersAsync(processRunId);
-                       
-                       return issuers.ToArray();
-                   })
-               ?? [];
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow =
+                   TimeSpan.FromMinutes(10);
+
+                var issuers =  await abstractionLicenceOutputService.GetDistinctIssuersAsync(processRunId);
+
+                return issuers.ToArray();
+            })
+            ?? [];
     }
     
     private async Task<string[]> GetIssueDates(int processRunId)
@@ -185,16 +200,16 @@ public class ProcessRunsController(IOutputService outputService, IMemoryCache me
         var cacheKey = $"licence-issuer-dates:{processRunId}";
 
         return await memoryCache.GetOrCreateAsync(
-                   cacheKey,
-                   async cacheEntry =>
-                   {
-                       cacheEntry.AbsoluteExpirationRelativeToNow =
-                           TimeSpan.FromMinutes(10);
-                       
-                       var years = await outputService.GetDistinctIssueDatesAsync(processRunId);
-                       
-                       return years.ToArray();
-                   })
-               ?? [];
+        cacheKey,
+        async cacheEntry =>
+        {
+           cacheEntry.AbsoluteExpirationRelativeToNow =
+               TimeSpan.FromMinutes(10);
+           
+           var years = await abstractionLicenceOutputService.GetDistinctIssueDatesAsync(processRunId);
+           
+           return years.ToArray();
+        })
+        ?? [];
     }
 }

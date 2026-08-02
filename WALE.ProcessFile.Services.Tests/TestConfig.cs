@@ -17,7 +17,7 @@ public static class TestConfig
             }
             
             _config = new ConfigurationBuilder()
-                .AddUserSecrets<PdfPigNoOcrPdfTests>()
+                .AddUserSecrets<PdfPigNoOcrPdfTests1>()
                 .Build();
             
             return _config;

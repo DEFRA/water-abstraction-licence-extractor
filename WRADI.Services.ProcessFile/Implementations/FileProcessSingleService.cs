@@ -1,22 +1,23 @@
-﻿using System.Collections.Concurrent;
-using WALE.ProcessFile.Core.Configuration;
-using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
+﻿using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Formats;
-using WALE.ProcessFile.Services.Helpers;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.ProcessFile.Implementations;
 
 public class FileProcessSingleService(
     FileProcessAppSettings settings,
+    IAbstractionLicenceCacheService abstractionLicenceCacheService,
     ICacheService cacheService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IOutputService outputService,
     IFileService fileService,
     IPdfDataExtractorService pdfDataExtractor)
@@ -45,12 +46,15 @@ public class FileProcessSingleService(
         var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
 
         var abstractionAndImpoundmentLicencesTask =
-            SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
+            SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(abstractionLicenceCacheService);
         
-        var dmsAndNaldFileDataTask = DmsHelper.GetDmsAndNaldFileData(cacheService, fileId!.Value);
-        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(cacheService);
+        var dmsAndNaldFileDataTask = DmsHelper.GetDmsAndNaldFileData(
+            abstractionLicenceCacheService,
+            fileId!.Value);
         
-        LicenceNumber.Instance = new LicenceNumber(await abstractionAndImpoundmentLicencesTask);
+        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
+        
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
         var (dmsFileData, naldLicence) = await dmsAndNaldFileDataTask;
         
@@ -98,7 +102,7 @@ public class FileProcessSingleService(
                 await SharedHelper.UpdateAndSaveLicenceSetsAsync(
                     [licenceSets],
                     licenceSets,
-                    outputService,
+                    abstractionLicenceOutputService,
                     processRun);
 
                 ConsoleHelper.WriteLine(
@@ -191,6 +195,7 @@ public class FileProcessSingleService(
                 pdfDataExtractor,
                 processRun.ProcessRunId,
                 lookupConfig,
+                abstractionLicenceCacheService,
                 dmsDataForFile,
                 naldLicenceNumber));
         }
@@ -230,7 +235,7 @@ public class FileProcessSingleService(
             $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
         var allLicenceSets1 =
-            await outputService.GetProcessRunLicenceSetsAsync(processRun.ProcessRunId);
+            await abstractionLicenceOutputService.GetProcessRunLicenceSetsAsync(processRun.ProcessRunId);
 
         var licenceSetGroups = allLicenceSets1
             .Values
@@ -239,7 +244,8 @@ public class FileProcessSingleService(
 
         var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
-            lookupConfiguration);
+            lookupConfiguration,
+            abstractionLicenceCacheService);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -247,7 +253,7 @@ public class FileProcessSingleService(
         await SharedHelper.UpdateAndSaveLicenceSetsAsync(
             licenceSetGroups,
             allLicenceSets,
-            outputService,
+            abstractionLicenceOutputService,
             processRun);
         
         ConsoleHelper.WriteLine(

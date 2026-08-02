@@ -9,15 +9,15 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
-using WALE.ProcessFile.Services.Models.OutputSchema.PromptSpecific;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Models.PromptSpecific;
 
 namespace WALE.Tools._2ndHalf;
 

@@ -1,7 +1,6 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -136,7 +135,7 @@ public class PdfDataExtractorService(
             return (false ,null);
         }
         
-        if (existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
+        if (existingLicenceInRun.Status != nameof(ScrapeStatus.InProgress))
         {
             return (false, existingLicenceInRun);
         }
@@ -153,7 +152,7 @@ public class PdfDataExtractorService(
             const int maxWaitTimeSeconds = 50;
             var maxFinishDateTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
             
-            while (existingLicenceInRun?.Status == nameof(LicenceStatus.InProgress)
+            while (existingLicenceInRun?.Status == nameof(ScrapeStatus.InProgress)
                 && DateTime.Now <= maxFinishDateTime)
             {
                 await Task.Delay(delayInSeconds * 1000);
@@ -163,7 +162,7 @@ public class PdfDataExtractorService(
                     outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
             }
 
-            if (existingLicenceInRun?.Status != nameof(LicenceStatus.InProgress))
+            if (existingLicenceInRun?.Status != nameof(ScrapeStatus.InProgress))
             {
                 ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Lock now released for {dmsDataForFile.FileId}");
                 return (false, existingLicenceInRun);
@@ -211,7 +210,7 @@ public class PdfDataExtractorService(
         {
             Filename = pdfFileName,
             RegionCode = configuration.RegionId,
-            Status = nameof(LicenceStatus.Ok),
+            Status = nameof(ScrapeStatus.Ok),
             ServicesUsed =
             [
                 noOcrDataExtractorService.Name,
@@ -1539,6 +1538,11 @@ public class PdfDataExtractorService(
                         }
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
+                    }
+                    
+                    if (label.Name == "PointPointNumber")
+                    {
+            
                     }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))

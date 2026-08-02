@@ -4,12 +4,10 @@ using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
@@ -18,6 +16,12 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WaterAbstractionLicenseExtractor.Cmd;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 await ProgramAsync();
 return;
@@ -30,7 +34,9 @@ async Task ProgramAsync()
     var services = ConfigureServices();
 
     var cacheService = services.CacheService!;
+    var abstractionLicenceCacheService = services.AbstractionLicenceCacheService!;
     var outputService = services.OutputService!;
+    var abstractionLicenceOutputService = services.AbstractionLicenceOutputService!;
 
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
@@ -46,14 +52,14 @@ async Task ProgramAsync()
     var firstNamesTask = cacheService.GetFirstNamesAsync();
     
     var abstractionAndImpoundmentLicencesTask =
-        SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(cacheService);
+        SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(abstractionLicenceCacheService);
     
     var (filesToProcess, _) =
         await DmsHelper.GetDmsAndNaldFilesAndMappingAsync(
             services.FileService!,
             services.DmsReportPath!,
             false,
-            cacheService,
+            abstractionLicenceCacheService,
             false);
 
     // For debugging uncheck sections of the following
@@ -81,8 +87,8 @@ async Task ProgramAsync()
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
-    LicenceNumber.Instance = new LicenceNumber(abstractionAndImpoundmentLicences);
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(cacheService);
+    AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
 
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
@@ -123,6 +129,7 @@ async Task ProgramAsync()
                     pdfDataExtractor,
                     processRun,
                     loopLookupConfig,
+                    abstractionLicenceCacheService,
                     dmsFileData,
                     naldLicence.LicenceNumber));
 
@@ -182,7 +189,8 @@ async Task ProgramAsync()
 
     var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
-        lookupConfig);
+        lookupConfig,
+        abstractionLicenceCacheService);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -190,11 +198,11 @@ async Task ProgramAsync()
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
         allLicenceSets,
-        outputService,
+        abstractionLicenceOutputService,
         processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    await outputService.FinishProcessRunAsync(processRun);
+    await abstractionLicenceOutputService.FinishProcessRunAsync(processRun);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
@@ -208,6 +216,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     IPdfDataExtractorService pdfDataExtractor,
     ProcessRun processRun,
     LookupConfiguration lookupConfig,
+    IAbstractionLicenceCacheService cacheService,
     DmsFileData dmsDataForFile,
     string naldLicenceNumber)
 {
@@ -246,6 +255,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,
+            cacheService,
             dmsDataForFile,
             naldLicenceNumber);
 
@@ -363,7 +373,11 @@ ConfiguredServices ConfigureServices()
     }
     
     var cacheService = new ApiCacheService(httpClient);
+    var abstractionLicenceCacheService = (IAbstractionLicenceCacheService?)null; // TODO TODAY
+    
     var outputService = new ApiOutputService(httpClient);
+    var abstractionLicenceOutputService = (IAbstractionLicenceOutputService?)null; // TODO TODAY
+    
     var messageQueueService = new ApiMessageQueueService(httpClient);
 
     var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -425,7 +439,9 @@ ConfiguredServices ConfigureServices()
     return new ConfiguredServices
     {
         CacheService = cacheService,
+        AbstractionLicenceCacheService = abstractionLicenceCacheService,
         OutputService = outputService,
+        AbstractionLicenceOutputService = abstractionLicenceOutputService,
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

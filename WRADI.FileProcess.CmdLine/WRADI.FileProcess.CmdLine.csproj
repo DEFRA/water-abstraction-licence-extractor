@@ -22,10 +22,9 @@
             <HintPath>..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\9.0.14\Microsoft.Extensions.Hosting.dll</HintPath>
         </Reference>
     </ItemGroup>
-
-
+    
     <ItemGroup>
+      <ProjectReference Include="..\WRADI.Services.AbstractionLicence\WRADI.Services.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />
     </ItemGroup>
-
 </Project>

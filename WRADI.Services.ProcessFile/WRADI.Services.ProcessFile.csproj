@@ -19,5 +19,7 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+      <ProjectReference Include="..\WRADI.Core.AbstractionLicence\WRADI.Core.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\WRADI.Services.AbstractionLicence\WRADI.Services.AbstractionLicence.csproj" />
     </ItemGroup>
 </Project>

@@ -7,7 +7,6 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
@@ -15,6 +14,11 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -38,6 +42,17 @@ public class OcrDatabaseTests
         ReadService,
         WriteService);
     
+    private static IAbstractionLicenceDatabaseReadService AbsLicReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
+
+    private static IAbstractionLicenceDatabaseWriteService AbsLicWriteService =>
+        new PostgresAbstractionLicenceWriteService(NpgsqlDataSourceProvider);
+    
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService =
+        new DatabaseAbstractionLicenceCacheService(
+            AbsLicReadService,
+            AbsLicWriteService);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -51,8 +66,8 @@ public class OcrDatabaseTests
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
-        var allNaldData = await CacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(

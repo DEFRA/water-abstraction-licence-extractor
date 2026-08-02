@@ -1,18 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
-using WALE.ProcessFile.Core.Interfaces;
+using WRADI.Core.AbstractionLicence.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class LicenceFinderController(ICacheService cacheService) : Controller
+public class LicenceFinderController(
+    IAbstractionLicenceCacheService abstractionLicenceCacheService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult> GetAsync([FromQuery] Guid fileId)
     {
-        var date = await cacheService.GetLicenceFinderResultAsync(fileId);
+        var date = await abstractionLicenceCacheService.GetLicenceFinderResultAsync(fileId);
         return Ok(date);
     }
     
@@ -21,14 +22,14 @@ public class LicenceFinderController(ICacheService cacheService) : Controller
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue)
     {
-        var date = await cacheService.GetLicenceFinderResultsAsync(skip, take);
+        var date = await abstractionLicenceCacheService.GetLicenceFinderResultsAsync(skip, take);
         return Ok(date);
     }
     
     [HttpPost]
     public async Task<ActionResult> ClearResultsAsync()
     {
-        await cacheService.ClearLicenceFinderResultsAsync();
+        await abstractionLicenceCacheService.ClearLicenceFinderResultsAsync();
         return Ok();
     }
     
@@ -36,7 +37,7 @@ public class LicenceFinderController(ICacheService cacheService) : Controller
     public async Task<ActionResult> SaveResultsAsync(
         [FromBody] LicenceFinderCreateRequest request)
     {
-        await cacheService.SaveLicenceFinderResultsAsync(request.results!);
+        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!);
         return Ok();
     }
 }

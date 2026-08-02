@@ -4,7 +4,6 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Output;
 
@@ -18,11 +17,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.CompletedTask;
     }
     
-    public Task<Dictionary<string, LicenceSet>> GetProcessRunLicenceSetsAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
     public List<(string ProviderName, string? ImageReference)> GetPageScreenshotReferences(
         int pageNumber,
         string pdfServiceName,
@@ -85,46 +79,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
     
-    public Task SaveLicenceSetsAsync(
-        Dictionary<string, LicenceSet> licenceSets,
-        Guid? fileId,
-        int processRunId)
-    {
-        if (fileId == null)
-        {
-            return Task.CompletedTask;
-        }
-        
-        var licenceSetsJson = JsonHelper.GetAsString(licenceSets);
-        
-        return File.WriteAllTextAsync(
-            $"{outputFolder}/{fileId}/licence-sets.jsonp",
-            $"var licenceSets = {licenceSetsJson}");
-    }
-
-    public Task SaveLicenceSetAsync(LicenceSet licenceSet, Guid? fileId, int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<int> SaveLicenceAsync(Licence licence, int processRunId)
-    {
-        Directory.CreateDirectory($"{outputFolder}/{licence.DmsFileId}");
-        
-        var licenceJson = JsonHelper.GetAsString(licence);
-
-        await File.WriteAllTextAsync(
-            $"{outputFolder}/{licence.DmsFileId}/licence.jsonp",
-            $"var data2 = {licenceJson}");
-
-        return -1;
-    }
-
-    public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
     public Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
     {
         throw new NotImplementedException();
@@ -156,14 +110,6 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
             $"var data = {internalJson}");
 
         return -1;
-    }
-
-    public Task SaveListDataAsync(List<OutputListDataItem> listData, int processRunId)
-    {
-        var jsListFilePath = $"{outputFolder}list-data.js";
-
-        return File.WriteAllTextAsync(jsListFilePath, "var data = " +
-            JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
     public async Task<int> SavePageScreenshotAsync(
@@ -275,53 +221,13 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
 
         return returnList;
     }
-
-    public Task FinishProcessRunAsync(ProcessRun processRun)
-    {
-        return Task.CompletedTask;
-    }
-
+    
     public Task<List<ProcessRun>> GetProcessRunsAsync()
     {
         throw new NotImplementedException();
     }
 
     public Task<List<ProcessRun>> GetAllProcessRunsAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
     {
         throw new NotImplementedException();
     }
@@ -336,53 +242,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<MatchesResult?>(null);
     }
 
-    public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
-    {
-        return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
-    }
-
-    public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public
-        Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification)
-    {
-        return Task.FromResult(0);
-    }
-
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<string>> GetDistinctIssuersAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

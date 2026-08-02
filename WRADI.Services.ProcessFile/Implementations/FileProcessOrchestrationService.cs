@@ -1,13 +1,15 @@
 ﻿using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Helpers;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.ProcessFile.Implementations;
 
 public class FileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
+    IAbstractionLicenceCacheService abstractionLicenceCacheService,
     IOutputService outputService,
     IFileService fileService,
     IMessageQueueService messageQueueService)
@@ -30,7 +32,7 @@ public class FileProcessOrchestrationService(
                 fileService,
                 string.Empty,
                 false,
-                cacheService);
+                abstractionLicenceCacheService);
 
         if (dmsFilesToProcess.Count == 0)
         {

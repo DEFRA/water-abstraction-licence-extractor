@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Interfaces;
+using WRADI.Core.AbstractionLicence.Interfaces;
 
 namespace WaterAbstractionLicenseExtractor.Cmd;
 
@@ -6,7 +7,11 @@ public class ConfiguredServices
 {
     public IOutputService? OutputService { get; set; }
     
+    public IAbstractionLicenceOutputService? AbstractionLicenceOutputService { get; set; }
+    
     public ICacheService? CacheService { get; init; }
+    
+    public IAbstractionLicenceCacheService? AbstractionLicenceCacheService { get; init; }
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
     

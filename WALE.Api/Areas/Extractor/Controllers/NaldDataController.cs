@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class NaldDataController(ICacheService cacheService) : Controller
+public class NaldDataController(
+    IAbstractionLicenceCacheService abstractionLicenceCacheService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -18,7 +19,7 @@ public class NaldDataController(ICacheService cacheService) : Controller
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue)
     {
-        var naldData = await cacheService.GetNaldDataAsync(
+        var naldData = await abstractionLicenceCacheService.GetNaldDataAsync(
             regionCode,
             allVersions ?? false,
             skip,
@@ -31,15 +32,16 @@ public class NaldDataController(ICacheService cacheService) : Controller
     [HttpGet]
     public async Task<IActionResult> GetImpoundmentAndAbstractionLicencesAsync()
     {
-        var naldLicences = await cacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
+        var naldLicences =
+            await abstractionLicenceCacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
         return Ok(naldLicences);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetLicenceStatusDataAsync([FromQuery] short? regionCode = null)
     {
-        var naldLicenceNumbers = await cacheService.GetNaldLicenceNumbersAsync(
-            regionCode);
+        var naldLicenceNumbers =
+            await abstractionLicenceCacheService.GetNaldLicenceNumbersAsync(regionCode);
 
         return Ok(new NaldLicenceStatusData
         {
@@ -76,7 +78,10 @@ public class NaldDataController(ICacheService cacheService) : Controller
         [FromQuery] string permitNumber,
         [FromQuery] int issueNumber)
     {
-        var incrementNumber = await cacheService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
+        var incrementNumber = await abstractionLicenceCacheService.GetNaldLicenceIncrementNumberAsync(
+            permitNumber,
+            issueNumber);
+
         return Ok(incrementNumber);
     }
     
@@ -85,7 +90,7 @@ public class NaldDataController(ICacheService cacheService) : Controller
         [FromQuery] string licenceNumber,
         [FromQuery] int regionCode)
     {
-        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
+        var naldData = await abstractionLicenceCacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
         return Ok(naldData);
     }
 }

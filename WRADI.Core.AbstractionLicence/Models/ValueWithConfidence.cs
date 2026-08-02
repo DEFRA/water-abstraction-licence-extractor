@@ -1,0 +1,20 @@
+namespace WRADI.Core.AbstractionLicence.Models;
+
+public class ValueWithConfidence<T>
+{
+    // ReSharper disable once UnusedMember.Global - Intended for serialisation
+    public ValueWithConfidence() {}
+
+    public ValueWithConfidence(T? value, double? ocrConfidence, double? confidence)
+    {
+        Value = value;
+        OcrConfidence = ocrConfidence;
+        Confidence = confidence;
+    }
+    
+    public T? Value { get; set; }
+    
+    public double? OcrConfidence { get; set; }
+    
+    public double? Confidence { get; set; }
+}

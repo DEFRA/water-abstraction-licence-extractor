@@ -2,20 +2,25 @@ using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -39,6 +44,17 @@ public class NoOcrDatabaseTests
         ReadService,
         WriteService);
     
+    private static IAbstractionLicenceDatabaseReadService AbsLicReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
+
+    private static IAbstractionLicenceDatabaseWriteService AbsLicWriteService =>
+        new PostgresAbstractionLicenceWriteService(NpgsqlDataSourceProvider);
+    
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService =
+        new DatabaseAbstractionLicenceCacheService(
+            AbsLicReadService,
+            AbsLicWriteService);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -61,8 +77,8 @@ public class NoOcrDatabaseTests
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
-        var allNaldData = await CacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -276,7 +292,8 @@ public class NoOcrDatabaseTests
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder));
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
+            AbsLicCacheService);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 

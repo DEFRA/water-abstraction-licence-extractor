@@ -1,4 +1,4 @@
-using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Models;
 
 namespace WALE.Api.Areas.Extractor.Controllers.Models;
 

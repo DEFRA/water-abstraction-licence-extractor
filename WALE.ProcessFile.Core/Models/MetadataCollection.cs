@@ -1,5 +1,3 @@
-using WALE.ProcessFile.Core.Models.OutputSchema;
-
 namespace WALE.ProcessFile.Core.Models;
 
 public class MetadataCollection

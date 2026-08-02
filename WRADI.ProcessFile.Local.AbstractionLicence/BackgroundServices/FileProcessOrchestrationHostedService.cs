@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using WALE.ProcessFile.Core.Interfaces;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
-namespace WRADI.FileProcess.CmdLine.BackgroundServices;
+namespace WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
 
 public sealed class FileProcessOrchestrationHostedService(
     IAmazonSQS sqsClient,

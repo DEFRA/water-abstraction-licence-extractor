@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WRADI.Core.AbstractionLicence.Interfaces;
 
-namespace WaterAbstractionLicenseExtractor.Cmd;
+namespace WRADI.ProcessFile.Cmd.AbstractionLicence;
 
 public class ConfiguredServices
 {

@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>719e2f8e-27a0-44ec-a007-203f98168d4d</UserSecretsId>
+        <RootNamespace>WRADI.ProcessFile.Cmd.AbstractionLicence</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

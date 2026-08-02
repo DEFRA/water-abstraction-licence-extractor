@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WALE.ProcessFile.Services.AwsSqs;
-using WRADI.FileProcess.CmdLine.BackgroundServices;
+using WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
 // NOTE - This is used locally rather than running the lambdas to process messages

@@ -7,7 +7,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
-namespace WRADI.FileProcess.CmdLine.BackgroundServices;
+namespace WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
 
 public sealed class FileProcessSingleFileHostedService(
     IAmazonSQS sqsClient,

@@ -4,7 +4,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
-namespace WRADI.Services.ProcessFile.Implementations;
+namespace WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
 public class FileProcessOrchestrationService(
     FileProcessAppSettings settings,

@@ -12,9 +12,9 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
-using WRADI.Services.ProcessFile.Implementations;
+using WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
-namespace WRADI.Services.ProcessFile;
+namespace WRADI.Services.ProcessFile.AbstractionLicence;
 
 public static class FileProcessServiceRegistration
 {

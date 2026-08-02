@@ -84,7 +84,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.FileProcess.CmdLine",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.FileProcess.Orchestrator", "WRADI.Lambda.FileProcess.Orchestrator\WRADI.Lambda.FileProcess.Orchestrator.csproj", "{B0A9193B-3B66-4381-BA9A-A1FF3AF8FABE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.ProcessFile", "WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj", "{0133FF46-525A-4B18-827A-990726AEAA01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.ProcessFile.AbstractionLicence", "WRADI.Services.ProcessFile.AbstractionLicence\WRADI.Services.ProcessFile.AbstractionLicence.csproj", "{0133FF46-525A-4B18-827A-990726AEAA01}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.FileProcess.Single", "WRADI.Lambda.FileProcess.Single\WRADI.Lambda.FileProcess.Single.csproj", "{5F2C235B-2F7B-4A77-BD59-2F345CC98384}"
 EndProject
@@ -106,7 +106,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Database.PostgreSQL.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.Cache.AbstractionLicence", "WRADI.Services.Cache.AbstractionLicence\WRADI.Services.Cache.AbstractionLicence.csproj", "{8C86FDB7-2254-4AC7-8CC0-A6FEA74E5520}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AbstractionLicence", "AbstractionLicence", "{70C0E208-440F-45E7-98CE-29FBD799975C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abstraction Licences", "Abstraction Licences", "{70C0E208-440F-45E7-98CE-29FBD799975C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.Output.AbstractionLicence", "WRADI.Services.Output.AbstractionLicence\WRADI.Services.Output.AbstractionLicence.csproj", "{398ED1F7-38A2-41B9-8EBC-4A672BCACE89}"
 EndProject

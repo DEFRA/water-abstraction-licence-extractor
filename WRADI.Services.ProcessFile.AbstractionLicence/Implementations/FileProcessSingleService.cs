@@ -3,7 +3,6 @@ using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
@@ -11,7 +10,7 @@ using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
-namespace WRADI.Services.ProcessFile.Implementations;
+namespace WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
 public class FileProcessSingleService(
     FileProcessAppSettings settings,

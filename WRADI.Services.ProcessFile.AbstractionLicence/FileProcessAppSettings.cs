@@ -1,4 +1,4 @@
-namespace WRADI.Services.ProcessFile;
+namespace WRADI.Services.ProcessFile.AbstractionLicence;
 
 public class FileProcessAppSettings
 {

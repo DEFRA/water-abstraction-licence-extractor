@@ -4,7 +4,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>14</LangVersion>
         <TargetFramework>net10.0</TargetFramework>
-        <RootNamespace>WRADI.Services.ProcessFile</RootNamespace>
+        <RootNamespace>WRADI.Services.ProcessFile.AbstractionLicence</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

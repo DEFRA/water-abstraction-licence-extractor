@@ -267,6 +267,8 @@ function ListPage() {
                             shortLicenceIds={shortLicenceIds}
                             issueDates={issueDates}
                             setPageNumber={setPageNumber}
+                            showSingles={showSingles}
+                            onToggleSingles={setShowSingles}
                         />
                         <LicencesTableHeaders
                             data={outputList}

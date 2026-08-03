@@ -2,7 +2,6 @@ import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem } from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
-import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";
 import LicencesTableFooters from "../components/LicencesTableFooters";
 import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
@@ -10,7 +9,6 @@ import LicenceSetsTableFooters from "../components/LicenceSetsTableFooters";
 import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/LicenceSetsTableBody";
 import FilesList from "../components/FilesList";
 import '../assets/liststyles.css'
-import {useFiltering} from "../utils/useFiltering.ts";
 import {useTotals} from "../utils/useTotals.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
@@ -60,15 +58,7 @@ function ListSearchPage() {
 
     const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
 
-    const {
-        filteredData,
-        applyFilter,
-        resetFiltersExcept,
-        toggleSort,
-        filters
-    } = useFiltering(outputList);
-
-    const totals = useTotals(filteredData);
+    const totals = useTotals(outputList);
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -99,7 +89,9 @@ function ListSearchPage() {
                 currentQuery.meansFound +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
-                currentQuery.verificationType;
+                currentQuery.verificationType +
+            currentQuery.sortField +
+            currentQuery.sortAscending;
 
             // @ts-ignore
             if (!force && filterKey == window.lastFilterKey) {
@@ -277,22 +269,16 @@ function ListSearchPage() {
                             shortLicenceIds={shortLicenceIds}
                             issueDates={issueDates}
                             setPageNumber={setPageNumber}
-                        />
-                        <LicencesTableHeaders
-                            data={outputList}
-                            onFilterChange={applyFilter}
-                            onResetFilters={resetFiltersExcept}
-                            onToggleSort={toggleSort}
-                            onToggleSingles={setShowSingles}
-                            filters={filters}
                             showSingles={showSingles}
-                        /></thead>
+                            onToggleSingles={setShowSingles}
+                        />
+                   </thead>
                         <tbody>
-                        {filteredData.map((item, index) => (
+                        {outputList.map((item, index) => (
                             <LicencesTableRow
                                 item={item} 
                                 key={index} 
-                                data={filteredData} 
+                                data={outputList} 
                                 oddRow={index % 2 === 0}
                                 onOpenReport={(fileId) => openReportWithId(fileId, item)}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
@@ -310,7 +296,7 @@ function ListSearchPage() {
                     <table>
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
-                            data={filteredData} 
+                            data={outputList} 
                             onOpenReport={openReportWithId} 
                             onOpenLicenceSetReport={openLicenceSetReportWithId} 
                             onTotalsCalculated={setLicenceSetsTotals}

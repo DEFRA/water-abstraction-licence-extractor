@@ -76,7 +76,7 @@ public class ProcessRunsController(
        var processRun = new ProcessRunResponse
        {
            TotalRecords = await countTask,
-           Records = outputList.OrderBy(x => x.licenceNumber).ToList(),
+           Records = outputList.ToList(),
            Issuers = await GetDistinctListIssuers(processRunId),
            LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
            IssueDates =  await GetDistinctListDates(processRunId),

@@ -22,10 +22,11 @@ public static class WalSchemaConverter
         DmsFileData? dmsFileData,
         string? naldLicenceNumber,
         NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
-        LookupConfiguration? lookupConfiguration,
+        LookupConfiguration lookupConfiguration,
         IAbstractionLicenceCacheService cacheService,
         int processRunId)
     {
+        
         var dmsFileIdInfo = await RecordFileIdAsync(
             dmsFileData,
             lookupConfiguration,
@@ -269,14 +270,14 @@ public static class WalSchemaConverter
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
-            lookupConfiguration,
+            lookupConfiguration!,
             cacheService));
         
         linkedLicences.AddRange(await GetPointsLinkedLicencesAsync(
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
-            lookupConfiguration,
+            lookupConfiguration!,
             cacheService));
         
         foreach (var (_, (list, _, _)) in sectionDataDict)

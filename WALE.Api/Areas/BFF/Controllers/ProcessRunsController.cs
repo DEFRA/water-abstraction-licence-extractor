@@ -103,12 +103,12 @@ public class ProcessRunsController(
                     .Where(x => x.licenceSectionVerifications == null || x.licenceSectionVerifications.Length == 0)
                     .ToList();
             }
+            
             paginationListData = paginationListData
                 .Where(x => x.licenceSectionVerifications?
                     .Any(item => item.LicenceSectionItems
                         .Any(i => i.VerificationTypes.Contains(query.VerificationType))) == true)
                 .ToList();
-            ;
         }
 
         var processRun = new ProcessRunResponse
@@ -167,7 +167,12 @@ public class ProcessRunsController(
                            .ToList();
                        var setIds = new List<string>();
 
-                       foreach (var set in from item in paginationOutputLines from set in item.LicenceSets?.Skip(1) where !setIds.Contains(set.ShortLicenceSetId) select set)
+                       foreach (var set 
+                            in from item 
+                            in paginationOutputLines from set
+                            in item.LicenceSets!.Skip(1)
+                            where !setIds.Contains(set.ShortLicenceSetId)
+                            select set)
                        {
                            setIds.Add(set.ShortLicenceSetId);
                        }

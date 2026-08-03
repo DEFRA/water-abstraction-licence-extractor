@@ -8,6 +8,10 @@ using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AwsSqs;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Database.PostgreSQL.AbstractionLicence;
+using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
@@ -94,6 +98,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
+        .AddAbstractionLicencePostgreSqlServices()
         .AddAwsS3Services(
             awsRegionName,
             s3BucketName,
@@ -106,7 +111,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsSecretKey,
             awsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
-        .AddTransient<ICacheService>(sp => new DatabaseCacheService(
-            sp.GetRequiredService<IDatabaseReadService>(),
-            sp.GetRequiredService<IDatabaseWriteService>()));
+        .AddTransient<IAbstractionLicenceOutputService, DatabaseAbstractionLicenceOutputService>()
+        .AddTransient<ICacheService, DatabaseCacheService>()
+        .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>();
 }

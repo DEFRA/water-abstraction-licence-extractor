@@ -289,6 +289,4 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     {
         throw new NotImplementedException();
     }
-
-    private static bool _showAllLogs = false;
 }

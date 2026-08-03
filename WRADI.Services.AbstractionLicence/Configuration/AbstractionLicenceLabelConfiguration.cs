@@ -2530,6 +2530,51 @@ public static partial class AbstractionLicenceLabelConfiguration
                     },
                     new()
                     {
+                        Name = "PurposeCondition",
+                        Text =
+                        [
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        TextEnd =
+                        [
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        IncludeStartLabelText = true,
+                        Format = "Text",
+                        Possibilities =
+                        [
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        MustContain =
+                        [
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)"
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PurposeConditionSub",
+                                Text = [new("and ")],
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },
+                    new()
+                    {
                         Name = "PointConditionSingleLine",
                         Text =
                         [

@@ -145,20 +145,38 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
         Assert.Equal(36.36, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[0].Limits[0].PeriodType);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[0].Points);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[0].Purposes);
+        Assert.Single(licence.AbstractionLimits.Individual[0].Limits[0].Points!);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[0].Points![0].IsImplicit);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].Purposes!.Length);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[0].Purposes![0].IsImplicit);
+        
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[1].Units);
         Assert.Equal(618.20, licence.AbstractionLimits.Individual[0].Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[0].Limits[1].PeriodType);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[1].Points);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[1].Purposes);
+        Assert.Single(licence.AbstractionLimits.Individual[0].Limits[1].Points!);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[1].Points![0].IsImplicit);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[1].Purposes!.Length);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[1].Purposes![0].IsImplicit);
+        
         Assert.Equal("litres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(10.10, licence.AbstractionLimits.Individual[0].Limits[2].Value);
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[2].Points);
-        Assert.Null(licence.AbstractionLimits.Individual[0].Limits[2].Purposes);
+        Assert.Single(licence.AbstractionLimits.Individual[0].Limits[2].Points!);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[2].Points![0].IsImplicit);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[2].Purposes!.Length);
+        Assert.True(licence.AbstractionLimits.Individual[0].Limits[2].Purposes![0].IsImplicit);
         
-        Assert.NotNull(licence.AbstractionLimits.Aggregates); //TODO
-        Assert.Single(licence.AbstractionLimits.Aggregates); //TODO should be 2
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
+
+        Assert.Equal("thousand cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
+        Assert.Equal(41.360, licence.AbstractionLimits.Individual[1].Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].Points!);
+        //Assert.True(licence.AbstractionLimits.Individual[1].Limits[0].Points![0].IsImplicit);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].Purposes!);
+        Assert.False(licence.AbstractionLimits.Individual[1].Limits[0].Purposes![0].IsImplicit);
+        
+        //Assert.NotNull(licence.AbstractionLimits.Aggregates); //TODO
+        //Assert.Single(licence.AbstractionLimits.Aggregates); //TODO should be 2
     }
 }

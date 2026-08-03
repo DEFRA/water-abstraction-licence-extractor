@@ -881,7 +881,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(13, section1Sub1.SubResults.Count);
+        Assert.Equal(14, section1Sub1.SubResults.Count);
         
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -1224,23 +1224,28 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("(1)", pointName);
         
         Assert.Equal(3, section1Sub1.Text?.Count);
-        Assert.Equal(5, section1Sub1.SubResults.Count);
+        Assert.Equal(6, section1Sub1.SubResults.Count);
 
-        var units1 = section1Sub1.SubResults[1];
+        var purposeCondition = section1Sub1.SubResults[1];
+        Assert.Equal("(1)", purposeCondition.Text![0].Text);
+        Assert.Equal("PurposeCondition", purposeCondition.MatchedLabel!.Name);
+        Assert.Equal(32, purposeCondition.LabelStartLineNumber);
+        
+        var units1 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
         Assert.Equal(32, units1.LabelStartLineNumber);
         
-        var units2 = section1Sub1.SubResults[2];
+        var units2 = section1Sub1.SubResults[3];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
         Assert.Equal(33, units2.LabelStartLineNumber);
         
-        var value1 = section1Sub1.SubResults[3];
+        var value1 = section1Sub1.SubResults[4];
         Assert.Equal("45460.92", value1.Text![0].Text);
         Assert.Equal("PerDayValue", value1.MatchedLabel!.Name);
         
-        var value2 = section1Sub1.SubResults[4];
+        var value2 = section1Sub1.SubResults[5];
         Assert.Equal("13638276", value2.Text![0].Text);
         Assert.Equal("PerYearValue", value2.MatchedLabel!.Name);
         

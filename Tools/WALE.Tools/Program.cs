@@ -12,9 +12,10 @@ string workflow;
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 //workflow = "CopyS3Files";
-workflow = "ForceLowercaseS3Files";
+//workflow = "ForceLowercaseS3Files";
+workflow = "GenerateLinkedLicencesCsv";
 
-const int processRunId = 89;//1707;
+const int processRunId = 112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 var folderPathUsername = "xxx";

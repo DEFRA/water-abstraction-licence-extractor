@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <LangVersion>latest</LangVersion>
@@ -25,5 +24,4 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
     </ItemGroup>
-
 </Project>

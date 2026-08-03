@@ -43,8 +43,4 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services.PdfPig\WALE.ProcessFile.Services.PdfPig.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Enums\" />
-    </ItemGroup>
 </Project>

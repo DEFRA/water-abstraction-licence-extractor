@@ -2184,7 +2184,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     public async Task When_XBackLinkX_ThenNowGetsThem()
     {
         // Arrange
-
         const string filename = "NE0270023043__Application New Licence Issued 18.12.2018 10623801.pdf";
 
         // Act

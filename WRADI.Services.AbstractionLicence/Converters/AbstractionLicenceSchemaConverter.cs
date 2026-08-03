@@ -2516,16 +2516,18 @@ public static class AbstractionLicenceSchemaConverter
                     })
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
+                .Where(p => allPoints.Any(ap => ap.Id == p.Id))
                 .ToList()
             : null;
 
         foreach (var documentPoint in allPoints)
         {
             var documentPointNameSet = !string.IsNullOrEmpty(documentPoint.Name);
+            var nameInSingleQuotes = $"'{documentPoint.Name}'";
             
             var textContainsPointName = documentPointNameSet &&
                 abstractionLimitPointSubText.Contains(
-                    documentPoint.Name!,
+                    nameInSingleQuotes,
                     StringComparison.OrdinalIgnoreCase);
 
             if (!textContainsPointName || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
@@ -3436,6 +3438,7 @@ public static class AbstractionLicenceSchemaConverter
                         {
                             Description = tableLine.Text,
                             Id = $"{pointNumber} {subId}", // e.g 2.1 - A
+                            AltId = subId,
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
                             NaldData = GetNaldPointData(naldDataLine,
@@ -3485,12 +3488,23 @@ public static class AbstractionLicenceSchemaConverter
                 
                 gridRef = gridRef?.Replace("point ", string.Empty);
 
+                var pointText = string.Join(" ", point.Text?.Select(p => p.Text).ToArray() ?? []);
+
+                var letterIdParts = pointText.Split("marked '");
+                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Split('\'')[0] : null;
+
+                if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
+                {
+                    name = letterId;
+                }
+                
                 returnList.Add(new PointOfAbstraction
                 {
                     Name = name,
                     GridRef = gridRef,
                     Description = description,
                     Id = pointNumber,
+                    AltId = letterId,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
                     NaldData = GetNaldPointData(naldDataLine, description),

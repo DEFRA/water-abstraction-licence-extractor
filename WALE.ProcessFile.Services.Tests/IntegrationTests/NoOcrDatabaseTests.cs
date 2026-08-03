@@ -149,8 +149,6 @@ public class NoOcrDatabaseTests
     public async Task Uncached_Then_Changed()
     {
         // Arrange
-
-        
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
         var someGuid = Guid.NewGuid();
         

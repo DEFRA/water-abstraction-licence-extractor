@@ -172,7 +172,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(41.360, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].Points!);
-        //Assert.True(licence.AbstractionLimits.Individual[1].Limits[0].Points![0].IsImplicit);
+        Assert.True(licence.AbstractionLimits.Individual[1].Limits[0].Points![0].IsImplicit);
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].Purposes!);
         Assert.False(licence.AbstractionLimits.Individual[1].Limits[0].Purposes![0].IsImplicit);
         

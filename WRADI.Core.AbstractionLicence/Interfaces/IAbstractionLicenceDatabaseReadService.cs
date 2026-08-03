@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.Table;
 
 namespace WRADI.Core.AbstractionLicence.Interfaces;
@@ -77,4 +78,19 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
     Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+
+    Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
+        int processRunId,
+        ProcessRunQuery query,
+        CancellationToken cancellationToken = default);
+    
+    Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId);
+    
+    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
+    
+    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
+
+    Task<int> GetLicencesListSearchCountAsync(
+        int processRunId,
+        ProcessRunQuery query);
 }

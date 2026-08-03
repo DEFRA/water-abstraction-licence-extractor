@@ -117,5 +117,5 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<ICacheService, DatabaseCacheService>()
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
-        .AddTransient<ILicenceListRepository, DatabaseOutputService>();
+        .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>();
 }

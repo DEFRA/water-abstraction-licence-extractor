@@ -11,6 +11,8 @@ using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 using WRADI.Core.AbstractionLicence.Models.Table;
 
 namespace WRADI.Database.PostgreSQL.AbstractionLicence.Services;
@@ -516,85 +518,16 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var parameters = new DynamicParameters();
         parameters.Add("ProcessRunId", processRunId);
-
-        AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
-        AddIssuerFilter(sql, parameters, query.Issuer);
-        AddOcrScanFilter(sql, parameters, query.OcrScan);
-        AddMeansFoundFilter(sql, parameters, query.MeansFound);
-
-        AddArrayEmptyFilter(sql, query.PointsEmpty, "points");
-        AddArrayEmptyFilter(sql, query.PurposesEmpty, "purposes");
-
-        AddNestedLimitsFilter(
-            sql,
-            query.LimitsEmpty,
-            "individual");
-
-        AddNestedLimitsFilter(
-            sql,
-            query.AggregatesEmpty,
-            "aggregates");
-
-        AddIssueYearFilter(sql, parameters, query.IssueYear);
-        
-        AddIssueYearFilter(
-            sql,
-            parameters,
-            query.IssueYear);
-
-        AddLinkedLicencesTypeFilter(
-            sql,
-            parameters,
-            query.LinkedLicencesType);
-
+        AddGenericParamaters(query, sql, parameters);
         return await QuerySingleOrDefaultAsync<int>(
             connection,
             sql.ToString(),
             0,
             parameters);
     }
-    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    
+    private static void AddGenericParamaters(ProcessRunQuery query, StringBuilder sql, DynamicParameters parameters)
     {
-        await using var connection = GetPostgresConnection();
-
-        const string sql = """
-                           SELECT max(licence_number) AS licence_number, file_id
-                           FROM licence
-                           WHERE process_run_id = @ProcessRunId
-                             AND licence_number IS NOT NULL
-                             AND file_id IS NOT NULL
-                           GROUP BY file_id;
-                           """;
-
-        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
-            connection,
-            sql,
-            0,
-            new { ProcessRunId = processRunId });
-
-        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
-    }
-
-    public async Task<List<Licence>> GetLicencesSearchAsync(
-        int processRunId,
-        ProcessRunQuery query)
-    {
-        await using var connection = GetPostgresConnection();
-
-        var sql = new StringBuilder(
-            """
-            SELECT data, licence_id
-            FROM licence
-            WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
-            """);
-
-        var parameters = new DynamicParameters();
-
-        parameters.Add("ProcessRunId", processRunId);
-        parameters.Add("Skip", query.Skip);
-        parameters.Add("Take", query.Take);
-
         AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
         AddIssuerFilter(sql, parameters, query.Issuer);
         AddOcrScanFilter(sql, parameters, query.OcrScan);
@@ -629,6 +562,62 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             sql,
             parameters,
             query.LinkedLicencesType);
+    }
+    
+    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT max(licence_number) AS licence_number, file_id
+                           FROM licence
+                           WHERE process_run_id = @ProcessRunId
+                             AND licence_number IS NOT NULL
+                             AND file_id IS NOT NULL
+                           GROUP BY file_id;
+                           """;
+
+        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
+
+        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
+    }
+    
+    public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
+    {
+        await using var connection = GetPostgresConnection();
+
+        return await GetLicenceListItemParentsCountAsync(
+            connection,
+            processRunId,
+            query,
+            CancellationToken.None);
+    }
+
+    public async Task<List<Licence>> GetLicencesSearchAsync(
+        int processRunId,
+        ProcessRunQuery query)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT data, licence_id
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND data::jsonb ->> 'status' = 'Ok'
+            """);
+
+        var parameters = new DynamicParameters();
+
+        parameters.Add("ProcessRunId", processRunId);
+        parameters.Add("Skip", query.Skip);
+        parameters.Add("Take", query.Take);
+
+        AddGenericParamaters(query, sql, parameters);
 
         sql.AppendLine(
             """
@@ -892,6 +881,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         data.ProcessRunId = processRunId;
+        
         return data;
     }
 
@@ -2318,6 +2308,661 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             "IssueYearPattern",
             $"{issueYear.Value}%");
     }
+    
+    
+
+    public async Task<List<LicenceListItemAggregate>>
+        GetLicencesListSearchAsync(
+            int processRunId,
+            ProcessRunQuery query,
+            CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var parents = await GetLicenceListItemParentsAsync(
+            connection,
+            processRunId,
+            query,
+            cancellationToken);
+
+        if (parents.Count == 0)
+        {
+            return [];
+        }
+
+        var itemIds = parents
+            .Select(x => x.LicenceListItemId)
+            .ToArray();
+
+        var linkedLicences = await GetLinkedLicencesAsync(
+            connection,
+            processRunId,
+            itemIds,
+            cancellationToken);
+
+        var licenceSets = await GetLicenceSetsAsync(
+            connection,
+            processRunId,
+            itemIds,
+            cancellationToken);
+        
+        var verificationSections =
+            await GetLicenceVerificationSectionsAsync(
+                connection,
+                processRunId,
+                itemIds,
+                cancellationToken);
+        
+        return parents
+            .Select(parent => new LicenceListItemAggregate
+            {
+                Licence = parent,
+                
+                LinkedLicences = linkedLicences.TryGetValue(
+                    parent.LicenceListItemId,
+                    out var itemLinkedLicences)
+                    ? itemLinkedLicences.ToList()
+                    : [],
+
+                LicenceSets = licenceSets.TryGetValue(
+                    parent.LicenceListItemId,
+                    out var itemLicenceSets)
+                    ? itemLicenceSets.ToList()
+                    : [],
+                
+                VerificationSections =
+                    verificationSections.TryGetValue(
+                        parent.LicenceListItemId,
+                        out var itemVerificationSections)
+                        ? itemVerificationSections.ToList()
+                        : []
+            })
+            .ToList();
+    }
+
+    public async Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql =
+            """
+            SELECT DISTINCT issuer
+            FROM licence_list_item
+            WHERE process_run_id = @ProcessRunId
+              AND NULLIF(trim(issuer), '') IS NOT NULL
+            ORDER BY issuer;
+            """;
+
+        var results=  await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                @ProcessRunId =  processRunId
+            });
+        
+        return results.ToList();
+    }
+
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql =
+            """
+            SELECT DISTINCT 
+                   short_licence_set_id        
+            FROM licence_list_item_licence_set
+            where process_run_id = @ProcessRunId
+            order by short_licence_set_id
+            """;
+
+        var results=  await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                @ProcessRunId =  processRunId
+            });
+        
+        return results.ToList();
+    }
+
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql =
+            """
+            SELECT DISTINCT issue_year
+            FROM licence_list_item
+            WHERE process_run_id = @ProcessRunId
+            and  issue_year IS NOT NULL
+            ORDER BY issue_year;
+            """;
+
+        var results=  await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                @ProcessRunId =  processRunId
+            });
+        
+        return results.ToList();
+    }
+
+private static async Task<
+        Dictionary<long, List<LicenceSectionVerificationSummary>>>
+    GetLicenceVerificationSectionsAsync(
+        NpgsqlConnection connection,
+        int processRunId,
+        IReadOnlyCollection<long> licenceListItemIds,
+        CancellationToken cancellationToken)
+{
+    if (licenceListItemIds.Count == 0)
+    {
+        return [];
+    }
+
+    const string sql =
+        """
+        SELECT
+            verification_section.licence_list_item_id
+                AS LicenceListItemId,
+
+            verification_section.verification_section_id
+                AS VerificationSectionId,
+
+            verification_section.licence_section_name
+                AS LicenceSectionName,
+
+            verification_item.verification_item_id
+                AS VerificationItemId,
+
+            verification_item.licence_section_item_id
+                AS LicenceSectionItemId,
+
+            verification_item.verification_types
+                AS VerificationTypes,
+
+            verification_item.scraped_data_is_different
+                AS ScrapedDataIsDifferent
+
+        FROM licence_list_item_verification_section
+            AS verification_section
+
+        LEFT JOIN licence_list_item_verification_item
+            AS verification_item
+            ON verification_item.verification_section_id =
+               verification_section.verification_section_id
+
+        WHERE verification_section.process_run_id = @ProcessRunId
+          AND verification_section.licence_list_item_id =
+              ANY(@LicenceListItemIds)
+
+        ORDER BY
+            verification_section.licence_list_item_id,
+            verification_section.verification_section_id,
+            verification_item.verification_item_id;
+        """;
+
+    var rows = await connection.QueryAsync<VerificationSectionRow>(
+        new CommandDefinition(
+            sql,
+            new
+            {
+                ProcessRunId = processRunId,
+                LicenceListItemIds = licenceListItemIds.ToArray()
+            },
+            cancellationToken: cancellationToken));
+
+    return rows
+        .GroupBy(row => row.LicenceListItemId)
+        .ToDictionary(
+            itemGroup => itemGroup.Key,
+            itemGroup => itemGroup
+                .GroupBy(row => new
+                {
+                    row.VerificationSectionId,
+                    row.LicenceSectionName
+                })
+                .Select(sectionGroup =>
+                    new LicenceSectionVerificationSummary
+                    {
+                        LicenceSectionName =
+                            sectionGroup.Key.LicenceSectionName,
+
+                        LicenceSectionItems = sectionGroup
+                            .Where(row =>
+                                row.VerificationItemId.HasValue &&
+                                !string.IsNullOrWhiteSpace(
+                                    row.LicenceSectionItemId))
+                            .Select(row =>
+                                new LicenceSectionItemSummary
+                                {
+                                    LicenceSectionItemId =
+                                        row.LicenceSectionItemId!,
+
+                                    VerificationTypes =
+                                        row.VerificationTypes ?? [],
+
+                                    ScrapedDataIsDifferent =
+                                        row.ScrapedDataIsDifferent
+                                })
+                            .ToArray()
+                    })
+                .ToList());
+}
+
+
+    private static async Task<
+            Dictionary<long, IReadOnlyList<LicenceListItemLicenceSet>>>
+        GetLicenceSetsAsync(
+            NpgsqlConnection connection,
+            int processRunId,
+            long[] itemIds,
+            CancellationToken cancellationToken)
+    {
+        const string sql =
+            """
+            SELECT
+                s.licence_list_item_licence_set_id
+                    AS LicenceListItemLicenceSetId,
+                s.licence_list_item_id
+                    AS LicenceListItemId,
+                s.licence_set_id
+                    AS LicenceSetId,
+                s.process_run_id
+                    AS ProcessRunId,
+                s.short_licence_set_id
+                    AS ShortLicenceSetId,
+                s.licence_set_type
+                    AS LicenceSetType,
+                t.licence_list_item_licence_set_id
+                    AS LicenceListItemLicenceSetId,
+                t.licence_set_type
+                    AS LicenceSetType
+            FROM licence_list_item_licence_set s
+            LEFT JOIN licence_list_item_licence_set_type t
+                ON t.licence_list_item_licence_set_id = s.licence_list_item_licence_set_id
+            WHERE s.process_run_id = @ProcessRunId
+              AND s.licence_list_item_id = ANY(@ItemIds)
+            ORDER BY s.licence_list_item_id,
+                     s.licence_list_item_licence_set_id;
+            """;
+
+        var lookup = new Dictionary<long, LicenceListItemLicenceSet>();
+
+        await connection
+            .QueryAsync<LicenceListItemLicenceSet, LicenceListItemLicenceSetType, LicenceListItemLicenceSet>(
+                new CommandDefinition(
+                    sql,
+                    new
+                    {
+                        ProcessRunId = processRunId,
+                        ItemIds = itemIds
+                    },
+                    cancellationToken: cancellationToken),
+                (set, type) =>
+                {
+                    if (!lookup.TryGetValue(set.LicenceListItemLicenceSetId, out var existing))
+                    {
+                        existing = set;
+                        lookup[set.LicenceListItemLicenceSetId] = existing;
+                    }
+
+                    if (type != null)
+                    {
+                        existing.LicenceSetTypes.Add(type);
+                    }
+
+                    return existing;
+                },
+                splitOn: "LicenceListItemLicenceSetId");
+
+        return lookup.Values
+            .GroupBy(x => x.LicenceListItemId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<LicenceListItemLicenceSet>)
+                    group.ToArray());
+    }
+
+    private static async Task<
+            Dictionary<long, IReadOnlyList<LicenceListItemLinkedLicence>>>
+        GetLinkedLicencesAsync(
+            NpgsqlConnection connection,
+            int processRunId,
+            long[] itemIds,
+            CancellationToken cancellationToken)
+    {
+        const string linkedSql =
+            """
+            SELECT
+                linked_licence_id
+                    AS LinkedLicenceId,
+                licence_list_item_id
+                    AS LicenceListItemId,
+                licence_number
+                    AS LicenceNumber,
+                raw_scraped_licence_number
+                    AS RawScrapedLicenceNumber,
+                dms_permit_number
+                    AS DmsPermitNumber,
+                dms_path
+                    AS DmsPath,
+                dms_file_id
+                    AS DmsFileId,
+                filename
+                    AS Filename,
+                licence_version_id
+            AS LicenceVersionId,
+                issue_date
+            AS IssueDate,
+                expiry_date
+            AS ExpiryDate,
+            original_issue_date
+            AS OriginalIssueDate,
+            issuer,
+            nald_status
+            AS NaldStatus,
+                licence_type
+            As LicenceType,
+                region_id
+            As RegionId,
+                condition_data AS ConditionData,
+            nald_revocation_date AS NaldRevocationDate,
+            nald_expiry_date AS NaldExpiryDate,
+            nald_orig_effective_date AS NaldOrigEffectiveDate,
+            nald_orig_signature_date AS NaldOrigSignatureDate,
+            nald_signature_date AS NaldSignatureDate,
+            nald_effective_start_date AS NaldEffectiveStartDate,
+            nald_effective_end_date AS NaldEffectiveEndDate,
+            nald_issue_number AS NaldIssueNumber,
+            nald_increment_number AS NaldIncrementNumber,
+            nald_update_reason AS NaldUpdateReason,
+            dms_file_id_status_date_utc As DmsFileIdStatusDateUtc,
+            dms_file_id_status As DmsFileIdStatus,
+            effective_date As EffectiveDate,
+            source_data AS SourceData,
+            licence_version_nald_status AS  LicenceVersionNaldStatus
+            FROM licence_list_item_linked_licence
+              where licence_list_item_id = ANY(@ItemIds)
+            ORDER BY licence_list_item_id,
+                     linked_licence_id;
+            """;
+
+        var linkedRows =
+            (await connection.QueryAsync<LicenceListItemLinkedLicence>(
+                new CommandDefinition(
+                    linkedSql,
+                    new
+                    {
+                        ItemIds = itemIds
+                    },
+                    cancellationToken: cancellationToken)))
+            .ToList();
+
+        if (linkedRows.Count == 0)
+        {
+            return [];
+        }
+
+        var linkedLicenceIds = linkedRows
+            .Select(x => x.LinkedLicenceId)
+            .ToArray();
+
+        const string locationSql =
+            """
+            SELECT
+                linked_licence_id
+                    AS LinkedLicenceId,
+                direction
+                    AS Direction,
+                section_name
+                    AS SectionName,
+                link_reason
+                   AS LinkReason,
+                page_number
+                    AS PageNumber,
+                line_number
+                    AS LineNumber,
+                source
+            AS Source,
+                link_location_id
+            AS LinkLocationId,
+                is_because_of_aggregate
+            AS IsBecauseOfAggregate
+            FROM licence_list_item_link_location
+              where linked_licence_id =
+                  ANY(@LinkedLicenceIds)
+            ORDER BY linked_licence_id;
+            """;
+
+        var locations =
+            await connection.QueryAsync<LicenceListItemLinkLocation>(
+                new CommandDefinition(
+                    locationSql,
+                    new
+                    {
+                        LinkedLicenceIds = linkedLicenceIds
+                    },
+                    cancellationToken: cancellationToken));
+
+        var locationsByLinkedLicenceId = locations
+            .GroupBy(x => x.LinkedLicenceId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(x => new LicenceListItemLinkLocation
+                    {
+                        Direction = x.Direction,
+                        SectionName = x.SectionName,
+                        PageNumber = x.PageNumber,
+                        LineNumber = x.LineNumber,
+                        IsBecauseOfAggregate =  x.IsBecauseOfAggregate,
+                        Source =  x.Source,
+                        LinkReason = x.LinkReason,
+                        LinkedLicenceId =  x.LinkedLicenceId,
+                        LinkLocationId =   x.LinkLocationId,
+                    })
+                    .ToArray());
+
+        foreach (var linkedLicence in linkedRows)
+        {
+            linkedLicence.Locations =
+                locationsByLinkedLicenceId.TryGetValue(
+                    linkedLicence.LinkedLicenceId,
+                    out var linkedLocations)
+                    ? linkedLocations.ToList()
+                    : [];
+        }
+
+        return linkedRows
+            .GroupBy(x => x.LicenceListItemId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<LicenceListItemLinkedLicence>)
+                    group.ToArray());
+    }
+    
+    
+    private static async Task<List<LicenceListItem>>
+    GetLicenceListItemParentsAsync(
+        NpgsqlConnection connection,
+        int processRunId,
+        ProcessRunQuery query,
+        CancellationToken cancellationToken)
+{
+    var sql = new StringBuilder(
+        """
+        SELECT
+            licence_list_item_id AS LicenceListItemId,
+            process_run_id AS ProcessRunId,
+            file_id AS FileId,
+            filename AS Filename,
+            licence_number AS LicenceNumber,
+            licence_holder AS LicenceHolder,
+            limits_count AS LimitsCount,
+            aggregates_count AS AggregatesCount,
+            ocr AS Ocr,
+            issue_date AS IssueDate,
+            issue_year AS IssueYear,
+            issuer AS Issuer,
+            means_found AS MeansFound,
+            status AS Status,
+            purposes_count AS PurposesCount,
+            points_count AS PointsCount,
+            purposes AS Purposes,
+            points AS Points,
+            linked_licences_count AS LinkedLicencesCount,
+            licence_sets_count AS LicenceSetsCount,
+            verification_sections_count AS VerificationSectionsCount,
+            verification_items_count AS VerificationItemsCount,
+            has_verifications AS HasVerifications,
+            created_date_time_utc AS CreatedDateTimeUtc,
+            updated_date_time_utc AS UpdatedDateTimeUtc
+        FROM licence_list_item
+        WHERE process_run_id = @ProcessRunId
+          AND status = 'Live'
+        """);
+
+    var parameters = new DynamicParameters();
+
+    parameters.Add("ProcessRunId", processRunId);
+    parameters.Add("Skip", query.Skip);
+    parameters.Add("Take", query.Take);
+
+    AddLicenceListItemFilters(
+        sql,
+        parameters,
+        query);
+
+    ReadSqlHelper.AddOrdering(
+        sql,
+        query.SortField,
+        query.SortAscending);
+
+    sql.AppendLine(
+        """
+        LIMIT @Take
+        OFFSET @Skip;
+        """);
+
+    var results = await connection.QueryAsync<LicenceListItem>(
+        new CommandDefinition(
+            sql.ToString(),
+            parameters,
+            cancellationToken: cancellationToken));
+
+    return results.ToList();
+}
+
+private static async Task<int>
+    GetLicenceListItemParentsCountAsync(
+        NpgsqlConnection connection,
+        int processRunId,
+        ProcessRunQuery query,
+        CancellationToken cancellationToken)
+{
+    var sql = new StringBuilder(
+        """
+        SELECT COUNT(*)
+        FROM licence_list_item
+        WHERE process_run_id = @ProcessRunId
+          AND status = 'Live'
+        """);
+
+    var parameters = new DynamicParameters();
+
+    parameters.Add("ProcessRunId", processRunId);
+
+    AddLicenceListItemFilters(
+        sql,
+        parameters,
+        query);
+
+    return await connection.ExecuteScalarAsync<int>(
+        new CommandDefinition(
+            sql.ToString(),
+            parameters,
+            cancellationToken: cancellationToken));
+}
+
+private static void AddLicenceListItemFilters(
+    StringBuilder sql,
+    DynamicParameters parameters,
+    ProcessRunQuery query)
+{
+    ReadSqlHelper.AddSearchTermFilter(
+        sql,
+        parameters,
+        query.SearchTermClean);
+
+    ReadSqlHelper.AddStringFilter(
+        sql,
+        parameters,
+        "issuer",
+        "Issuer",
+        query.Issuer);
+
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "ocr",
+        "OcrScan",
+        query.OcrScan);
+
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "means_found",
+        "MeansFound",
+        query.MeansFound);
+
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.PointsEmpty,
+        "points_count");
+
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.PurposesEmpty,
+        "purposes_count");
+
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.LimitsEmpty,
+        "limits_count");
+
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.AggregatesEmpty,
+        "aggregates_count");
+
+    ReadSqlHelper.AddIssueYearFilter(
+        sql,
+        parameters,
+        query.IssueYear?.ToString());
+
+    ReadSqlHelper.AddLinkedLicencesTypeFilter(
+        sql,
+        parameters,
+        query.LinkedLicencesType);
+
+    ReadSqlHelper.AddLicenceSetFilter(
+        sql,
+        parameters,
+        query.ShortLicenceSetId);
+
+    ReadSqlHelper.AddVerificationTypeFilter(
+        sql,
+        parameters,
+        query.VerificationType);
+}
 
     // TODO move to a 'Core' layer
     private static JsonSerializerOptions GetSerializerOptions() =>

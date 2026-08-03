@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Core.Models.OutputSchema;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
-namespace WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
+namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 public sealed class LicenceListRow
 {

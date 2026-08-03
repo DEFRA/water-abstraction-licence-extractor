@@ -5,8 +5,6 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;

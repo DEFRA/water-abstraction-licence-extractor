@@ -5,6 +5,8 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WRADI.Services.Output.AbstractionLicence;
 
@@ -12,7 +14,7 @@ public class DatabaseAbstractionLicenceOutputService(
     IDatabaseReadService ogDatabaseReadService,
     IAbstractionLicenceDatabaseReadService databaseReadService,
     IAbstractionLicenceDatabaseWriteService databaseWriteService,
-    IDatabaseWriteService ogDatabaseWriteService) : IAbstractionLicenceOutputService
+    IDatabaseWriteService ogDatabaseWriteService) : IAbstractionLicenceOutputService, ILicenceListRepository
 {
     public string? OutputFolder { get; set; } = null;
     
@@ -362,5 +364,41 @@ public class DatabaseAbstractionLicenceOutputService(
     public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
     {
         return databaseReadService.GetLicenceFileIdsAsync(processRunId);
+    }
+    
+    public async Task<long> UpsertLicenceListItemAsync(UpsertLicenceListItem item, CancellationToken cancellationToken = default)
+    {
+        return await databaseWriteService.UpsertLicenceListItemAsync(item, cancellationToken);
+    }
+
+    public async Task UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items, CancellationToken cancellationToken = default)
+    {
+        await databaseWriteService.UpsertLicenceListItemManyAsync(items, cancellationToken);
+    }
+
+    public async Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(int processRunId,
+        ProcessRunQuery query)
+    {
+        return await databaseReadService.GetLicencesListSearchAsync(processRunId, query);
+    }
+
+    public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
+    {
+        return await databaseReadService.GetLicencesListSearchCountAsync(processRunId, query);
+    }
+
+    public async Task<List<string>> GetLicenceListIssuersAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListLicenceSetIdsAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListIssueYearsAsync(processRunId);
     }
 }

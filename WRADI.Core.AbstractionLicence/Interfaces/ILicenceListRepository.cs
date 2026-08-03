@@ -1,8 +1,8 @@
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
-namespace WALE.ProcessFile.Core.Interfaces;
+namespace WRADI.Core.AbstractionLicence.Interfaces;
 
 public interface ILicenceListRepository
 {
@@ -27,4 +27,4 @@ public interface ILicenceListRepository
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
     
     Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
-}  
+}

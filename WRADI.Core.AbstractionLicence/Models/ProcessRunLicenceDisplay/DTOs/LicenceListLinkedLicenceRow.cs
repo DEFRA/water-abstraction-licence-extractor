@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
+namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 public sealed class LicenceListLinkedLicenceRow
 {

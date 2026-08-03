@@ -1,17 +1,12 @@
-using System.Text.Json.Serialization;
-using Newtonsoft.Json;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
+using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WALE.Api.Services;
-
-using System.Globalization;
-using System.Text.Json;
 
 public class LicenceListItemModelService
     : ILicenceListItemModelService
@@ -58,15 +53,15 @@ public class LicenceListItemModelService
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,
 
-            Purposes = source.purposes
+            Purposes = source.purposes?
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x!)
-                .ToArray(),
+                .ToArray() ?? [],
 
-            Points = source.points
+            Points = source.points?
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x!)
-                .ToArray(),
+                .ToArray() ?? [],
 
             LimitsCount = source.limitsCount,
             AggregatesCount = source.aggregatesCount,
@@ -85,7 +80,9 @@ public class LicenceListItemModelService
                 .Select(ToUpsertLicenceSet)
                 .ToArray() ?? [],
 
-            LicenceSectionVerifications = source.licenceSectionVerifications?.Any() == true ? source.licenceSectionVerifications?.ToArray() : [],
+            LicenceSectionVerifications = source.licenceSectionVerifications?.Any() == true
+                ? source.licenceSectionVerifications?.ToArray() ?? []
+                : [],
         };
     }
 
@@ -176,10 +173,10 @@ public class LicenceListItemModelService
         return new ContainedInInformation
         {
             LinkReason = source.LinkReason,
-            IsBecauseOfAggregate =  source.IsBecauseOfAggregate,
-            LineNumber =  source.LineNumber,
-            PageNumber =   source.PageNumber,
-            SectionName =  source.SectionName,
+            //IsBecauseOfAggregate =  source.IsBecauseOfAggregate, // NOTE not sure if this should be done elsewhere now
+            LineNumber = source.LineNumber,
+            PageNumber = source.PageNumber,
+            SectionName = source.SectionName,
             Source = ParseEnum<InformationSource>(source.Source),
             Direction = ParseEnum<InformationDirection>(source.Direction),
         };
@@ -298,10 +295,10 @@ public class LicenceListItemModelService
         return new UpsertContainedInInformation
         {
             Source = source.Source.ToString(),
-            Direction = source.Direction.ToString(),
+            Direction = source.Direction?.ToString() ?? string.Empty,
             SectionName = source.SectionName,
             LinkReason = source.LinkReason,
-            IsBecauseOfAggregate = source.IsBecauseOfAggregate,
+            //IsBecauseOfAggregate = source.IsBecauseOfAggregate, // NOTE not sure if this should be done elsewhere now
             LineNumber = source.LineNumber,
             PageNumber = source.PageNumber
         };

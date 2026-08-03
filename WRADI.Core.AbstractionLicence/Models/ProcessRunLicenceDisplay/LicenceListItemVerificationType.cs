@@ -1,5 +1,4 @@
-namespace WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
-
+namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 public sealed class LicenceListItemVerificationType
 {
     public long VerificationItemId { get; set; }

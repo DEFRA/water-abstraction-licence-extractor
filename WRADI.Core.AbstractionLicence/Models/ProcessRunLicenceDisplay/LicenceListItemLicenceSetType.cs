@@ -1,6 +1,6 @@
-using WALE.ProcessFile.Core.Enums.OutputSchema;
+using WRADI.Core.AbstractionLicence.Enums;
 
-namespace WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
+namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 
 public sealed class LicenceListItemLicenceSetType
 {

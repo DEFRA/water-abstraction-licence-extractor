@@ -1,11 +1,8 @@
-using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
-namespace WALE.ProcessFile.Core.Interfaces;
-
-using System.Globalization;
-using System.Text.Json;
+namespace WRADI.Core.AbstractionLicence.Interfaces;
 
 public interface ILicenceListItemModelService
 {

@@ -1,4 +1,5 @@
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WRADI.Core.AbstractionLicence.Interfaces;
 
@@ -38,4 +39,9 @@ public interface IAbstractionLicenceDatabaseWriteService
         Guid? fileId,
         string? permitNumber,
         int processRunId);
+    
+    Task<long> UpsertLicenceListItemAsync(UpsertLicenceListItem item, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<long>> UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items,
+        CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,3 @@
-using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
-
 namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
 public sealed class LicenceListRow

@@ -4,8 +4,6 @@ using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.RuleEngine.Helpers;
-using WALE.ProcessFile.RuleEngine.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Configuration;
@@ -23,6 +21,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Helpers;
+using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Services;
 
 namespace WALE.Tools._1stHalf;
 

@@ -4,13 +4,16 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Services.Output;
 
 public class DatabaseOutputService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService) : IOutputService
+    IDatabaseWriteService databaseWriteService) : IOutputService, ILicenceListRepository
 {
     public string? OutputFolder { get; set; } = null;
 
@@ -226,5 +229,41 @@ public class DatabaseOutputService(
         stream.Close();
 
         return bytes;
+    }
+
+    public async Task<long> UpsertLicenceListItemAsync(UpsertLicenceListItem item, CancellationToken cancellationToken = default)
+    {
+        return await databaseWriteService.UpsertLicenceListItemAsync(item, cancellationToken);
+    }
+
+    public async Task UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items, CancellationToken cancellationToken = default)
+    {
+       await databaseWriteService.UpsertLicenceListItemManyAsync(items, cancellationToken);
+    }
+
+    public async Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(int processRunId,
+        ProcessRunQuery query)
+    {
+        return await databaseReadService.GetLicencesListSearchAsync(processRunId, query);
+    }
+
+    public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
+    {
+         return await databaseReadService.GetLicencesListSearchCountAsync(processRunId, query);
+    }
+
+    public async Task<List<string>> GetLicenceListIssuersAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    {
+       return await databaseReadService.GetLicenceListLicenceSetIdsAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListIssueYearsAsync(processRunId);
     }
 }

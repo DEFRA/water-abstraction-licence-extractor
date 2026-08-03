@@ -14,7 +14,7 @@ export class Client {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:8080/";
+        this.baseUrl = baseUrl ?? "https://wli-api-dev.aws-int.defra.cloud/";
     }
 
     /**
@@ -117,19 +117,14 @@ export class Client {
 
     /**
      * @param permitNumber (optional) 
-     * @param filterContainedIn (optional) 
      * @return OK
      */
-    getOutgoing(permitNumber: string | undefined, filterContainedIn: boolean | undefined): Promise<LinkedLicence[]> {
+    getOutgoing(permitNumber: string | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/Public/LinkedLicences/GetOutgoing?";
         if (permitNumber === null)
             throw new globalThis.Error("The parameter 'permitNumber' cannot be null.");
         else if (permitNumber !== undefined)
             url_ += "permitNumber=" + encodeURIComponent("" + permitNumber) + "&";
-        if (filterContainedIn === null)
-            throw new globalThis.Error("The parameter 'filterContainedIn' cannot be null.");
-        else if (filterContainedIn !== undefined)
-            url_ += "filterContainedIn=" + encodeURIComponent("" + filterContainedIn) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -317,44 +312,6 @@ export class Client {
     }
 
     /**
-     * @param licenceNumber (optional) 
-     * @return OK
-     */
-    getFileData(licenceNumber: string | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Dms/GetFileData?";
-        if (licenceNumber === null)
-            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
-        else if (licenceNumber !== undefined)
-            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetFileData(_response);
-        });
-    }
-
-    protected processGetFileData(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
      * @return OK
      */
     getFileIds(): Promise<void> {
@@ -373,44 +330,6 @@ export class Client {
     }
 
     protected processGetFileIds(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @return OK
-     */
-    getFileIdInformation(fileId: string | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Dms/GetFileIdInformation?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetFileIdInformation(_response);
-        });
-    }
-
-    protected processGetFileIdInformation(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -577,24 +496,14 @@ export class Client {
 
     /**
      * @param filename (optional) 
-     * @param chunkIndex (optional) 
-     * @param chunkSize (optional) 
      * @return OK
      */
-    get(filename: string | undefined, chunkIndex: number | undefined, chunkSize: number | undefined): Promise<void> {
+    get(filename: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Files/Get?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
-        if (chunkIndex === null)
-            throw new globalThis.Error("The parameter 'chunkIndex' cannot be null.");
-        else if (chunkIndex !== undefined)
-            url_ += "chunkIndex=" + encodeURIComponent("" + chunkIndex) + "&";
-        if (chunkSize === null)
-            throw new globalThis.Error("The parameter 'chunkSize' cannot be null.");
-        else if (chunkSize !== undefined)
-            url_ += "chunkSize=" + encodeURIComponent("" + chunkSize) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -662,44 +571,11 @@ export class Client {
     }
 
     /**
-     * @return OK
-     */
-    getAll2(): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/FirstNames/GetAll";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll2(_response);
-        });
-    }
-
-    protected processGetAll2(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
      * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    getAll3(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    getAll2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Images/GetAll?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -718,11 +594,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll3(_response);
+            return this.processGetAll2(_response);
         });
     }
 
-    protected processGetAll3(response: Response): Promise<void> {
+    protected processGetAll2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1162,24 +1038,14 @@ export class Client {
 
     /**
      * @param processRunId (optional) 
-     * @param skip (optional) 
-     * @param take (optional) 
      * @return OK
      */
-    getAll4(processRunId: number | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
+    getAll3(processRunId: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetAll?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        if (skip === null)
-            throw new globalThis.Error("The parameter 'skip' cannot be null.");
-        else if (skip !== undefined)
-            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
-        if (take === null)
-            throw new globalThis.Error("The parameter 'take' cannot be null.");
-        else if (take !== undefined)
-            url_ += "take=" + encodeURIComponent("" + take) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1189,97 +1055,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll4(_response);
+            return this.processGetAll3(_response);
         });
     }
 
-    protected processGetAll4(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @param processRunId (optional) 
-     * @return OK
-     */
-    getByFileId(fileId: string | undefined, processRunId: number | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Licence/GetByFileId?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetByFileId(_response);
-        });
-    }
-
-    protected processGetByFileId(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @param licenceNumber (optional) 
-     * @param processRunId (optional) 
-     * @return OK
-     */
-    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Licence/GetByLicenceNumber?";
-        if (licenceNumber === null)
-            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
-        else if (licenceNumber !== undefined)
-            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetByLicenceNumber(_response);
-        });
-    }
-
-    protected processGetByLicenceNumber(response: Response): Promise<void> {
+    protected processGetAll3(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1317,43 +1097,6 @@ export class Client {
     }
 
     protected processSave(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    update(body: UpdateLicenceRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Licence/Update";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdate(_response);
-        });
-    }
-
-    protected processUpdate(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1428,44 +1171,6 @@ export class Client {
     }
 
     protected processSaveLicenceSets(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @return OK
-     */
-    get2(fileId: string | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/LicenceFinder/Get?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet2(_response);
-        });
-    }
-
-    protected processGet2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1738,85 +1443,11 @@ export class Client {
     }
 
     /**
-     * @return OK
-     */
-    saveStub(body: SaveStubMatchResultRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/MatchResult/SaveStub";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSaveStub(_response);
-        });
-    }
-
-    protected processSaveStub(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    saveError(body: SaveErrorMatchResultRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/MatchResult/SaveError";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSaveError(_response);
-        });
-    }
-
-    protected processSaveError(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
      * @param fileId (optional) 
      * @param noOcrServiceName (optional) 
      * @return OK
      */
-    get3(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
+    get2(fileId: string | undefined, noOcrServiceName: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Metadata/Get?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -1835,11 +1466,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet3(_response);
+            return this.processGet2(_response);
         });
     }
 
-    protected processGet3(response: Response): Promise<void> {
+    protected processGet2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1861,7 +1492,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getAll5(regionCode: number | undefined, allVersions: boolean | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
+    getAll4(regionCode: number | undefined, allVersions: boolean | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/GetAll?";
         if (regionCode === null)
             throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
@@ -1888,44 +1519,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll5(_response);
+            return this.processGetAll4(_response);
         });
     }
 
-    protected processGetAll5(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    getImpoundmentAndAbstractionLicences(): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/NaldData/GetImpoundmentAndAbstractionLicences";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetImpoundmentAndAbstractionLicences(_response);
-        });
-    }
-
-    protected processGetImpoundmentAndAbstractionLicences(response: Response): Promise<void> {
+    protected processGetAll4(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2007,49 +1605,6 @@ export class Client {
     }
 
     protected processGetCurrentIncrementNumber(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @param licenceNumber (optional) 
-     * @param regionCode (optional) 
-     * @return OK
-     */
-    get4(licenceNumber: string | undefined, regionCode: number | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/NaldData/Get?";
-        if (licenceNumber === null)
-            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
-        else if (licenceNumber !== undefined)
-            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
-        if (regionCode === null)
-            throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
-        else if (regionCode !== undefined)
-            url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGet4(_response);
-        });
-    }
-
-    protected processGet4(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2622,154 +2177,6 @@ export class Client {
     /**
      * @return OK
      */
-    markProcessRunCompleteIfComplete(body: ProcessRunEndRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunCompleteIfComplete";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processMarkProcessRunCompleteIfComplete(_response);
-        });
-    }
-
-    protected processMarkProcessRunCompleteIfComplete(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    addProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/AddProcessRunFile";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddProcessRunFile(_response);
-        });
-    }
-
-    protected processAddProcessRunFile(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    markProcessRunFileComplete(body: ProcessRunFileRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/MarkProcessRunFileComplete";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processMarkProcessRunFileComplete(_response);
-        });
-    }
-
-    protected processMarkProcessRunFileComplete(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    reportErrorProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/ProcessRun/ReportErrorProcessRunFile";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processReportErrorProcessRunFile(_response);
-        });
-    }
-
-    protected processReportErrorProcessRunFile(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
     finish(body: ProcessRunEndRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/Finish";
         url_ = url_.replace(/[?&]$/, "");
@@ -2840,7 +2247,7 @@ export class Client {
     /**
      * @return OK
      */
-    getAll6(): Promise<void> {
+    getAll5(): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/VersionFiles/GetAll";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2851,11 +2258,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAll6(_response);
+            return this.processGetAll5(_response);
         });
     }
 
-    protected processGetAll6(response: Response): Promise<void> {
+    protected processGetAll5(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3057,96 +2464,6 @@ export class Client {
      * @param processRunId (optional) 
      * @return OK
      */
-    getMatchesResult(fileId: string | undefined, processRunId: number | undefined): Promise<MatchesResult2> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetMatchesResult?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMatchesResult(_response);
-        });
-    }
-
-    protected processGetMatchesResult(response: Response): Promise<MatchesResult2> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = MatchesResult2.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<MatchesResult2>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @return OK
-     */
-    matchesResultString(fileId: string | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/MatchesResultString?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processMatchesResultString(_response);
-        });
-    }
-
-    protected processMatchesResultString(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @param processRunId (optional) 
-     * @return OK
-     */
     licence(fileId: string | undefined, processRunId: number | undefined): Promise<Licence> {
         let url_ = this.baseUrl + "/BFF/FileData/Licence?";
         if (fileId === null)
@@ -3187,54 +2504,6 @@ export class Client {
             });
         }
         return Promise.resolve<Licence>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @param processRunId (optional) 
-     * @return OK
-     */
-    licenceString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/LicenceString?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLicenceString(_response);
-        });
-    }
-
-    protected processLicenceString(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
     }
 
     /**
@@ -3287,49 +2556,6 @@ export class Client {
     }
 
     /**
-     * @param fileId (optional) 
-     * @return OK
-     */
-    licenceSetsString(fileId: string | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/LicenceSetsString?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLicenceSetsString(_response);
-        });
-    }
-
-    protected processLicenceSetsString(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
-    }
-
-    /**
      * @param licenceFileId (optional) 
      * @return OK
      */
@@ -3354,55 +2580,6 @@ export class Client {
     }
 
     protected processLicenceSectionVerifications(response: Response): Promise<LicenceSectionVerification[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(LicenceSectionVerification.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<LicenceSectionVerification[]>(null as any);
-    }
-
-    /**
-     * @param maxProcessRunId (optional) 
-     * @return OK
-     */
-    getAllVerifications(maxProcessRunId: number | undefined): Promise<LicenceSectionVerification[]> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetAllVerifications?";
-        if (maxProcessRunId === null)
-            throw new globalThis.Error("The parameter 'maxProcessRunId' cannot be null.");
-        else if (maxProcessRunId !== undefined)
-            url_ += "maxProcessRunId=" + encodeURIComponent("" + maxProcessRunId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAllVerifications(_response);
-        });
-    }
-
-    protected processGetAllVerifications(response: Response): Promise<LicenceSectionVerification[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3592,48 +2769,6 @@ export class Client {
     }
 
     protected processDelete(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    rename(body: RenameRequest): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/Files/Rename";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processRename(_response);
-        });
-    }
-
-    protected processRename(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3938,81 +3073,6 @@ export class Client {
     }
 
     /**
-     * @param delayInSeconds (optional) 
-     * @return OK
-     */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
-        if (delayInSeconds === null)
-            throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
-        else if (delayInSeconds !== undefined)
-            url_ += "delayInSeconds=" + encodeURIComponent("" + delayInSeconds) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "POST",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSendFileProcessOrchestrationMessage(_response);
-        });
-    }
-
-    protected processSendFileProcessOrchestrationMessage(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    sendFileProcessSingleMessage(body: FileProcessSingleRequest): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessSingleMessage";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSendFileProcessSingleMessage(_response);
-        });
-    }
-
-    protected processSendFileProcessSingleMessage(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
      * @return OK
      */
     getProcessRuns(): Promise<ProcessRun[]> {
@@ -4057,61 +3117,20 @@ export class Client {
     }
 
     /**
-     * @return OK
-     */
-    getAllProcessRuns(): Promise<ProcessRun[]> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetAllProcessRuns";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetAllProcessRuns(_response);
-        });
-    }
-
-    protected processGetAllProcessRuns(response: Response): Promise<ProcessRun[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(ProcessRun.fromJS(item));
-            }
-            else {
-                result200 = null as any;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ProcessRun[]>(null as any);
-    }
-
-    /**
-     * @param processRunId (optional) 
+     * @param searchTerm (optional) 
      * @param skip (optional) 
      * @param take (optional) 
      * @return OK
      */
-    getProcessRunLicenceSets(processRunId: number | undefined, skip: number | undefined, take: number | undefined): Promise<{ [key: string]: LicenceSet; }> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunLicenceSets?";
-        if (processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
-        else if (processRunId !== undefined)
-            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+    getProcessRun(processRunId: number, searchTerm: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunResponse> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        if (searchTerm === null)
+            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
+        else if (searchTerm !== undefined)
+            url_ += "searchTerm=" + encodeURIComponent("" + searchTerm) + "&";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
         else if (skip !== undefined)
@@ -4120,140 +3139,6 @@ export class Client {
             throw new globalThis.Error("The parameter 'take' cannot be null.");
         else if (take !== undefined)
             url_ += "take=" + encodeURIComponent("" + take) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetProcessRunLicenceSets(_response);
-        });
-    }
-
-    protected processGetProcessRunLicenceSets(response: Response): Promise<{ [key: string]: LicenceSet; }> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (resultData200) {
-                result200 = {} as any;
-                for (let key in resultData200) {
-                    if (resultData200.hasOwnProperty(key))
-                        (result200 as any)![key] = resultData200[key] ? LicenceSet.fromJS(resultData200[key]) : new LicenceSet();
-                }
-            }
-            else {
-                result200 = null as any;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<{ [key: string]: LicenceSet; }>(null as any);
-    }
-
-    /**
-     * @param searchTerm (optional) 
-     * @param searchTermClean (optional) 
-     * @param skip (optional) 
-     * @param take (optional) 
-     * @param issuer (optional) 
-     * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
-     * @param ocrScan (optional) 
-     * @param purposesEmpty (optional) 
-     * @param pointsEmpty (optional) 
-     * @param issueYear (optional) 
-     * @param meansFound (optional) 
-     * @param shortLicenceSetId (optional) 
-     * @param linkedLicencesType (optional) 
-     * @param verificationType (optional) 
-     * @param sortField (optional) 
-     * @param sortAscending (optional) 
-     * @return OK
-     */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
-        if (processRunId === undefined || processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
-        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        if (searchTerm === null)
-            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
-        else if (searchTerm !== undefined)
-            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
-        if (searchTermClean === null)
-            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
-        else if (searchTermClean !== undefined)
-            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
-        if (skip === null)
-            throw new globalThis.Error("The parameter 'skip' cannot be null.");
-        else if (skip !== undefined)
-            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
-        if (take === null)
-            throw new globalThis.Error("The parameter 'take' cannot be null.");
-        else if (take !== undefined)
-            url_ += "Take=" + encodeURIComponent("" + take) + "&";
-        if (issuer === null)
-            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
-        else if (issuer !== undefined)
-            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
-        if (limitsEmpty === null)
-            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
-        else if (limitsEmpty !== undefined)
-            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
-        if (ocrScan === null)
-            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
-        else if (ocrScan !== undefined)
-            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
-        if (purposesEmpty === null)
-            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
-        else if (purposesEmpty !== undefined)
-            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
-        if (pointsEmpty === null)
-            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
-        else if (pointsEmpty !== undefined)
-            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
-        if (issueYear === null)
-            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
-        else if (issueYear !== undefined)
-            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
-        if (meansFound === null)
-            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
-        else if (meansFound !== undefined)
-            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
-        if (shortLicenceSetId === null)
-            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
-        else if (shortLicenceSetId !== undefined)
-            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
-        if (linkedLicencesType === null)
-            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
-        else if (linkedLicencesType !== undefined)
-            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
-        if (verificationType === null)
-            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
-        else if (verificationType !== undefined)
-            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
-        if (sortField === null)
-            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
-        else if (sortField !== undefined)
-            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
-        if (sortAscending === null)
-            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
-        else if (sortAscending !== undefined)
-            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4284,172 +3169,6 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRunResponse>(null as any);
-    }
-
-    /**
-     * @param searchTerm (optional) 
-     * @param searchTermClean (optional) 
-     * @param skip (optional) 
-     * @param take (optional) 
-     * @param issuer (optional) 
-     * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
-     * @param ocrScan (optional) 
-     * @param purposesEmpty (optional) 
-     * @param pointsEmpty (optional) 
-     * @param issueYear (optional) 
-     * @param meansFound (optional) 
-     * @param shortLicenceSetId (optional) 
-     * @param linkedLicencesType (optional) 
-     * @param verificationType (optional) 
-     * @param sortField (optional) 
-     * @param sortAscending (optional) 
-     * @return OK
-     */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
-        if (processRunId === undefined || processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
-        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        if (searchTerm === null)
-            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
-        else if (searchTerm !== undefined)
-            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
-        if (searchTermClean === null)
-            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
-        else if (searchTermClean !== undefined)
-            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
-        if (skip === null)
-            throw new globalThis.Error("The parameter 'skip' cannot be null.");
-        else if (skip !== undefined)
-            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
-        if (take === null)
-            throw new globalThis.Error("The parameter 'take' cannot be null.");
-        else if (take !== undefined)
-            url_ += "Take=" + encodeURIComponent("" + take) + "&";
-        if (issuer === null)
-            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
-        else if (issuer !== undefined)
-            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
-        if (limitsEmpty === null)
-            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
-        else if (limitsEmpty !== undefined)
-            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
-        if (ocrScan === null)
-            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
-        else if (ocrScan !== undefined)
-            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
-        if (purposesEmpty === null)
-            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
-        else if (purposesEmpty !== undefined)
-            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
-        if (pointsEmpty === null)
-            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
-        else if (pointsEmpty !== undefined)
-            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
-        if (issueYear === null)
-            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
-        else if (issueYear !== undefined)
-            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
-        if (meansFound === null)
-            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
-        else if (meansFound !== undefined)
-            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
-        if (shortLicenceSetId === null)
-            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
-        else if (shortLicenceSetId !== undefined)
-            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
-        if (linkedLicencesType === null)
-            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
-        else if (linkedLicencesType !== undefined)
-            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
-        if (verificationType === null)
-            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
-        else if (verificationType !== undefined)
-            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
-        if (sortField === null)
-            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
-        else if (sortField !== undefined)
-            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
-        if (sortAscending === null)
-            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
-        else if (sortAscending !== undefined)
-            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetProcessRunList(_response);
-        });
-    }
-
-    protected processGetProcessRunList(response: Response): Promise<ProcessRunResponse> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ProcessRunResponse.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ProcessRunResponse>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    updateLicenceListProcessRun(processRunId: number): Promise<number> {
-        let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
-        if (processRunId === undefined || processRunId === null)
-            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
-        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateLicenceListProcessRun(_response);
-        });
-    }
-
-    protected processUpdateLicenceListProcessRun(response: Response): Promise<number> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<number>(null as any);
     }
 
     /**
@@ -4497,13 +3216,12 @@ export class Client {
 }
 
 export class AbstractionLimit implements IAbstractionLimit {
-    periodType?: LimitPeriodType;
+    periodType?: number;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
-    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4530,7 +3248,6 @@ export class AbstractionLimit implements IAbstractionLimit {
             this.implicitLimit = _data["implicitLimit"];
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
-            this.valueAdditionalText = _data["valueAdditionalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4563,7 +3280,6 @@ export class AbstractionLimit implements IAbstractionLimit {
         data["implicitLimit"] = this.implicitLimit;
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
-        data["valueAdditionalText"] = this.valueAdditionalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4579,13 +3295,12 @@ export class AbstractionLimit implements IAbstractionLimit {
 }
 
 export interface IAbstractionLimit {
-    periodType?: LimitPeriodType;
+    periodType?: number;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
-    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4593,13 +3308,12 @@ export interface IAbstractionLimit {
 }
 
 export class AbstractionLimit2 implements IAbstractionLimit2 {
-    periodType?: LimitPeriodType;
+    periodType?: number;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
-    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4626,7 +3340,6 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
             this.implicitLimit = _data["implicitLimit"];
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
-            this.valueAdditionalText = _data["valueAdditionalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4659,7 +3372,6 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
         data["implicitLimit"] = this.implicitLimit;
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
-        data["valueAdditionalText"] = this.valueAdditionalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4675,13 +3387,12 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
 }
 
 export interface IAbstractionLimit2 {
-    periodType?: LimitPeriodType;
+    periodType?: number;
     value?: number | undefined;
     units?: string | undefined;
     implicitLimit?: boolean | undefined;
     isAverage?: boolean;
     averagePeriod?: number | undefined;
-    valueAdditionalText?: string | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4689,11 +3400,8 @@ export interface IAbstractionLimit2 {
 }
 
 export class AbstractionLimitGroup implements IAbstractionLimitGroup {
-    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -4714,18 +3422,11 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
-            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
                     this.limits!.push(AbstractionLimit2.fromJS(item));
-            }
-            if (Array.isArray(_data["containedIn"])) {
-                this.containedIn = [] as any;
-                for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -4753,18 +3454,11 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
-        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
                 data["limits"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.containedIn)) {
-            data["containedIn"] = [];
-            for (let item of this.containedIn)
-                data["containedIn"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -4781,11 +3475,8 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
 }
 
 export interface IAbstractionLimitGroup {
-    documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -4863,18 +3554,15 @@ export interface IAbstractionLimits {
 export class Aggregate implements IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
+    licenceNumber?: string | undefined;
+    licenceVersionId?: string | undefined;
+    primaryType?: number;
+    subType?: number | undefined;
     naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    linkedLicences?: LinkedLicence[] | undefined;
+    timePeriod?: TimePeriod | undefined;
     limits?: any[];
-    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -4897,29 +3585,22 @@ export class Aggregate implements IAggregate {
             }
             this.id = _data["id"];
             this.aggregateSetId = _data["aggregateSetId"];
-            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
-            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
-            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
+            this.licenceNumber = _data["licenceNumber"];
+            this.licenceVersionId = _data["licenceVersionId"];
             this.primaryType = _data["primaryType"];
             this.subType = _data["subType"];
             this.naldType = _data["naldType"];
+            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(item);
+                    this.linkedLicences!.push(LinkedLicence.fromJS(item));
             }
-            this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
-            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
                     this.limits!.push(item);
-            }
-            if (Array.isArray(_data["containedIn"])) {
-                this.containedIn = [] as any;
-                for (let item of _data["containedIn"])
-                    this.containedIn!.push(item);
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -4949,29 +3630,22 @@ export class Aggregate implements IAggregate {
         }
         data["id"] = this.id;
         data["aggregateSetId"] = this.aggregateSetId;
-        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
-        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
-        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
+        data["licenceNumber"] = this.licenceNumber;
+        data["licenceVersionId"] = this.licenceVersionId;
         data["primaryType"] = this.primaryType;
         data["subType"] = this.subType;
         data["naldType"] = this.naldType;
+        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item);
+                data["linkedLicences"].push(item ? item.toJSON() : undefined as any);
         }
-        data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
-        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
                 data["limits"].push(item);
-        }
-        if (Array.isArray(this.containedIn)) {
-            data["containedIn"] = [];
-            for (let item of this.containedIn)
-                data["containedIn"].push(item);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -4990,18 +3664,15 @@ export class Aggregate implements IAggregate {
 export interface IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
+    licenceNumber?: string | undefined;
+    licenceVersionId?: string | undefined;
+    primaryType?: number;
+    subType?: number | undefined;
     naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    linkedLicences?: LinkedLicence[] | undefined;
+    timePeriod?: TimePeriod | undefined;
     limits?: any[];
-    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -5010,7 +3681,7 @@ export interface IAggregate {
 
 export class AggregateSet implements IAggregateSet {
     aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
+    aggregates?: Aggregate[];
 
     [key: string]: any;
 
@@ -5033,7 +3704,7 @@ export class AggregateSet implements IAggregateSet {
             if (Array.isArray(_data["aggregates"])) {
                 this.aggregates = [] as any;
                 for (let item of _data["aggregates"])
-                    this.aggregates!.push(AggregateWithContext.fromJS(item));
+                    this.aggregates!.push(Aggregate.fromJS(item));
             }
         }
     }
@@ -5063,155 +3734,7 @@ export class AggregateSet implements IAggregateSet {
 
 export interface IAggregateSet {
     aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
-
-    [key: string]: any;
-}
-
-export class AggregateWithContext implements IAggregateWithContext {
-    id?: string | undefined;
-    aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
-    naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
-    points?: any[] | undefined;
-    purposes?: any[] | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IAggregateWithContext) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
-            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
-            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
-            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
-            this.primaryType = _data["primaryType"];
-            this.subType = _data["subType"];
-            this.naldType = _data["naldType"];
-            if (Array.isArray(_data["linkedLicences"])) {
-                this.linkedLicences = [] as any;
-                for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(item);
-            }
-            this.documentIdentifier = _data["documentIdentifier"];
-            this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
-            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
-            if (Array.isArray(_data["limits"])) {
-                this.limits = [] as any;
-                for (let item of _data["limits"])
-                    this.limits!.push(AbstractionLimit2.fromJS(item));
-            }
-            if (Array.isArray(_data["containedIn"])) {
-                this.containedIn = [] as any;
-                for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
-            }
-            if (Array.isArray(_data["points"])) {
-                this.points = [] as any;
-                for (let item of _data["points"])
-                    this.points!.push(item);
-            }
-            if (Array.isArray(_data["purposes"])) {
-                this.purposes = [] as any;
-                for (let item of _data["purposes"])
-                    this.purposes!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): AggregateWithContext {
-        data = typeof data === 'object' ? data : {};
-        let result = new AggregateWithContext();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
-        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
-        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
-        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
-        data["primaryType"] = this.primaryType;
-        data["subType"] = this.subType;
-        data["naldType"] = this.naldType;
-        if (Array.isArray(this.linkedLicences)) {
-            data["linkedLicences"] = [];
-            for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item);
-        }
-        data["documentIdentifier"] = this.documentIdentifier;
-        data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
-        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
-        if (Array.isArray(this.limits)) {
-            data["limits"] = [];
-            for (let item of this.limits)
-                data["limits"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.containedIn)) {
-            data["containedIn"] = [];
-            for (let item of this.containedIn)
-                data["containedIn"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.points)) {
-            data["points"] = [];
-            for (let item of this.points)
-                data["points"].push(item);
-        }
-        if (Array.isArray(this.purposes)) {
-            data["purposes"] = [];
-            for (let item of this.purposes)
-                data["purposes"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IAggregateWithContext {
-    id?: string | undefined;
-    aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
-    naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
-    points?: any[] | undefined;
-    purposes?: any[] | undefined;
+    aggregates?: Aggregate[];
 
     [key: string]: any;
 }
@@ -5268,76 +3791,13 @@ export interface ICondition {
     [key: string]: any;
 }
 
-export class ContainedInInformation implements IContainedInInformation {
-    source?: InformationSource;
-    direction?: InformationDirection;
-    sectionName?: string | undefined;
-    linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
-    lineNumber?: number | undefined;
-    pageNumber?: number | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IContainedInInformation) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.source = _data["source"];
-            this.direction = _data["direction"];
-            this.sectionName = _data["sectionName"];
-            this.linkReason = _data["linkReason"];
-            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
-            this.lineNumber = _data["lineNumber"];
-            this.pageNumber = _data["pageNumber"];
-        }
-    }
-
-    static fromJS(data: any): ContainedInInformation {
-        data = typeof data === 'object' ? data : {};
-        let result = new ContainedInInformation();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["source"] = this.source;
-        data["direction"] = this.direction;
-        data["sectionName"] = this.sectionName;
-        data["linkReason"] = this.linkReason;
-        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
-        data["lineNumber"] = this.lineNumber;
-        data["pageNumber"] = this.pageNumber;
-        return data;
-    }
-}
-
-export interface IContainedInInformation {
-    source?: InformationSource;
-    direction?: InformationDirection;
-    sectionName?: string | undefined;
-    linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
-    lineNumber?: number | undefined;
-    pageNumber?: number | undefined;
-
-    [key: string]: any;
+export enum ConfidenceType {
+    NotSet = "NotSet",
+    OcrConfidencePassthrough = "OcrConfidencePassthrough",
+    OcrConfidenceMultiplied = "OcrConfidenceMultiplied",
+    OcrConfidenceMultipliedMinusNPerLine = "OcrConfidenceMultipliedMinusNPerLine",
+    OcrConfidencePassthroughMinusNPerLine = "OcrConfidencePassthroughMinusNPerLine",
+    Static = "Static",
 }
 
 export class DmsFileIdInformation implements IDmsFileIdInformation {
@@ -5840,103 +4300,6 @@ export interface IFileMetadata {
     [key: string]: any;
 }
 
-export class FileProcessSingleRequest implements IFileProcessSingleRequest {
-    filePath?: string | undefined;
-    permitNumber?: string | undefined;
-    dmsPath?: string | undefined;
-    destinationFileName?: string | undefined;
-    fileId?: string;
-    regionId?: number;
-    processRunId?: number | undefined;
-    delayInSeconds?: number | undefined;
-    requestedAt?: Date;
-    lockRetryCount?: number;
-
-    [key: string]: any;
-
-    constructor(data?: IFileProcessSingleRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.filePath = _data["filePath"];
-            this.permitNumber = _data["permitNumber"];
-            this.dmsPath = _data["dmsPath"];
-            this.destinationFileName = _data["destinationFileName"];
-            this.fileId = _data["fileId"];
-            this.regionId = _data["regionId"];
-            this.processRunId = _data["processRunId"];
-            this.delayInSeconds = _data["delayInSeconds"];
-            this.requestedAt = _data["requestedAt"] ? new Date(_data["requestedAt"].toString()) : undefined as any;
-            this.lockRetryCount = _data["lockRetryCount"];
-        }
-    }
-
-    static fromJS(data: any): FileProcessSingleRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new FileProcessSingleRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["filePath"] = this.filePath;
-        data["permitNumber"] = this.permitNumber;
-        data["dmsPath"] = this.dmsPath;
-        data["destinationFileName"] = this.destinationFileName;
-        data["fileId"] = this.fileId;
-        data["regionId"] = this.regionId;
-        data["processRunId"] = this.processRunId;
-        data["delayInSeconds"] = this.delayInSeconds;
-        data["requestedAt"] = this.requestedAt ? this.requestedAt.toISOString() : undefined as any;
-        data["lockRetryCount"] = this.lockRetryCount;
-        return data;
-    }
-}
-
-export interface IFileProcessSingleRequest {
-    filePath?: string | undefined;
-    permitNumber?: string | undefined;
-    dmsPath?: string | undefined;
-    destinationFileName?: string | undefined;
-    fileId?: string;
-    regionId?: number;
-    processRunId?: number | undefined;
-    delayInSeconds?: number | undefined;
-    requestedAt?: Date;
-    lockRetryCount?: number;
-
-    [key: string]: any;
-}
-
-export enum InformationDirection {
-    Unknown = "Unknown",
-    Incoming = "Incoming",
-    Outgoing = "Outgoing",
-}
-
-export enum InformationSource {
-    Unknown = "Unknown",
-    Nald = "Nald",
-    Document = "Document",
-    OtherDocument = "OtherDocument",
-}
-
 export class LabelGroupResult implements ILabelGroupResult {
     text?: DocumentLine[] | undefined;
     matchedPosition?: MatchedPosition;
@@ -5946,10 +4309,7 @@ export class LabelGroupResult implements ILabelGroupResult {
     pageNumber?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
-    matchedLabelName?: string | undefined;
-    matchedLabelRelatedName?: string | undefined;
-    matchedLabelPosition?: NullableOfLabelPosition | undefined;
-    matchedLabelTextFirstLine?: string | undefined;
+    matchedLabel?: LabelToMatch | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
@@ -5983,10 +4343,7 @@ export class LabelGroupResult implements ILabelGroupResult {
             this.pageNumber = _data["pageNumber"];
             this.serviceName = _data["serviceName"];
             this.labelGroupName = _data["labelGroupName"];
-            this.matchedLabelName = _data["matchedLabelName"];
-            this.matchedLabelRelatedName = _data["matchedLabelRelatedName"];
-            this.matchedLabelPosition = _data["matchedLabelPosition"];
-            this.matchedLabelTextFirstLine = _data["matchedLabelTextFirstLine"];
+            this.matchedLabel = _data["matchedLabel"] ? LabelToMatch.fromJS(_data["matchedLabel"]) : undefined as any;
             this.confidence = _data["confidence"];
             if (Array.isArray(_data["subResults"])) {
                 this.subResults = [] as any;
@@ -6026,10 +4383,7 @@ export class LabelGroupResult implements ILabelGroupResult {
         data["pageNumber"] = this.pageNumber;
         data["serviceName"] = this.serviceName;
         data["labelGroupName"] = this.labelGroupName;
-        data["matchedLabelName"] = this.matchedLabelName;
-        data["matchedLabelRelatedName"] = this.matchedLabelRelatedName;
-        data["matchedLabelPosition"] = this.matchedLabelPosition;
-        data["matchedLabelTextFirstLine"] = this.matchedLabelTextFirstLine;
+        data["matchedLabel"] = this.matchedLabel ? this.matchedLabel.toJSON() : undefined as any;
         data["confidence"] = this.confidence;
         if (Array.isArray(this.subResults)) {
             data["subResults"] = [];
@@ -6054,13 +4408,544 @@ export interface ILabelGroupResult {
     pageNumber?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
-    matchedLabelName?: string | undefined;
-    matchedLabelRelatedName?: string | undefined;
-    matchedLabelPosition?: NullableOfLabelPosition | undefined;
-    matchedLabelTextFirstLine?: string | undefined;
+    matchedLabel?: LabelToMatch | undefined;
     confidence?: number | undefined;
     subResults?: any[];
     alternativeMatches?: any[];
+
+    [key: string]: any;
+}
+
+export enum LabelPosition {
+    ApplicableToMost = "ApplicableToMost",
+    LabelIsBeforeTextToFind = "LabelIsBeforeTextToFind",
+    LabelIsAfterTextToFind = "LabelIsAfterTextToFind",
+    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore",
+    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter",
+    LabelIsInMiddleOfTextToFind = "LabelIsInMiddleOfTextToFind",
+    ContractIsSuccession = "ContractIsSuccession",
+    TextToFindIsBetweenLabels = "TextToFindIsBetweenLabels",
+    RelatedCategoryPosition = "RelatedCategoryPosition",
+    SplitAtLabel = "SplitAtLabel",
+    LabelIsActuallyResult = "LabelIsActuallyResult",
+}
+
+export class LabelToMatch implements ILabelToMatch {
+    textStart?: TextToMatch[] | undefined;
+    matchAllText?: boolean;
+    ignoreBlockIfContains?: string[] | undefined;
+    ignoreMatchIfContains?: string[] | undefined;
+    skipLineWhenContains?: string[] | undefined;
+    remove?: any[] | undefined;
+    textEnd?: any[] | undefined;
+    mustContain?: string[] | undefined;
+    minimumSubMatches?: number | undefined;
+    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
+    canGoOverPageBoundary?: boolean;
+    position?: LabelPosition;
+    relatedCategoryName?: string | undefined;
+    relatedName?: string | undefined;
+    leewayBefore?: number;
+    subLabels?: LabelToMatch2[] | undefined;
+    format?: string;
+    includeStartLabelText?: boolean;
+    includeEndLabelText?: boolean;
+    includeWholeLine?: boolean;
+    name?: string | undefined;
+    categoryName?: string | undefined;
+    possibilities?: string[] | undefined;
+    previousLinesToFetch?: number;
+    nextLinesToFetch?: number;
+    doNotTrimLines?: boolean;
+    multipleMatchBehaviour?: MultipleMatchBehaviour;
+    findMultipleOnSingleLine?: boolean;
+    autoCorrect?: boolean;
+    confidenceType?: ConfidenceType;
+    noOcrConfidence?: number;
+    confidenceIfMatched?: number | undefined;
+    ocrConfidenceMinusNPerLine?: number;
+    skipLineNumbers?: number[];
+
+    [key: string]: any;
+
+    constructor(data?: ILabelToMatch) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["textStart"])) {
+                this.textStart = [] as any;
+                for (let item of _data["textStart"])
+                    this.textStart!.push(TextToMatch.fromJS(item));
+            }
+            this.matchAllText = _data["matchAllText"];
+            if (Array.isArray(_data["ignoreBlockIfContains"])) {
+                this.ignoreBlockIfContains = [] as any;
+                for (let item of _data["ignoreBlockIfContains"])
+                    this.ignoreBlockIfContains!.push(item);
+            }
+            if (Array.isArray(_data["ignoreMatchIfContains"])) {
+                this.ignoreMatchIfContains = [] as any;
+                for (let item of _data["ignoreMatchIfContains"])
+                    this.ignoreMatchIfContains!.push(item);
+            }
+            if (Array.isArray(_data["skipLineWhenContains"])) {
+                this.skipLineWhenContains = [] as any;
+                for (let item of _data["skipLineWhenContains"])
+                    this.skipLineWhenContains!.push(item);
+            }
+            if (Array.isArray(_data["remove"])) {
+                this.remove = [] as any;
+                for (let item of _data["remove"])
+                    this.remove!.push(item);
+            }
+            if (Array.isArray(_data["textEnd"])) {
+                this.textEnd = [] as any;
+                for (let item of _data["textEnd"])
+                    this.textEnd!.push(item);
+            }
+            if (Array.isArray(_data["mustContain"])) {
+                this.mustContain = [] as any;
+                for (let item of _data["mustContain"])
+                    this.mustContain!.push(item);
+            }
+            this.minimumSubMatches = _data["minimumSubMatches"];
+            this.multipleServiceMatchBehaviour = _data["multipleServiceMatchBehaviour"];
+            this.canGoOverPageBoundary = _data["canGoOverPageBoundary"];
+            this.position = _data["position"];
+            this.relatedCategoryName = _data["relatedCategoryName"];
+            this.relatedName = _data["relatedName"];
+            this.leewayBefore = _data["leewayBefore"];
+            if (Array.isArray(_data["subLabels"])) {
+                this.subLabels = [] as any;
+                for (let item of _data["subLabels"])
+                    this.subLabels!.push(LabelToMatch2.fromJS(item));
+            }
+            this.format = _data["format"];
+            this.includeStartLabelText = _data["includeStartLabelText"];
+            this.includeEndLabelText = _data["includeEndLabelText"];
+            this.includeWholeLine = _data["includeWholeLine"];
+            this.name = _data["name"];
+            this.categoryName = _data["categoryName"];
+            if (Array.isArray(_data["possibilities"])) {
+                this.possibilities = [] as any;
+                for (let item of _data["possibilities"])
+                    this.possibilities!.push(item);
+            }
+            this.previousLinesToFetch = _data["previousLinesToFetch"];
+            this.nextLinesToFetch = _data["nextLinesToFetch"];
+            this.doNotTrimLines = _data["doNotTrimLines"];
+            this.multipleMatchBehaviour = _data["multipleMatchBehaviour"];
+            this.findMultipleOnSingleLine = _data["findMultipleOnSingleLine"];
+            this.autoCorrect = _data["autoCorrect"];
+            this.confidenceType = _data["confidenceType"];
+            this.noOcrConfidence = _data["noOcrConfidence"];
+            this.confidenceIfMatched = _data["confidenceIfMatched"];
+            this.ocrConfidenceMinusNPerLine = _data["ocrConfidenceMinusNPerLine"];
+            if (Array.isArray(_data["skipLineNumbers"])) {
+                this.skipLineNumbers = [] as any;
+                for (let item of _data["skipLineNumbers"])
+                    this.skipLineNumbers!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LabelToMatch {
+        data = typeof data === 'object' ? data : {};
+        let result = new LabelToMatch();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.textStart)) {
+            data["textStart"] = [];
+            for (let item of this.textStart)
+                data["textStart"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["matchAllText"] = this.matchAllText;
+        if (Array.isArray(this.ignoreBlockIfContains)) {
+            data["ignoreBlockIfContains"] = [];
+            for (let item of this.ignoreBlockIfContains)
+                data["ignoreBlockIfContains"].push(item);
+        }
+        if (Array.isArray(this.ignoreMatchIfContains)) {
+            data["ignoreMatchIfContains"] = [];
+            for (let item of this.ignoreMatchIfContains)
+                data["ignoreMatchIfContains"].push(item);
+        }
+        if (Array.isArray(this.skipLineWhenContains)) {
+            data["skipLineWhenContains"] = [];
+            for (let item of this.skipLineWhenContains)
+                data["skipLineWhenContains"].push(item);
+        }
+        if (Array.isArray(this.remove)) {
+            data["remove"] = [];
+            for (let item of this.remove)
+                data["remove"].push(item);
+        }
+        if (Array.isArray(this.textEnd)) {
+            data["textEnd"] = [];
+            for (let item of this.textEnd)
+                data["textEnd"].push(item);
+        }
+        if (Array.isArray(this.mustContain)) {
+            data["mustContain"] = [];
+            for (let item of this.mustContain)
+                data["mustContain"].push(item);
+        }
+        data["minimumSubMatches"] = this.minimumSubMatches;
+        data["multipleServiceMatchBehaviour"] = this.multipleServiceMatchBehaviour;
+        data["canGoOverPageBoundary"] = this.canGoOverPageBoundary;
+        data["position"] = this.position;
+        data["relatedCategoryName"] = this.relatedCategoryName;
+        data["relatedName"] = this.relatedName;
+        data["leewayBefore"] = this.leewayBefore;
+        if (Array.isArray(this.subLabels)) {
+            data["subLabels"] = [];
+            for (let item of this.subLabels)
+                data["subLabels"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["format"] = this.format;
+        data["includeStartLabelText"] = this.includeStartLabelText;
+        data["includeEndLabelText"] = this.includeEndLabelText;
+        data["includeWholeLine"] = this.includeWholeLine;
+        data["name"] = this.name;
+        data["categoryName"] = this.categoryName;
+        if (Array.isArray(this.possibilities)) {
+            data["possibilities"] = [];
+            for (let item of this.possibilities)
+                data["possibilities"].push(item);
+        }
+        data["previousLinesToFetch"] = this.previousLinesToFetch;
+        data["nextLinesToFetch"] = this.nextLinesToFetch;
+        data["doNotTrimLines"] = this.doNotTrimLines;
+        data["multipleMatchBehaviour"] = this.multipleMatchBehaviour;
+        data["findMultipleOnSingleLine"] = this.findMultipleOnSingleLine;
+        data["autoCorrect"] = this.autoCorrect;
+        data["confidenceType"] = this.confidenceType;
+        data["noOcrConfidence"] = this.noOcrConfidence;
+        data["confidenceIfMatched"] = this.confidenceIfMatched;
+        data["ocrConfidenceMinusNPerLine"] = this.ocrConfidenceMinusNPerLine;
+        if (Array.isArray(this.skipLineNumbers)) {
+            data["skipLineNumbers"] = [];
+            for (let item of this.skipLineNumbers)
+                data["skipLineNumbers"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILabelToMatch {
+    textStart?: TextToMatch[] | undefined;
+    matchAllText?: boolean;
+    ignoreBlockIfContains?: string[] | undefined;
+    ignoreMatchIfContains?: string[] | undefined;
+    skipLineWhenContains?: string[] | undefined;
+    remove?: any[] | undefined;
+    textEnd?: any[] | undefined;
+    mustContain?: string[] | undefined;
+    minimumSubMatches?: number | undefined;
+    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
+    canGoOverPageBoundary?: boolean;
+    position?: LabelPosition;
+    relatedCategoryName?: string | undefined;
+    relatedName?: string | undefined;
+    leewayBefore?: number;
+    subLabels?: LabelToMatch2[] | undefined;
+    format?: string;
+    includeStartLabelText?: boolean;
+    includeEndLabelText?: boolean;
+    includeWholeLine?: boolean;
+    name?: string | undefined;
+    categoryName?: string | undefined;
+    possibilities?: string[] | undefined;
+    previousLinesToFetch?: number;
+    nextLinesToFetch?: number;
+    doNotTrimLines?: boolean;
+    multipleMatchBehaviour?: MultipleMatchBehaviour;
+    findMultipleOnSingleLine?: boolean;
+    autoCorrect?: boolean;
+    confidenceType?: ConfidenceType;
+    noOcrConfidence?: number;
+    confidenceIfMatched?: number | undefined;
+    ocrConfidenceMinusNPerLine?: number;
+    skipLineNumbers?: number[];
+
+    [key: string]: any;
+}
+
+export class LabelToMatch2 implements ILabelToMatch2 {
+    textStart?: TextToMatch[] | undefined;
+    matchAllText?: boolean;
+    ignoreBlockIfContains?: string[] | undefined;
+    ignoreMatchIfContains?: string[] | undefined;
+    skipLineWhenContains?: string[] | undefined;
+    remove?: any[] | undefined;
+    textEnd?: any[] | undefined;
+    mustContain?: string[] | undefined;
+    minimumSubMatches?: number | undefined;
+    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
+    canGoOverPageBoundary?: boolean;
+    position?: LabelPosition;
+    relatedCategoryName?: string | undefined;
+    relatedName?: string | undefined;
+    leewayBefore?: number;
+    subLabels?: LabelToMatch2[] | undefined;
+    format?: string;
+    includeStartLabelText?: boolean;
+    includeEndLabelText?: boolean;
+    includeWholeLine?: boolean;
+    name?: string | undefined;
+    categoryName?: string | undefined;
+    possibilities?: string[] | undefined;
+    previousLinesToFetch?: number;
+    nextLinesToFetch?: number;
+    doNotTrimLines?: boolean;
+    multipleMatchBehaviour?: MultipleMatchBehaviour;
+    findMultipleOnSingleLine?: boolean;
+    autoCorrect?: boolean;
+    confidenceType?: ConfidenceType;
+    noOcrConfidence?: number;
+    confidenceIfMatched?: number | undefined;
+    ocrConfidenceMinusNPerLine?: number;
+    skipLineNumbers?: number[];
+
+    [key: string]: any;
+
+    constructor(data?: ILabelToMatch2) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["textStart"])) {
+                this.textStart = [] as any;
+                for (let item of _data["textStart"])
+                    this.textStart!.push(TextToMatch.fromJS(item));
+            }
+            this.matchAllText = _data["matchAllText"];
+            if (Array.isArray(_data["ignoreBlockIfContains"])) {
+                this.ignoreBlockIfContains = [] as any;
+                for (let item of _data["ignoreBlockIfContains"])
+                    this.ignoreBlockIfContains!.push(item);
+            }
+            if (Array.isArray(_data["ignoreMatchIfContains"])) {
+                this.ignoreMatchIfContains = [] as any;
+                for (let item of _data["ignoreMatchIfContains"])
+                    this.ignoreMatchIfContains!.push(item);
+            }
+            if (Array.isArray(_data["skipLineWhenContains"])) {
+                this.skipLineWhenContains = [] as any;
+                for (let item of _data["skipLineWhenContains"])
+                    this.skipLineWhenContains!.push(item);
+            }
+            if (Array.isArray(_data["remove"])) {
+                this.remove = [] as any;
+                for (let item of _data["remove"])
+                    this.remove!.push(item);
+            }
+            if (Array.isArray(_data["textEnd"])) {
+                this.textEnd = [] as any;
+                for (let item of _data["textEnd"])
+                    this.textEnd!.push(item);
+            }
+            if (Array.isArray(_data["mustContain"])) {
+                this.mustContain = [] as any;
+                for (let item of _data["mustContain"])
+                    this.mustContain!.push(item);
+            }
+            this.minimumSubMatches = _data["minimumSubMatches"];
+            this.multipleServiceMatchBehaviour = _data["multipleServiceMatchBehaviour"];
+            this.canGoOverPageBoundary = _data["canGoOverPageBoundary"];
+            this.position = _data["position"];
+            this.relatedCategoryName = _data["relatedCategoryName"];
+            this.relatedName = _data["relatedName"];
+            this.leewayBefore = _data["leewayBefore"];
+            if (Array.isArray(_data["subLabels"])) {
+                this.subLabels = [] as any;
+                for (let item of _data["subLabels"])
+                    this.subLabels!.push(LabelToMatch2.fromJS(item));
+            }
+            this.format = _data["format"];
+            this.includeStartLabelText = _data["includeStartLabelText"];
+            this.includeEndLabelText = _data["includeEndLabelText"];
+            this.includeWholeLine = _data["includeWholeLine"];
+            this.name = _data["name"];
+            this.categoryName = _data["categoryName"];
+            if (Array.isArray(_data["possibilities"])) {
+                this.possibilities = [] as any;
+                for (let item of _data["possibilities"])
+                    this.possibilities!.push(item);
+            }
+            this.previousLinesToFetch = _data["previousLinesToFetch"];
+            this.nextLinesToFetch = _data["nextLinesToFetch"];
+            this.doNotTrimLines = _data["doNotTrimLines"];
+            this.multipleMatchBehaviour = _data["multipleMatchBehaviour"];
+            this.findMultipleOnSingleLine = _data["findMultipleOnSingleLine"];
+            this.autoCorrect = _data["autoCorrect"];
+            this.confidenceType = _data["confidenceType"];
+            this.noOcrConfidence = _data["noOcrConfidence"];
+            this.confidenceIfMatched = _data["confidenceIfMatched"];
+            this.ocrConfidenceMinusNPerLine = _data["ocrConfidenceMinusNPerLine"];
+            if (Array.isArray(_data["skipLineNumbers"])) {
+                this.skipLineNumbers = [] as any;
+                for (let item of _data["skipLineNumbers"])
+                    this.skipLineNumbers!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LabelToMatch2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new LabelToMatch2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.textStart)) {
+            data["textStart"] = [];
+            for (let item of this.textStart)
+                data["textStart"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["matchAllText"] = this.matchAllText;
+        if (Array.isArray(this.ignoreBlockIfContains)) {
+            data["ignoreBlockIfContains"] = [];
+            for (let item of this.ignoreBlockIfContains)
+                data["ignoreBlockIfContains"].push(item);
+        }
+        if (Array.isArray(this.ignoreMatchIfContains)) {
+            data["ignoreMatchIfContains"] = [];
+            for (let item of this.ignoreMatchIfContains)
+                data["ignoreMatchIfContains"].push(item);
+        }
+        if (Array.isArray(this.skipLineWhenContains)) {
+            data["skipLineWhenContains"] = [];
+            for (let item of this.skipLineWhenContains)
+                data["skipLineWhenContains"].push(item);
+        }
+        if (Array.isArray(this.remove)) {
+            data["remove"] = [];
+            for (let item of this.remove)
+                data["remove"].push(item);
+        }
+        if (Array.isArray(this.textEnd)) {
+            data["textEnd"] = [];
+            for (let item of this.textEnd)
+                data["textEnd"].push(item);
+        }
+        if (Array.isArray(this.mustContain)) {
+            data["mustContain"] = [];
+            for (let item of this.mustContain)
+                data["mustContain"].push(item);
+        }
+        data["minimumSubMatches"] = this.minimumSubMatches;
+        data["multipleServiceMatchBehaviour"] = this.multipleServiceMatchBehaviour;
+        data["canGoOverPageBoundary"] = this.canGoOverPageBoundary;
+        data["position"] = this.position;
+        data["relatedCategoryName"] = this.relatedCategoryName;
+        data["relatedName"] = this.relatedName;
+        data["leewayBefore"] = this.leewayBefore;
+        if (Array.isArray(this.subLabels)) {
+            data["subLabels"] = [];
+            for (let item of this.subLabels)
+                data["subLabels"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["format"] = this.format;
+        data["includeStartLabelText"] = this.includeStartLabelText;
+        data["includeEndLabelText"] = this.includeEndLabelText;
+        data["includeWholeLine"] = this.includeWholeLine;
+        data["name"] = this.name;
+        data["categoryName"] = this.categoryName;
+        if (Array.isArray(this.possibilities)) {
+            data["possibilities"] = [];
+            for (let item of this.possibilities)
+                data["possibilities"].push(item);
+        }
+        data["previousLinesToFetch"] = this.previousLinesToFetch;
+        data["nextLinesToFetch"] = this.nextLinesToFetch;
+        data["doNotTrimLines"] = this.doNotTrimLines;
+        data["multipleMatchBehaviour"] = this.multipleMatchBehaviour;
+        data["findMultipleOnSingleLine"] = this.findMultipleOnSingleLine;
+        data["autoCorrect"] = this.autoCorrect;
+        data["confidenceType"] = this.confidenceType;
+        data["noOcrConfidence"] = this.noOcrConfidence;
+        data["confidenceIfMatched"] = this.confidenceIfMatched;
+        data["ocrConfidenceMinusNPerLine"] = this.ocrConfidenceMinusNPerLine;
+        if (Array.isArray(this.skipLineNumbers)) {
+            data["skipLineNumbers"] = [];
+            for (let item of this.skipLineNumbers)
+                data["skipLineNumbers"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILabelToMatch2 {
+    textStart?: TextToMatch[] | undefined;
+    matchAllText?: boolean;
+    ignoreBlockIfContains?: string[] | undefined;
+    ignoreMatchIfContains?: string[] | undefined;
+    skipLineWhenContains?: string[] | undefined;
+    remove?: any[] | undefined;
+    textEnd?: any[] | undefined;
+    mustContain?: string[] | undefined;
+    minimumSubMatches?: number | undefined;
+    multipleServiceMatchBehaviour?: MultipleServiceMatchBehaviour;
+    canGoOverPageBoundary?: boolean;
+    position?: LabelPosition;
+    relatedCategoryName?: string | undefined;
+    relatedName?: string | undefined;
+    leewayBefore?: number;
+    subLabels?: LabelToMatch2[] | undefined;
+    format?: string;
+    includeStartLabelText?: boolean;
+    includeEndLabelText?: boolean;
+    includeWholeLine?: boolean;
+    name?: string | undefined;
+    categoryName?: string | undefined;
+    possibilities?: string[] | undefined;
+    previousLinesToFetch?: number;
+    nextLinesToFetch?: number;
+    doNotTrimLines?: boolean;
+    multipleMatchBehaviour?: MultipleMatchBehaviour;
+    findMultipleOnSingleLine?: boolean;
+    autoCorrect?: boolean;
+    confidenceType?: ConfidenceType;
+    noOcrConfidence?: number;
+    confidenceIfMatched?: number | undefined;
+    ocrConfidenceMinusNPerLine?: number;
+    skipLineNumbers?: number[];
 
     [key: string]: any;
 }
@@ -6083,7 +4968,7 @@ export class Licence implements ILicence {
     meansOfAbstraction?: MeanOfAbstraction[];
     abstractionLimits?: AbstractionLimits;
     definitionOfYear?: TimePeriod | undefined;
-    linkedLicences?: LinkedLicence[];
+    linkedLicences?: any[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
     regionId?: number | undefined;
@@ -6141,7 +5026,7 @@ export class Licence implements ILicence {
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(LinkedLicence.fromJS(item));
+                    this.linkedLicences!.push(item);
             }
             if (Array.isArray(_data["licenceSets"])) {
                 this.licenceSets = [] as any;
@@ -6202,7 +5087,7 @@ export class Licence implements ILicence {
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item ? item.toJSON() : undefined as any);
+                data["linkedLicences"].push(item);
         }
         if (Array.isArray(this.licenceSets)) {
             data["licenceSets"] = [];
@@ -6233,7 +5118,7 @@ export interface ILicence {
     meansOfAbstraction?: MeanOfAbstraction[];
     abstractionLimits?: AbstractionLimits;
     definitionOfYear?: TimePeriod | undefined;
-    linkedLicences?: LinkedLicence[];
+    linkedLicences?: any[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
     regionId?: number | undefined;
@@ -6299,7 +5184,6 @@ export interface ILicenceFinderCreateRequest {
 
 export class LicenceFinderResult implements ILicenceFinderResult {
     permitNumber?: string;
-    dmsPermitNumber?: string;
     fileUrl?: string;
     ruleUsed?: string;
     changeAuditAction?: string;
@@ -6349,7 +5233,6 @@ export class LicenceFinderResult implements ILicenceFinderResult {
                     this[property] = _data[property];
             }
             this.permitNumber = _data["permitNumber"];
-            this.dmsPermitNumber = _data["dmsPermitNumber"];
             this.fileUrl = _data["fileUrl"];
             this.ruleUsed = _data["ruleUsed"];
             this.changeAuditAction = _data["changeAuditAction"];
@@ -6397,7 +5280,6 @@ export class LicenceFinderResult implements ILicenceFinderResult {
                 data[property] = this[property];
         }
         data["permitNumber"] = this.permitNumber;
-        data["dmsPermitNumber"] = this.dmsPermitNumber;
         data["fileUrl"] = this.fileUrl;
         data["ruleUsed"] = this.ruleUsed;
         data["changeAuditAction"] = this.changeAuditAction;
@@ -6434,7 +5316,6 @@ export class LicenceFinderResult implements ILicenceFinderResult {
 
 export interface ILicenceFinderResult {
     permitNumber?: string;
-    dmsPermitNumber?: string;
     fileUrl?: string;
     ruleUsed?: string;
     changeAuditAction?: string;
@@ -6469,80 +5350,12 @@ export interface ILicenceFinderResult {
     [key: string]: any;
 }
 
-export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
-    licenceSectionItemId!: string;
-    verificationTypes!: string[];
-    scrapedDataIsDifferent?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: ILicenceSectionItemSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.verificationTypes = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.licenceSectionItemId = _data["licenceSectionItemId"];
-            if (Array.isArray(_data["verificationTypes"])) {
-                this.verificationTypes = [] as any;
-                for (let item of _data["verificationTypes"])
-                    this.verificationTypes!.push(item);
-            }
-            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
-        }
-    }
-
-    static fromJS(data: any): LicenceSectionItemSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new LicenceSectionItemSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["licenceSectionItemId"] = this.licenceSectionItemId;
-        if (Array.isArray(this.verificationTypes)) {
-            data["verificationTypes"] = [];
-            for (let item of this.verificationTypes)
-                data["verificationTypes"].push(item);
-        }
-        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
-        return data;
-    }
-}
-
-export interface ILicenceSectionItemSummary {
-    licenceSectionItemId: string;
-    verificationTypes: string[];
-    scrapedDataIsDifferent?: boolean;
-
-    [key: string]: any;
-}
-
 export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
-    licenceSectionSnapshotValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
@@ -6572,7 +5385,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.processRunId = _data["processRunId"];
             this.licenceSectionName = _data["licenceSectionName"];
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
-            this.licenceSectionSnapshotValue = _data["licenceSectionSnapshotValue"];
             this.licenceSectionOverrideValue = _data["licenceSectionOverrideValue"];
             this.verificationType = _data["verificationType"];
             this.licenceSectionItemId = _data["licenceSectionItemId"];
@@ -6600,7 +5412,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["processRunId"] = this.processRunId;
         data["licenceSectionName"] = this.licenceSectionName;
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
-        data["licenceSectionSnapshotValue"] = this.licenceSectionSnapshotValue;
         data["licenceSectionOverrideValue"] = this.licenceSectionOverrideValue;
         data["verificationType"] = this.verificationType;
         data["licenceSectionItemId"] = this.licenceSectionItemId;
@@ -6617,76 +5428,12 @@ export interface ILicenceSectionVerification {
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
-    licenceSectionSnapshotValue?: string | undefined;
     licenceSectionOverrideValue?: string | undefined;
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
-
-    [key: string]: any;
-}
-
-export class LicenceSectionVerificationSummary implements ILicenceSectionVerificationSummary {
-    licenceSectionName!: string;
-    licenceSectionItems!: LicenceSectionItemSummary[];
-
-    [key: string]: any;
-
-    constructor(data?: ILicenceSectionVerificationSummary) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-        if (!data) {
-            this.licenceSectionItems = [];
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.licenceSectionName = _data["licenceSectionName"];
-            if (Array.isArray(_data["licenceSectionItems"])) {
-                this.licenceSectionItems = [] as any;
-                for (let item of _data["licenceSectionItems"])
-                    this.licenceSectionItems!.push(LicenceSectionItemSummary.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): LicenceSectionVerificationSummary {
-        data = typeof data === 'object' ? data : {};
-        let result = new LicenceSectionVerificationSummary();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["licenceSectionName"] = this.licenceSectionName;
-        if (Array.isArray(this.licenceSectionItems)) {
-            data["licenceSectionItems"] = [];
-            for (let item of this.licenceSectionItems)
-                data["licenceSectionItems"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface ILicenceSectionVerificationSummary {
-    licenceSectionName: string;
-    licenceSectionItems: LicenceSectionItemSummary[];
 
     [key: string]: any;
 }
@@ -6781,7 +5528,7 @@ export interface ILicenceSet {
 
 export class LicenceSetReference implements ILicenceSetReference {
     licenceSetId?: string | undefined;
-    licenceSetType?: LicenceSetType;
+    licenceSetType?: number;
 
     [key: string]: any;
 
@@ -6826,19 +5573,9 @@ export class LicenceSetReference implements ILicenceSetReference {
 
 export interface ILicenceSetReference {
     licenceSetId?: string | undefined;
-    licenceSetType?: LicenceSetType;
+    licenceSetType?: number;
 
     [key: string]: any;
-}
-
-export enum LicenceSetType {
-    SingleLicenceOnly = "SingleLicenceOnly",
-    AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
-    AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
-    AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
-    AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
-    FullyEncompassedIn = "FullyEncompassedIn",
-    PartiallyEncompassedIn = "PartiallyEncompassedIn",
 }
 
 export enum LicenceStatus {
@@ -6846,8 +5583,6 @@ export enum LicenceStatus {
     NotFound = "NotFound",
     PathMissing = "PathMissing",
     FileIdMissing = "FileIdMissing",
-    InProgress = "InProgress",
-    Error = "Error",
 }
 
 export enum LicenceType {
@@ -6978,30 +5713,14 @@ export interface ILicenceVersion {
     [key: string]: any;
 }
 
-export enum LimitPeriodType {
-    Unknown = "Unknown",
-    NotApplicable = "NotApplicable",
-    PerSecond = "PerSecond",
-    PerMinute = "PerMinute",
-    PerHour = "PerHour",
-    PerDay = "PerDay",
-    PerWeek = "PerWeek",
-    PerMonth = "PerMonth",
-    PerYear = "PerYear",
-    Per5Years = "Per5Years",
-    InTotal = "InTotal",
-}
-
 export class LinkedLicence implements ILinkedLicence {
     licenceNumber?: string | undefined;
     rawScrapedLicenceNumber?: string | undefined;
-    dmsPermitNumber?: string | undefined;
-    dmsPath?: string | undefined;
-    dmsFileId?: string | undefined;
+    permitNumber?: string | undefined;
     filename?: string | undefined;
-    licenceVersion?: LicenceVersion;
+    dmsPath?: string | undefined;
     condition?: Condition | undefined;
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: LinkedLicenceSection[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     regionId?: number | undefined;
@@ -7025,16 +5744,14 @@ export class LinkedLicence implements ILinkedLicence {
             }
             this.licenceNumber = _data["licenceNumber"];
             this.rawScrapedLicenceNumber = _data["rawScrapedLicenceNumber"];
-            this.dmsPermitNumber = _data["dmsPermitNumber"];
-            this.dmsPath = _data["dmsPath"];
-            this.dmsFileId = _data["dmsFileId"];
+            this.permitNumber = _data["permitNumber"];
             this.filename = _data["filename"];
-            this.licenceVersion = _data["licenceVersion"] ? LicenceVersion.fromJS(_data["licenceVersion"]) : undefined as any;
+            this.dmsPath = _data["dmsPath"];
             this.condition = _data["condition"] ? Condition.fromJS(_data["condition"]) : undefined as any;
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+                    this.containedIn!.push(LinkedLicenceSection.fromJS(item));
             }
             this.naldStatus = _data["naldStatus"];
             this.licenceType = _data["licenceType"];
@@ -7057,11 +5774,9 @@ export class LinkedLicence implements ILinkedLicence {
         }
         data["licenceNumber"] = this.licenceNumber;
         data["rawScrapedLicenceNumber"] = this.rawScrapedLicenceNumber;
-        data["dmsPermitNumber"] = this.dmsPermitNumber;
-        data["dmsPath"] = this.dmsPath;
-        data["dmsFileId"] = this.dmsFileId;
+        data["permitNumber"] = this.permitNumber;
         data["filename"] = this.filename;
-        data["licenceVersion"] = this.licenceVersion ? this.licenceVersion.toJSON() : undefined as any;
+        data["dmsPath"] = this.dmsPath;
         data["condition"] = this.condition ? this.condition.toJSON() : undefined as any;
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
@@ -7078,18 +5793,101 @@ export class LinkedLicence implements ILinkedLicence {
 export interface ILinkedLicence {
     licenceNumber?: string | undefined;
     rawScrapedLicenceNumber?: string | undefined;
-    dmsPermitNumber?: string | undefined;
-    dmsPath?: string | undefined;
-    dmsFileId?: string | undefined;
+    permitNumber?: string | undefined;
     filename?: string | undefined;
-    licenceVersion?: LicenceVersion;
+    dmsPath?: string | undefined;
     condition?: Condition | undefined;
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: LinkedLicenceSection[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     regionId?: number | undefined;
 
     [key: string]: any;
+}
+
+export enum LinkedLicenceDirection {
+    Unknown = "Unknown",
+    Incoming = "Incoming",
+    Outgoing = "Outgoing",
+}
+
+export class LinkedLicenceSection implements ILinkedLicenceSection {
+    source?: LinkedLicenceSource;
+    direction?: LinkedLicenceDirection;
+    sectionName?: string | undefined;
+    linkReason?: string | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
+    lineNumber?: number | undefined;
+    pageNumber?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILinkedLicenceSection) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.source = _data["source"];
+            this.direction = _data["direction"];
+            this.sectionName = _data["sectionName"];
+            this.linkReason = _data["linkReason"];
+            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
+            this.lineNumber = _data["lineNumber"];
+            this.pageNumber = _data["pageNumber"];
+        }
+    }
+
+    static fromJS(data: any): LinkedLicenceSection {
+        data = typeof data === 'object' ? data : {};
+        let result = new LinkedLicenceSection();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["source"] = this.source;
+        data["direction"] = this.direction;
+        data["sectionName"] = this.sectionName;
+        data["linkReason"] = this.linkReason;
+        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
+        data["lineNumber"] = this.lineNumber;
+        data["pageNumber"] = this.pageNumber;
+        return data;
+    }
+}
+
+export interface ILinkedLicenceSection {
+    source?: LinkedLicenceSource;
+    direction?: LinkedLicenceDirection;
+    sectionName?: string | undefined;
+    linkReason?: string | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
+    lineNumber?: number | undefined;
+    pageNumber?: number | undefined;
+
+    [key: string]: any;
+}
+
+export enum LinkedLicenceSource {
+    Unknown = "Unknown",
+    Nald = "Nald",
+    Document = "Document",
+    OtherDocument = "OtherDocument",
 }
 
 export enum MatchedPosition {
@@ -7108,7 +5906,6 @@ export enum MatchedPosition {
 export class MatchesResult implements IMatchesResult {
     filename?: string | undefined;
     regionCode?: number;
-    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -7136,7 +5933,6 @@ export class MatchesResult implements IMatchesResult {
             }
             this.filename = _data["filename"];
             this.regionCode = _data["regionCode"];
-            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -7174,7 +5970,6 @@ export class MatchesResult implements IMatchesResult {
         }
         data["filename"] = this.filename;
         data["regionCode"] = this.regionCode;
-        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -7201,7 +5996,6 @@ export class MatchesResult implements IMatchesResult {
 export interface IMatchesResult {
     filename?: string | undefined;
     regionCode?: number;
-    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -7216,7 +6010,6 @@ export interface IMatchesResult {
 export class MatchesResult2 implements IMatchesResult2 {
     filename?: string | undefined;
     regionCode?: number;
-    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -7244,7 +6037,6 @@ export class MatchesResult2 implements IMatchesResult2 {
             }
             this.filename = _data["filename"];
             this.regionCode = _data["regionCode"];
-            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -7282,7 +6074,6 @@ export class MatchesResult2 implements IMatchesResult2 {
         }
         data["filename"] = this.filename;
         data["regionCode"] = this.regionCode;
-        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -7309,7 +6100,6 @@ export class MatchesResult2 implements IMatchesResult2 {
 export interface IMatchesResult2 {
     filename?: string | undefined;
     regionCode?: number;
-    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -7377,6 +6167,26 @@ export interface IMeanOfAbstraction {
     [key: string]: any;
 }
 
+export enum MultipleMatchBehaviour {
+    FindSingleInstanceOfLabelWithASingleValue = "FindSingleInstanceOfLabelWithASingleValue",
+    FindSingleInstanceOfLabelWithASingleValueButMultipleLines = "FindSingleInstanceOfLabelWithASingleValueButMultipleLines",
+    FindSingleInstanceOfLabelWithMultipleValues = "FindSingleInstanceOfLabelWithMultipleValues",
+    FindMultipleInstancesOfLabelWithASingleValuePerLabel = "FindMultipleInstancesOfLabelWithASingleValuePerLabel",
+    FindMultipleInstancesOfLabelWithMultipleValuesPerLabel = "FindMultipleInstancesOfLabelWithMultipleValuesPerLabel",
+}
+
+export enum MultipleServiceMatchBehaviour {
+    UseLastServiceResult = "UseLastServiceResult",
+    UseFirstServiceResult = "UseFirstServiceResult",
+    UseLongestUseLastServiceResultIfEqual = "UseLongestUseLastServiceResultIfEqual",
+    UseFullestDateUseLastServiceResultIfMultipleFull = "UseFullestDateUseLastServiceResultIfMultipleFull",
+    UseFullestDateUseHighestOcrConfidenceIfMultipleFull = "UseFullestDateUseHighestOcrConfidenceIfMultipleFull",
+    UseBestLicenceNumberUseLastServiceResultIfEqual = "UseBestLicenceNumberUseLastServiceResultIfEqual",
+    UseMostSubResultsUseLastServiceResultIfEqual = "UseMostSubResultsUseLastServiceResultIfEqual",
+    UseAllUnique = "UseAllUnique",
+    UseHighestOcrConfidence = "UseHighestOcrConfidence",
+}
+
 export class NaldCartesianReference implements INaldCartesianReference {
     referenceIndex?: number;
     east?: number | undefined;
@@ -7439,7 +6249,6 @@ export enum NaldLicenceStatus {
     Expired = "Expired",
     Revoked = "Revoked",
     Live = "Live",
-    Curr = "Curr",
 }
 
 export class NaldNationalGridReference implements INaldNationalGridReference {
@@ -7650,33 +6459,6 @@ export interface INaldPurposeData {
     [key: string]: any;
 }
 
-export enum NullableOfCutoffType {
-    Unknown = "Unknown",
-    NotApplicable = "NotApplicable",
-    Upto = "Upto",
-    From = "From",
-}
-
-export enum NullableOfLabelPosition {
-    ApplicableToMost = "ApplicableToMost",
-    LabelIsBeforeTextToFind = "LabelIsBeforeTextToFind",
-    LabelIsAfterTextToFind = "LabelIsAfterTextToFind",
-    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore",
-    LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter = "LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter",
-    LabelIsInMiddleOfTextToFind = "LabelIsInMiddleOfTextToFind",
-    ContractIsSuccession = "ContractIsSuccession",
-    TextToFindIsBetweenLabels = "TextToFindIsBetweenLabels",
-    RelatedCategoryPosition = "RelatedCategoryPosition",
-    SplitAtLabel = "SplitAtLabel",
-    LabelIsActuallyResult = "LabelIsActuallyResult",
-}
-
-export enum NullableOfSubType {
-    NotSet = "NotSet",
-    PurposeToPurpose = "PurposeToPurpose",
-    PointToPoint = "PointToPoint",
-}
-
 export class OutputListDataItem implements IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
@@ -7694,7 +6476,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
+    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
 
     [key: string]: any;
 
@@ -7745,10 +6527,10 @@ export class OutputListDataItem implements IOutputListDataItem {
                 for (let item of _data["licenceSets"])
                     this.licenceSets!.push(OutputListDataItemLicenceSet.fromJS(item));
             }
-            if (Array.isArray(_data["licenceSectionVerifications"])) {
-                this.licenceSectionVerifications = [] as any;
-                for (let item of _data["licenceSectionVerifications"])
-                    this.licenceSectionVerifications!.push(LicenceSectionVerificationSummary.fromJS(item));
+            if (Array.isArray(_data["latestLicenceSectionVerifications"])) {
+                this.latestLicenceSectionVerifications = [] as any;
+                for (let item of _data["latestLicenceSectionVerifications"])
+                    this.latestLicenceSectionVerifications!.push(LicenceSectionVerification.fromJS(item));
             }
         }
     }
@@ -7798,10 +6580,10 @@ export class OutputListDataItem implements IOutputListDataItem {
             for (let item of this.licenceSets)
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.licenceSectionVerifications)) {
-            data["licenceSectionVerifications"] = [];
-            for (let item of this.licenceSectionVerifications)
-                data["licenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.latestLicenceSectionVerifications)) {
+            data["latestLicenceSectionVerifications"] = [];
+            for (let item of this.latestLicenceSectionVerifications)
+                data["latestLicenceSectionVerifications"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -7824,7 +6606,7 @@ export interface IOutputListDataItem {
     status?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
-    licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
+    latestLicenceSectionVerifications?: LicenceSectionVerification[] | undefined;
 
     [key: string]: any;
 }
@@ -7970,7 +6752,6 @@ export class PdfPage implements IPdfPage {
     numberOfImages?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
-    likelyMapPage?: boolean;
 
     [key: string]: any;
 
@@ -8001,7 +6782,6 @@ export class PdfPage implements IPdfPage {
                 for (let item of _data["providers"])
                     this.providers!.push(PdfPageProvider.fromJS(item));
             }
-            this.likelyMapPage = _data["likelyMapPage"];
         }
     }
 
@@ -8030,7 +6810,6 @@ export class PdfPage implements IPdfPage {
             for (let item of this.providers)
                 data["providers"].push(item ? item.toJSON() : undefined as any);
         }
-        data["likelyMapPage"] = this.likelyMapPage;
         return data;
     }
 }
@@ -8040,7 +6819,6 @@ export interface IPdfPage {
     numberOfImages?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
-    likelyMapPage?: boolean;
 
     [key: string]: any;
 }
@@ -8264,8 +7042,6 @@ export interface IPoint {
 export class PointOfAbstraction implements IPointOfAbstraction {
     naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
-    name?: string | undefined;
-    gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
@@ -8293,8 +7069,6 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 for (let item of _data["purposeIds"])
                     this.purposeIds!.push(item);
             }
-            this.name = _data["name"];
-            this.gridRef = _data["gridRef"];
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             this.id = _data["id"];
             this.description = _data["description"];
@@ -8320,8 +7094,6 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             for (let item of this.purposeIds)
                 data["purposeIds"].push(item);
         }
-        data["name"] = this.name;
-        data["gridRef"] = this.gridRef;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         data["id"] = this.id;
         data["description"] = this.description;
@@ -8332,19 +7104,11 @@ export class PointOfAbstraction implements IPointOfAbstraction {
 export interface IPointOfAbstraction {
     naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
-    name?: string | undefined;
-    gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
 
     [key: string]: any;
-}
-
-export enum PrimaryType {
-    NotSet = "NotSet",
-    InLicence = "InLicence",
-    LicenceToLicence = "LicenceToLicence",
 }
 
 export class ProcessRun implements IProcessRun {
@@ -8353,8 +7117,6 @@ export class ProcessRun implements IProcessRun {
     startDateTimeUtc?: Date | undefined;
     endDateTimeUtc?: Date | undefined;
     numberOfFiles?: number;
-    successCount?: number;
-    status?: string | undefined;
 
     [key: string]: any;
 
@@ -8378,8 +7140,6 @@ export class ProcessRun implements IProcessRun {
             this.startDateTimeUtc = _data["startDateTimeUtc"] ? new Date(_data["startDateTimeUtc"].toString()) : undefined as any;
             this.endDateTimeUtc = _data["endDateTimeUtc"] ? new Date(_data["endDateTimeUtc"].toString()) : undefined as any;
             this.numberOfFiles = _data["numberOfFiles"];
-            this.successCount = _data["successCount"];
-            this.status = _data["status"];
         }
     }
 
@@ -8401,8 +7161,6 @@ export class ProcessRun implements IProcessRun {
         data["startDateTimeUtc"] = this.startDateTimeUtc ? this.startDateTimeUtc.toISOString() : undefined as any;
         data["endDateTimeUtc"] = this.endDateTimeUtc ? this.endDateTimeUtc.toISOString() : undefined as any;
         data["numberOfFiles"] = this.numberOfFiles;
-        data["successCount"] = this.successCount;
-        data["status"] = this.status;
         return data;
     }
 }
@@ -8413,8 +7171,6 @@ export interface IProcessRun {
     startDateTimeUtc?: Date | undefined;
     endDateTimeUtc?: Date | undefined;
     numberOfFiles?: number;
-    successCount?: number;
-    status?: string | undefined;
 
     [key: string]: any;
 }
@@ -8422,7 +7178,6 @@ export interface IProcessRun {
 export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
-    status?: string | undefined;
 
     [key: string]: any;
 
@@ -8443,7 +7198,6 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
             }
             this.description = _data["description"];
             this.numberOfFiles = _data["numberOfFiles"];
-            this.status = _data["status"];
         }
     }
 
@@ -8462,7 +7216,6 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
         }
         data["description"] = this.description;
         data["numberOfFiles"] = this.numberOfFiles;
-        data["status"] = this.status;
         return data;
     }
 }
@@ -8470,7 +7223,6 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
 export interface IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
-    status?: string | undefined;
 
     [key: string]: any;
 }
@@ -8523,72 +7275,9 @@ export interface IProcessRunEndRequest {
     [key: string]: any;
 }
 
-export class ProcessRunFileRequest implements IProcessRunFileRequest {
-    fileName?: string | undefined;
-    processRunId?: number;
-    processRunFileId?: number;
-    errorMessage?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IProcessRunFileRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.fileName = _data["fileName"];
-            this.processRunId = _data["processRunId"];
-            this.processRunFileId = _data["processRunFileId"];
-            this.errorMessage = _data["errorMessage"];
-        }
-    }
-
-    static fromJS(data: any): ProcessRunFileRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProcessRunFileRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["fileName"] = this.fileName;
-        data["processRunId"] = this.processRunId;
-        data["processRunFileId"] = this.processRunFileId;
-        data["errorMessage"] = this.errorMessage;
-        return data;
-    }
-}
-
-export interface IProcessRunFileRequest {
-    fileName?: string | undefined;
-    processRunId?: number;
-    processRunFileId?: number;
-    errorMessage?: string | undefined;
-
-    [key: string]: any;
-}
-
 export class ProcessRunResponse implements IProcessRunResponse {
     totalRecords!: number;
     records!: OutputListDataItem[];
-    issuers?: string[] | undefined;
-    issueDates?: string[] | undefined;
-    licenceSetIds?: string[] | undefined;
 
     [key: string]: any;
 
@@ -8616,21 +7305,6 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 for (let item of _data["records"])
                     this.records!.push(OutputListDataItem.fromJS(item));
             }
-            if (Array.isArray(_data["issuers"])) {
-                this.issuers = [] as any;
-                for (let item of _data["issuers"])
-                    this.issuers!.push(item);
-            }
-            if (Array.isArray(_data["issueDates"])) {
-                this.issueDates = [] as any;
-                for (let item of _data["issueDates"])
-                    this.issueDates!.push(item);
-            }
-            if (Array.isArray(_data["licenceSetIds"])) {
-                this.licenceSetIds = [] as any;
-                for (let item of _data["licenceSetIds"])
-                    this.licenceSetIds!.push(item);
-            }
         }
     }
 
@@ -8653,21 +7327,6 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.records)
                 data["records"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.issuers)) {
-            data["issuers"] = [];
-            for (let item of this.issuers)
-                data["issuers"].push(item);
-        }
-        if (Array.isArray(this.issueDates)) {
-            data["issueDates"] = [];
-            for (let item of this.issueDates)
-                data["issueDates"].push(item);
-        }
-        if (Array.isArray(this.licenceSetIds)) {
-            data["licenceSetIds"] = [];
-            for (let item of this.licenceSetIds)
-                data["licenceSetIds"].push(item);
-        }
         return data;
     }
 }
@@ -8675,9 +7334,6 @@ export class ProcessRunResponse implements IProcessRunResponse {
 export interface IProcessRunResponse {
     totalRecords: number;
     records: OutputListDataItem[];
-    issuers?: string[] | undefined;
-    issueDates?: string[] | undefined;
-    licenceSetIds?: string[] | undefined;
 
     [key: string]: any;
 }
@@ -8806,58 +7462,6 @@ export interface IPurposeOfAbstraction {
     [key: string]: any;
 }
 
-export class RenameRequest implements IRenameRequest {
-    originalFilename?: string | undefined;
-    newFilename?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IRenameRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.originalFilename = _data["originalFilename"];
-            this.newFilename = _data["newFilename"];
-        }
-    }
-
-    static fromJS(data: any): RenameRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new RenameRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["originalFilename"] = this.originalFilename;
-        data["newFilename"] = this.newFilename;
-        return data;
-    }
-}
-
-export interface IRenameRequest {
-    originalFilename?: string | undefined;
-    newFilename?: string | undefined;
-
-    [key: string]: any;
-}
-
 export class SaveAllPagesTextRequest implements ISaveAllPagesTextRequest {
     fileId?: string;
     documentLines?: string | undefined;
@@ -8962,66 +7566,6 @@ export class SaveDateRequest implements ISaveDateRequest {
 
 export interface ISaveDateRequest {
     dataSource?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class SaveErrorMatchResultRequest implements ISaveErrorMatchResultRequest {
-    filename?: string | undefined;
-    fileId?: string;
-    processRunId?: number;
-    error?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: ISaveErrorMatchResultRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.filename = _data["filename"];
-            this.fileId = _data["fileId"];
-            this.processRunId = _data["processRunId"];
-            this.error = _data["error"];
-        }
-    }
-
-    static fromJS(data: any): SaveErrorMatchResultRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new SaveErrorMatchResultRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["filename"] = this.filename;
-        data["fileId"] = this.fileId;
-        data["processRunId"] = this.processRunId;
-        data["error"] = this.error;
-        return data;
-    }
-}
-
-export interface ISaveErrorMatchResultRequest {
-    filename?: string | undefined;
-    fileId?: string;
-    processRunId?: number;
-    error?: string | undefined;
 
     [key: string]: any;
 }
@@ -9554,62 +8098,6 @@ export interface ISaveOcrImageTextRequest {
     [key: string]: any;
 }
 
-export class SaveStubMatchResultRequest implements ISaveStubMatchResultRequest {
-    filename?: string | undefined;
-    fileId?: string;
-    processRunId?: number;
-
-    [key: string]: any;
-
-    constructor(data?: ISaveStubMatchResultRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.filename = _data["filename"];
-            this.fileId = _data["fileId"];
-            this.processRunId = _data["processRunId"];
-        }
-    }
-
-    static fromJS(data: any): SaveStubMatchResultRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new SaveStubMatchResultRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["filename"] = this.filename;
-        data["fileId"] = this.fileId;
-        data["processRunId"] = this.processRunId;
-        return data;
-    }
-}
-
-export interface ISaveStubMatchResultRequest {
-    filename?: string | undefined;
-    fileId?: string;
-    processRunId?: number;
-
-    [key: string]: any;
-}
-
 export class SaveTemporaryOcrImageTextRequest implements ISaveTemporaryOcrImageTextRequest {
     fileId?: string;
     processRunId?: number;
@@ -9678,8 +8166,96 @@ export interface ISaveTemporaryOcrImageTextRequest {
     [key: string]: any;
 }
 
+export class TextToMatch implements ITextToMatch {
+    text!: string;
+    lineMustStartWith?: boolean;
+    columnMustStartWith?: boolean;
+    ifMultiplePreferLast?: boolean;
+    ifMultiplePreferLongest?: boolean;
+    columnMustHave2SequentialNumbers?: boolean;
+    removeWholeLine?: boolean;
+    instanceNumber?: number;
+    isRegularExpression?: boolean;
+    regularExpressionIsCaseInsensitive?: boolean;
+    exceptWhenInsideWord?: boolean;
+
+    [key: string]: any;
+
+    constructor(data?: ITextToMatch) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.text = _data["text"];
+            this.lineMustStartWith = _data["lineMustStartWith"];
+            this.columnMustStartWith = _data["columnMustStartWith"];
+            this.ifMultiplePreferLast = _data["ifMultiplePreferLast"];
+            this.ifMultiplePreferLongest = _data["ifMultiplePreferLongest"];
+            this.columnMustHave2SequentialNumbers = _data["columnMustHave2SequentialNumbers"];
+            this.removeWholeLine = _data["removeWholeLine"];
+            this.instanceNumber = _data["instanceNumber"];
+            this.isRegularExpression = _data["isRegularExpression"];
+            this.regularExpressionIsCaseInsensitive = _data["regularExpressionIsCaseInsensitive"];
+            this.exceptWhenInsideWord = _data["exceptWhenInsideWord"];
+        }
+    }
+
+    static fromJS(data: any): TextToMatch {
+        data = typeof data === 'object' ? data : {};
+        let result = new TextToMatch();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["text"] = this.text;
+        data["lineMustStartWith"] = this.lineMustStartWith;
+        data["columnMustStartWith"] = this.columnMustStartWith;
+        data["ifMultiplePreferLast"] = this.ifMultiplePreferLast;
+        data["ifMultiplePreferLongest"] = this.ifMultiplePreferLongest;
+        data["columnMustHave2SequentialNumbers"] = this.columnMustHave2SequentialNumbers;
+        data["removeWholeLine"] = this.removeWholeLine;
+        data["instanceNumber"] = this.instanceNumber;
+        data["isRegularExpression"] = this.isRegularExpression;
+        data["regularExpressionIsCaseInsensitive"] = this.regularExpressionIsCaseInsensitive;
+        data["exceptWhenInsideWord"] = this.exceptWhenInsideWord;
+        return data;
+    }
+}
+
+export interface ITextToMatch {
+    text: string;
+    lineMustStartWith?: boolean;
+    columnMustStartWith?: boolean;
+    ifMultiplePreferLast?: boolean;
+    ifMultiplePreferLongest?: boolean;
+    columnMustHave2SequentialNumbers?: boolean;
+    removeWholeLine?: boolean;
+    instanceNumber?: number;
+    isRegularExpression?: boolean;
+    regularExpressionIsCaseInsensitive?: boolean;
+    exceptWhenInsideWord?: boolean;
+
+    [key: string]: any;
+}
+
 export class TimeCutoff implements ITimeCutoff {
-    cutoffType?: NullableOfCutoffType | undefined;
+    cutoffType?: number | undefined;
     date?: string | undefined;
 
     [key: string]: any;
@@ -9724,7 +8300,7 @@ export class TimeCutoff implements ITimeCutoff {
 }
 
 export interface ITimeCutoff {
-    cutoffType?: NullableOfCutoffType | undefined;
+    cutoffType?: number | undefined;
     date?: string | undefined;
 
     [key: string]: any;
@@ -9786,62 +8362,6 @@ export interface ITimePeriod {
     startDate?: string | undefined;
     endDate?: string | undefined;
     inclusive?: boolean | undefined;
-
-    [key: string]: any;
-}
-
-export class UpdateLicenceRequest implements IUpdateLicenceRequest {
-    licence?: string | undefined;
-    licenceId?: number;
-    processRunId?: number;
-
-    [key: string]: any;
-
-    constructor(data?: IUpdateLicenceRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.licence = _data["licence"];
-            this.licenceId = _data["licenceId"];
-            this.processRunId = _data["processRunId"];
-        }
-    }
-
-    static fromJS(data: any): UpdateLicenceRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdateLicenceRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["licence"] = this.licence;
-        data["licenceId"] = this.licenceId;
-        data["processRunId"] = this.processRunId;
-        return data;
-    }
-}
-
-export interface IUpdateLicenceRequest {
-    licence?: string | undefined;
-    licenceId?: number;
-    processRunId?: number;
 
     [key: string]: any;
 }

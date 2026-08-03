@@ -5,13 +5,19 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OutputSchema;
+using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
+public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, JsonSerializerOptions? jsonSerializerOptions = null)
     : IDatabaseWriteService
 {
+    
+    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
+    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();

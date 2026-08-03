@@ -52,6 +52,10 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         listRow.linkedLicences = linkedLicences.Where(ll => ll.ContainedIn?.Length > 0).ToArray();
     }
 
+    private static bool IsAutoOrBusinessReview(string? verificationType)
+        => verificationType is "AutoWarn" or "AutoFail"
+            or "RequestBusinessReview" or "CompleteBusinessReview";
+
     private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications,
         OutputListDataItem listRow, List<LicenceSectionItemSummary> sectionSummaries,
         List<LinkedLicence> linkedLicences)
@@ -67,7 +71,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
             // Ignore review and auto-warn/fail - we just want the tags to appear to flag them for review
             if (verification.LicenceSectionItemId == Review
-                || verification.VerificationType is "AutoWarn" or "AutoFail")
+                || IsAutoOrBusinessReview(verification.VerificationType))
             {
                 continue;
             }
@@ -172,6 +176,19 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
     {
+        // Clear the review item as soon as we have any other later manual verification
+        if (verification.LicenceSectionItemId != Review &&
+            verification.VerificationType is not ("AutoWarn" or "AutoFail" or "AutoConfirm"))
+        {
+            var existingReviewSummary =
+                sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == Review);
+
+            if (existingReviewSummary != null)
+            {
+                sectionSummaries.Remove(existingReviewSummary);
+            }
+        }
+
         var existingSummary =
             sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == verification.LicenceSectionItemId);
 
@@ -192,7 +209,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
                     .ToArray();
             }
 
-            if (verification.VerificationType is not ("AutoWarn" or "AutoFail"))
+            if (!IsAutoOrBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
                 existingSummary.ScrapedDataIsDifferent = false;
@@ -232,7 +249,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             }
 
             // Ignore auto-warn/fail - it has no effect on incoming LLs
-            if (verification.VerificationType is "AutoWarn" or "AutoFail")
+            if (IsAutoOrBusinessReview(verification.VerificationType))
             {
                 continue;
             }

@@ -54,7 +54,7 @@ public static class FormattingHelper
             return null;
         }
         
-        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData))
+        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData) && cachedData != null)
         {
             return cachedData;
         }

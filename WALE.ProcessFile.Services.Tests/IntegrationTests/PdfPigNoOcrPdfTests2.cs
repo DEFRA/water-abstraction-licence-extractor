@@ -23,7 +23,7 @@ using WRADI.Services.Cache.AbstractionLicence;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
-[Collection("First Names 1b")]
+[Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;
@@ -2230,6 +2230,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+
+        Assert.NotNull(resultFull.Matches?.FirstOrDefault(m => m.LabelGroupName == "Purposes"));
+        Assert.NotNull(resultFull.Matches?.FirstOrDefault(m => m.LabelGroupName == "Additional"));
         
         var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -2243,6 +2246,11 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("NE0260034018-LV2019121120250331", licenceSets[0].LicenceSetId);
         Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
 
+        var aggregateLicenceSet = licenceSets[1];
+        var otherLicence = aggregateLicenceSet.Licences[1];
+        Assert.Equal("NE/026/0034/052", otherLicence.LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.Ok, otherLicence.Status);
+        
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
@@ -2255,6 +2263,13 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Direction);
+        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
+        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
+        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);

@@ -24,7 +24,7 @@ using WRADI.Services.Cache.AbstractionLicence;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
-[Collection("First Names 1a")]
+[Collection("First Names 1")]
 public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;

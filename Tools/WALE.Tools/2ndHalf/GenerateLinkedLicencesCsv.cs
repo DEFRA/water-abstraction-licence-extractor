@@ -28,7 +28,6 @@ public static class GenerateLinkedLicencesCsv
     public static async Task GenerateCsvAsync(int processRunId)
     {
         ConsoleHelper.WriteLine("Started generating linked licences csv");
-
         var data = await GetDataAsync(processRunId);
 
         await using var writer = new StreamWriter(
@@ -46,7 +45,21 @@ public static class GenerateLinkedLicencesCsv
         var returnList = new List<LinkedLicencesCsvLine>();
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
+        var licences = new List<Licence>();
+        var loopLicences = new List<Licence>();
+        
+        const int licencesToTake = 10;
+        var first = true;
+        var loopIdx = 0;
+        
+        while (first || loopLicences.Count == licencesToTake)
+        {
+            first = false;
+            var startAt = loopIdx++ * licencesToTake;
+            
+            loopLicences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, startAt, licencesToTake);
+            licences.AddRange(loopLicences);
+        }
         
         foreach (var licence in licences)
         {

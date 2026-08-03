@@ -2491,6 +2491,7 @@ public static class AbstractionLicenceSchemaConverter
                     })
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
+                //.Where(p => allPurposes.Any(ap => ap.Id == p.Id))
                 .ToList()
             : null;
 
@@ -2524,13 +2525,25 @@ public static class AbstractionLicenceSchemaConverter
         {
             var documentPointNameSet = !string.IsNullOrEmpty(documentPoint.Name);
             var nameInSingleQuotes = $"'{documentPoint.Name}'";
+            var abstractionPointExplicit = $"Abstraction Point {documentPoint.Name}";
             
-            var textContainsPointName = documentPointNameSet &&
+            var textContainsPointName1 = documentPointNameSet &&
                 abstractionLimitPointSubText.Contains(
                     nameInSingleQuotes,
                     StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName2 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointExplicit,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName3 = documentPointNameSet && documentPoint.Name!.Length > 10 &&
+                abstractionLimitPointSubText.Contains(
+                    documentPoint.Name!,
+                    StringComparison.OrdinalIgnoreCase);
 
-            if (!textContainsPointName || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
+            if ((!textContainsPointName1 && !textContainsPointName2 && !textContainsPointName3)
+                || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
             {
                 continue;
             }

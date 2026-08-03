@@ -361,6 +361,14 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Single(agreedSchemaLicence.Points[0].ContainedIn!);
         Assert.Equal("SourceOfSupply", agreedSchemaLicence.Points[0].ContainedIn![0].SectionName);
 
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        
+        // Abstraction limits section
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits);
+        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Units);
+        Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points!);
+        
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits.Count);
@@ -397,14 +405,6 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits[0].Points!);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points!.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points!.Count(c => c.IsImplicit != true));
-        
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        
-        // Abstraction limits section
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits);
-        Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Units);
-        Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points!);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

@@ -88,6 +88,8 @@ async Task ProgramAsync()
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
     var licenceNumberService = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    services.LicenceNumberService = licenceNumberService;
+    
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
         abstractionLicenceCacheService,
         licenceNumberService);
@@ -448,6 +450,7 @@ ConfiguredServices ConfigureServices()
         AbstractionLicenceCacheService = abstractionLicenceCacheService,
         OutputService = outputService,
         AbstractionLicenceOutputService = abstractionLicenceOutputService,
+        LicenceNumberService = null, // Set just after
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

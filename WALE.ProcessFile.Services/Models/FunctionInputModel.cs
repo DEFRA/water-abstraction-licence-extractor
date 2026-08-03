@@ -13,7 +13,7 @@ public class FunctionInputModel
     public IReadOnlyList<DocumentLine>? previousLines { get; set; }
     public IReadOnlyList<DocumentLine>? nextLines { get; set; }
     public IReadOnlyList<LabelGroupResult>? siblingMatches { get; set; }
-    public List<TextAndLabel>? textBeforeAtAndAfterLabel { get; set; }
+    public List<TextAndLabelAndPosition>? textBeforeAtAndAfterLabel { get; set; }
     public LookupConfiguration? lookupConfiguration { get; set; }
     public bool isDateLookup { get; set; }
     public bool isDateOrPurposeLookup { get; set; }

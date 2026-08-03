@@ -1,0 +1,12 @@
+namespace WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
+
+public class LicenceListItemAggregate
+{
+    public required LicenceListItem Licence { get; init; }
+
+    public List<LicenceListItemLinkedLicence> LinkedLicences { get; init; } = [];
+
+    public List<LicenceListItemLicenceSet> LicenceSets { get; init; } = [];
+
+    public List<LicenceSectionVerificationSummary> VerificationSections { get; init; } = [];
+}

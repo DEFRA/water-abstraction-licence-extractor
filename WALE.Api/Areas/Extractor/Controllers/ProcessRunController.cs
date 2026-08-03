@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class ProcessRunController(IOutputService outputService) : Controller
+public class ProcessRunController(
+    IOutputService outputService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
 {
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] ProcessRunCreateRequest request)
@@ -85,7 +88,7 @@ public class ProcessRunController(IOutputService outputService) : Controller
             EndDateTimeUtc = DateTime.UtcNow
         };
         
-        await outputService.FinishProcessRunAsync(processRun);
+        await abstractionLicenceOutputService.FinishProcessRunAsync(processRun);
         return Ok(processRun.EndDateTimeUtc.Value.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 }

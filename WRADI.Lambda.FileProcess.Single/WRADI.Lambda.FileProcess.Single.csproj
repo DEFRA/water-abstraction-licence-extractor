@@ -33,8 +33,7 @@
     
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
-      <ProjectReference Include="..\WALE.ProcessFile.Services.TesseractExe\WALE.ProcessFile.Services.TesseractExe.csproj" />
-      <ProjectReference Include="..\WRADI.Services.ProcessFile\WRADI.Services.ProcessFile.csproj" />
+      <ProjectReference Include="..\WRADI.Services.ProcessFile.AbstractionLicence\WRADI.Services.ProcessFile.AbstractionLicence.csproj" />
     </ItemGroup>
     
     <ItemGroup>

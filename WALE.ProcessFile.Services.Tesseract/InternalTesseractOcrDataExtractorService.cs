@@ -2,7 +2,6 @@
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Services.Tesseract;
 

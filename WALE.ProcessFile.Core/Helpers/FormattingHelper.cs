@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -7,8 +8,7 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    private static readonly Dictionary<string, DmsFileData?> DmsFileDataCache = new();
-    private static readonly Dictionary<string, NaldData?> NaldDataCache = new();
+    private static readonly ConcurrentDictionary<string, DmsFileData?> DmsFileDataCache = new();
     
     public static string? RemoveSeperators(string? licenceNumber)
     {
@@ -45,7 +45,9 @@ public static class FormattingHelper
         ];
     }
 
-    public static async Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber, ICacheService cacheService)
+    public static async Task<DmsFileData?> GetDmsFileDataAsync(
+        string? licenceNumber,
+        ICacheService cacheService)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
@@ -63,29 +65,6 @@ public static class FormattingHelper
         return dmsFileData;
     }
     
-    public static async Task<NaldData?> GetNaldDataLineAsync(
-        ICacheService cacheService,
-        string? licenceNumber,
-        int regionCode)
-    {
-        var key = $"{regionCode}|{licenceNumber}";
-        
-        if (string.IsNullOrEmpty(key))
-        {
-            return null;
-        }
-        
-        if (NaldDataCache.TryGetValue(key, out var cachedData))
-        {
-            return cachedData;
-        }
-        
-        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
-        NaldDataCache.TryAdd(key, naldData);
-
-        return naldData;
-    }
-
     public static string? StripForComparison(
         string? formattedLicenceNumber,
         int regionCode)
@@ -1213,7 +1192,10 @@ public static class FormattingHelper
         }
         
         labelGroupResult.MatchedLabel.Remove =
-            labelGroupResult.MatchedLabel.Remove!.Where(removeLine => removedLines?.Contains(removeLine.Text) == true).ToList();
+            labelGroupResult.MatchedLabel.Remove!
+                .Where(removeLine =>
+                    removedLines?.Any(rl => rl.Equals(removeLine.Text, StringComparison.OrdinalIgnoreCase)) == true)
+                .ToList();
 
         if (labelGroupResult.MatchedLabel.Remove.Count == 0)
         {

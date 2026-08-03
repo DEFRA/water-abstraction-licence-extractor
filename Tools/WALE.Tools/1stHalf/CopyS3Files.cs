@@ -26,8 +26,8 @@ public static class CopyS3Files
         var destinationFileService = new ApiFileService(destinationHttpClient);
 
         var sourceFilesTask = sourceFileService.GetAllFilesAsync();
-
         var existingDestinationFiles = await destinationFileService.GetAllFilesAsync();
+
         Console.WriteLine($"{existingDestinationFiles.Count} existing destination files");
         
         // For debugging / limiting file uploads

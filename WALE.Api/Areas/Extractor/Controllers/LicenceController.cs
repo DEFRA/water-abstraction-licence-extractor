@@ -2,15 +2,16 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models.OutputSchema;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class LicenceController(IOutputService outputService) : Controller
+public class LicenceController(
+    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -18,7 +19,11 @@ public class LicenceController(IOutputService outputService) : Controller
         [FromQuery] int skip = 0,
         [FromQuery] int take = int.MaxValue)
     {
-        var licences = await outputService.GetLicencesAsync(processRunId, skip, take);
+        var licences = await abstractionLicenceOutputService.GetLicencesAsync(
+            processRunId,
+            skip,
+            take);
+        
         return Ok(licences);
     }
     
@@ -27,7 +32,7 @@ public class LicenceController(IOutputService outputService) : Controller
         [FromQuery] Guid fileId,
         [FromQuery] int processRunId)
     {
-        var licence = await outputService.GetLicenceAsync(fileId, processRunId);
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
         return Ok(licence);
     }
     
@@ -36,7 +41,7 @@ public class LicenceController(IOutputService outputService) : Controller
         [FromQuery] string licenceNumber,
         [FromQuery] int processRunId)
     {
-        var licence = await outputService.GetLicenceAsync(licenceNumber, processRunId);
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(licenceNumber, processRunId);
         return Ok(licence);
     }
     
@@ -48,7 +53,7 @@ public class LicenceController(IOutputService outputService) : Controller
             request.licence!,
             JsonHelper.GetSerializerOptions())!;
         
-        var returnId = await outputService.SaveLicenceAsync(
+        var returnId = await abstractionLicenceOutputService.SaveLicenceAsync(
             licence,
             request.processRunId);
 
@@ -63,7 +68,7 @@ public class LicenceController(IOutputService outputService) : Controller
             request.licence!,
             JsonHelper.GetSerializerOptions())!;
         
-        await outputService.UpdateLicenceAsync(
+        await abstractionLicenceOutputService.UpdateLicenceAsync(
             licence,
             request.licenceId,
             request.processRunId);
@@ -85,7 +90,7 @@ public class LicenceController(IOutputService outputService) : Controller
                 licence.NoneSchemaData);
         }
         
-        await outputService.SaveLicenceSetAsync(
+        await abstractionLicenceOutputService.SaveLicenceSetAsync(
             licenceSet,
             request.fileId,
             request.processRunId);
@@ -110,7 +115,7 @@ public class LicenceController(IOutputService outputService) : Controller
             }
         }
         
-        await outputService.SaveLicenceSetsAsync(
+        await abstractionLicenceOutputService.SaveLicenceSetsAsync(
             licenceSets,
             request.fileId,
             request.processRunId);

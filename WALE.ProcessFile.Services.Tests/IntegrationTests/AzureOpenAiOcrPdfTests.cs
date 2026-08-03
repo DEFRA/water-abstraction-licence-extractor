@@ -7,25 +7,37 @@ using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureOpenAi;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 public class AzureOpenAiOcrPdfTests
 {
     private static readonly ICacheService CacheService;
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
 
     static AzureOpenAiOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
+        var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+
+        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+            realCacheService,
+            realAbsLicCacheService,
+            [],
+            _fileLicenceMapping);
+
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -35,16 +47,16 @@ public class AzureOpenAiOcrPdfTests
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
     
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -133,7 +145,7 @@ public class AzureOpenAiOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -178,7 +190,8 @@ public class AzureOpenAiOcrPdfTests
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder));
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

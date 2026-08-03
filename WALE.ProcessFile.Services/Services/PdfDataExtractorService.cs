@@ -1,7 +1,6 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -136,7 +135,7 @@ public class PdfDataExtractorService(
             return (false ,null);
         }
         
-        if (existingLicenceInRun.Status != nameof(LicenceStatus.InProgress))
+        if (existingLicenceInRun.Status != nameof(ScrapeStatus.InProgress))
         {
             return (false, existingLicenceInRun);
         }
@@ -153,7 +152,7 @@ public class PdfDataExtractorService(
             const int maxWaitTimeSeconds = 50;
             var maxFinishDateTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
             
-            while (existingLicenceInRun?.Status == nameof(LicenceStatus.InProgress)
+            while (existingLicenceInRun?.Status == nameof(ScrapeStatus.InProgress)
                 && DateTime.Now <= maxFinishDateTime)
             {
                 await Task.Delay(delayInSeconds * 1000);
@@ -163,7 +162,7 @@ public class PdfDataExtractorService(
                     outputService.GetMatchesResultAsync(dmsDataForFile.FileId, processRunId);
             }
 
-            if (existingLicenceInRun?.Status != nameof(LicenceStatus.InProgress))
+            if (existingLicenceInRun?.Status != nameof(ScrapeStatus.InProgress))
             {
                 ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Lock now released for {dmsDataForFile.FileId}");
                 return (false, existingLicenceInRun);
@@ -211,7 +210,7 @@ public class PdfDataExtractorService(
         {
             Filename = pdfFileName,
             RegionCode = configuration.RegionId,
-            Status = nameof(LicenceStatus.Ok),
+            Status = nameof(ScrapeStatus.Ok),
             ServicesUsed =
             [
                 noOcrDataExtractorService.Name,
@@ -570,7 +569,7 @@ public class PdfDataExtractorService(
                             if (alreadyOutput.Count >= 1)
                             {
                                 var i = alreadyOutput
-                                    .OrderBy(x => ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                                    .OrderBy(x => ifMultiplePreferLast ? ((x.LabelStartPageNumber * 100) + x.LabelStartLineNumber) : x.Text?.Count)
                                     .First();
                         
                                 labelGroupMatches.Remove(i);
@@ -1238,7 +1237,7 @@ public class PdfDataExtractorService(
             {
                 MatchedLabel = label,
                 SubResults = relatedFileMatches.Item!.Matches!,
-                PageNumber = line.PageNumber
+                LabelStartPageNumber = line.PageNumber
             };
 
             FormattingHelper.RemoveRemoves(labelResult, []); // TODO do this properly at some point
@@ -1276,6 +1275,11 @@ public class PdfDataExtractorService(
                 lineCount,
                 PositionConstants.UnknownLinesTotal,
                 out _,
+                out _,
+                out _,
+                out _,          
+                out _,
+                out _,
                 out _))
             {
                 continue;
@@ -1300,6 +1304,11 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
+                    out _,
+                    out _,
+                    out _,          
+                    out _,
                     out _,
                     out _))
                 {
@@ -1326,6 +1335,11 @@ public class PdfDataExtractorService(
                     label.Position,
                     lineCount,
                     PositionConstants.UnknownLinesTotal,
+                    out _,
+                    out _,
+                    out _,
+                    out _,          
+                    out _,
                     out _,
                     out _))
                 {
@@ -1393,7 +1407,7 @@ public class PdfDataExtractorService(
                     
                     previousPartialLine = partialLine;
                     
-                    var textBeforeAtAndAfterLabel = new List<TextAndLabel>();
+                    var textBeforeAtAndAfterLabel = new List<TextAndLabelAndPosition>();
                     var continuePartialLoop = false;
                     var matchedLabel = label;
 
@@ -1419,7 +1433,7 @@ public class PdfDataExtractorService(
                             continue;
                         }
                     }
-
+                    
                     if (FormattingHelper.IsLineEmpty(partialLine)
                         && label.TextToMatch?.Any(text =>
                             text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
@@ -1428,14 +1442,15 @@ public class PdfDataExtractorService(
                         partialLine = null;
                         continue;
                     }
-
-                    if (partialLine.Text.Contains("over any 5") && label.Name == "Per5YearUnits")
-                    {
-                        
-                    }
                     
                     TextToMatch? matchedStartText = null;
-                    var labelCharPosition = 0;
+
+                    var labelStartPageNumber = partialLine.PageNumber;
+                    var labelStartLineNumber = partialLine.LineNumber;
+                    var labelStartCharIndex = 0;
+                    var labelEndPageNumber = partialLine.PageNumber;
+                    var labelEndLineNumber = partialLine.LineNumber;
+                    var labelEndCharIndex = 0;
 
                     var labelTextLookingForSingleLine = label.Text?
                         .Where(t => t.SingleLinePerItem)
@@ -1479,7 +1494,6 @@ public class PdfDataExtractorService(
                                 partialLine = null;
                                 continue;
                             }
-
                         }
                     }
                     
@@ -1491,7 +1505,7 @@ public class PdfDataExtractorService(
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-
+                        
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -1501,7 +1515,12 @@ public class PdfDataExtractorService(
                             lineCount,
                             totalLineCount,
                             out matchedStartText,
-                            out labelCharPosition))
+                            out labelStartPageNumber,
+                            out labelStartLineNumber,
+                            out labelStartCharIndex,
+                            out labelEndPageNumber,
+                            out labelEndLineNumber,
+                            out labelEndCharIndex))
                         {
                             partialLine = null;
                             continue;
@@ -1519,6 +1538,11 @@ public class PdfDataExtractorService(
                         }
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
+                    }
+                    
+                    if (label.Name == "PointPointNumber")
+                    {
+            
                     }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
@@ -1548,8 +1572,22 @@ public class PdfDataExtractorService(
                         }
                     }
                     
+                    var over2Lines = labelEndPageNumber > labelStartPageNumber
+                        || (labelEndPageNumber == labelStartPageNumber && labelEndLineNumber > labelStartLineNumber);
+                    
+                    DocumentLine? nextLine2 = null;
+                    
+                    if (over2Lines)
+                    {
+                        nextLines ??= line.NextLines(lines, label);
+                        nextLine2 = nextLines.FirstOrDefault();
+                    }
+                    
                     textBeforeAtAndAfterLabel.AddRange(
-                        GetLineBeforeAtAndAfterText(partialLine, matchedLabel));
+                        GetLineBeforeAtAndAfterText(
+                            partialLine,
+                            nextLine2,
+                            matchedLabel));
                     
                     var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
                         .ToList();
@@ -1557,9 +1595,12 @@ public class PdfDataExtractorService(
                     var labelGroupResult = new LabelGroupResult
                     {
                         IsOcr = isOcr,
-                        LineNumber = partialLine.LineNumber,
-                        CharPosition = labelCharPosition,
-                        PageNumber = partialLine.PageNumber,
+                        LabelStartPageNumber = labelStartPageNumber,
+                        LabelStartLineNumber = labelStartLineNumber,
+                        LabelStartCharPosition = labelStartCharIndex,
+                        LabelEndPageNumber = labelEndPageNumber,
+                        LabelEndLineNumber = labelEndLineNumber,
+                        LabelEndCharPosition = labelEndCharIndex,                        
                         ServiceName = serviceName
                     };
                     
@@ -1611,7 +1652,7 @@ public class PdfDataExtractorService(
                             request,
                             partialLine!,
                             singleValueWanted);
-
+                        
                         if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
                         {
                             ConsoleHelper.WriteLine(
@@ -1727,7 +1768,7 @@ public class PdfDataExtractorService(
             }
 
             var returnItem = returnList.First();
-
+            
             return
             [
                 new()
@@ -1735,7 +1776,10 @@ public class PdfDataExtractorService(
                     MatchedLabel = returnItem.MatchedLabel!.Clone(),
                     LabelGroupName = returnItem.LabelGroupName,
                     MatchedPosition = returnItem.MatchedPosition,
-                    PageNumber = returnItem.PageNumber,
+                    LabelStartPageNumber = returnItem.LabelStartPageNumber,
+                    LabelStartLineNumber = returnItem.LabelStartLineNumber,
+                    LabelEndPageNumber = returnItem.LabelEndPageNumber,
+                    LabelEndLineNumber = returnItem.LabelEndLineNumber,                    
                     ServiceName = returnItem.ServiceName,
                     Text = textList
                 }
@@ -1750,8 +1794,8 @@ public class PdfDataExtractorService(
         // De-dupe exact matches
         returnList = returnList
             .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?
-                $"{x.PageNumber}_{x.LineNumber}_{x.CharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
-                : $"{x.PageNumber}_{x.LineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
+                $"{x.LabelStartPageNumber}_{x.LabelStartLineNumber}_{x.LabelStartCharPosition}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}"
+                : $"{x.LabelStartPageNumber}_{x.LabelStartLineNumber}_{x.MatchedLabel?.Name}_{x.Text?.FirstOrDefault()?.Text}")
             .Select(x => x.OrderByDescending(y => y.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]" ? 0 : 1).First())
             .ToList();
         
@@ -1770,7 +1814,7 @@ public class PdfDataExtractorService(
         {
             var i = alreadyOutput
                 .OrderBy(x =>
-                    ifMultiplePreferLast ? ((x.PageNumber * 100) + x.LineNumber) : x.Text?.Count)
+                    ifMultiplePreferLast ? ((x.LabelStartPageNumber * 100) + x.LabelStartLineNumber) : x.Text?.Count)
                 .First();
 
             returnList.Remove(i);
@@ -1805,9 +1849,9 @@ public class PdfDataExtractorService(
         {
             var newLineNumber = result.Text?.FirstOrDefault()?.LineNumber;
 
-            if (newLineNumber.HasValue && newLineNumber != result.LineNumber)
+            if (newLineNumber.HasValue && newLineNumber != result.LabelStartLineNumber)
             {
-                result.LineNumber = newLineNumber.Value;
+                result.LabelStartLineNumber = newLineNumber.Value;
             }
         }
 
@@ -1863,7 +1907,7 @@ public class PdfDataExtractorService(
         {
             var result = results[0];
 
-            if (result.LineNumber == partialLine.LineNumber)
+            if (result.LabelStartLineNumber == partialLine.LineNumber)
             {
                 var resultText = result.Text?.FirstOrDefault()?.Text;
 
@@ -1918,7 +1962,7 @@ public class PdfDataExtractorService(
             int Order)>
         {
             (LabelPosition.ApplicableToMost, ApplicableToMost.FunctionAsync, 0),
-            (LabelPosition.SplitAtLabel, Split.FunctionAsync, 0),
+            (LabelPosition.SplitAtLabel, SplitAtLabel.FunctionAsync, 0),
             (LabelPosition.RelatedCategoryPosition, RelatedCategoryPosition.FunctionAsync, 0),
             (LabelPosition.TextToFindIsBetweenLabels, TextToFindIsBetweenLabels.FunctionAsync, 0),
             (LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore, LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore.FunctionAsync, -1),
@@ -2050,29 +2094,74 @@ public class PdfDataExtractorService(
         
         var groups = subResults
             .GroupBy(x => x.MatchedLabel!.Name)
-            .Where(x => x.Count() > 1)
             .ToList();
 
-        if (groups.Any())
+        var subResultsToKeep = new List<LabelGroupResult>();
+        
+        foreach (var groupLoop in groups)
         {
-            foreach (var group in groups)
-            {
-                var anyDidntStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
-                
-                var anyDidStartAtStartOfBlock = group.Any(subResult =>
-                    subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
+            var group = groupLoop.ToList();
 
-                if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
-                {
-                    subResults = subResults
-                        .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
-                        .ToList();
-                }                
+            if (group.Count == 1)
+            {
+                subResultsToKeep.Add(group[0]);
+                continue;
             }
+
+            if (group.First().MatchedLabelName == "AbstractionLimitPoint")
+            {
+                
+            }
+
+            var groupLabel = group.First().MatchedLabel!;
+            
+            if (groupLabel.DeDuplicateResults)
+            {
+                // De-dupe exact text matches
+                group = group
+                    .GroupBy(g =>
+                    {
+                        if (g.Text == null)
+                        {
+                            return string.Empty;
+                        }
+
+                        var text = string.Join(string.Empty, g.Text!.Select(t => t.Text));
+                        return text;
+                    })
+                    .Select(g => g.Last())
+                    .ToList();
+            }
+            
+            if (!groupLabel.RemoveStartOfBlockSectionsWhenMultiple)
+            {
+                subResultsToKeep.AddRange(group);
+                continue;
+            }
+            
+            // If we found some with an implicit start label, then we don't want others
+            // we found with a start of block
+            
+            var anyDidntStartAtStartOfBlock = group.Any(subResult =>
+                subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
+            
+            var anyDidStartAtStartOfBlock = group.Any(subResult =>
+                subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
+
+            if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+            {
+                var newGroupSubResults = group
+                    .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
+                    .ToList();
+                
+                subResultsToKeep.AddRange(newGroupSubResults);
+                continue;
+            }
+            
+            subResultsToKeep.AddRange(group);
         }
 
-        return subResults;
+        return subResultsToKeep;
     }
 
     private static bool IsStartOfBlock(LabelToMatch label)
@@ -2082,43 +2171,52 @@ public class PdfDataExtractorService(
             .Contains("[START_OF_BLOCK]") == true;
     }
 
-    private static List<TextAndLabel> GetLineBeforeAtAndAfterText(
+    private static List<TextAndLabelAndPosition> GetLineBeforeAtAndAfterText(
         DocumentLine line,
+        DocumentLine? nextLineToContinueOnto,
         LabelToMatch label)
     {
-        var returnItems = new List<TextAndLabel>();
+        var returnItems = new List<TextAndLabelAndPosition>();
 
+        if (line.Text.StartsWith("3.1"))
+        {
+            
+        }
+        
         var lineColumns = line.Columns
             .Select(c => c.Text)
             .ToList();
 
         if (label.TextToMatch == null || IsStartOfBlock(label))
         {
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
                 ColumnsText = lineColumns,
-                Label = label
+                Label = label,
+                Position = "StartOfBlock"
             });
 
             return returnItems;
         }
 
-        var lineText = line.Text;
+        var combinedText = nextLineToContinueOnto != null ?
+            $"{line.Text} {nextLineToContinueOnto.Text}"
+            : line.Text;
         
         if (label.TextToMatch?.FirstOrDefault()?.Regex != null &&
             label.Position == LabelPosition.LabelIsActuallyResult)
         {
             var regex = label.TextToMatch.FirstOrDefault()!.Regex;
-            var matches = regex!.Matches(lineText);
+            var matches = regex!.Matches(combinedText);
 
             foreach (var match in matches.AsQueryable())
             {
                 var regexValue = match.Value;
-                var positionIndexOnLine = lineText.IndexOf(regexValue, StringComparison.Ordinal);
+                var positionIndexOnLine = combinedText.IndexOf(regexValue, StringComparison.Ordinal);
 
                 if (positionIndexOnLine > 0)
                 {
-                    var previousChar = lineText[positionIndexOnLine - 1];
+                    var previousChar = combinedText[positionIndexOnLine - 1];
                     var firstChar = match.Value[0];
                     
                     if (previousChar != ' ' && previousChar != ',' && previousChar != '.'
@@ -2128,9 +2226,10 @@ public class PdfDataExtractorService(
                     }
                 }
 
-                var valueStartPositionOnLine = lineText.IndexOf(
+                var valueStartPositionOnLine = combinedText.IndexOf(
                     regexValue,
                     StringComparison.OrdinalIgnoreCase);
+                
                 var valueEndPositionOnLine = valueStartPositionOnLine + regexValue.Length;
 
                 var beforeColumns = new List<string>();
@@ -2211,17 +2310,19 @@ public class PdfDataExtractorService(
                     var beforeLabel = label.Clone();
                     beforeLabel.Position = LabelPosition.LabelIsAfterTextToFind;
                     
-                    returnItems.Add(new TextAndLabel
+                    returnItems.Add(new TextAndLabelAndPosition
                     {
                         ColumnsText = beforeColumns,
-                        Label = beforeLabel
+                        Label = beforeLabel,
+                        Position = "BeforeLabel"
                     });
                 }
                 
-                returnItems.Add(new TextAndLabel
+                returnItems.Add(new TextAndLabelAndPosition
                 {
                     ColumnsText = valueColumns,
-                    Label = label
+                    Label = label,
+                    Position = "AtLabel"
                 });
 
                 if (afterColumns.Count > 1 || !string.IsNullOrWhiteSpace(afterColumns.FirstOrDefault()))
@@ -2229,23 +2330,24 @@ public class PdfDataExtractorService(
                     var afterLabel = label.Clone();
                     afterLabel.Position = LabelPosition.LabelIsBeforeTextToFind;
 
-                    returnItems.Add(new TextAndLabel
+                    returnItems.Add(new TextAndLabelAndPosition
                     {
                         ColumnsText = afterColumns,
-                        Label = afterLabel
+                        Label = afterLabel,
+                        Position = "AfterLabel"
                     });
                 }
             }
 
             return returnItems;
         }
-
+        
         var labelTextPositionIndex = PositionConstants.PositionNotFound;
         string? matchedLabelText = null;
 
         foreach (var labelText in label.TextToMatch!)
         {
-            var index = lineText.IndexOf(
+            var index = combinedText.IndexOf(
                 labelText.Text,
                 StringComparison.OrdinalIgnoreCase);
 
@@ -2263,12 +2365,9 @@ public class PdfDataExtractorService(
             return [];
         }
 
-        var textBeforeLabel = FormattingHelper.TrimFormatting(
-            lineText[..labelTextPositionIndex], true, false);
-
+        var textBeforeLabel = combinedText[..labelTextPositionIndex];
         var textAtLabel = matchedLabelText;
-        var textAfterLabel = FormattingHelper.TrimFormatting(
-            lineText[(labelTextPositionIndex + matchedLabelText!.Length)..], false, false);
+        var textAfterLabel = combinedText[(labelTextPositionIndex + matchedLabelText!.Length)..];
 
         if (!string.IsNullOrEmpty(textBeforeLabel)
             && label.Position is LabelPosition.LabelIsAfterTextToFind
@@ -2289,22 +2388,25 @@ public class PdfDataExtractorService(
                 ? LabelPosition.LabelIsAfterTextToFind
                 : label.Position;
 
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
-                ColumnsText = [textBeforeLabel.Trim()],
-                Label = returnLabel
+                ColumnsText = [textBeforeLabel],
+                Label = returnLabel,
+                Position = "BeforeLabel"
             });
         }
 
-        if (!string.IsNullOrEmpty(textAtLabel) && label.IncludeStartLabelText)
+        if (!string.IsNullOrEmpty(textAtLabel) &&
+            (label.IncludeStartLabelText || label.Possibilities?.Any() == true))
         {
             var returnLabel = label.Clone();
             returnLabel.Position = LabelPosition.LabelIsActuallyResult;
 
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
-                ColumnsText = [textAtLabel.Trim()],
-                Label = returnLabel
+                ColumnsText = [textAtLabel],
+                Label = returnLabel,
+                Position = "AtLabel"
             });
         }
 
@@ -2327,11 +2429,11 @@ public class PdfDataExtractorService(
                 ? LabelPosition.LabelIsBeforeTextToFind
                 : label.Position;
 
-
-            returnItems.Add(new TextAndLabel
+            returnItems.Add(new TextAndLabelAndPosition
             {
-                ColumnsText = [textAfterLabel.Trim()],
-                Label = returnLabel
+                ColumnsText = [textAfterLabel],
+                Label = returnLabel,
+                Position = "AfterLabel"
             });
         }
 

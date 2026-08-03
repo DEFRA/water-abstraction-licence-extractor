@@ -80,7 +80,8 @@ public static partial class DataHelper
 
                 var alteredTextWords = DocumentLineColumn.FilterWordsFromText(
                     column.Words,
-                    alteredText);
+                    alteredText,
+                    false);
                 
                 var clonedColumn = new DocumentLineColumn(alteredTextWords);
                 newColumns.Add(clonedColumn);
@@ -106,7 +107,7 @@ public static partial class DataHelper
     }
 
     public static string GetTextBeforeAtAndAfterLabelAsSingleString(
-        List<TextAndLabel>? textBeforeAtAndAfterLabel,
+        List<TextAndLabelAndPosition>? textBeforeAtAndAfterLabel,
         bool includeLabelText)
     {
         var beforeStuff = textBeforeAtAndAfterLabel!
@@ -141,7 +142,8 @@ public static partial class DataHelper
     {
         removesUsed = null;
         
-        if ((label.Remove?.Any() != true && label.IgnoreMatchIfContains?.Any() != true) || string.IsNullOrEmpty(betweenText))
+        if ((label.Remove?.Any() != true && label.IgnoreMatchIfContains?.Any() != true)
+            || string.IsNullOrEmpty(betweenText))
         {
             return betweenText;
         }
@@ -167,7 +169,7 @@ public static partial class DataHelper
                     continue;
                 }
 
-                if (!returnStr.Contains(textToMatch.Text))
+                if (!returnStr.Contains(textToMatch.Text, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -175,7 +177,7 @@ public static partial class DataHelper
                 if (textToMatch.ColumnMustStartWith || textToMatch.LineMustStartWith)
                 {
                     if ((individualWordLineIndex != 0 && individualWordLineIndex != null)
-                        || !returnStr.StartsWith(textToMatch.Text))
+                        || !returnStr.StartsWith(textToMatch.Text, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

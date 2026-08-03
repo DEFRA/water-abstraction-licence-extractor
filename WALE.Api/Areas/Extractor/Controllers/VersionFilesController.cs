@@ -1,25 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
-using WALE.ProcessFile.Core.Interfaces;
+using WRADI.Core.AbstractionLicence.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class VersionFilesController(ICacheService cacheService) : Controller
+public class VersionFilesController(
+    IAbstractionLicenceCacheService abstractionLicenceCacheService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult> GetToDownloadAsync()
     {
-        var date = await cacheService.GetVersionFilesToDownloadAsync();
+        var date =
+            await abstractionLicenceCacheService.GetVersionFilesToDownloadAsync();
+        
         return Ok(date);
     }
     
     [HttpGet]
     public async Task<ActionResult> GetAllAsync()
     {
-        var date = await cacheService.GetVersionFilesAsync();
+        var date = await abstractionLicenceCacheService.GetVersionFilesAsync();
         return Ok(date);
     }
     
@@ -27,7 +30,7 @@ public class VersionFilesController(ICacheService cacheService) : Controller
     public async Task<ActionResult> SaveToDownloadAsync(
         [FromBody] VersionFilesToDownloadCreateRequest request)
     {
-        await cacheService.SaveVersionFilesToDownloadAsync(request.results!);
+        await abstractionLicenceCacheService.SaveVersionFilesToDownloadAsync(request.results!);
         return Ok();
     }
     
@@ -35,21 +38,21 @@ public class VersionFilesController(ICacheService cacheService) : Controller
     public async Task<ActionResult> SaveAllAsync(
         [FromBody] VersionFilesCreateRequest request)
     {
-        await cacheService.SaveVersionFilesAsync(request.results!);
+        await abstractionLicenceCacheService.SaveVersionFilesAsync(request.results!);
         return Ok();
     }
     
     [HttpDelete]
     public async Task<ActionResult> ClearDownloadFilesAsync()
     {
-        await cacheService.ClearVersionFilesToDownloadAsync();
+        await abstractionLicenceCacheService.ClearVersionFilesToDownloadAsync();
         return Ok();
     }
     
     [HttpDelete]
     public async Task<ActionResult> ClearAllFilesAsync()
     {
-        await cacheService.ClearVersionFilesAsync();
+        await abstractionLicenceCacheService.ClearVersionFilesAsync();
         return Ok();
     }
 }

@@ -24,13 +24,25 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             }
           ],
           "containedIn": [
@@ -39,9 +51,20 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": true,
               "lineNumber": 18,
               "pageNumber": 4
+            }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
+            }
+          ],
+          "purposes": [
+            {
+              "id": "4.1",
+              "isImplicit": true
             }
           ]
         },
@@ -60,13 +83,25 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             }
           ],
           "containedIn": [
@@ -75,9 +110,20 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": true,
               "lineNumber": 18,
               "pageNumber": 4
+            }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
+            }
+          ],
+          "purposes": [
+            {
+              "id": "4.1",
+              "isImplicit": true
             }
           ]
         },
@@ -96,13 +142,25 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false
+              "isAverage": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ]
             }
           ],
           "containedIn": [
@@ -111,9 +169,20 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": true,
               "lineNumber": 18,
               "pageNumber": 4
+            }
+          ],
+          "points": [
+            {
+              "id": "2.1",
+              "isImplicit": true
+            }
+          ],
+          "purposes": [
+            {
+              "id": "4.1",
+              "isImplicit": true
             }
           ]
         }
@@ -145,6 +214,14 @@
       "points": [
         {
           "gridRef": "SJ 5179 4988",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5179 4988"
         }
@@ -179,19 +256,55 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -200,9 +313,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           },
@@ -213,7 +337,19 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -221,9 +357,20 @@
                 "source": "Document",
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 5
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -244,13 +391,25 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -259,9 +418,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": true,
                 "lineNumber": 18,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -289,7 +459,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -327,7 +496,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -369,11 +537,14 @@
         "Confidence:DateOfOriginalIssue": null,
         "Confidence:MeansOfAbstraction": null,
         "Features:MeansPointsTable": false,
+        "NaldSourceOfSupplyData": [],
+        "Confidence:SourceOfSupply": null,
+        "Confidence:SourceOfSupply_PointPurposeGroup_0": null,
+        "Features:PointsTable": false,
         "NaldPointsData": [],
         "Confidence:Points": null,
         "Confidence:Points_PointPurposeGroup_0": null,
         "Confidence:Points_PointPurposeGroup_0_Point_0_PointPointNumber": null,
-        "Features:PointsTable": false,
         "NaldPurposesData": [],
         "Confidence:Points_PointPurposeGroup_0_Point_1_PointTextWithoutPurposeAndPoint": null,
         "NaldPeriodsData": [],
@@ -418,6 +589,14 @@
       "points": [
         {
           "gridRef": "SJ 5158 5029",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5158 5029"
         }
@@ -452,19 +631,55 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -473,9 +688,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           },
@@ -486,7 +712,19 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -494,9 +732,20 @@
                 "source": "Document",
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 5
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -517,13 +766,25 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -532,9 +793,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": true,
                 "lineNumber": 18,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -562,7 +834,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -598,7 +869,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -640,11 +910,14 @@
         "Confidence:DateOfOriginalIssue": null,
         "Confidence:MeansOfAbstraction": null,
         "Features:MeansPointsTable": false,
+        "NaldSourceOfSupplyData": [],
+        "Confidence:SourceOfSupply": null,
+        "Confidence:SourceOfSupply_PointPurposeGroup_0": null,
+        "Features:PointsTable": false,
         "NaldPointsData": [],
         "Confidence:Points": null,
         "Confidence:Points_PointPurposeGroup_0": null,
         "Confidence:Points_PointPurposeGroup_0_Point_0_PointPointNumber": null,
-        "Features:PointsTable": false,
         "NaldPurposesData": [],
         "Confidence:Points_PointPurposeGroup_0_Point_1_PointTextWithoutPurposeAndPoint": null,
         "NaldPeriodsData": [],
@@ -689,6 +962,14 @@
       "points": [
         {
           "gridRef": "SJ 5168 5015",
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Points",
+              "lineNumber": 6,
+              "pageNumber": 4
+            }
+          ],
           "id": "2.1",
           "description": "At National Grid Reference SJ 5168 5015"
         }
@@ -723,19 +1004,55 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -744,9 +1061,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "AggregateCondition",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           },
@@ -757,7 +1085,19 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -765,9 +1105,20 @@
                 "source": "Document",
                 "direction": "Outgoing",
                 "sectionName": "FurtherConditions",
-                "isBecauseOfAggregate": false,
                 "lineNumber": 14,
                 "pageNumber": 5
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -788,13 +1139,25 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false
+                "isAverage": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ]
               }
             ],
             "containedIn": [
@@ -803,9 +1166,20 @@
                 "direction": "Outgoing",
                 "sectionName": "AbstractionLimits",
                 "linkReason": "ShallNotExceed",
-                "isBecauseOfAggregate": true,
                 "lineNumber": 18,
                 "pageNumber": 4
+              }
+            ],
+            "points": [
+              {
+                "id": "2.1",
+                "isImplicit": true
+              }
+            ],
+            "purposes": [
+              {
+                "id": "4.1",
+                "isImplicit": true
               }
             ]
           }
@@ -833,7 +1207,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -869,7 +1242,6 @@
               "direction": "Outgoing",
               "sectionName": "AbstractionLimits",
               "linkReason": "ShallNotExceed",
-              "isBecauseOfAggregate": false,
               "lineNumber": 18,
               "pageNumber": 4
             },
@@ -911,11 +1283,14 @@
         "Confidence:DateOfOriginalIssue": null,
         "Confidence:MeansOfAbstraction": null,
         "Features:MeansPointsTable": false,
+        "NaldSourceOfSupplyData": [],
+        "Confidence:SourceOfSupply": null,
+        "Confidence:SourceOfSupply_PointPurposeGroup_0": null,
+        "Features:PointsTable": false,
         "NaldPointsData": [],
         "Confidence:Points": null,
         "Confidence:Points_PointPurposeGroup_0": null,
         "Confidence:Points_PointPurposeGroup_0_Point_0_PointPointNumber": null,
-        "Features:PointsTable": false,
         "NaldPurposesData": [],
         "Confidence:Points_PointPurposeGroup_0_Point_1_PointTextWithoutPurposeAndPoint": null,
         "NaldPeriodsData": [],

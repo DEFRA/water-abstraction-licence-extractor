@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Models;
 
@@ -13,11 +12,17 @@ public class LabelGroupResult
 
     public bool IsOcr { get; init; }
 
-    public int LineNumber { get; set; }
+    public int LabelStartPageNumber { get; init; }
     
-    public int CharPosition { get; set; }
+    public int LabelStartLineNumber { get; set; }
     
-    public int PageNumber { get; init; }
+    public int LabelStartCharPosition { get; set; }
+    
+    public int LabelEndPageNumber { get; init; }
+    
+    public int LabelEndLineNumber { get; set; }
+    
+    public int LabelEndCharPosition { get; set; }
 
     public string? ServiceName { get; init; }
     
@@ -168,9 +173,12 @@ public class LabelGroupResult
             Text = Text?.ToList(),
             MatchedPosition = MatchedPosition,
             IsOcr = IsOcr,
-            LineNumber = LineNumber,
-            CharPosition = CharPosition,
-            PageNumber = PageNumber,
+            LabelStartPageNumber = LabelStartPageNumber,
+            LabelStartLineNumber = LabelStartLineNumber,
+            LabelStartCharPosition = LabelStartCharPosition,
+            LabelEndPageNumber = LabelEndPageNumber,
+            LabelEndLineNumber = LabelEndLineNumber,
+            LabelEndCharPosition = LabelEndCharPosition,
             ServiceName = ServiceName,
             LabelGroupName = LabelGroupName,
             MatchedLabel = MatchedLabel?.Clone(),

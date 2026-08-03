@@ -1,5 +1,4 @@
-using WALE.ProcessFile.Services.Formats;
-using Xunit;
+using WRADI.DocumentType.AbstractionLicence.Formats;
 
 namespace WALE.ProcessFile.Services.Tests.UnitTests;
 
@@ -9,7 +8,7 @@ public class LicenceNumberTests
     public void Constructor_ShouldThrowArgumentNullException_WhenDatabaseReadServiceIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new LicenceNumber(null!));
+        Assert.Throws<ArgumentNullException>(() => new AbstractionLicenceNumber(null!));
     }
 
     [Theory]
@@ -22,7 +21,7 @@ public class LicenceNumberTests
     public void NormalizeLicenceNumber_ShouldRemoveNonAlphanumericExceptZero(string input, string expected)
     {
         // Act
-        var result = LicenceNumber.NormalizeLicenceNumber(input);
+        var result = AbstractionLicenceNumber.NormalizeLicenceNumber(input);
 
         // Assert
         Assert.Equal(expected, result);
@@ -39,7 +38,7 @@ public class LicenceNumberTests
     public void ExtractSegments_ShouldSplitCorrectly(string input, string[] expected)
     {
         // Act
-        var result = LicenceNumber.ExtractSegments(input);
+        var result = AbstractionLicenceNumber.ExtractSegments(input);
 
         // Assert
         Assert.Equal(expected, result);
@@ -61,7 +60,7 @@ public class LicenceNumberTests
     public void SegmentsMatch_ShouldMatchCorrectly(string[] segments1, string[] segments2, bool expected)
     {
         // Act
-        var result = LicenceNumber.SegmentsMatch(segments1.ToList(), segments2.ToList());
+        var result = AbstractionLicenceNumber.SegmentsMatch(segments1.ToList(), segments2.ToList());
 
         // Assert
         Assert.Equal(expected, result);

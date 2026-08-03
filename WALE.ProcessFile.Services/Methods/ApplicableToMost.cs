@@ -13,7 +13,7 @@ public static class ApplicableToMost
     {
         ArgumentNullException.ThrowIfNull(request.labelGroupResult);
         ArgumentNullException.ThrowIfNull(request.label);
-        
+
         if (request.label!.Position is LabelPosition.TextToFindIsBetweenLabels
             or LabelPosition.SplitAtLabel
             or LabelPosition.RelatedCategoryPosition)
@@ -55,6 +55,9 @@ public static class ApplicableToMost
         var isMultiple = request.label?.MultipleMatchBehaviour is
             MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
                 or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+        
+        var hasToBePossibility = false;
+        var isPossiblity = false;
         
         foreach (var item in textBeforeAtAndAfterLabel)
         {
@@ -359,11 +362,12 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
 
-            var isPossiblity = false;
+            var loopIsPossiblity = false;
             var matchedPossibility = (TextToMatch?)null;
             
             if (matchedLabel.Possibilities?.Any() == true)
             {
+                hasToBePossibility = true;
                 var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
                 
                 var autoCorrectedOutput = request.isOcr
@@ -382,7 +386,13 @@ public static class ApplicableToMost
                     }
                     
                     outputText = possibility.Text;
-                    isPossiblity = true;
+                    loopIsPossiblity = true;
+
+                    if (loopIsPossiblity)
+                    {
+                        isPossiblity = true;
+                    }
+                    
                     matchedPossibility = possibility;
                     
                     break;
@@ -391,7 +401,7 @@ public static class ApplicableToMost
 
             if (request.isUnitsLookup)
             {
-                if (isPossiblity)
+                if (loopIsPossiblity)
                 {
                     var dLineWords = documentLine.Columns
                         .SelectMany(c => c.Words)
@@ -506,7 +516,7 @@ public static class ApplicableToMost
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
 
-                if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
+                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
                 {
                     labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
@@ -520,7 +530,7 @@ public static class ApplicableToMost
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
             
-            var trimmedWords = outputText!.Trim().Split(' ');
+            var trimmedWords = outputText.Trim().Split(' ');
 
             if (trimmedWords.Length == 1
                 && !string.IsNullOrEmpty(trimmedWords[0])
@@ -541,12 +551,13 @@ public static class ApplicableToMost
                 
                 FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
                 
-                if (labelGroupResult.MatchedLabel.Possibilities != null && isPossiblity)
+                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
                 {
                     labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
                 }
 
                 labelGroupResult = CheckContains(request.label, labelGroupResult);
+                
                 if (labelGroupResult == null)
                 {
                     return [];
@@ -554,7 +565,7 @@ public static class ApplicableToMost
                 
                 return await ProcessSubLabelsAsync(request, labelGroupResult);
             }
-
+            
             if (!string.IsNullOrWhiteSpace(outputText))
             {
                 if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)
@@ -594,6 +605,11 @@ public static class ApplicableToMost
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
             }
+        }
+        
+        if (hasToBePossibility && !isPossiblity)
+        {
+            return [];
         }
         
         return CheckContains(request.label, returnListTop);

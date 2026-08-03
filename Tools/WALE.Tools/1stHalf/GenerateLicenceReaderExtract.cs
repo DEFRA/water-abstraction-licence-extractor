@@ -19,6 +19,10 @@ using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.Tools._1stHalf;
 
@@ -100,6 +104,7 @@ public static class GenerateLicenceReaderExtract
         var maxConcurrentScrapers = 10;
         
         var cacheService = (ICacheService)new ApiCacheService(httpClient);
+        var absLicenceCacheService = (IAbstractionLicenceCacheService)new ApiAbstractionLicenceCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
         var messageQueueService = (IMessageQueueService)new ApiMessageQueueService(httpClient);
         
@@ -107,16 +112,16 @@ public static class GenerateLicenceReaderExtract
         var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
         
         ConsoleHelper.WriteLine("Started getting nald licence status");
-        var naldLicenceStatusDataTask = cacheService.GetNaldLicenceStatusDataAsync();
+        var naldLicenceStatusDataTask = absLicenceCacheService.GetNaldLicenceStatusDataAsync();
         
         const int take = 10_000;
 
         var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, take);
-        var allNaldData = await GetAllNaldDataAsync(cacheService, take);
+        var allNaldData = await GetAllNaldDataAsync(absLicenceCacheService, take);
         
         ConsoleHelper.WriteLine("Finished getting all nald data");
         
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
 
         var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
 
@@ -190,6 +195,7 @@ public static class GenerateLicenceReaderExtract
             pdfDataExtractors,
             fileService,
             cacheService,
+            absLicenceCacheService,
             outputService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
@@ -214,7 +220,9 @@ public static class GenerateLicenceReaderExtract
         return 1;
     }
 
-    private static async Task<NaldDataCollection> GetAllNaldDataAsync(ICacheService cacheService, int take)
+    private static async Task<NaldDataCollection> GetAllNaldDataAsync(
+        IAbstractionLicenceCacheService cacheService,
+        int take)
     {
         var allNaldData = new NaldDataCollection
         {
@@ -313,6 +321,7 @@ public static class GenerateLicenceReaderExtract
         List<PdfDataExtractorService> pdfDataExtractors,
         IFileService fileService,
         ICacheService cacheService,
+        IAbstractionLicenceCacheService abstractionLicenceCacheService,
         IOutputService outputService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
@@ -339,7 +348,7 @@ public static class GenerateLicenceReaderExtract
 
         // TODO - May need to implement paging above
         
-        var licenceFinderResultsRaw = await cacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        var licenceFinderResultsRaw = await abstractionLicenceCacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
         foreach (var licenceFinderResult in licenceFinderResultsRaw)
@@ -396,7 +405,7 @@ public static class GenerateLicenceReaderExtract
         
         if (includeVersionMatch)
         {
-            var versionFiles = await cacheService.GetVersionFilesAsync();
+            var versionFiles = await abstractionLicenceCacheService.GetVersionFilesAsync();
             versionFilesCount =  versionFiles.Count;
 
             foreach (var versionFile in versionFiles)

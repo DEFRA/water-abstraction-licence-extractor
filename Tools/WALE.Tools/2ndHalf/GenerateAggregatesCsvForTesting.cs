@@ -2,13 +2,15 @@ using System.Collections;
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.Tools._2ndHalf;
 
@@ -20,6 +22,9 @@ public static class GenerateAggregatesCsvForTesting
     };
 
     private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
+
+    private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
+        new ApiAbstractionLicenceOutputService(HttpClient);
     
     public static async Task<int> GenerateCsvForTestingAsync(int processRunId)
     {
@@ -52,7 +57,7 @@ public static class GenerateAggregatesCsvForTesting
             first = false;
             var startAt = loopIdx++ * licencesToTake;
             
-            loopLicences = await OutputService.GetLicencesAsync(processRunId, startAt, licencesToTake);
+            loopLicences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, startAt, licencesToTake);
             licences.AddRange(loopLicences);
         }
 

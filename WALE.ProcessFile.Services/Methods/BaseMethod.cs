@@ -195,15 +195,24 @@ public static class BaseMethod
         
         return lines
             .Where(line => possibilities
-                .Any(possibility => possibility.LineMustStartWith
-                    ? line.Text.StartsWith(possibility.Text)
-                    : line.Text.Contains(possibility.Text)))
+                .Any(possibility =>
+                {
+                    var possibilityText = possibility.Text;
+                    var possibilityTextWithSpaceInfront = $" {possibility.Text}";
+
+                    var startWith = line.Text.StartsWith(possibilityText, StringComparison.OrdinalIgnoreCase);
+                    
+                    return possibility.LineMustStartWith
+                        ? line.Text.StartsWith(possibilityText, StringComparison.OrdinalIgnoreCase)
+                        : startWith ||
+                            line.Text.Contains(possibilityTextWithSpaceInfront, StringComparison.OrdinalIgnoreCase);
+                }))
             .Select(line =>
             {
                 var possibility = possibilities
                     .First(possibility => possibility.LineMustStartWith
-                        ? line.Text.StartsWith(possibility.Text)
-                        : line.Text.Contains(possibility.Text));
+                        ? line.Text.StartsWith(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                        : line.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
 
                 var possibilityWords = line.Columns
                     .SelectMany(c => c.Words)
@@ -272,12 +281,12 @@ public static class BaseMethod
         }
 
         var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text) == true);
+            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true);
 
         if (possiblityFound)
         {
             var possibility = request.label.Possibilities
-                .First(possibility => result.Text!.First().Text.Contains(possibility.Text));
+                .First(possibility => result.Text!.First().Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
             
             var possibilityWords = result.Text!.First().Columns
                 .SelectMany(c => c.Words)
@@ -310,13 +319,13 @@ public static class BaseMethod
         return results
             .Where(result => request.label.Possibilities
                 .Any(possibility =>
-                    result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text) == true))
+                    result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true))
             .Select(result =>
             {
                 var lineText = result.Text!.First().Text;
                 
                 var possibility = request.label.Possibilities
-                    .First(possibility => lineText.Contains(possibility.Text));
+                    .First(possibility => lineText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
 
                 var possibilityWords = result.Text!.First().Columns
                     .SelectMany(c => c.Words)

@@ -1,7 +1,4 @@
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay.DTOs;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -16,20 +13,7 @@ public interface IDatabaseWriteService
     public Task<ProcessRunFile> CompleteProcessRunFileAsync(ProcessRunFile processRunFile);
     
     public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
-
-    public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
-
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status);
-
-    public Task<int> SaveLicenceAsync(
-        string? licenceNumber,
-        string? filename,
-        string status,
-        string licenceData,
-        Guid? fileId,
-        string? permitNumber,
-        int processRunId);
-
+    
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
 
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
@@ -78,33 +62,11 @@ public interface IDatabaseWriteService
     
     Task UpdateProcessRunAsync(ProcessRun processRun);
     
-    Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence);
-    
-    Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber, string licenceVersionId, int processRunId);
-
-    Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId);
-    
-    Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
-
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
-
-    Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
     
     Task SaveImportRunDateAsync(string dataSource);
-
-    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
-
-    Task ClearLicenceFinderResultsAsync();
-
-    Task ClearVersionFilesAsync();
-
-    Task ClearVersionFilesToDownloadAsync();
-    
-    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
-
-    Task SaveVersionFilesAsync(List<VersionFile> results);
 
     Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
 
@@ -112,9 +74,4 @@ public interface IDatabaseWriteService
 
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
         int processRunId);
-
-    Task<long> UpsertLicenceListItemAsync(UpsertLicenceListItem item, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyCollection<long>> UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items,
-        CancellationToken cancellationToken = default);
 }

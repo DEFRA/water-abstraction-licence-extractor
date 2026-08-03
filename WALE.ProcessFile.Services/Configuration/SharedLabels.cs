@@ -1,5 +1,4 @@
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 

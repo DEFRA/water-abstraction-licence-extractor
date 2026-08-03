@@ -6,14 +6,18 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -24,11 +28,19 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     : IClassFixture<SingletonAwsTextractFixture>
 {
     private static readonly ICacheService CacheService;
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
 
     static TesseractAndAwsTextractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+        var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+
+        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+            realCacheService,
+            realAbsLicCacheService,
+            _naldData,
+            _fileLicenceMapping);
+
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -38,11 +50,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
     
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
     private Task SetupLicenceNumbersAsync(short regionCode)
     {
@@ -138,13 +150,13 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(10, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
         
         Assert.Single(abstractionLimitsResult!.SubResults!);
 
         var abstractionPoint1 = abstractionLimitsResult!.SubResults![0];
         Assert.NotNull(abstractionPoint1);
-        Assert.Equal(10, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(11, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -182,7 +194,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -221,7 +234,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -234,7 +247,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(12, section1Sub1.SubResults!.Count);
+        Assert.Equal(12, section1Sub1.SubResults.Count);
         
         // NOTE - it does a bad job getting these subresults
         
@@ -248,7 +261,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -293,7 +307,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -336,7 +350,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -353,7 +368,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("12201014__Application New Licence Issued - [1966] - (1966).pdf", "27th day of JULY, 19 66", "27/07/1966", 7, 0, "1/22/01/014", 3)]
     [InlineData("12201021__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 6g", "28/07/1966", 6, 0, "1/22/01/021", 3)]
     [InlineData("12201023__Application New Licence Issued - [1966] - (1966).pdf", "28th day of JULY, 19 66", "28/07/1966", 6, 0, "1/22/01/023", 3)]
-    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 6, 0, "1/22/02/043", 3)]
+    [InlineData("12202043__abstraction license 1975.pdf", "14th day of February 1975", "14/02/1975", 5, 0, "1/22/02/043", 3)]
     [InlineData("12203007__1-22-03-007 5822413.PDF", "9th day of MARCH, 1986", "09/03/1986", 6, 0, "1/22/03/007", 3)]
     [InlineData("12203045__Non-Application Licence Document [Original licence] (23051966).PDF", "23rd day of MAY, 19 66", "23/05/1966", 7, 0, "1/22/03/045", 3)]
     [InlineData("12203120__1-22-03-120 5822437.PDF", "6 September 2006", "06/09/2006", 11, 0, "1/22/03/120", 3)]
@@ -412,7 +427,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            AbsLicCacheService);
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLicenceNumber, licence.LicenceNumber?.Value);
@@ -459,7 +475,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LV19660523", agreedSchemaLicenceGroup[0].LicenceSetId);
@@ -504,7 +521,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode));
+            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Equal("12405035-LV19660310", agreedSchemaLicenceGroup[0].LicenceSetId);

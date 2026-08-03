@@ -1,20 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
-using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models.OutputSchema;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
 
 namespace WALE.Api.Areas.Public.Controllers;
 
 [ApiController]
 [Area("Public")]
 [Route("/[area]/[controller]/[action]")]
-public class LinkedLicencesController(IOutputService outputService) : Controller
+public class LinkedLicencesController(
+    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
-            await outputService.GetLinkedLicencesAsync(permitNumber);
+            await abstractionLicenceOutputService.GetLinkedLicencesAsync(permitNumber);
 
         if (linkedLicences == null)
         {
@@ -25,10 +26,11 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetIncomingAsync([FromQuery] string permitNumber)
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetIncomingAsync(
+        [FromQuery] string permitNumber)
     {
         var linkedLicences =
-            await outputService.GetLinkedLicencesAsync(permitNumber);
+            await abstractionLicenceOutputService.GetLinkedLicencesAsync(permitNumber);
 
         if (linkedLicences == null)
         {
@@ -42,11 +44,12 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetOutgoingAsync([FromQuery] string permitNumber,
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> GetOutgoingAsync(
+        [FromQuery] string permitNumber,
         [FromQuery] bool filterContainedIn = false)
     {
         var linkedLicences =
-            await outputService.GetLinkedLicencesAsync(permitNumber);
+            await abstractionLicenceOutputService.GetLinkedLicencesAsync(permitNumber);
 
         if (linkedLicences == null)
         {
@@ -74,7 +77,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     public async Task<IActionResult> GetAbstractionAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
-            await outputService.GetLinkedLicencesAsync(permitNumber);
+            await abstractionLicenceOutputService.GetLinkedLicencesAsync(permitNumber);
 
         if (linkedLicences == null)
         {
@@ -93,7 +96,7 @@ public class LinkedLicencesController(IOutputService outputService) : Controller
     public async Task<IActionResult> GetImpoundmentAsync([FromQuery] string permitNumber)
     {
         var linkedLicences =
-            await outputService.GetLinkedLicencesAsync(permitNumber);
+            await abstractionLicenceOutputService.GetLinkedLicencesAsync(permitNumber);
 
         if (linkedLicences == null)
         {

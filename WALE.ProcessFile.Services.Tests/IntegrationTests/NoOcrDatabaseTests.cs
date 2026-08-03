@@ -2,20 +2,25 @@ using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -39,6 +44,17 @@ public class NoOcrDatabaseTests
         ReadService,
         WriteService);
     
+    private static IAbstractionLicenceDatabaseReadService AbsLicReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
+
+    private static IAbstractionLicenceDatabaseWriteService AbsLicWriteService =>
+        new PostgresAbstractionLicenceWriteService(NpgsqlDataSourceProvider);
+    
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService =
+        new DatabaseAbstractionLicenceCacheService(
+            AbsLicReadService,
+            AbsLicWriteService);
+    
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -61,8 +77,8 @@ public class NoOcrDatabaseTests
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
-        var allNaldData = await CacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -174,8 +190,8 @@ public class NoOcrDatabaseTests
         Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
         Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
         Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-        Assert.Equal(3, nameResult.PageNumber);
-        Assert.Equal(6, nameResult.LineNumber);
+        Assert.Equal(3, nameResult.LabelStartPageNumber);
+        Assert.Equal(6, nameResult.LabelStartLineNumber);
 
         // Note no other licence mentioned
         var abstractionLimitsSection =
@@ -183,11 +199,11 @@ public class NoOcrDatabaseTests
 
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(4, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
         Assert.Equal("A day means any period of 24 consecutive hours and a year means the",
-            abstractionLimitsSection.Text![2].Text);
-        Assert.Equal(4, abstractionLimitsSection.PageNumber);        
-        Assert.Equal(16, abstractionLimitsSection.LineNumber);
+            abstractionLimitsSection.Text![3].Text);
+        Assert.Equal(4, abstractionLimitsSection.LabelStartPageNumber);        
+        Assert.Equal(15, abstractionLimitsSection.LabelStartLineNumber);
 
         Assert.NotNull(abstractionLimitsSection.SubResults);
         Assert.Single(abstractionLimitsSection.SubResults);
@@ -210,8 +226,8 @@ public class NoOcrDatabaseTests
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(4, perDay.PageNumber);
-        Assert.Equal(16, perDay.LineNumber);
+        Assert.Equal(4, perDay.LabelStartPageNumber);
+        Assert.Equal(16, perDay.LabelStartLineNumber);
         Assert.Equal("90.91", perDay.Text?.FirstOrDefault()?.Text);
 
         var perDayUnits = point1Sub1.SubResults
@@ -240,8 +256,8 @@ public class NoOcrDatabaseTests
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("1/25/04/059", licenceNumberResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(3, licenceNumberResult.PageNumber);
-        Assert.Equal(0, licenceNumberResult.LineNumber);
+        Assert.Equal(3, licenceNumberResult.LabelStartPageNumber);
+        Assert.Equal(0, licenceNumberResult.LabelStartLineNumber);
 
         var purposeResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
@@ -276,7 +292,8 @@ public class NoOcrDatabaseTests
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder));
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
+            AbsLicCacheService);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 
@@ -291,15 +308,17 @@ public class NoOcrDatabaseTests
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(90.91, limit.Value);
-        Assert.Null(limit.Points);
-        Assert.Null(limit.Purposes);
+        Assert.Single(limit.Points!);
+        Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
+        Assert.Equal(0, limit.Purposes!.Count(c => c.IsImplicit != true));
 
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerYear, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(33182, limit.Value);
-        Assert.Null(limit.Points);
-        Assert.Null(limit.Purposes);
+        Assert.Single(limit.Points!);
+        Assert.Equal(0, limit.Points!.Count(c => c.IsImplicit != true));
+        Assert.Equal(0, limit.Purposes!.Count(c => c.IsImplicit != true));
 
         Assert.NotNull(agreedSchemaLicence.LicenceVersion);
         Assert.Equal("LV20220705", agreedSchemaLicence.LicenceVersion.LicenceVersionId);

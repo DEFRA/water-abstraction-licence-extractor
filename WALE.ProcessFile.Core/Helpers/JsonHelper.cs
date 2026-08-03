@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 
 namespace WALE.ProcessFile.Core.Helpers;
 
@@ -13,16 +12,6 @@ public static class JsonHelper
         return JsonSerializer.Serialize(matches, GetSerializerOptions());
     }
     
-    public static string GetAsString(Licence licence)
-    {
-        return JsonSerializer.Serialize(licence, GetSerializerOptions());
-    }
-    
-    public static string GetAsString(Dictionary<string, LicenceSet> licenceSets)
-    {
-        return JsonSerializer.Serialize(licenceSets.Values, GetSerializerOptions());
-    }
-
     public static Dictionary<string, object?> MakeJsonElementDictionaryNative(
         Dictionary<string, object?> inputDictionary)
     {

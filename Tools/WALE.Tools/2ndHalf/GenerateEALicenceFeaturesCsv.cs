@@ -6,6 +6,9 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
+using WRADI.Core.AbstractionLicence.Constants;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.Tools._2ndHalf;
 
@@ -17,6 +20,8 @@ public static class GenerateEaLicenceFeaturesCsv
     };
 
     private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
+    private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
+        new ApiAbstractionLicenceOutputService(HttpClient);
     
     public static async Task GenerateCsvAsync(int processRunId)
     {
@@ -35,7 +40,7 @@ public static class GenerateEaLicenceFeaturesCsv
     {
         var returnList = new List<EALicenceFeaturesCsvLine>();
         
-        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
+        var licences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
         
         foreach (var licence in licences)
         {

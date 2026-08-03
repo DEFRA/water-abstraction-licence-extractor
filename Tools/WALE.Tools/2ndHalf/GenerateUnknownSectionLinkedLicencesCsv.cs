@@ -1,13 +1,15 @@
 using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models.OutputSchema;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WALE.Tools.Models;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.Tools._2ndHalf;
 
@@ -19,6 +21,9 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
     };
 
     private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
+    
+    private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
+        new ApiAbstractionLicenceOutputService(HttpClient);
     
     public static async Task GenerateCsvAsync(int processRunId)
     {
@@ -38,7 +43,7 @@ public static class GenerateUnknownSectionLinkedLicencesCsv
         var returnList = new List<UnknownSectionLinkedLicencesCsvLine>();
         const string scrapedLicenceNumberKey = "scrapedLicenceNumber";
         
-        var licences = await OutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
+        var licences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, 0, int.MaxValue);
         
         foreach (var licence in licences)
         {

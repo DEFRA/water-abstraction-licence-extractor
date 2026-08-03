@@ -24,7 +24,7 @@ public static class TextToFindIsBetweenLabels
         }
 
         var nextLine = request.nextLines?.FirstOrDefault();
-
+        
         var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
             request.line!,
             nextLine,
@@ -33,6 +33,11 @@ public static class TextToFindIsBetweenLabels
             request.label.Position,
             0,
             0,
+            out _,
+            out _,
+            out _,
+            out _,
+            out _,
             out _,
             out _);
         
@@ -57,8 +62,33 @@ public static class TextToFindIsBetweenLabels
             || ((labelText.LineMustStartWith || labelText.ColumnMustStartWith)
                     && relevantLineText.StartsWith(labelText.Text, StringComparison.OrdinalIgnoreCase)));
 
+        var textEnd = request.label.TextEnd!.ToList();
+        
+        if (request.label.IncludeStartLabelText
+            && !labelLineAlreadyIncluded
+            && beforeTextContainsLabel != true)
+        {
+            var labelText1 = request.textBeforeAtAndAfterLabel?
+                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
+                .ColumnsText![0];
+
+            if (!string.IsNullOrEmpty(labelText1) && labelText1 != "[START_OF_BLOCK]")
+            {
+                relevantLineText = $"{labelText1}{relevantLineText}";
+                
+                textEnd = textEnd.Where(te =>
+                {
+                    var teTextWithoutMarkers = te.Text
+                        .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
+                        .Replace(PositionConstants.EndOfLineMarker, string.Empty);
+                    
+                    return teTextWithoutMarkers != labelText1;
+                }).ToList();
+            }
+        }
+        
         var betweenText = GetTextBetween(
-            request.label.TextEnd!,
+            textEnd,
             relevantLineText,
             linesToUse,
             request.lineNumber,
@@ -73,55 +103,13 @@ public static class TextToFindIsBetweenLabels
             return [];
         }
         
-        // Add label text if asked for
-        if (request.label.IncludeStartLabelText
-            && betweenText.Count >= 1
-            && !labelLineAlreadyIncluded
-            && beforeTextContainsLabel != true)
+        if (request.label.IncludeEndLabelText)
         {
-            var labelText = request.textBeforeAtAndAfterLabel?
-                .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
-                .ColumnsText![0];
+            var endText = matchedEndText?.matchedEndText.Text;
+            var wordsToAdd = DocumentLineColumn.TextToWords(endText!, null);
 
-            if (!string.IsNullOrEmpty(labelText) && labelText != "[START_OF_BLOCK]")
-            {
-                var firstBetweenLine = betweenText[0];
-                var firstColumn = firstBetweenLine.Columns.Count > 0 ? firstBetweenLine.Columns[0] : null;
-                var firstColumnText = firstColumn != null ?
-                    FormattingHelper.TrimFormatting(firstColumn.Text, true, false) : null;
-                var text = labelText;
-
-                var words = DocumentLineColumn.TextToWords(labelText, null);
-                
-                if (!string.IsNullOrEmpty(firstColumnText))
-                {
-                    text += $" {firstColumnText}";
-                    words.AddRange(firstBetweenLine.Columns[0].Words);
-                }
-                
-                if (request.label.IncludeEndLabelText)
-                {
-                    var endText = matchedEndText?.matchedEndText.Text;
-
-                    text += $" {endText}";
-                    words.Add(new(
-                        endText!,
-                        null,
-                        DocumentLineWordCoordinates.NotKnown(),
-                        null));
-                }
-
-                if (betweenText[0].Columns.Count == 0)
-                {
-                    betweenText[0].Columns.Add(new DocumentLineColumn(DocumentLineColumn.TextToWords(text, null)));
-                }
-                else
-                {
-                    var textWords = DocumentLineColumn.FilterWordsFromText(words, text);
-                    
-                    betweenText[0].Columns[0] = new DocumentLineColumn(textWords);   
-                }
-            }
+            var existingWords = betweenText.LastOrDefault()?.Columns.LastOrDefault()?.Words!;
+            existingWords.AddRange(wordsToAdd);
         }
 
         if (request.label.MustContain?.Count > 0)
@@ -172,6 +160,11 @@ public static class TextToFindIsBetweenLabels
             false,
             out var isForbidden,
             out var removedLines);
+
+        if (request.label.Name == "PointPointNumber")
+        {
+            
+        }
         
         if (isForbidden && betweenText.Count == 0)
         {
@@ -271,7 +264,7 @@ public static class TextToFindIsBetweenLabels
                 : null;
 
             count += 1;
-            
+
             var lineContainsLabel = LabelMatchingHelper.LineContainsLabel(
                 line,
                 nextLine,
@@ -281,6 +274,11 @@ public static class TextToFindIsBetweenLabels
                 lineCount++,
                 totalLines,
                 out var matchedEndTextTemp,
+                out _,
+                out _,
+                out _,
+                out _,
+                out _,
                 out _);
 
             if (lineContainsLabel)
@@ -317,6 +315,13 @@ public static class TextToFindIsBetweenLabels
                         
                         var i = combinedText.IndexOf(matchedEndTextTemp.Text, StringComparison.Ordinal);
 
+                        // TOOD this should look at which actually matched, not just the first label to end on
+                        if (label.TextToMatch?.FirstOrDefault()?.Text == PositionConstants.EndOfLineMarker
+                            && matchedEndTextTemp.Text == string.Empty)
+                        {
+                            i = combinedText.Length;
+                        }
+                        
                         if (i > -1)
                         {
                             var t = combinedText[..i];

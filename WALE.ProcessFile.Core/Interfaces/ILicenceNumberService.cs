@@ -9,8 +9,4 @@ public interface ILicenceNumberService
         LabelToMatch label,
         bool isOcr,
         Dictionary<string, object?> additionalInformationStore);
-
-    List<NaldLicence> GetNaldLicences(string licenceNumber);
-    
-    List<NaldLicence> ExtractNaldLicences(string? sourceText);
 }

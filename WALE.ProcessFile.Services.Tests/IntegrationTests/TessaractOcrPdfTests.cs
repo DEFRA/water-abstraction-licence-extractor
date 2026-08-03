@@ -2,20 +2,24 @@ using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -24,11 +28,18 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
 
     static TessaractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+        var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+
+        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+            realCacheService,
+            realAbsLicCacheService,
+            _naldData,
+            _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -38,11 +49,11 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
     
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
     private Task SetupLicenceNumbersAsync(short regionCode)
     {
@@ -162,7 +173,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, resultList.Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 
@@ -171,7 +182,10 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(8, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var licenceNumber = resultList.Single(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumber);
@@ -194,11 +208,11 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);
         Assert.Single(abstractionLimitsResult.SubResults);
-        Assert.Equal(16, abstractionLimitsResult.LineNumber);
+        Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
         
         var abstractionLimitsSection1 = abstractionLimitsResult.SubResults[0];
         Assert.Equal(8, abstractionLimitsSection1.Text!.Count);
@@ -258,7 +272,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -279,7 +294,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(11, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -302,7 +317,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -315,6 +330,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService,
             _fileLicenceMapping["28_39_28_312"]);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
@@ -367,7 +383,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var linkedLicenceNumberCount = resultList.Count(result => result.LabelGroupName == "LinkedLicenceNumber");
         Assert.Equal(12, linkedLicenceNumberCount); // TODO - why not 100s?
@@ -376,7 +392,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -404,14 +421,17 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(14, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(19, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -430,7 +450,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);        
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.NotNull(licenceNumberResult);
@@ -441,7 +461,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -491,7 +512,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(9, abstractionLimitsResult.Text?.Count);  
+        Assert.Equal(10, abstractionLimitsResult.Text?.Count);  
         
         // Licence number gets OCRed too scrambled
         
@@ -499,7 +520,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -521,14 +543,17 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(9, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -547,7 +572,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(28, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -558,7 +583,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -581,7 +607,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(13, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -609,7 +635,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -621,7 +647,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -671,7 +698,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(10, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -688,7 +715,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -714,10 +742,13 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(8, resultList.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -741,7 +772,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -753,7 +784,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.Single().Licences);
@@ -782,14 +814,17 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(11, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(8, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -808,7 +843,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(10, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(15, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -820,7 +855,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -841,14 +877,17 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(11, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
         Assert.Equal(8, records.Text!.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -867,7 +906,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(12, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -878,7 +917,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -914,7 +954,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(7, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         // The document is printed out of alignment and has ghosting
         
@@ -922,7 +962,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup); // NOTE - There are a few in this licence, but OCR doesnt read right
         // The one it does read (25/68/5/7) cant be found in NALD
@@ -980,7 +1021,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1027,7 +1069,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1064,7 +1107,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1128,7 +1172,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1179,7 +1224,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1228,7 +1274,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1271,7 +1318,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1315,7 +1363,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1373,7 +1422,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(3, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1426,7 +1476,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1447,10 +1498,13 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(9, resultList.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        Assert.Null(points);
+        
+        var sourceOfSupply = resultList.FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1469,7 +1523,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1481,7 +1535,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1502,7 +1557,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(12, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1525,7 +1580,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1537,7 +1592,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1565,7 +1621,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);        
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -1577,7 +1633,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1625,7 +1682,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1696,7 +1754,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1742,7 +1801,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1788,7 +1848,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
 
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Equal("283922427-LV19760114", agreedSchemaLicenceGroup[0].LicenceSetId);
@@ -1841,7 +1902,8 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder4));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder4),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LVUNKNOWN", agreedSchemaLicenceGroup[0].LicenceSetId);

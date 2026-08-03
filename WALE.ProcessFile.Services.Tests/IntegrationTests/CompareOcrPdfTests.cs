@@ -9,7 +9,6 @@ using WALE.ProcessFile.Services.AwsTextract;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
@@ -17,6 +16,11 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -25,7 +29,13 @@ public class CompareOcrPdfTests
     static CompareOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, [], _fileLicenceMapping);
+        var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+
+        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+            realCacheService,
+            realAbsLicCacheService,
+            [],
+            _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -35,19 +45,21 @@ public class CompareOcrPdfTests
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
     
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
     private static async Task SetupLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        LicenceNumber.Instance = new LicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -222,11 +234,11 @@ public class CompareOcrPdfTests
         
         // Number of matches
 
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractSparseTextOsd).Count);
-        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultListTesseractAutoOsd).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAwsTextract).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListDocumentIntelligence).Count);
-        Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultListAiVision).Count);
+        Assert.Equal(11, resultListTesseractSparseTextOsd.Count);
+        Assert.Equal(11, resultListTesseractAutoOsd.Count);
+        Assert.Equal(14, resultListAwsTextract.Count);
+        Assert.Equal(14, resultListDocumentIntelligence.Count);
+        Assert.Equal(14, resultListAiVision.Count);
         
         // Records
 
@@ -357,31 +369,31 @@ public class CompareOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResultTesseractSparseTextOsd);
         Assert.True(abstractionLimitsResultTesseractSparseTextOsd.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
         
         var abstractionLimitsResultTesseractAutoOsd = resultListTesseractAutoOsd.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultTesseractAutoOsd);
         Assert.True(abstractionLimitsResultTesseractAutoOsd.IsOcr);
-        Assert.Equal(5, abstractionLimitsResultTesseractAutoOsd.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResultTesseractAutoOsd.Text?.Count);
         
         var abstractionLimitsResultTextract = resultListAwsTextract.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultTextract);
         Assert.True(abstractionLimitsResultTextract.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultTextract.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResultTextract.Text?.Count);
         
         var abstractionLimitsResultDocumentIntelligence = resultListDocumentIntelligence.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultDocumentIntelligence);
         Assert.True(abstractionLimitsResultDocumentIntelligence.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultDocumentIntelligence.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResultDocumentIntelligence.Text?.Count);
         
         var abstractionLimitsResultAiVision = resultListAiVision.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultAiVision);
         Assert.True(abstractionLimitsResultAiVision.IsOcr);
-        Assert.Equal(4, abstractionLimitsResultAiVision.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResultAiVision.Text?.Count);
     }
     
     [Fact]
@@ -514,31 +526,31 @@ public class CompareOcrPdfTests
         
         Assert.NotNull(abstractionLimitsResultTesseractSparseTextOsd);
         Assert.True(abstractionLimitsResultTesseractSparseTextOsd.IsOcr);
-        Assert.Equal(11, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
+        Assert.Equal(12, abstractionLimitsResultTesseractSparseTextOsd.Text?.Count);
         
         var abstractionLimitsResultTesseractAutoOsd = resultListTesseractAutoOsd.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultTesseractAutoOsd);
         Assert.True(abstractionLimitsResultTesseractAutoOsd.IsOcr);
-        Assert.Equal(7, abstractionLimitsResultTesseractAutoOsd.Text?.Count);
+        Assert.Equal(8, abstractionLimitsResultTesseractAutoOsd.Text?.Count);
         
         var abstractionLimitsResultAwsTextract = resultListAwsTextract.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultAwsTextract);
         Assert.True(abstractionLimitsResultAwsTextract.IsOcr);
-        Assert.Equal(9, abstractionLimitsResultAwsTextract.Text?.Count);
+        Assert.Equal(10, abstractionLimitsResultAwsTextract.Text?.Count);
         
         var abstractionLimitsResultDocumentIntelligence = resultListDocumentIntelligence.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultDocumentIntelligence);
         Assert.True(abstractionLimitsResultDocumentIntelligence.IsOcr);
-        Assert.Equal(9, abstractionLimitsResultDocumentIntelligence.Text?.Count);
+        Assert.Equal(10, abstractionLimitsResultDocumentIntelligence.Text?.Count);
         
         var abstractionLimitsResultAiVision = resultListAiVision.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResultAiVision);
         Assert.True(abstractionLimitsResultAiVision.IsOcr);
-        Assert.Equal(8, abstractionLimitsResultAiVision.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResultAiVision.Text?.Count);
         
         // Linked licence counts
         
@@ -1038,12 +1050,12 @@ public class CompareOcrPdfTests
         var abstractionLimitsResultDocumentIntelligence = resultListDocumentIntelligence.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResultDocumentIntelligence);
         Assert.True(abstractionLimitsResultDocumentIntelligence.IsOcr);
-        Assert.Equal(3, abstractionLimitsResultDocumentIntelligence.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResultDocumentIntelligence.Text?.Count);
         
         var abstractionLimitsResultAiVision = resultListAiVision.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResultAiVision);
         Assert.True(abstractionLimitsResultAiVision.IsOcr);
-        Assert.Equal(3, abstractionLimitsResultAiVision.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResultAiVision.Text?.Count);
         
         // Linked licence counts
         

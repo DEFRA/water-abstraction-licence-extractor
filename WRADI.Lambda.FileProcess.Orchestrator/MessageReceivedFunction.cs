@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WALE.ProcessFile.Core.Interfaces;
-using WRADI.Services.ProcessFile;
+using WRADI.Services.ProcessFile.AbstractionLicence;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]

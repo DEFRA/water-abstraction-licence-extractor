@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Config;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WALE.Tools._1stHalf;
 

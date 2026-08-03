@@ -10,7 +10,9 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [ApiController]
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
-public class ImagesController(IOutputService outputService, ICacheService cacheService) : Controller
+public class ImagesController(
+    IOutputService outputService,
+    ICacheService cacheService) : Controller
 {
     [HttpGet]
     [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]

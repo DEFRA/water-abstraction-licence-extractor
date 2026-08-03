@@ -13,6 +13,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
 {
     public async Task<List<string>> GetAllFilesAsync()
     {
+        var dtStart = DateTime.UtcNow;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiFileService)} - Started getting files");
+        
         var path = "/BFF/Files/ListAll";
        
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -22,9 +25,16 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         
         var content = await response.Content.ReadAsStringAsync();
         
-        return JsonSerializer.Deserialize<List<string>>(
+        var list = JsonSerializer.Deserialize<List<string>>(
             content,
             JsonHelper.GetSerializerOptions())!;
+        
+        var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiFileService)} - Finished getting {list.Count} files in {tsDuration} seconds");
+        
+        // TOOD get this stuff from a DB table
+        
+        return list;
     }
 
     public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)

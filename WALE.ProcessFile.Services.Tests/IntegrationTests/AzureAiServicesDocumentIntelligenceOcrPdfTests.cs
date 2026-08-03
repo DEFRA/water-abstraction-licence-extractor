@@ -2,19 +2,23 @@ using FakeItEasy;
 using Meziantou.Xunit;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
-using WALE.ProcessFile.Services.Converters;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tests.Helper;
+using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
+using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -23,11 +27,18 @@ namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;
+    private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
 
     static AzureAiServicesDocumentIntelligenceOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
-        CacheService = GeneralTestsHelper.GetFakeCacheService(realCacheService, _naldData, _fileLicenceMapping);
+        var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+
+        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+            realCacheService,
+            realAbsLicCacheService,
+            _naldData,
+            _fileLicenceMapping);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -37,11 +48,11 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             TestConfig.PostgresUsername,
             TestConfig.PostgresPassword);
     
-    private static IDatabaseReadService ReadService =>
-        new PostgresReadService(NpgsqlDataSourceProvider);
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
 
-    private static readonly ICacheService DatabaseCacheService =
-        new DatabaseCacheService(ReadService, null!);
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -118,7 +129,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
+        Assert.Equal(7, resultList.Count);
 
         var period = resultList
             .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
@@ -136,15 +147,16 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(purpose);
         Assert.Equal("Spray irrigation", purpose.Text!.First().Text);
         
-        var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
-        Assert.NotNull(points);
+        var sourceOfSupply = resultList
+            .FirstOrDefault(result => result.LabelGroupName == "SourceOfSupply");
+        Assert.NotNull(sourceOfSupply);
         
         var abstractionLimitsResult = resultList
             .FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(13, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -162,12 +174,27 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             .ToList();
 
         Assert.Equal(4, perDayUnitsAll.Count);
+        Assert.Equal("thousand cubic metres", perDayUnitsAll[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(8, perDayUnitsAll[0].LabelStartLineNumber);
+        Assert.Equal("gallons", perDayUnitsAll[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(9, perDayUnitsAll[1].LabelStartLineNumber);
+        // units on row 11 is missing
+        Assert.Equal("cubic metres", perDayUnitsAll[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(11, perDayUnitsAll[2].LabelStartLineNumber);
         
         var perDayValuesAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerDayValue")
             .ToList();
 
         Assert.Equal(4, perDayValuesAll.Count);
+        Assert.Equal("1", perDayValuesAll[0].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(8, perDayValuesAll[0].LabelStartLineNumber);
+        Assert.Equal("220000", perDayValuesAll[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(9, perDayValuesAll[1].LabelStartLineNumber);
+        Assert.Equal("384", perDayValuesAll[2].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(11, perDayValuesAll[2].LabelStartLineNumber);
+        Assert.Equal("84500", perDayValuesAll[3].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(12, perDayValuesAll[3].LabelStartLineNumber);
         
         var perHourUnitsAll = abstractionLimitsSection.SubResults
             .Where(x => x.MatchedLabel!.Name == "PerHourUnits")
@@ -185,7 +212,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder3));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder3),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -237,7 +265,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count); // Better then Azure AI Vision
+        Assert.Equal(6, resultList.Count); // Better then Azure AI Vision
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
@@ -248,7 +276,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -285,7 +314,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -322,7 +352,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(3, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(4, abstractionLimitsResult.Text?.Count);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -367,7 +397,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -413,7 +444,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -476,7 +507,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.NotEmpty(agreedSchemaLicence.LinkedLicences);
@@ -518,7 +550,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(4, abstractionLimitsResult.Text?.Count);        
+        Assert.Equal(5, abstractionLimitsResult.Text?.Count);        
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -600,7 +632,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -673,7 +706,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder))).Last();
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -696,7 +730,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -748,7 +783,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -795,7 +830,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -836,7 +872,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult); // Is crossed out but Azure AI can read it
-        Assert.Equal(8, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(9, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -848,7 +884,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(13, section1Sub1.SubResults!.Count);
+        Assert.Equal(13, section1Sub1.SubResults.Count);
         
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -903,7 +939,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -946,10 +983,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.True(abstractionLimitsSection.IsOcr);
-        Assert.Equal(10, abstractionLimitsSection.Text?.Count);
+        Assert.Equal(11, abstractionLimitsSection.Text?.Count);
         
-        Assert.Single(abstractionLimitsSection.SubResults!);
-        Assert.Equal(10, abstractionLimitsSection.SubResults![0].Text!.Count);
+        Assert.Single(abstractionLimitsSection.SubResults);
+        Assert.Equal(10, abstractionLimitsSection.SubResults[0].Text!.Count);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -962,7 +999,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1021,7 +1059,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1057,7 +1096,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1192,12 +1232,12 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var units1 = section1Sub1.SubResults[1];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
-        Assert.Equal(32, units1.LineNumber);
+        Assert.Equal(32, units1.LabelStartLineNumber);
         
         var units2 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
-        Assert.Equal(33, units2.LineNumber);
+        Assert.Equal(33, units2.LabelStartLineNumber);
         
         var value1 = section1Sub1.SubResults[3];
         Assert.Equal("45460.92", value1.Text![0].Text);
@@ -1216,12 +1256,12 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
         Assert.Equal("Units", section5Sub1.SubResults[0].MatchedLabel?.Format);
-        Assert.Equal(10, units3.LineNumber);
+        Assert.Equal(10, units3.LabelStartLineNumber);
         
         var units4 = section5Sub1.SubResults[1];
         Assert.Equal("cubic metres", units4.Text![0].Text);
         Assert.Equal("PerYearUnits", units4.MatchedLabel!.Name);
-        Assert.Equal(10, units4.LineNumber);
+        Assert.Equal(10, units4.LabelStartLineNumber);
         
         var value3 = section5Sub1.SubResults[2];
         Assert.Equal("100000", value3.Text![0].Text);
@@ -1235,7 +1275,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1361,7 +1402,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(5, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(6, abstractionLimitsResult.Text?.Count);
         
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
         Assert.NotNull(abstractionLimitsSections);
@@ -1369,7 +1410,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         var abstractionLimitsSection = abstractionLimitsSections[0];
         Assert.NotNull(abstractionLimitsSection);
-        Assert.Equal(5, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(6, abstractionLimitsSection.Text!.Count);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);
 
@@ -1480,7 +1521,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService);
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -1545,7 +1587,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder2),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1572,7 +1615,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder2),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1596,7 +1640,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder2),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
@@ -1614,13 +1659,14 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2, 2);
-        Assert.Equal(6, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(6, resultFull.Matches!.Count);
 
         var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(2, TestConfig.PdfFolder2));
+            await LookupConfigurationAsync(2, TestConfig.PdfFolder2),
+            AbsLicCacheService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

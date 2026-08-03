@@ -57,6 +57,11 @@ public static class AfterTextContainsAnotherMatch
             0,
             PositionConstants.UnknownLinesTotal,
             out _,
+            out _,
+            out _,
+            out _,
+            out _,
+            out _,
             out _))
         {
             return returnListTop;
@@ -76,7 +81,7 @@ public static class AfterTextContainsAnotherMatch
             var labelInAfterTextPosition = afterText.IndexOf(result.MatchedLabel!.TextToMatch!.First().Text,
                 StringComparison.OrdinalIgnoreCase);
             
-            result.CharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
+            result.LabelStartCharPosition = afterTextInOriginalLinePosition + labelInAfterTextPosition;
             
             result.MatchedLabel.Position = valueInAfterTextPosition > labelInAfterTextPosition ?
                 LabelPosition.LabelIsBeforeTextToFind : LabelPosition.LabelIsAfterTextToFind;

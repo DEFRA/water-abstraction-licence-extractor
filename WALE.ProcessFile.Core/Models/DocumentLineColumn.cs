@@ -103,7 +103,10 @@ public class DocumentLineColumn
             .ToList();
     }
 
-    public static List<DocumentLineWord> FilterWordsFromText(List<DocumentLineWord> inputWords, string inputText)
+    public static List<DocumentLineWord> FilterWordsFromText(
+        List<DocumentLineWord> inputWords,
+        string inputText,
+        bool throwIfMissing = false)
     {
         var inputTextTrimmed = FormattingHelper.TrimFormatting(inputText, true, true);
         
@@ -141,6 +144,11 @@ public class DocumentLineColumn
                 
             if (position == -1)
             {
+                if (!throwIfMissing)
+                {
+                    return outputWords;
+                }
+                
                 var inputWordsForDisplay = string.Join(' ', inputWords.Select(iw => iw.Text));
                 throw new Exception($"Words don't contain input text '{inputTextWordTrimmedText}';\n\nWords - '{inputWordsForDisplay}'\nText  - '{inputText}'");
             }
@@ -174,11 +182,14 @@ public class DocumentLineColumn
 
         var outputWordsText = string.Join(' ', outputWords.Select(w => w.Text));
         var outputWordsTextTrimmed = FormattingHelper.TrimFormatting(outputWordsText, true, true);
-        
-        System.Diagnostics.Debug.Assert(
-            inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.OrdinalIgnoreCase),
-            $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
-        
+
+        if (throwIfMissing)
+        {
+            System.Diagnostics.Debug.Assert(
+                inputTextTrimmed.Equals(outputWordsTextTrimmed, StringComparison.OrdinalIgnoreCase),
+                $"Words are different between;\n\n(Input)  - {inputText}\n(Output) - {outputWordsTextTrimmed}");
+        }
+
         return outputWords;
     }
 }

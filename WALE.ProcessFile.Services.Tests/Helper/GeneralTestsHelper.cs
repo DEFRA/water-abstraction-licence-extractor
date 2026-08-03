@@ -3,6 +3,8 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
 
 namespace WALE.ProcessFile.Services.Tests.Helper;
 
@@ -10,19 +12,25 @@ public static class GeneralTestsHelper
 {
     public static List<LabelGroupResult> ExcludeSomeMatches(List<LabelGroupResult> matches)
     {
-        return matches.Where(m =>
-            m.LabelGroupName != "LinkedLicenceNumber"
-            && m.LabelGroupName != "ReasonsForConditions"
-            && m.LabelGroupName != "ScheduleOfConditionsA"
-            && m.LabelGroupName != "ScheduleOfConditionsB").ToList();
-    }
+        return matches
+            .Where(m =>
+                m.LabelGroupName != "LinkedLicenceNumber"
+                && m.LabelGroupName != "SourceOfSupply"
+                && m.LabelGroupName != "ReasonsForConditions"
+                && m.LabelGroupName != "ScheduleOfConditionsA"
+                && m.LabelGroupName != "ScheduleOfConditionsB")
+            .ToList();
+        }
 
-    public static ICacheService GetFakeCacheService(
-        ICacheService realCacheService,
-        Dictionary<string, List<NaldData>> naldData,
-        Dictionary<string, DmsFileData> dmsData)
+    public static (ICacheService CacheService, IAbstractionLicenceCacheService AbsLicCacheService)
+        GetFakeCacheService(
+            ICacheService realCacheService,
+            IAbstractionLicenceCacheService realAbsLiceCacheService,
+            Dictionary<string, List<NaldData>> naldData,
+            Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
+        var fakeCacheAbsLic = A.Fake<IAbstractionLicenceCacheService>(x => x.Wrapping(realAbsLiceCacheService));
         
         A
             .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._))
@@ -49,7 +57,7 @@ public static class GeneralTestsHelper
             });
         
         A
-            .CallTo(() => fakeCache.GetNaldLicenceAsync(A<string>._, A<int>._))
+            .CallTo(() => fakeCacheAbsLic.GetNaldLicenceAsync(A<string>._, A<int>._))
             .ReturnsLazily(x =>
             {
                 var licenceNumberInNaldFormat = (string)x.Arguments[0]!;
@@ -75,6 +83,6 @@ public static class GeneralTestsHelper
                 return Task.FromResult((NaldData?)null);
             });
 
-        return fakeCache;
+        return (fakeCache, fakeCacheAbsLic);
     }
 }

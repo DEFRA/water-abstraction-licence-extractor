@@ -3,6 +3,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 using WALE.Tools.Models;
+using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.Tools._1stHalf;
 
@@ -14,6 +15,8 @@ public class OverrideAddIncrements
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
     
         var cacheService = new ApiCacheService(httpClient);
+        var absLicenceCacheService = new ApiAbstractionLicenceCacheService(httpClient);
+        
         var fileProcessor = new LicenceFileProcessor();
         
         var oldFiles = GetDmsChangeAuditOverrides(rootPath, fileProcessor);
@@ -26,7 +29,7 @@ public class OverrideAddIncrements
             {
                 var issueNumber = int.Parse(overrideOldFormat.IssueNo);
                 
-                var incrementNumber = await cacheService.GetNaldLicenceIncrementNumberAsync(
+                var incrementNumber = await absLicenceCacheService.GetNaldLicenceIncrementNumberAsync(
                     overrideOldFormat.PermitNumber,
                     issueNumber);
                 

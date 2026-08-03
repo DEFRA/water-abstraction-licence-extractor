@@ -1,8 +1,4 @@
-using WALE.ProcessFile.Core.Enums.OutputSchema;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Core.Models.OutputSchema;
-using WALE.ProcessFile.Core.Models.OutputSchema.Table;
-using WALE.ProcessFile.Core.Models.ProcessRunLicenceDisplay;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 
@@ -38,105 +34,19 @@ public interface IDatabaseReadService
     
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
-    Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery query);
-    
-    Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take);
-    
-    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
-
-    Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
-    
-    Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
-    
-    Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int licenceSetId, int processRunId);
-    
-    Task<LicenceSetType[]> GetLicenceSetTypes(int licenceSetId);
-    
-    Task<List<(int LicenceSetId, LicenceSetType Type)>> GetLicenceSetTypesForProcessRun(int processRunId);
-    
-    Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
-    
-    Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
-    
-    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
-    
-    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
-    
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
     
     Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
-
-    Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
-
-    Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
-
-    Task<(
-        HashSet<(string, int)> Live,
-        HashSet<(string, int)> Lapsed,
-        HashSet<(string, int)> Expired,
-        HashSet<(string, int)> Revoked,
-        HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
-
-    Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode, int skip, int take);
-
-    Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take);
-
-    Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode, int skip, int take);
-
-    Task<List<NaldLicencePointDataLine>> GetNaldLicencePointsAsync(short? regionCode, int skip, int take);
-
-    Task<List<NaldLicenceQuantitiesDataLine>> GetNaldLicenceQuantitiesAsync(short? regionCode, int skip, int take);
     
-    Task<Licence?> GetNewestLicenceAsync(string permitNumber);
-    
-    Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
-
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
-
-    Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
-
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
     
     Task<string?> GetImportRunDateAsync(string dataSource);
-
-    Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
-    
-    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
-    
-    Task<List<VersionFile>> GetVersionFilesAsync();
     
     Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, Guid fileId, string noOcrServiceName);
-  
-    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode);
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
-    Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
-    
-    Task<int> GetTotalLicenceCountAsync(int processRunId,  ProcessRunQuery processRunQuery);
-    
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
-
-    Task<List<string>> GetDistinctIssuersAsync(int processRunId);
-    
-    Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
-
-    Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
-        int processRunId,
-        ProcessRunQuery query,
-        CancellationToken cancellationToken = default);
-    
-    Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId);
-    
-    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
-    
-    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
-
-    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
-
-    Task<int> GetLicencesListSearchCountAsync(
-        int processRunId,
-        ProcessRunQuery query);
 }

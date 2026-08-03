@@ -205,7 +205,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 
         // See notes RE licence
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -240,7 +240,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -264,7 +264,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 5);
         Assert.Equal(7, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

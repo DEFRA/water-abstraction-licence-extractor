@@ -289,7 +289,7 @@ public class NoOcrDatabaseTests
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults[1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

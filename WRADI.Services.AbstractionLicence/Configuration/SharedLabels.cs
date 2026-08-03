@@ -2,7 +2,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 
-namespace WALE.ProcessFile.Services.Configuration;
+namespace WRADI.DocumentType.AbstractionLicence.Configuration;
 
 public static class SharedLabels
 {

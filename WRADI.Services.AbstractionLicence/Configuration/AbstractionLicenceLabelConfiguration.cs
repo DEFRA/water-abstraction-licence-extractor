@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Formats;
@@ -1466,20 +1465,10 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "PurposePointGroup",
                         TextStart = [
                             new("From Point "),
-                            new("(1)"),
-                            new("(2)"),
-                            new("(3)"),
-                            new("(4)"),
-                            new("(5)"),
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
                             new("From Point ") { InstanceNumber = 2 },
-                            new("(2)"),
-                            new("(3)"),
-                            new("(4)"),
-                            new("(5)"),
-                            new("(6)"),
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,

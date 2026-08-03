@@ -341,7 +341,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("1/23/01/001", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -505,7 +505,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
 
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -533,12 +533,12 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
 
         var licenceSetGroups1 = new List<IReadOnlyList<LicenceSet>> { agreedSchemaLicenceGroup };
 
-        var licenceSetGroups = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+        var licenceSetGroups = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups1,
             config,
             AbsLicCacheService);
         
-        WalSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
+        AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
         
         var agreedSchemaLicence2 = licenceSetGroups.First().Licences.First();
         Assert.Equal(13187500, agreedSchemaLicence2.AbstractionLimits.Aggregates![0].Limits[0].Value);
@@ -637,7 +637,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -728,7 +728,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -804,7 +804,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -854,7 +854,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -866,7 +866,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.NotNull(licence.LicenceVersion.IssueDate);
         Assert.Equal(expectedIssueDate2, licence.LicenceVersion.IssueDate!.Value.ToShortDateString());
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -964,7 +964,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -996,7 +996,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -1029,7 +1029,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         var resultFull = await GetMatchesAsync(filename, 3);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -1122,7 +1122,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

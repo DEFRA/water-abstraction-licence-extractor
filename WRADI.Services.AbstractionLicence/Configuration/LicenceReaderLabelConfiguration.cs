@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Configuration;
 
 namespace WRADI.DocumentType.AbstractionLicence.Configuration;
 

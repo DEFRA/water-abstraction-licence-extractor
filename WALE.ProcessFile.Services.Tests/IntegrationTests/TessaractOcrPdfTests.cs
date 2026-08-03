@@ -264,7 +264,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // See notes RE licence
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -321,7 +321,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/28/312", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -384,7 +384,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var linkedLicenceNumberCount = resultList.Count(result => result.LabelGroupName == "LinkedLicenceNumber");
         Assert.Equal(12, linkedLicenceNumberCount); // TODO - why not 100s?
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -453,7 +453,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("34/259", licenceNumberResult.Text!.FirstOrDefault()?.Text); // TODO - Dodgy file made up of 2 licences
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -512,7 +512,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // Licence number gets OCRed too scrambled
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -575,7 +575,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(licenceNumberResult);
         Assert.Equal("13/43/021/G/061", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -639,7 +639,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/28/507", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -707,7 +707,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("25 68 002 177", linkedLicences[0].Text![0].Text);
         Assert.Equal("25 68 002 182", linkedLicences[1].Text![0].Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -776,7 +776,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("3/074", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -847,7 +847,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("13/43/022/G/033", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -909,7 +909,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(licenceNumberResult);
         Assert.Equal("13/43/021/G/018", licenceNumberResult.Text![0].Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -954,7 +954,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // The document is printed out of alignment and has ghosting
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1013,7 +1013,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("6/076", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1061,7 +1061,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // File is scanned titled and font is very bold and hard to read
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1099,7 +1099,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(LabelPosition.LabelIsAfterTextToFind, nameResult.MatchedLabel.Position);
         Assert.Equal(MatchedPosition.FullyOnSameLine, nameResult.MatchedPosition);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1164,7 +1164,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("16/52/005/G/411", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1216,7 +1216,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // Reads licence number very badly wrong. Doesn't read abstraction limits correctly
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1266,7 +1266,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var abstractionLimitsResult = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         Assert.NotNull(abstractionLimitsResult);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1310,7 +1310,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1355,7 +1355,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var issuer = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.Equal("ESSEX RIVER AUTHORITY", issuer!.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1414,7 +1414,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("y", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1468,7 +1468,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // Abstraction limitscrossed out
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1527,7 +1527,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 006 109", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1584,7 +1584,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/38/35", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1625,7 +1625,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1674,7 +1674,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         
         // Poor OCR stops us finding the section (its in points)
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1746,7 +1746,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("8/36/19/S/130", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1793,7 +1793,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var additionalInformation = resultList.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.Null(additionalInformation);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1840,7 +1840,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
 
         // Name cannot be found as its stricken through (should be 'Barry Ball')
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1894,7 +1894,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         Assert.Null(licenceNumberResult);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,

@@ -376,7 +376,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults[1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -573,7 +573,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var firstPurposePointGroup = purposeResult.SubResults.Single();
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", firstPurposePointGroup.Text!.Single().Text);
 
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -842,7 +842,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', firstPurposePointGroup.Text!.Select(x => x.Text).ToArray()));
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1035,7 +1035,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below.",
             string.Join(' ', firstPurposePointGroup.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1528,7 +1528,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.2 Filling a reservoir for subsequent trickle irrigation.  Licence Serial No: AN/033/0051/004",
             string.Join(' ', purpose2.Text?.Select(x => x.Text).ToArray()!)); // TODO licence serial number bit shouldnt be here
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2051,7 +2051,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         //...
         Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2308,7 +2308,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO 4 more sections
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2411,7 +2411,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO expand this section + add others
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2538,7 +2538,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
         config.CacheService = specialCacheServices.CacheService;
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2680,7 +2680,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2930,7 +2930,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("16/51/007/S/011", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2995,7 +2995,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("2/27/05/032", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

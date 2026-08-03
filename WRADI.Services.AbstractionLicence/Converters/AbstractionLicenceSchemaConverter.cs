@@ -15,7 +15,7 @@ using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
 
 namespace WRADI.DocumentType.AbstractionLicence.Converters;
 
-public static class WalSchemaConverter
+public static class AbstractionLicenceSchemaConverter
 {
     private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
@@ -37,7 +37,7 @@ public static class WalSchemaConverter
 
         if (matches == null)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(WalSchemaConverter)} - No match object exists to " +
+            ConsoleHelper.WriteLine($"WARNING - {nameof(AbstractionLicenceSchemaConverter)} - No match object exists to " +
                 $"convert, {dmsFileData?.FileId} {naldLicenceNumber}");
             
             return new Licence
@@ -1522,7 +1522,7 @@ public static class WalSchemaConverter
                     continue;
                 }
                 
-                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
+                ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
 
                 if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
@@ -1534,7 +1534,7 @@ public static class WalSchemaConverter
             }
             catch (Exception ex)
             {
-                ConsoleHelper.WriteLine($"ERROR - {nameof(WalSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
                 
                 await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
                     destinationFileName!,
@@ -2412,7 +2412,7 @@ public static class WalSchemaConverter
                     || yearlyQuantity == null
                     || instantRate == null)
                 {
-                    ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Table was not in the expected format. Skipping");
+                    ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Table was not in the expected format. Skipping");
                     continue;
                 }
                 
@@ -3989,7 +3989,7 @@ public static class WalSchemaConverter
             if (licence.LicenceNumber == null)
             {
                 ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(WalSchemaConverter)} - AddImplicitExplicitAndEncompassingLicenceSets - Licence doesnt have licence number set");
+                    $"WARNING - {nameof(AbstractionLicenceSchemaConverter)} - AddImplicitExplicitAndEncompassingLicenceSets - Licence doesnt have licence number set");
                 
                 continue;
             }

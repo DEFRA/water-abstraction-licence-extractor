@@ -323,7 +323,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("NE/021/0000/036", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -412,7 +412,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("4/29/04/*S/0098/R01", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -440,7 +440,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);  
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -560,7 +560,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("SO/042/0036/022", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -669,7 +669,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("SO/040/0009/016", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -756,7 +756,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("9/40/01/0500/G", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -876,7 +876,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("08/37/54/0025", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -971,7 +971,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var firstPurposePointGroup = purposeResult.SubResults.First();
         Assert.Equal("4.1 Transfer for the purpose of dewatering.", firstPurposePointGroup.Text!.First().Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1013,7 +1013,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("South West Water Limited", companyName?.Text?.FirstOrDefault()?.Text);
 
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1142,7 +1142,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Lakeminster Park Limited", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1233,7 +1233,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1351,7 +1351,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1446,7 +1446,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1519,7 +1519,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
         Assert.StartsWith("Yorkshire", companyName?.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1612,7 +1612,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(issuerResult);
         Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1659,7 +1659,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4. PURPOSE OF ABSTRACTION 4.1 Cooling water make up (68% returned to source).",
             string.Join(' ', purposeResult.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1690,7 +1690,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(additionalInformation);
         Assert.Equal(37, additionalInformation.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1727,7 +1727,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(additionalInformation);
         Assert.Equal(28, additionalInformation.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1764,7 +1764,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(additionalInformation);
         Assert.Equal(36, additionalInformation.Text!.Count);
 
-        var licenceGroups = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceGroups = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1864,7 +1864,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("9.4 The minimum value for the quantity of water authorised to be abstracted", furtherConditions.SubResults[3].Text!.First().Text);
 
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2028,7 +2028,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("8.2 The Licence Holder shall send a copy of the record or summary data from it to", records.SubResults[1].Text!.FirstOrDefault()!.Text);
         Assert.Equal("8.3 Each record shall be kept and be made available during all reasonable", records.SubResults[2].Text!.FirstOrDefault()!.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2077,7 +2077,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2191,7 +2191,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2234,7 +2234,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(resultFull.Matches?.FirstOrDefault(m => m.LabelGroupName == "Purposes"));
         Assert.NotNull(resultFull.Matches?.FirstOrDefault(m => m.LabelGroupName == "Additional"));
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2290,7 +2290,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 1, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2333,7 +2333,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2372,7 +2372,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2421,7 +2421,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2453,7 +2453,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2485,7 +2485,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2517,7 +2517,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2599,7 +2599,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2722,7 +2722,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 5);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2758,7 +2758,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2792,7 +2792,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2827,7 +2827,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2864,7 +2864,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2900,7 +2900,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2934,7 +2934,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -2976,7 +2976,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
         Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3011,7 +3011,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(13, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3043,7 +3043,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3075,7 +3075,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3107,7 +3107,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3139,7 +3139,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(14, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3171,7 +3171,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,
@@ -3203,7 +3203,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         Assert.Equal(15, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             -1,

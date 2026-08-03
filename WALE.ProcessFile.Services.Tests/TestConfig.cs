@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -5,293 +6,276 @@ namespace WALE.ProcessFile.Services.Tests;
 
 public static class TestConfig
 {
-    private static IConfigurationRoot? _config;
-
+    [field: AllowNull, MaybeNull]
     private static IConfigurationRoot Config
     {
         get
         {
-            if (_config != null)
+            if (field != null)
             {
-                return _config;
+                return field;
             }
             
-            _config = new ConfigurationBuilder()
+            field = new ConfigurationBuilder()
                 .AddUserSecrets<PdfPigNoOcrPdfTests1>()
                 .Build();
             
-            return _config;
+            return field;
         }
     }
-    
-    private static string? _pdfFolder;
 
+    [field: AllowNull, MaybeNull]
     public static string PdfFolder
     {
         get
         {
-            if (_pdfFolder != null)
+            if (field != null)
             {
-                return _pdfFolder;
+                return field;
             }
             
-            _pdfFolder = Config["PdfFolder"]!;
-            return _pdfFolder;
+            field = Config["PdfFolder"]!;
+            return field;
         }
     }
-    
-    private static string? _pdfFolder2;
 
+    [field: AllowNull, MaybeNull]
     public static string PdfFolder2
     {
         get
         {
-            if (_pdfFolder2 != null)
+            if (field != null)
             {
-                return _pdfFolder2;
+                return field;
             }
             
-            _pdfFolder2 = Config["PdfFolder2"]!;
-            return _pdfFolder2;
+            field = Config["PdfFolder2"]!;
+            return field;
         }
     }
-    
-    private static string? _pdfFolder3;
 
+    [field: AllowNull, MaybeNull]
     public static string PdfFolder3
     {
         get
         {
-            if (_pdfFolder3 != null)
+            if (field != null)
             {
-                return _pdfFolder3;
+                return field;
             }
             
-            _pdfFolder3 = Config["PdfFolder3"]!;
-            return _pdfFolder3;
+            field = Config["PdfFolder3"]!;
+            return field;
         }
     }
-    
-    private static string? _pdfFolder4;
 
+    [field: AllowNull, MaybeNull]
     public static string PdfFolder4
     {
         get
         {
-            if (_pdfFolder4 != null)
+            if (field != null)
             {
-                return _pdfFolder4;
+                return field;
             }
             
-            _pdfFolder4 = Config["PdfFolder4"]!;
-            return _pdfFolder4;
+            field = Config["PdfFolder4"]!;
+            return field;
         }
     }
-    
-    private static string? _pdfFolder5;
 
+    [field: AllowNull, MaybeNull]
     public static string PdfFolder5
     {
         get
         {
-            if (_pdfFolder5 != null)
+            if (field != null)
             {
-                return _pdfFolder5;
+                return field;
             }
             
-            _pdfFolder5 = Config["PdfFolder5"]!;
-            return _pdfFolder5;
+            field = Config["PdfFolder5"]!;
+            return field;
         }
     }
-    
-    private static string? _aiVisionEndpoint;
 
+    [field: AllowNull, MaybeNull]
     public static string AiVisionEndpoint
     {
         get
         {
-            if (_aiVisionEndpoint != null)
+            if (field != null)
             {
-                return _aiVisionEndpoint;
+                return field;
             }
             
-            _aiVisionEndpoint = Config["AiVisionEndpoint"]!;
-            return _aiVisionEndpoint;
+            field = Config["AiVisionEndpoint"]!;
+            return field;
         }
     }
-    
-    private static string? _aiVisionKey;
 
+    [field: AllowNull, MaybeNull]
     public static string AiVisionKey
     {
         get
         {
-            if (_aiVisionKey != null)
+            if (field != null)
             {
-                return _aiVisionKey;
+                return field;
             }
             
-            _aiVisionKey = Config["AiVisionKey"]!;
-            return _aiVisionKey;
+            field = Config["AiVisionKey"]!;
+            return field;
         }
     }
-    
-    private static string? _aiServicesEndpoint;
 
+    [field: AllowNull, MaybeNull]
     public static string AiServicesEndpoint
     {
         get
         {
-            if (_aiServicesEndpoint != null)
+            if (field != null)
             {
-                return _aiServicesEndpoint;
+                return field;
             }
             
-            _aiServicesEndpoint = Config["AiServicesEndpoint"]!;
-            return _aiServicesEndpoint;
+            field = Config["AiServicesEndpoint"]!;
+            return field;
         }
     }
-    
-    private static string? _aiServicesKey;
 
+    [field: AllowNull, MaybeNull]
     public static string AiServicesKey
     {
         get
         {
-            if (_aiServicesKey != null)
+            if (field != null)
             {
-                return _aiServicesKey;
+                return field;
             }
             
-            _aiServicesKey = Config["AiServicesKey"]!;
-            return _aiServicesKey;
+            field = Config["AiServicesKey"]!;
+            return field;
         }
     }
-    
-    private static string? _awsAccessKey;
 
+    [field: AllowNull, MaybeNull]
     public static string AwsAccessKey
     {
         get
         {
-            if (_awsAccessKey != null)
+            if (field != null)
             {
-                return _awsAccessKey;
+                return field;
             }
             
-            _awsAccessKey = Config["AwsAccessKey"]!;
-            return _awsAccessKey;
+            field = Config["AwsAccessKey"]!;
+            return field;
         }
     }
-    
-    private static string? _awsSecretKey;
 
+    [field: AllowNull, MaybeNull]
     public static string AwsSecretKey
     {
         get
         {
-            if (_awsSecretKey != null)
+            if (field != null)
             {
-                return _awsSecretKey;
+                return field;
             }
             
-            _awsSecretKey = Config["AwsSecretKey"]!;
-            return _awsSecretKey;
+            field = Config["AwsSecretKey"]!;
+            return field;
         }
     }
-    
-    private static string? _openAiEndpoint;
 
+    [field: AllowNull, MaybeNull]
     public static string OpenAiEndpoint
     {
         get
         {
-            if (_openAiEndpoint != null)
+            if (field != null)
             {
-                return _openAiEndpoint;
+                return field;
             }
             
-            _openAiEndpoint = Config["OpenAiEndpoint"]!;
-            return _openAiEndpoint;
+            field = Config["OpenAiEndpoint"]!;
+            return field;
         }
     }
-    
-    private static string? _openAiKey;
 
+    [field: AllowNull, MaybeNull]
     public static string OpenAiKey
     {
         get
         {
-            if (_openAiKey != null)
+            if (field != null)
             {
-                return _openAiKey;
+                return field;
             }
             
-            _openAiKey = Config["OpenAiKey"]!;
-            return _openAiKey;
+            field = Config["OpenAiKey"]!;
+            return field;
         }
     }
 
-    private static string? _openAiModelName;
-
+    [field: AllowNull, MaybeNull]
     public static string OpenAiModelName
     {
         get
         {
-            if (_openAiModelName != null)
+            if (field != null)
             {
-                return _openAiModelName;
+                return field;
             }
             
-            _openAiModelName = Config["OpenAiModelName"]!;
-            return _openAiModelName;
+            field = Config["OpenAiModelName"]!;
+            return field;
         }
     }
 
-    private static string? _openAiDeploymentName;
-
+    [field: AllowNull, MaybeNull]
     public static string OpenAiDeploymentName
     {
         get
         {
-            if (_openAiDeploymentName != null)
+            if (field != null)
             {
-                return _openAiDeploymentName;
+                return field;
             }
             
-            _openAiDeploymentName = Config["OpenAiDeploymentName"]!;
-            return _openAiDeploymentName;
+            field = Config["OpenAiDeploymentName"]!;
+            return field;
         }
     }
-    
-    private static string? _tesseractPath;
 
+    [field: AllowNull, MaybeNull]
     public static string TesseractPath
     {
         get
         {
-            if (_tesseractPath != null)
+            if (field != null)
             {
-                return _tesseractPath;
+                return field;
             }
             
-            _tesseractPath = Config["TesseractPath"]!;
-            return _tesseractPath;
+            field = Config["TesseractPath"]!;
+            return field;
         }
     }
 
-    private static string? _postgresHost;
+    [field: AllowNull, MaybeNull]
     public static string PostgresHost
     {
         get
         {
-            if (_postgresHost != null)
+            if (field != null)
             {
-                return _postgresHost;
+                return field;
             }
             
-            _postgresHost = Config["POSTGRESQL_HOST"]!;
-            return _postgresHost;
+            field = Config["POSTGRESQL_HOST"]!;
+            return field;
         }
     }
     
@@ -309,97 +293,94 @@ public static class TestConfig
             return _postgresPort.Value;
         }
     }
-    
-    private static string? _postgresDbName;
+
+    [field: AllowNull, MaybeNull]
     public static string PostgresDbName
     {
         get
         {
-            if (_postgresDbName != null)
+            if (field != null)
             {
-                return _postgresDbName;
+                return field;
             }
             
-            _postgresDbName = Config["POSTGRESQL_DBNAME"]!;
-            return _postgresDbName;
+            field = Config["POSTGRESQL_DBNAME"]!;
+            return field;
         }
     }
-    
-    private static string? _postgresUsername;
+
+    [field: AllowNull, MaybeNull]
     public static string PostgresUsername
     {
         get
         {
-            if (_postgresUsername != null)
+            if (field != null)
             {
-                return _postgresUsername;
+                return field;
             }
             
-            _postgresUsername = Config["POSTGRESQL_USERNAME"]!;
-            return _postgresUsername;
+            field = Config["POSTGRESQL_USERNAME"]!;
+            return field;
         }
     }
-    
-    private static string? _postgresPassword;
+
+    [field: AllowNull, MaybeNull]
     public static string PostgresPassword
     {
         get
         {
-            if (_postgresPassword != null)
+            if (field != null)
             {
-                return _postgresPassword;
+                return field;
             }
             
-            _postgresPassword = Config["POSTGRESQL_PASSWORD"]!;
-            return _postgresPassword;
+            field = Config["POSTGRESQL_PASSWORD"]!;
+            return field;
         }
     }
-    
-    private static string? _dotnetPath;
 
+    [field: AllowNull, MaybeNull]
     public static string DotnetPath
     {
         get
         {
-            if (_dotnetPath != null)
+            if (field != null)
             {
-                return _dotnetPath;
+                return field;
             }
 
-            _dotnetPath = Config["DotnetPath"]!;
-            return _dotnetPath;
+            field = Config["DotnetPath"]!;
+            return field;
         }
     }
-    
-    private static string? _tesseractExeName;
 
+    [field: AllowNull, MaybeNull]
     public static string TesseractExeName
     {
         get
         {
-            if (_tesseractExeName != null)
+            if (field != null)
             {
-                return _tesseractExeName;
+                return field;
             }
 
-            _tesseractExeName = Config["TesseractExeName"]!;
-            return _tesseractExeName;
+            field = Config["TesseractExeName"]!;
+            return field;
         }
     }
-    
-    private static string? _tesseractExeDirectory;
 
+    [field: AllowNull, MaybeNull]
     public static string TesseractExeDirectory
     {
         get
         {
-            if (_tesseractExeDirectory != null)
+            if (field != null)
             {
-                return _tesseractExeDirectory;
+                return field;
             }
 
-            _tesseractExeDirectory = Config["TesseractExeDirectory"]!;
-            return _tesseractExeDirectory;
+            field = Config["TesseractExeDirectory"]!;
+            return field;
         }
     }
 }

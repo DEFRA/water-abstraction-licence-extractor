@@ -192,13 +192,13 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+    var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
         abstractionLicenceCacheService);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
+    AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
 
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
@@ -255,7 +255,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
                 processRun.ProcessRunId);
         }
 
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             matchesResult!,
             pdfDataExtractor,
             processRun.ProcessRunId,

@@ -139,7 +139,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("2 3rd day of MAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -170,7 +170,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("14IEH day of OCTOBER, 1966", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -198,7 +198,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 th day of NAY, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -227,7 +227,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -256,7 +256,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("8th day of NOVEMBER, 19 66", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -285,7 +285,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -314,7 +314,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 November 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -343,7 +343,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("28 DAY OF March 1984", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -372,7 +372,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("22 July 2016", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -401,7 +401,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 December 2014", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -430,7 +430,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("5th AY OF March 1993", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -459,7 +459,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("21st day of March 1974", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -488,7 +488,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("17 June 2025", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -517,7 +517,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("30th 1997", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,
@@ -548,7 +548,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         Assert.NotNull(dateOfIssue);
         Assert.StartsWith("11 May 2018", dateOfIssue.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined5,
             0,

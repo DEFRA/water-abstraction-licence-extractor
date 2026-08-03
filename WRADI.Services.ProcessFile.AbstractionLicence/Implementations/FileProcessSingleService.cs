@@ -193,7 +193,7 @@ public class FileProcessSingleService(
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            return (false, await WalSchemaConverter.ToLicenceSetsAsync(
+            return (false, await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
                 matchesResult!,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
@@ -245,13 +245,13 @@ public class FileProcessSingleService(
             .Select(IReadOnlyList<LicenceSet> (licenceSet) => new List<LicenceSet> { licenceSet })
             .ToList();
 
-        var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+        var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
             lookupConfiguration,
             abstractionLicenceCacheService);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
+        AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
         
         await SharedHelper.UpdateAndSaveLicenceSetsAsync(
             licenceSetGroups,

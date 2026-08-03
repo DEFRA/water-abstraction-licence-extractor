@@ -9,6 +9,7 @@ public class LookupConfiguration(
     IFileService fileService,
     ICacheService cacheService,
     IOutputService outputService,
+    ILicenceNumberServiceCore licenceNumberService,
     int regionId,
     DateTime requestedAt,
     int currentLockRetryCount = 0,
@@ -28,6 +29,8 @@ public class LookupConfiguration(
     
     public IOutputService OutputService { get; set; } = outputService;
 
+    public ILicenceNumberServiceCore LicenceNumberService { get; set; } = licenceNumberService;
+
     public int RegionId { get; set; } = regionId;
 
     public readonly int MaxPagesToProcessWhenOcrNeeded = maxPagesToProcessWhenOcrNeeded;
@@ -43,7 +46,7 @@ public class LookupConfiguration(
     public bool UseLockExclusivity { get; set; } = useLockExclusivity;
     
     public bool LockInProcess { get; set; } = lockInProcess;
-    
+
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -52,6 +55,7 @@ public class LookupConfiguration(
             FileService,
             CacheService,
             OutputService,
+            LicenceNumberService,
             RegionId,
             RequestedAt,
             CurrentLockRetryCount,

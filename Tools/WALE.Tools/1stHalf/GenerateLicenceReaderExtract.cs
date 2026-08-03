@@ -19,6 +19,7 @@ using WALE.Tools.Helpers;
 using WALE.Tools.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Helpers;
@@ -106,6 +107,7 @@ public static class GenerateLicenceReaderExtract
         var cacheService = (ICacheService)new ApiCacheService(httpClient);
         var absLicenceCacheService = (IAbstractionLicenceCacheService)new ApiAbstractionLicenceCacheService(httpClient);
         var outputService = new ApiOutputService(httpClient);
+        
         var messageQueueService = (IMessageQueueService)new ApiMessageQueueService(httpClient);
         
         var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -121,8 +123,7 @@ public static class GenerateLicenceReaderExtract
         
         ConsoleHelper.WriteLine("Finished getting all nald data");
         
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
-
+        var licenceNumberService = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
         var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
 
         foreach (var naldLine in allNaldData.AbstractionLicences!)
@@ -197,6 +198,7 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             absLicenceCacheService,
             outputService,
+            licenceNumberService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
             await dmsExtractInfoTask,
@@ -323,6 +325,7 @@ public static class GenerateLicenceReaderExtract
         ICacheService cacheService,
         IAbstractionLicenceCacheService abstractionLicenceCacheService,
         IOutputService outputService,
+        ILicenceNumberService licenceNumberService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
@@ -466,6 +469,7 @@ public static class GenerateLicenceReaderExtract
             fileService,
             cacheService,
             outputService,
+            licenceNumberService,
             -1,
             DateTime.Now,
             skipFileIfMoreThenPages: 25);

@@ -55,11 +55,6 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -125,11 +120,12 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -165,7 +161,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -286,7 +282,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Alternate_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
@@ -353,7 +349,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task FaintText_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
@@ -413,7 +409,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "34_236CA_LICENCE 8463615 (2007).pdf";
 
         // Act
@@ -478,7 +474,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "original licence (12.03.1975).PDF";
 
         // Act
@@ -535,7 +531,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task JMStrongAndPartners_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence Original 5796052.PDF";
 
         // Act
@@ -599,7 +595,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task CroxleyHallFarm_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "28-39-28-0507 5609942.PDF";
 
         // Act
@@ -667,7 +663,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task MRJEWard_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6081901.PDF";
 
         // Act
@@ -734,7 +730,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Original Licence 5646512.PDF";
 
         // Act
@@ -806,7 +802,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ4_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Original 5798383.PDF";
 
         // Act
@@ -869,7 +865,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ6_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document Licence document 28112002.PDF";
 
         // Act
@@ -936,7 +932,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ5_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6083958.PDF";
 
         // Act
@@ -980,7 +976,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ2_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document [Licence] (25112008).PDF";
 
         // Act
@@ -1035,7 +1031,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XYZ3_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6083584.PDF";
 
         // Act
@@ -1084,7 +1080,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Y_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Original 5809134.PDF";
 
         // Act
@@ -1126,7 +1122,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task X_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (14.11.2000).PDF";
 
         // Act
@@ -1186,7 +1182,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AttachedSticker_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence Original 5652046.pdf";
 
         // Act
@@ -1238,7 +1234,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenIsSuccession_ThenNotFound()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -1288,7 +1284,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -1337,7 +1333,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task ReallyOldPrinting_WhenCantBeRead_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application New Licence Issued - 22-07-1966 - 22-07-1966.pdf";
 
         // Act
@@ -1387,7 +1383,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task CantLoadImage_NearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "permit_01_01_1998.pdf";
 
         // Act
@@ -1441,7 +1437,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AttachedStickerDifferent_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "2938010008 5641759.pdf";
 
         // Act
@@ -1490,7 +1486,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task SingleWordCompany_WhenOcrSameLineSingleWord_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6084155.PDF";
 
         // Act
@@ -1549,7 +1545,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task EstateCompany_WhenOcrSameLineIsCompany1Line_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (22.05.2001).PDF";
 
         // Act
@@ -1606,7 +1602,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Handsigned_WhenCantBeReadByTesseract_ThenDoesNotGiveResult()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
 
         // Act
@@ -1648,7 +1644,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task VeryFaintText_WhenCantBeReadByTesseract_ThenDoesNotGiveResult()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
@@ -1706,7 +1702,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task Z_X_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "08-36-19-S-0130 5827009.PDF";
 
         // Act
@@ -1773,7 +1769,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task A1_B2_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (12.09.1979).pdf";
 
         // Act
@@ -1815,7 +1811,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task A3_B4_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (14.09.1992).PDF";
 
         // Act
@@ -1876,7 +1872,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task AAA3_B4_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         // Act
@@ -1919,7 +1915,7 @@ public class TessaractOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
     public async Task FileWithImageWithSmallDimensions_ThrowsTooManyImagesException()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12202043__Licence - Signed Addendum 6431587.pdf";
 
         var throwTooManyImagesException = false;

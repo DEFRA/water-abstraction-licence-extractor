@@ -13,6 +13,8 @@ public class ConfiguredServices
     
     public IAbstractionLicenceCacheService? AbstractionLicenceCacheService { get; init; }
     
+    public ILicenceNumberService? LicenceNumberService { get; set; }
+    
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
     
     public int MaxConcurrentScrapers { get; init; }

@@ -51,18 +51,22 @@ public class FileProcessSingleService(
             abstractionLicenceCacheService,
             fileId!.Value);
         
-        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
+        var licenceNumberService = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
         
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
+        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
+            abstractionLicenceCacheService,
+            licenceNumberService);
+        
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
         var (dmsFileData, naldLicence) = await dmsAndNaldFileDataTask;
         
         var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesCsvTask,
             fileService,
             cacheService,
             outputService,
+            licenceNumberService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,

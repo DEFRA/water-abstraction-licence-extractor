@@ -1,27 +1,30 @@
-using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Formats;
 
 namespace WRADI.DocumentType.AbstractionLicence.Helpers;
 
 public class NaldLinkedLicenceHelper
 {
     private readonly Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> _linkedLicenceMap;
+    private readonly ILicenceNumberService _licenceNumberService;
 
-    private NaldLinkedLicenceHelper(Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> linkedLicenceMap)
+    private NaldLinkedLicenceHelper(
+        Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> linkedLicenceMap,
+        ILicenceNumberService licenceNumberService)
     {
         _linkedLicenceMap = linkedLicenceMap;
+        _licenceNumberService = licenceNumberService;
     }
 
     public static async Task<NaldLinkedLicenceHelper> CreateAsync(
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        ILicenceNumberService licenceNumberService)
     {
         var rawData =
             await cacheService.GetNaldLinkedLicenceRawDataAsync();
         
-        var map = BuildLinkedLicenceMap(rawData);
-        return new NaldLinkedLicenceHelper(map);
+        var map = BuildLinkedLicenceMap(rawData, licenceNumberService);
+        return new NaldLinkedLicenceHelper(map, licenceNumberService);
     }
 
     public List<NaldLinkedLicence> GetLinkedLicences(string? licenceNumber)
@@ -31,7 +34,7 @@ public class NaldLinkedLicenceHelper
             return [];
         }
 
-        var naldLicences = AbstractionLicenceNumber.GetNaldLicences(licenceNumber);
+        var naldLicences = _licenceNumberService.GetNaldLicences(licenceNumber);
         var candidateLicenceNumbers = naldLicences
             .Select(l => l.LicenceNumber)
             .ToList();
@@ -51,7 +54,8 @@ public class NaldLinkedLicenceHelper
     }
 
     private static Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>> BuildLinkedLicenceMap(
-        List<NaldLinkedLicenceRawData> naldRawData)
+        List<NaldLinkedLicenceRawData> naldRawData,
+        ILicenceNumberService licenceNumberService)
     {
         var map = new Dictionary<string, Dictionary<string, List<NaldLinkedLicence>>>();
 
@@ -75,7 +79,7 @@ public class NaldLinkedLicenceHelper
             foreach (var potentialNumberSource in potentialNumberSources)
             {
                 var text = potentialNumberSource.Value;
-                var linkCandidates = AbstractionLicenceNumber.ExtractNaldLicences(text);
+                var linkCandidates = licenceNumberService.ExtractNaldLicences(text);
 
                 foreach (var linkCandidate in linkCandidates)
                 {

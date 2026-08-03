@@ -1,8 +1,9 @@
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Configuration;
 
-namespace WALE.ProcessFile.Services.Configuration;
+namespace WRADI.DocumentType.AbstractionLicence.Configuration;
 
 public static partial class LicenceReaderConfiguration
 {

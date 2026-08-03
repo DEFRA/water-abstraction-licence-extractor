@@ -64,10 +64,10 @@ public class OcrDatabaseTests
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
     
-    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     
     private readonly IPdfDataExtractorService _pdfDataExtractorCombined = new PdfDataExtractorService(
@@ -92,11 +92,12 @@ public class OcrDatabaseTests
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
             new LookupConfiguration(
-                WalLabelConfiguration.GetLabels(),
+                AbstractionLicenceLabelConfiguration.GetLabels(),
                 await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
                 new LocalFileService(PdfFolder),
                 CacheService,
                 OutputService,
+                await GetLicenceNumbersAsync(3),
                 3,
                 DateTime.Now),
             [fileName],
@@ -113,7 +114,7 @@ public class OcrDatabaseTests
     [Fact(Skip = "NeedsReworkingNowWeUseApi")]
     public async Task Uncached_Then_Changed()
     {
-        await SetupLicenceNumbersAsync(3);
+        await GetLicenceNumbersAsync(3);
         
         var filename = "14460030853 licence effective 24.07.2005";
         var someGuid = Guid.NewGuid(); // TODO

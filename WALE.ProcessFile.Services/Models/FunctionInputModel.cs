@@ -30,6 +30,7 @@ public class FunctionInputModel
     public List<string>? previouslyParsedPaths { get; set; }
     public IOutputService? outputService { get; set; }
     public ICacheService? cacheService { get; set; }
+    public ILicenceNumberServiceCore? licenceNumberService;
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
     public int processRunId { get; set; }
     public int regionCode { get; set; }
@@ -63,6 +64,7 @@ public class FunctionInputModel
             previouslyParsedPaths = previouslyParsedPaths,
             outputService = outputService,
             cacheService = cacheService,
+            licenceNumberService = licenceNumberService,
             pdfDataExtractorService = pdfDataExtractorService,
             processRunId = processRunId,
             regionCode = regionCode,

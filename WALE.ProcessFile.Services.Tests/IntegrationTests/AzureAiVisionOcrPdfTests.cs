@@ -54,11 +54,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -95,11 +90,12 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -122,7 +118,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task FROM_6000_SET_LabelOver2Lines()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
         const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
         
         // Act
@@ -242,7 +237,6 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
         const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
         
         // Act
@@ -272,7 +266,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly2()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22632235__Application Renewal - Licence Issued - 11112024.pdf";
         
         // Act
@@ -310,7 +304,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
@@ -400,7 +394,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task VeryFaintText_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
@@ -509,7 +503,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task X_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
@@ -634,7 +628,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task Succession_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -708,7 +702,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task WhenZ_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
         
         // Act
@@ -736,7 +730,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -839,7 +833,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -949,7 +943,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task Z1_X2_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
@@ -1009,7 +1003,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task Z2_X3_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
@@ -1066,7 +1060,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task Z3_X3_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "08-36-19-S-0101 5826949.PDF";
 
         // Act
@@ -1110,7 +1104,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task ScannedFileUploaded_ThenFindXuncorn_DebuggingTest()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         if (File.Exists("Licence - Old 6082700/PdfPig/Text/cache-metadata.json"))
@@ -1145,7 +1139,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_YorkshireWaterCompany1_ThenY()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "2-26-32-126 6937559.PDF";
 
         // Act
@@ -1374,7 +1368,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_YorkshireWaterCompany2_ThenY()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "2-27-29-012 7003124.PDF";
 
         // Act
@@ -1567,7 +1561,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_PurposeHasSubPointsInIt_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "22713185__Non-Application Licence Documents (20.12.1996).pdf";
 
         // Act
@@ -1595,7 +1589,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_PurposeHasSubPointsInIt33_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "2671309044__Application type unknown Licence Issued (30102002).pdf";
 
         // Act
@@ -1620,7 +1614,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_PurposeHasSubPointsInIt44_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "2671311013__Non-Application Licence Document (09.01.1985).pdf";
 
         // Act
@@ -1645,7 +1639,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_LinkedLicenceLooksSuspect_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(2);
+
         const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
 
         // Act
@@ -1670,7 +1664,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
     public async Task When_LicenceNumberWithMissingSpaceInFront()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22712254__2-27-12-254 6960530.PDF";
 
         // Act

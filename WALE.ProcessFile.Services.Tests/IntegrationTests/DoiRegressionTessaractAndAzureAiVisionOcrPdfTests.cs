@@ -54,11 +54,6 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -97,11 +92,12 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -131,7 +127,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12203045()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051966).PDF";
 
         // Act
@@ -162,7 +158,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         // NOTE - This one worked even with just Tesseract (as long as the IEH removal code runs)
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12205044__Non-Application Licence Document [Original Licence] (14101966).pdf";
 
         // Act
@@ -190,7 +186,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12303008()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12303008__Non-Application Licence Document [Original Licence] (11051966).PDF";
 
         // Act
@@ -219,7 +215,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12303075()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12303075__Non-Application Licence Document [Original Licence] (08111966).PDF";
 
         // Act
@@ -248,7 +244,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12303076()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12303076__Non-Application Licence Document [Original Licence] (08111966).PDF";
 
         // Act
@@ -277,7 +273,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100001()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100001__Application Minor Variation Issued Licence 17062025 .pdf";
 
         // Act
@@ -306,7 +302,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100004()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100004__Application - Renewal - Same Terms – Issued licence - November 2014 8621766.pdf";
 
         // Act
@@ -335,7 +331,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100010()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100010__1-21-00-010 5822315.PDF";
 
         // Act
@@ -364,7 +360,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100023()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100023__Application - Transfer - Issued licence 22.7.2016 9423969.pdf";
 
         // Act
@@ -393,7 +389,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100052()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100052__Application - New - Issued licence 8677332.pdf";
 
         // Act
@@ -425,7 +421,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
         const string filename = "12100063__Application type unknown Licence Issued - 05031993.pdf";
 
         // Act
-        await SetupLicenceNumbersAsync(1);
+
         var resultFull = await GetMatchesAsync(filename, 1, 5);
         
         // Assert
@@ -451,7 +447,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100065()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100065__Application New Licence Issued - [1974] - (1974).pdf";
 
         // Act
@@ -480,7 +476,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_2100068()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100068__Application Normal Variation Licence Issued 17062025.docx.pdf";
 
         // Act
@@ -509,7 +505,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100069()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100069__Application New Licence Issued - [1997] - (1997).pdf";
 
         // Act
@@ -540,7 +536,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     public async Task DoiNotFound_12100071R01()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "12100071R01__Application - New - Issued Licence 15-05-2018 10311405.pdf";
 
         // Act

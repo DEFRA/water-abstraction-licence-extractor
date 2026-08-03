@@ -2,9 +2,15 @@ using Meziantou.Xunit;
 
 namespace WALE.ProcessFile.Services.Tests.Helper;
 
-[CollectionDefinition("First Names 1", DisableParallelization = false)]
+[CollectionDefinition("First Names 1a", DisableParallelization = false)]
 [EnableParallelization] // This enables the parallel execution of classes in a collection
-public class FirstNamesCollection1 : ICollectionFixture<SingletonFirstNamesFixture>
+public class FirstNamesCollection1a : ICollectionFixture<SingletonFirstNamesFixture>
+{
+}
+
+[CollectionDefinition("First Names 1b", DisableParallelization = false)]
+[EnableParallelization] // This enables the parallel execution of classes in a collection
+public class FirstNamesCollection1b : ICollectionFixture<SingletonFirstNamesFixture>
 {
 }
 

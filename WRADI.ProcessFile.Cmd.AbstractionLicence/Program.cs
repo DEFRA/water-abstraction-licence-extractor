@@ -87,17 +87,20 @@ async Task ProgramAsync()
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
-    AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
+    var licenceNumberService = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
+        abstractionLicenceCacheService,
+        licenceNumberService);
 
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
-        WalLabelConfiguration.GetLabels(),
+        AbstractionLicenceLabelConfiguration.GetLabels(),
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
         services.OutputService!,
+        services.LicenceNumberService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,

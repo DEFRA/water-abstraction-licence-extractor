@@ -51,11 +51,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -79,11 +74,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -105,7 +101,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task WhenA_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -234,7 +229,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task When1_ThenIssueDateCorrectly(string filename, string expectedIssueDate, string expectedIssueDate2, int expectedResults, int expectedLinkedLicenceLength)
     {
         // Act
-        await SetupLicenceNumbersAsync(3);
         var resultFull = await GetMatchesAsync(filename, 3, 3);
         var resultList = resultFull.Matches!;
         
@@ -264,7 +258,6 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     public async Task When_LicenceNumberWithMissingSpaceInFront()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
         const string filename = "22712254__2-27-12-254 6960530.PDF";
 
         // Act

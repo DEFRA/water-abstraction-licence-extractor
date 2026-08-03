@@ -75,10 +75,10 @@ public class NoOcrDatabaseTests
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
     
-    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -107,11 +107,12 @@ public class NoOcrDatabaseTests
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await GetLicenceNumbersAsync(3),
             3,
             DateTime.Now,
             useLockExclusivity: false);
@@ -131,7 +132,7 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         
         var processRun = await OutputService.StartProcessRunAsync(new ProcessRun
         {
@@ -148,7 +149,7 @@ public class NoOcrDatabaseTests
     public async Task Uncached_Then_Changed()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
         var someGuid = Guid.NewGuid();
@@ -161,7 +162,7 @@ public class NoOcrDatabaseTests
 
     private async Task ProcessAsync(string filename, Guid fileId)
     {
-        await SetupLicenceNumbersAsync(3);
+
         
         // Act
         var resultFull = await GetMatchesAsync(filename, fileId);

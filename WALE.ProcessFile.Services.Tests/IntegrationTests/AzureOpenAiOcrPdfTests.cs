@@ -53,10 +53,10 @@ public class AzureOpenAiOcrPdfTests
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -89,11 +89,12 @@ public class AzureOpenAiOcrPdfTests
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await GetLicenceNumbersAsync(4),
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is
     }
@@ -113,7 +114,7 @@ public class AzureOpenAiOcrPdfTests
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act

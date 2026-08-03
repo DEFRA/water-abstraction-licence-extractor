@@ -235,7 +235,7 @@ public static class ApplicableToMost
                 var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
 
                 var (anyIsLicenceNumber, licenceNumberLines) =
-                    LicenceNumber.AnyIsLicenceNumber(
+                    request.licenceNumberService!.AnyIsLicenceNumber(
                         [documentLine],
                         request.label!,
                         request.isOcr,
@@ -290,7 +290,7 @@ public static class ApplicableToMost
                 // TODO can swap this out now for shared method in Base
                 
                 var (anyIsLicenceNumberF, licenceNumberLinesF) =
-                    LicenceNumber.AnyIsLicenceNumber(
+                    request.licenceNumberService!.AnyIsLicenceNumber(
                         [documentLine],
                         request.label!,
                         request.isOcr,

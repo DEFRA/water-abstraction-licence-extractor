@@ -56,11 +56,6 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
-    
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -103,11 +98,12 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -148,7 +144,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     {
         // Arrange
         var regionCode = 5;
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "12301001__1 23 01 001 Hallington - Licence Document.pdf";
 
         // Act
@@ -419,7 +415,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     {
         // Arrange
         var regionCode = 5;
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "22722027__2-27-22-027 6070677.PDF";
 
         // Act
@@ -553,7 +549,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     {
         // Arrange
         var regionCode = 5;
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -663,7 +659,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     {
         // Arrange
         var regionCode = 5; // TODO Hampshire and IOW
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
@@ -795,7 +791,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         int expectedLicenceGroups)
     {
         // Act
-        await SetupLicenceNumbersAsync(3);
+
         
         var resultFull = await GetMatchesAsync(filename, 3);
         var resultList = resultFull.Matches!;
@@ -845,7 +841,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         string? expectedLicenceNumber)
     {
         // Act
-        await SetupLicenceNumbersAsync(3);
+
         
         var resultFull = await GetMatchesAsync(filename, 3);
         var resultList = resultFull.Matches!;
@@ -889,7 +885,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task GetSomeFromTesseractAndSomeFromAzureAi_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -961,7 +957,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task WhenZ_B()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22630082__Application - New - Issued Licence 12.12.08 10739186.pdf";
 
         // Act
@@ -993,7 +989,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task WhenZ_L()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22728008__2-27-28-008 6846495.PDF";
 
         // Act
@@ -1026,7 +1022,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task WhenZ_ZA()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "12202087__Non-Application Licence Document [Original Licence] (26112001).PDF";
 
         // Act
@@ -1059,7 +1055,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task Template_Test1()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string fileName = "22712213__Non-Application Licence Document (16.05.1984).PDF";
 
         // Act
@@ -1072,6 +1068,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
             new LocalFileService(TestConfig.PdfFolder3),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync(3, DatabaseCacheService),
             3,
             DateTime.Now),
             [TestConfig.PdfFolder3 + fileName],
@@ -1084,7 +1081,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task A3_B466_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "83743S0057__8-37-43-S-0057Plans.pdf";
 
         // Act
@@ -1099,7 +1096,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
     public async Task AAA3_B4_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         // Act

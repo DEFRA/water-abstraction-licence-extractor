@@ -17,16 +17,18 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
+    
     let text = backLink
         ? 'Implicit back link'
         : linkedLicence.containedIn!.length ?
             linkedLicence.containedIn![0].sectionName
             : "?";
-    let color = backLink ? "#888" : "black";
-
-    if (abstractionLimits) {
-        color = "lightseagreen";
-    }
+    
+    let color = backLink 
+        ? "#888" 
+        : abstractionLimits 
+            ? "lightseagreen" 
+            : "black";
 
     let linkedFilename = getFileId(data, licenceNumber);
 

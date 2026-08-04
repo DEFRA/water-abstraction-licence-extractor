@@ -426,7 +426,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task When1_ThenFoundCorrectly()
     {
-
         const string filename = "ne0270018009__Application – Formal Variation – Issued Licence 19122022.pdf";
         
         // Act
@@ -466,9 +465,61 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+
+        Assert.NotNull(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].Name);
+        Assert.Equal("SE 57396 22415", agreedSchemaLicence.Points[0].GridRef);
+        Assert.Equal("2.1", agreedSchemaLicence.Points[0].Id);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].AltId);
+        Assert.Equal("At National Grid Reference SE 57396 22415", agreedSchemaLicence.Points[0].Description);
         
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits!.Individual.Length);
-        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits!.Aggregates!.Length);
+        Assert.NotNull(agreedSchemaLicence.Purposes);
+        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Equal("4.1", agreedSchemaLicence.Purposes[0].Id);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("4.2", agreedSchemaLicence.Purposes[1].Id);
+        Assert.Equal("Trickle irrigation", agreedSchemaLicence.Purposes[1].Description);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+        
+        Assert.Equal("6.1", agreedSchemaLicence.AbstractionLimits.Individual[0].DocumentIdentifier);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].Id);
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].IsImplicit);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].IsImplicit);
+        
+        Assert.Equal("6.2", agreedSchemaLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].Id);
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].IsImplicit);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].IsImplicit);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        
+        Assert.Equal("6.3", agreedSchemaLicence.AbstractionLimits.Aggregates[0].DocumentIdentifier);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].Id);
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes!.Length);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);        
+        
+        Assert.Equal("6.4", agreedSchemaLicence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].Id);
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].IsImplicit);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes!.Length);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].IsImplicit);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![1].Id);
+        Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].IsImplicit);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[1].LinkedLicences);
+        Assert.Equal(17, agreedSchemaLicence.AbstractionLimits.Aggregates[1].LinkedLicences!.Length);
     }
     
     [Fact]

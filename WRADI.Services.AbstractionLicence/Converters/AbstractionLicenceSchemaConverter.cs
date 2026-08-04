@@ -2480,21 +2480,94 @@ public static class AbstractionLicenceSchemaConverter
             .SelectMany(pc => pc.SubResults)
             .Where(x => x.MatchedLabelName is "PurposeConditionSub" or "PurposeConditionSingleLineSub")
             .ToList();
-                
+        
+        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
+            .Select(l => l.Text) ?? []);
+        
         var limitPurposes = purposeConditionSub.Count > 0 ?
             purposeConditionSub
                 .Select(pcs =>
-                    new Purpose
+                {
+                    var text = FormattingHelper.CapitaliseFirstLetter(pcs.Text!.FirstOrDefault()?.Text);
+                    var documentPurpose = allPurposes.FirstOrDefault(ap => ap.Id == text
+                        || ap.Description?.Equals(text, StringComparison.InvariantCultureIgnoreCase) == true);
+
+                    if (documentPurpose == null)
                     {
-                        Id = pcs.Text!.FirstOrDefault()?.Text,
+                        return null;
+                    }
+                    
+                    var purpose = new Purpose
+                    {
+                        Id = documentPurpose.Id,
+                        Description = documentPurpose.Description,
                         IsImplicit = false
-                    })
+                    };
+
+                    return purpose;
+                })
+                .Where(p => p != null)
+                .Select(p => p!)
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
-                //.Where(p => allPurposes.Any(ap => ap.Id == p.Id))
                 .ToList()
             : null;
 
+        foreach (var documentPurpose in allPurposes)
+        {
+            var documentPurposeNameSet = !string.IsNullOrEmpty(documentPurpose.Description);
+            var documentPurposeIdSet = !string.IsNullOrEmpty(documentPurpose.Id);
+            
+            var nameInSingleQuotes = $"'{documentPurpose.Description}'";
+            var idInSingleQuotes = $"'{documentPurpose.Id}'";
+            
+            var textContainsPurposeName1 = documentPurposeNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    nameInSingleQuotes,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPurposeName2 = documentPurposeNameSet && documentPurpose.Description!.Length > 10 &&
+                abstractionLimitPointSubText.Contains(
+                    documentPurpose.Description!,
+                    StringComparison.OrdinalIgnoreCase);
+            
+             var textContainsPurposeId1 = documentPurposeIdSet &&
+                abstractionLimitPointSubText.Contains(
+                    idInSingleQuotes,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPurposeId2 = documentPurposeIdSet
+                && documentPurpose.Id?.Contains(')') == true
+                && abstractionLimitPointSubText.Contains(
+                    documentPurpose.Id!,
+                    StringComparison.OrdinalIgnoreCase);
+
+            var textContains = textContainsPurposeName1
+                || textContainsPurposeName2
+                || textContainsPurposeId1
+                || textContainsPurposeId2;
+
+            var matchedDocumentPurpose = limitPurposes?
+                .FirstOrDefault(lp => lp.Id?.Equals(documentPurpose.Id, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.Id?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.Description?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true);
+
+            var allPurposesContains = matchedDocumentPurpose != null;
+            
+            if (!textContains || allPurposesContains)
+            {
+                continue;
+            }
+            
+            limitPurposes ??= [];
+            limitPurposes.Add(new Purpose
+            {
+                Id = documentPurpose.Id,
+                Description = documentPurpose.Description,
+                IsImplicit = false
+            });
+        }
+        
         var pointCondition = siblings
             .Where(x => x.MatchedLabelName is "PointCondition" or "PointConditionSingleLine")
             .ToList();
@@ -2503,9 +2576,6 @@ public static class AbstractionLicenceSchemaConverter
             .SelectMany(pc => pc.SubResults)
             .Where(x => x.MatchedLabelName is "PointConditionSub" or "PointConditionSingleLineSub")
             .ToList();
-                
-        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
-            .Select(l => l.Text) ?? []);
         
         var limitPoints = pointConditionSub.Count > 0 ?
             pointConditionSub
@@ -3503,8 +3573,8 @@ public static class AbstractionLicenceSchemaConverter
 
                 var pointText = string.Join(" ", point.Text?.Select(p => p.Text).ToArray() ?? []);
 
-                var letterIdParts = pointText.Split("marked '");
-                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Split('\'')[0] : null;
+                var letterIdParts = pointText.Replace("\"", "'").Split("marked '");
+                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
 
                 if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
                 {

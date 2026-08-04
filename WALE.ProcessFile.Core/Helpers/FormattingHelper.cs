@@ -9,6 +9,16 @@ namespace WALE.ProcessFile.Core.Helpers;
 public static class FormattingHelper
 {
     private static readonly ConcurrentDictionary<string, DmsFileData?> DmsFileDataCache = new();
+
+    public static string? CapitaliseFirstLetter(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Length == 0)
+        {
+            return text;
+        }
+
+        return text[0].ToString().ToUpper() + text[1..];
+    }
     
     public static string? RemoveSeperators(string? licenceNumber)
     {

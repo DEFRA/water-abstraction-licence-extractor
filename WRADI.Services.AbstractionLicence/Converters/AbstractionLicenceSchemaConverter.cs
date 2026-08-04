@@ -2466,7 +2466,14 @@ public static class AbstractionLicenceSchemaConverter
                 var lineAbstractionLimitGroup = new AbstractionLimitGroup
                 {
                     Points = points,
-                    Purposes = null,
+                    Purposes = allPurposes
+                        .Select(p => new Purpose
+                        {
+                            IsImplicit = true,
+                            Id = p.Id,
+                            Description = p.Description
+                        })
+                        .ToArray(),
                     DocumentIdentifier = documentIdentifier,
                     ContainedIn = containedIn,
                     Limits =
@@ -2552,6 +2559,8 @@ public static class AbstractionLicenceSchemaConverter
                 .ToList()
             : null;
 
+        limitPurposes = CheckForGenericTransferPurpose(limitPurposes, abstractionLimitPointSubText);
+        
         foreach (var documentPurpose in allPurposes)
         {
             var documentPurposeNameSet = !string.IsNullOrEmpty(documentPurpose.Description);
@@ -3215,6 +3224,30 @@ public static class AbstractionLicenceSchemaConverter
         return dateLines.IndexOf(match) + 1;
     }
 
+    private static List<Purpose>? CheckForGenericTransferPurpose(
+        List<Purpose>? limitPurposes,
+        string abstractionLimitPointSubText)
+    {
+        const string forThePurposeOfTransferGeneric = "for the purpose of transfer shall";
+        
+        if ((limitPurposes == null || limitPurposes.Count == 0)
+            && abstractionLimitPointSubText.Contains(forThePurposeOfTransferGeneric,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return
+            [
+                new Purpose
+                {
+                    Id = "Transfer",
+                    Description = "Transfer",
+                    IsImplicit = false
+                }
+            ];
+        }
+
+        return limitPurposes;
+    }
+    
     private static bool IsExcludedLinkReason(string? linkReason)
     {
         return linkReason is LinkReason.SimultaneousDischargeCondition

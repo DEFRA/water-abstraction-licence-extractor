@@ -1875,15 +1875,14 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual![4].Limits.Count);
-        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Individual![4].Limits[0].Value);
-        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Individual![4].Limits[1].Value);
-        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Individual![4].Limits[2].Value);        
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
+        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[1].Value);
+        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[2].Value);        
         
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
+        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
     }
     
     [Fact]
@@ -2015,11 +2014,11 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
-        
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
+
         Assert.Equal(4, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
@@ -2200,9 +2199,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
+        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

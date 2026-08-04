@@ -3,6 +3,8 @@ import { OutputListDataItem } from '../../api/generated/apiClient';
 
 export interface LicenceSectionBodyProps {
     outputListDataItem?: OutputListDataItem;
+    data?: OutputListDataItem[];
+    onOpenReport?: (fileId: string) => void;
 }
 
 interface ScrapedLicenceSectionProps {
@@ -14,9 +16,11 @@ interface ScrapedLicenceSectionProps {
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
+    data?: OutputListDataItem[];
+    onOpenReport?: (fileId: string) => void;
 }
 
-export function ScrapedLicenceSection({ title, children, initialOpen = false, outputListDataItem }: ScrapedLicenceSectionProps) {
+export function ScrapedLicenceSection({ title, children, initialOpen = false, outputListDataItem, data, onOpenReport }: ScrapedLicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
 
     return (
@@ -40,6 +44,8 @@ export function ScrapedLicenceSection({ title, children, initialOpen = false, ou
                 <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
                     {cloneElement(children, { 
                         outputListDataItem: outputListDataItem,
+                        data: data,
+                        onOpenReport: onOpenReport,
                         onItemVerificationRequested: undefined,
                         scrapedView: true
                     } as any)}

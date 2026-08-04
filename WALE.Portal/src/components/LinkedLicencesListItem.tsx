@@ -4,6 +4,7 @@ import {
     OutputListDataItem
 } from "../api/generated/apiClient.ts";
 import {NaldStatusTag} from "./NaldStatusTag.tsx";
+import {getFileId} from "../utils/verificationUtils.ts";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -53,22 +54,6 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
             </li>
         );
     }
-}
-
-function getFileId(data: OutputListDataItem[], licenceNumber: string | undefined) {
-    if (licenceNumber == undefined) {
-        return false;
-    }
-
-    for (let itemNumber in data) {
-        let item = data[itemNumber];
-
-        if (item.licenceNumber === licenceNumber) {
-            return item.fileId;
-        }
-    }
-
-    return false;
 }
 
 export default LinkedLicencesListItem;

@@ -16,11 +16,13 @@ interface ReportContentProps {
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
+    data?: OutputListDataItem[];
+    onOpenReport?: (fileId: string) => void;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, data, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -278,6 +280,8 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     onJumpToPage={jumpToPage}
                                     onRefresh={handleRefresh}
                                     outputListDataItem={outputListDataItem}
+                                    data={data}
+                                    onOpenReport={onOpenReport}
                                 />
                             </div>
                         )}

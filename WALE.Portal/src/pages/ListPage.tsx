@@ -154,8 +154,8 @@ function ListPage() {
     } = useReportModals();
 
     const openReportWithId = useCallback((fileId: string, item?: OutputListDataItem) => {
-        openReport(fileId, parseInt(processRunId ?? '0'), item);
-    }, [openReport, processRunId]);
+        openReport(fileId, parseInt(processRunId ?? '0'), item, outputList, openReportWithId);
+    }, [openReport, processRunId, outputList]);
 
     const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
         openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));

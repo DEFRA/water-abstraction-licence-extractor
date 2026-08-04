@@ -1,3 +1,5 @@
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
+
 export const getVerificationTypeColor = (type: string): string => {
     switch (type) {
         case 'Confirmed':
@@ -79,3 +81,19 @@ export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
     if (!containedIn) return false;
     return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
 };
+
+export function getFileId(data: OutputListDataItem[], licenceNumber: string | undefined) {
+    if (licenceNumber == undefined) {
+        return false;
+    }
+
+    for (let itemNumber in data) {
+        let item = data[itemNumber];
+
+        if (item.licenceNumber === licenceNumber) {
+            return item.fileId;
+        }
+    }
+
+    return false;
+}

@@ -42,6 +42,8 @@ export function ReportModalContainer({
                             processRunId={modal.processRunId}
                             onRefresh={onRefresh}
                             outputListDataItem={modal.outputListDataItem}
+                            data={modal.data}
+                            onOpenReport={modal.onOpenReport}
                         />
                     ) : (
                         <LicenceSetReportContent

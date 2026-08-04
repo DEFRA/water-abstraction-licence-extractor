@@ -21,7 +21,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, scrapedView, history}, ref) => {
+    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, data, onOpenReport, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
@@ -225,6 +225,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 }
                             }}
                             outputListDataItem={outputListDataItem}
+                            data={data}
+                            onOpenReport={onOpenReport}
                             scrapedView={scrapedView}
                             history={history}
                         />

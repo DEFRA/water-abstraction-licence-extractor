@@ -6,7 +6,7 @@ export function useReportModals() {
     const [modals, setModals] = useState<ReportModal[]>([]);
     const [modalCounter, setModalCounter] = useState(0);
 
-    const openReport = useCallback((fileId: string, processRunId: number, item?: OutputListDataItem) => {
+    const openReport = useCallback((fileId: string, processRunId: number, item?: OutputListDataItem, data?: OutputListDataItem[], onOpenReport?: (fileId: string) => void) => {
         const newModal: ReportModal = {
             id: modalCounter,
             type: 'report',
@@ -14,7 +14,9 @@ export function useReportModals() {
             processRunId,
             position: { top: 40, left: 350 },
             size: { width: 'calc(100% - 370px)', height: 'calc(100% - 60px)' },
-            outputListDataItem: item
+            outputListDataItem: item,
+            data,
+            onOpenReport
         };
 
         setModals(prev => [...prev, newModal]);

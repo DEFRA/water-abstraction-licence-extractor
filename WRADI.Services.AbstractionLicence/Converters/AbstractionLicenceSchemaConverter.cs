@@ -529,6 +529,14 @@ public static class AbstractionLicenceSchemaConverter
             lowestPoints = lowestPointsInd;
         }
         
+        var lowestPurposes = aggregates.Min(a => a.Purposes?.Length) ?? int.MaxValue;
+        var lowestPurposesInd = individuals.Min(a => a.Purposes?.Length) ?? int.MaxValue;
+
+        if (lowestPurposes > lowestPurposesInd)
+        {
+            lowestPurposes = lowestPurposesInd;
+        }
+        
         var newIndividuals = new List<AbstractionLimitGroup>();
         var newAggregates = new List<Aggregate>();
         
@@ -575,10 +583,12 @@ public static class AbstractionLicenceSchemaConverter
 
             if (mixedPurposesCounts)
             {
-                var individualPurposesCount = individual.Purposes?.Count(p => p.IsImplicit != true);
-                var multipleIndividualPurposesSet = individualPurposesCount >= 2;
+                var individualExplicitPurposesCount = individual.Purposes?.Count(p => p.IsImplicit != true);
 
-                if (multipleIndividualPurposesSet)
+                var multipleExplicitIndividualPurposesSet = individualExplicitPurposesCount >= 2;
+                var morePurposesSetThenAnotherAggregate = individual.Purposes?.Length > lowestPurposes;
+                
+                if (multipleExplicitIndividualPurposesSet || morePurposesSetThenAnotherAggregate)
                 {
                     var purposesLoop = individual.Purposes;
                     var isAllPurposes = individual.Purposes?.Length == purposes.Length;
@@ -2679,7 +2689,7 @@ public static class AbstractionLicenceSchemaConverter
             limitPoints ??= [];
             limitPoints.Add(new Point
             {
-                Id = documentPoint.Name,
+                Id = documentPoint.Id,
                 IsImplicit = false
             });
         }

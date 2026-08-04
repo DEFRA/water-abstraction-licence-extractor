@@ -521,6 +521,14 @@ public static class AbstractionLicenceSchemaConverter
             return (individuals, aggregates);
         }
 
+        var lowestPoints = aggregates.Min(a => a.Points?.Length);
+        var lowestPointsInd = individuals.Min(a => a.Points?.Length);
+
+        if (lowestPoints > lowestPointsInd)
+        {
+            lowestPoints = lowestPointsInd;
+        }
+        
         var newIndividuals = new List<AbstractionLimitGroup>();
         var newAggregates = new List<Aggregate>();
         
@@ -528,10 +536,12 @@ public static class AbstractionLicenceSchemaConverter
         {
             if (mixedPointsCounts)
             {
-                var individualPointsCount = individual.Points?.Length;
-                var multipleIndividualPointsSet = individualPointsCount >= 2;
+                var individualExplicitPointsCount = individual.Points?.Count(p => p.IsImplicit != true);
+
+                var multipleExplicitIndividualPointsSet = individualExplicitPointsCount >= 2;
+                var morePointsSetThenAnotherAggregate = individual.Points?.Length > lowestPoints;
                 
-                if (multipleIndividualPointsSet)
+                if (multipleExplicitIndividualPointsSet || morePointsSetThenAnotherAggregate)
                 {
                     var pointsLoop = individual.Points;
                     var isAllPoints = individual.Points?.Length == points.Length;
@@ -565,7 +575,7 @@ public static class AbstractionLicenceSchemaConverter
 
             if (mixedPurposesCounts)
             {
-                var individualPurposesCount = individual.Purposes?.Length;
+                var individualPurposesCount = individual.Purposes?.Count(p => p.IsImplicit != true);
                 var multipleIndividualPurposesSet = individualPurposesCount >= 2;
 
                 if (multipleIndividualPurposesSet)
@@ -2438,7 +2448,8 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     new()
                     {
-                        Id = abstractionPoint
+                        Id = abstractionPoint,
+                        IsImplicit = false
                     }
                 };
                 
@@ -2613,7 +2624,14 @@ public static class AbstractionLicenceSchemaConverter
         {
             var documentPointNameSet = !string.IsNullOrEmpty(documentPoint.Name);
             var nameInSingleQuotes = $"'{documentPoint.Name}'";
-            var abstractionPointExplicit = $"Abstraction Point {documentPoint.Name}";
+            var abstractionPointExplicit = $"Abstraction Point {documentPoint.Id}";
+            var abstractionPointInQuotesExplicit = $"Abstraction Point '{documentPoint.Id}'";
+            var abstractionPointExplicitAlt = !string.IsNullOrEmpty(documentPoint.AltId)
+                ? $"Abstraction Point {documentPoint.AltId}"
+                : "[NEVER_FIND_THIS]";
+            var abstractionPointInQuotesExplicitAlt = !string.IsNullOrEmpty(documentPoint.AltId)
+                ? $"Abstraction Point '{documentPoint.AltId}'"
+                : "[NEVER_FIND_THIS]";
             
             var textContainsPointName1 = documentPointNameSet &&
                 abstractionLimitPointSubText.Contains(
@@ -2625,13 +2643,35 @@ public static class AbstractionLicenceSchemaConverter
                     abstractionPointExplicit,
                     StringComparison.OrdinalIgnoreCase);
             
-            var textContainsPointName3 = documentPointNameSet && documentPoint.Name!.Length > 10 &&
+            var textContainsPointName3 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointExplicitAlt,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName4 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointInQuotesExplicit,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName5 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointInQuotesExplicitAlt,
+                    StringComparison.OrdinalIgnoreCase);            
+            
+            var textContainsPointName6 = documentPointNameSet &&
+                documentPoint.Name!.Length > 10 &&
                 abstractionLimitPointSubText.Contains(
                     documentPoint.Name!,
                     StringComparison.OrdinalIgnoreCase);
 
-            if ((!textContainsPointName1 && !textContainsPointName2 && !textContainsPointName3)
-                || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
+            var textContainsPoint = textContainsPointName1
+                || textContainsPointName2 
+                || textContainsPointName3
+                || textContainsPointName4                
+                || textContainsPointName5                
+                || textContainsPointName6;
+            
+            if (!textContainsPoint || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
             {
                 continue;
             }

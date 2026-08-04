@@ -8,7 +8,7 @@ import {
 } from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
 import NaldStatusTag from "../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFileId} from "../../utils/verificationUtils.ts";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -24,6 +24,8 @@ interface LinkedLicenceItemProps {
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
     outputListDataItem?: OutputListDataItem;
+    data?: OutputListDataItem[];
+    onOpenReport?: (fileId: string) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -40,6 +42,8 @@ export const LinkedLicenceItem = ({
                                       onOverride,
                                       onRequestBusinessReview,
                                       onCompleteBusinessReview,
+                                      data,
+                                      onOpenReport,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
@@ -48,6 +52,8 @@ export const LinkedLicenceItem = ({
     if (!linkedLicence) {
         return null;
     }
+
+    const linkedFilename = getFileId(data || [], linkedLicence.licenceNumber);
 
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
@@ -355,7 +361,14 @@ export const LinkedLicenceItem = ({
         <div className="linked-licence-item" style={{padding: '12px', borderBottom: '1px solid #eee'}}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
                 <p style={{margin: 0}}><strong>Linked Licence
-                    Number:</strong> {linkedLicence.licenceNumber || 'N/A'}<NaldStatusTag
+                    Number:</strong> {linkedFilename ? (
+                        <a href="#" onClick={(e) => {
+                            e.preventDefault();
+                            onOpenReport?.(linkedFilename);
+                        }}>{linkedLicence.licenceNumber || 'N/A'}</a>
+                    ) : (
+                        linkedLicence.licenceNumber || 'N/A'
+                    )}<NaldStatusTag
                     status={linkedLicence.naldStatus}/></p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
             </div>

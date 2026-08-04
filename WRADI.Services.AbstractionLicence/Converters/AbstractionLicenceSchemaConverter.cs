@@ -3602,6 +3602,14 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
+        foreach (var item in returnList)
+        {
+            if (string.IsNullOrEmpty(item.Id) && !string.IsNullOrEmpty(item.Name))
+            {
+                item.Id = item.Name;
+            }
+        }
+        
         return returnList.ToArray();
     }
 

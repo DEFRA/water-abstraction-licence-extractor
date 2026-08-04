@@ -2,7 +2,7 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class Point
 {
-    public string? Id { get; init; }
+    public string? Id { get; set; }
     
     public string? AltId { get; init; }
     

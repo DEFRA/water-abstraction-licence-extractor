@@ -33,4 +33,6 @@ public class ProcessRunQuery
     public string? VerificationType { get; init; }
     public string? SortField { get; init; }
     public bool SortAscending { get; init; }
+    
+    public string[]? LicenceNumbers { get; init; }
 }

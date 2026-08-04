@@ -37,7 +37,8 @@ function ListSearchPage() {
         linkedLicencesType: '',
         verificationType: undefined,
         sortField: '',
-        sortAscending: undefined
+        sortAscending: undefined,
+        licenceNumbers: []
     });
     const processRunId = searchParams.get('processRunId');
     const parsedProcessRunId = Number(processRunId);
@@ -121,7 +122,8 @@ function ListSearchPage() {
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
                 currentQuery.sortField,
-                currentQuery.sortAscending
+                currentQuery.sortAscending,
+                currentQuery.licenceNumbers
             );
 
             setOutputList(listDataItems.records);

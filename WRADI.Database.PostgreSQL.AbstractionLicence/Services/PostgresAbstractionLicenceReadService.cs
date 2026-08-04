@@ -518,7 +518,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var parameters = new DynamicParameters();
         parameters.Add("ProcessRunId", processRunId);
-        AddGenericParamaters(query, sql, parameters);
+        AddGenericParameters(query, sql, parameters);
         return await QuerySingleOrDefaultAsync<int>(
             connection,
             sql.ToString(),
@@ -526,9 +526,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             parameters);
     }
     
-    private static void AddGenericParamaters(ProcessRunQuery query, StringBuilder sql, DynamicParameters parameters)
+    private static void AddGenericParameters(ProcessRunQuery query, StringBuilder sql, DynamicParameters parameters)
     {
         AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
+        AddLicenceNumbersFilter(sql, parameters, query.LicenceNumbers);
         AddIssuerFilter(sql, parameters, query.Issuer);
         AddOcrScanFilter(sql, parameters, query.OcrScan);
         AddMeansFoundFilter(sql, parameters, query.MeansFound);
@@ -617,7 +618,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         parameters.Add("Skip", query.Skip);
         parameters.Add("Take", query.Take);
 
-        AddGenericParamaters(query, sql, parameters);
+        AddGenericParameters(query, sql, parameters);
 
         sql.AppendLine(
             """
@@ -2010,6 +2011,38 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         return conn;
+    }
+    
+    private static void AddLicenceNumbersFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string[]? licenceNumbers)
+    {
+        var filteredLicenceNumbers = licenceNumbers?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (filteredLicenceNumbers is not { Length: > 0 })
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND lower(
+                  data::jsonb
+                      -> 'licenceNumber'
+                      ->> 'value'
+              ) = ANY(@LicenceNumbers)
+            """);
+
+        parameters.Add(
+            "LicenceNumbers",
+            filteredLicenceNumbers
+                .Select(x => x.ToLowerInvariant())
+                .ToArray());
     }
     
     private static void AddLicenceSearchTermFilter(

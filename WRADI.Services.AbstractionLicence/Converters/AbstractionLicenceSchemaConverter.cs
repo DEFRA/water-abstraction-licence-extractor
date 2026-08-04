@@ -489,16 +489,34 @@ public static class AbstractionLicenceSchemaConverter
             return (individuals, aggregates);
         }
         
-        var anyExplicitMultiplePointAggregateThatIsNotAll = aggregates.Any(a =>
-            a.Points?.Count(p => p.IsImplicit != true) > 1
-                && a.Points.Length != points.Length);
+        var countsOfPoints = aggregates
+            .Select(a => a.Points?.Length)
+            .Where(c => c != null)
+            .ToList();
         
-        var anyExplicitMultiplePurposeAggregateThatIsNotAll = aggregates.Any(a =>
-            a.Purposes?.Count(p => p.IsImplicit != true) > 1
-                && a.Purposes.Length != purposes.Length);
+        countsOfPoints.AddRange(individuals
+            .Select(a => a.Points?.Length)
+            .Where(c => c != null)
+            .ToList());
 
-        if (!anyExplicitMultiplePointAggregateThatIsNotAll
-            && !anyExplicitMultiplePurposeAggregateThatIsNotAll)
+        countsOfPoints = countsOfPoints.Distinct().ToList();
+        
+        var countsOfPurposes = aggregates
+            .Select(a => a.Purposes?.Length)
+            .Where(c => c != null)
+            .ToList();
+        
+        countsOfPurposes.AddRange(individuals
+            .Select(a => a.Purposes?.Length)
+            .Where(c => c != null)
+            .ToList());
+
+        countsOfPurposes = countsOfPurposes.Distinct().ToList();
+        
+        var mixedPointsCounts = countsOfPoints.Count > 1;
+        var mixedPurposesCounts = countsOfPurposes.Count > 1;
+        
+        if (!mixedPointsCounts && !mixedPurposesCounts)
         {
             return (individuals, aggregates);
         }
@@ -508,7 +526,7 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var individual in individuals)
         {
-            if (multiplePointsInDocument && anyExplicitMultiplePointAggregateThatIsNotAll)
+            if (mixedPointsCounts)
             {
                 var individualPointsCount = individual.Points?.Length;
                 var multipleIndividualPointsSet = individualPointsCount >= 2;
@@ -545,7 +563,7 @@ public static class AbstractionLicenceSchemaConverter
                 }
             }
 
-            if (multiplePurposesInDocument && anyExplicitMultiplePurposeAggregateThatIsNotAll)
+            if (mixedPurposesCounts)
             {
                 var individualPurposesCount = individual.Purposes?.Length;
                 var multipleIndividualPurposesSet = individualPurposesCount >= 2;

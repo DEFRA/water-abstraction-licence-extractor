@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Helpers;
@@ -461,6 +462,37 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             ConsoleHelper.WriteLine($"SavePageScreenshotThumbnailAsync API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
         }
     }
-    
+
+    public async Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
+    {
+        var path =
+            $"/BFF/ProcessRuns/UpdateProcessRunByLicenceNumbers/{processRunId}";
+
+        var json = JsonSerializer.Serialize(
+            licenceNumbers,
+            JsonHelper.GetSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateLicenceListProcessRunAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+    }
+
     private static bool _showAllLogs = false;
 }

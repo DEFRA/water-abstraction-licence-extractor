@@ -56,36 +56,95 @@ public class ProcessRunsController(
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
-    {
-        var processRun = await GetProcessRunResponse(processRunId, query);
+    { 
+        var getTotalsTask =
+            abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+                processRunId,
+                query);
 
+        var paginationDataTask =
+            GetProcessRunRawDataList(
+                processRunId,
+                query);
+
+        var issuersTask =
+            GetIssuers(processRunId);
+
+        var licenceSetIdsTask =
+            GetLicenceSetIds(processRunId);
+
+        var issueDatesTask =
+            GetIssueDates(processRunId);
+
+        await Task.WhenAll(
+            getTotalsTask,
+            paginationDataTask,
+            issuersTask,
+            licenceSetIdsTask,
+            issueDatesTask);
+
+        var processRun = new ProcessRunResponse
+        {
+            TotalRecords = await getTotalsTask,
+            Records = (await paginationDataTask).ToList(),
+            Issuers = await issuersTask,
+            LicenceSetIds = await licenceSetIdsTask,
+            IssueDates = await issueDatesTask
+        };
+        
         return Ok(processRun);
     }
-    
+
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
-        
-        var countTask = licenceListRepository.GetLicencesListSearchCountAsync(processRunId,  query);
-        var licenceListItems = await licenceListRepository.GetLicencesListSearchAsync(processRunId, query);
+        var countTask =
+            licenceListRepository.GetLicencesListSearchCountAsync(
+                processRunId,
+                query);
 
-       var outputList = licenceListItemModelService.ConvertToOutputListDataItems(licenceListItems);
-       
-       var processRun = new ProcessRunResponse
-       {
-           TotalRecords = await countTask,
-           Records = outputList.OrderBy(x => x.licenceNumber).ToList(),
-           Issuers = await GetDistinctListIssuers(processRunId),
-           LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
-           IssueDates =  await GetDistinctListDates(processRunId),
-       };
-       return Ok(processRun);
- 
+        var licenceListItemsTask =
+            licenceListRepository.GetLicencesListSearchAsync(
+                processRunId,
+                query);
+
+        var issuersTask =
+            GetDistinctListIssuers(processRunId);
+
+        var licenceSetIdsTask =
+            GetDistinctListLicenceSetIds(processRunId);
+
+        var issueDatesTask =
+            GetDistinctListDates(processRunId);
+
+        await Task.WhenAll(
+            countTask,
+            licenceListItemsTask,
+            issuersTask,
+            licenceSetIdsTask,
+            issueDatesTask);
+
+        var licenceListItems = await licenceListItemsTask;
+
+        var outputList =
+            licenceListItemModelService
+                .ConvertToOutputListDataItems(licenceListItems);
+
+        var processRun = new ProcessRunResponse
+        {
+            TotalRecords = await countTask,
+            Records = outputList.ToList(),
+            Issuers = await issuersTask,
+            LicenceSetIds = await licenceSetIdsTask,
+            IssueDates = await issueDatesTask
+        };
+
+        return Ok(processRun);
     }
-
-    private async Task<ProcessRunResponse> GetProcessRunResponse(int processRunId, ProcessRunQuery query)
+    
+    private async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query)
     {
         var completeNumber = 1;
         var fileNumber = 1;
@@ -93,8 +152,7 @@ public class ProcessRunsController(
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
-
-        var getTotalsTask = abstractionLicenceOutputService.GetTotalLicenceCountAsync(processRunId, query);
+        
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
             await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
@@ -117,37 +175,31 @@ public class ProcessRunsController(
             processRunId,
             verificationsBySection,
             fileIdToLicenceNumberMapping);
-        
-        // TODO we've really got to do this in SQL as it will be broken now (TODO ryan)
-        if (!string.IsNullOrEmpty(query.VerificationType))
-        {
-            if (query.VerificationType == "NoVerification")
-            {
-                paginationListData = paginationListData
-                    .Where(x => x.licenceSectionVerifications == null || x.licenceSectionVerifications.Length == 0)
-                    .ToList();
-            }
-            
-            paginationListData = paginationListData
-                .Where(x => x.licenceSectionVerifications?
-                    .Any(item => item.LicenceSectionItems
-                        .Any(i => i.VerificationTypes.Contains(query.VerificationType))) == true)
-                .ToList();
-        }
 
-        var processRun = new ProcessRunResponse
+        return paginationListData;
+    }
+
+    [HttpPost("{processRunId:int}")]
+    public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
+        [FromRoute] int processRunId,
+        [FromBody] string[] licenceNumbers)
+    {
+        var query = new ProcessRunQuery
         {
-            TotalRecords = await getTotalsTask,
-            Records = paginationListData,
-            Issuers = await GetIssuers(processRunId),
-            LicenceSetIds = await GetLicenceSetIds(processRunId),
-            IssueDates =  await GetIssueDates(processRunId),
+            Skip = 0,
+            Take = int.MaxValue,
+            LicenceNumbers = licenceNumbers
         };
-        return processRun;
+
+        var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
+
+        await UpdateLicenceListRepo(processRunRawDataList);
+
+        return Ok($"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences");
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<int>> UpdateLicenceListProcessRun(
+    public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
         [FromRoute] int processRunId)
     {
         var query = new ProcessRunQuery
@@ -156,19 +208,11 @@ public class ProcessRunsController(
             Take = int.MaxValue
         };
 
-        var processRun = await GetProcessRunResponse(processRunId, query);
-        var dbItems = licenceListItemModelService
-            .ConvertToUpsertLicenceListItems(processRun.Records)
-            .ToList();
+        var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
         
-        foreach (var batch in dbItems.Chunk(50))
-        {
-            await licenceListRepository.UpsertLicenceListItemManyAsync(
-                batch,
-                 CancellationToken.None);
-        }
+        await UpdateLicenceListRepo(processRunRawDataList);
 
-        return Ok();
+        return Ok($"Completed Process Run: {processRunId} for {processRunRawDataList.Count} licences");
     }
 
     [HttpGet]
@@ -179,6 +223,20 @@ public class ProcessRunsController(
             new ProcessRunQuery());
 
         return Ok(total);
+    }
+    
+    private async Task UpdateLicenceListRepo(IReadOnlyList<OutputListDataItem> processRunRawDataList)
+    {
+        var dbItems = licenceListItemModelService
+            .ConvertToUpsertLicenceListItems(processRunRawDataList)
+            .ToList();
+
+        foreach (var batch in dbItems.Chunk(50))
+        {
+            await licenceListRepository.UpsertLicenceListItemManyAsync(
+                batch,
+                CancellationToken.None);
+        }
     }
 
     private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)

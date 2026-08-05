@@ -4179,9 +4179,10 @@ export class Client {
      * @param verificationType (optional) 
      * @param sortField (optional) 
      * @param sortAscending (optional) 
+     * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4254,6 +4255,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
         else if (sortAscending !== undefined)
             url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
+        if (licenceNumbers === null)
+            throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
+        else if (licenceNumbers !== undefined)
+            licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4304,9 +4309,10 @@ export class Client {
      * @param verificationType (optional) 
      * @param sortField (optional) 
      * @param sortAscending (optional) 
+     * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4379,6 +4385,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
         else if (sortAscending !== undefined)
             url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
+        if (licenceNumbers === null)
+            throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
+        else if (licenceNumbers !== undefined)
+            licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4409,6 +4419,51 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    updateProcessRunByLicenceNumbers(processRunId: number, body: string[]): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateProcessRunByLicenceNumbers/{processRunId}";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProcessRunByLicenceNumbers(_response);
+        });
+    }
+
+    protected processUpdateProcessRunByLicenceNumbers(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
     }
 
     /**
@@ -4693,7 +4748,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -4725,7 +4780,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+                    this.containedIn!.push(item);
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -4764,7 +4819,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
-                data["containedIn"].push(item ? item.toJSON() : undefined as any);
+                data["containedIn"].push(item);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -4785,7 +4840,7 @@ export interface IAbstractionLimitGroup {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -5270,10 +5325,9 @@ export interface ICondition {
 
 export class ContainedInInformation implements IContainedInInformation {
     source?: InformationSource;
-    direction?: InformationDirection;
+    direction?: NullableOfInformationDirection | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
 
@@ -5298,7 +5352,6 @@ export class ContainedInInformation implements IContainedInInformation {
             this.direction = _data["direction"];
             this.sectionName = _data["sectionName"];
             this.linkReason = _data["linkReason"];
-            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
             this.lineNumber = _data["lineNumber"];
             this.pageNumber = _data["pageNumber"];
         }
@@ -5321,7 +5374,6 @@ export class ContainedInInformation implements IContainedInInformation {
         data["direction"] = this.direction;
         data["sectionName"] = this.sectionName;
         data["linkReason"] = this.linkReason;
-        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
         data["lineNumber"] = this.lineNumber;
         data["pageNumber"] = this.pageNumber;
         return data;
@@ -5330,10 +5382,9 @@ export class ContainedInInformation implements IContainedInInformation {
 
 export interface IContainedInInformation {
     source?: InformationSource;
-    direction?: InformationDirection;
+    direction?: NullableOfInformationDirection | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
-    isBecauseOfAggregate?: boolean | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
 
@@ -5924,12 +5975,6 @@ export interface IFileProcessSingleRequest {
     [key: string]: any;
 }
 
-export enum InformationDirection {
-    Unknown = "Unknown",
-    Incoming = "Incoming",
-    Outgoing = "Outgoing",
-}
-
 export enum InformationSource {
     Unknown = "Unknown",
     Nald = "Nald",
@@ -5941,9 +5986,12 @@ export class LabelGroupResult implements ILabelGroupResult {
     text?: DocumentLine[] | undefined;
     matchedPosition?: MatchedPosition;
     isOcr?: boolean;
-    lineNumber?: number;
-    charPosition?: number;
-    pageNumber?: number;
+    labelStartPageNumber?: number;
+    labelStartLineNumber?: number;
+    labelStartCharPosition?: number;
+    labelEndPageNumber?: number;
+    labelEndLineNumber?: number;
+    labelEndCharPosition?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
     matchedLabelName?: string | undefined;
@@ -5978,9 +6026,12 @@ export class LabelGroupResult implements ILabelGroupResult {
             }
             this.matchedPosition = _data["matchedPosition"];
             this.isOcr = _data["isOcr"];
-            this.lineNumber = _data["lineNumber"];
-            this.charPosition = _data["charPosition"];
-            this.pageNumber = _data["pageNumber"];
+            this.labelStartPageNumber = _data["labelStartPageNumber"];
+            this.labelStartLineNumber = _data["labelStartLineNumber"];
+            this.labelStartCharPosition = _data["labelStartCharPosition"];
+            this.labelEndPageNumber = _data["labelEndPageNumber"];
+            this.labelEndLineNumber = _data["labelEndLineNumber"];
+            this.labelEndCharPosition = _data["labelEndCharPosition"];
             this.serviceName = _data["serviceName"];
             this.labelGroupName = _data["labelGroupName"];
             this.matchedLabelName = _data["matchedLabelName"];
@@ -6021,9 +6072,12 @@ export class LabelGroupResult implements ILabelGroupResult {
         }
         data["matchedPosition"] = this.matchedPosition;
         data["isOcr"] = this.isOcr;
-        data["lineNumber"] = this.lineNumber;
-        data["charPosition"] = this.charPosition;
-        data["pageNumber"] = this.pageNumber;
+        data["labelStartPageNumber"] = this.labelStartPageNumber;
+        data["labelStartLineNumber"] = this.labelStartLineNumber;
+        data["labelStartCharPosition"] = this.labelStartCharPosition;
+        data["labelEndPageNumber"] = this.labelEndPageNumber;
+        data["labelEndLineNumber"] = this.labelEndLineNumber;
+        data["labelEndCharPosition"] = this.labelEndCharPosition;
         data["serviceName"] = this.serviceName;
         data["labelGroupName"] = this.labelGroupName;
         data["matchedLabelName"] = this.matchedLabelName;
@@ -6049,9 +6103,12 @@ export interface ILabelGroupResult {
     text?: DocumentLine[] | undefined;
     matchedPosition?: MatchedPosition;
     isOcr?: boolean;
-    lineNumber?: number;
-    charPosition?: number;
-    pageNumber?: number;
+    labelStartPageNumber?: number;
+    labelStartLineNumber?: number;
+    labelStartCharPosition?: number;
+    labelEndPageNumber?: number;
+    labelEndLineNumber?: number;
+    labelEndCharPosition?: number;
     serviceName?: string | undefined;
     labelGroupName?: string | undefined;
     matchedLabelName?: string | undefined;
@@ -6068,7 +6125,7 @@ export interface ILabelGroupResult {
 export class Licence implements ILicence {
     processRunId?: number | undefined;
     id?: string | undefined;
-    status?: LicenceStatus;
+    status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -6218,7 +6275,7 @@ export class Licence implements ILicence {
 export interface ILicence {
     processRunId?: number | undefined;
     id?: string | undefined;
-    status?: LicenceStatus;
+    status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -6841,15 +6898,6 @@ export enum LicenceSetType {
     PartiallyEncompassedIn = "PartiallyEncompassedIn",
 }
 
-export enum LicenceStatus {
-    Ok = "Ok",
-    NotFound = "NotFound",
-    PathMissing = "PathMissing",
-    FileIdMissing = "FileIdMissing",
-    InProgress = "InProgress",
-    Error = "Error",
-}
-
 export enum LicenceType {
     Unknown = "Unknown",
     SurfaceWaterAbstraction = "SurfaceWaterAbstraction",
@@ -7001,6 +7049,7 @@ export class LinkedLicence implements ILinkedLicence {
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
     condition?: Condition | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
@@ -7031,6 +7080,7 @@ export class LinkedLicence implements ILinkedLicence {
             this.filename = _data["filename"];
             this.licenceVersion = _data["licenceVersion"] ? LicenceVersion.fromJS(_data["licenceVersion"]) : undefined as any;
             this.condition = _data["condition"] ? Condition.fromJS(_data["condition"]) : undefined as any;
+            this.isBecauseOfAggregate = _data["isBecauseOfAggregate"];
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
@@ -7063,6 +7113,7 @@ export class LinkedLicence implements ILinkedLicence {
         data["filename"] = this.filename;
         data["licenceVersion"] = this.licenceVersion ? this.licenceVersion.toJSON() : undefined as any;
         data["condition"] = this.condition ? this.condition.toJSON() : undefined as any;
+        data["isBecauseOfAggregate"] = this.isBecauseOfAggregate;
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
@@ -7084,6 +7135,7 @@ export interface ILinkedLicence {
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
     condition?: Condition | undefined;
+    isBecauseOfAggregate?: boolean | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
@@ -7657,6 +7709,12 @@ export enum NullableOfCutoffType {
     From = "From",
 }
 
+export enum NullableOfInformationDirection {
+    Unknown = "Unknown",
+    Incoming = "Incoming",
+    Outgoing = "Outgoing",
+}
+
 export enum NullableOfLabelPosition {
     ApplicableToMost = "ApplicableToMost",
     LabelIsBeforeTextToFind = "LabelIsBeforeTextToFind",
@@ -8212,6 +8270,7 @@ export interface IPeriodOfAbstraction {
 export class Point implements IPoint {
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 
@@ -8232,6 +8291,7 @@ export class Point implements IPoint {
             }
             this.id = _data["id"];
             this.description = _data["description"];
+            this.isImplicit = _data["isImplicit"];
         }
     }
 
@@ -8250,6 +8310,7 @@ export class Point implements IPoint {
         }
         data["id"] = this.id;
         data["description"] = this.description;
+        data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
@@ -8257,6 +8318,7 @@ export class Point implements IPoint {
 export interface IPoint {
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
@@ -8267,8 +8329,10 @@ export class PointOfAbstraction implements IPointOfAbstraction {
     name?: string | undefined;
     gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 
@@ -8296,8 +8360,14 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             this.name = _data["name"];
             this.gridRef = _data["gridRef"];
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+            }
             this.id = _data["id"];
             this.description = _data["description"];
+            this.isImplicit = _data["isImplicit"];
         }
     }
 
@@ -8323,8 +8393,14 @@ export class PointOfAbstraction implements IPointOfAbstraction {
         data["name"] = this.name;
         data["gridRef"] = this.gridRef;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item ? item.toJSON() : undefined as any);
+        }
         data["id"] = this.id;
         data["description"] = this.description;
+        data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
@@ -8335,8 +8411,10 @@ export interface IPointOfAbstraction {
     name?: string | undefined;
     gridRef?: string | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
@@ -8685,6 +8763,7 @@ export interface IProcessRunResponse {
 export class Purpose implements IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 
@@ -8705,6 +8784,7 @@ export class Purpose implements IPurpose {
             }
             this.id = _data["id"];
             this.description = _data["description"];
+            this.isImplicit = _data["isImplicit"];
         }
     }
 
@@ -8723,6 +8803,7 @@ export class Purpose implements IPurpose {
         }
         data["id"] = this.id;
         data["description"] = this.description;
+        data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
@@ -8730,6 +8811,7 @@ export class Purpose implements IPurpose {
 export interface IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
@@ -8740,6 +8822,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 
@@ -8767,6 +8850,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             this.id = _data["id"];
             this.description = _data["description"];
+            this.isImplicit = _data["isImplicit"];
         }
     }
 
@@ -8792,6 +8876,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         data["id"] = this.id;
         data["description"] = this.description;
+        data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
@@ -8802,6 +8887,7 @@ export interface IPurposeOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
@@ -9676,6 +9762,15 @@ export interface ISaveTemporaryOcrImageTextRequest {
     text?: string | undefined;
 
     [key: string]: any;
+}
+
+export enum ScrapeStatus {
+    Ok = "Ok",
+    NotFound = "NotFound",
+    PathMissing = "PathMissing",
+    FileIdMissing = "FileIdMissing",
+    InProgress = "InProgress",
+    Error = "Error",
 }
 
 export class TimeCutoff implements ITimeCutoff {

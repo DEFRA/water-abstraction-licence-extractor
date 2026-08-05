@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
+import type { OutputListDataItemKey} from "../utils/types.ts";
 
 type ProcessRunLicenceFiltersProps = {
     issuers?: string[];
@@ -8,6 +9,8 @@ type ProcessRunLicenceFiltersProps = {
     query: ProcessRunQuery;
     setQuery: React.Dispatch<React.SetStateAction<ProcessRunQuery>>;
     setPageNumber: (pageNumber: number) => void;
+    showSingles: boolean;
+    onToggleSingles: (checked: boolean) => void;
 };
 
 export function ProcessRunLicenceFilters({
@@ -16,7 +19,9 @@ export function ProcessRunLicenceFilters({
                                              issuers,
                                              shortLicenceIds,
                                              issueDates,
-                                             setPageNumber
+                                             setPageNumber,
+                                             onToggleSingles,
+                                             showSingles
                                          }: ProcessRunLicenceFiltersProps) {
     const [pendingQuery, setPendingQuery] = useState<ProcessRunQuery>(query);
 
@@ -66,8 +71,36 @@ export function ProcessRunLicenceFilters({
         setPendingQuery(clearedQuery);
         applyQuery(clearedQuery);
     };
+    const handleSort = (field: OutputListDataItemKey) => {
+        const nextAscending =
+            query.sortField === field
+                ? !(query.sortAscending ?? true)
+                : true;
+
+        const sortedQuery: ProcessRunQuery = {
+            ...pendingQuery,
+            sortField: field,
+            sortAscending: nextAscending
+        };
+
+        setPendingQuery(sortedQuery);
+        applyQuery(sortedQuery);
+    };
 
     return (
+        <>
+            <tr>
+                <td colSpan={11}></td>
+                <td>
+                    <input
+                        type="checkbox"
+                        id="showSingles"
+                        checked={showSingles}
+                        onChange={(e) => onToggleSingles(e.target.checked)}
+                    /> Show singles
+                </td>
+                <td colSpan={2}></td>
+            </tr>
         <tr>
             <td> 
                 <button
@@ -347,6 +380,49 @@ export function ProcessRunLicenceFilters({
                 </select>
             </td>
         </tr>
+    <tr>
+        <td style={{width: '5%'}}>&nbsp;</td>
+        <td style={{width: '7%'}}>
+            Licence no. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceNumber'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}} className="default-hidden">
+            Licence holder <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceHolder'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '14%'}}>
+            Purposes <a href="#" onClick={(e) => { e.preventDefault(); handleSort('purposes'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '14%'}}>
+            Points <a href="#" onClick={(e) => { e.preventDefault(); handleSort('points'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Abs. limits <a href="#" onClick={(e) => { e.preventDefault(); handleSort('limitsCount'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Agg's <a href="#" onClick={(e) => { e.preventDefault(); handleSort('aggregatesCount'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Scan <a href="#" onClick={(e) => { e.preventDefault(); handleSort('ocr'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Iss. date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issueDate'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '6%'}}>
+            Issuer <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issuer'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Means of abs. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '7%'}}>
+            Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '8%'}}>
+            Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '10%'}}>
+            Verified <a href="#" onClick={(e) => { e.preventDefault(); handleSort('latestLicenceSectionVerifications'); }}>&#8693;</a>
+        </td>
+    </tr>
+        </>
     );
 }
 

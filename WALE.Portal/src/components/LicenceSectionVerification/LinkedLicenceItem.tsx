@@ -1,6 +1,6 @@
 import {
     LinkedLicence,
-    InformationDirection,
+    NullableOfInformationDirection,
     ContainedInInformation,
     InformationSource,
     OutputListDataItem,
@@ -73,7 +73,7 @@ export const LinkedLicenceItem = ({
         if (onUpdate) {
             const newSection = new ContainedInInformation({
                 source: InformationSource.Document,
-                direction: InformationDirection.Outgoing,
+                direction: NullableOfInformationDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
                 isBecauseOfAggregate: false
@@ -179,7 +179,7 @@ export const LinkedLicenceItem = ({
                     </div>
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
                         {(linkedLicence.containedIn || []).map((section, idx) => {
-                            if (section.direction !== InformationDirection.Outgoing) {
+                            if (section.direction !== NullableOfInformationDirection.Outgoing) {
                                 return null;
                             }
                             return (
@@ -377,7 +377,7 @@ export const LinkedLicenceItem = ({
                     <strong style={{display: 'block', marginBottom: '8px'}}>Contained In:</strong>
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
                         {linkedLicence.containedIn!.map((section, idx) => {
-                            if (section.direction !== InformationDirection.Outgoing) {
+                            if (section.direction !== NullableOfInformationDirection.Outgoing) {
                                 return null;
                             }
                             return (

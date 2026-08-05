@@ -38,7 +38,8 @@ function ListPage() {
         linkedLicencesType: '',
         verificationType: undefined,
         sortAscending: undefined,
-        sortField: ''
+        sortField: '',
+        licenceNumbers: []
     });
     const processRunId = searchParams.get('processRunId');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
@@ -90,7 +91,11 @@ function ListPage() {
                 currentQuery.meansFound +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
-                currentQuery.verificationType;
+                currentQuery.verificationType +
+                currentQuery.sortField +
+                currentQuery.sortAscending +
+                currentQuery.licenceNumbers;
+            ;
 
             // @ts-ignore
             if (!force && filterKey == window.lastFilterKey) {
@@ -120,7 +125,8 @@ function ListPage() {
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
                 currentQuery.sortField,
-                currentQuery.sortAscending
+                currentQuery.sortAscending,
+                currentQuery.licenceNumbers
             );
 
             setOutputList(listDataItems.records);
@@ -267,6 +273,8 @@ function ListPage() {
                             shortLicenceIds={shortLicenceIds}
                             issueDates={issueDates}
                             setPageNumber={setPageNumber}
+                            showSingles={showSingles}
+                            onToggleSingles={setShowSingles}
                         />
                         <LicencesTableHeaders
                             data={outputList}

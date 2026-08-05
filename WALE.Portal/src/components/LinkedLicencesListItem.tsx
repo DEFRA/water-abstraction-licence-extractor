@@ -1,6 +1,6 @@
 import {
     LinkedLicence,
-    InformationDirection,
+    NullableOfInformationDirection,
     OutputListDataItem
 } from "../api/generated/apiClient.ts";
 import {NaldStatusTag} from "./NaldStatusTag.tsx";
@@ -14,7 +14,7 @@ interface LinkedLicencesListItemProps {
 
 export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: LinkedLicencesListItemProps) {
     let licenceNumber = linkedLicence.licenceNumber;
-    let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === InformationDirection.Incoming);
+    let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;

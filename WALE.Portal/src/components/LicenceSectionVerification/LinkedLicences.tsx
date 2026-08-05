@@ -2,7 +2,7 @@ import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
 import {
     type Licence,
     LinkedLicence,
-    InformationDirection,
+    NullableOfInformationDirection,
     LicenceSectionVerification,
     ContainedInInformation,
     InformationSource
@@ -84,7 +84,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             .map(ll => {
                                 const licence = LinkedLicence.fromJS(ll);
                                 licence.containedIn = (licence.containedIn || [])
-                                    .filter(c => c.direction === InformationDirection.Outgoing);
+                                    .filter(c => c.direction === NullableOfInformationDirection.Outgoing);
                                 return licence;
                             });
 
@@ -109,7 +109,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 containedIn: [
                     new ContainedInInformation({
                         source: InformationSource.Document,
-                        direction: InformationDirection.Outgoing,
+                        direction: NullableOfInformationDirection.Outgoing,
                         sectionName: '',
                         linkReason: '',
                         isBecauseOfAggregate: false

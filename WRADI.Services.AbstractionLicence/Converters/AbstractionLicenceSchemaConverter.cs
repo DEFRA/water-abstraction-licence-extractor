@@ -4544,8 +4544,40 @@ public static class AbstractionLicenceSchemaConverter
                     {
                         continue;
                     }
+
+                    var units1 = limit.Units;
+                    var value1 = limit.Value;
                     
-                    var combinedAmount = limit.Value + otherLicenceLimit.Value;
+                    var units2 = otherLicenceLimit.Units;
+                    var value2 = otherLicenceLimit.Value;
+                    
+                    var differentUnits = units1?.Equals(units2) != true;
+
+                    const string cubicMetres = "cubic metres";
+                    const string thousandCubicMetres = "thousand cubic metres";
+                    
+                    if (differentUnits)
+                    {
+                        switch (units1?.ToLower())
+                        {
+                            case thousandCubicMetres:
+                                if (units2 == cubicMetres)
+                                {
+                                    value1 *= 1_000;
+                                }
+                                
+                                break;
+                            case cubicMetres:
+                                if (units2 == thousandCubicMetres)
+                                {
+                                    value2 *= 1_000;                                    
+                                }
+                                
+                                break;                            
+                        }
+                    }
+                    
+                    var combinedAmount = value1 + value2;
 
                     limit.Value = combinedAmount;
                     limit.ValueAdditionalText = null;

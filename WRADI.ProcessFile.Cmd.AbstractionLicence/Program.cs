@@ -211,7 +211,7 @@ async Task ProgramAsync()
     
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Starting Licence List Data Refresh processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-
+  // TODO - Add message on another queue to kick off licence list report data population
     
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished Licence List Data Refresh at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 

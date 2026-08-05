@@ -4424,7 +4424,7 @@ export class Client {
     /**
      * @return OK
      */
-    updateProcessRunByLicenceNumbers(processRunId: number, body: string[]): Promise<number> {
+    updateProcessRunByLicenceNumbers(processRunId: number, body: string[]): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateProcessRunByLicenceNumbers/{processRunId}";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4438,7 +4438,6 @@ export class Client {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json"
             }
         };
 
@@ -4447,29 +4446,25 @@ export class Client {
         });
     }
 
-    protected processUpdateProcessRunByLicenceNumbers(response: Response): Promise<number> {
+    protected processUpdateProcessRunByLicenceNumbers(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<number>(null as any);
+        return Promise.resolve<void>(null as any);
     }
 
     /**
      * @return OK
      */
-    updateLicenceListProcessRun(processRunId: number): Promise<number> {
+    updateLicenceListProcessRun(processRunId: number): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4479,7 +4474,6 @@ export class Client {
         let options_: RequestInit = {
             method: "GET",
             headers: {
-                "Accept": "application/json"
             }
         };
 
@@ -4488,23 +4482,19 @@ export class Client {
         });
     }
 
-    protected processUpdateLicenceListProcessRun(response: Response): Promise<number> {
+    protected processUpdateLicenceListProcessRun(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<number>(null as any);
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -6127,6 +6117,7 @@ export class Licence implements ILicence {
     id?: string | undefined;
     status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
@@ -6166,6 +6157,7 @@ export class Licence implements ILicence {
             this.id = _data["id"];
             this.status = _data["status"];
             this.naldStatus = _data["naldStatus"];
+            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.licenceType = _data["licenceType"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
             this.dmsPermitNumber = _data["dmsPermitNumber"];
@@ -6227,6 +6219,7 @@ export class Licence implements ILicence {
         data["id"] = this.id;
         data["status"] = this.status;
         data["naldStatus"] = this.naldStatus;
+        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["licenceType"] = this.licenceType;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
         data["dmsPermitNumber"] = this.dmsPermitNumber;
@@ -6277,6 +6270,7 @@ export interface ILicence {
     id?: string | undefined;
     status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
@@ -8269,6 +8263,7 @@ export interface IPeriodOfAbstraction {
 
 export class Point implements IPoint {
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8290,6 +8285,7 @@ export class Point implements IPoint {
                     this[property] = _data[property];
             }
             this.id = _data["id"];
+            this.altId = _data["altId"];
             this.description = _data["description"];
             this.isImplicit = _data["isImplicit"];
         }
@@ -8309,6 +8305,7 @@ export class Point implements IPoint {
                 data[property] = this[property];
         }
         data["id"] = this.id;
+        data["altId"] = this.altId;
         data["description"] = this.description;
         data["isImplicit"] = this.isImplicit;
         return data;
@@ -8317,6 +8314,7 @@ export class Point implements IPoint {
 
 export interface IPoint {
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8331,6 +8329,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8366,6 +8365,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                     this.containedIn!.push(ContainedInInformation.fromJS(item));
             }
             this.id = _data["id"];
+            this.altId = _data["altId"];
             this.description = _data["description"];
             this.isImplicit = _data["isImplicit"];
         }
@@ -8399,6 +8399,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 data["containedIn"].push(item ? item.toJSON() : undefined as any);
         }
         data["id"] = this.id;
+        data["altId"] = this.altId;
         data["description"] = this.description;
         data["isImplicit"] = this.isImplicit;
         return data;
@@ -8413,6 +8414,7 @@ export interface IPointOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 

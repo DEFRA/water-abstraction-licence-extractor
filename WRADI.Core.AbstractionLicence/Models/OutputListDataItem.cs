@@ -20,6 +20,8 @@ public class OutputListDataItem
     
     public int aggregatesCount { get; set; }
     
+    public bool? naldHasAggregateCondition { get; set; }
+    
     public bool ocr { get; set; }
     
     public string? issueDate { get; set; }

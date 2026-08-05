@@ -11,3 +11,10 @@ export function dashesIfNullOrZero(i: number | null | undefined): string {
     }
     return i!.toString();
 }
+
+export function dashesIfNull(i: number | null | undefined): string {
+    if (i == null) {
+        return "--";
+    }
+    return i!.toString();
+}

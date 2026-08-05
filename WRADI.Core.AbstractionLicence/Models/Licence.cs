@@ -24,6 +24,8 @@ public class Licence
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public NaldLicenceStatus NaldStatus { get; set; }
+    
+    public bool? NaldHasAggregateCondition { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceType LicenceType { get; set; }

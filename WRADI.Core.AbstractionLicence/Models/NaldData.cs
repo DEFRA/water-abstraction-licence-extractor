@@ -31,4 +31,5 @@ public class NaldData
     public char? QuantityUserValid { get; set; }
     public string? QuantityPurpPoints { get; set; }
     public string? ArepEiucCode { get; set; }
+    public bool? HasAggCondition { get; set; }
 }

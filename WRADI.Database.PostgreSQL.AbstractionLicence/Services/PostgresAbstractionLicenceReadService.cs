@@ -78,7 +78,42 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                    "PREV_LIC_NO" AS PrevLicNo,
                    "FOLL_LIC_NO" AS FollLicNo,
                    "AREP_EIUC_CODE" AS ArepEiucCode,
-                   "FGAC_REGION_CODE" AS FgacRegionCode
+                   "FGAC_REGION_CODE" AS FgacRegionCode,
+                   (
+                        select
+                           cast(1 as bit) HasAggCondition
+                       from nald."NALD_ABS_LIC_VERSIONS" ver
+                       join nald."NALD_ABS_LIC_PURPOSES" pu
+                           ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
+                           AND ver."INCR_NO" = pu."AABV_INCR_NO"
+                           AND ver."AABL_ID" = pu."AABV_AABL_ID"
+                           AND ver."FGAC_REGION_CODE" = pu."FGAC_REGION_CODE"
+                       join nald."NALD_LIC_CONDITIONS" lc
+                           ON pu."ID" = lc."AABP_ID"
+                           AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
+                           AND lc."ACIN_CODE" = 'AGG'
+                       where
+                           nald."NALD_ABS_LICENCES"."ID" = ver."AABL_ID"
+                           AND nald."NALD_ABS_LICENCES"."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                           AND ver."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
+                                   AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                   AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
+                                   AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                               )
+                           AND ver."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
+                                   AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                   AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
+                                   AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                               )
+                       LIMIT 1) AS HasAggCondition
                FROM nald."NALD_ABS_LICENCES"
                WHERE "FGAC_REGION_CODE" = @RegionCode
                     AND (
@@ -460,12 +495,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                              "FGAC_REGION_CODE" AS FgacRegionCode
                            FROM nald."NALD_ABS_LIC_VERSIONS"
                            WHERE "FGAC_REGION_CODE" = @RegionCode
-                                 AND "AABL_ID" = @AablId 
-                           """;
-
-        if (true)
-        {
-            sql += """
+                                 AND "AABL_ID" = @AablId
                     AND "ISSUE_NO" = (
                         SELECT max(lic_ver_subquery."ISSUE_NO")
                         FROM nald."NALD_ABS_LIC_VERSIONS" lic_ver_subquery
@@ -485,7 +515,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                             AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
                       )
                     """;
-        }
             
         sql += """
             AND "WA_ALTY_CODE" IN ('FULL', 'NA', 'TEMP', 'TRAN');
@@ -939,7 +968,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
                                        AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
                                        AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
                                    )
                                AND ver."INCR_NO" = (
@@ -948,7 +977,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
                                        AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
                                        AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
                                    )    
                            join nald."NALD_ABS_LIC_PURPOSES" pu
@@ -962,7 +991,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                AND lc."ACIN_CODE" = 'AGG'
                                AND (lc."PARAM1" IS NOT NULL 
                                    OR lc."PARAM2" IS NOT NULL 
-                                   OR lc."TEXT" IS NOT NULL)    
+                                   OR lc."TEXT" IS NOT NULL)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
@@ -987,7 +1016,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
                                        AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
                                        AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
                                    )
                                AND ver."INCR_NO" = (
@@ -996,7 +1025,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
                                        AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
                                        AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR ver."EFF_END_DATE" IS NULL)
+                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
                                    )
                            WHERE
@@ -1327,7 +1356,42 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                "PREV_LIC_NO" AS PrevLicNo,
                                "FOLL_LIC_NO" AS FollLicNo,
                                "AREP_EIUC_CODE" AS ArepEiucCode,
-                               "FGAC_REGION_CODE" AS FgacRegionCode
+                               "FGAC_REGION_CODE" AS FgacRegionCode,
+                               (
+                                    select
+                                       cast(1 as bit) HasAggCondition
+                                   from nald."NALD_ABS_LIC_VERSIONS" ver
+                                   join nald."NALD_ABS_LIC_PURPOSES" pu
+                                       ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
+                                       AND ver."INCR_NO" = pu."AABV_INCR_NO"
+                                       AND ver."AABL_ID" = pu."AABV_AABL_ID"
+                                       AND ver."FGAC_REGION_CODE" = pu."FGAC_REGION_CODE"
+                                   join nald."NALD_LIC_CONDITIONS" lc
+                                       ON pu."ID" = lc."AABP_ID"
+                                       AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
+                                       AND lc."ACIN_CODE" = 'AGG'
+                                   where
+                                       nald."NALD_ABS_LICENCES"."ID" = ver."AABL_ID"
+                                       AND nald."NALD_ABS_LICENCES"."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                       AND ver."ISSUE_NO" = (
+                                           SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                                           FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
+                                           WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
+                                               AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                               AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                               AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
+                                               AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                                           )
+                                       AND ver."INCR_NO" = (
+                                           SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                                           FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                                           WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
+                                               AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
+                                               AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                               AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
+                                               AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                       )
+                               LIMIT 1) AS HasAggCondition
                            FROM nald."NALD_ABS_LICENCES"
                            WHERE @RegionCode is null or "FGAC_REGION_CODE" = @RegionCode
                            ORDER BY

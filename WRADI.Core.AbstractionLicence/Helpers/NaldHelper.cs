@@ -27,7 +27,8 @@ public static class NaldHelper
             LicenceNumber = line.LicenceNo!,
             LicenceIdCharsAndDigitsOnly = strippedLicenceNumbers[0],
             FgacRegionCode = line.FgacRegionCode,
-            ArepEiucCode = line.ArepEiucCode
+            ArepEiucCode = line.ArepEiucCode,
+            HasAggCondition = line.HasAggCondition
         };
 
         return naldData;

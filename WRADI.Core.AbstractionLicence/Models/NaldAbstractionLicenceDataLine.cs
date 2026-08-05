@@ -11,4 +11,5 @@ public class NaldAbstractionLicenceDataLine
     public DateTime? LapsedDate { get; set; }
     public string? ArepEiucCode { get; set; }
     public short FgacRegionCode { get; set; }
+    public bool? HasAggCondition { get; set; }
 }

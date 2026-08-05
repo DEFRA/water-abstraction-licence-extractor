@@ -13,12 +13,12 @@ public static class FormattingHelper
         string? licenceNumber,
         int regionCode)
     {
-        var key = $"{regionCode}|{licenceNumber}";
-
-        if (string.IsNullOrEmpty(key))
+        if (string.IsNullOrEmpty(licenceNumber))
         {
             return null;
         }
+        
+        var key = $"{regionCode}|{licenceNumber}";
 
         if (NaldDataCache.TryGetValue(key, out var cachedData))
         {

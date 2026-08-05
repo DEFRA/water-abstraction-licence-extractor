@@ -447,6 +447,8 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add("ArepEuicCode", naldDataLine.ArepEiucCode);
         }
         
+        var naldHasAggCondition = naldDataLine?.HasAggCondition ?? false;
+        
         return new Licence
         {
             Filename = matchesResult.Filename,
@@ -464,6 +466,7 @@ public static class AbstractionLicenceSchemaConverter
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
             NaldStatus = naldStatus,
+            NaldHasAggregateCondition = naldHasAggCondition,
             LicenceType = licenceType,
             RegionId = naldDataLine?.FgacRegionCode ?? regionCode
         };

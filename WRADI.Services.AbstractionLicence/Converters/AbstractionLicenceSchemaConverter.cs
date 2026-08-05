@@ -708,7 +708,9 @@ public static class AbstractionLicenceSchemaConverter
                     .LicenceVersion.Clone() ?? new LicenceVersion(),
                 regionId,
                 lookupConfiguration.CacheService,
-                cacheService), regionId));
+                cacheService,
+                linkedLicencesGroup
+                    .OrderByDescending(ll => ll.IsBecauseOfAggregate).FirstOrDefault()?.IsBecauseOfAggregate), regionId));
         }
         
         tempLinkedLicences = tempLinkedLicences
@@ -901,7 +903,8 @@ public static class AbstractionLicenceSchemaConverter
         LicenceVersion licenceVersion,
         int? regionId,
         ICacheService cacheService,
-        IAbstractionLicenceCacheService abstractionLicenceCacheService)
+        IAbstractionLicenceCacheService abstractionLicenceCacheService,
+        bool? isBecauseOfAggregate)
     {
         var licenceOrPermitNumber = linkedLicenceNumber;
         if (string.IsNullOrWhiteSpace(linkedLicenceNumber))
@@ -939,7 +942,8 @@ public static class AbstractionLicenceSchemaConverter
             ContainedIn = containedIn,
             NaldStatus = naldStatus,
             LicenceType = licenceType,
-            LicenceVersion = licenceVersion
+            LicenceVersion = licenceVersion,
+            IsBecauseOfAggregate = isBecauseOfAggregate
         };
     }
 
@@ -1249,7 +1253,8 @@ public static class AbstractionLicenceSchemaConverter
                             incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId,
                             lookupConfiguration.CacheService,
-                            cacheService);
+                            cacheService,
+                            null);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {
@@ -2851,7 +2856,15 @@ public static class AbstractionLicenceSchemaConverter
         
         var hasLinkedLicenceNumber = abstractionLinkedLicences.Count > 0;
         var isAggregate = hasLinkedLicenceNumber || meetsAggregateConditions;
-        
+
+        if (isAggregate)
+        {
+            foreach (var linkedLicenceNumber in linkedLicenceNumbers)
+            {
+                linkedLicenceNumber.IsBecauseOfAggregate = true;
+            }
+        }
+
         // If points is null, then get all the points from the document implicitly
         if (limitPoints == null || limitPoints.Count == 0)
         {

@@ -132,8 +132,6 @@ public class NoOcrDatabaseTests
     public async Task AddProcessRun()
     {
         // Arrange
-
-        
         var processRun = await OutputService.StartProcessRunAsync(new ProcessRun
         {
             Description = "Test run",

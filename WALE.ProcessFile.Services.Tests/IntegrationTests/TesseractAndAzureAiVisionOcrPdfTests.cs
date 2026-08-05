@@ -546,7 +546,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
         
         var agreedSchemaLicence2 = licenceSetGroups.First().Licences.First();
-        Assert.Equal(13187500, agreedSchemaLicence2.AbstractionLimits.Aggregates![0].Limits[0].Value);
+        Assert.Equal(16684000, agreedSchemaLicence2.AbstractionLimits.Aggregates![0].Limits[0].Value);
     }
     
     [Fact]

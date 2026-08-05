@@ -69,7 +69,17 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
     {
         return Task.CompletedTask;
     }
-    
+
+    public Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateLicenceListProcessRunAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();

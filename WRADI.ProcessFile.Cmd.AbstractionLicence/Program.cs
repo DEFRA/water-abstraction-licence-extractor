@@ -208,6 +208,12 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Saved licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     await abstractionLicenceOutputService.FinishProcessRunAsync(processRun);
+    
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Starting Licence List Data Refresh processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
+
+    
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished Licence List Data Refresh at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(

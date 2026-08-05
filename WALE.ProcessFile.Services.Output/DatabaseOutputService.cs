@@ -200,16 +200,6 @@ public class DatabaseOutputService(
             processRunId);
     }
 
-    public Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateLicenceListProcessRunAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
-
     private static async Task<byte[]> GetAsJpegAsync(SKBitmap bitmap, int quality = 60)
     {
         using var image = SKImage.FromBitmap(bitmap);

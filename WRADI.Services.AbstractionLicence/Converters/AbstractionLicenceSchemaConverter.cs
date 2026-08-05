@@ -2758,16 +2758,16 @@ public static class AbstractionLicenceSchemaConverter
         // Need to see if there are any limits that were for a single point or purpose and this has
         // multiple points or purposes
         var alreadyHadSpecificLimitsForAPointOrPurpose = allIndividualGroups.Any(
-            ig => ig.Purposes?.Count(p => p.IsImplicit != true) < allPurposes.Length
-                || ig.Points?.Count(p => p.IsImplicit != true) < allPoints.Length);
+            ig => ig.Purposes?.Length < allPurposes.Length
+                || ig.Points?.Length < allPoints.Length);
 
         var countPurposesAppliesTo = limitPurposes?.Count ?? allPurposes.Length;
         var countPointsAppliesTo = limitPoints?.Count ?? allPoints.Length;
         
         var lessSpecificThenPrevious = alreadyHadSpecificLimitsForAPointOrPurpose
             && allIndividualGroups.Any(
-                ig => countPurposesAppliesTo > ig.Purposes?.Count(p => p.IsImplicit != true)
-                    || countPointsAppliesTo > ig.Points?.Count(p => p.IsImplicit != true));
+                ig => countPurposesAppliesTo > ig.Purposes?.Length
+                    || countPointsAppliesTo > ig.Points?.Length);
         
         var meetsAggregateConditions = 
             (textSuggestsIsAggregate

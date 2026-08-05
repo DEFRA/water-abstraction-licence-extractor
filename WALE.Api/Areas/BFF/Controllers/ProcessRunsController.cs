@@ -56,44 +56,94 @@ public class ProcessRunsController(
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRun(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
-    {
-        var paginationData = await GetProcessRunRawDataList(processRunId, query);
-        
-        var getTotalsTask = abstractionLicenceOutputService.GetTotalLicenceCountAsync(processRunId, query);
+    { 
+        var getTotalsTask =
+            abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+                processRunId,
+                query);
+
+        var paginationDataTask =
+            GetProcessRunRawDataList(
+                processRunId,
+                query);
+
+        var issuersTask =
+            GetIssuers(processRunId);
+
+        var licenceSetIdsTask =
+            GetLicenceSetIds(processRunId);
+
+        var issueDatesTask =
+            GetIssueDates(processRunId);
+
+        await Task.WhenAll(
+            getTotalsTask,
+            paginationDataTask,
+            issuersTask,
+            licenceSetIdsTask,
+            issueDatesTask);
 
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await getTotalsTask,
-            Records = paginationData.ToList(),
-            Issuers = await GetIssuers(processRunId),
-            LicenceSetIds = await GetLicenceSetIds(processRunId),
-            IssueDates =  await GetIssueDates(processRunId),
+            Records = (await paginationDataTask).ToList(),
+            Issuers = await issuersTask,
+            LicenceSetIds = await licenceSetIdsTask,
+            IssueDates = await issueDatesTask
         };
+        
         return Ok(processRun);
     }
-    
+
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
-    {  
-        var countTask = licenceListRepository.GetLicencesListSearchCountAsync(processRunId,  query);
-        var licenceListItems = await licenceListRepository.GetLicencesListSearchAsync(processRunId, query);
+    {
+        var countTask =
+            licenceListRepository.GetLicencesListSearchCountAsync(
+                processRunId,
+                query);
 
-       var outputList = licenceListItemModelService.ConvertToOutputListDataItems(licenceListItems);
-       
-       var processRun = new ProcessRunResponse
-       {
-           TotalRecords = await countTask,
-           Records = outputList.ToList(),
-           Issuers = await GetDistinctListIssuers(processRunId),
-           LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
-           IssueDates =  await GetDistinctListDates(processRunId),
-       };
-       
-       return Ok(processRun);
+        var licenceListItemsTask =
+            licenceListRepository.GetLicencesListSearchAsync(
+                processRunId,
+                query);
+
+        var issuersTask =
+            GetDistinctListIssuers(processRunId);
+
+        var licenceSetIdsTask =
+            GetDistinctListLicenceSetIds(processRunId);
+
+        var issueDatesTask =
+            GetDistinctListDates(processRunId);
+
+        await Task.WhenAll(
+            countTask,
+            licenceListItemsTask,
+            issuersTask,
+            licenceSetIdsTask,
+            issueDatesTask);
+
+        var licenceListItems = await licenceListItemsTask;
+
+        var outputList =
+            licenceListItemModelService
+                .ConvertToOutputListDataItems(licenceListItems);
+
+        var processRun = new ProcessRunResponse
+        {
+            TotalRecords = await countTask,
+            Records = outputList.ToList(),
+            Issuers = await issuersTask,
+            LicenceSetIds = await licenceSetIdsTask,
+            IssueDates = await issueDatesTask
+        };
+
+        return Ok(processRun);
     }
-
+    
     private async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query)
     {
         var completeNumber = 1;

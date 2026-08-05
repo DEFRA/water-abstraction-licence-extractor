@@ -213,6 +213,7 @@
       },
       "points": [
         {
+          "name": "C",
           "gridRef": "SJ 5179 4988",
           "containedIn": [
             {
@@ -223,6 +224,7 @@
             }
           ],
           "id": "2.1",
+          "altId": "C",
           "description": "At National Grid Reference SJ 5179 4988"
         }
       ],
@@ -588,6 +590,7 @@
       },
       "points": [
         {
+          "name": "A",
           "gridRef": "SJ 5158 5029",
           "containedIn": [
             {
@@ -598,6 +601,7 @@
             }
           ],
           "id": "2.1",
+          "altId": "A",
           "description": "At National Grid Reference SJ 5158 5029"
         }
       ],
@@ -961,6 +965,7 @@
       },
       "points": [
         {
+          "name": "B",
           "gridRef": "SJ 5168 5015",
           "containedIn": [
             {
@@ -971,6 +976,7 @@
             }
           ],
           "id": "2.1",
+          "altId": "B",
           "description": "At National Grid Reference SJ 5168 5015"
         }
       ],

@@ -17,6 +17,7 @@ using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WALE.Tools.Config;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Models.PromptSpecific;
 
 namespace WALE.Tools._2ndHalf;
@@ -72,6 +73,7 @@ public static class TestsForAiPrompts
                 var chatClient = azureClient.GetChatClient(deploymentName);
                 var cacheService = new FileSystemCacheService("Cache/");
                 var outputService = new FileSystemOutputService("Output/");
+                var licenceNumberService = new AbstractionLicenceNumber([]);
                 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,
@@ -82,6 +84,7 @@ public static class TestsForAiPrompts
                         new LocalFileService(KeyConfig.PdfFolder),
                         cacheService,
                         outputService,
+                        licenceNumberService,
                         -1,
                         DateTime.Now));
                 

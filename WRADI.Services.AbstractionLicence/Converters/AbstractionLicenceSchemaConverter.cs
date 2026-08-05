@@ -15,7 +15,7 @@ using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
 
 namespace WRADI.DocumentType.AbstractionLicence.Converters;
 
-public static class WalSchemaConverter
+public static class AbstractionLicenceSchemaConverter
 {
     private static async Task<Licence> ToLicenceAsync(
         MatchesResult matchesResult,
@@ -37,7 +37,7 @@ public static class WalSchemaConverter
 
         if (matches == null)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(WalSchemaConverter)} - No match object exists to " +
+            ConsoleHelper.WriteLine($"WARNING - {nameof(AbstractionLicenceSchemaConverter)} - No match object exists to " +
                 $"convert, {dmsFileData?.FileId} {naldLicenceNumber}");
             
             return new Licence
@@ -489,31 +489,67 @@ public static class WalSchemaConverter
             return (individuals, aggregates);
         }
         
-        var anyExplicitMultiplePointAggregateThatIsNotAll = aggregates.Any(a =>
-            a.Points?.Count(p => p.IsImplicit != true) > 1
-                && a.Points.Length != points.Length);
+        var countsOfPoints = aggregates
+            .Select(a => a.Points?.Length)
+            .Where(c => c != null)
+            .ToList();
         
-        var anyExplicitMultiplePurposeAggregateThatIsNotAll = aggregates.Any(a =>
-            a.Purposes?.Count(p => p.IsImplicit != true) > 1
-                && a.Purposes.Length != purposes.Length);
+        countsOfPoints.AddRange(individuals
+            .Select(a => a.Points?.Length)
+            .Where(c => c != null)
+            .ToList());
 
-        if (!anyExplicitMultiplePointAggregateThatIsNotAll
-            && !anyExplicitMultiplePurposeAggregateThatIsNotAll)
+        countsOfPoints = countsOfPoints.Distinct().ToList();
+        
+        var countsOfPurposes = aggregates
+            .Select(a => a.Purposes?.Length)
+            .Where(c => c != null)
+            .ToList();
+        
+        countsOfPurposes.AddRange(individuals
+            .Select(a => a.Purposes?.Length)
+            .Where(c => c != null)
+            .ToList());
+
+        countsOfPurposes = countsOfPurposes.Distinct().ToList();
+        
+        var mixedPointsCounts = countsOfPoints.Count > 1;
+        var mixedPurposesCounts = countsOfPurposes.Count > 1;
+        
+        if (!mixedPointsCounts && !mixedPurposesCounts)
         {
             return (individuals, aggregates);
         }
 
+        var lowestPoints = aggregates.Min(a => a.Points?.Length);
+        var lowestPointsInd = individuals.Min(a => a.Points?.Length);
+
+        if (lowestPoints > lowestPointsInd)
+        {
+            lowestPoints = lowestPointsInd;
+        }
+        
+        var lowestPurposes = aggregates.Min(a => a.Purposes?.Length) ?? int.MaxValue;
+        var lowestPurposesInd = individuals.Min(a => a.Purposes?.Length) ?? int.MaxValue;
+
+        if (lowestPurposes > lowestPurposesInd)
+        {
+            lowestPurposes = lowestPurposesInd;
+        }
+        
         var newIndividuals = new List<AbstractionLimitGroup>();
         var newAggregates = new List<Aggregate>();
         
         foreach (var individual in individuals)
         {
-            if (multiplePointsInDocument && anyExplicitMultiplePointAggregateThatIsNotAll)
+            if (mixedPointsCounts)
             {
-                var individualPointsCount = individual.Points?.Length;
-                var multipleIndividualPointsSet = individualPointsCount >= 2;
+                var individualExplicitPointsCount = individual.Points?.Count(p => p.IsImplicit != true);
+
+                var multipleExplicitIndividualPointsSet = individualExplicitPointsCount >= 2;
+                var morePointsSetThenAnotherAggregate = individual.Points?.Length > lowestPoints;
                 
-                if (multipleIndividualPointsSet)
+                if (multipleExplicitIndividualPointsSet || morePointsSetThenAnotherAggregate)
                 {
                     var pointsLoop = individual.Points;
                     var isAllPoints = individual.Points?.Length == points.Length;
@@ -545,12 +581,14 @@ public static class WalSchemaConverter
                 }
             }
 
-            if (multiplePurposesInDocument && anyExplicitMultiplePurposeAggregateThatIsNotAll)
+            if (mixedPurposesCounts)
             {
-                var individualPurposesCount = individual.Purposes?.Length;
-                var multipleIndividualPurposesSet = individualPurposesCount >= 2;
+                var individualExplicitPurposesCount = individual.Purposes?.Count(p => p.IsImplicit != true);
 
-                if (multipleIndividualPurposesSet)
+                var multipleExplicitIndividualPurposesSet = individualExplicitPurposesCount >= 2;
+                var morePurposesSetThenAnotherAggregate = individual.Purposes?.Length > lowestPurposes;
+                
+                if (multipleExplicitIndividualPurposesSet || morePurposesSetThenAnotherAggregate)
                 {
                     var purposesLoop = individual.Purposes;
                     var isAllPurposes = individual.Purposes?.Length == purposes.Length;
@@ -1522,7 +1560,7 @@ public static class WalSchemaConverter
                     continue;
                 }
                 
-                ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
+                ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
 
                 if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
                 {
@@ -1534,7 +1572,7 @@ public static class WalSchemaConverter
             }
             catch (Exception ex)
             {
-                ConsoleHelper.WriteLine($"ERROR - {nameof(WalSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
                 
                 await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
                     destinationFileName!,
@@ -2412,7 +2450,7 @@ public static class WalSchemaConverter
                     || yearlyQuantity == null
                     || instantRate == null)
                 {
-                    ConsoleHelper.WriteLine($"INFO - {nameof(WalSchemaConverter)} - Table was not in the expected format. Skipping");
+                    ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Table was not in the expected format. Skipping");
                     continue;
                 }
                 
@@ -2420,14 +2458,22 @@ public static class WalSchemaConverter
                 {
                     new()
                     {
-                        Id = abstractionPoint
+                        Id = abstractionPoint,
+                        IsImplicit = false
                     }
                 };
                 
                 var lineAbstractionLimitGroup = new AbstractionLimitGroup
                 {
                     Points = points,
-                    Purposes = null,
+                    Purposes = allPurposes
+                        .Select(p => new Purpose
+                        {
+                            IsImplicit = true,
+                            Id = p.Id,
+                            Description = p.Description
+                        })
+                        .ToArray(),
                     DocumentIdentifier = documentIdentifier,
                     ContainedIn = containedIn,
                     Limits =
@@ -2480,20 +2526,96 @@ public static class WalSchemaConverter
             .SelectMany(pc => pc.SubResults)
             .Where(x => x.MatchedLabelName is "PurposeConditionSub" or "PurposeConditionSingleLineSub")
             .ToList();
-                
+        
+        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
+            .Select(l => l.Text) ?? []);
+        
         var limitPurposes = purposeConditionSub.Count > 0 ?
             purposeConditionSub
                 .Select(pcs =>
-                    new Purpose
+                {
+                    var text = FormattingHelper.CapitaliseFirstLetter(pcs.Text!.FirstOrDefault()?.Text);
+                    var documentPurpose = allPurposes.FirstOrDefault(ap => ap.Id == text
+                        || ap.Description?.Equals(text, StringComparison.InvariantCultureIgnoreCase) == true);
+
+                    if (documentPurpose == null)
                     {
-                        Id = pcs.Text!.FirstOrDefault()?.Text,
+                        return null;
+                    }
+                    
+                    var purpose = new Purpose
+                    {
+                        Id = documentPurpose.Id,
+                        Description = documentPurpose.Description,
                         IsImplicit = false
-                    })
+                    };
+
+                    return purpose;
+                })
+                .Where(p => p != null)
+                .Select(p => p!)
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
                 .ToList()
             : null;
 
+        limitPurposes = CheckForGenericTransferPurpose(limitPurposes, abstractionLimitPointSubText);
+        
+        foreach (var documentPurpose in allPurposes)
+        {
+            var documentPurposeNameSet = !string.IsNullOrEmpty(documentPurpose.Description);
+            var documentPurposeIdSet = !string.IsNullOrEmpty(documentPurpose.Id);
+            
+            var nameInSingleQuotes = $"'{documentPurpose.Description}'";
+            var idInSingleQuotes = $"'{documentPurpose.Id}'";
+            
+            var textContainsPurposeName1 = documentPurposeNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    nameInSingleQuotes,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPurposeName2 = documentPurposeNameSet && documentPurpose.Description!.Length > 10 &&
+                abstractionLimitPointSubText.Contains(
+                    documentPurpose.Description!,
+                    StringComparison.OrdinalIgnoreCase);
+            
+             var textContainsPurposeId1 = documentPurposeIdSet &&
+                abstractionLimitPointSubText.Contains(
+                    idInSingleQuotes,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPurposeId2 = documentPurposeIdSet
+                && documentPurpose.Id?.Contains(')') == true
+                && abstractionLimitPointSubText.Contains(
+                    documentPurpose.Id!,
+                    StringComparison.OrdinalIgnoreCase);
+
+            var textContains = textContainsPurposeName1
+                || textContainsPurposeName2
+                || textContainsPurposeId1
+                || textContainsPurposeId2;
+
+            var matchedDocumentPurpose = limitPurposes?
+                .FirstOrDefault(lp => lp.Id?.Equals(documentPurpose.Id, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.Id?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.Description?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true);
+
+            var allPurposesContains = matchedDocumentPurpose != null;
+            
+            if (!textContains || allPurposesContains)
+            {
+                continue;
+            }
+            
+            limitPurposes ??= [];
+            limitPurposes.Add(new Purpose
+            {
+                Id = documentPurpose.Id,
+                Description = documentPurpose.Description,
+                IsImplicit = false
+            });
+        }
+        
         var pointCondition = siblings
             .Where(x => x.MatchedLabelName is "PointCondition" or "PointConditionSingleLine")
             .ToList();
@@ -2502,9 +2624,6 @@ public static class WalSchemaConverter
             .SelectMany(pc => pc.SubResults)
             .Where(x => x.MatchedLabelName is "PointConditionSub" or "PointConditionSingleLineSub")
             .ToList();
-                
-        var abstractionLimitPointSubText = string.Join(" ", abstractionLimitPointSub.Text?
-            .Select(l => l.Text) ?? []);
         
         var limitPoints = pointConditionSub.Count > 0 ?
             pointConditionSub
@@ -2516,19 +2635,62 @@ public static class WalSchemaConverter
                     })
                 .GroupBy(x => x.Id)
                 .Select(x => x.First())
+                .Where(p => allPoints.Any(ap => ap.Id == p.Id))
                 .ToList()
             : null;
 
         foreach (var documentPoint in allPoints)
         {
             var documentPointNameSet = !string.IsNullOrEmpty(documentPoint.Name);
+            var nameInSingleQuotes = $"'{documentPoint.Name}'";
+            var abstractionPointExplicit = $"Abstraction Point {documentPoint.Id}";
+            var abstractionPointInQuotesExplicit = $"Abstraction Point '{documentPoint.Id}'";
+            var abstractionPointExplicitAlt = !string.IsNullOrEmpty(documentPoint.AltId)
+                ? $"Abstraction Point {documentPoint.AltId}"
+                : "[NEVER_FIND_THIS]";
+            var abstractionPointInQuotesExplicitAlt = !string.IsNullOrEmpty(documentPoint.AltId)
+                ? $"Abstraction Point '{documentPoint.AltId}'"
+                : "[NEVER_FIND_THIS]";
             
-            var textContainsPointName = documentPointNameSet &&
+            var textContainsPointName1 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    nameInSingleQuotes,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName2 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointExplicit,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName3 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointExplicitAlt,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName4 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointInQuotesExplicit,
+                    StringComparison.OrdinalIgnoreCase);
+            
+            var textContainsPointName5 = documentPointNameSet &&
+                abstractionLimitPointSubText.Contains(
+                    abstractionPointInQuotesExplicitAlt,
+                    StringComparison.OrdinalIgnoreCase);            
+            
+            var textContainsPointName6 = documentPointNameSet &&
+                documentPoint.Name!.Length > 10 &&
                 abstractionLimitPointSubText.Contains(
                     documentPoint.Name!,
                     StringComparison.OrdinalIgnoreCase);
 
-            if (!textContainsPointName || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
+            var textContainsPoint = textContainsPointName1
+                || textContainsPointName2 
+                || textContainsPointName3
+                || textContainsPointName4                
+                || textContainsPointName5                
+                || textContainsPointName6;
+            
+            if (!textContainsPoint || limitPoints?.Any(lp => lp.Id == documentPoint.Name) == true)
             {
                 continue;
             }
@@ -2536,7 +2698,7 @@ public static class WalSchemaConverter
             limitPoints ??= [];
             limitPoints.Add(new Point
             {
-                Id = documentPoint.Name,
+                Id = documentPoint.Id,
                 IsImplicit = false
             });
         }
@@ -3062,6 +3224,30 @@ public static class WalSchemaConverter
         return dateLines.IndexOf(match) + 1;
     }
 
+    private static List<Purpose>? CheckForGenericTransferPurpose(
+        List<Purpose>? limitPurposes,
+        string abstractionLimitPointSubText)
+    {
+        const string forThePurposeOfTransferGeneric = "for the purpose of transfer shall";
+        
+        if ((limitPurposes == null || limitPurposes.Count == 0)
+            && abstractionLimitPointSubText.Contains(forThePurposeOfTransferGeneric,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return
+            [
+                new Purpose
+                {
+                    Id = "Transfer",
+                    Description = "Transfer",
+                    IsImplicit = false
+                }
+            ];
+        }
+
+        return limitPurposes;
+    }
+    
     private static bool IsExcludedLinkReason(string? linkReason)
     {
         return linkReason is LinkReason.SimultaneousDischargeCondition
@@ -3436,6 +3622,7 @@ public static class WalSchemaConverter
                         {
                             Description = tableLine.Text,
                             Id = $"{pointNumber} {subId}", // e.g 2.1 - A
+                            AltId = subId,
                             PurposeIds = purposeIds,
                             TimeCutoff = timeCutoff,
                             NaldData = GetNaldPointData(naldDataLine,
@@ -3485,12 +3672,23 @@ public static class WalSchemaConverter
                 
                 gridRef = gridRef?.Replace("point ", string.Empty);
 
+                var pointText = string.Join(" ", point.Text?.Select(p => p.Text).ToArray() ?? []);
+
+                var letterIdParts = pointText.Replace("\"", "'").Split("marked '");
+                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
+
+                if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
+                {
+                    name = letterId;
+                }
+                
                 returnList.Add(new PointOfAbstraction
                 {
                     Name = name,
                     GridRef = gridRef,
                     Description = description,
                     Id = pointNumber,
+                    AltId = letterId,
                     PurposeIds = purposeIds,
                     TimeCutoff = timeCutoff,
                     NaldData = GetNaldPointData(naldDataLine, description),
@@ -3505,6 +3703,14 @@ public static class WalSchemaConverter
             }
         }
 
+        foreach (var item in returnList)
+        {
+            if (string.IsNullOrEmpty(item.Id) && !string.IsNullOrEmpty(item.Name))
+            {
+                item.Id = item.Name;
+            }
+        }
+        
         return returnList.ToArray();
     }
 
@@ -3989,7 +4195,7 @@ public static class WalSchemaConverter
             if (licence.LicenceNumber == null)
             {
                 ConsoleHelper.WriteLine(
-                    $"WARNING - {nameof(WalSchemaConverter)} - AddImplicitExplicitAndEncompassingLicenceSets - Licence doesnt have licence number set");
+                    $"WARNING - {nameof(AbstractionLicenceSchemaConverter)} - AddImplicitExplicitAndEncompassingLicenceSets - Licence doesnt have licence number set");
                 
                 continue;
             }

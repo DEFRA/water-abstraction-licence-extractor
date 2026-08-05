@@ -51,18 +51,22 @@ public class FileProcessSingleService(
             abstractionLicenceCacheService,
             fileId!.Value);
         
-        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
+        var licenceNumberService = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
         
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
+        var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
+            abstractionLicenceCacheService,
+            licenceNumberService);
+        
         var naldLinkedLicenceHelper = await naldLinkedLicenceHelperTask;
         var (dmsFileData, naldLicence) = await dmsAndNaldFileDataTask;
         
         var lookupConfig = new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesCsvTask,
             fileService,
             cacheService,
             outputService,
+            licenceNumberService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,
@@ -189,7 +193,7 @@ public class FileProcessSingleService(
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            return (false, await WalSchemaConverter.ToLicenceSetsAsync(
+            return (false, await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
                 matchesResult!,
                 pdfDataExtractor,
                 processRun.ProcessRunId,
@@ -241,13 +245,13 @@ public class FileProcessSingleService(
             .Select(IReadOnlyList<LicenceSet> (licenceSet) => new List<LicenceSet> { licenceSet })
             .ToList();
 
-        var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+        var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
             lookupConfiguration,
             abstractionLicenceCacheService);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
+        AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
         
         await SharedHelper.UpdateAndSaveLicenceSetsAsync(
             licenceSetGroups,

@@ -1,7 +1,5 @@
 using System.Collections.Concurrent;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Formats;
@@ -12,26 +10,24 @@ public class BaseFixture : IDisposable
 {
     private readonly ConcurrentDictionary<short, List<NaldLicence>> _licencesAlternateFormatValues = [];
     private static readonly SemaphoreSlim SetupLicenceNumbersLock = new(1, 1);
-    private static AbstractionLicenceNumber? _licenceNumber;
+    private static ILicenceNumberService? _licenceNumberService;
     
-    public async Task SetupLicenceNumbersAsync(
+    public async Task<ILicenceNumberService> GetLicenceNumbersServiceAsync(
         short regionCode,
         IAbstractionLicenceCacheService cacheService)
     {
-        if (_licenceNumber != null)
+        if (_licenceNumberService != null)
         {
-            AbstractionLicenceNumber.Instance = _licenceNumber;
-            return;
+            return _licenceNumberService;
         }
 
         await SetupLicenceNumbersLock.WaitAsync();
         
         try
         {
-            if (_licenceNumber != null)
+            if (_licenceNumberService != null)
             {
-                AbstractionLicenceNumber.Instance = _licenceNumber;
-                return;
+                return _licenceNumberService;
             }
             
             if (!_licencesAlternateFormatValues.TryGetValue(regionCode, out var licences))
@@ -42,8 +38,8 @@ public class BaseFixture : IDisposable
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);
             }
 
-            _licenceNumber = new AbstractionLicenceNumber(licences);
-            AbstractionLicenceNumber.Instance = _licenceNumber;
+            _licenceNumberService = new AbstractionLicenceNumber(licences);
+            return _licenceNumberService;
             
         }
         finally

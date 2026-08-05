@@ -10,7 +10,6 @@ using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -51,10 +50,10 @@ public class CompareOcrPdfTests
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
-    private static async Task SetupLicenceNumbersAsync(short regionCode)
+    private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
     }
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
@@ -156,11 +155,12 @@ public class CompareOcrPdfTests
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await GetLicenceNumbersAsync((short)regionCode),
             regionCode,
             DateTime.Now);
     }
@@ -198,7 +198,7 @@ public class CompareOcrPdfTests
         // Printed EA file from 2000
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "28-39-28-0312 5606418.PDF";
 
         // Act
@@ -402,7 +402,7 @@ public class CompareOcrPdfTests
         // Mersey and River Authority
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Licence - Old 6078947.PDF";
 
         // Act
@@ -576,7 +576,7 @@ public class CompareOcrPdfTests
         // Wessex Water Authority
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Non-Application Licence Document (12.09.1979).pdf";
 
         // Act
@@ -748,7 +748,7 @@ public class CompareOcrPdfTests
         // Wessex Water Authority
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "original licence (01.06.1966).PDF";
 
         // Act
@@ -920,7 +920,7 @@ public class CompareOcrPdfTests
         // The Somerset River Authority
         
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "original licence (01.09.1966).PDF";
 
         // Act

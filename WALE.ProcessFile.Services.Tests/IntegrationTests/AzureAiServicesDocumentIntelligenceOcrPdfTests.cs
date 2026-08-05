@@ -85,21 +85,18 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
     
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
+    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
     
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -121,7 +118,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_LabelOver2Lines()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22631093__Application - Issued Licence [23-10-1978] 6075944.pdf";
         
         // Act
@@ -208,7 +205,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
 
         Assert.Equal(2, perHourValuesAll.Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -257,7 +254,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22631097__Non-Application Licence Document (09.03.1988).pdf";
         
         // Act
@@ -272,7 +269,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Single(purpose.Text!); // TODO its 2 on the Ai Vision side, not sure which is right
         Assert.Equal("irrigation", purpose.Text!.First().Text); // NOTE - its missing 'Spray '
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -287,7 +284,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task FROM_6000_SET_PurposeWasntSplitCorrectly2()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22632235__Application Renewal - Licence Issued - 11112024.pdf";
         
         // Act
@@ -310,7 +307,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(records);
         Assert.Equal(12, records.Text!.Count);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -325,7 +322,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Handsigned_WhenNearPreviousLineIsCompany_ThenFoundCorrect_Ish()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
         // Act
@@ -393,7 +390,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -409,7 +406,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task VeryFaintText_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Licence - Old 6078942.PDF";
 
         // Act
@@ -503,7 +500,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -518,7 +515,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task X_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Issued Licence - 01081966.PDF";
 
         // Act
@@ -628,7 +625,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -643,7 +640,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Succession_WhenNearNextLineIsCompany_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -702,7 +699,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -717,7 +714,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenZ_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
         
         // Act
@@ -726,7 +723,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -745,7 +742,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenNearPreviousLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "14460030853 licence effective 24.07.2005.PDF";
 
         // Act
@@ -826,7 +823,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -848,7 +845,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task WhenIsOldCrossedOut_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -884,7 +881,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
-        Assert.Equal(13, section1Sub1.SubResults.Count);
+        Assert.Equal(14, section1Sub1.SubResults.Count);
         
         var pointName = section1Sub1.SubResults
             .FirstOrDefault(x => x.MatchedLabel?.Name == "PointCondition")?.Text!.First().Text;
@@ -935,7 +932,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         // TODO - other 2 things
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -956,7 +953,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z1_X2_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "14460030852 licence effective 24.07.2005.PDF";
 
         // Act
@@ -995,7 +992,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("14/46/03/0852", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1016,7 +1013,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z2_X3_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "1-21-00-010 5822315.PDF";
 
         // Act
@@ -1055,7 +1052,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/21/0/10", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1073,7 +1070,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task Z3_X3_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "08-36-19-S-0101 5826949.PDF";
 
         // Act
@@ -1092,7 +1089,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(pointResult);
         Assert.True(pointResult.IsOcr);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1117,7 +1114,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task ScannedFileUploaded_ThenFindXuncorn_DebuggingTest()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         if (File.Exists("Licence - Old 6082700/PdfPig/Text/cache-metadata.json"))
@@ -1152,7 +1149,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_YorkshireWaterCompany1_ThenY()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "2-26-32-126 6937559.PDF";
 
         // Act
@@ -1227,23 +1224,28 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("(1)", pointName);
         
         Assert.Equal(3, section1Sub1.Text?.Count);
-        Assert.Equal(5, section1Sub1.SubResults.Count);
+        Assert.Equal(6, section1Sub1.SubResults.Count);
 
-        var units1 = section1Sub1.SubResults[1];
+        var purposeCondition = section1Sub1.SubResults[1];
+        Assert.Equal("(1)", purposeCondition.Text![0].Text);
+        Assert.Equal("PurposeCondition", purposeCondition.MatchedLabel!.Name);
+        Assert.Equal(32, purposeCondition.LabelStartLineNumber);
+        
+        var units1 = section1Sub1.SubResults[2];
         Assert.Equal("cubic metres", units1.Text![0].Text);
         Assert.Equal("PerDayUnits", units1.MatchedLabel!.Name);
         Assert.Equal(32, units1.LabelStartLineNumber);
         
-        var units2 = section1Sub1.SubResults[2];
+        var units2 = section1Sub1.SubResults[3];
         Assert.Equal("cubic metres", units2.Text![0].Text);
         Assert.Equal("PerYearUnits", units2.MatchedLabel!.Name);
         Assert.Equal(33, units2.LabelStartLineNumber);
         
-        var value1 = section1Sub1.SubResults[3];
+        var value1 = section1Sub1.SubResults[4];
         Assert.Equal("45460.92", value1.Text![0].Text);
         Assert.Equal("PerDayValue", value1.MatchedLabel!.Name);
         
-        var value2 = section1Sub1.SubResults[4];
+        var value2 = section1Sub1.SubResults[5];
         Assert.Equal("13638276", value2.Text![0].Text);
         Assert.Equal("PerYearValue", value2.MatchedLabel!.Name);
         
@@ -1271,7 +1273,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1381,7 +1383,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_YorkshireWaterCompany2_ThenY()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "2-27-29-012 7003124.PDF";
 
         // Act
@@ -1517,7 +1519,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal(2, purpose.Text!.Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1576,14 +1578,14 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22713185__Non-Application Licence Documents (20.12.1996).pdf";
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1604,14 +1606,14 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt33_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "2671309044__Application type unknown Licence Issued (30102002).pdf";
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, 2);
         Assert.Equal(11, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1629,14 +1631,14 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_PurposeHasSubPointsInIt44_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "2671311013__Non-Application Licence Document (09.01.1985).pdf";
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 1, 2);
         Assert.Equal(5, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1654,14 +1656,14 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_LinkedLicenceLooksSuspect_ThenNowGetsThem()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "22720211__Non-Application Licence Document (01.12.1990).pdf";
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2, 2);
         Assert.Equal(6, resultFull.Matches!.Count);
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

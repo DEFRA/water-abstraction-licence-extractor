@@ -87,17 +87,22 @@ async Task ProgramAsync()
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     
-    AbstractionLicenceNumber.Instance = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
-    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(abstractionLicenceCacheService);
+    var licenceNumberService = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    services.LicenceNumberService = licenceNumberService;
+    
+    var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
+        abstractionLicenceCacheService,
+        licenceNumberService);
 
     var licenceSetGroups = new List<IReadOnlyList<LicenceSet>>();
     
     var lookupConfig = new LookupConfiguration(
-        WalLabelConfiguration.GetLabels(),
+        AbstractionLicenceLabelConfiguration.GetLabels(),
         firstNamesCsv,
         services.FileService,
         services.CacheService!,
         services.OutputService!,
+        services.LicenceNumberService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,
@@ -187,13 +192,13 @@ async Task ProgramAsync()
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-    var allLicenceSets = await WalSchemaConverter.AddAdditionalLicenceSetsAsync(
+    var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
         abstractionLicenceCacheService);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    WalSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
+    AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
 
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
@@ -250,7 +255,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
                 processRun.ProcessRunId);
         }
 
-        var licenceSets = await WalSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             matchesResult!,
             pdfDataExtractor,
             processRun.ProcessRunId,
@@ -445,6 +450,7 @@ ConfiguredServices ConfigureServices()
         AbstractionLicenceCacheService = abstractionLicenceCacheService,
         OutputService = outputService,
         AbstractionLicenceOutputService = abstractionLicenceOutputService,
+        LicenceNumberService = null, // Set just after
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

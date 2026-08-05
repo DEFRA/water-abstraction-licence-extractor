@@ -40,7 +40,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             realAbsLicCacheService,
             _naldData,
             _fileLicenceMapping);
-
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -55,11 +54,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
 
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
-    
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return textractFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -96,11 +90,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder, int regionCode)
     {
         return new(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await textractFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now);
     }
@@ -124,7 +119,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         // Arrange
         var regionCode = 3; // TODO Berkshire
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "Non-Application Licence Document (08.06.1987).PDF";
 
         // Act
@@ -169,7 +164,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Single(abstractionLimitsSection.SubResults);
         var section1Sub1 = abstractionLimitsSection.SubResults![0];
         
-        Assert.Equal(5, section1Sub1.SubResults.Count);
+        Assert.Equal(6, section1Sub1.SubResults.Count);
         // TODO fix for this
         
         var perDayUnits = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
@@ -190,7 +185,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/22/271", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -209,7 +204,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         // Arrange
         var regionCode = 2; // TODO Lancashire
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "Licence - Old 6082700.PDF";
 
         // Act
@@ -257,7 +252,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -279,7 +274,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         // Arrange
         var regionCode = 5; // TODO IOW
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         
         const string filename = "Non-Application Licence Document (22.09.1986).PDF";
         
@@ -346,7 +341,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -410,7 +405,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         int regionCode)
     {
         // Act
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         
         var resultFull = await GetMatchesAsync(filename, 3, regionCode);
         var resultList = resultFull.Matches!;
@@ -423,7 +418,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.NotNull(dateOfIssue);
         Assert.Equal(expectedIssueDate, dateOfIssue.Text!.First().Text);
         
-        var schemaData = await WalSchemaConverter.ToLicenceSetsAsync(
+        var schemaData = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -444,7 +439,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         // Arrange
         var regionCode = 3; // TODO Lancashire
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
         
@@ -471,7 +466,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal(LabelPosition.LabelIsBeforeTextToFind, licenceNumberResult.MatchedLabel!.Position);        
         Assert.Equal("1/22/3/45", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -494,7 +489,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     {
         // Arrange
         var regionCode = 3; 
-        await SetupLicenceNumbersAsync((short)regionCode);
+
         const string filename = "12405035__Application type unknown Licence Issued - 08041968.pdf";
         
         // Act
@@ -517,7 +512,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         Assert.Null(licenceNumberResult);
         
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

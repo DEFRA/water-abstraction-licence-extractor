@@ -7,7 +7,6 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
@@ -31,8 +30,8 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
     
-    private static FileSystemCacheService? RealCacheService;
-    private static FileSystemAbstractionLicenceCacheService? RealAbsLicCacheService;
+    private static readonly FileSystemCacheService? RealCacheService;
+    private static readonly FileSystemAbstractionLicenceCacheService? RealAbsLicCacheService;
     
     static PdfPigNoOcrPdfTests1()
     {
@@ -58,11 +57,6 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
 
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
-
-    private Task SetupLicenceNumbersAsync(short regionCode)
-    {
-        return firstNamesFixture.SetupLicenceNumbersAsync(regionCode, DatabaseCacheService);
-    }
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -217,11 +211,12 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
     {
         return new LookupConfiguration(
-            WalLabelConfiguration.GetLabels(),
+            AbstractionLicenceLabelConfiguration.GetLabels(),
             await firstNamesFixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
+            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -257,7 +252,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenX_NotCheckingAbstractionLimits_ThenFoundCorrectly_IncludesAgreedSchema()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
 
         // Act
@@ -381,7 +376,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var secondPurposeWithoutPrepoint = secondPurpose.SubResults[1];
         Assert.Equal("Agriculture (other than Spray Irrigation)", secondPurposeWithoutPrepoint.Text!.First().Text);
 
-        var agreedSchemaLicenceGroup = await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -438,7 +433,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LongLicenceHolderName_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application - Minor Variation -Application New Licence Issued 24_12_2019 00_00_00 11164372.pdf";
 
         // Act
@@ -578,7 +573,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var firstPurposePointGroup = purposeResult.SubResults.Single();
         Assert.Equal("4.1 Spray irrigation (other than spray irrigation under glass).", firstPurposePointGroup.Text!.Single().Text);
 
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -650,7 +645,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task X_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application – Transfer – Issued Licence – 07.07.2022.pdf";
 
         // Act
@@ -847,7 +842,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', firstPurposePointGroup.Text!.Select(x => x.Text).ToArray()));
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -880,7 +875,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LicenceToCharity_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application new Issued licence 04052017 AN0300012011 9781525.pdf";
 
         // Act
@@ -1040,7 +1035,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             + " 23479 authorised under licence serial number 4/30/12/*G/0214 referred to in Condition 9 below.",
             string.Join(' ', firstPurposePointGroup.Text?.Select(x => x.Text).ToArray()!));
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1067,7 +1062,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task EWPorterAndSon_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application - NA Formal Variation - Issued Licence [26_3_21] 11759321.pdf";
 
         // Act
@@ -1533,7 +1528,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("4.2 Filling a reservoir for subsequent trickle irrigation.  Licence Serial No: AN/033/0051/004",
             string.Join(' ', purpose2.Text?.Select(x => x.Text).ToArray()!)); // TODO licence serial number bit shouldnt be here
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -1560,7 +1555,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WalderseyFarmsLimited_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application – Renewal – Licence Issued – 24062022.pdf";
 
         // Act
@@ -2056,7 +2051,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         //...
         Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2123,7 +2118,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task LicenceToEA_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application Renewal Issued Licence- 25.01.2024.pdf";
 
         // Act
@@ -2313,7 +2308,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO 4 more sections
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2328,7 +2323,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenNearNextLineIsCompany_NotCheckingAbstractionLimits_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application - Minor Variation  Issued licence -007-13122023.pdf";
 
         // Act
@@ -2416,7 +2411,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         // TODO expand this section + add others
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2438,7 +2433,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
                 NaldData,
                 FileLicenceMappingWithout52);
 
-        await SetupLicenceNumbersAsync(3);
+
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 
         // Act
@@ -2543,7 +2538,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
         config.CacheService = specialCacheServices.CacheService;
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2555,7 +2550,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(6, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
@@ -2568,7 +2563,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task XXXWhenSameLineIsCompany1Line_AndAbstractionLimitsToBeFoundWithSpellingMistake_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893476.pdf";
 
         // Act
@@ -2685,7 +2680,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2860,7 +2855,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task WhenSameLineIsCompany1Line_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "Application Vesting Licence Issued November 2017 011 10045454.pdf";
 
         // Act
@@ -2935,7 +2930,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("16/51/007/S/011", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2950,7 +2945,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
     public async Task W1henSameLineIsCompany1Line_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
         // Arrange
-        await SetupLicenceNumbersAsync(1);
+
         const string filename = "22705032__Application Normal Variation Licence Issued 20062025.pdf";
 
         // Act
@@ -3000,7 +2995,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(licenceNumberResult.IsOcr);        
         Assert.Equal("2/27/05/032", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = (await WalSchemaConverter.ToLicenceSetsAsync(
+        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,

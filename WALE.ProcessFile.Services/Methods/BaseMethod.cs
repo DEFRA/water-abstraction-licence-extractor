@@ -94,7 +94,7 @@ public static class BaseMethod
                 break;
             case LicenceNumber.Constant:
                 {
-                    var (success, licenceNumberLines) = LicenceNumber.AnyIsLicenceNumber(
+                    var (success, licenceNumberLines) = request.licenceNumberService!.AnyIsLicenceNumber(
                         lines,
                         request.label,
                         request.isOcr,
@@ -120,11 +120,11 @@ public static class BaseMethod
                 break;
             case LicenceNumberFilename.Constant:
                 {
-                    var (success, licenceNumberLinesF) = LicenceNumber.AnyIsLicenceNumber(
-                            lines,
-                            request.label,
-                            request.isOcr,
-                            request.additionalInformationStore);
+                    var (success, licenceNumberLinesF) = request.licenceNumberService!.AnyIsLicenceNumber(
+                        lines,
+                        request.label,
+                        request.isOcr,
+                        request.additionalInformationStore);
                     
                     if (success)
                     {

@@ -1,8 +1,9 @@
+using WALE.ProcessFile.Core.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
 namespace WRADI.Core.AbstractionLicence.Interfaces;
 
-public interface ILicenceNumberService : WALE.ProcessFile.Core.Interfaces.ILicenceNumberService
+public interface ILicenceNumberService : ILicenceNumberServiceCore
 {
     List<NaldLicence> GetNaldLicences(string licenceNumber);
     

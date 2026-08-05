@@ -2,14 +2,13 @@ using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Configuration;
 using WALE.ProcessFile.Services.Formats;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 
 namespace WRADI.DocumentType.AbstractionLicence.Configuration;
 
-public static partial class WalLabelConfiguration
+public static partial class AbstractionLicenceLabelConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -1508,7 +1507,7 @@ public static partial class WalLabelConfiguration
                                     new("2.7"),
                                     new("2.8"),
                                     new("2.9"),
-                                    new("2.10")                                    
+                                    new("2.10")             
                                 ],
                                 PreviousLinesToFetch = 0,
                                 NextLinesToFetch = 0,
@@ -1535,6 +1534,11 @@ public static partial class WalLabelConfiguration
                                     new("(b)"),
                                     new("(c)"),
                                     new("(d)"),
+                                    new("(1)"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
+                                    new("(5)"),
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
@@ -1545,6 +1549,11 @@ public static partial class WalLabelConfiguration
                                     new("(c)"),
                                     new("(d)"),                                    
                                     new("(e)"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
+                                    new("(5)"),
+                                    new("(6)"),
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1565,6 +1574,11 @@ public static partial class WalLabelConfiguration
                                             new("(c)"),
                                             new("(d)"),
                                             new("(e)"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("(5)"),
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
@@ -1594,6 +1608,11 @@ public static partial class WalLabelConfiguration
                                             new("(c)"),
                                             new("(d)"),
                                             new("(e)"),
+                                            new("(1)"),
+                                            new("(2)"),
+                                            new("(3)"),
+                                            new("(4)"),
+                                            new("(5)")
                                         ],
                                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
@@ -1747,6 +1766,11 @@ public static partial class WalLabelConfiguration
                             new("5.8"),
                             new("5.9"),
                             new("5.10"),
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
+                            new("(5)"),
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -1759,6 +1783,11 @@ public static partial class WalLabelConfiguration
                             new("5.8"),
                             new("5.9"),
                             new("5.10"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
+                            new("(5)"),
+                            new("(6)"),
                             new("[END_OF_BLOCK]")
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1775,7 +1804,12 @@ public static partial class WalLabelConfiguration
                                 Possibilities = [
                                     new("5.1"),
                                     new("5.2"),
-                                    new("5.3")
+                                    new("5.3"),
+                                    new("(1)"),
+                                    new("(2)"),
+                                    new("(3)"),
+                                    new("(4)"),
+                                    new("(5)")
                                 ],
                                 Position = LabelPosition.ApplicableToMost,
                                 Format = "Number",
@@ -1810,6 +1844,11 @@ public static partial class WalLabelConfiguration
                                     new("5.2") { ColumnMustStartWith = true },
                                     new("5.3") { ColumnMustStartWith = true },
                                     new("5.4") { ColumnMustStartWith = true },
+                                    new("(1)") { ColumnMustStartWith = true },
+                                    new("(2)") { ColumnMustStartWith = true },
+                                    new("(3)") { ColumnMustStartWith = true },
+                                    new("(4)") { ColumnMustStartWith = true },
+                                    new("(5)") { ColumnMustStartWith = true },
                                     new("For Purpose ") { RemoveWholeLine = true },
                                     new("For Purposes ") { RemoveWholeLine = true }                                   
                                 ],
@@ -2483,6 +2522,51 @@ public static partial class WalLabelConfiguration
                             new()
                             {
                                 Name = "PointConditionSub",
+                                Text = [new("and ")],
+                                Position = LabelPosition.SplitAtLabel,
+                                MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues
+                            }
+                        ]
+                    },
+                    new()
+                    {
+                        Name = "PurposeCondition",
+                        Text =
+                        [
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        TextEnd =
+                        [
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)"),
+                            new("[END_OF_BLOCK]")
+                        ],
+                        Position = LabelPosition.TextToFindIsBetweenLabels,
+                        IncludeStartLabelText = true,
+                        Format = "Text",
+                        Possibilities =
+                        [
+                            new("(1)"),
+                            new("(2)"),
+                            new("(3)"),
+                            new("(4)")
+                        ],
+                        MustContain =
+                        [
+                            "(1)",
+                            "(2)",
+                            "(3)",
+                            "(4)"
+                        ],
+                        SubLabels =
+                        [
+                            new()
+                            {
+                                Name = "PurposeConditionSub",
                                 Text = [new("and ")],
                                 Position = LabelPosition.SplitAtLabel,
                                 MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues

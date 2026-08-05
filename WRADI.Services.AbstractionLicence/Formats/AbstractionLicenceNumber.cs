@@ -1,9 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -11,18 +10,6 @@ namespace WRADI.DocumentType.AbstractionLicence.Formats;
 
 public partial class AbstractionLicenceNumber : ILicenceNumberService
 {
-    [field: AllowNull, MaybeNull]
-    public static ILicenceNumberService Instance
-    {
-        get => field ??
-               throw new InvalidOperationException("LicenceNumber.Instance must be initialized before use.");
-        set
-        {
-            field = value;
-            LicenceNumber.LicenceNumberService = value;
-        }
-    }
-
     private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex;
 
     public AbstractionLicenceNumber(List<NaldLicence> licences)
@@ -93,23 +80,12 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
     [GeneratedRegex(@"[^a-zA-Z0-9]+")]
     private static partial Regex NonAlphanumericRegex();
 
-    public const string Constant = "LicenceNumber";
-
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
 
-    public static (bool Success, List<DocumentLine> MatchedLines) AnyIsLicenceNumber(
-        IEnumerable<DocumentLine?> lines,
-        LabelToMatch label,
-        bool isOcr,
-        Dictionary<string, object?> additionalInformationStore)
-    {
-        return Instance.AnyIsLicenceNumber(lines, label, isOcr, additionalInformationStore);
-    }
-
     (bool Success, List<DocumentLine> MatchedLines)
-            WALE.ProcessFile.Core.Interfaces.ILicenceNumberService.AnyIsLicenceNumber(
+            ILicenceNumberServiceCore.AnyIsLicenceNumber(
         IEnumerable<DocumentLine?> lines,
         LabelToMatch label,
         bool isOcr,
@@ -197,12 +173,7 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
         return (matchedLines.Count > 0, matchedLines);
     }
 
-    public static List<NaldLicence> GetNaldLicences(string licenceNumber)
-    {
-        return Instance.GetNaldLicences(licenceNumber);
-    }
-
-    List<NaldLicence> ILicenceNumberService.GetNaldLicences(string licenceNumber)
+    public List<NaldLicence> GetNaldLicences(string licenceNumber)
     {
         var normalized = NormalizeLicenceNumber(licenceNumber);
 
@@ -220,12 +191,7 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
             .ToList();
     }
 
-    public static List<NaldLicence> ExtractNaldLicences(string? sourceText)
-    {
-        return Instance.ExtractNaldLicences(sourceText);
-    }
-
-    List<NaldLicence> ILicenceNumberService.ExtractNaldLicences(string? sourceText)
+    public List<NaldLicence> ExtractNaldLicences(string? sourceText)
     {
         if (string.IsNullOrEmpty(sourceText) || !sourceText.Any(char.IsDigit))
         {

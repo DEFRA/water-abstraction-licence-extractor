@@ -65,9 +65,9 @@ public class ProcessRunsController(
         {
             TotalRecords = await getTotalsTask,
             Records = paginationData.ToList(),
-            Issuers = await GetDistinctListIssuers(processRunId),
-            LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
-            IssueDates =  await GetDistinctListDates(processRunId),
+            Issuers = await GetIssuers(processRunId),
+            LicenceSetIds = await GetLicenceSetIds(processRunId),
+            IssueDates =  await GetIssueDates(processRunId),
         };
         return Ok(processRun);
     }
@@ -86,9 +86,9 @@ public class ProcessRunsController(
        {
            TotalRecords = await countTask,
            Records = outputList.ToList(),
-           Issuers = await GetIssuers(processRunId),
-           LicenceSetIds = await GetLicenceSetIds(processRunId),
-           IssueDates =  await GetIssueDates(processRunId),
+           Issuers = await GetDistinctListIssuers(processRunId),
+           LicenceSetIds = await GetDistinctListLicenceSetIds(processRunId),
+           IssueDates =  await GetDistinctListDates(processRunId),
        };
        
        return Ok(processRun);

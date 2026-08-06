@@ -5,6 +5,7 @@ import {ScrapedLicenceSection} from "./ScrapedLicenceSection";
 import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
+import {Aggregates} from "./Aggregates/Aggregates.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -111,6 +112,25 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                             history={history}
                         />
                     </LicenceSection>
+                    <LicenceSection
+                        title="Aggregates"
+                        itemType="aggregate"
+                        licenceFileId={licence.dmsFileId!}
+                        processRunId={processRunId}
+                        onRefresh={onRefresh}
+                        onVerified={handleVerified}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                        data={data}
+                        onOpenReport={onOpenReport}
+                    >
+                        <Aggregates
+                            licence={licence}
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                            history={history}
+                        />
+                    </LicenceSection>
                 </div>
             )}
 
@@ -128,6 +148,24 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <LinkedLicences 
                             licence={licence} 
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                            scrapedView={true}
+                            history={history}
+                        />
+                    </ScrapedLicenceSection>
+                    <ScrapedLicenceSection
+                        title="Aggregates"
+                        itemType="aggregate"
+                        licenceFileId={licence.dmsFileId!}
+                        processRunId={processRunId}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                        data={data}
+                        onOpenReport={onOpenReport}
+                    >
+                        <Aggregates
+                            licence={licence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

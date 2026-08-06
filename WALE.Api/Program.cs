@@ -3,6 +3,7 @@ using Amazon.SQS;
 using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
+using WALE.Api.Interfaces;
 using WALE.Api.Services;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
@@ -117,5 +118,6 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<ICacheService, DatabaseCacheService>()
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
+        .AddTransient<IUiProcessRunService, UiProcessRunService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>();
 }

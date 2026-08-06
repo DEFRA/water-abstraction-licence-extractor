@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -13,7 +15,9 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class FileDataController(
     IOutputService outputService,
-    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
+    IUiProcessRunService uiProcessRunService,
+    IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> MatchesResult([FromQuery] Guid fileId)
@@ -92,6 +96,51 @@ public class FileDataController(
         [FromBody] LicenceSectionVerification verification)
     {
         var result = await abstractionLicenceOutputService.SaveLicenceSectionVerificationAsync(verification);
+
+        if (result != 0)
+        {
+            await RefreshLicenceListData(verification);
+        }
         return Ok(result);
+    }
+
+    private async Task RefreshLicenceListData(LicenceSectionVerification verification)
+    {
+        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+
+        if (!string.IsNullOrWhiteSpace(mainLicence))
+        {
+            var licenceList = new List<string> { mainLicence };
+
+            if (!string.IsNullOrWhiteSpace(verification.LicenceSectionItemId))
+            {
+                licenceList.Add(verification.LicenceSectionItemId);
+            }
+            
+            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId, licenceList.ToArray());
+        }
+    }
+
+    private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)
+    {
+        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
+   
+        return fileIdToLicenceNumberMapping[fileId];
+ 
+    }
+
+    private async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        var cacheKey = $"licence-file-ids:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow =
+                    TimeSpan.FromMinutes(10);
+
+                return await abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
+            }) ?? [];
     }
 }

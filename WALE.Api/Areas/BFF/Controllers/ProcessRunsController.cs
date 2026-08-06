@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
+using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -18,6 +19,7 @@ public class ProcessRunsController(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     ILicenceListItemModelService licenceListItemModelService,
     ILicenceListRepository licenceListRepository,
+    IUiProcessRunService uiProcessRunService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -63,7 +65,7 @@ public class ProcessRunsController(
                 query);
 
         var paginationDataTask =
-            GetProcessRunRawDataList(
+           uiProcessRunService.GetProcessRunRawDataList(
                 processRunId,
                 query);
 
@@ -144,75 +146,21 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
     
-    private async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query)
-    {
-        var completeNumber = 1;
-        var fileNumber = 1;
-        
-        var verificationsBySectionTask =
-            abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
-        var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
-        
-        var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
-        var licenceSets =
-            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
-        
-        var verificationsBySection = await verificationsBySectionTask;
-        var fileIdToLicenceNumberMapping = await fileIdTask;
-        
-        var paginationOutputLines = licences
-            .Where(licence => licence.Status == ScrapeStatus.Ok)
-            .Select(licence => JsOutputHelper.ToOutputLine(
-                licence,
-                DateTime.Now,
-                completeNumber++,
-                fileNumber++,
-                licenceSets))
-            .ToList();
-        
-        var paginationListData = JsOutputHelper.ToListData(
-            paginationOutputLines,
-            processRunId,
-            verificationsBySection,
-            fileIdToLicenceNumberMapping);
-
-        return paginationListData;
-    }
-
     [HttpPost("{processRunId:int}")]
     public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
         [FromRoute] int processRunId,
         [FromBody] string[] licenceNumbers)
     {
-        var query = new ProcessRunQuery
-        {
-            Skip = 0,
-            Take = int.MaxValue,
-            LicenceNumbers = licenceNumbers
-        };
-
-        var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-
-        await UpdateLicenceListRepo(processRunRawDataList);
-
-        return Ok($"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences");
+        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId, licenceNumbers);  
+        return Ok(result);
     }
 
     [HttpGet("{processRunId:int}")]
     public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
         [FromRoute] int processRunId)
     {
-        var query = new ProcessRunQuery
-        {
-            Skip = 0,
-            Take = int.MaxValue
-        };
-
-        var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-        
-        await UpdateLicenceListRepo(processRunRawDataList);
-
-        return Ok($"Completed Process Run: {processRunId} for {processRunRawDataList.Count} licences");
+        var result = await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);  
+        return Ok(result);
     }
 
     [HttpGet]
@@ -223,20 +171,6 @@ public class ProcessRunsController(
             new ProcessRunQuery());
 
         return Ok(total);
-    }
-    
-    private async Task UpdateLicenceListRepo(IReadOnlyList<OutputListDataItem> processRunRawDataList)
-    {
-        var dbItems = licenceListItemModelService
-            .ConvertToUpsertLicenceListItems(processRunRawDataList)
-            .ToList();
-
-        foreach (var batch in dbItems.Chunk(50))
-        {
-            await licenceListRepository.UpsertLicenceListItemManyAsync(
-                batch,
-                CancellationToken.None);
-        }
     }
 
     private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)
@@ -360,8 +294,6 @@ public class ProcessRunsController(
                    })
                ?? [];
     }
-    
-    
     
     private async Task<string[]> GetIssueDates(int processRunId)
     {

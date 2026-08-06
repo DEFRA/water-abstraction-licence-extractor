@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
@@ -116,6 +117,36 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         processRun.EndDateTimeUtc = DateTime.Parse(content);
     }
 
+    public async Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
+    {
+        var path =
+            $"/BFF/ProcessRuns/UpdateProcessRunByLicenceNumbers/{processRunId}";
+
+        var json = JsonSerializer.Serialize(
+            licenceNumbers,
+            JsonHelper.GetSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateLicenceListProcessRunAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+    }
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";

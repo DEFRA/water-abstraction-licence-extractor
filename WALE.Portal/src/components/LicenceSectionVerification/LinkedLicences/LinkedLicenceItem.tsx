@@ -5,10 +5,10 @@ import {
     InformationSource,
     OutputListDataItem,
     LicenceSectionVerification
-} from "../../api/generated/apiClient.ts";
-import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
-import NaldStatusTag from "../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFileId} from "../../utils/verificationUtils.ts";
+} from "../../../api/generated/apiClient.ts";
+import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo.tsx";
+import NaldStatusTag from "../../NaldStatusTag.tsx";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFileId} from "../../../utils/verificationUtils.ts";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;

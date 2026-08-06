@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type {Licence, LicenceSectionVerification, OutputListDataItem} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {ScrapedLicenceSection} from "./ScrapedLicenceSection";
-import {LinkedLicences} from "./LinkedLicences";
+import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
 

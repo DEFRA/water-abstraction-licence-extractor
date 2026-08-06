@@ -1,6 +1,6 @@
 import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
-import {LinkedLicenceItem} from "./LinkedLicenceItem.tsx";
+import {LinkedLicenceItem} from "./LinkedLicences/LinkedLicenceItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {

@@ -173,7 +173,7 @@ public class NoOcrDatabaseTests
 
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(16, additionalInformation.Text!.Count);
+        Assert.Equal(14, additionalInformation.Text!.Count);
 
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

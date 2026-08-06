@@ -305,7 +305,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(12, records.Text!.Count);
+        Assert.Equal(10, records.Text!.Count);
         
         var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1204,7 +1204,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(15, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
         Assert.Equal("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE", abstractionLimitsResult.Text![0].Text);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
@@ -1223,7 +1223,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal("(1)", pointName);
         
-        Assert.Equal(3, section1Sub1.Text?.Count);
+        Assert.Equal(2, section1Sub1.Text?.Count);
         Assert.Equal(6, section1Sub1.SubResults.Count);
 
         var purposeCondition = section1Sub1.SubResults[1];

@@ -2903,6 +2903,7 @@ private static async Task<
             licence_holder AS LicenceHolder,
             limits_count AS LimitsCount,
             aggregates_count AS AggregatesCount,
+            nald_aggregate as NaldAggregate,
             ocr AS Ocr,
             issue_date AS IssueDate,
             issue_year AS IssueYear,

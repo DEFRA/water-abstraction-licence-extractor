@@ -51,6 +51,10 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
+            <div id="simpleOverview" style={{ textAlign: 'right' }}>
+                <strong>Licence contains Aggregates (NALD):</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
+            </div>
+                
             <ul className="ul-links">
                 <li>
                     <a

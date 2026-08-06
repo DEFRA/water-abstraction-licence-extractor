@@ -1,6 +1,6 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
-import {dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
+import {dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
@@ -32,7 +32,9 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
             <td>{dashesIfNullOrZero(item.limitsCount)}</td>
-            <td>{dashesIfNullOrZero(item.aggregatesCount)}</td>
+            <td>
+                <strong>File:</strong> {(item.aggregatesCount ?? 0) > 0 ? "True" : "False"} ({dashesIfNull(item.aggregatesCount)})
+                <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
             <td>{(item.ocr ? "True" : "False")}</td>
             <td>{dashesIfNullOrEmpty(item.issueDate)}</td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>

@@ -44,7 +44,6 @@ public class LicenceListItemModelService
     {
         ArgumentNullException.ThrowIfNull(source);
         
-        
         return new UpsertLicenceListItem
         {
             ProcessRunId = source.processRunId!.Value,
@@ -52,6 +51,7 @@ public class LicenceListItemModelService
             Filename = source.filename ?? string.Empty,
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,
+            NaldAggregate = source.naldHasAggregateCondition ?? false,
 
             Purposes = source.purposes?
                 .Where(x => !string.IsNullOrWhiteSpace(x))

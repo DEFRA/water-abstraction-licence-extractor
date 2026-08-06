@@ -548,6 +548,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var parameters = new DynamicParameters();
         parameters.Add("ProcessRunId", processRunId);
         AddGenericParameters(query, sql, parameters);
+        
         return await QuerySingleOrDefaultAsync<int>(
             connection,
             sql.ToString(),
@@ -578,10 +579,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LimitsEmpty,
             "individual");
 
-        AddNestedLimitsFilter(
-            sql,
-            query.AggregatesEmpty,
-            "aggregates");
+        AddAggregatesFilter(sql, query.AggregatesFilter);
 
         AddIssueYearFilter(
             sql,
@@ -957,7 +955,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                lc."PARAM2" AS Param2,
                                lc."TEXT" AS Text,
                                NULL AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               lc."ACIN_CODE" as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
                            join nald."NALD_ABS_LIC_VERSIONS" ver
                                ON lic."ID" = ver."AABL_ID"
@@ -1005,29 +1004,9 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                null AS Param2,
                                null AS Text,
                                lic."NOTES" AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               null as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
-                           join nald."NALD_ABS_LIC_VERSIONS" ver
-                               ON lic."ID" = ver."AABL_ID"
-                               AND lic."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                               AND ver."ISSUE_NO" = (
-                                   SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
-                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
-                                   WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
-                                       AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                                       AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
-                                       AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
-                                   )
-                               AND ver."INCR_NO" = (
-                                   SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
-                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
-                                   WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
-                                       AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                                       AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
-                                       AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
-                                   )
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
@@ -2406,7 +2385,29 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             $"{issueYear.Value}%");
     }
     
-    
+    private static void AddAggregatesFilter(StringBuilder sql, string? aggregatesState)
+    {
+        if (string.IsNullOrEmpty(aggregatesState))
+        {
+            return;
+        }
+
+        var parts = aggregatesState.Split('_');
+
+        var docAggregates = bool.Parse(parts[0]);
+        var docAggregatesEmpty = !docAggregates;
+        AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
+
+        var naldAggregate = bool.Parse(parts[1]);
+
+        sql.AppendLine(
+            naldAggregate
+                ? "  AND data::jsonb ->> 'naldHasAggregateCondition' = 'true'"
+                : """
+                      AND (data::jsonb ->> 'naldHasAggregateCondition' = 'false'
+                          or data::jsonb ->> 'naldHasAggregateCondition' is null)
+                  """);
+    }
 
     public async Task<List<LicenceListItemAggregate>>
         GetLicencesListSearchAsync(
@@ -2905,6 +2906,7 @@ private static async Task<
             licence_holder AS LicenceHolder,
             limits_count AS LimitsCount,
             aggregates_count AS AggregatesCount,
+            nald_aggregate as NaldAggregate,
             ocr AS Ocr,
             issue_date AS IssueDate,
             issue_year AS IssueYear,
@@ -3035,10 +3037,10 @@ private static void AddLicenceListItemFilters(
         query.LimitsEmpty,
         "limits_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
+    ReadSqlHelper.AddAggregatesFilter(
         sql,
-        query.AggregatesEmpty,
-        "aggregates_count");
+        parameters,
+        query.AggregatesFilter);
 
     ReadSqlHelper.AddIssueYearFilter(
         sql,

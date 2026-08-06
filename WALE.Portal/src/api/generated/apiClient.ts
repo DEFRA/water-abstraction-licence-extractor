@@ -4168,7 +4168,7 @@ export class Client {
      * @param take (optional) 
      * @param issuer (optional) 
      * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
+     * @param aggregatesFilter (optional) 
      * @param ocrScan (optional) 
      * @param purposesEmpty (optional) 
      * @param pointsEmpty (optional) 
@@ -4182,7 +4182,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4211,10 +4211,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
             url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
         if (ocrScan === null)
             throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
         else if (ocrScan !== undefined)
@@ -4298,7 +4298,7 @@ export class Client {
      * @param take (optional) 
      * @param issuer (optional) 
      * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
+     * @param aggregatesFilter (optional) 
      * @param ocrScan (optional) 
      * @param purposesEmpty (optional) 
      * @param pointsEmpty (optional) 
@@ -4312,7 +4312,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4341,10 +4341,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
             url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
         if (ocrScan === null)
             throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
         else if (ocrScan !== undefined)
@@ -4424,7 +4424,7 @@ export class Client {
     /**
      * @return OK
      */
-    updateProcessRunByLicenceNumbers(processRunId: number, body: string[]): Promise<number> {
+    updateProcessRunByLicenceNumbers(processRunId: number, body: string[]): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateProcessRunByLicenceNumbers/{processRunId}";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4438,7 +4438,6 @@ export class Client {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json"
             }
         };
 
@@ -4447,29 +4446,25 @@ export class Client {
         });
     }
 
-    protected processUpdateProcessRunByLicenceNumbers(response: Response): Promise<number> {
+    protected processUpdateProcessRunByLicenceNumbers(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<number>(null as any);
+        return Promise.resolve<void>(null as any);
     }
 
     /**
      * @return OK
      */
-    updateLicenceListProcessRun(processRunId: number): Promise<number> {
+    updateLicenceListProcessRun(processRunId: number): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4479,7 +4474,6 @@ export class Client {
         let options_: RequestInit = {
             method: "GET",
             headers: {
-                "Accept": "application/json"
             }
         };
 
@@ -4488,23 +4482,19 @@ export class Client {
         });
     }
 
-    protected processUpdateLicenceListProcessRun(response: Response): Promise<number> {
+    protected processUpdateLicenceListProcessRun(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<number>(null as any);
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -6127,6 +6117,7 @@ export class Licence implements ILicence {
     id?: string | undefined;
     status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
@@ -6166,6 +6157,7 @@ export class Licence implements ILicence {
             this.id = _data["id"];
             this.status = _data["status"];
             this.naldStatus = _data["naldStatus"];
+            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.licenceType = _data["licenceType"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
             this.dmsPermitNumber = _data["dmsPermitNumber"];
@@ -6227,6 +6219,7 @@ export class Licence implements ILicence {
         data["id"] = this.id;
         data["status"] = this.status;
         data["naldStatus"] = this.naldStatus;
+        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["licenceType"] = this.licenceType;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
         data["dmsPermitNumber"] = this.dmsPermitNumber;
@@ -6277,6 +6270,7 @@ export interface ILicence {
     id?: string | undefined;
     status?: ScrapeStatus;
     naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
     dmsPermitNumber?: string | undefined;
@@ -7745,6 +7739,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     points?: string[] | undefined;
     limitsCount?: number;
     aggregatesCount?: number;
+    naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
     issuer?: string | undefined;
@@ -7788,6 +7783,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             }
             this.limitsCount = _data["limitsCount"];
             this.aggregatesCount = _data["aggregatesCount"];
+            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
             this.issueDate = _data["issueDate"];
             this.issuer = _data["issuer"];
@@ -7841,6 +7837,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         }
         data["limitsCount"] = this.limitsCount;
         data["aggregatesCount"] = this.aggregatesCount;
+        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
         data["issueDate"] = this.issueDate;
         data["issuer"] = this.issuer;
@@ -7875,6 +7872,7 @@ export interface IOutputListDataItem {
     points?: string[] | undefined;
     limitsCount?: number;
     aggregatesCount?: number;
+    naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
     issuer?: string | undefined;
@@ -8269,6 +8267,7 @@ export interface IPeriodOfAbstraction {
 
 export class Point implements IPoint {
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8290,6 +8289,7 @@ export class Point implements IPoint {
                     this[property] = _data[property];
             }
             this.id = _data["id"];
+            this.altId = _data["altId"];
             this.description = _data["description"];
             this.isImplicit = _data["isImplicit"];
         }
@@ -8309,6 +8309,7 @@ export class Point implements IPoint {
                 data[property] = this[property];
         }
         data["id"] = this.id;
+        data["altId"] = this.altId;
         data["description"] = this.description;
         data["isImplicit"] = this.isImplicit;
         return data;
@@ -8317,6 +8318,7 @@ export class Point implements IPoint {
 
 export interface IPoint {
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8331,6 +8333,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 
@@ -8366,6 +8369,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                     this.containedIn!.push(ContainedInInformation.fromJS(item));
             }
             this.id = _data["id"];
+            this.altId = _data["altId"];
             this.description = _data["description"];
             this.isImplicit = _data["isImplicit"];
         }
@@ -8399,6 +8403,7 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 data["containedIn"].push(item ? item.toJSON() : undefined as any);
         }
         data["id"] = this.id;
+        data["altId"] = this.altId;
         data["description"] = this.description;
         data["isImplicit"] = this.isImplicit;
         return data;
@@ -8413,6 +8418,7 @@ export interface IPointOfAbstraction {
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
+    altId?: string | undefined;
     description?: string | undefined;
     isImplicit?: boolean | undefined;
 

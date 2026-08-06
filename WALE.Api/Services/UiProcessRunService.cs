@@ -22,7 +22,6 @@ public class UiProcessRunService(
         };
 
         var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-
         await UpdateLicenceListRepo(processRunRawDataList);
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
@@ -38,7 +37,6 @@ public class UiProcessRunService(
         };
 
         var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-
         await UpdateLicenceListRepo(processRunRawDataList);
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";

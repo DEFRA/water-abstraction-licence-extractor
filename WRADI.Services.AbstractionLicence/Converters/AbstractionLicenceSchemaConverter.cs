@@ -244,6 +244,7 @@ public static class AbstractionLicenceSchemaConverter
                     DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
+                    IsBecauseOfAggregate = true,
                     ContainedIn =
                     [
                         new ContainedInInformation
@@ -253,14 +254,19 @@ public static class AbstractionLicenceSchemaConverter
                                 ? InformationDirection.Incoming
                                 : InformationDirection.Outgoing,
                             LinkReason = GetLinkReason(
-                                naldLinkedLicence.FromFieldText,
+                                naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                     ? licenceNumber
                                     : naldLinkedLicence.NaldLicence.LicenceNumber),
-                            SectionName = naldLinkedLicence.FromField
+                            SectionName = naldLinkedLicence.FromField,
+                            AcinCode = naldLinkedLicence.AcinCode
                         }
                     ]
                 });
+
+                var nll = naldLinkedLicence;
+                var noneSchemaDataKey = $"LinkedLicence_Nald{nll.LinkType}_{nll.FromField}_{nll.AcinCode}";
+                noneSchemaData.TryAdd(noneSchemaDataKey, naldLinkedLicence.SourceFields);
             }
         }
 
@@ -2851,6 +2857,11 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
+            .Where(linkedLicence =>
+                !LicenceNumberContainsOther(
+                    licenceNumber,
+                    linkedLicence.LicenceNumber,
+                    regionCode))
             .ToList();
 
         var abstractionLinkedLicences = linkedLicenceNumbers

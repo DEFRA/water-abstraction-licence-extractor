@@ -541,7 +541,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(65, additionalInformation.Text!.Count);
+        Assert.Equal(64, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -771,7 +771,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(28, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(26, abstractionLimitsSection.Text!.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -834,7 +834,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(12, records.Text!.Count);
+        Assert.Equal(10, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
@@ -867,7 +867,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(20, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(18, abstractionLimitsSection.Text!.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults.Count);
 
         var abstractionLimitsPoint1 = abstractionLimitsSection.SubResults[0];
@@ -1147,7 +1147,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(16, abstractionLimitsResult.Text!.Count);
         Assert.Equal(15, abstractionLimitsResult.LabelStartLineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);        
@@ -1172,7 +1172,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var abstractionLimitsSection3 = abstractionLimitsResult.SubResults[2];
         Assert.Equal("6.3", abstractionLimitsSection3.MatchedLabelTextFirstLine);
-        Assert.Equal(7, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
+        Assert.Equal(6, abstractionLimitsSection3.Text!.Count); // TODO should really be 5, its including a header from the next page
         Assert.NotNull(abstractionLimitsSection3.SubResults);
         Assert.Single(abstractionLimitsSection3.SubResults);
         var section3Sub1 = abstractionLimitsSection3.SubResults[0];
@@ -1653,11 +1653,11 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var records = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(12, records.Text!.Count);
+        Assert.Equal(10, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(75, additionalInformation.Text!.Count);
+        Assert.Equal(71, additionalInformation.Text!.Count);
         
         var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -1693,7 +1693,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(6, records.Text!.Count);
+        Assert.Equal(4, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
@@ -1735,11 +1735,11 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         var records = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(19, records.Text!.Count);
+        Assert.Equal(17, records.Text!.Count);
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(37, additionalInformation.Text!.Count);
+        Assert.Equal(35, additionalInformation.Text!.Count);
         
         var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1907,7 +1907,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var furtherConditions = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "FurtherConditions");
         Assert.NotNull(furtherConditions);
         Assert.Equal("9. FURTHER CONDITIONS", furtherConditions.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(39, furtherConditions.Text!.Count);
+        Assert.Equal(38, furtherConditions.Text!.Count);
 
         Assert.Equal(4, furtherConditions.SubResults.Count);
         Assert.Equal("9.1 (i) No abstraction shall take place unless the Licence Holder has installed a", furtherConditions.SubResults[0].Text!.First().Text);

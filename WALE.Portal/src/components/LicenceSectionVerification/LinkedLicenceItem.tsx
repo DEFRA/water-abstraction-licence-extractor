@@ -76,7 +76,7 @@ export const LinkedLicenceItem = ({
                 direction: NullableOfInformationDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
-                isBecauseOfAggregate: false
+                //isBecauseOfAggregate: false // NOTE not sure if this should be done elsewhere now
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
             onUpdate(new LinkedLicence({...linkedLicence, containedIn: newSections}));
@@ -266,7 +266,7 @@ export const LinkedLicenceItem = ({
                                             }}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={!!section.isBecauseOfAggregate}
+                                                    checked={!!linkedLicence.isBecauseOfAggregate}
                                                     onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
                                                     style={{marginRight: '6px'}}
                                                 />
@@ -397,7 +397,7 @@ export const LinkedLicenceItem = ({
                                         <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                         <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
                                         <div><strong>Because of
-                                            Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
+                                            Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                         {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                             <button
                                                 onClick={() => {

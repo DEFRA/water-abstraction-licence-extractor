@@ -19,6 +19,8 @@ public sealed class UpsertLicenceListItem
     public int LimitsCount { get; init; }
 
     public int AggregatesCount { get; init; }
+    
+    public bool NaldAggregate { get; init; }
 
     public bool Ocr { get; init; }
 

@@ -14,7 +14,7 @@ public class ProcessRunQuery
 
     public bool? LimitsEmpty { get; init; }
 
-    public bool? AggregatesEmpty { get; init; }
+    public string? AggregatesFilter { get; init; }
 
     public bool? OcrScan { get; init; }
     

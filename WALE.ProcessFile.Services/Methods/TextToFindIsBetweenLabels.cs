@@ -160,11 +160,6 @@ public static class TextToFindIsBetweenLabels
             false,
             out var isForbidden,
             out var removedLines);
-
-        if (request.label.Name == "PointPointNumber")
-        {
-            
-        }
         
         if (isForbidden && betweenText.Count == 0)
         {

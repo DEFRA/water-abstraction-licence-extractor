@@ -70,10 +70,10 @@ public class NaldLinkedLicenceHelper
 
             var potentialNumberSources = new Dictionary<string, string?>
             {
-                { nameof(naldRawDataItem.Param1), naldRawDataItem.Param1 },
-                { nameof(naldRawDataItem.Param2), naldRawDataItem.Param2 },
-                { nameof(naldRawDataItem.Text), naldRawDataItem.Text },
-                { nameof(naldRawDataItem.Notes), naldRawDataItem.Notes }
+                { nameof(NaldLinkedLicenceRawData.Param1), naldRawDataItem.Param1 },
+                { nameof(NaldLinkedLicenceRawData.Param2), naldRawDataItem.Param2 },
+                { nameof(NaldLinkedLicenceRawData.Text), naldRawDataItem.Text },
+                { nameof(NaldLinkedLicenceRawData.Notes), naldRawDataItem.Notes }
             };
 
             foreach (var potentialNumberSource in potentialNumberSources)
@@ -106,7 +106,7 @@ public class NaldLinkedLicenceHelper
                             NaldLicence = linkCandidate,
                             LinkType = NaldLinkedLicenceType.Outgoing,
                             FromField = potentialNumberSource.Key,
-                            FromFieldText = potentialNumberSource.Value,
+                            SourceFields = potentialNumberSources,
                             AcinCode = naldRawDataItem.AcinCode
                         });
 
@@ -119,7 +119,7 @@ public class NaldLinkedLicenceHelper
                             NaldLicence = naldRawDataItem.ToNaldLicence(),
                             LinkType = NaldLinkedLicenceType.Incoming,
                             FromField = potentialNumberSource.Key,
-                            FromFieldText = potentialNumberSource.Value,
+                            SourceFields = potentialNumberSources,
                             IncomingLicenceNumber = forwardLinkKey,
                             AcinCode = naldRawDataItem.AcinCode
                         });

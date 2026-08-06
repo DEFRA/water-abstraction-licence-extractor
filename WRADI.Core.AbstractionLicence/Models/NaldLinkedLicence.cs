@@ -15,5 +15,5 @@ public record NaldLinkedLicence
     
     public string? AcinCode { get; init; }
     
-    public required string? FromFieldText { get; init; }
+    public required Dictionary<string, string?>? SourceFields { get; init; }
 }

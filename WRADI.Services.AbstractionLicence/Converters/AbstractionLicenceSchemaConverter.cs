@@ -254,7 +254,7 @@ public static class AbstractionLicenceSchemaConverter
                                 ? InformationDirection.Incoming
                                 : InformationDirection.Outgoing,
                             LinkReason = GetLinkReason(
-                                naldLinkedLicence.FromFieldText,
+                                naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                     ? licenceNumber
                                     : naldLinkedLicence.NaldLicence.LicenceNumber),
@@ -266,7 +266,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 var nll = naldLinkedLicence;
                 var noneSchemaDataKey = $"LinkedLicence_Nald{nll.LinkType}_{nll.FromField}_{nll.AcinCode}";
-                noneSchemaData.TryAdd(noneSchemaDataKey, naldLinkedLicence.FromFieldText);
+                noneSchemaData.TryAdd(noneSchemaDataKey, naldLinkedLicence.SourceFields);
             }
         }
 

@@ -94,7 +94,8 @@ public static class ReadSqlHelper
         var parts = aggregatesState.Split('_');
 
         var docAggregates = bool.Parse(parts[0]);
-        AddCountEmptyFilter(sql, docAggregates, "aggregates_count");
+        var docAggregatesEmpty = !docAggregates;
+        AddCountEmptyFilter(sql, docAggregatesEmpty, "aggregates_count");
 
         var naldAggregates = bool.Parse(parts[1]);
         // TODO nald aggregates

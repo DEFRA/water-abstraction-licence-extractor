@@ -2399,7 +2399,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var parts = aggregatesState.Split('_');
 
         var docAggregates = bool.Parse(parts[0]);
-        AddNestedLimitsFilter(sql, docAggregates, "aggregates");
+        var docAggregatesEmpty = !docAggregates;
+        AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
 
         var naldAggregates = bool.Parse(parts[1]);
         // TODO nald aggregates

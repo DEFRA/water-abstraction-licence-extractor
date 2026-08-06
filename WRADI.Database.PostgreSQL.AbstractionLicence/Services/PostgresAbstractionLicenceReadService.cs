@@ -579,10 +579,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LimitsEmpty,
             "individual");
 
-        AddAggregatesFilter(
-            sql,
-            parameters,
-            query.AggregatesFilter);
+        AddAggregatesFilter(sql, query.AggregatesFilter);
 
         AddIssueYearFilter(
             sql,
@@ -2386,10 +2383,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             $"{issueYear.Value}%");
     }
     
-    private static void AddAggregatesFilter(
-        StringBuilder sql,
-        DynamicParameters parameters,
-        string? aggregatesState)
+    private static void AddAggregatesFilter(StringBuilder sql, string? aggregatesState)
     {
         if (string.IsNullOrEmpty(aggregatesState))
         {
@@ -2402,8 +2396,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var docAggregatesEmpty = !docAggregates;
         AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
 
-        var naldAggregates = bool.Parse(parts[1]);
-        // TODO nald aggregates
+        var naldAggregate = bool.Parse(parts[1]);
+
+        sql.AppendLine(
+            naldAggregate
+                ? "  AND data::jsonb ->> 'naldHasAggregateCondition' = 'true'"
+                : """
+                      AND (data::jsonb ->> 'naldHasAggregateCondition' = 'false'
+                          or data::jsonb ->> 'naldHasAggregateCondition' is null)
+                  """);
     }
 
     public async Task<List<LicenceListItemAggregate>>

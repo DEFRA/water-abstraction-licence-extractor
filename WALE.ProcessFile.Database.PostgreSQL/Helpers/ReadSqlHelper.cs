@@ -98,7 +98,13 @@ public static class ReadSqlHelper
         AddCountEmptyFilter(sql, docAggregatesEmpty, "aggregates_count");
 
         var naldAggregates = bool.Parse(parts[1]);
-        // TODO nald aggregates
+        
+        sql.AppendLine(
+            """
+              AND nald_aggregate = @NaldAggregate
+            """);
+
+        parameters.Add("NaldAggregate", naldAggregates);
     }
     
     public static void AddIssueYearFilter(

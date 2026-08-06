@@ -74,11 +74,4 @@ public interface IOutputService
     
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
         int processRunId);
-    
-    Task UpdateProcessRunByLicenceNumbersAsync(
-        int processRunId,
-        string[] licenceNumbers);
-
-    Task UpdateLicenceListProcessRunAsync(
-        int processRunId);
 }

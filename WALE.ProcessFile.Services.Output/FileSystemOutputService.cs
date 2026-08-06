@@ -246,14 +246,4 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
-
-    public Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateLicenceListProcessRunAsync(int processRunId)
-    {
-        throw new NotImplementedException();
-    }
 }

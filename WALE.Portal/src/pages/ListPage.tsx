@@ -2,7 +2,6 @@ import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem } from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
-import LicencesTableHeaders from "../components/LicencesTableHeaders";
 import LicencesTableRow from "../components/LicencesTableRow";
 import LicencesTableFooters from "../components/LicencesTableFooters";
 import LicenceSetsTableHeaders from "../components/LicenceSetsTableHeaders";
@@ -54,10 +53,6 @@ function ListPage() {
 
     const {
         filteredData,
-        applyFilter,
-        resetFiltersExcept,
-        toggleSort,
-        filters
     } = useFiltering(outputList);
 
     const totals = useTotals(filteredData);
@@ -276,15 +271,7 @@ function ListPage() {
                             showSingles={showSingles}
                             onToggleSingles={setShowSingles}
                         />
-                        <LicencesTableHeaders
-                            data={outputList}
-                            onFilterChange={applyFilter}
-                            onResetFilters={resetFiltersExcept}
-                            onToggleSort={toggleSort}
-                            onToggleSingles={setShowSingles}
-                            filters={filters}
-                            showSingles={showSingles}
-                        /></thead>
+                        </thead>
                         <tbody>
                         {filteredData.map((item, index) => (
                             <LicencesTableRow

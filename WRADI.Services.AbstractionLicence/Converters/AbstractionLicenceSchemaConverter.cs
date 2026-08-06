@@ -244,6 +244,7 @@ public static class AbstractionLicenceSchemaConverter
                     DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
+                    IsBecauseOfAggregate = true,
                     ContainedIn =
                     [
                         new ContainedInInformation

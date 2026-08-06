@@ -27,7 +27,7 @@ function ListSearchPage() {
         take: 1000,
         issuer: '',
         limitsEmpty: undefined,
-        aggregatesEmpty: undefined,
+        aggregatesFilter: undefined,
         purposesEmpty: undefined,
         pointsEmpty: undefined,
         ocrScan: undefined,
@@ -82,7 +82,7 @@ function ListSearchPage() {
                 currentQuery.take +
                 currentQuery.issuer +
                 currentQuery.limitsEmpty +
-                currentQuery.aggregatesEmpty +
+                currentQuery.aggregatesFilter +
                 currentQuery.ocrScan +
                 currentQuery.purposesEmpty +
                 currentQuery.pointsEmpty +
@@ -112,7 +112,7 @@ function ListSearchPage() {
                 currentQuery.take,
                 currentQuery.issuer,
                 currentQuery.limitsEmpty,
-                currentQuery.aggregatesEmpty,
+                currentQuery.aggregatesFilter,
                 currentQuery.ocrScan,
                 currentQuery.purposesEmpty,
                 currentQuery.pointsEmpty,

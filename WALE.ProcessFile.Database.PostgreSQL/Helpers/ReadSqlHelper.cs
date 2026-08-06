@@ -81,6 +81,25 @@ public static class ReadSqlHelper
                 : $"  AND {countColumn} > 0");
     }
     
+    public static void AddAggregatesFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string? aggregatesState)
+    {
+        if (string.IsNullOrEmpty(aggregatesState))
+        {
+            return;
+        }
+        
+        var parts = aggregatesState.Split('_');
+
+        var docAggregates = bool.Parse(parts[0]);
+        AddCountEmptyFilter(sql, docAggregates, "aggregates_count");
+
+        var naldAggregates = bool.Parse(parts[1]);
+        // TODO nald aggregates
+    }
+    
     public static void AddIssueYearFilter(
         StringBuilder sql,
         DynamicParameters parameters,

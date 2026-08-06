@@ -58,7 +58,7 @@ export function ProcessRunLicenceFilters({
             purposesEmpty: undefined,
             pointsEmpty: undefined,
             limitsEmpty: undefined,
-            aggregatesEmpty: undefined,
+            aggregatesFilter: undefined,
             ocrScan: undefined,
             issueYear: undefined,
             issuer: undefined,
@@ -196,24 +196,24 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={pendingQuery.aggregatesEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.aggregatesFilter === undefined ? "" : "filter-active"}
                     value={
-                        pendingQuery.aggregatesEmpty === undefined
+                        pendingQuery.aggregatesFilter === undefined
                             ? ""
-                            : String(pendingQuery.aggregatesEmpty)
+                            : String(pendingQuery.aggregatesFilter)
                     }
                     onChange={e =>
                         updatePendingQuery(
-                            "aggregatesEmpty",
-                            e.target.value === ""
-                                ? undefined
-                                : e.target.value === "true"
+                            "aggregatesFilter",
+                            e.target.value
                         )
                     }
                 >
                     <option value="">Any</option>
-                    <option value="false">Not empty</option>
-                    <option value="true">Empty</option>
+                    <option value="false_false">File: False, Nald: False</option>
+                    <option value="false_true">File: False, Nald: True</option>
+                    <option value="true_true">File: True, Nald: True</option>
+                    <option value="true_false">File: True, Nald: False</option>
                 </select>
             </td>
 

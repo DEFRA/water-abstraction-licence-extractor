@@ -548,6 +548,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var parameters = new DynamicParameters();
         parameters.Add("ProcessRunId", processRunId);
         AddGenericParameters(query, sql, parameters);
+        
         return await QuerySingleOrDefaultAsync<int>(
             connection,
             sql.ToString(),
@@ -578,10 +579,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LimitsEmpty,
             "individual");
 
-        AddNestedLimitsFilter(
+        AddAggregatesFilter(
             sql,
-            query.AggregatesEmpty,
-            "aggregates");
+            parameters,
+            query.AggregatesFilter);
 
         AddIssueYearFilter(
             sql,
@@ -2385,7 +2386,24 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             $"{issueYear.Value}%");
     }
     
-    
+    private static void AddAggregatesFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string? aggregatesState)
+    {
+        if (string.IsNullOrEmpty(aggregatesState))
+        {
+            return;
+        }
+
+        var parts = aggregatesState.Split('_');
+
+        var docAggregates = bool.Parse(parts[0]);
+        AddNestedLimitsFilter(sql, docAggregates, "aggregates");
+
+        var naldAggregates = bool.Parse(parts[1]);
+        // TODO nald aggregates
+    }
 
     public async Task<List<LicenceListItemAggregate>>
         GetLicencesListSearchAsync(
@@ -3014,10 +3032,10 @@ private static void AddLicenceListItemFilters(
         query.LimitsEmpty,
         "limits_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
+    ReadSqlHelper.AddAggregatesFilter(
         sql,
-        query.AggregatesEmpty,
-        "aggregates_count");
+        parameters,
+        query.AggregatesFilter);
 
     ReadSqlHelper.AddIssueYearFilter(
         sql,

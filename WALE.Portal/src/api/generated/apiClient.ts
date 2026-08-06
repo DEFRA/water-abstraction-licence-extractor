@@ -4168,7 +4168,7 @@ export class Client {
      * @param take (optional) 
      * @param issuer (optional) 
      * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
+     * @param aggregatesFilter (optional) 
      * @param ocrScan (optional) 
      * @param purposesEmpty (optional) 
      * @param pointsEmpty (optional) 
@@ -4182,7 +4182,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4211,10 +4211,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
             url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
         if (ocrScan === null)
             throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
         else if (ocrScan !== undefined)
@@ -4298,7 +4298,7 @@ export class Client {
      * @param take (optional) 
      * @param issuer (optional) 
      * @param limitsEmpty (optional) 
-     * @param aggregatesEmpty (optional) 
+     * @param aggregatesFilter (optional) 
      * @param ocrScan (optional) 
      * @param purposesEmpty (optional) 
      * @param pointsEmpty (optional) 
@@ -4312,7 +4312,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesEmpty: boolean | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -4341,10 +4341,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
             url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
-        if (aggregatesEmpty === null)
-            throw new globalThis.Error("The parameter 'aggregatesEmpty' cannot be null.");
-        else if (aggregatesEmpty !== undefined)
-            url_ += "AggregatesEmpty=" + encodeURIComponent("" + aggregatesEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
         if (ocrScan === null)
             throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
         else if (ocrScan !== undefined)
@@ -7739,6 +7739,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     points?: string[] | undefined;
     limitsCount?: number;
     aggregatesCount?: number;
+    naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
     issuer?: string | undefined;
@@ -7782,6 +7783,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             }
             this.limitsCount = _data["limitsCount"];
             this.aggregatesCount = _data["aggregatesCount"];
+            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
             this.issueDate = _data["issueDate"];
             this.issuer = _data["issuer"];
@@ -7835,6 +7837,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         }
         data["limitsCount"] = this.limitsCount;
         data["aggregatesCount"] = this.aggregatesCount;
+        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
         data["issueDate"] = this.issueDate;
         data["issuer"] = this.issuer;
@@ -7869,6 +7872,7 @@ export interface IOutputListDataItem {
     points?: string[] | undefined;
     limitsCount?: number;
     aggregatesCount?: number;
+    naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
     issuer?: string | undefined;

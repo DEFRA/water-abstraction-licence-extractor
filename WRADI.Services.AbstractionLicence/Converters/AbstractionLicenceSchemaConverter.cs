@@ -2857,6 +2857,11 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
+            .Where(linkedLicence =>
+                !LicenceNumberContainsOther(
+                    licenceNumber,
+                    linkedLicence.LicenceNumber,
+                    regionCode))
             .ToList();
 
         var abstractionLinkedLicences = linkedLicenceNumbers

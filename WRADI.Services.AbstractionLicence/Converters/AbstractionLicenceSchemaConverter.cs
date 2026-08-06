@@ -258,10 +258,15 @@ public static class AbstractionLicenceSchemaConverter
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                     ? licenceNumber
                                     : naldLinkedLicence.NaldLicence.LicenceNumber),
-                            SectionName = naldLinkedLicence.FromField
+                            SectionName = naldLinkedLicence.FromField,
+                            AcinCode = naldLinkedLicence.AcinCode
                         }
                     ]
                 });
+
+                var nll = naldLinkedLicence;
+                var noneSchemaDataKey = $"LinkedLicence_Nald{nll.LinkType}_{nll.FromField}_{nll.AcinCode}";
+                noneSchemaData.TryAdd(noneSchemaDataKey, naldLinkedLicence.FromFieldText);
             }
         }
 

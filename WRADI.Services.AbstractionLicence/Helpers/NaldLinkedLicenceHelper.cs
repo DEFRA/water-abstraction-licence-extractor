@@ -100,25 +100,29 @@ public class NaldLinkedLicenceHelper
                     forwardMap.TryAdd(backLinkKey, []);
                     
                     // Add forward link
-                    forwardMap[backLinkKey].Add(new NaldLinkedLicence
-                    {
-                        NaldLicence = linkCandidate,
-                        LinkType = NaldLinkedLicenceType.Outgoing,
-                        FromField = potentialNumberSource.Key,
-                        FromFieldText = potentialNumberSource.Value
-                    });
+                    forwardMap[backLinkKey].Add(
+                        new NaldLinkedLicence
+                        {
+                            NaldLicence = linkCandidate,
+                            LinkType = NaldLinkedLicenceType.Outgoing,
+                            FromField = potentialNumberSource.Key,
+                            FromFieldText = potentialNumberSource.Value,
+                            AcinCode = naldRawDataItem.AcinCode
+                        });
 
                     backMap.TryAdd(forwardLinkKey, []);
                     
                     // Add back link
-                    backMap[forwardLinkKey].Add(new NaldLinkedLicence
-                    {
-                        NaldLicence = naldRawDataItem.ToNaldLicence(),
-                        LinkType = NaldLinkedLicenceType.Incoming,
-                        FromField = potentialNumberSource.Key,
-                        FromFieldText = potentialNumberSource.Value,
-                        IncomingLicenceNumber = forwardLinkKey
-                    });
+                    backMap[forwardLinkKey].Add(
+                        new NaldLinkedLicence
+                        {
+                            NaldLicence = naldRawDataItem.ToNaldLicence(),
+                            LinkType = NaldLinkedLicenceType.Incoming,
+                            FromField = potentialNumberSource.Key,
+                            FromFieldText = potentialNumberSource.Value,
+                            IncomingLicenceNumber = forwardLinkKey,
+                            AcinCode = naldRawDataItem.AcinCode
+                        });
                 }
             }
         }

@@ -955,7 +955,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                lc."PARAM2" AS Param2,
                                lc."TEXT" AS Text,
                                NULL AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               lc."ACIN_CODE" as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
                            join nald."NALD_ABS_LIC_VERSIONS" ver
                                ON lic."ID" = ver."AABL_ID"
@@ -1003,7 +1004,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                null AS Param2,
                                null AS Text,
                                lic."NOTES" AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               null as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)

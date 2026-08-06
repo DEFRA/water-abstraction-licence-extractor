@@ -15,6 +15,9 @@ public record ContainedInInformation
     
     public string? LinkReason { get; init; }
     
+    // Will only be set for Nald licences
+    public string? AcinCode { get; set; }
+    
     public int? LineNumber { get; init; }
     
     public int? PageNumber { get; init; }

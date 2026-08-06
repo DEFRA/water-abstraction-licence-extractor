@@ -13,5 +13,7 @@ public record NaldLinkedLicence
     
     public required string FromField { get; init; }
     
+    public string? AcinCode { get; init; }
+    
     public required string? FromFieldText { get; init; }
 }

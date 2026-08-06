@@ -157,13 +157,15 @@ public static partial class DataHelper
             {
                 if (textToMatch.Regex != null)
                 {
-                    if (textToMatch.Regex.IsMatch(returnStr))
+                    var match = textToMatch.Regex.Match(returnStr);
+                    
+                    if (match.Success)
                     {
                         returnStr = textToMatch.Regex.Replace(
-                            returnStr,
+                            match.Value,
                             string.Empty);
 
-                        removesUsedList.Add(textToMatch.Text);
+                        removesUsedList.Add(match.Value);
                     }
 
                     continue;

@@ -3204,6 +3204,6 @@ public static partial class AbstractionLicenceLabelConfiguration
     [GeneratedRegex(@"Page \d* of \d*", RegexOptions.IgnoreCase, "en-GB")]
     private static partial Regex PageXOfYRegex();
     
-    [GeneratedRegex($"/^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}^/", RegexOptions.None, "en-GB")]
+    [GeneratedRegex($"^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}$", RegexOptions.None, "en-GB")]
     private static partial Regex LicenceNumberInHeaderRegex();
 }

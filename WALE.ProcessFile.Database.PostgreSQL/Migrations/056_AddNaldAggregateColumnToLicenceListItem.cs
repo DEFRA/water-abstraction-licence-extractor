@@ -9,7 +9,7 @@ public sealed class AddNaldAggregateColumnToLicenceListItem : Migration
     public override void Up()
     {
         Alter.Table("licence_list_item")
-            .AddColumn("nald_aggregate").AsString().Nullable();
+            .AddColumn("nald_aggregate").AsBoolean().Nullable();
     }
 
     public override void Down()

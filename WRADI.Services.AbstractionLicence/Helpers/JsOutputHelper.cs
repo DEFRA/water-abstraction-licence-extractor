@@ -101,7 +101,8 @@ public static class JsOutputHelper
         var verificationOutputStrategies =
             new List<IVerificationOutputStrategy>
             {
-                new LinkedLicencesVerificationOutputStrategy()
+                new LinkedLicencesVerificationOutputStrategy(),
+                new AggregatesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
 
         var verificationSectionNames = verificationLookups.Keys.ToList();

@@ -156,6 +156,8 @@ public static class FindLabelGroupMatchesHelper
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
+
+                        var prevPartialLine = partialLine.Clone();
                         
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
@@ -189,6 +191,11 @@ public static class FindLabelGroupMatchesHelper
                         }
 
                         matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
+                    }
+
+                    if (label.Name == "Purposes")
+                    {
+                        
                     }
                     
                     if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
@@ -1043,6 +1050,11 @@ public static class FindLabelGroupMatchesHelper
     
     private static List<LabelGroupResult> FilterDownResults(List<LabelGroupResult> returnList, LabelToMatch? label)
     {
+        if (label.Name == "Purposes")
+        {
+            
+        }
+        
         // De-dupe exact matches
         returnList = returnList
             .GroupBy(x => x.MatchedLabel!.FindMultipleOnSingleLine ?

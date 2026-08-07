@@ -1225,6 +1225,11 @@ public class PdfDataExtractorService(
             }
 
             var groupLabel = group.First().MatchedLabel!;
+
+            if (groupLabel.Name == "PurposePointGroup" && group.Count == 2)
+            {
+                
+            }
             
             if (groupLabel.DeDuplicateResults)
             {
@@ -1256,10 +1261,10 @@ public class PdfDataExtractorService(
             var anyDidntStartAtStartOfBlock = group.Any(subResult =>
                 subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
             
-            var anyDidStartAtStartOfBlock = group.Any(subResult =>
+            var countDidStartAtStartOfBlock = group.Count(subResult =>
                 subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
-
-            if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+            
+            if (anyDidntStartAtStartOfBlock && countDidStartAtStartOfBlock > 0)
             {
                 var newGroupSubResults = group
                     .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
@@ -1268,8 +1273,19 @@ public class PdfDataExtractorService(
                 subResultsToKeep.AddRange(newGroupSubResults);
                 continue;
             }
+
+            if (countDidStartAtStartOfBlock > 0)
+            {
+                subResultsToKeep.Add(group.First());
+                continue;
+            }
             
             subResultsToKeep.AddRange(group);
+        }
+        
+        if (subResultsToKeep.FirstOrDefault()?.MatchedLabelName == "PurposePointGroup")
+        {
+                
         }
 
         return subResultsToKeep;

@@ -1493,7 +1493,7 @@ public static class AbstractionLicenceSchemaConverter
         IAbstractionLicenceCacheService cacheService)
     {
         var returnLicences = new List<Licence>();
-        //return returnLicences;
+        return returnLicences;
         
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {

@@ -2167,7 +2167,7 @@ public static partial class AbstractionLicenceLabelConfiguration
 
                         ],
                         RemoveStartOfBlockSectionsWhenMultiple = false,
-                        DeDuplicateResults = true,
+                        DeDuplicateResults = true, // Have a think about how to remove the ones that are broadly the same but not exactly
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",

@@ -199,8 +199,9 @@ public static class AbstractionLicenceSchemaConverter
                 purposes,
                 naldDataLine,
                 noneSchemaData,
-                lookupConfiguration!,
-                cacheService);
+                lookupConfiguration,
+                cacheService,
+                individual);
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
         }
@@ -1761,7 +1762,8 @@ public static class AbstractionLicenceSchemaConverter
             NaldData? naldDataLine,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
-            IAbstractionLicenceCacheService cacheService)
+            IAbstractionLicenceCacheService cacheService,
+            AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var section = matches
             .FirstOrDefault(result => result.LabelGroupName == sectionName);
@@ -1802,7 +1804,8 @@ public static class AbstractionLicenceSchemaConverter
                     aggregates,
                     sectionLinkedLicences,
                     noneSchemaData,
-                    cacheService);
+                    cacheService,
+                    previouslyFoundIndividualLimits);
             }
 
             var linkedLicenceNumbers = sectionPoint.SubResults
@@ -2389,7 +2392,8 @@ public static class AbstractionLicenceSchemaConverter
                 allAggregates,
                 allAggregateLinkedLicences,
                 noneSchemaData,
-                cacheService);
+                cacheService,
+                []);
         }
 
         if (allIndividualGroups is [{ Limits.Count: 0 }])
@@ -2417,7 +2421,8 @@ public static class AbstractionLicenceSchemaConverter
         List<Aggregate> allAggregates,
         List<LinkedLicence> sectionLinkedLicences,
         Dictionary<string, object?> noneSchemaData,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
 
@@ -2880,6 +2885,42 @@ public static class AbstractionLicenceSchemaConverter
                     regionCode))
             .ToList();
 
+        const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
+            = "shall not exceed the quantity authorised to be abstracted under this licence.";
+        
+        var shouldCopyIndividualValues = abstractionLimitPointSubText.Contains(
+            shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
+            , StringComparison.OrdinalIgnoreCase);
+
+        if (shouldCopyIndividualValues)
+        {
+            allAggregates.AddRange(
+                previouslyFoundIndividualLimits
+                    .Select(previouslyFoundIndividualLimit =>
+                        new Aggregate
+                        {
+                            PrimaryType = PrimaryType.LicenceToLicence,
+                            LinkedLicences = linkedLicenceNumbers
+                                .Select(ll => ll.LicenceNumber!)
+                                .ToArray(),
+                            SourceLicenceNumber = licenceNumber,
+                            SourceLicenceVersionId = licenceVersionId,
+                            NaldType = GetNaldType(naldDataLine),
+                            AggregateSetId = PositionConstants.ReplacementMarker,
+                            Limits = previouslyFoundIndividualLimit.Limits
+                                .Select(l => l.Clone())
+                                .ToList(),
+                            Points = previouslyFoundIndividualLimit.Points,
+                            Purposes = previouslyFoundIndividualLimit.Purposes,
+                            ContainedIn = previouslyFoundIndividualLimit.ContainedIn,
+                            IsExplicitlyAggregate = true
+                        }
+                    )
+            );
+
+            return;
+        }
+        
         var abstractionLinkedLicences = linkedLicenceNumbers
             .Where(lln => lln.ContainedIn?.Any(ci => !IsExcludedLinkReason(ci.LinkReason)) == true)
             .ToList();

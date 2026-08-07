@@ -92,19 +92,31 @@ public static class ReadSqlHelper
         }
         
         var parts = aggregatesState.Split('_');
-
-        var docAggregates = bool.Parse(parts[0]);
-        var docAggregatesEmpty = !docAggregates;
-        AddCountEmptyFilter(sql, docAggregatesEmpty, "aggregates_count");
-
-        var naldAggregates = bool.Parse(parts[1]);
+        var docAggregatesText = parts[0];
+        var docAggregatesTextIsNull = docAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
         
-        sql.AppendLine(
-            """
-              AND nald_aggregate = @NaldAggregate
-            """);
+        if (!docAggregatesTextIsNull)
+        {
+            var docAggregates = bool.Parse(docAggregatesText);
+            var docAggregatesEmpty = !docAggregates;
+            
+            AddCountEmptyFilter(sql, docAggregatesEmpty, "aggregates_count");
+        }
 
-        parameters.Add("NaldAggregate", naldAggregates);
+        var naldAggregatesText = parts[1];
+        var naldAggregatesTextIsNull = naldAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
+
+        if (!naldAggregatesTextIsNull)
+        {
+            var naldAggregates = bool.Parse(naldAggregatesText);
+
+            sql.AppendLine(
+                """
+                  AND nald_aggregate = @NaldAggregate
+                """);
+
+            parameters.Add("NaldAggregate", naldAggregates);
+        }
     }
     
     public static void AddIssueYearFilter(

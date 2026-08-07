@@ -210,10 +210,14 @@ export function ProcessRunLicenceFilters({
                     }
                 >
                     <option value="">Any</option>
-                    <option value="false_false">File: False, Nald: False</option>
-                    <option value="false_true">File: False, Nald: True</option>
-                    <option value="true_true">File: True, Nald: True</option>
-                    <option value="true_false">File: True, Nald: False</option>
+                    <option value="null_false">File: Any, Nald: False</option>
+                    <option value="null_true">File: Any, Nald: True</option>
+                    <option value="false_null">File: No, Nald: Any</option>
+                    <option value="false_false">File: No, Nald: No</option>
+                    <option value="false_true">File: No, Nald: Yes</option>
+                    <option value="true_null">File: Yes, Nald: Any</option>
+                    <option value="true_true">File: Yes, Nald: Yes</option>
+                    <option value="true_false">File: Yes, Nald: No</option>
                 </select>
             </td>
 

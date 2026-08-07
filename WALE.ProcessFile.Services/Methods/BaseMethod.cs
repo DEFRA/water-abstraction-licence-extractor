@@ -257,6 +257,7 @@ public static class BaseMethod
                 request.regionCode,
                 request.processRunId,
                 request.lookupConfiguration!,
+                request.documentLineService!,
                 request.additionalInformationStore);
             
             if (request.label!.MinimumSubMatches.HasValue

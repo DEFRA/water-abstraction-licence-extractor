@@ -50,4 +50,15 @@ public class DocumentLineWrapped
 
         return returnList;
     }
+    
+    public static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines, bool clone)
+    {
+        return lines
+            .Select((line, index) => new DocumentLineWrapped
+            {
+                Line = line.Clone(),
+                Index = index
+            })
+            .ToList();
+    }
 }

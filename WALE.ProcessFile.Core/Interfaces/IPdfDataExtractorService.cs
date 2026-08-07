@@ -27,6 +27,7 @@ public interface IPdfDataExtractorService
         int regionCode,
         int processRunId,
         LookupConfiguration configuration,
+        IDocumentLineService documentLineService,
         Dictionary<string, object?> additionalInformationStore);
 
     public void Dispose();

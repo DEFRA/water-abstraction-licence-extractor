@@ -57,4 +57,5 @@ public sealed class UpsertLinkedLicenceItem
     
     public DateTime? DmsFileIdStatusDateUtc { get; set; }
     public string? SourceData { get; init; }
+    public bool? IsBecauseOfAggregate { get; set; }
 }

@@ -512,7 +512,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 summary,
                 cancellationToken);
         
-
         await ReplaceLinkedLicencesAsync(
             connection,
             transaction,
@@ -779,7 +778,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 dms_file_id_status,
                 dms_file_id_status_date_utc,
                 licence_version_nald_status,
-                source_data
+                source_data,
+                is_because_of_aggregate
             )
             VALUES
             (
@@ -813,7 +813,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
               @DmsFileIdStatus,
              @DmsFileIdStatusDateUtc,
              @LicenceVersionNaldStatus,
-               CAST(@SourceData AS jsonb)
+               CAST(@SourceData AS jsonb),
+             @IsBecauseOfAggregate
             )
             RETURNING linked_licence_id;
             """;
@@ -852,7 +853,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             linkedLicence.DmsFileIdStatusDateUtc,
             linkedLicence.LicenceVersionNaldStatus,
             SourceData =
-                NullIfWhiteSpace(linkedLicence.SourceData)
+                NullIfWhiteSpace(linkedLicence.SourceData),
+            linkedLicence.IsBecauseOfAggregate
         };
 
         return await connection.ExecuteScalarAsync<long>(
@@ -878,9 +880,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 location.Direction,
                 location.SectionName,
                 location.LinkReason,
-                location.IsBecauseOfAggregate,
                 location.LineNumber,
-                location.PageNumber
+                location.PageNumber,
+                location.AcinCode,
+                location.SourceFields
             })
             .ToArray();
 
@@ -898,9 +901,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 direction,
                 section_name,
                 link_reason,
-                is_because_of_aggregate,
                 line_number,
-                page_number
+                page_number,
+                acin_code,
+                source_fields
             )
             VALUES
             (
@@ -909,9 +913,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @Direction,
                 @SectionName,
                 @LinkReason,
-                @IsBecauseOfAggregate,
                 @LineNumber,
-                @PageNumber
+                @PageNumber,
+                @AcinCode,
+                @SourceFields
             );
             """;
 

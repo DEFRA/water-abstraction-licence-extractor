@@ -37,7 +37,6 @@ public sealed class LicenceListItemLinkedLicence
 
     public string? SourceData { get; set; }
     
-    
     public DateTime? NaldRevocationDate { get; init; }
 
     public DateTime? NaldExpiryDate { get; init; }
@@ -63,5 +62,8 @@ public sealed class LicenceListItemLinkedLicence
     public string? LicenceVersionNaldStatus { get; set; }
     
     public DateTime? DmsFileIdStatusDateUtc { get; init; }
+    
     public List<LicenceListItemLinkLocation> Locations { get; set; } = [];
+    
+    public bool? IsBecauseOfAggregate { get; set; }
 }

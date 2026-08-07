@@ -2393,20 +2393,32 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var parts = aggregatesState.Split('_');
+        var docAggregatesText = parts[0];
+        var docAggregatesTextIsNull = docAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
 
-        var docAggregates = bool.Parse(parts[0]);
-        var docAggregatesEmpty = !docAggregates;
-        AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
+        if (!docAggregatesTextIsNull)
+        {
+            var docAggregates = bool.Parse(docAggregatesText);
+            var docAggregatesEmpty = !docAggregates;
+            
+            AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
+        }
 
-        var naldAggregate = bool.Parse(parts[1]);
+        var naldAggregatesText = parts[1];
+        var naldAggregatesTextIsNull = naldAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
 
-        sql.AppendLine(
-            naldAggregate
-                ? "  AND data::jsonb ->> 'naldHasAggregateCondition' = 'true'"
-                : """
-                      AND (data::jsonb ->> 'naldHasAggregateCondition' = 'false'
-                          or data::jsonb ->> 'naldHasAggregateCondition' is null)
-                  """);
+        if (!naldAggregatesTextIsNull)
+        {
+            var naldAggregates = bool.Parse(naldAggregatesText);
+            
+            sql.AppendLine(
+                naldAggregates
+                    ? "  AND data::jsonb ->> 'naldHasAggregateCondition' = 'true'"
+                    : """
+                          AND (data::jsonb ->> 'naldHasAggregateCondition' = 'false'
+                              or data::jsonb ->> 'naldHasAggregateCondition' is null)
+                      """);
+        }
     }
 
     public async Task<List<LicenceListItemAggregate>>

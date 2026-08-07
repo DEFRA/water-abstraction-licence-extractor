@@ -216,7 +216,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 var thisDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
-                    lookupConfiguration!.CacheService);
+                    lookupConfiguration.CacheService);
 
                 var outputLicenceType = LicenceType.Unknown;
 
@@ -237,6 +237,10 @@ public static class AbstractionLicenceSchemaConverter
                     outputLicenceType = LicenceType.Abstraction;
                 }
 
+                var sourceFields = naldLinkedLicence.SourceFields?
+                    .Where(sf => sf.Value != null)
+                    .ToDictionary();
+                
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
@@ -259,14 +263,11 @@ public static class AbstractionLicenceSchemaConverter
                                     ? licenceNumber
                                     : naldLinkedLicence.NaldLicence.LicenceNumber),
                             SectionName = naldLinkedLicence.FromField,
-                            AcinCode = naldLinkedLicence.AcinCode
+                            AcinCode = naldLinkedLicence.AcinCode,
+                            SourceFields = sourceFields
                         }
                     ]
                 });
-
-                var nll = naldLinkedLicence;
-                var noneSchemaDataKey = $"LinkedLicence_Nald{nll.LinkType}_{nll.FromField}_{nll.AcinCode}";
-                noneSchemaData.TryAdd(noneSchemaDataKey, naldLinkedLicence.SourceFields);
             }
         }
 
@@ -757,7 +758,7 @@ public static class AbstractionLicenceSchemaConverter
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
 
-        if (setConfidence)
+        if (setConfidence && labelGroupResult?.Confidence != null)
         {
             noneSchemaData?.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
         }
@@ -817,7 +818,11 @@ public static class AbstractionLicenceSchemaConverter
         Dictionary<string, object?> noneSchemaData)
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
-        noneSchemaData.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
+
+        if (labelGroupResult?.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
+        }
 
         return text;
     }
@@ -1846,9 +1851,12 @@ public static class AbstractionLicenceSchemaConverter
 
         var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLineLoop);
         var dmsFileData = await dmsFileDataTask;
-        
-        noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
-            linkedLicenceNumber.Confidence);
+
+        if (linkedLicenceNumber.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
+                linkedLicenceNumber.Confidence);
+        }
 
         return new LinkedLicence
         {
@@ -1931,8 +1939,12 @@ public static class AbstractionLicenceSchemaConverter
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
-            noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
-            
+            if (generalLinkedLicenceNumber.Confidence != null)
+            {
+                noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}",
+                    generalLinkedLicenceNumber.Confidence);
+            }
+
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
@@ -2016,7 +2028,11 @@ public static class AbstractionLicenceSchemaConverter
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
-            noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
+            if (linkedLicenceNumber.Confidence != null)
+            {
+                noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}",
+                    linkedLicenceNumber.Confidence);
+            }
 
             returnList.Add(new LinkedLicence
             {
@@ -3466,8 +3482,11 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
-        noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
-        
+        if (meansResult.Confidence != null)
+        {
+            noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
+        }
+
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults
@@ -3555,16 +3574,23 @@ public static class AbstractionLicenceSchemaConverter
         {
             return returnList.ToArray();
         }
-        
-        noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
+
+        if (pointsResults.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
+        }
+
         var pointPurposeGroupCount = -1;
         
         foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
-            noneSchemaData.Add(
-                $"Confidence:{sectionName}_PointPurposeGroup_{++pointPurposeGroupCount}",
-                pointPurposeGroup.Confidence);
-            
+            if (pointPurposeGroup.Confidence != null)
+            {
+                noneSchemaData.Add(
+                    $"Confidence:{sectionName}_PointPurposeGroup_{++pointPurposeGroupCount}",
+                    pointPurposeGroup.Confidence);
+            }
+
             var purposeGroupName = DataHelper.GetFirstMatchByLabel(
                 pointPurposeGroup.SubResults,
                 "PurposeGroupName");
@@ -3588,7 +3614,7 @@ public static class AbstractionLicenceSchemaConverter
                     point.SubResults,
                     "PointPointNumber");
 
-                if (pointNumber != null)
+                if (pointNumber != null && point.Confidence != null)
                 {
                     noneSchemaData.Add(
                         $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount++}_PointPointNumber",
@@ -3637,7 +3663,13 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (pointTable != null)
                 {
-                    noneSchemaData.Add($"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable", pointTable.Confidence);
+                    if (pointTable.Confidence != null)
+                    {
+                        noneSchemaData.Add(
+                            $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable",
+                            pointTable.Confidence);
+                    }
+
                     var tableLines = pointTable.Text!;
 
                     foreach (var tableLine in tableLines)
@@ -3908,7 +3940,7 @@ public static class AbstractionLicenceSchemaConverter
                     .Select(t => t.Text)
                     .ToArray();
 
-                if (pointTextWithoutPurposeAndPoint != null)
+                if (pointTextWithoutPurposeAndPoint is { Confidence: not null })
                 {
                     noneSchemaData.Add(
                         $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTextWithoutPurposeAndPoint",

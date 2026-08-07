@@ -54,7 +54,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string? SourceLicenceVersionId { get; set; }
     
-    public int? IsExplicitlyAggregate { get; set; }
+    public bool? IsExplicitlyAggregate { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PrimaryType PrimaryType { get; init; }

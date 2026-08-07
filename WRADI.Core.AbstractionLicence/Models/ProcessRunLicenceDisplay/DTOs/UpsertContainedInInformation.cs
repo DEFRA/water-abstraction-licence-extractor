@@ -10,9 +10,11 @@ public sealed class UpsertContainedInInformation
 
     public string? LinkReason { get; init; }
 
-    public bool? IsBecauseOfAggregate { get; init; }
-
     public int? LineNumber { get; init; }
 
     public int? PageNumber { get; init; }
+    
+    public string? AcinCode { get; init; }
+    
+    public string? SourceFields { get; init; }
 }

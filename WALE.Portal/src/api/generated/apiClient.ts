@@ -5318,6 +5318,8 @@ export class ContainedInInformation implements IContainedInInformation {
     direction?: NullableOfInformationDirection | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
+    acinCode?: string | undefined;
+    sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
 
@@ -5342,6 +5344,14 @@ export class ContainedInInformation implements IContainedInInformation {
             this.direction = _data["direction"];
             this.sectionName = _data["sectionName"];
             this.linkReason = _data["linkReason"];
+            this.acinCode = _data["acinCode"];
+            if (_data["sourceFields"]) {
+                this.sourceFields = {} as any;
+                for (let key in _data["sourceFields"]) {
+                    if (_data["sourceFields"].hasOwnProperty(key))
+                        (this.sourceFields as any)![key] = _data["sourceFields"][key];
+                }
+            }
             this.lineNumber = _data["lineNumber"];
             this.pageNumber = _data["pageNumber"];
         }
@@ -5364,6 +5374,14 @@ export class ContainedInInformation implements IContainedInInformation {
         data["direction"] = this.direction;
         data["sectionName"] = this.sectionName;
         data["linkReason"] = this.linkReason;
+        data["acinCode"] = this.acinCode;
+        if (this.sourceFields) {
+            data["sourceFields"] = {};
+            for (let key in this.sourceFields) {
+                if (this.sourceFields.hasOwnProperty(key))
+                    (data["sourceFields"] as any)[key] = (this.sourceFields as any)[key];
+            }
+        }
         data["lineNumber"] = this.lineNumber;
         data["pageNumber"] = this.pageNumber;
         return data;
@@ -5375,6 +5393,8 @@ export interface IContainedInInformation {
     direction?: NullableOfInformationDirection | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
+    acinCode?: string | undefined;
+    sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
 
@@ -6116,13 +6136,14 @@ export class Licence implements ILicence {
     processRunId?: number | undefined;
     id?: string | undefined;
     status?: ScrapeStatus;
-    naldStatus?: NaldLicenceStatus;
-    naldHasAggregateCondition?: boolean | undefined;
-    licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
+    regionId?: number | undefined;
+    licenceType?: LicenceType;
     dmsPermitNumber?: string | undefined;
     dmsPath?: string | undefined;
     dmsFileId?: string | undefined;
+    naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
     points?: PointOfAbstraction[];
@@ -6134,7 +6155,6 @@ export class Licence implements ILicence {
     linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
-    regionId?: number | undefined;
 
     [key: string]: any;
 
@@ -6156,13 +6176,14 @@ export class Licence implements ILicence {
             this.processRunId = _data["processRunId"];
             this.id = _data["id"];
             this.status = _data["status"];
-            this.naldStatus = _data["naldStatus"];
-            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
-            this.licenceType = _data["licenceType"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
+            this.regionId = _data["regionId"];
+            this.licenceType = _data["licenceType"];
             this.dmsPermitNumber = _data["dmsPermitNumber"];
             this.dmsPath = _data["dmsPath"];
             this.dmsFileId = _data["dmsFileId"];
+            this.naldStatus = _data["naldStatus"];
+            this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.filename = _data["filename"];
             this.licenceVersion = _data["licenceVersion"] ? LicenceVersion.fromJS(_data["licenceVersion"]) : undefined as any;
             if (Array.isArray(_data["points"])) {
@@ -6198,7 +6219,6 @@ export class Licence implements ILicence {
                     this.licenceSets!.push(LicenceSetReference.fromJS(item));
             }
             this.noneSchemaData = _data["noneSchemaData"];
-            this.regionId = _data["regionId"];
         }
     }
 
@@ -6218,13 +6238,14 @@ export class Licence implements ILicence {
         data["processRunId"] = this.processRunId;
         data["id"] = this.id;
         data["status"] = this.status;
-        data["naldStatus"] = this.naldStatus;
-        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
-        data["licenceType"] = this.licenceType;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
+        data["regionId"] = this.regionId;
+        data["licenceType"] = this.licenceType;
         data["dmsPermitNumber"] = this.dmsPermitNumber;
         data["dmsPath"] = this.dmsPath;
         data["dmsFileId"] = this.dmsFileId;
+        data["naldStatus"] = this.naldStatus;
+        data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["filename"] = this.filename;
         data["licenceVersion"] = this.licenceVersion ? this.licenceVersion.toJSON() : undefined as any;
         if (Array.isArray(this.points)) {
@@ -6260,7 +6281,6 @@ export class Licence implements ILicence {
                 data["licenceSets"].push(item ? item.toJSON() : undefined as any);
         }
         data["noneSchemaData"] = this.noneSchemaData;
-        data["regionId"] = this.regionId;
         return data;
     }
 }
@@ -6269,13 +6289,14 @@ export interface ILicence {
     processRunId?: number | undefined;
     id?: string | undefined;
     status?: ScrapeStatus;
-    naldStatus?: NaldLicenceStatus;
-    naldHasAggregateCondition?: boolean | undefined;
-    licenceType?: LicenceType;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
+    regionId?: number | undefined;
+    licenceType?: LicenceType;
     dmsPermitNumber?: string | undefined;
     dmsPath?: string | undefined;
     dmsFileId?: string | undefined;
+    naldStatus?: NaldLicenceStatus;
+    naldHasAggregateCondition?: boolean | undefined;
     filename?: string | undefined;
     licenceVersion?: LicenceVersion;
     points?: PointOfAbstraction[];
@@ -6287,7 +6308,6 @@ export interface ILicence {
     linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
-    regionId?: number | undefined;
 
     [key: string]: any;
 }

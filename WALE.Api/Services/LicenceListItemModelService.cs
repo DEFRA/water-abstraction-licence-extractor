@@ -105,6 +105,7 @@ public class LicenceListItemModelService
 
             limitsCount = licence.LimitsCount,
             aggregatesCount = licence.AggregatesCount,
+            naldHasAggregateCondition = licence.NaldAggregate,
             ocr = licence.Ocr,
             issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
             issuer = licence.Issuer,
@@ -139,6 +140,7 @@ public class LicenceListItemModelService
             RegionId = source.RegionId,
             NaldStatus = ParseEnum<NaldLicenceStatus>(source.NaldStatus),
             LicenceType = ParseEnum<LicenceType>(source.LicenceType),
+            IsBecauseOfAggregate = source.IsBecauseOfAggregate,
             LicenceVersion = new LicenceVersion
             {
                 EffectiveDate = source.EffectiveDate?.ToDateTime(TimeOnly.MinValue),
@@ -170,15 +172,23 @@ public class LicenceListItemModelService
     {
         ArgumentNullException.ThrowIfNull(source);
 
+        Dictionary<string, string?>? sourceFields = null;
+
+        if (!string.IsNullOrEmpty(source.SourceFields))
+        {
+            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields);
+        }
+        
         return new ContainedInInformation
         {
             LinkReason = source.LinkReason,
-            //IsBecauseOfAggregate =  source.IsBecauseOfAggregate, // NOTE not sure if this should be done elsewhere now
             LineNumber = source.LineNumber,
             PageNumber = source.PageNumber,
             SectionName = source.SectionName,
             Source = ParseEnum<InformationSource>(source.Source),
             Direction = ParseEnum<InformationDirection>(source.Direction),
+            AcinCode = source.AcinCode,
+            SourceFields = sourceFields
         };
     }
     
@@ -235,25 +245,18 @@ public class LicenceListItemModelService
             DmsPath = source.DmsPath,
             DmsFileId = source.DmsFileId,
             Filename = source.Filename,
-
             LicenceVersionId =
                 source.LicenceVersion?.LicenceVersionId
                 ?? LicenceVersion.UnknownVersion,
-
             EffectiveDate = ToDateOnly(
                 source.LicenceVersion?.EffectiveDate),
-
             ExpiryDate = ToDateOnly(
                 source.LicenceVersion?.ExpiryDate),
-
             IssueDate = ToDateOnly(
                 source.LicenceVersion?.IssueDate),
-
             OriginalIssueDate = ToDateOnly(
                 source.LicenceVersion?.OriginalIssueDate),
-
             NaldExpiryDate = source.LicenceVersion?.NaldExpiryDate,
-
             NaldEffectiveStartDate = source.LicenceVersion?.NaldEffectiveStartDate,
             NaldOrigEffectiveDate = source.LicenceVersion?.NaldOrigEffectiveDate,
             NaldOrigSignatureDate = source.LicenceVersion?.NaldOrigSignatureDate,
@@ -263,7 +266,6 @@ public class LicenceListItemModelService
             NaldIncrementNumber = source.LicenceVersion?.NaldIncrementNumber,
             NaldIssueNumber = source.LicenceVersion?.NaldIssueNumber,
             NaldUpdateReason = source.LicenceVersion?.NaldUpdateReason,
-
             Issuer = source.LicenceVersion?.Issuer,
             DmsFileIdStatus = source.LicenceVersion?.DmsFileIdStatus,
             DmsFileIdStatusDateUtc = source.LicenceVersion?.DmsFileIdStatusDateUtc,
@@ -271,20 +273,18 @@ public class LicenceListItemModelService
             LicenceVersionNaldStatus = source.LicenceVersion?.NaldStatus,
             LicenceType = source.LicenceType.ToString(),
             RegionId = source.RegionId,
-
             ContainedIn = source.ContainedIn?
                 .Select(ToUpsertContainedInInformation)
                 .ToArray() ?? [],
-
             ConditionData = source.Condition is null
                 ? null
                 : JsonSerializer.Serialize(
                     source.Condition,
                     JsonHelper.GetSerializerOptions()),
-
             SourceData = JsonSerializer.Serialize(
                 source,
-                JsonHelper.GetSerializerOptions())
+                JsonHelper.GetSerializerOptions()),
+            IsBecauseOfAggregate = true
         };
     }
 
@@ -298,9 +298,12 @@ public class LicenceListItemModelService
             Direction = source.Direction?.ToString() ?? string.Empty,
             SectionName = source.SectionName,
             LinkReason = source.LinkReason,
-            //IsBecauseOfAggregate = source.IsBecauseOfAggregate, // NOTE not sure if this should be done elsewhere now
             LineNumber = source.LineNumber,
-            PageNumber = source.PageNumber
+            PageNumber = source.PageNumber,
+            AcinCode = source.AcinCode,
+            SourceFields = source.SourceFields != null
+                ? JsonSerializer.Serialize(source.SourceFields, JsonHelper.GetSerializerOptions())
+                : null
         };
     }
 

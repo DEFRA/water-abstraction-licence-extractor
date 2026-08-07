@@ -496,6 +496,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                 Name = "FurtherProvisionsAll",
                 TextStart =
                 [
+                    new("9. FURTHER PROVISIONS[END_OF_LINE]"),
+                    new("9 FURTHER PROVISIONS") { LineMustStartWith = true },
                     new("10. FURTHER PROVISIONS[END_OF_LINE]"),
                     new("10 FURTHER PROVISIONS") { LineMustStartWith = true },
                     new("FURTHER PROVISIONS[END_OF_LINE]") { LineMustStartWith = true }

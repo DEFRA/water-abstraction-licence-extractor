@@ -1258,7 +1258,7 @@ public class PdfDataExtractorService(
             
             var countDidStartAtStartOfBlock = group.Count(subResult =>
                 subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
-            
+
             if (anyDidntStartAtStartOfBlock && countDidStartAtStartOfBlock > 0)
             {
                 var newGroupSubResults = group
@@ -1277,7 +1277,7 @@ public class PdfDataExtractorService(
             
             subResultsToKeep.AddRange(group);
         }
-        
+
         return subResultsToKeep;
     }
 

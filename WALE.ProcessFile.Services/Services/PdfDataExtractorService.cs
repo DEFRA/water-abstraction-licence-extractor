@@ -1225,11 +1225,6 @@ public class PdfDataExtractorService(
             }
 
             var groupLabel = group.First().MatchedLabel!;
-
-            if (groupLabel.Name == "PurposePointGroup" && group.Count == 2)
-            {
-                
-            }
             
             if (groupLabel.DeDuplicateResults)
             {
@@ -1283,11 +1278,6 @@ public class PdfDataExtractorService(
             subResultsToKeep.AddRange(group);
         }
         
-        if (subResultsToKeep.FirstOrDefault()?.MatchedLabelName == "PurposePointGroup")
-        {
-                
-        }
-
         return subResultsToKeep;
     }
 

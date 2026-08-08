@@ -2133,6 +2133,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
+                            new("6.10") { LineMustStartWith = true },
+                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
+                            new("6.1[END_OF_COLUMN]") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2141,8 +2144,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.7") { LineMustStartWith = true },
                             new("6.8") { LineMustStartWith = true },
                             new("6.9") { LineMustStartWith = true },
-                            new("6.10") { LineMustStartWith = true },
-                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
                             new("(1)") { LineMustStartWith = true},

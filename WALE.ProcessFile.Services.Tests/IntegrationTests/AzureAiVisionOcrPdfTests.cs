@@ -1636,7 +1636,9 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
-        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].Description);
+        
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 

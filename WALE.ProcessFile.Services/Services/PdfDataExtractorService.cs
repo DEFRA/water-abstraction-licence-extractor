@@ -6,9 +6,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Helpers;
-using WALE.ProcessFile.Services.Methods;
 using WALE.ProcessFile.Services.Models;
-using LinkedLicence = WALE.ProcessFile.Services.Formats.LinkedLicence;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -1068,8 +1066,9 @@ public class PdfDataExtractorService(
         }
 
         var lines = StandardiseLines(documentLines);
-        var wrappedLines = WrapLines(lines, false);
+        var wrappedLines = DocumentLineWrapped.WrapLines(lines, false);
         var joinedLines = string.Join(',', lines.Select(line => line.Text));
+        var documentLineService = new DocumentLineService(lines);
         
         foreach (var (labelGroupName, labels) in labelLookups)
         {
@@ -1087,19 +1086,21 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
-                var labelGroupMatch = await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                    wrappedLines,
-                    [label],
-                    isOcr,
-                    serviceName,
-                    labelGroupName,
-                    labelGroupMatches,
-                    previouslyParsedPaths,
-                    regionCode,
-                    processRunId,
-                    lookupConfiguration,
-                    this,
-                    additionalInformationStore);
+                var labelGroupMatch =
+                    await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
+                        wrappedLines,
+                        [label],
+                        isOcr,
+                        serviceName,
+                        labelGroupName,
+                        labelGroupMatches,
+                        previouslyParsedPaths,
+                        regionCode,
+                        processRunId,
+                        lookupConfiguration,
+                        this,
+                        documentLineService,
+                        additionalInformationStore);
                 
                 if (labelGroupMatch.Count == 0)
                 {
@@ -1136,34 +1137,69 @@ public class PdfDataExtractorService(
         int regionCode,
         int processRunId,
         LookupConfiguration lookupConfiguration,
+        IDocumentLineService documentLineService,
         Dictionary<string, object?> additionalInformationStore)
     {
         var subResults = new List<LabelGroupResult>();
         
         if (label.SubLabels?.Count > 0)
         {
-            var wrappedLines = WrapLines(lines, true);
+            var wrappedLines = DocumentLineWrapped.WrapLines(lines, true);
             
             foreach (var subLabel in label.SubLabels)
             {
+                var instanceWrappedLines = wrappedLines;
+                
+                if (false && subLabel is { PreviousLinesToFetch: > 0, Name: "DateOnly" })
+                {
+                    instanceWrappedLines = instanceWrappedLines.ToList();
+                    var thisLine = lines[0];
+                        
+                    var startPageNumber = thisLine.PageNumber;
+                    var endPageNumber = startPageNumber;
+
+                    var endLineNumber = thisLine.LineNumber - 1;
+                    var startLineNumber = thisLine.LineNumber - subLabel.PreviousLinesToFetch;
+
+                    var extraLines = documentLineService.GetDocumentLines(
+                        startPageNumber,
+                        startLineNumber,
+                        endPageNumber,
+                        endLineNumber);
+
+                    extraLines = extraLines
+                        .Where(l =>
+                            !(l.PageNumber == thisLine.PageNumber && l.LineNumber == thisLine.LineNumber))
+                        .OrderBy(l => l.PageNumber)
+                        .ThenBy(l => l.LineNumber)
+                        .ToList();
+
+                    var newLines = extraLines.ToList();
+                    newLines.AddRange(instanceWrappedLines.Select(wl => wl.Line)!);
+                        
+                    instanceWrappedLines = DocumentLineWrapped.WrapLines(newLines, true);
+                }
+
                 if (subLabel.Remove == null && label.Remove != null)
                 {
                     subLabel.Remove = label.Remove;
                 }
  
-                var subLabelGroupMatch = await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                    wrappedLines,
-                    [subLabel],
-                    isOcr,
-                    serviceName,
-                    labelGroupName,
-                    subResults,
-                    previouslyParsedPaths,
-                    regionCode,
-                    processRunId,
-                    lookupConfiguration,
-                    this,
-                    additionalInformationStore);
+                var subLabelGroupMatch =
+                    await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
+                        instanceWrappedLines,
+                        [subLabel],
+                        isOcr,
+                        serviceName,
+                        labelGroupName,
+                        subResults,
+                        previouslyParsedPaths,
+                        regionCode,
+                        processRunId,
+                        lookupConfiguration,
+                        this,
+                        documentLineService,
+                        additionalInformationStore);
 
                 if (subLabelGroupMatch.Count > 0)
                 {
@@ -1220,16 +1256,22 @@ public class PdfDataExtractorService(
             var anyDidntStartAtStartOfBlock = group.Any(subResult =>
                 subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]");
             
-            var anyDidStartAtStartOfBlock = group.Any(subResult =>
+            var countDidStartAtStartOfBlock = group.Count(subResult =>
                 subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text == "[START_OF_BLOCK]");
 
-            if (anyDidntStartAtStartOfBlock && anyDidStartAtStartOfBlock)
+            if (anyDidntStartAtStartOfBlock && countDidStartAtStartOfBlock > 0)
             {
                 var newGroupSubResults = group
                     .Where(subResult => subResult.MatchedLabel?.TextToMatch?.FirstOrDefault()?.Text != "[START_OF_BLOCK]")
                     .ToList();
                 
                 subResultsToKeep.AddRange(newGroupSubResults);
+                continue;
+            }
+
+            if (countDidStartAtStartOfBlock > 0)
+            {
+                subResultsToKeep.Add(group.First());
                 continue;
             }
             
@@ -1249,17 +1291,6 @@ public class PdfDataExtractorService(
         }
 
         return newLines;
-    }
-    
-    private static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines, bool clone)
-    {
-        return lines
-            .Select((line, index) => new DocumentLineWrapped
-            {
-                Line = line.Clone(),
-                Index = index
-            })
-            .ToList();
     }
     
     private static bool LabelIsInDocument(

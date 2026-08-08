@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Methods;
@@ -24,6 +25,7 @@ public static class FindLabelGroupMatchesHelper
         int processRunId,
         LookupConfiguration lookupConfiguration,
         PdfDataExtractorService pdfDataExtractorService,
+        IDocumentLineService documentLineService,
         Dictionary<string, object?> additionalInformationStore)
     {
         var returnList = new List<LabelGroupResult>();
@@ -154,6 +156,8 @@ public static class FindLabelGroupMatchesHelper
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
+
+                        var prevPartialLine = partialLine.Clone();
                         
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
@@ -281,6 +285,7 @@ public static class FindLabelGroupMatchesHelper
                         processRunId = processRunId,
                         regionCode = regionCode,
                         lookupConfiguration = lookupConfiguration,
+                        documentLineService = documentLineService,
                         additionalInformationStore = additionalInformationStore
                     };
                     

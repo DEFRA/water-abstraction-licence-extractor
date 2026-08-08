@@ -2135,6 +2135,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
+                            new("6.10") { LineMustStartWith = true },
+                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
+                            new("6.1[END_OF_COLUMN]") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2143,8 +2146,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.7") { LineMustStartWith = true },
                             new("6.8") { LineMustStartWith = true },
                             new("6.9") { LineMustStartWith = true },
-                            new("6.10") { LineMustStartWith = true },
-                            new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
                             new("(1)") { LineMustStartWith = true},
@@ -2169,7 +2170,7 @@ public static partial class AbstractionLicenceLabelConfiguration
 
                         ],
                         RemoveStartOfBlockSectionsWhenMultiple = false,
-                        DeDuplicateResults = true,
+                        DeDuplicateResults = true, // Have a think about how to remove the ones that are broadly the same but not exactly
                         IncludeStartLabelText = true,
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         Format = "Text",
@@ -2254,6 +2255,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new ($"{documentIdentifierPrefix}.7"),
                             new ($"{documentIdentifierPrefix}.8")
                         ],
+                        PreviousLinesToFetch = 2,
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
                         IncludeStartLabelText = true,

@@ -1673,7 +1673,8 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase)
+            || value.Contains("Up to and including", StringComparison.OrdinalIgnoreCase);
         
         if (!isFrom && !isUntil)
         {
@@ -1683,6 +1684,7 @@ public static class AbstractionLicenceSchemaConverter
         var parts = value
             .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
             .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
+            .Replace("Up to and including", "~", StringComparison.OrdinalIgnoreCase)
             .Split('~');
 
         var datePart = parts.Length >= 2 ? parts[1] : null;

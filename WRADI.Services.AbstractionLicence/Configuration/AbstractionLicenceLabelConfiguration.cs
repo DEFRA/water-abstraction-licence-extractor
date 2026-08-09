@@ -2256,6 +2256,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new ($"{documentIdentifierPrefix}.8")
                         ],
                         PreviousLinesToFetch = 1, // Done for licences like 2/27/15/041
+                        GoOutsideTextBlock = true,
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore,
                         Format = "Date",
                         IncludeStartLabelText = true,

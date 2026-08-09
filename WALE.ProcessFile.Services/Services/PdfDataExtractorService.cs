@@ -1150,7 +1150,7 @@ public class PdfDataExtractorService(
             {
                 var instanceWrappedLines = wrappedLines;
                 
-                if (subLabel is { PreviousLinesToFetch: > 0, Name: "DateOnly" })
+                if (subLabel is { PreviousLinesToFetch: > 0, GoOutsideTextBlock: true })
                 {
                     instanceWrappedLines = instanceWrappedLines.ToList();
                     var thisLine = lines[0];

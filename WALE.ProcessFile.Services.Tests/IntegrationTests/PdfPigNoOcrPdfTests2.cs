@@ -3291,4 +3291,58 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
         Assert.Equal(6, agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences?.Length);
     }
+
+    [Fact]
+    public async Task WeirdLineWrapping()
+    {
+        // Arrange
+        const string filename = "22715041__Application Formal Variation Issued Licence - 22032013.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3, 5);
+        Assert.Equal(12, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            -1,
+            await LookupConfigurationAsync(5, 3, TestConfig.PdfFolder3),
+            AbsLicCacheService);
+        
+        Assert.Equal(2, licenceSets.Count);
+        
+        Assert.Equal("22715041-LV20130322", licenceSets[0].LicenceSetId);
+        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+
+        var agreedSchemaLicenceGroup = licenceSets[0];
+        var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
+
+        Assert.Equal("2/27/15/041", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]?.ToString());
+        
+        Assert.Null(agreedSchemaLicence.DefinitionOfYear);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
+        Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
+
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual[0].TimeCutoff);        
+        Assert.Equal("31 March 2027", agreedSchemaLicence.AbstractionLimits.Individual[0].TimeCutoff!.Date);
+        Assert.Equal(CutoffType.Upto, agreedSchemaLicence.AbstractionLimits.Individual[0].TimeCutoff!.CutoffType);
+        
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual[1].Limits);
+        Assert.Equal("1 April 2027", agreedSchemaLicence.AbstractionLimits.Individual[1].TimeCutoff!.Date);
+        Assert.Equal(CutoffType.From, agreedSchemaLicence.AbstractionLimits.Individual[1].TimeCutoff!.CutoffType);
+        
+        Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits.Count);
+        Assert.Equal("31 March 2027", agreedSchemaLicence.AbstractionLimits.Aggregates[0].TimeCutoff!.Date);
+        Assert.Equal(CutoffType.Upto, agreedSchemaLicence.AbstractionLimits.Aggregates[0].TimeCutoff!.CutoffType);
+        
+        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences?.Length);
+        Assert.Equal("2/27/14/009", agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
+        Assert.Equal("2/27/14/010", agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences![1]);
+        Assert.Equal("2/27/14/058", agreedSchemaLicence.AbstractionLimits.Aggregates[0].LinkedLicences![2]);
+    }
 }

@@ -1,4 +1,5 @@
-﻿using WALE.ProcessFile.Core.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
@@ -23,15 +24,22 @@ using WRADI.ProcessFile.Cmd.AbstractionLicence;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
 
-await ProgramAsync();
+
+var configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>(
+        optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+await ProgramAsync(configuration);
 return;
 
-async Task ProgramAsync()
+async Task ProgramAsync(IConfiguration configurationItem)
 {
     ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started");
     var startDateTimeUtc = DateTime.UtcNow;
     
-    var services = ConfigureServices();
+    var services = ConfigureServices(configurationItem);
 
     var cacheService = services.CacheService!;
     var abstractionLicenceCacheService = services.AbstractionLicenceCacheService!;
@@ -211,13 +219,29 @@ async Task ProgramAsync()
     
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Starting Licence List Data Refresh processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
-  // TODO - Add message on another queue to kick off licence list report data population
+    FireAndForgetDataRefresh(abstractionLicenceOutputService, processRun);
     
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished Licence List Data Refresh at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+}
+
+void FireAndForgetDataRefresh(IAbstractionLicenceOutputService abstractionLicenceOutputService, ProcessRun processRun)
+{
+    _ = Task.Run((Func<Task?>)(async () =>
+    {
+        try
+        {
+            await abstractionLicenceOutputService
+                .UpdateLicenceListProcessRunAsync(processRun.ProcessRunId);
+        }
+        catch
+        {
+            // intentionally swallowed
+        }
+    }));
 }
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(
@@ -297,155 +321,242 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     }
 }
 
-ConfiguredServices ConfigureServices()
+ConfiguredServices ConfigureServices(
+    IConfiguration configurationForServices)
 {
-    var maxConcurrentScrapers = int.Parse(Environment.GetEnvironmentVariable("ConcurrentCount")
-                                          ?? throw new NullReferenceException("ConcurrentCount"));
-    var regenerateMappingJson = bool.Parse(Environment.GetEnvironmentVariable("REGENERATE_MAPPING_JSON")
-                                           ?? throw new NullReferenceException("REGENERATE_MAPPING_JSON"));
-    var loadAiJs = bool.Parse(Environment.GetEnvironmentVariable("LOAD_AI_JS")
-                              ?? throw new NullReferenceException("LOAD_AI_JS"));
-    var refreshCache = bool.Parse(Environment.GetEnvironmentVariable("RefreshCache")
-                                  ?? throw new NullReferenceException("RefreshCache"));
-    var reportTemplatePath = Environment.GetEnvironmentVariable("ReportTemplatePath")
-                             ?? throw new NullReferenceException("ReportTemplatePath");
-    var outputFolder = Environment.GetEnvironmentVariable("OutputFolder")
-                       ?? throw new NullReferenceException("OutputFolder");
-    var listDataPath = Environment.GetEnvironmentVariable("ListDataPath")
-                       ?? throw new NullReferenceException("ListDataPath");
-    var processRunsDataPath = Environment.GetEnvironmentVariable("ProcessRunsDataPath")
-                              ?? throw new NullReferenceException("ProcessRunsDataPath");
-    var internalDataPath = Environment.GetEnvironmentVariable("InternalDataPath")
-                           ?? throw new NullReferenceException("InternalDataPath");
-    var licenceDataPath = Environment.GetEnvironmentVariable("LicenceDataPath")
-                          ?? throw new NullReferenceException("LicenceDataPath");
-    var licenceSetsDataPath = Environment.GetEnvironmentVariable("LicenceSetsDataPath")
-                              ?? throw new NullReferenceException("LicenceSetsDataPath");
-    var thumbnailImageDataPath = Environment.GetEnvironmentVariable("ThumbnailImageDataPath")
-                                 ?? throw new NullReferenceException("ThumbnailImageDataPath");
-    var fullImageDataPath = Environment.GetEnvironmentVariable("FullImageDataPath")
-                            ?? throw new NullReferenceException("FullImageDataPath");
-    var fileMappingPath = Environment.GetEnvironmentVariable("FileMappingPath")
-                          ?? throw new NullReferenceException("FileMappingPath");
-    var dotnetPath = Environment.GetEnvironmentVariable("DotnetPath")
-                     ?? throw new NullReferenceException("DotnetPath");
-    var tesseractExeName = Environment.GetEnvironmentVariable("TesseractExeName")
-                           ?? throw new NullReferenceException("TesseractExeName");
-    var tesseractExeDirectory = Environment.GetEnvironmentVariable("TesseractExeDirectory")
-                                ?? throw new NullReferenceException("TesseractExeDirectory");
-    var tessDataPrefix = Environment.GetEnvironmentVariable("TESSDATA_PREFIX")
-                         ?? throw new NullReferenceException("TESSDATA_PREFIX");
-    var apiBaseUrl = Environment.GetEnvironmentVariable("ApiBaseUrl")
-                         ?? throw new NullReferenceException("ApiBaseUrl");
+    var maxConcurrentScrapers =
+        configurationForServices.GetRequiredValue<int>(
+            "ConcurrentCount");
 
-    var delayPerProcessMs = 200; // TODO get from variable
-    var httpClient = HttpHelper.GetResilientHttpClient(apiBaseUrl, 100, 30);
-    
-    var fileServiceType = "api";
+    var regenerateMappingJson =
+        configurationForServices.GetRequiredValue<bool>(
+            "REGENERATE_MAPPING_JSON");
+
+    var loadAiJs =
+        configurationForServices.GetRequiredValue<bool>(
+            "LOAD_AI_JS");
+
+    var refreshCache =
+        configurationForServices.GetRequiredValue<bool>(
+            "RefreshCache");
+
+    var reportTemplatePath =
+        configurationForServices.GetRequiredValue<string>(
+            "ReportTemplatePath");
+
+    var outputFolder =
+        configurationForServices.GetRequiredValue<string>(
+            "OutputFolder");
+
+    var listDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "ListDataPath");
+
+    var processRunsDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "ProcessRunsDataPath");
+
+    var internalDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "InternalDataPath");
+
+    var licenceDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "LicenceDataPath");
+
+    var licenceSetsDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "LicenceSetsDataPath");
+
+    var thumbnailImageDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "ThumbnailImageDataPath");
+
+    var fullImageDataPath =
+        configurationForServices.GetRequiredValue<string>(
+            "FullImageDataPath");
+
+    var fileMappingPath =
+        configurationForServices.GetRequiredValue<string>(
+            "FileMappingPath");
+
+    var dotnetPath =
+        configurationForServices.GetRequiredValue<string>(
+            "DotnetPath");
+
+    var tesseractExeName =
+        configurationForServices.GetRequiredValue<string>(
+            "TesseractExeName");
+
+    var tesseractExeDirectory =
+        configurationForServices.GetRequiredValue<string>(
+            "TesseractExeDirectory");
+
+    var tessDataPrefix =
+        configurationForServices.GetRequiredValue<string>(
+            "TESSDATA_PREFIX");
+
+    var apiBaseUrl =
+        configurationForServices.GetRequiredValue<string>(
+            "ApiBaseUrl");
+
+    var delayPerProcessMs =
+        configurationForServices.GetValue<int?>(
+            "DelayPerProcessMs")
+        ?? 200;
+
+    var httpClient = HttpHelper.GetResilientHttpClient(
+        apiBaseUrl,
+        100,
+        30);
+
+    var fileServiceType =
+        configurationForServices.GetValue<string>(
+            "FileServiceType")
+        ?? "api";
+
     IFileService fileService;
 
-    switch (fileServiceType)
+    switch (fileServiceType.ToLowerInvariant())
     {
         case "api":
             fileService = new ApiFileService(httpClient);
             break;
+
         case "s3":
         {
-            var accessKey = Environment.GetEnvironmentVariable("AwsS3AccessKey")
-                ?? throw new NullReferenceException("AwsS3AccessKey");
-            var secretKey = Environment.GetEnvironmentVariable("AwsS3SecretKey")
-                ?? throw new NullReferenceException("AwsS3SecretKey");
-            var regionName = Environment.GetEnvironmentVariable("AwsRegionName")
-                ?? throw new NullReferenceException("AwsRegionName");
-            var bucketName = Environment.GetEnvironmentVariable("AwsS3BucketName")
-                ?? throw new NullReferenceException("AwsS3BucketName");
-        
+            var accessKey =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsS3AccessKey");
+
+            var secretKey =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsS3SecretKey");
+
+            var regionName =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsRegionName");
+
+            var bucketName =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsS3BucketName");
+
             fileService = new AwsS3FileService(
                 regionName,
                 bucketName,
                 accessKey,
                 secretKey,
                 null);
+
             break;
         }
+
         default:
         {
-            var pdfFolderPath = Environment.GetEnvironmentVariable("PdfFolderPath")
-                ?? throw new NullReferenceException("PdfFolderPath");
-        
+            var pdfFolderPath =
+                configurationForServices.GetRequiredValue<string>(
+                    "PdfFolderPath");
+
             if (!pdfFolderPath.EndsWith('/'))
             {
                 pdfFolderPath += "/";
             }
-        
+
             fileService = new LocalFileService(pdfFolderPath);
             break;
         }
     }
-    
-    var cacheService = new ApiCacheService(httpClient);
-    
-    var abstractionLicenceCacheService =
-        (IAbstractionLicenceCacheService?)new ApiAbstractionLicenceCacheService(httpClient);
-    
-    var outputService = new ApiOutputService(httpClient);
-    var abstractionLicenceOutputService =
-        (IAbstractionLicenceOutputService?)new ApiAbstractionLicenceOutputService(httpClient);
-    
-    var messageQueueService = new ApiMessageQueueService(httpClient);
 
-    var pdfPigDocumentService = new PdfPigNoOcrPdfDocumentService();
-    var docnetAlternativeDocumentService = new DocnetNoOcrAlternativePdfDocumentService();
-    
-    var pdfDataExtractors = new List<IPdfDataExtractorService>();
+    var cacheService =
+        new ApiCacheService(httpClient);
 
-    for (var idx = 0; idx < maxConcurrentScrapers; idx++)
+    IAbstractionLicenceCacheService
+        abstractionLicenceCacheService =
+            new ApiAbstractionLicenceCacheService(
+                httpClient);
+
+    var outputService =
+        new ApiOutputService(httpClient);
+
+    IAbstractionLicenceOutputService
+        abstractionLicenceOutputService =
+            new ApiAbstractionLicenceOutputService(
+                httpClient);
+
+    var messageQueueService =
+        new ApiMessageQueueService(httpClient);
+
+    var pdfPigDocumentService =
+        new PdfPigNoOcrPdfDocumentService();
+
+    var docnetAlternativeDocumentService =
+        new DocnetNoOcrAlternativePdfDocumentService();
+
+    var pdfDataExtractors =
+        new List<IPdfDataExtractorService>();
+
+    var azureAiVisionEndpoint =
+        configurationForServices.GetRequiredValue<string>(
+            "AzureAIVisionEndpoint");
+
+    var azureAiVisionKey =
+        configurationForServices.GetRequiredValue<string>(
+            "AzureAIVisionKey");
+
+    for (var idx = 0;
+         idx < maxConcurrentScrapers;
+         idx++)
     {
         var id = idx + 1;
-        var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
 
-        var tesseractOcrSparse = new TesseractOcrDataExtractorService(
-            tessDataPrefix,
-            WALE.ProcessFile.Core.Enums.PageSegMode.SparseTextOsd,
-            cacheService,
-            outputService,
-            dotnetPath,
-            tesseractExeName,
-            tesseractExeDirectory,
-            id);
+        var pdfPigNoOcr =
+            new PdfPigNoOcrDataExtractorService();
 
-        var tesseractOcrDefault = new TesseractOcrDataExtractorService(
-            tessDataPrefix,
-            WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
-            cacheService,
-            outputService,
-            dotnetPath,
-            tesseractExeName,
-            tesseractExeDirectory,
-            id);
+        var tesseractOcrSparse =
+            new TesseractOcrDataExtractorService(
+                tessDataPrefix,
+                WALE.ProcessFile.Core.Enums.PageSegMode
+                    .SparseTextOsd,
+                cacheService,
+                outputService,
+                dotnetPath,
+                tesseractExeName,
+                tesseractExeDirectory,
+                id);
 
-        var azureAiServices = new AzureAiVisionOcrDataExtractorService(
-            Environment.GetEnvironmentVariable("AzureAIVisionEndpoint")
-            ?? throw new NullReferenceException("AzureAIVisionEndpoint"),
-            Environment.GetEnvironmentVariable("AzureAIVisionKey")
-            ?? throw new NullReferenceException("AzureAIVisionKey"),
-            cacheService,
-            outputService,
-            id);
+        var tesseractOcrDefault =
+            new TesseractOcrDataExtractorService(
+                tessDataPrefix,
+                WALE.ProcessFile.Core.Enums.PageSegMode.Auto,
+                cacheService,
+                outputService,
+                dotnetPath,
+                tesseractExeName,
+                tesseractExeDirectory,
+                id);
 
-        var pdfDataExtractor = new PdfDataExtractorService(
-            pdfPigNoOcr,
-            [
-                tesseractOcrSparse,
-                tesseractOcrDefault,
-                azureAiServices
-            ],
-            cacheService,
-            outputService,
-            pdfPigDocumentService,
-            docnetAlternativeDocumentService,
-            messageQueueService,
-            id);
+        var azureAiServices =
+            new AzureAiVisionOcrDataExtractorService(
+                azureAiVisionEndpoint,
+                azureAiVisionKey,
+                cacheService,
+                outputService,
+                id);
+
+        var pdfDataExtractor =
+            new PdfDataExtractorService(
+                pdfPigNoOcr,
+                [
+                    tesseractOcrSparse,
+                    tesseractOcrDefault,
+                    azureAiServices
+                ],
+                cacheService,
+                outputService,
+                pdfPigDocumentService,
+                docnetAlternativeDocumentService,
+                messageQueueService,
+                id);
 
         pdfDataExtractors.Add(pdfDataExtractor);
     }
@@ -453,10 +564,12 @@ ConfiguredServices ConfigureServices()
     return new ConfiguredServices
     {
         CacheService = cacheService,
-        AbstractionLicenceCacheService = abstractionLicenceCacheService,
+        AbstractionLicenceCacheService =
+            abstractionLicenceCacheService,
         OutputService = outputService,
-        AbstractionLicenceOutputService = abstractionLicenceOutputService,
-        LicenceNumberService = null, // Set just after
+        AbstractionLicenceOutputService =
+            abstractionLicenceOutputService,
+        LicenceNumberService = null,
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,
@@ -469,7 +582,8 @@ ConfiguredServices ConfigureServices()
         InternalDataPath = internalDataPath,
         LicenceDataPath = licenceDataPath,
         LicenceSetsDataPath = licenceSetsDataPath,
-        ThumbnailImageDataPath = thumbnailImageDataPath,
+        ThumbnailImageDataPath =
+            thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
         DmsReportPath = fileMappingPath,

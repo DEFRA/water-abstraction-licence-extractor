@@ -340,7 +340,7 @@ export function ProcessRunLicenceFilters({
                 </select>
             </td>
 
-            <td>
+            <td className='default-hidden'>
                 <select
                     className={!pendingQuery.ShortLicenceSetId ? "" : "filter-active"}
                     value={pendingQuery.ShortLicenceSetId ?? ""}
@@ -419,7 +419,7 @@ export function ProcessRunLicenceFilters({
         <td style={{width: '7%'}}>
             Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
         </td>
-        <td style={{width: '8%'}}>
+        <td className='default-hidden' style={{width: '8%'}}>
             Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
         </td>
         <td style={{width: '10%'}}>

@@ -230,18 +230,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
 void FireAndForgetDataRefresh(IAbstractionLicenceOutputService abstractionLicenceOutputService, ProcessRun processRun)
 {
-    _ = Task.Run((Func<Task?>)(async () =>
-    {
-        try
-        {
-            await abstractionLicenceOutputService
-                .UpdateLicenceListProcessRunAsync(processRun.ProcessRunId);
-        }
-        catch (Exception exception)
-        {
-            ConsoleHelper.WriteLine($"{exception} Failed to update licence list for process run {processRun.ProcessRunId}");
-        }
-    }));
+    _ = Task.Run(() =>
+        abstractionLicenceOutputService.UpdateLicenceListProcessRunAsync(processRun.ProcessRunId));
 }
 
 async Task<List<LicenceSet>> ScrapeDocumentAsync(

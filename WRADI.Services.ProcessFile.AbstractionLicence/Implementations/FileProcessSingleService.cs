@@ -154,18 +154,8 @@ public class FileProcessSingleService(
     
     private void FireAndForgetDataRefresh(int processRunId)
     {
-        _ = Task.Run((Func<Task?>)(async () =>
-        {
-            try
-            {
-                await outputService
-                    .UpdateLicenceListProcessRunAsync(processRunId);
-            }
-            catch (Exception exception)
-            {
-                ConsoleHelper.WriteLine($"{exception} Failed to update licence list for process run {processRunId}");
-            }
-        }));
+        _ = Task.Run(() =>
+            outputService.UpdateLicenceListProcessRunAsync(processRunId));
     }
     
     private async Task<(bool StopExecution, List<LicenceSet> LicenceSets)> ScrapeDocumentAsync(

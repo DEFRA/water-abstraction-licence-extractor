@@ -163,7 +163,7 @@ public class FileProcessSingleService(
             }
             catch
             {
-              
+               // intentionally swallowed
             }
         }));
     }

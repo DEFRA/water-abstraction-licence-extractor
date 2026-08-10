@@ -136,6 +136,7 @@ public class FileProcessSingleService(
                 processRun,
                 lookupConfig);
 
+            FireAndForgetDataRefresh(processRun.ProcessRunId);
             return true;
         }
         catch (Exception e)
@@ -151,18 +152,18 @@ public class FileProcessSingleService(
         }
     }
     
-    private void FireAndForgetDataRefresh(IAbstractionLicenceOutputService abstractionLicenceOutputService, ProcessRun processRun)
+    private void FireAndForgetDataRefresh(int processRunId)
     {
         _ = Task.Run((Func<Task?>)(async () =>
         {
             try
             {
                 await outputService
-                    .UpdateLicenceListProcessRunAsync(processRun.ProcessRunId);
+                    .UpdateLicenceListProcessRunAsync(processRunId);
             }
             catch (Exception exception)
             {
-                ConsoleHelper.WriteLine($"{exception} Failed to update licence list for process run {processRun.ProcessRunId}");
+                ConsoleHelper.WriteLine($"{exception} Failed to update licence list for process run {processRunId}");
             }
         }));
     }

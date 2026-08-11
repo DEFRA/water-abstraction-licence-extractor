@@ -156,8 +156,6 @@ public static class FindLabelGroupMatchesHelper
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-
-                        var prevPartialLine = partialLine.Clone();
                         
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,

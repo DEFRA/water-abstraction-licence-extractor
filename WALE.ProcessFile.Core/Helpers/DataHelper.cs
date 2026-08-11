@@ -240,9 +240,10 @@ public static partial class DataHelper
 
                         var isCharBefore = indexOf >= 1 && !char.IsWhiteSpace(returnStr[indexOf - 1]);
                         var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
-                            && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
-
-                        if (textToMatch.ExceptWhenInsideWord && isCharBefore && isCharAfter)
+                            && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length])
+                            && returnStr[indexOf + textToMatch.Text.Length] != '.';
+                        
+                        if (textToMatch.ExceptWhenInsideWord && (isCharBefore || isCharAfter))
                         {
                             break;
                         }

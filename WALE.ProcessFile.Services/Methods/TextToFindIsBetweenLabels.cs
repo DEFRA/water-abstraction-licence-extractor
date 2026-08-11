@@ -72,6 +72,7 @@ public static class TextToFindIsBetweenLabels
                 .FirstOrDefault(x => x.Label?.Position == LabelPosition.LabelIsActuallyResult)?
                 .ColumnsText![0];
 
+            // Remove the one we matched on in TextStart from TextEnd (or any subset of it)
             if (!string.IsNullOrEmpty(labelText1) && labelText1 != "[START_OF_BLOCK]")
             {
                 relevantLineText = $"{labelText1}{relevantLineText}";
@@ -82,7 +83,7 @@ public static class TextToFindIsBetweenLabels
                         .Replace(PositionConstants.EndOfColumnMarker, string.Empty)
                         .Replace(PositionConstants.EndOfLineMarker, string.Empty);
                     
-                    return teTextWithoutMarkers != labelText1;
+                    return !labelText1.Contains(teTextWithoutMarkers, StringComparison.OrdinalIgnoreCase);
                 }).ToList();
             }
         }

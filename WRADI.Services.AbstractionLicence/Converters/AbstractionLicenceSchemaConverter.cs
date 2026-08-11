@@ -532,8 +532,8 @@ public static class AbstractionLicenceSchemaConverter
             return (individuals, aggregates);
         }
 
-        var lowestPoints = aggregates.Min(a => a.Points?.Length);
-        var lowestPointsInd = individuals.Min(a => a.Points?.Length);
+        var lowestPoints = aggregates.Min(a => a.Points?.Length) ?? int.MaxValue;
+        var lowestPointsInd = individuals.Min(a => a.Points?.Length) ?? int.MaxValue;
 
         if (lowestPoints > lowestPointsInd)
         {

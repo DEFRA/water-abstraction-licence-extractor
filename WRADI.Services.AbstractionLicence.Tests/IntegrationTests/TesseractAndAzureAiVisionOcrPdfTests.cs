@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
@@ -13,9 +14,9 @@ using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
-using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 
@@ -83,15 +84,30 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             0)).Item!;
     }
     
-    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
+    private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
+        new(TestConfig.PostgresHost,
+            TestConfig.PostgresPort,
+            TestConfig.PostgresDbName,
+            TestConfig.PostgresUsername,
+            TestConfig.PostgresPassword);
+    
+    private static IAbstractionLicenceDatabaseReadService ReadService =>
+        new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
+
+    private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
+        new DatabaseAbstractionLicenceCacheService(ReadService, null!);
+    
+    private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
+        var baseFixture = new BaseFixture();
+        
         return new LookupConfiguration(
             AbstractionLicenceLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
-            new AbstractionLicenceNumber([]),
+            await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -226,7 +242,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(13, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder3);
         
@@ -334,5 +350,80 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(agg.Limits[0].Purposes!);        
         Assert.Equal("(b)", agg.Limits[0].Purposes![0].Id);
         Assert.False(agg.Limits[0].Purposes![0].IsImplicit);
+    }
+    
+    [Fact]
+    public async Task WhenComplicatedFile3_ThenGetPurposesPointsAbstractionLimitsCorrectly()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "22722395__Licence (PDF) 24.08.2006 7556094.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 4, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(21, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder4);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService);
+        
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("2/27/22/395", licence.LicenceNumber!.Value);
+        
+        Assert.Single(licence.LinkedLicences);
+
+        Assert.NotNull(licence.Points);
+        Assert.Single(licence.Points);
+        Assert.Equal("SE 2865 7639", licence.Points[0].GridRef);
+        Assert.Equal("A", licence.Points[0].Name);
+        Assert.Equal("At National Grid Reference point SE 2865 7639", licence.Points[0].Description);
+        Assert.Equal("A", licence.Points[0].Id);
+
+        Assert.NotNull(licence.Purposes);
+        Assert.Single(licence.Purposes);
+        Assert.Null(licence.Purposes[0].Id);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Single(licence.AbstractionLimits.Individual!);
+
+        var limitBlock = licence.AbstractionLimits.Individual[0];
+        Assert.Equal(4, limitBlock.Limits.Count);
+        Assert.Equal("cubic metres", limitBlock.Limits[0].Units);
+        Assert.Equal(22.7, limitBlock.Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerHour, limitBlock.Limits[0].PeriodType); 
+        Assert.Single(limitBlock.Limits[0].Points!);
+        Assert.Equal("A", limitBlock.Limits[0].Points![0].Id);
+        Assert.True(limitBlock.Limits[0].Points![0].IsImplicit);
+        Assert.Single(limitBlock.Limits[0].Purposes!);
+        Assert.Null(limitBlock.Limits[0].Purposes![0].Id);
+        Assert.True(limitBlock.Limits[0].Purposes![0].IsImplicit);
+        
+        Assert.NotNull(licence.AbstractionLimits.Aggregates);
+        Assert.Single(licence.AbstractionLimits.Aggregates!);
+
+        limitBlock = licence.AbstractionLimits.Aggregates[0];
+        Assert.Single(limitBlock.Limits);
+        Assert.Equal("thousand cubic metres", limitBlock.Limits[0].Units);
+        Assert.Equal(120, limitBlock.Limits[0].Value);
+        Assert.Equal(LimitPeriodType.PerYear, limitBlock.Limits[0].PeriodType); 
+        Assert.Single(limitBlock.Points!);
+        Assert.Equal("A", limitBlock.Points![0].Id);
+        Assert.True(limitBlock.Points![0].IsImplicit);
+        Assert.Single(limitBlock.Purposes!);
+        Assert.Null(limitBlock.Purposes![0].Id);
+        Assert.False(limitBlock.Purposes![0].IsImplicit);
     }
 }

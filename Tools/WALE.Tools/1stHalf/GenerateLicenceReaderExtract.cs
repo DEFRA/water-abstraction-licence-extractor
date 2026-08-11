@@ -115,10 +115,10 @@ public static class GenerateLicenceReaderExtract
         ConsoleHelper.WriteLine("Started getting nald licence status");
         var naldLicenceStatusDataTask = absLicenceCacheService.GetNaldLicenceStatusDataAsync();
         
-        const int take = 10_000;
+        const int takeAtOnce = 10_000;
 
-        var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, take);
-        var allNaldData = await GetAllNaldDataAsync(absLicenceCacheService, take);
+        var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, takeAtOnce);
+        var allNaldData = await GetAllNaldDataAsync(absLicenceCacheService, takeAtOnce);
         
         ConsoleHelper.WriteLine("Finished getting all nald data");
         
@@ -150,6 +150,7 @@ public static class GenerateLicenceReaderExtract
             // If we didn't fetch data for the region, this could happen
             if (fullLicencePossibilities.Key == null)
             {
+                ConsoleHelper.WriteLine($"Skipping - No full licence possibilities found for {licenceNumber}");
                 continue;
             }
             
@@ -160,7 +161,13 @@ public static class GenerateLicenceReaderExtract
                     && (x.LapsedDate == null || x.LapsedDate > DateTime.Now));
 
             // TODO WA/055/0018/031 + WA/055/0018/31 both get compared to be the same here
-            var fullLicence = fullLicences.First();
+            var fullLicence = fullLicences.FirstOrDefault();
+
+            if (fullLicence == null)
+            {
+                ConsoleHelper.WriteLine($"Skipping - {licenceNumber} looks to be expired");
+                continue;
+            }
             
             var dmsStylePermitNumber = FormattingHelper.CleanPermitNumber(fullLicence.LicenceNo!).ToLower();
             naldLiveLicenceDataByLowercasePermitNumber.Add(dmsStylePermitNumber, fullLicence);
@@ -348,7 +355,7 @@ public static class GenerateLicenceReaderExtract
             .OrderBy(fileMetadata => fileMetadata.Filename)
             .ToDictionary(fileMetadata => fileMetadata.Filename, fileMetadata => fileMetadata);
 
-        // TODO - May need to implement paging above
+        // TODO - May need to implement paging above soon
         
         var licenceFinderResultsRaw = await abstractionLicenceCacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
@@ -471,7 +478,8 @@ public static class GenerateLicenceReaderExtract
             licenceNumberService,
             -1,
             DateTime.Now,
-            skipFileIfMoreThenPages: 25);
+            skipFileIfMoreThenPages: 25,
+            lockInProcess: true);
         
         ConsoleHelper.WriteLine($"DEBUG - {nameof(GenerateLicenceReaderExtract)} - Retrieved {originalConfiguration.Labels.Count} label groups from configuration");
 

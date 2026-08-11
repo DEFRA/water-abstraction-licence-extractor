@@ -9,11 +9,11 @@ string workflow;
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 //workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
-workflow = "GenerateLinkedLicencesCsv";
+//workflow = "GenerateLinkedLicencesCsv";
 
 const int processRunId = 112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -22,6 +22,15 @@ var folderPathUsername = "xxx";
 
 switch (workflow)
 {
+    case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs (from FME S3) into the DB
+        return await ImportNaldData.ImportAsync();
+    
+    case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
+        return await ImportDmsData.ImportAsync();
+    
+    case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
+        throw new NotImplementedException(); // TODO
+ 
     case "GenerateLicenceReaderExtract": // FREQUENT - Foreach file in storage, scrape (and feed into the DB);
         // - DOI (that will be used in Live Licence Identification)
         // - Licence number
@@ -31,15 +40,6 @@ switch (workflow)
 
         var includeVersionMatch = true;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
-    
-    case "ImportNaldData": // FREQUENT - Import needed to import NALD data from CSVs (from FME S3) into the DB
-        return await ImportNaldData.ImportAsync();
-    
-    case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
-        return await ImportDmsData.ImportAsync();
-    
-    case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
-        throw new NotImplementedException(); // TODO
     
     case "DuplicateLicenceIdentificationExtractBySize": // INFREQUENT - Identify duplicates by file size
         return await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(

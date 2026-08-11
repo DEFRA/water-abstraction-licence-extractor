@@ -4246,6 +4246,7 @@ public static class AbstractionLicenceSchemaConverter
             "per month" => LimitPeriodType.PerMonth,
             "per annum" => LimitPeriodType.PerYear,
             "per year" => LimitPeriodType.PerYear,
+            "aggregate annual abstraction" => LimitPeriodType.PerYear,            
             "in total" => LimitPeriodType.InTotal,
             "total annual quantity" => LimitPeriodType.InTotal,
             "consecutive five year" => LimitPeriodType.Per5Years,

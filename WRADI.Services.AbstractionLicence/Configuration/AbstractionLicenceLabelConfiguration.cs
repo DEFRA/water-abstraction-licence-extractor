@@ -2734,7 +2734,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Text =
                         [
                             new("per year"),
-                            new("per annum")
+                            new("per annum"),
+                            new("aggregate annual abstraction")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                         Format = "Units",
@@ -2955,7 +2956,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Text =
                         [
                             new("per year"),
-                            new("per annum")
+                            new("per annum"),
+                            new("aggregate annual abstraction")
                         ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",

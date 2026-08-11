@@ -2057,6 +2057,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING") { IfMultiplePreferLongest = true },                   
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLongest = true },
+                    new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of Water Authorised to be Abstracted During a Period or Periods Specified"),                    
                     new("Quantity(ies) of water authorised to be abstracted during a period"),

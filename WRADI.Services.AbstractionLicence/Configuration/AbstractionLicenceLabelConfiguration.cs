@@ -2123,13 +2123,16 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.7") { LineMustStartWith = true },
                             new("6.8") { LineMustStartWith = true },
                             new("6.9") { LineMustStartWith = true },
-                            new("From borehole (1)") { LineMustStartWith = true }, // Specificity matters here else you can start and being on same line (e.g. between text starts 'From borehole' and ends straight away with '(1)')
+                            new("From borehole (1)") { LineMustStartWith = true }, // Specificity matters here else you can start and end on same line (e.g. between text starts 'From borehole' and ends straight away with '(1)')
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
                             new("(1)") { LineMustStartWith = true },
                             new("(2)") { LineMustStartWith = true },
                             new("(3)") { LineMustStartWith = true },
                             new("(4)") { LineMustStartWith = true },
+                            new("*For Purpose (a)") { LineMustStartWith = true },
+                            new("*For Purpose (b)") { LineMustStartWith = true },
+                            new("*For Purpose (c)") { LineMustStartWith = true },                             
                             new("*For Purpose") { LineMustStartWith = true },
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
                             new("[START_OF_BLOCK]")
@@ -2146,6 +2149,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.7") { LineMustStartWith = true },
                             new("6.8") { LineMustStartWith = true },
                             new("6.9") { LineMustStartWith = true },
+                            new("From borehole (1)") { LineMustStartWith = true },
                             new("From borehole (2)") { LineMustStartWith = true },
                             new("From borehole") { LineMustStartWith = true },
                             new("(1)") { LineMustStartWith = true},
@@ -2153,6 +2157,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("(3)") { LineMustStartWith = true},
                             new("(4)") { LineMustStartWith = true},
                             new("(5)") { LineMustStartWith = true},
+                            new("*For Purpose (a)") { LineMustStartWith = true },
+                            new("*For Purpose (b)") { LineMustStartWith = true },
+                            new("*For Purpose (c)") { LineMustStartWith = true },                            
                             new("*For Purpose") { LineMustStartWith = true },
                             new("*In aggregate") { LineMustStartWith = true },
                             new("The aggregate quantity of water authorised to be abstracted under this licence shall not") { ColumnMustStartWith = true },
@@ -2208,14 +2215,14 @@ public static partial class AbstractionLicenceLabelConfiguration
                     {
                         Name = "DocumentIdentifier",
                         Possibilities = documentIdentifierPrefix != null ? [
-                            new($"{documentIdentifierPrefix}.1"),
-                            new($"{documentIdentifierPrefix}.2"),
-                            new($"{documentIdentifierPrefix}.3"),
-                            new($"{documentIdentifierPrefix}.4"),
-                            new($"{documentIdentifierPrefix}.5"),
-                            new($"{documentIdentifierPrefix}.6"),
-                            new($"{documentIdentifierPrefix}.7"),
-                            new($"{documentIdentifierPrefix}.8"),
+                            new($"{documentIdentifierPrefix}.1") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.2") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.3") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.4") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.5") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.6") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.7") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.8") { LineMustStartWith = true },
                             new("1. ") { LineMustStartWith = true },
                             new("2. ") { LineMustStartWith = true },
                             new("3. ") { LineMustStartWith = true },
@@ -2246,14 +2253,14 @@ public static partial class AbstractionLicenceLabelConfiguration
                             "Note:"
                         ],
                         Remove = [
-                            new ($"{documentIdentifierPrefix}.1"),
-                            new ($"{documentIdentifierPrefix}.2"),
-                            new ($"{documentIdentifierPrefix}.3"),
-                            new ($"{documentIdentifierPrefix}.4"),
-                            new ($"{documentIdentifierPrefix}.5"),
-                            new ($"{documentIdentifierPrefix}.6"),
-                            new ($"{documentIdentifierPrefix}.7"),
-                            new ($"{documentIdentifierPrefix}.8")
+                            new ($"{documentIdentifierPrefix}.1") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.2") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.3") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.4") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.5") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.6") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.7") { ExceptWhenInsideWord = true },
+                            new ($"{documentIdentifierPrefix}.8") { ExceptWhenInsideWord = true }
                         ],
                         PreviousLinesToFetch = 1, // Done for licences like 2/27/15/041
                         GoOutsideTextBlock = true,
@@ -3209,6 +3216,6 @@ public static partial class AbstractionLicenceLabelConfiguration
     [GeneratedRegex(@"Page \d* of \d*", RegexOptions.IgnoreCase, "en-GB")]
     private static partial Regex PageXOfYRegex();
     
-    [GeneratedRegex($"^{LicenceNumberHeaderLine}[0-9GSABR*&/. ]{{1,15}}$", RegexOptions.None, "en-GB")]
+    [GeneratedRegex($"^{LicenceNumberHeaderLine}[0-9GSABRgsabr*&/.() ]{{1,15}}$", RegexOptions.None, "en-GB")]
     private static partial Regex LicenceNumberInHeaderRegex();
 }

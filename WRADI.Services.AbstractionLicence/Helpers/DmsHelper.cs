@@ -234,7 +234,7 @@ public static class DmsHelper
 
         foreach (var licenceFinderResult in licenceFinderResults)
         {
-            if (licenceFinderResult.FileId == null)
+            if (licenceFinderResult.FileId == null || licenceFinderResult.FileId.Contains('('))
             {
                 continue;
             }

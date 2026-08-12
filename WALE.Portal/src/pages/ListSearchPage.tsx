@@ -191,8 +191,13 @@ function ListSearchPage() {
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
+    // @ts-ignore
+    const toHome = () => window.location = '/';
+    
     return (
         <div className="list-page-container">
+            <div style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer'}} onClick={toHome}>&#8617;</div>
+            
             <h1>
                 <a
                     href="#"

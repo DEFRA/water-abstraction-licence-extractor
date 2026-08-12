@@ -2911,7 +2911,7 @@ public static class AbstractionLicenceSchemaConverter
             .ToList();
 
         const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
-            = "shall not exceed the quantity authorised to be abstracted under this licence.";
+            = "shall not exceed the quantity authorised to be abstracted under this licence";
         
         var shouldCopyIndividualValues = abstractionLimitPointSubText.Contains(
             shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
@@ -2968,6 +2968,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Point
                 {
                     Id = p.Id,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();
@@ -2980,6 +2981,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Purpose
                 {
                     Id = p.Id,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();
@@ -3193,6 +3195,11 @@ public static class AbstractionLicenceSchemaConverter
 
         if (aggregateAbstractionLimits.Count == 0)
         {
+            foreach (var linkedLicenceNumber in linkedLicenceNumbers)
+            {
+                linkedLicenceNumber.IsBecauseOfAggregate = false;
+            }
+            
             sectionLinkedLicences.AddRange(linkedLicenceNumbers);
             return;
         }

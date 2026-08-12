@@ -3193,6 +3193,11 @@ public static class AbstractionLicenceSchemaConverter
 
         if (aggregateAbstractionLimits.Count == 0)
         {
+            foreach (var linkedLicenceNumber in linkedLicenceNumbers)
+            {
+                linkedLicenceNumber.IsBecauseOfAggregate = false;
+            }
+            
             sectionLinkedLicences.AddRange(linkedLicenceNumbers);
             return;
         }

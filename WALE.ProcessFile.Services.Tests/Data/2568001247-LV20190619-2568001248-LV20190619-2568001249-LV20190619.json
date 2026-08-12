@@ -24,25 +24,13 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             }
           ],
           "containedIn": [
@@ -83,25 +71,13 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             }
           ],
           "containedIn": [
@@ -142,25 +118,13 @@
               "periodType": "PerDay",
               "value": 475,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             },
             {
               "periodType": "PerYear",
               "value": 173453,
               "units": "cubic metres",
-              "isAverage": false,
-              "points": [
-                {
-                  "id": "2.1",
-                  "isImplicit": true
-                }
-              ]
+              "isAverage": false
             }
           ],
           "containedIn": [
@@ -260,55 +224,19 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -341,19 +269,7 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -395,25 +311,13 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -626,55 +530,19 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -707,19 +575,7 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -761,25 +617,13 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -990,55 +834,19 @@
                 "periodType": "PerHour",
                 "value": 20,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -1071,19 +879,7 @@
                 "periodType": "PerDay",
                 "value": 91,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ],
-                "purposes": [
-                  {
-                    "id": "4.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [
@@ -1125,25 +921,13 @@
                 "periodType": "PerDay",
                 "value": 475,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               },
               {
                 "periodType": "PerYear",
                 "value": 173453,
                 "units": "cubic metres",
-                "isAverage": false,
-                "points": [
-                  {
-                    "id": "2.1",
-                    "isImplicit": true
-                  }
-                ]
+                "isAverage": false
               }
             ],
             "containedIn": [

@@ -1344,20 +1344,20 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
         
-        Assert.Single(limit.Purposes!);
-        Assert.Equal("4.1", limit.Purposes![0].Id);
+        Assert.Single(limitG.Purposes!);
+        Assert.Equal("4.1", limitG.Purposes![0].Id);
         Assert.Equal(38640, limit.Value);
 
         limit = limitG.Limits[1];
-        Assert.Single(limit.Purposes!);
-        Assert.Equal("4.1", limit.Purposes![0].Id);
+        Assert.Single(limitG.Purposes!);
+        Assert.Equal("4.1", limitG.Purposes![0].Id);
         Assert.Equal(10140000, limit.Value);
 
         limitG = agreedSchemaLicence.AbstractionLimits.Individual[1];
         limit = limitG.Limits[0];
         
-        Assert.Single(limit.Purposes!);
-        Assert.Equal("4.2", limit.Purposes![0].Id);
+        Assert.Single(limitG.Purposes!);
+        Assert.Equal("4.2", limitG.Purposes![0].Id);
         Assert.Equal(2482000, limit.Value);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -1373,12 +1373,14 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.Equal(38640, aggregate.Limits[0].Value);
         Assert.Null(aggregate.Limits[0].Purposes);
-        Assert.Equal(5, aggregate.Limits[0].Points.Length);
-        Assert.Equal(0, aggregate.Limits[0].Points.Count(c => c.IsImplicit != true));
+        Assert.Null(aggregate.Limits[0].Points);
+        Assert.Equal(5, aggregate.Points.Length);
+        Assert.Equal(0, aggregate.Points.Count(c => c.IsImplicit != true));
         Assert.Equal(10140000, aggregate.Limits[1].Value);
         Assert.Null(aggregate.Limits[1].Purposes);
-        Assert.Equal(5, aggregate.Limits[1].Points.Length);
-        Assert.Equal(0, aggregate.Limits[1].Points.Count(c => c.IsImplicit != true));
+        Assert.Null(aggregate.Limits[1].Points);
+        Assert.Equal(5, aggregate.Points.Length);
+        Assert.Equal(0, aggregate.Points.Count(c => c.IsImplicit != true));
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
@@ -1460,9 +1462,10 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
-        
-        Assert.Equal(2, limit.Purposes.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
+
+        Assert.Null(limit.Purposes);
+        Assert.Equal(2, limitG.Purposes.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
         Assert.Equal(12410000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -1539,11 +1542,13 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
-        
-        Assert.Equal(2, limit.Purposes!.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
-        Assert.Equal(21, limit.Points!.Length);
-        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
+
+        Assert.Null(limit.Purposes!);
+        Assert.Equal(2, limitG.Purposes!.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
+        Assert.Null(limit.Points);
+        Assert.Equal(21, limitG.Points!.Length);
+        Assert.Equal(0, limitG.Points.Count(c => c.IsImplicit != true));
         Assert.Equal(5840000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -1618,18 +1623,22 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 
         var limitG = agreedSchemaLicence.AbstractionLimits.Individual[0];
         var limit = limitG.Limits[0];
-        
-        Assert.Equal(2, limit.Purposes.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
-        Assert.Single(limit.Points!);
+
+        Assert.Null(limit.Purposes);
+        Assert.Equal(2, limitG.Purposes.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
+        Assert.Null(limit.Points!);
+        Assert.Single(limitG.Points!);
         Assert.Equal(730000, limit.Value);
 
         limitG = agreedSchemaLicence.AbstractionLimits.Individual[1];
         limit = limitG.Limits[0];
-        
-        Assert.Equal(2, limit.Purposes.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
-        Assert.Single(limit.Points!);
+
+        Assert.Null(limit.Purposes);
+        Assert.Equal(2, limitG.Purposes.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
+        Assert.Null(limit.Points!);
+        Assert.Single(limitG.Points!);
         Assert.Equal(2920000, limit.Value);
         
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);

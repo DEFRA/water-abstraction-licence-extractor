@@ -27,18 +27,27 @@ public class NaldLinkedLicenceHelper
         return new NaldLinkedLicenceHelper(map, licenceNumberService);
     }
 
-    public List<NaldLinkedLicence> GetLinkedLicences(string? licenceNumber)
+    public List<NaldLinkedLicence> GetLinkedLicences(string? licenceNumber, bool getExactMatch)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
             return [];
         }
 
-        var naldLicences = _licenceNumberService.GetNaldLicences(licenceNumber);
-        var candidateLicenceNumbers = naldLicences
-            .Select(l => l.LicenceNumber)
-            .ToList();
+        List<string> candidateLicenceNumbers;
 
+        if (getExactMatch)
+        {
+            candidateLicenceNumbers = [licenceNumber];
+        }
+        else
+        {
+            var naldLicences = _licenceNumberService.GetNaldLicences(licenceNumber);
+            candidateLicenceNumbers = getExactMatch ? [licenceNumber] : naldLicences
+                .Select(l => l.LicenceNumber)
+                .ToList();
+        }
+        
         var returnList = new List<NaldLinkedLicence>();
 
         foreach (var candidateLicenceNumber in candidateLicenceNumbers)

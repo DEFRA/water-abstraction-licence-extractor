@@ -600,19 +600,21 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(LimitPeriodType.PerHour, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(41, limit.Value);
-        Assert.Equal(4, limit.Points.Length);
-        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
-        Assert.Equal(1, limit.Purposes.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
+        Assert.Null(limit.Points);
+        Assert.Equal(4, limitG.Points.Length);
+        Assert.Equal(0, limitG.Points.Count(c => c.IsImplicit != true));
+        Assert.Equal(1, limitG.Purposes.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
 
         limit = limitG.Limits[1];
         Assert.Equal(LimitPeriodType.PerDay, limit.PeriodType);
         Assert.Equal("cubic metres", limit.Units);
         Assert.Equal(205, limit.Value);
-        Assert.Equal(4, limit.Points.Length);
-        Assert.Equal(0, limit.Points.Count(c => c.IsImplicit != true));
-        Assert.Equal(1, limit.Purposes.Length);
-        Assert.Equal(0, limit.Purposes.Count(c => c.IsImplicit != true));
+        Assert.Null(limit.Points);
+        Assert.Equal(4, limitG.Points.Length);
+        Assert.Equal(0, limitG.Points.Count(c => c.IsImplicit != true));
+        Assert.Equal(1, limitG.Purposes.Length);
+        Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
         
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);

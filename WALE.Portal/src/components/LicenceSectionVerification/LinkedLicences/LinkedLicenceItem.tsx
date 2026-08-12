@@ -1,3 +1,4 @@
+import React from "react";
 import {
     LinkedLicence,
     NullableOfInformationDirection,
@@ -7,6 +8,7 @@ import {
     LicenceSectionVerification
 } from "../../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo.tsx";
+import {ValidationError} from "../ValidationError.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
 import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFileId} from "../../../utils/verificationUtils.ts";
 
@@ -47,6 +49,7 @@ export const LinkedLicenceItem = ({
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
+    const [errors, setErrors] = React.useState<Record<string, string>>({});
     const linkedLicence = linkedLicenceProp;
 
     if (!linkedLicence) {
@@ -70,13 +73,14 @@ export const LinkedLicenceItem = ({
     };
 
     const handleAddSection = () => {
+        setErrors({});
         if (onUpdate) {
             const newSection = new ContainedInInformation({
                 source: InformationSource.Document,
                 direction: NullableOfInformationDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
-                isBecauseOfAggregate: false
+                //isBecauseOfAggregate: false // NOTE not sure if this should be done elsewhere now
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
             onUpdate(new LinkedLicence({...linkedLicence, containedIn: newSections}));
@@ -91,13 +95,38 @@ export const LinkedLicenceItem = ({
     };
 
     const handleEdit = () => {
-        if (onOverride) {
+        const newErrors: Record<string, string> = {};
+
+        if (isAddingNew) {
+            if (!linkedLicence.licenceNumber || !linkedLicence.licenceNumber.trim()) {
+                newErrors.licenceNumber = 'Licence Number is required';
+            }
+            if (!linkedLicence.permitNumber || !linkedLicence.permitNumber.trim()) {
+                newErrors.permitNumber = 'Permit Number is required';
+            }
+        }
+
+        (linkedLicence.containedIn || []).forEach((section, idx) => {
+            if (section.direction === NullableOfInformationDirection.Outgoing) {
+                if (!section.sectionName || !section.sectionName.trim()) {
+                    newErrors[`section_${idx}_sectionName`] = 'Section Name is required';
+                }
+                if (!section.linkReason || !section.linkReason.trim()) {
+                    newErrors[`section_${idx}_linkReason`] = 'Link Reason is required';
+                }
+            }
+        });
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length === 0 && onOverride) {
             onOverride();
         }
     };
 
     const handleDiscardClick = (e: React.MouseEvent) => {
         e.preventDefault();
+        setErrors({});
         if (onDiscard) {
             onDiscard();
         }
@@ -124,12 +153,13 @@ export const LinkedLicenceItem = ({
                             style={{
                                 width: '80%',
                                 padding: '6px 8px',
-                                border: '1px solid #d9d9d9',
+                                border: errors.licenceNumber ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
                                 borderRadius: '4px',
                                 boxSizing: 'border-box',
                                 backgroundColor: !isAddingNew ? '#f0f0f0' : 'white'
                             }}
                         />
+                        <ValidationError message={errors.licenceNumber} />
                         <NaldStatusTag status={linkedLicence.naldStatus}/>
                     </div>
                     <div style={{flex: 1}}>
@@ -143,12 +173,13 @@ export const LinkedLicenceItem = ({
                             style={{
                                 width: '100%',
                                 padding: '6px 8px',
-                                border: '1px solid #d9d9d9',
+                                border: errors.permitNumber ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
                                 borderRadius: '4px',
                                 boxSizing: 'border-box',
                                 backgroundColor: !isAddingNew ? '#f0f0f0' : 'white'
                             }}
                         />
+                        <ValidationError message={errors.permitNumber} />
                     </div>
                 </div>
 
@@ -231,11 +262,12 @@ export const LinkedLicenceItem = ({
                                                 style={{
                                                     width: '100%',
                                                     padding: '4px 8px',
-                                                    border: '1px solid #d9d9d9',
+                                                    border: errors[`section_${idx}_sectionName`] ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
                                                     borderRadius: '4px',
                                                     boxSizing: 'border-box'
                                                 }}
                                             />
+                                            <ValidationError message={errors[`section_${idx}_sectionName`]} style={{fontSize: '0.7rem'}} />
                                         </div>
                                         <div>
                                             <label style={{
@@ -251,11 +283,12 @@ export const LinkedLicenceItem = ({
                                                 style={{
                                                     width: '100%',
                                                     padding: '4px 8px',
-                                                    border: '1px solid #d9d9d9',
+                                                    border: errors[`section_${idx}_linkReason`] ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
                                                     borderRadius: '4px',
                                                     boxSizing: 'border-box'
                                                 }}
                                             />
+                                            <ValidationError message={errors[`section_${idx}_linkReason`]} style={{fontSize: '0.7rem'}} />
                                         </div>
                                         <div style={{paddingBottom: '6px'}}>
                                             <label style={{
@@ -266,7 +299,7 @@ export const LinkedLicenceItem = ({
                                             }}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={!!section.isBecauseOfAggregate}
+                                                    checked={!!linkedLicence.isBecauseOfAggregate}
                                                     onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
                                                     style={{marginRight: '6px'}}
                                                 />
@@ -397,7 +430,7 @@ export const LinkedLicenceItem = ({
                                         <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                         <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
                                         <div><strong>Because of
-                                            Aggregate:</strong> {section.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
+                                            Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                         {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                             <button
                                                 onClick={() => {

@@ -58,7 +58,7 @@ export function ProcessRunLicenceFilters({
             purposesEmpty: undefined,
             pointsEmpty: undefined,
             limitsEmpty: undefined,
-            aggregatesEmpty: undefined,
+            aggregatesFilter: undefined,
             ocrScan: undefined,
             issueYear: undefined,
             issuer: undefined,
@@ -196,24 +196,28 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={pendingQuery.aggregatesEmpty === undefined ? "" : "filter-active"}
+                    className={pendingQuery.aggregatesFilter === undefined ? "" : "filter-active"}
                     value={
-                        pendingQuery.aggregatesEmpty === undefined
+                        pendingQuery.aggregatesFilter === undefined
                             ? ""
-                            : String(pendingQuery.aggregatesEmpty)
+                            : String(pendingQuery.aggregatesFilter)
                     }
                     onChange={e =>
                         updatePendingQuery(
-                            "aggregatesEmpty",
-                            e.target.value === ""
-                                ? undefined
-                                : e.target.value === "true"
+                            "aggregatesFilter",
+                            e.target.value
                         )
                     }
                 >
                     <option value="">Any</option>
-                    <option value="false">Not empty</option>
-                    <option value="true">Empty</option>
+                    <option value="null_false">File: Any, Nald: False</option>
+                    <option value="null_true">File: Any, Nald: True</option>
+                    <option value="false_null">File: No, Nald: Any</option>
+                    <option value="false_false">File: No, Nald: No</option>
+                    <option value="false_true">File: No, Nald: Yes</option>
+                    <option value="true_null">File: Yes, Nald: Any</option>
+                    <option value="true_true">File: Yes, Nald: Yes</option>
+                    <option value="true_false">File: Yes, Nald: No</option>
                 </select>
             </td>
 
@@ -336,7 +340,7 @@ export function ProcessRunLicenceFilters({
                 </select>
             </td>
 
-            <td>
+            <td className='default-hidden'>
                 <select
                     className={!pendingQuery.ShortLicenceSetId ? "" : "filter-active"}
                     value={pendingQuery.ShortLicenceSetId ?? ""}
@@ -415,7 +419,7 @@ export function ProcessRunLicenceFilters({
         <td style={{width: '7%'}}>
             Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
         </td>
-        <td style={{width: '8%'}}>
+        <td className='default-hidden' style={{width: '8%'}}>
             Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
         </td>
         <td style={{width: '10%'}}>

@@ -27,7 +27,7 @@ function ListPage() {
         take: 1000,
         issuer: '',
         limitsEmpty: undefined,
-        aggregatesEmpty: undefined,
+        aggregatesFilter: undefined,
         purposesEmpty: undefined,
         pointsEmpty: undefined,
         ocrScan: undefined,
@@ -78,7 +78,7 @@ function ListPage() {
                 currentQuery.take +
                 currentQuery.issuer +
                 currentQuery.limitsEmpty +
-                currentQuery.aggregatesEmpty +
+                currentQuery.aggregatesFilter +
                 currentQuery.ocrScan +
                 currentQuery.purposesEmpty +
                 currentQuery.pointsEmpty +
@@ -110,7 +110,7 @@ function ListPage() {
                 currentQuery.take,
                 currentQuery.issuer,
                 currentQuery.limitsEmpty,
-                currentQuery.aggregatesEmpty,
+                currentQuery.aggregatesFilter,
                 currentQuery.ocrScan,
                 currentQuery.purposesEmpty,
                 currentQuery.pointsEmpty,

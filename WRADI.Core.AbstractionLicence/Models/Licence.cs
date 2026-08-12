@@ -22,21 +22,23 @@ public class Licence
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ScrapeStatus Status { get; init; }
     
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public NaldLicenceStatus NaldStatus { get; set; }
+    public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
-    public bool? NaldHasAggregateCondition { get; set; }
-
+    public int? RegionId { get; set; }
+    
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public LicenceType LicenceType { get; set; }
-    
-    public ValueWithConfidence<string>? LicenceNumber { get; init; }
     
     public string? DmsPermitNumber { get; set; }
     
     public string? DmsPath { get; set; }
     
     public Guid? DmsFileId { get; set; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public NaldLicenceStatus NaldStatus { get; set; }
+        
+    public bool? NaldHasAggregateCondition { get; set; }
     
     public string? Filename { get; set; }
 
@@ -59,6 +61,4 @@ public class Licence
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
-    
-    public int? RegionId { get; set; }
 }

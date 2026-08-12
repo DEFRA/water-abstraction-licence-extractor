@@ -409,7 +409,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
     
-    
     public async Task<long> UpsertLicenceListItemAsync(
         UpsertLicenceListItem item,
         CancellationToken cancellationToken = default)
@@ -452,7 +451,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
 
         if (items.Count == 0)
         {
-            return Array.Empty<long>();
+            return [];
         }
 
         foreach (var item in items)
@@ -513,7 +512,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 summary,
                 cancellationToken);
         
-
         await ReplaceLinkedLicencesAsync(
             connection,
             transaction,
@@ -559,6 +557,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_holder,
                 limits_count,
                 aggregates_count,
+                nald_aggregate,
                 ocr,
                 issue_date,
                 issue_year,
@@ -568,7 +567,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 purposes_count,
                 points_count,
                 purposes,
-               points,
+                points,
                 linked_licences_count,
                 licence_sets_count,
                 verification_sections_count,
@@ -588,6 +587,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @LicenceHolder,
                 @LimitsCount,
                 @AggregatesCount,
+                @NaldAggregate,
                 @Ocr,
                 @IssueDate,
                 @IssueYear,
@@ -596,8 +596,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @Status,
                 @PurposesCount,
                 @PointsCount,
-             @Purposes,
-             @Points,
+                @Purposes,
+                @Points,
                 @LinkedLicencesCount,
                 @LicenceSetsCount,
                 @VerificationSectionsCount,
@@ -619,6 +619,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_holder = EXCLUDED.licence_holder,
                 limits_count = EXCLUDED.limits_count,
                 aggregates_count = EXCLUDED.aggregates_count,
+                nald_aggregate = EXCLUDED.nald_aggregate,
                 ocr = EXCLUDED.ocr,
                 issue_date = EXCLUDED.issue_date,
                 issue_year = EXCLUDED.issue_year,
@@ -628,7 +629,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 purposes_count = EXCLUDED.purposes_count,
                 points_count = EXCLUDED.points_count,
                 purposes = EXCLUDED.purposes,
-               points = EXCLUDED.points,
+                points = EXCLUDED.points,
                 linked_licences_count =
                     EXCLUDED.linked_licences_count,
                 licence_sets_count =
@@ -654,6 +655,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.LicenceHolder,
             item.LimitsCount,
             item.AggregatesCount,
+            item.NaldAggregate,
             item.Ocr,
             IssueDate = ToDateTime(item.IssueDate),
             IssueYear = item.IssueDate?.Year,
@@ -776,7 +778,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 dms_file_id_status,
                 dms_file_id_status_date_utc,
                 licence_version_nald_status,
-                source_data
+                source_data,
+                is_because_of_aggregate
             )
             VALUES
             (
@@ -810,7 +813,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
               @DmsFileIdStatus,
              @DmsFileIdStatusDateUtc,
              @LicenceVersionNaldStatus,
-               CAST(@SourceData AS jsonb)
+               CAST(@SourceData AS jsonb),
+             @IsBecauseOfAggregate
             )
             RETURNING linked_licence_id;
             """;
@@ -849,7 +853,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             linkedLicence.DmsFileIdStatusDateUtc,
             linkedLicence.LicenceVersionNaldStatus,
             SourceData =
-                NullIfWhiteSpace(linkedLicence.SourceData)
+                NullIfWhiteSpace(linkedLicence.SourceData),
+            linkedLicence.IsBecauseOfAggregate
         };
 
         return await connection.ExecuteScalarAsync<long>(
@@ -875,9 +880,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 location.Direction,
                 location.SectionName,
                 location.LinkReason,
-                location.IsBecauseOfAggregate,
                 location.LineNumber,
-                location.PageNumber
+                location.PageNumber,
+                location.AcinCode,
+                location.SourceFields
             })
             .ToArray();
 
@@ -895,9 +901,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 direction,
                 section_name,
                 link_reason,
-                is_because_of_aggregate,
                 line_number,
-                page_number
+                page_number,
+                acin_code,
+                source_fields
             )
             VALUES
             (
@@ -906,9 +913,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @Direction,
                 @SectionName,
                 @LinkReason,
-                @IsBecauseOfAggregate,
                 @LineNumber,
-                @PageNumber
+                @PageNumber,
+                @AcinCode,
+                @SourceFields
             );
             """;
 

@@ -199,8 +199,9 @@ public static class AbstractionLicenceSchemaConverter
                 purposes,
                 naldDataLine,
                 noneSchemaData,
-                lookupConfiguration!,
-                cacheService);
+                lookupConfiguration,
+                cacheService,
+                individual);
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
         }
@@ -216,7 +217,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 var thisDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
-                    lookupConfiguration!.CacheService);
+                    lookupConfiguration.CacheService);
 
                 var outputLicenceType = LicenceType.Unknown;
 
@@ -237,6 +238,10 @@ public static class AbstractionLicenceSchemaConverter
                     outputLicenceType = LicenceType.Abstraction;
                 }
 
+                var sourceFields = naldLinkedLicence.SourceFields?
+                    .Where(sf => sf.Value != null)
+                    .ToDictionary();
+                
                 linkedLicences.Add(new LinkedLicence
                 {
                     LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
@@ -244,6 +249,7 @@ public static class AbstractionLicenceSchemaConverter
                     DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
+                    IsBecauseOfAggregate = true,
                     ContainedIn =
                     [
                         new ContainedInInformation
@@ -253,11 +259,13 @@ public static class AbstractionLicenceSchemaConverter
                                 ? InformationDirection.Incoming
                                 : InformationDirection.Outgoing,
                             LinkReason = GetLinkReason(
-                                naldLinkedLicence.FromFieldText,
+                                naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                     ? licenceNumber
                                     : naldLinkedLicence.NaldLicence.LicenceNumber),
-                            SectionName = naldLinkedLicence.FromField
+                            SectionName = naldLinkedLicence.FromField,
+                            AcinCode = naldLinkedLicence.AcinCode,
+                            SourceFields = sourceFields
                         }
                     ]
                 });
@@ -524,8 +532,8 @@ public static class AbstractionLicenceSchemaConverter
             return (individuals, aggregates);
         }
 
-        var lowestPoints = aggregates.Min(a => a.Points?.Length);
-        var lowestPointsInd = individuals.Min(a => a.Points?.Length);
+        var lowestPoints = aggregates.Min(a => a.Points?.Length) ?? int.MaxValue;
+        var lowestPointsInd = individuals.Min(a => a.Points?.Length) ?? int.MaxValue;
 
         if (lowestPoints > lowestPointsInd)
         {
@@ -751,7 +759,7 @@ public static class AbstractionLicenceSchemaConverter
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
 
-        if (setConfidence)
+        if (setConfidence && labelGroupResult?.Confidence != null)
         {
             noneSchemaData?.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
         }
@@ -811,7 +819,11 @@ public static class AbstractionLicenceSchemaConverter
         Dictionary<string, object?> noneSchemaData)
     {
         var text = DataHelper.GetTextFromFirstMatchByLabelGroup(matches, labelName, out var labelGroupResult);
-        noneSchemaData.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
+
+        if (labelGroupResult?.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:{labelName}", labelGroupResult?.Confidence);
+        }
 
         return text;
     }
@@ -1661,7 +1673,8 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
+        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase)
+            || value.Contains("Up to and including", StringComparison.OrdinalIgnoreCase);
         
         if (!isFrom && !isUntil)
         {
@@ -1671,6 +1684,7 @@ public static class AbstractionLicenceSchemaConverter
         var parts = value
             .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
             .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
+            .Replace("Up to and including", "~", StringComparison.OrdinalIgnoreCase)
             .Split('~');
 
         var datePart = parts.Length >= 2 ? parts[1] : null;
@@ -1750,7 +1764,8 @@ public static class AbstractionLicenceSchemaConverter
             NaldData? naldDataLine,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
-            IAbstractionLicenceCacheService cacheService)
+            IAbstractionLicenceCacheService cacheService,
+            AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var section = matches
             .FirstOrDefault(result => result.LabelGroupName == sectionName);
@@ -1791,7 +1806,8 @@ public static class AbstractionLicenceSchemaConverter
                     aggregates,
                     sectionLinkedLicences,
                     noneSchemaData,
-                    cacheService);
+                    cacheService,
+                    previouslyFoundIndividualLimits);
             }
 
             var linkedLicenceNumbers = sectionPoint.SubResults
@@ -1840,9 +1856,12 @@ public static class AbstractionLicenceSchemaConverter
 
         var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLineLoop);
         var dmsFileData = await dmsFileDataTask;
-        
-        noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
-            linkedLicenceNumber.Confidence);
+
+        if (linkedLicenceNumber.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:LinkedLicence_{sectionName}_{count}",
+                linkedLicenceNumber.Confidence);
+        }
 
         return new LinkedLicence
         {
@@ -1925,8 +1944,12 @@ public static class AbstractionLicenceSchemaConverter
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
-            noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}", generalLinkedLicenceNumber.Confidence);
-            
+            if (generalLinkedLicenceNumber.Confidence != null)
+            {
+                noneSchemaData.Add($"Confidence:LinkedLicence_SomewhereInDocument_{count++}",
+                    generalLinkedLicenceNumber.Confidence);
+            }
+
             returnList.Add(new LinkedLicence
             {
                 LicenceNumber = linkedLicenceNumber,
@@ -2010,7 +2033,11 @@ public static class AbstractionLicenceSchemaConverter
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
-            noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}", linkedLicenceNumber.Confidence);
+            if (linkedLicenceNumber.Confidence != null)
+            {
+                noneSchemaData.Add($"Confidence:LinkedLicence_LicenceHistory_{count++}",
+                    linkedLicenceNumber.Confidence);
+            }
 
             returnList.Add(new LinkedLicence
             {
@@ -2367,7 +2394,8 @@ public static class AbstractionLicenceSchemaConverter
                 allAggregates,
                 allAggregateLinkedLicences,
                 noneSchemaData,
-                cacheService);
+                cacheService,
+                []);
         }
 
         if (allIndividualGroups is [{ Limits.Count: 0 }])
@@ -2395,7 +2423,8 @@ public static class AbstractionLicenceSchemaConverter
         List<Aggregate> allAggregates,
         List<LinkedLicence> sectionLinkedLicences,
         Dictionary<string, object?> noneSchemaData,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
 
@@ -2851,8 +2880,49 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
+            .Where(linkedLicence =>
+                !LicenceNumberContainsOther(
+                    licenceNumber,
+                    linkedLicence.LicenceNumber,
+                    regionCode))
             .ToList();
 
+        const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
+            = "shall not exceed the quantity authorised to be abstracted under this licence.";
+        
+        var shouldCopyIndividualValues = abstractionLimitPointSubText.Contains(
+            shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
+            , StringComparison.OrdinalIgnoreCase);
+
+        if (shouldCopyIndividualValues)
+        {
+            allAggregates.AddRange(
+                previouslyFoundIndividualLimits
+                    .Select(previouslyFoundIndividualLimit =>
+                        new Aggregate
+                        {
+                            PrimaryType = PrimaryType.LicenceToLicence,
+                            LinkedLicences = linkedLicenceNumbers
+                                .Select(ll => ll.LicenceNumber!)
+                                .ToArray(),
+                            SourceLicenceNumber = licenceNumber,
+                            SourceLicenceVersionId = licenceVersionId,
+                            NaldType = GetNaldType(naldDataLine),
+                            AggregateSetId = PositionConstants.ReplacementMarker,
+                            Limits = previouslyFoundIndividualLimit.Limits
+                                .Select(l => l.Clone())
+                                .ToList(),
+                            Points = previouslyFoundIndividualLimit.Points,
+                            Purposes = previouslyFoundIndividualLimit.Purposes,
+                            ContainedIn = previouslyFoundIndividualLimit.ContainedIn,
+                            IsExplicitlyAggregate = true
+                        }
+                    )
+            );
+
+            return;
+        }
+        
         var abstractionLinkedLicences = linkedLicenceNumbers
             .Where(lln => lln.ContainedIn?.Any(ci => !IsExcludedLinkReason(ci.LinkReason)) == true)
             .ToList();
@@ -3455,8 +3525,11 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
-        noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
-        
+        if (meansResult.Confidence != null)
+        {
+            noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
+        }
+
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults
@@ -3544,16 +3617,23 @@ public static class AbstractionLicenceSchemaConverter
         {
             return returnList.ToArray();
         }
-        
-        noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
+
+        if (pointsResults.Confidence != null)
+        {
+            noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
+        }
+
         var pointPurposeGroupCount = -1;
         
         foreach (var pointPurposeGroup in pointsResults.SubResults)
         {
-            noneSchemaData.Add(
-                $"Confidence:{sectionName}_PointPurposeGroup_{++pointPurposeGroupCount}",
-                pointPurposeGroup.Confidence);
-            
+            if (pointPurposeGroup.Confidence != null)
+            {
+                noneSchemaData.Add(
+                    $"Confidence:{sectionName}_PointPurposeGroup_{++pointPurposeGroupCount}",
+                    pointPurposeGroup.Confidence);
+            }
+
             var purposeGroupName = DataHelper.GetFirstMatchByLabel(
                 pointPurposeGroup.SubResults,
                 "PurposeGroupName");
@@ -3577,7 +3657,7 @@ public static class AbstractionLicenceSchemaConverter
                     point.SubResults,
                     "PointPointNumber");
 
-                if (pointNumber != null)
+                if (pointNumber != null && point.Confidence != null)
                 {
                     noneSchemaData.Add(
                         $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount++}_PointPointNumber",
@@ -3626,7 +3706,13 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (pointTable != null)
                 {
-                    noneSchemaData.Add($"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable", pointTable.Confidence);
+                    if (pointTable.Confidence != null)
+                    {
+                        noneSchemaData.Add(
+                            $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTable",
+                            pointTable.Confidence);
+                    }
+
                     var tableLines = pointTable.Text!;
 
                     foreach (var tableLine in tableLines)
@@ -3897,7 +3983,7 @@ public static class AbstractionLicenceSchemaConverter
                     .Select(t => t.Text)
                     .ToArray();
 
-                if (pointTextWithoutPurposeAndPoint != null)
+                if (pointTextWithoutPurposeAndPoint is { Confidence: not null })
                 {
                     noneSchemaData.Add(
                         $"Confidence:Points_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_PointTextWithoutPurposeAndPoint",

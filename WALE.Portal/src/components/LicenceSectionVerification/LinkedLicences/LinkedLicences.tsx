@@ -112,7 +112,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                         direction: NullableOfInformationDirection.Outgoing,
                         sectionName: '',
                         linkReason: '',
-                        isBecauseOfAggregate: false
+                        //isBecauseOfAggregate: false // TODO this isn't done here
                     })
                 ]
             });

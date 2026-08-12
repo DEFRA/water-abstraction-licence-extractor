@@ -14,9 +14,11 @@ public sealed class LicenceListItemLinkLocation
 
     public string? LinkReason { get; set; }
 
-    public bool? IsBecauseOfAggregate { get; set; }
-
     public int? LineNumber { get; set; }
 
     public int? PageNumber { get; set; }
+    
+    public string? AcinCode { get; set; }
+    
+    public string? SourceFields { get; set; }
 }

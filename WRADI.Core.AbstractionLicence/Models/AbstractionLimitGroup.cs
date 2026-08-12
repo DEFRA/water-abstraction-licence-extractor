@@ -13,6 +13,20 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     public List<AbstractionLimit> Limits { get; init; } = [];
     
     public ContainedInInformation[]? ContainedIn { get; set; }
+
+    public AbstractionLimitGroup Clone()
+    {
+        return new AbstractionLimitGroup
+        {
+            DocumentIdentifier = DocumentIdentifier,
+            TimePeriod = TimePeriod,
+            TimeCutoff = TimeCutoff,
+            Limits = Limits,
+            ContainedIn = ContainedIn,
+            Points = Points,
+            Purposes = Purposes
+        };
+    }
     
     public static AbstractionLimitGroup Template => new()
     {

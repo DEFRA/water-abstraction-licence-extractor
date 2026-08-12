@@ -60,26 +60,17 @@ public static class JsOutputHelper
 
         return new IntermediateOutputLicence
         {
-            LineNumber = completeNumber,
-            StartNumber = fileNumber,
             Filename = licence.Filename,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
             Purposes = licence.Purposes.Select(p => p.Description).ToArray(),
             Points = licence.Points.Select(p => p.Description).ToArray(),
-            ServiceName = serviceName,
-            Certainty = GetValueOrDefault<int, int>(licence.NoneSchemaData, "issuedToCertainty", -1),
-            MatchType = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchType", "N/A"),
-            Duration = durationInMSeconds,
-            MatchedLabelText =
-                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchedLabelText", null),
-            MatchedLabelPosition =
-                GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedToMatchLabelPosition", null),
             LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
             AggregatesCount = licence.AbstractionLimits.Aggregates?.Sum(x => x.Limits.Count) ?? 0,
+            NaldHasAggregateCondition = licence.NaldHasAggregateCondition,
             IssueDate = issueDate,
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,
@@ -154,6 +145,7 @@ public static class JsOutputHelper
                 points = outputLine.Points,
                 limitsCount = outputLine.LimitsCount,
                 aggregatesCount = outputLine.AggregatesCount,
+                naldHasAggregateCondition = outputLine.NaldHasAggregateCondition,
                 ocr = outputLine.Ocr == "OCR",
                 issueDate = outputLine.IssueDate,
                 issuer = outputLine.Issuer,

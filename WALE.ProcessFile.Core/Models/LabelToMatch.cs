@@ -105,6 +105,8 @@ public class LabelToMatch
     public bool RemoveStartOfBlockSectionsWhenMultiple { get; set; } = true;
 
     public bool DeDuplicateResults { get; set; }
+    
+    public bool GoOutsideTextBlock { get; set; }
 
     public LabelToMatch Clone()
     {
@@ -147,7 +149,8 @@ public class LabelToMatch
             ConfidenceType = ConfidenceType,
             NoOcrConfidence = NoOcrConfidence,
             RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple,
-            DeDuplicateResults = DeDuplicateResults
+            DeDuplicateResults = DeDuplicateResults,
+            GoOutsideTextBlock = GoOutsideTextBlock
         };
     }    
 }

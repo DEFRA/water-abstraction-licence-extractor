@@ -305,7 +305,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
-        Assert.Equal(12, records.Text!.Count);
+        Assert.Equal(10, records.Text!.Count);
         
         var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1149,7 +1149,6 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
     public async Task When_YorkshireWaterCompany1_ThenY()
     {
         // Arrange
-
         const string filename = "2-26-32-126 6937559.PDF";
 
         // Act
@@ -1204,7 +1203,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.True(abstractionLimitsResult.IsOcr);
-        Assert.Equal(15, abstractionLimitsResult.Text?.Count);
+        Assert.Equal(14, abstractionLimitsResult.Text?.Count);
         Assert.Equal("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE", abstractionLimitsResult.Text![0].Text);
 
         var abstractionLimitsSections = abstractionLimitsResult.SubResults;
@@ -1223,7 +1222,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal("(1)", pointName);
         
-        Assert.Equal(3, section1Sub1.Text?.Count);
+        Assert.Equal(2, section1Sub1.Text?.Count);
         Assert.Equal(6, section1Sub1.SubResults.Count);
 
         var purposeCondition = section1Sub1.SubResults[1];
@@ -1252,24 +1251,26 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         abstractionLimitsSection = abstractionLimitsSections[4];
         
         var section5Sub1 = abstractionLimitsSection.SubResults[0];
-        Assert.Equal(4, section5Sub1.SubResults.Count);
+        Assert.Equal(5, section5Sub1.SubResults.Count);
         
-        var units3 = section5Sub1.SubResults[0];
+        // [0] is date field
+        
+        var units3 = section5Sub1.SubResults[1];
         Assert.Equal("cubic metres", units3.Text![0].Text);
         Assert.Equal("PerDayUnits", units3.MatchedLabel!.Name);
-        Assert.Equal("Units", section5Sub1.SubResults[0].MatchedLabel?.Format);
+        Assert.Equal("Units", units3.MatchedLabel?.Format);
         Assert.Equal(10, units3.LabelStartLineNumber);
         
-        var units4 = section5Sub1.SubResults[1];
+        var units4 = section5Sub1.SubResults[2];
         Assert.Equal("cubic metres", units4.Text![0].Text);
         Assert.Equal("PerYearUnits", units4.MatchedLabel!.Name);
         Assert.Equal(10, units4.LabelStartLineNumber);
         
-        var value3 = section5Sub1.SubResults[2];
+        var value3 = section5Sub1.SubResults[3];
         Assert.Equal("100000", value3.Text![0].Text);
         Assert.Equal("PerDayValue", value3.MatchedLabel!.Name);
         
-        var value4 = section5Sub1.SubResults[3];
+        var value4 = section5Sub1.SubResults[4];
         Assert.Equal("32850000", value4.Text![0].Text);
         Assert.Equal("PerYearValue", value4.MatchedLabel!.Name);
         
@@ -1296,6 +1297,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
         
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates!.All(a => a.TimeCutoff == null));
+        
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits.Count);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Units);        
         Assert.Equal(100000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[0].Value);
@@ -1303,6 +1306,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Equal(32850000, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         
         Assert.Equal(4, agreedSchemaLicence.AbstractionLimits.Individual!.Length);
+        Assert.True(agreedSchemaLicence.AbstractionLimits.Individual!.All(a => a.TimeCutoff == null));
 
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
         var limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[0];
@@ -1648,7 +1652,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         Assert.Single(agreedSchemaLicenceGroup);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
-        Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
+        Assert.Single(agreedSchemaLicence.Purposes);
+        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].Description);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 

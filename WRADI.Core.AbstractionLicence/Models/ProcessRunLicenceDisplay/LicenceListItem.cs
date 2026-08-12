@@ -17,6 +17,8 @@ public sealed class LicenceListItem
     public int LimitsCount { get; set; }
 
     public int AggregatesCount { get; set; }
+    
+    public bool? NaldAggregate { get; set; }
 
     public bool Ocr { get; set; }
 

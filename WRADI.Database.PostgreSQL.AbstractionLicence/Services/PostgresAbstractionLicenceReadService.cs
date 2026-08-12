@@ -548,6 +548,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         var parameters = new DynamicParameters();
         parameters.Add("ProcessRunId", processRunId);
         AddGenericParameters(query, sql, parameters);
+        
         return await QuerySingleOrDefaultAsync<int>(
             connection,
             sql.ToString(),
@@ -578,10 +579,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LimitsEmpty,
             "individual");
 
-        AddNestedLimitsFilter(
-            sql,
-            query.AggregatesEmpty,
-            "aggregates");
+        AddAggregatesFilter(sql, query.AggregatesFilter);
 
         AddIssueYearFilter(
             sql,
@@ -957,7 +955,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                lc."PARAM2" AS Param2,
                                lc."TEXT" AS Text,
                                NULL AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               lc."ACIN_CODE" as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
                            join nald."NALD_ABS_LIC_VERSIONS" ver
                                ON lic."ID" = ver."AABL_ID"
@@ -1005,29 +1004,9 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                null AS Param2,
                                null AS Text,
                                lic."NOTES" AS Notes,
-                               lic."FGAC_REGION_CODE" AS RegionCode
+                               lic."FGAC_REGION_CODE" AS RegionCode,
+                               null as AcinCode
                            from nald."NALD_ABS_LICENCES" lic
-                           join nald."NALD_ABS_LIC_VERSIONS" ver
-                               ON lic."ID" = ver."AABL_ID"
-                               AND lic."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                               AND ver."ISSUE_NO" = (
-                                   SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
-                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY
-                                   WHERE LIC_VER_SUBQUERY."AABL_ID" = ver."AABL_ID"
-                                       AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                                       AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
-                                       AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
-                                   )
-                               AND ver."INCR_NO" = (
-                                   SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
-                                   FROM nald."NALD_ABS_LIC_VERSIONS" LIC_VER_SUBQUERY_2
-                                   WHERE LIC_VER_SUBQUERY_2."AABL_ID" = ver."AABL_ID"
-                                       AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = ver."FGAC_REGION_CODE"
-                                       AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
-                                       AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
-                                       AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
-                                   )
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
                                AND (lic."LAPSED_DATE" IS NULL OR lic."LAPSED_DATE" >= CURRENT_DATE)
@@ -2406,7 +2385,41 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             $"{issueYear.Value}%");
     }
     
-    
+    private static void AddAggregatesFilter(StringBuilder sql, string? aggregatesState)
+    {
+        if (string.IsNullOrEmpty(aggregatesState))
+        {
+            return;
+        }
+
+        var parts = aggregatesState.Split('_');
+        var docAggregatesText = parts[0];
+        var docAggregatesTextIsNull = docAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
+
+        if (!docAggregatesTextIsNull)
+        {
+            var docAggregates = bool.Parse(docAggregatesText);
+            var docAggregatesEmpty = !docAggregates;
+            
+            AddNestedLimitsFilter(sql, docAggregatesEmpty, "aggregates");
+        }
+
+        var naldAggregatesText = parts[1];
+        var naldAggregatesTextIsNull = naldAggregatesText.Equals("null", StringComparison.OrdinalIgnoreCase);
+
+        if (!naldAggregatesTextIsNull)
+        {
+            var naldAggregates = bool.Parse(naldAggregatesText);
+            
+            sql.AppendLine(
+                naldAggregates
+                    ? "  AND data::jsonb ->> 'naldHasAggregateCondition' = 'true'"
+                    : """
+                          AND (data::jsonb ->> 'naldHasAggregateCondition' = 'false'
+                              or data::jsonb ->> 'naldHasAggregateCondition' is null)
+                      """);
+        }
+    }
 
     public async Task<List<LicenceListItemAggregate>>
         GetLicencesListSearchAsync(
@@ -2433,7 +2446,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var linkedLicences = await GetLinkedLicencesAsync(
             connection,
-            processRunId,
             itemIds,
             cancellationToken);
 
@@ -2731,64 +2743,51 @@ private static async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLinkedLicence>>>
         GetLinkedLicencesAsync(
             NpgsqlConnection connection,
-            int processRunId,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
         const string linkedSql =
             """
             SELECT
-                linked_licence_id
-                    AS LinkedLicenceId,
-                licence_list_item_id
-                    AS LicenceListItemId,
-                licence_number
-                    AS LicenceNumber,
-                raw_scraped_licence_number
-                    AS RawScrapedLicenceNumber,
-                dms_permit_number
-                    AS DmsPermitNumber,
-                dms_path
-                    AS DmsPath,
-                dms_file_id
-                    AS DmsFileId,
-                filename
-                    AS Filename,
-                licence_version_id
-            AS LicenceVersionId,
-                issue_date
-            AS IssueDate,
-                expiry_date
-            AS ExpiryDate,
-            original_issue_date
-            AS OriginalIssueDate,
-            issuer,
-            nald_status
-            AS NaldStatus,
-                licence_type
-            As LicenceType,
-                region_id
-            As RegionId,
+                linked_licence_id AS LinkedLicenceId,
+                licence_list_item_id AS LicenceListItemId,
+                licence_number AS LicenceNumber,
+                raw_scraped_licence_number AS RawScrapedLicenceNumber,
+                dms_permit_number AS DmsPermitNumber,
+                dms_path AS DmsPath,
+                dms_file_id AS DmsFileId,
+                filename AS Filename,
+                licence_version_id AS LicenceVersionId,
+                issue_date AS IssueDate,
+                expiry_date AS ExpiryDate,
+                original_issue_date AS OriginalIssueDate,
+                issuer,
+                nald_status AS NaldStatus,
+                licence_type As LicenceType,
+                region_id As RegionId,
                 condition_data AS ConditionData,
-            nald_revocation_date AS NaldRevocationDate,
-            nald_expiry_date AS NaldExpiryDate,
-            nald_orig_effective_date AS NaldOrigEffectiveDate,
-            nald_orig_signature_date AS NaldOrigSignatureDate,
-            nald_signature_date AS NaldSignatureDate,
-            nald_effective_start_date AS NaldEffectiveStartDate,
-            nald_effective_end_date AS NaldEffectiveEndDate,
-            nald_issue_number AS NaldIssueNumber,
-            nald_increment_number AS NaldIncrementNumber,
-            nald_update_reason AS NaldUpdateReason,
-            dms_file_id_status_date_utc As DmsFileIdStatusDateUtc,
-            dms_file_id_status As DmsFileIdStatus,
-            effective_date As EffectiveDate,
-            source_data AS SourceData,
-            licence_version_nald_status AS  LicenceVersionNaldStatus
+                nald_revocation_date AS NaldRevocationDate,
+                nald_expiry_date AS NaldExpiryDate,
+                nald_orig_effective_date AS NaldOrigEffectiveDate,
+                nald_orig_signature_date AS NaldOrigSignatureDate,
+                nald_signature_date AS NaldSignatureDate,
+                nald_effective_start_date AS NaldEffectiveStartDate,
+                nald_effective_end_date AS NaldEffectiveEndDate,
+                nald_issue_number AS NaldIssueNumber,
+                nald_increment_number AS NaldIncrementNumber,
+                nald_update_reason AS NaldUpdateReason,
+                dms_file_id_status_date_utc As DmsFileIdStatusDateUtc,
+                dms_file_id_status As DmsFileIdStatus,
+                effective_date As EffectiveDate,
+                source_data AS SourceData,
+                licence_version_nald_status AS LicenceVersionNaldStatus,
+                is_because_of_aggregate AS IsBecauseOfAggregate
             FROM licence_list_item_linked_licence
-              where licence_list_item_id = ANY(@ItemIds)
-            ORDER BY licence_list_item_id,
-                     linked_licence_id;
+            where
+                licence_list_item_id = ANY(@ItemIds)
+            ORDER BY
+                licence_list_item_id,
+                linked_licence_id;
             """;
 
         var linkedRows =
@@ -2814,28 +2813,22 @@ private static async Task<
         const string locationSql =
             """
             SELECT
-                linked_licence_id
-                    AS LinkedLicenceId,
-                direction
-                    AS Direction,
-                section_name
-                    AS SectionName,
-                link_reason
-                   AS LinkReason,
-                page_number
-                    AS PageNumber,
-                line_number
-                    AS LineNumber,
-                source
-            AS Source,
-                link_location_id
-            AS LinkLocationId,
-                is_because_of_aggregate
-            AS IsBecauseOfAggregate
+                linked_licence_id AS LinkedLicenceId,
+                direction AS Direction,
+                section_name AS SectionName,
+                link_reason AS LinkReason,
+                page_number AS PageNumber,
+                line_number AS LineNumber,
+                source AS Source,
+                link_location_id AS LinkLocationId,
+                acin_code AS AcinCode,
+                source_fields as SourceFields
             FROM licence_list_item_link_location
-              where linked_licence_id =
-                  ANY(@LinkedLicenceIds)
-            ORDER BY linked_licence_id;
+            where
+                linked_licence_id =
+                ANY(@LinkedLicenceIds)
+            ORDER BY
+                linked_licence_id;
             """;
 
         var locations =
@@ -2859,11 +2852,12 @@ private static async Task<
                         SectionName = x.SectionName,
                         PageNumber = x.PageNumber,
                         LineNumber = x.LineNumber,
-                        IsBecauseOfAggregate =  x.IsBecauseOfAggregate,
-                        Source =  x.Source,
+                        Source = x.Source,
                         LinkReason = x.LinkReason,
-                        LinkedLicenceId =  x.LinkedLicenceId,
-                        LinkLocationId =   x.LinkLocationId,
+                        LinkedLicenceId = x.LinkedLicenceId,
+                        LinkLocationId = x.LinkLocationId,
+                        AcinCode = x.AcinCode,
+                        SourceFields = x.SourceFields
                     })
                     .ToArray());
 
@@ -2905,6 +2899,7 @@ private static async Task<
             licence_holder AS LicenceHolder,
             limits_count AS LimitsCount,
             aggregates_count AS AggregatesCount,
+            nald_aggregate as NaldAggregate,
             ocr AS Ocr,
             issue_date AS IssueDate,
             issue_year AS IssueYear,
@@ -3035,10 +3030,10 @@ private static void AddLicenceListItemFilters(
         query.LimitsEmpty,
         "limits_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
+    ReadSqlHelper.AddAggregatesFilter(
         sql,
-        query.AggregatesEmpty,
-        "aggregates_count");
+        parameters,
+        query.AggregatesFilter);
 
     ReadSqlHelper.AddIssueYearFilter(
         sql,

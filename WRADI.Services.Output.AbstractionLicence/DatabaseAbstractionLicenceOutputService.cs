@@ -376,12 +376,16 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetLicenceFileIdsAsync(processRunId);
     }
     
-    public async Task<long> UpsertLicenceListItemAsync(UpsertLicenceListItem item, CancellationToken cancellationToken = default)
+    public async Task<long> UpsertLicenceListItemAsync(
+        UpsertLicenceListItem item,
+        CancellationToken cancellationToken = default)
     {
         return await databaseWriteService.UpsertLicenceListItemAsync(item, cancellationToken);
     }
 
-    public async Task UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items, CancellationToken cancellationToken = default)
+    public async Task UpsertLicenceListItemManyAsync(
+        IReadOnlyCollection<UpsertLicenceListItem> items,
+        CancellationToken cancellationToken = default)
     {
         await databaseWriteService.UpsertLicenceListItemManyAsync(items, cancellationToken);
     }

@@ -136,6 +136,7 @@ public class FileProcessSingleService(
                 processRun,
                 lookupConfig);
 
+            FireAndForgetDataRefresh(processRun.ProcessRunId);
             return true;
         }
         catch (Exception e)
@@ -149,6 +150,22 @@ public class FileProcessSingleService(
         {
             pdfDataExtractor.Dispose();
         }
+    }
+    
+    private void FireAndForgetDataRefresh(int processRunId)
+    {
+        _ = Task.Run((Func<Task?>)(async () =>
+        {
+            try
+            {
+                await outputService
+                    .UpdateLicenceListProcessRunAsync(processRunId);
+            }
+            catch
+            {
+               // intentionally swallowed
+            }
+        }));
     }
     
     private async Task<(bool StopExecution, List<LicenceSet> LicenceSets)> ScrapeDocumentAsync(

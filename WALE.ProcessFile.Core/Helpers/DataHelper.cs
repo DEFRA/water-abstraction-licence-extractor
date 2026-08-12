@@ -157,13 +157,15 @@ public static partial class DataHelper
             {
                 if (textToMatch.Regex != null)
                 {
-                    if (textToMatch.Regex.IsMatch(returnStr))
+                    var match = textToMatch.Regex.Match(returnStr);
+                    
+                    if (match.Success)
                     {
                         returnStr = textToMatch.Regex.Replace(
-                            returnStr,
+                            match.Value,
                             string.Empty);
 
-                        removesUsedList.Add(textToMatch.Text);
+                        removesUsedList.Add(match.Value);
                     }
 
                     continue;
@@ -238,9 +240,10 @@ public static partial class DataHelper
 
                         var isCharBefore = indexOf >= 1 && !char.IsWhiteSpace(returnStr[indexOf - 1]);
                         var isCharAfter = returnStr.Length > indexOf + textToMatch.Text.Length
-                            && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length]);
-
-                        if (textToMatch.ExceptWhenInsideWord && isCharBefore && isCharAfter)
+                            && !char.IsWhiteSpace(returnStr[indexOf + textToMatch.Text.Length])
+                            && returnStr[indexOf + textToMatch.Text.Length] != '.';
+                        
+                        if (textToMatch.ExceptWhenInsideWord && (isCharBefore || isCharAfter))
                         {
                             break;
                         }

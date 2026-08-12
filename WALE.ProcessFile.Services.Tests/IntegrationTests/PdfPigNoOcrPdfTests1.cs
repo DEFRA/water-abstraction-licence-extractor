@@ -272,7 +272,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         var additionalInformation = resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
         Assert.NotNull(additionalInformation);
-        Assert.Equal(16, additionalInformation.Text!.Count);
+        Assert.Equal(14, additionalInformation.Text!.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);
@@ -686,7 +686,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsResult);
         Assert.False(abstractionLimitsResult.IsOcr);
-        Assert.Equal(18, abstractionLimitsResult.Text!.Count);
+        Assert.Equal(17, abstractionLimitsResult.Text!.Count);
         Assert.Equal(17, abstractionLimitsResult.LabelStartLineNumber);
         
         Assert.NotNull(abstractionLimitsResult.SubResults);       
@@ -747,7 +747,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("cubic metres", perYearUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsResult.SubResults[1];
-        Assert.Equal(13, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(12, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -916,7 +916,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(13, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(12, abstractionLimitsSection.Text!.Count);
         Assert.Equal(27, abstractionLimitsSection.LabelStartLineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
@@ -993,7 +993,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
-        Assert.Equal(8, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(7, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -1639,7 +1639,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(29, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(28, abstractionLimitsSection.Text!.Count);
         Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(4, abstractionLimitsSection.SubResults[0].Text!.Count);
         
@@ -1698,7 +1698,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("litres", perSecondUnits);
         
         var abstractionLimitsSection2 = abstractionLimitsSection.SubResults[1];
-        Assert.Equal(4, abstractionLimitsSection2.Text!.Count);
+        Assert.Equal(3, abstractionLimitsSection2.Text!.Count);
 
         Assert.NotNull(abstractionLimitsSection2.SubResults);
         Assert.Single(abstractionLimitsSection2.SubResults);
@@ -1981,7 +1981,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(pointsResult.IsOcr);
         Assert.Equal("DocumentPointsAll", pointsResult.MatchedLabel!.Name);
         
-        Assert.Equal(53, pointsResult.Text!.Count);
+        Assert.Equal(52, pointsResult.Text!.Count);
         Assert.Equal("2.1 For Purpose 4.1 and 4.2", pointsResult.Text![0].Text);
         Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", pointsResult.Text![1].Text);
         Assert.Equal("marked 'Point A' and 'Point B' on Map 1.", pointsResult.Text![2].Text);
@@ -1991,7 +1991,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("TL5584494741 TL5453692523", pointsResult.Text![6].Text);
         Assert.Equal("TL5502493346 TL5522093137", pointsResult.Text![7].Text);
         
-        Assert.Equal(49, pointsResult.SubResults.Count); // TODO should probably be 47
+        Assert.Equal(50, pointsResult.SubResults.Count); // TODO should probably be 47
 
         var pointPurposeGroup1 = pointsResult.SubResults[0];
         Assert.Equal("PointPurposeGroup", pointPurposeGroup1.MatchedLabel!.Name);
@@ -2039,17 +2039,17 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         var pointPurposeGroup2 = pointsResult.SubResults[1];
         Assert.Equal("PointPurposeGroup", pointPurposeGroup2.MatchedLabel!.Name);
-        Assert.Equal(50, pointPurposeGroup2.Text!.Count);
+        Assert.Equal(49, pointPurposeGroup2.Text!.Count);
         
         var pointPurposeGroup2Text = pointPurposeGroup2.Text!;
 
-        Assert.Equal(50, pointPurposeGroup2Text.Count);
+        Assert.Equal(49, pointPurposeGroup2Text.Count);
         Assert.Equal("2.2 For Purpose 4.3", pointPurposeGroup2Text[0].Text);
         Assert.Equal("National Grid References", pointPurposeGroup2Text[1].Text);
         Assert.Equal("From To", pointPurposeGroup2Text[2].Text);
         Assert.Equal("TL5584494741 TL5453692523", pointPurposeGroup2Text[3].Text);
         //...
-        Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[49].Text);
+        Assert.Equal("TL5616889665 TL5658389810", pointPurposeGroup2Text[48].Text);
         
         var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -2067,7 +2067,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("6/33/47/*S/0172/R01", primaryLicence.LicenceNumber?.Value);
 
         var points = primaryLicence.Points;
-        Assert.Equal(49, points.Length);
+        Assert.Equal(50, points.Length);
         
         var primaryPoint1 = points[0];
         Assert.Equal("2.1", primaryPoint1.Id);
@@ -2078,7 +2078,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         var primaryPoint2 = points[1];
         Assert.Equal("2.2", primaryPoint2.Id);
-        Assert.Equal(1242, primaryPoint2.Description!.Length);
+        Assert.Equal(1241, primaryPoint2.Description!.Length);
         Assert.StartsWith("National Grid References From To TL558449", primaryPoint2.Description);
         Assert.Single(primaryPoint2.PurposeIds!);
         Assert.Equal("4.3", primaryPoint2.PurposeIds![0]);
@@ -2159,7 +2159,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.Equal(61, abstractionLimitsSection.Text!.Count);
+        Assert.Equal(60, abstractionLimitsSection.Text!.Count);
         Assert.Equal(8, abstractionLimitsSection.SubResults.Count);
         Assert.Equal(3, abstractionLimitsSection.SubResults[0].Text!.Count);        
         

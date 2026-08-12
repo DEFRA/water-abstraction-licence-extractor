@@ -367,8 +367,9 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Units);
         Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points!);
-        Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points![0].Id); 
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Points!);
+        Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![0].Points![0].Id); 
         
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
@@ -383,8 +384,9 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].SectionName);
         Assert.Null( agreedSchemaLicence.AbstractionLimits.Aggregates![0].ContainedIn![0].LinkReason);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Aggregates![0].LinkedLicences!);
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!.Length);
-        Assert.Equal(0, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points!.Count(p => p.IsImplicit != true));
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![0].Limits[0].Points);
+        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Points!.Length);
+        Assert.Equal(0, agreedSchemaLicence.AbstractionLimits.Aggregates![0].Points!.Count(p => p.IsImplicit != true));
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Units);

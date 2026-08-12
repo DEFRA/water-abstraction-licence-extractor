@@ -188,4 +188,79 @@ public static class TestConfig
             return field;
         }
     }
+    
+    [field: AllowNull, MaybeNull]
+    public static string PostgresHost
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["POSTGRESQL_HOST"]!;
+            return field;
+        }
+    }
+    
+    private static int? _postgresPort;
+    public static int PostgresPort
+    {
+        get
+        {
+            if (_postgresPort != null)
+            {
+                return _postgresPort.Value;
+            }
+            
+            _postgresPort = int.Parse(Config["POSTGRESQL_PORT"]!);
+            return _postgresPort.Value;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
+    public static string PostgresDbName
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["POSTGRESQL_DBNAME"]!;
+            return field;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
+    public static string PostgresUsername
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["POSTGRESQL_USERNAME"]!;
+            return field;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
+    public static string PostgresPassword
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["POSTGRESQL_PASSWORD"]!;
+            return field;
+        }
+    }
 }

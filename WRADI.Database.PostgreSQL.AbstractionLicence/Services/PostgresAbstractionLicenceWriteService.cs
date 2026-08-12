@@ -1203,14 +1203,16 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_section_id,
                 licence_section_item_id,
                 verification_types,
-                scraped_data_is_different
+                scraped_data_is_different,
+             current_verification_type
             )
             VALUES
             (
                 @VerificationSectionId,
                 @LicenceSectionItemId,
                 @VerificationTypes,
-                @ScrapedDataIsDifferent
+                @ScrapedDataIsDifferent,
+             @CurrentVerificationType
             )
             ON CONFLICT
             (
@@ -1220,6 +1222,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             DO UPDATE SET
                 verification_types =
                     EXCLUDED.verification_types,
+                current_verification_type = 
+                EXCLUDED.current_verification_type,
                 scraped_data_is_different =
                     EXCLUDED.scraped_data_is_different;
             """;
@@ -1247,7 +1251,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     VerificationTypes =
                         verificationTypes,
 
-                    item.ScrapedDataIsDifferent
+                    item.ScrapedDataIsDifferent,
+                    
+                    item.CurrentVerificationType
                 },
                 transaction,
                 cancellationToken: cancellationToken));

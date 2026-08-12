@@ -197,11 +197,13 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             sectionSummaries.Add(new LicenceSectionItemSummary
             {
                 LicenceSectionItemId = verification.LicenceSectionItemId!,
-                VerificationTypes = [verification.VerificationType!]
+                VerificationTypes = [verification.VerificationType!],
+                CurrentVerificationType = verification.VerificationType!
             });
         }
         else
         {
+            existingSummary.CurrentVerificationType = verification.VerificationType!;
             if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes

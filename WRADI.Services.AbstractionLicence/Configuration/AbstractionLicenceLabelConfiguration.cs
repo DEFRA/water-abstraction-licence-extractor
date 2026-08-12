@@ -1426,6 +1426,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                 Name = "DocumentPurposesAll",
                 TextStart =
                 [
+                    new("3. PURPOSE OF ABSTRACTION"),
                     new("PURPOSE OF ABSTRACTION"),
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
@@ -1436,6 +1437,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                 ],
                 TextEnd =
                 [
+                    new("4. MAXIMUM QUANTITY OF WATER TO BE") { LineMustStartWith = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE") { LineMustStartWith = true },
                     new("PERIODS OF ABSTRACTION"),
                     new("PERIOD(S) OF ABSTRACTION"),
                     new("PERIOD OF ABSTRACTION"),

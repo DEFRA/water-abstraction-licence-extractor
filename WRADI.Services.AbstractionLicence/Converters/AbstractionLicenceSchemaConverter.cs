@@ -2911,7 +2911,7 @@ public static class AbstractionLicenceSchemaConverter
             .ToList();
 
         const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
-            = "shall not exceed the quantity authorised to be abstracted under this licence.";
+            = "shall not exceed the quantity authorised to be abstracted under this licence";
         
         var shouldCopyIndividualValues = abstractionLimitPointSubText.Contains(
             shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence

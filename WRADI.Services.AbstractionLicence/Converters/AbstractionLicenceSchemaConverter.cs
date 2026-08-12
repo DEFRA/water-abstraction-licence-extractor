@@ -205,13 +205,13 @@ public static class AbstractionLicenceSchemaConverter
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
         }
-        
+
         var linkedLicences = new List<LinkedLicence>();
         
         if (naldLinkedLicenceHelper != null)
         {
             var naldLinkedLicences =
-                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
+                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber, true);
 
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
@@ -249,7 +249,6 @@ public static class AbstractionLicenceSchemaConverter
                     DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
-                    IsBecauseOfAggregate = true,
                     ContainedIn =
                     [
                         new ContainedInInformation

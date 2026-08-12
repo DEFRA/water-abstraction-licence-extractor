@@ -1,6 +1,7 @@
 import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
 import {LinkedLicenceItem} from "./LinkedLicences/LinkedLicenceItem.tsx";
+import {AggregateItem} from "./Aggregates/AggregateItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -10,7 +11,8 @@ interface LicenceVerificationHistoryProps {
 }
 
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
-    "Linked Licences": LinkedLicenceItem
+    "Linked Licences": LinkedLicenceItem,
+    "Aggregates": AggregateItem
 };
 
 export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage}: LicenceVerificationHistoryProps) {
@@ -67,7 +69,7 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
             if (Component) {
                 try {
                     const data = JSON.parse(value);
-                    content = <Component linkedLicence={data} isEditing={false} onJumpToPage={onJumpToPage}/>;
+                    content = <Component linkedLicence={data} aggregate={data} isEditing={false} onJumpToPage={onJumpToPage}/>;
                 } catch (e) {
                     console.error("Error parsing verification value", e);
                     content = <div>{value}</div>;
@@ -88,7 +90,10 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
             <div>
                 {verification.licenceSectionName === 'Linked Licences' && verification.licenceSectionItemId === 'None Outgoing' && (
                     <label>No outgoing linked licences</label>
-                )}                
+                )}
+                {verification.licenceSectionName === 'Aggregates' && verification.licenceSectionItemId === 'None' && (
+                    <label>No aggregates</label>
+                )}
                 {renderValue(verification.licenceSectionScrapedValue, `Original value (scraped on process run ${verification.processRunId})`)}
                 {renderValue(verification.licenceSectionSnapshotValue, getSnapshotLabel(verificationType))}
                 {renderValue(verification.licenceSectionOverrideValue, getOverrideLabel(verificationType))}

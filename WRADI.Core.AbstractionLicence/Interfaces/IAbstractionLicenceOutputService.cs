@@ -27,9 +27,9 @@ public interface IAbstractionLicenceOutputService
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
 
-    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
+    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false);
 
-    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 

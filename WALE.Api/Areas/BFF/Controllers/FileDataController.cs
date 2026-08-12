@@ -44,17 +44,23 @@ public class FileDataController(
     }
     
     [HttpGet]
-    public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId, [FromQuery] int processRunId)
+    public async Task<ActionResult<Licence?>> Licence(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
     {
-        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
         return Ok(result);
     }
-    
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
-    public async Task<ActionResult<string?>> LicenceStringAsync([FromQuery] Guid fileId, [FromQuery] int processRunId)
+    public async Task<ActionResult<string?>> LicenceStringAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
     {
-        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
     

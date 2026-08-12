@@ -6,6 +6,14 @@ import { waleApiClient } from '../../api/apiClient';
  * Interface that all licence section body components must implement.
  * This allows the parent LicenceSection to control view/edit mode and get edited data.
  */
+export interface VerificationRequestPayload {
+    verificationType: string;
+    itemId?: string;
+    data?: any;
+    scrapedData?: any;
+    snapshotData?: any;
+}
+
 export interface ILicenceSectionBody {
     /**
      * Returns the current data of the section as JSON.
@@ -21,6 +29,16 @@ export interface ILicenceSectionBody {
      * Returns a snapshot of the data of the section, before the current session's edits, as JSON.
      */
     getSnapshotData: (itemId?: string) => any;
+
+    /**
+     * Optional override for sections that need custom save behaviour instead of the default single-
+     * verification POST (e.g. Aggregates, where editing PrimaryType/SubType/LinkedLicences changes the
+     * item's Id and must be saved as Removed(oldId) + Added(newId) rather than a single Edited). If
+     * implemented and returns a non-empty array, LicenceSection POSTs each entry in order instead of
+     * building one verification from getData/getScrapedData/getSnapshotData. Return null/undefined to
+     * fall back to the default single-verification behaviour.
+     */
+    getVerificationRequests?: (verificationType: string, itemId?: string) => VerificationRequestPayload[] | null;
 }
 
 export interface LicenceSectionBodyProps {
@@ -110,21 +128,42 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
             }
 
             console.log(`Creating ${verificationType} Verification for`, title, 'Item:', pendingVerificationItemId, 'Data:', JSON.stringify(data, null, 2));
-            
-            try {
-                const verification = new LicenceSectionVerification({
-                    licenceFileId: licenceFileId,
-                    processRunId: processRunId,
-                    licenceSectionName: title,
-                    licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
-                    licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
-                    licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
-                    verificationType: verificationType,
-                    licenceSectionItemId: pendingVerificationItemId,
-                    notes: verificationNotes
-                });
 
-                await waleApiClient.createLicenceSectionVerification(verification);
+            try {
+                const overrideRequests = bodyRef.current.getVerificationRequests?.(verificationType, pendingVerificationItemId);
+
+                if (overrideRequests && overrideRequests.length > 0) {
+                    for (const req of overrideRequests) {
+                        const verification = new LicenceSectionVerification({
+                            licenceFileId: licenceFileId,
+                            processRunId: processRunId,
+                            licenceSectionName: title,
+                            licenceSectionScrapedValue: req.scrapedData ? JSON.stringify(req.scrapedData) : undefined,
+                            licenceSectionSnapshotValue: req.verificationType === 'Added' ? undefined : (req.snapshotData ? JSON.stringify(req.snapshotData) : undefined),
+                            licenceSectionOverrideValue: (req.verificationType === 'Edited' || req.verificationType === 'Added') ? JSON.stringify(req.data) : undefined,
+                            verificationType: req.verificationType,
+                            licenceSectionItemId: req.itemId,
+                            notes: verificationNotes
+                        });
+
+                        await waleApiClient.createLicenceSectionVerification(verification);
+                    }
+                } else {
+                    const verification = new LicenceSectionVerification({
+                        licenceFileId: licenceFileId,
+                        processRunId: processRunId,
+                        licenceSectionName: title,
+                        licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
+                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
+                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
+                        verificationType: verificationType,
+                        licenceSectionItemId: pendingVerificationItemId,
+                        notes: verificationNotes
+                    });
+
+                    await waleApiClient.createLicenceSectionVerification(verification);
+                }
+
                 setResetKey(prev => prev + 1);
                 if (onRefresh) {
                     onRefresh();

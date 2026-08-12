@@ -49,9 +49,9 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                 waleApiClient.matchesResult(fileId),
                 waleApiClient.matchesResultString(fileId),
-                waleApiClient.licence(fileId, processRunId),
+                waleApiClient.licence(fileId, processRunId, false),
                 waleApiClient.licenceSets(fileId),
-                waleApiClient.licenceString(fileId, processRunId),
+                waleApiClient.licenceString(fileId, processRunId, false),
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);

@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using AggregateVerificationMergeHelper = WRADI.Core.AbstractionLicence.Helpers.AggregateVerificationMergeHelper;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
@@ -163,14 +164,38 @@ public class DatabaseAbstractionLicenceOutputService(
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
-        return databaseReadService.GetLicenceAsync(fileId, processRunId);
+        var licence = await databaseReadService.GetLicenceAsync(fileId, processRunId);
+
+        return licence == null || !applyVerifications
+            ? licence
+            : await ApplyAggregateVerificationsAsync(licence, licence.DmsFileId ?? fileId);
     }
 
-    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false)
     {
-        return databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+        var licence = await databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+
+        return licence == null || !applyVerifications || licence.DmsFileId is null
+            ? licence
+            : await ApplyAggregateVerificationsAsync(licence, licence.DmsFileId.Value);
+    }
+
+    private async Task<Licence> ApplyAggregateVerificationsAsync(Licence licence, Guid fileId)
+    {
+        var verifications = await databaseReadService.GetLicenceSectionVerificationsAsync(fileId);
+        var aggregateVerifications = verifications.Where(v => v.LicenceSectionName == "Aggregates");
+
+        var merged = AggregateVerificationMergeHelper.MergeAggregates(
+            licence.AbstractionLimits.Aggregates,
+            aggregateVerifications);
+
+        return licence.CloneWithAbstractionLimits(new AbstractionLimits
+        {
+            Individual = licence.AbstractionLimits.Individual,
+            Aggregates = merged.ToArray()
+        });
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)

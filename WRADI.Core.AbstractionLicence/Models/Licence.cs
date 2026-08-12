@@ -59,6 +59,34 @@ public class Licence
     public LinkedLicence[] LinkedLicences { get; set; } = [];
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
-    
+
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
+
+    public Licence CloneWithAbstractionLimits(AbstractionLimits abstractionLimits)
+    {
+        return new Licence
+        {
+            ProcessRunId = ProcessRunId,
+            Status = Status,
+            LicenceNumber = LicenceNumber,
+            RegionId = RegionId,
+            LicenceType = LicenceType,
+            DmsPermitNumber = DmsPermitNumber,
+            DmsPath = DmsPath,
+            DmsFileId = DmsFileId,
+            NaldStatus = NaldStatus,
+            NaldHasAggregateCondition = NaldHasAggregateCondition,
+            Filename = Filename,
+            LicenceVersion = LicenceVersion,
+            Points = Points,
+            Purposes = Purposes,
+            PeriodsOfAbstraction = PeriodsOfAbstraction,
+            MeansOfAbstraction = MeansOfAbstraction,
+            AbstractionLimits = abstractionLimits,
+            DefinitionOfYear = DefinitionOfYear,
+            LinkedLicences = LinkedLicences,
+            LicenceSets = LicenceSets,
+            NoneSchemaData = NoneSchemaData
+        };
+    }
 }

@@ -1,3 +1,4 @@
+using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -10,6 +11,22 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
         Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
     {
-        throw new NotImplementedException();
+        if (!verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications))
+        {
+            return; // no incoming-link concept for Aggregates — ByItemId is never consulted
+        }
+
+        var (aggregateIds, summaries) = AggregateVerificationMergeHelper.MergeAggregateIds(
+            listRow.aggregateIds, outgoingVerifications);
+
+        listRow.aggregateIds = aggregateIds.ToArray(); // aggregatesCount recomputes automatically from this
+
+        var sectionSummaries = listRow.licenceSectionVerifications?.ToList() ?? [];
+        sectionSummaries.Add(new LicenceSectionVerificationSummary
+        {
+            LicenceSectionName = SectionName,
+            LicenceSectionItems = summaries.ToArray()
+        });
+        listRow.licenceSectionVerifications = sectionSummaries.ToArray();
     }
 }

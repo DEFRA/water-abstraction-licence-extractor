@@ -1,33 +1,35 @@
 import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
 import {
     type Licence,
-    LinkedLicence,
-    NullableOfInformationDirection,
+    Aggregate,
     LicenceSectionVerification,
-    ContainedInInformation,
-    InformationSource
+    PrimaryType,
+    NullableOfSubType
 } from "../../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../../api/apiClient.ts";
-import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "../LicenceSection";
+import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
-import {hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
+import {computeAggregateId} from "../../../utils/aggregateUtils.ts";
+
+const NO_AGGREGATES_ITEM_ID = 'None';
 
 interface AggregatesProps extends LicenceSectionBodyProps {
     licence?: Licence;
+    processRunId?: number;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
 
 export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, data, onOpenReport, scrapedView, history}, ref) => {
-        const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
-        const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
-        const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
+    ({licence, processRunId, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
+        const [aggregates, setAggregates] = useState<Aggregate[]>([]);
+        const [scrapedData, setScrapedData] = useState<Aggregate[] | null>(null);
+        const [snapshotData, setSnapshotData] = useState<Aggregate[] | null>(null);
 
-        const noneOutgoingVerification = (history || [])
-            .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === 'None Outgoing')
+        const noAggregatesVerification = (history || [])
+            .filter(v => v.licenceSectionName === 'Aggregates' && v.licenceSectionItemId === NO_AGGREGATES_ITEM_ID)
             .sort((a, b) => {
                 const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
                 const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
@@ -37,7 +39,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
-        const [originalItem, setOriginalItem] = useState<LinkedLicence | null>(null);
+        const [originalItem, setOriginalItem] = useState<Aggregate | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
 
@@ -45,94 +47,110 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
         useImperativeHandle(ref, () => ({
             getData: (itemId?: string) => {
                 if (itemId) {
-                    return linkedLicences.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                    return aggregates.find(a => computeAggregateId(a) === itemId);
                 }
-                return linkedLicences;
+                return aggregates;
             },
             getScrapedData: (itemId?: string) => {
                 if (itemId) {
-                    return scrapedData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                    return scrapedData?.find(a => computeAggregateId(a) === itemId);
                 }
                 return scrapedData;
             },
             getSnapshotData: (itemId?: string) => {
                 if (itemId) {
-                    return snapshotData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
+                    return snapshotData?.find(a => computeAggregateId(a) === itemId);
                 }
                 return snapshotData;
+            },
+            getVerificationRequests: (verificationType: string): VerificationRequestPayload[] | null => {
+                // Editing an aggregate's PrimaryType/SubType/LinkedLicences changes its computed Id — that
+                // can't be expressed as a single 'Edited' verification (which assumes the item's identity
+                // is unchanged), so it must be saved as Removed(oldId) + Added(newId) instead.
+                if (verificationType !== 'Edited' || editingIndex === null || !originalItem) {
+                    return null;
+                }
+
+                const currentItem = aggregates[editingIndex];
+                if (!currentItem) {
+                    return null;
+                }
+
+                const newId = computeAggregateId(currentItem);
+                const oldId = computeAggregateId(originalItem);
+
+                if (newId === oldId) {
+                    return null; // no Id-affecting field changed — default single 'Edited' POST
+                }
+
+                return [
+                    {verificationType: 'Removed', itemId: oldId, snapshotData: originalItem},
+                    {verificationType: 'Added', itemId: newId, data: currentItem}
+                ];
             },
             onVerificationCancelled: () => {
                 setIsWaitingForVerification(false);
             }
-        }), [linkedLicences, scrapedData, snapshotData]);
+        }), [aggregates, scrapedData, snapshotData, editingIndex, originalItem]);
 
         useEffect(() => {
-            const fetchLinkedLicences = async () => {
-                const permitNumber = licence?.dmsPermitNumber;
-                if (!permitNumber) return;
+            const fetchAggregates = async () => {
+                if (!licence?.dmsFileId) return;
 
                 setIsLoading(true);
                 setError(null);
                 try {
-                    const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
-                    setLinkedLicences(scrapeResults || []);
-                    setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                    const scraped = licence.abstractionLimits?.aggregates ?? [];
+                    setScrapedData(scraped.map(a => Aggregate.fromJS(a)));
 
-                    if (!scrapedView) {
-                        const currentOutgoingLinkedLicences = (outputListDataItem?.linkedLicences || [])
-                            .filter(ll => hasAnyOutgoingSections(ll.containedIn))
-                            .map(ll => {
-                                const licence = LinkedLicence.fromJS(ll);
-                                licence.containedIn = (licence.containedIn || [])
-                                    .filter(c => c.direction === NullableOfInformationDirection.Outgoing);
-                                return licence;
-                            });
-
-                        setLinkedLicences(currentOutgoingLinkedLicences);
-                        setSnapshotData(currentOutgoingLinkedLicences.map(ll => LinkedLicence.fromJS(ll)));
+                    if (scrapedView) {
+                        setAggregates(scraped);
+                    } else if (processRunId) {
+                        const merged = await waleApiClient.licence(licence.dmsFileId, processRunId, true);
+                        const currentAggregates = merged.abstractionLimits?.aggregates ?? [];
+                        setAggregates(currentAggregates);
+                        setSnapshotData(currentAggregates.map(a => Aggregate.fromJS(a)));
                     }
                 } catch (err) {
-                    console.error("Error fetching linked licences:", err);
-                    setError("Failed to load linked licences.");
+                    console.error("Error fetching aggregates:", err);
+                    setError("Failed to load aggregates.");
                 } finally {
                     setIsLoading(false);
                 }
             };
 
-            fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber]);
+            fetchAggregates();
+        }, [licence?.dmsFileId, processRunId, scrapedView]);
 
-        const handleAddLicence = () => {
-            const newLicence = new LinkedLicence({
-                licenceNumber: '',
-                permitNumber: '',
-                containedIn: [
-                    new ContainedInInformation({
-                        source: InformationSource.Document,
-                        direction: NullableOfInformationDirection.Outgoing,
-                        sectionName: '',
-                        linkReason: '',
-                        isBecauseOfAggregate: false
-                    })
-                ]
+        const handleAddAggregate = () => {
+            const newAggregate = new Aggregate({
+                sourceLicenceNumber: licence?.licenceNumber?.value,
+                sourceLicenceVersionId: licence?.licenceVersion?.licenceVersionId,
+                primaryType: PrimaryType.NotSet,
+                subType: NullableOfSubType.NotSet,
+                linkedLicences: [],
+                containedIn: [],
+                points: [],
+                purposes: [],
+                limits: []
             });
-            const newList = [...linkedLicences, newLicence];
-            setLinkedLicences(newList);
+            const newList = [...aggregates, newAggregate];
+            setAggregates(newList);
             setEditingIndex(newList.length - 1);
             setIsAddingNew(true);
             setOriginalItem(null);
             setIsWaitingForVerification(false);
         };
 
-        const handleUpdateLicence = (index: number, updated: LinkedLicence) => {
-            const newList = [...linkedLicences];
+        const handleUpdateAggregate = (index: number, updated: Aggregate) => {
+            const newList = [...aggregates];
             newList[index] = updated;
-            setLinkedLicences(newList);
+            setAggregates(newList);
         };
 
-        const handleRemoveLicence = (index: number) => {
-            const newList = linkedLicences.filter((_, i) => i !== index);
-            setLinkedLicences(newList);
+        const handleRemoveAggregate = (index: number) => {
+            const newList = aggregates.filter((_, i) => i !== index);
+            setAggregates(newList);
             if (editingIndex === index) {
                 setEditingIndex(null);
                 setIsAddingNew(false);
@@ -144,11 +162,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             if (editingIndex === null) return;
 
             if (isAddingNew) {
-                handleRemoveLicence(editingIndex);
+                handleRemoveAggregate(editingIndex);
             } else if (originalItem) {
-                const newList = [...linkedLicences];
+                const newList = [...aggregates];
                 newList[editingIndex] = originalItem;
-                setLinkedLicences(newList);
+                setAggregates(newList);
                 setEditingIndex(null);
                 setOriginalItem(null);
             } else {
@@ -158,20 +176,20 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
         };
 
         return (
-            <div className="linked-licences-container" style={{padding: '8px'}}>
-                <div className="linked-licences-list">
+            <div className="aggregates-container" style={{padding: '8px'}}>
+                <div className="aggregates-list">
                     {isLoading &&
-                        <p style={{textAlign: 'center', padding: '20px', color: '#888'}}>Loading linked licences...</p>}
+                        <p style={{textAlign: 'center', padding: '20px', color: '#888'}}>Loading aggregates...</p>}
                     {error && <p style={{color: 'red', textAlign: 'center', padding: '20px'}}>{error}</p>}
-                    {!isLoading && !error && linkedLicences.length === 0 && (
+                    {!isLoading && !error && aggregates.length === 0 && (
                         <div style={{textAlign: 'center', padding: '20px'}}>
-                            <p style={{color: '#888', marginBottom: '16px'}}>No outgoing linked licences found.</p>
-                            {noneOutgoingVerification && (
-                                <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
+                            <p style={{color: '#888', marginBottom: '16px'}}>No aggregates found.</p>
+                            {noAggregatesVerification && (
+                                <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                             )}
                             {!scrapedView && (
                                 <button
-                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', NO_AGGREGATES_ITEM_ID)}
                                     style={{
                                         padding: '6px 20px',
                                         backgroundColor: '#52c41a',
@@ -181,61 +199,62 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                         cursor: 'pointer',
                                         fontWeight: '600',
                                         fontSize: '0.85rem',
-                                        marginTop: noneOutgoingVerification ? '12px' : '0'
+                                        marginTop: noAggregatesVerification ? '12px' : '0'
                                     }}
                                 >
-                                    Confirm No Outgoing Linked Licences
+                                    Confirm No Aggregates
                                 </button>
                             )}
                         </div>
                     )}
-                    {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (
+                    {!isLoading && !error && aggregates.length > 0 && noAggregatesVerification && (
                         <div style={{
                             marginBottom: '12px',
                             padding: '8px',
                             backgroundColor: '#f9f9f9',
                             borderRadius: '4px'
                         }}>
-                            <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
+                            <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && linkedLicences.map((ll, index) => (
-                        <AggregateItem
-                            key={index}
-                            linkedLicence={ll}
-                            isEditing={editingIndex === index && !isWaitingForVerification}
-                            isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
-                            onUpdate={(updated) => handleUpdateLicence(index, updated)}
-                            onRemove={() => handleRemoveLicence(index)}
-                            onDiscard={handleDiscard}
-                            onJumpToPage={onJumpToPage}
-                            onVerify={() => onItemVerificationRequested?.('Confirm', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onOverride={() => {
-                                if (editingIndex === index) {
-                                    setIsWaitingForVerification(true);
-                                    onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
-                                } else {
-                                    setEditingIndex(index);
-                                    setIsAddingNew(false);
-                                    setOriginalItem(LinkedLicence.fromJS(ll));
-                                    setIsWaitingForVerification(false);
-                                }
-                            }}
-                            outputListDataItem={outputListDataItem}
-                            data={data}
-                            onOpenReport={onOpenReport}
-                            scrapedView={scrapedView}
-                            history={history}
-                        />
-                    ))}
+                    {!isLoading && !error && aggregates.map((aggregate, index) => {
+                        const itemId = computeAggregateId(aggregate);
+                        return (
+                            <AggregateItem
+                                key={index}
+                                aggregate={aggregate}
+                                isEditing={editingIndex === index && !isWaitingForVerification}
+                                isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
+                                onUpdate={(updated) => handleUpdateAggregate(index, updated)}
+                                onRemove={() => handleRemoveAggregate(index)}
+                                onDiscard={handleDiscard}
+                                onJumpToPage={onJumpToPage}
+                                onVerify={() => onItemVerificationRequested?.('Confirm', itemId)}
+                                onReject={() => onItemVerificationRequested?.('Remove', itemId)}
+                                onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
+                                onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
+                                onOverride={() => {
+                                    if (editingIndex === index) {
+                                        setIsWaitingForVerification(true);
+                                        onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', itemId);
+                                    } else {
+                                        setEditingIndex(index);
+                                        setIsAddingNew(false);
+                                        setOriginalItem(Aggregate.fromJS(aggregate));
+                                        setIsWaitingForVerification(false);
+                                    }
+                                }}
+                                onOpenReport={onOpenReport}
+                                scrapedView={scrapedView}
+                                history={history}
+                            />
+                        );
+                    })}
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (
                         <button
-                            onClick={handleAddLicence}
+                            onClick={handleAddAggregate}
                             style={{
                                 padding: '10px 24px',
                                 backgroundColor: '#1890ff',
@@ -248,7 +267,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                 boxShadow: '0 2px 0 rgba(0,0,0,0.045)'
                             }}
                         >
-                            + Add Linked Licence
+                            + Add Aggregate
                         </button>
                     )}
                 </div>

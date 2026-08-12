@@ -130,6 +130,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <Aggregates
                             licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             history={history}
@@ -170,6 +171,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <Aggregates
                             licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

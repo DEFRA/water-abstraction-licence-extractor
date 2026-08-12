@@ -2968,7 +2968,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Point
                 {
                     Id = p.Id,
-                    Description = p.Description,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();
@@ -2981,7 +2981,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Purpose
                 {
                     Id = p.Id,
-                    Description = p.Description,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();

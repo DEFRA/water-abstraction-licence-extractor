@@ -80,7 +80,6 @@ export const LinkedLicenceItem = ({
                 direction: NullableOfInformationDirection.Outgoing,
                 sectionName: '',
                 linkReason: '',
-                //isBecauseOfAggregate: false // NOTE not sure if this should be done elsewhere now
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
             onUpdate(new LinkedLicence({...linkedLicence, containedIn: newSections}));
@@ -180,6 +179,23 @@ export const LinkedLicenceItem = ({
                             }}
                         />
                         <ValidationError message={errors.permitNumber} />
+                    </div>
+
+                    <div style={{marginTop: '16px'}}>
+                        <label style={{
+                            fontSize: '0.85rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={!!linkedLicence.isBecauseOfAggregate}
+                                onChange={(e) => handleChange('isBecauseOfAggregate', e.target.checked)}
+                                style={{marginRight: '6px'}}
+                            />
+                            Because of Aggregate
+                        </label>
                     </div>
                 </div>
 
@@ -290,22 +306,6 @@ export const LinkedLicenceItem = ({
                                             />
                                             <ValidationError message={errors[`section_${idx}_linkReason`]} style={{fontSize: '0.7rem'}} />
                                         </div>
-                                        <div style={{paddingBottom: '6px'}}>
-                                            <label style={{
-                                                fontSize: '0.75rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                cursor: 'pointer'
-                                            }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={!!linkedLicence.isBecauseOfAggregate}
-                                                    onChange={(e) => handleSectionChange(idx, 'isBecauseOfAggregate', e.target.checked)}
-                                                    style={{marginRight: '6px'}}
-                                                />
-                                                Because of Aggregate
-                                            </label>
-                                        </div>
                                         {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                             <div style={{paddingBottom: '2px'}}>
                                                 <button
@@ -404,6 +404,8 @@ export const LinkedLicenceItem = ({
                     )}<NaldStatusTag
                     status={linkedLicence.naldStatus}/></p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
+                <div style={{marginBottom: '8px'}}><strong>Because of
+                    Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
             </div>
             {hasAnyOutgoingSections(linkedLicence.containedIn) && (
                 <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
@@ -429,8 +431,6 @@ export const LinkedLicenceItem = ({
                                         <div><strong>Source:</strong> {section.source || 'N/A'}</div>
                                         <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
                                         <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
-                                        <div><strong>Because of
-                                            Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
                                         {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                             <button
                                                 onClick={() => {

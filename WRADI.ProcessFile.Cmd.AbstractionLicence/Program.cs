@@ -68,7 +68,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
             services.DmsReportPath!,
             false,
             abstractionLicenceCacheService,
-            false);
+            true);
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess

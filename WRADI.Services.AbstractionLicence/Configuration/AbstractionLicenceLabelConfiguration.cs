@@ -844,7 +844,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "PointPurposeGroup",
                         TextStart = [
                             new("For Purpose "),
-                            new(string.Empty) { SingleLinePerItem = true },
+                            new(string.Empty) { SingleLinePerItem = true }, // TODO look into this more at some point
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -988,6 +988,20 @@ public static partial class AbstractionLicenceLabelConfiguration
                                 {
                                     new()
                                     {
+                                        Name = "FromToPointTable",
+                                        Position =  LabelPosition.TextToFindIsBetweenLabels,
+                                        TextStart = [
+                                            new("From To") {LineMustStartWith = true},
+                                        ],
+                                        TextEnd = [
+                                            new("3. Means of abstraction"),
+                                            new("[END_OF_BLOCK]")
+                                        ],
+                                        PreviousLinesToFetch = 0,
+                                        NextLinesToFetch = 50
+                                    },
+                                    new()
+                                    {
                                         Name = "PointTable",
                                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                                         TextStart = [
@@ -1000,7 +1014,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("Point Reference")
                                         ],
                                         PreviousLinesToFetch = 0,
-                                        NextLinesToFetch = 5
+                                        NextLinesToFetch = 50
                                     },
                                     new()
                                     {
@@ -1058,6 +1072,17 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     {
                                         Name = "PointTextWithoutPurposeAndPoint",
                                         Remove = [
+                                            new("1.10") { ColumnMustStartWith = true },
+                                            new("1.1") { ColumnMustStartWith = true },
+                                            new("1.2") { ColumnMustStartWith = true },
+                                            new("1.3") { ColumnMustStartWith = true },
+                                            new("1.4") { ColumnMustStartWith = true },
+                                            new("1.5") { ColumnMustStartWith = true },
+                                            new("1.6") { ColumnMustStartWith = true },
+                                            new("1.7") { ColumnMustStartWith = true },
+                                            new("1.8") { ColumnMustStartWith = true },
+                                            new("1.9") { ColumnMustStartWith = true },
+                                            new("2.10") { ColumnMustStartWith = true },
                                             new("2.1") { ColumnMustStartWith = true },
                                             new("2.2") { ColumnMustStartWith = true },
                                             new("2.3") { ColumnMustStartWith = true },
@@ -1067,7 +1092,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("2.7") { ColumnMustStartWith = true },
                                             new("2.8") { ColumnMustStartWith = true },
                                             new("2.9") { ColumnMustStartWith = true },
-                                            new("2.10") { ColumnMustStartWith = true },
                                             new("(1)"),
                                             new("(2)"),
                                             new("(3)"),
@@ -1076,9 +1100,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
                                             new("For Purpose 4.4") { RemoveWholeLine = true },
-                                            new("Map 1"),
-                                            new("Map 2"),
-                                            new("Map 3"),
                                             new("A ") { ColumnMustStartWith = true },
                                             new("B ") { ColumnMustStartWith = true },
                                             new("C ") { ColumnMustStartWith = true },
@@ -1090,10 +1111,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("I ") { ColumnMustStartWith = true },
                                             new("J ") { ColumnMustStartWith = true },                                            
                                         ],
-                                        Text = [
-                                            new("marked") // TODO ' marked ' doesn't work, change so it does
-                                        ],
-                                        Position = LabelPosition.SplitAtLabel,
+                                        Position = LabelPosition.LabelIsActuallyResult,
                                         Format = "Text",
                                         PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 10,
@@ -1366,6 +1384,17 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     {
                                         Name = "PointTextWithoutPurposeAndPoint",
                                         Remove = [
+                                            new("1.10") { ColumnMustStartWith = true },
+                                            new("1.1") { ColumnMustStartWith = true },
+                                            new("1.2") { ColumnMustStartWith = true },
+                                            new("1.3") { ColumnMustStartWith = true },
+                                            new("1.4") { ColumnMustStartWith = true },
+                                            new("1.5") { ColumnMustStartWith = true },
+                                            new("1.6") { ColumnMustStartWith = true },
+                                            new("1.7") { ColumnMustStartWith = true },
+                                            new("1.8") { ColumnMustStartWith = true },
+                                            new("1.9") { ColumnMustStartWith = true },
+                                            new("2.10") { ColumnMustStartWith = true },
                                             new("2.1") { ColumnMustStartWith = true },
                                             new("2.2") { ColumnMustStartWith = true },
                                             new("2.3") { ColumnMustStartWith = true },
@@ -1375,7 +1404,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("2.7") { ColumnMustStartWith = true },
                                             new("2.8") { ColumnMustStartWith = true },
                                             new("2.9") { ColumnMustStartWith = true },
-                                            new("2.10") { ColumnMustStartWith = true },
                                             new("(1)"),
                                             new("(2)"),
                                             new("(3)"),
@@ -1384,9 +1412,6 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("For Purpose 4.2") { RemoveWholeLine = true },
                                             new("For Purpose 4.3") { RemoveWholeLine = true },
                                             new("For Purpose 4.4") { RemoveWholeLine = true },
-                                            new("Map 1"),
-                                            new("Map 2"),
-                                            new("Map 3"),
                                             new("A ") { ColumnMustStartWith = true },
                                             new("B ") { ColumnMustStartWith = true },
                                             new("C ") { ColumnMustStartWith = true },
@@ -1398,10 +1423,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("I ") { ColumnMustStartWith = true },
                                             new("J ") { ColumnMustStartWith = true },                                            
                                         ],
-                                        Text = [
-                                            new("marked") // TODO ' marked ' doesn't work, change so it does
-                                        ],
-                                        Position = LabelPosition.SplitAtLabel,
+                                        Position = LabelPosition.LabelIsActuallyResult,
                                         Format = "Text",
                                         PreviousLinesToFetch = 100,
                                         NextLinesToFetch = 10,

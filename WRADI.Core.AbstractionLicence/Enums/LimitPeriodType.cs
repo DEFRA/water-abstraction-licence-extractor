@@ -11,6 +11,6 @@ public enum LimitPeriodType
     PerWeek,
     PerMonth,
     PerYear,
-    Per5Years,    
+    Per5Years,
     InTotal
 }

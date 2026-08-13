@@ -25,6 +25,44 @@ public static class ApplicableToMost
         {
             return [];
         }
+
+        if (request.label.Position == LabelPosition.LabelIsActuallyResult
+            && request.label.Text == null
+            && request.label.Possibilities == null)
+        {
+            var labelGroupResult = request.labelGroupResult.Clone();
+            labelGroupResult.MatchedPosition = request.nextLines?.Count > 0
+                ? MatchedPosition.PartiallyOnSameLine
+                : MatchedPosition.FullyOnSameLine;
+
+            var lines = new List<DocumentLine> { request.line };
+
+            if (request.nextLines?.Count > 0)
+            {
+                lines.AddRange(request.nextLines);
+            }
+
+            labelGroupResult.LabelStartCharPosition = 0;
+            labelGroupResult.MatchedLabel = request.label;
+            
+            lines = DataHelper.RemoveExcludesAndNotContains(
+                request.label,
+                lines,
+                false,
+                false,
+                out _,
+                out _);
+
+            labelGroupResult.Text = lines;
+            labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        
+            if (labelGroupResult == null)
+            {
+                return [];
+            }
+            
+            return await ProcessSubLabelsAsync(request, labelGroupResult);
+        }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
             && request.line?.Text.Equals(request.label.TextToMatch?.FirstOrDefault()?.Text, StringComparison.OrdinalIgnoreCase) == true)

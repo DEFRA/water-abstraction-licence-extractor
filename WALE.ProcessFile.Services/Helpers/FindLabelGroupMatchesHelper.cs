@@ -132,6 +132,8 @@ public static class FindLabelGroupMatchesHelper
                         if (matchesRule)
                         {
                             rulePassed = true;
+                            label.Text = [label.Text!.First(lt => lt.SingleLinePerItem)];
+                            matchedStartText = label.Text.Single();
                             
                             // Clear out the next lines, as we are doing it in isolation
                             nextLines = [];

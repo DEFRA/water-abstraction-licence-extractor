@@ -3660,9 +3660,23 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
         }
 
+        var pointPurposeGroups = pointsResults.SubResults
+            .Where(sr => sr.MatchedLabelName == "PointPurposeGroup")
+            .ToList();
+
+        var anyNoneEmptyStringMatches = pointPurposeGroups
+            .Any(ppg => ppg.MatchedLabelTextFirstLine != string.Empty);
+
+        if (anyNoneEmptyStringMatches)
+        {
+            pointPurposeGroups = pointPurposeGroups
+                .Where(ppg => ppg.MatchedLabelTextFirstLine != string.Empty)
+                .ToList();
+        }
+        
         var pointPurposeGroupCount = -1;
         
-        foreach (var pointPurposeGroup in pointsResults.SubResults)
+        foreach (var pointPurposeGroup in pointPurposeGroups)
         {
             if (pointPurposeGroup.Confidence != null)
             {
@@ -3726,6 +3740,59 @@ public static class AbstractionLicenceSchemaConverter
                     };
                 }
 
+                // 63347S0172R01 has one
+                var fromToPointTable = DataHelper.GetFirstMatchByLabel(point.SubResults, "FromToPointTable");
+
+                if (noneSchemaData.ContainsKey(TemplateFeatures.FromToPointsTable))
+                {
+                    if (fromToPointTable != null)
+                    {
+                        noneSchemaData[TemplateFeatures.FromToPointsTable] = true;
+                    }
+                }
+                else
+                {
+                    noneSchemaData.Add(TemplateFeatures.FromToPointsTable, fromToPointTable != null);
+                }
+
+                if (fromToPointTable != null)
+                {
+                    if (fromToPointTable.Confidence != null)
+                    {
+                        noneSchemaData.Add(
+                            $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_FromToPointTable",
+                            fromToPointTable.Confidence);
+                    }
+
+                    var tableLines = fromToPointTable.Text!;
+
+                    foreach (var tableLine in tableLines)
+                    {
+                        var id = $"{tableLine.Columns[0].Text} to {tableLine.Columns[1].Text}";
+                        
+                        returnList.Add(
+                            new PointOfAbstraction
+                            {
+                                Description = $"From {id}",
+                                Id = $"{pointNumber} {id}", // e.g 2.1 - From TL123 to TL456
+                                AltId = id,
+                                PurposeIds = purposeIds,
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPointData(naldDataLine, tableLine.Text),
+                                ContainedIn = [new()
+                                {
+                                    Source = InformationSource.Document,
+                                    SectionName = sectionName,
+                                    PageNumber = tableLine.PageNumber,
+                                    LineNumber = tableLine.LineNumber
+                                }]
+                            });
+                        // Format is 'Abstraction National Grid Location Description Map'
+                    }
+
+                    continue;
+                }
+
                 // NE0260034052 has one
                 var pointTable = DataHelper.GetFirstMatchByLabel(point.SubResults, "PointTable");
 
@@ -3757,23 +3824,23 @@ public static class AbstractionLicenceSchemaConverter
                         var words = tableLine.Text.Split(' ');
                         var subId = words[0]; // e.g. A, D, E
 
-                        returnList.Add(new PointOfAbstraction
-                        {
-                            Description = tableLine.Text,
-                            Id = $"{pointNumber} {subId}", // e.g 2.1 - A
-                            AltId = subId,
-                            PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldDataLine,
-                                tableLine.Text), // TODO needs to get the correct point
-                            ContainedIn = [new()
+                        returnList.Add(
+                            new PointOfAbstraction
                             {
-                                Source = InformationSource.Document,
-                                SectionName = sectionName,
-                                PageNumber = tableLine.PageNumber,
-                                LineNumber = tableLine.LineNumber
-                            }]
-                        });
+                                Description = tableLine.Text,
+                                Id = $"{pointNumber} {subId}", // e.g 2.1 - A
+                                AltId = subId,
+                                PurposeIds = purposeIds,
+                                TimeCutoff = timeCutoff,
+                                NaldData = GetNaldPointData(naldDataLine, tableLine.Text),
+                                ContainedIn = [new()
+                                {
+                                    Source = InformationSource.Document,
+                                    SectionName = sectionName,
+                                    PageNumber = tableLine.PageNumber,
+                                    LineNumber = tableLine.LineNumber
+                                }]
+                            });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
 
@@ -3790,55 +3857,29 @@ public static class AbstractionLicenceSchemaConverter
                 }
 
                 var description = string.Join(' ', allTextWithoutNumber);
-
-                // If its like 'A SE' or 'B NE' get rid of the A and B
-                if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
-                {
-                    description = description[2..];
-                }
-
-                var parts = description.Split(" at ");
-                var name = parts[0];
-                var gridRef = parts.Length >= 2 ? parts[1] : null;
-
-                if (parts.Length == 1 && description.Contains("National Grid Reference"))
-                {
-                    parts = description.Split("National Grid Reference");
-
-                    name = null;
-                    gridRef = parts[1].Trim();
-                }
+                description = FormattingHelper.TrimFormatting(description, false, true);
                 
-                gridRef = gridRef?.Replace("point ", string.Empty);
-
-                var pointText = string.Join(" ", point.Text?.Select(p => p.Text).ToArray() ?? []);
-
-                var letterIdParts = pointText.Replace("\"", "'").Split("marked '");
-                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
-
-                if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
-                {
-                    name = letterId;
-                }
+                var (name, gridRef, letterId) = GetPointNameGridRefLetterId(description);
                 
-                returnList.Add(new PointOfAbstraction
-                {
-                    Name = name,
-                    GridRef = gridRef,
-                    Description = description,
-                    Id = pointNumber,
-                    AltId = letterId,
-                    PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description),
-                    ContainedIn = [new()
+                returnList.Add(
+                    new PointOfAbstraction
                     {
-                        Source = InformationSource.Document,
-                        SectionName = sectionName,
-                        PageNumber = point.LabelStartPageNumber,
-                        LineNumber = point.LabelStartLineNumber
-                    }]
-                });
+                        Name = name,
+                        GridRef = gridRef,
+                        Description = description,
+                        Id = pointNumber,
+                        AltId = letterId,
+                        PurposeIds = purposeIds,
+                        TimeCutoff = timeCutoff,
+                        NaldData = GetNaldPointData(naldDataLine, description),
+                        ContainedIn = [new()
+                        {
+                            Source = InformationSource.Document,
+                            SectionName = sectionName,
+                            PageNumber = point.LabelStartPageNumber,
+                            LineNumber = point.LabelStartLineNumber
+                        }]
+                    });
             }
         }
 
@@ -3853,27 +3894,78 @@ public static class AbstractionLicenceSchemaConverter
         return returnList.ToArray();
     }
 
-    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)
+    private static (string? Name, string? GridRef, string? LetterId) GetPointNameGridRefLetterId(
+        string? description)
     {
+        if (string.IsNullOrEmpty(description))
+        {
+            return (null, null, null);
+        }
+        
+        // If its like 'A SE' or 'B NE' get rid of the A and B
+        if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
+        {
+            description = description[2..];
+        }
+
+        var parts = description.Split(" at ");
+        var name = parts[0];
+        var gridRef = parts.Length >= 2 ? parts[1] : null;
+
+        if (parts.Length == 1 && description.Contains("National Grid Reference"))
+        {
+            parts = description.Split("National Grid Reference");
+
+            name = null;
+            gridRef = parts[1].Trim();
+        }
+
+        if (gridRef?.Contains(" marked") == true)
+        {
+            parts = gridRef.Split(" marked");
+            gridRef = parts[0];
+        }
+        
+        gridRef = gridRef?.Replace("point ", string.Empty);
+
+        var letterIdParts = description.Replace("\"", "'").Split("marked '");
+        var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
+
+        if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
+        {
+            name = letterId;
+        }
+
+        return (name, gridRef, letterId);
+    }
+
+    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string? description)
+    {
+        if (string.IsNullOrEmpty(description))
+        {
+            return null;
+        }
+        
         if (naldDataLine?.Points.Count is null or 0)
         {
             return null;
         }
 
-        var points = naldDataLine.Points;
+        var naldPoints = naldDataLine.Points;
         NaldDataPoint? point;
 
-        if (points.Count == 1)
+        // There is only one, must be this one
+        if (naldPoints.Count == 1)
         {
-            point = points[0];
+            point = naldPoints[0];
         }
         else
         {
             var relevantDescription = description.Split(" at ")[0];
             
-            point = points
+            point = naldPoints
                 .FirstOrDefault(p =>
-                    p.PointName?.Equals(relevantDescription, StringComparison.OrdinalIgnoreCase) == true);
+                    p.PointName?.Contains(relevantDescription, StringComparison.OrdinalIgnoreCase) == true);
         }
 
         if (point is null)
@@ -3911,15 +4003,18 @@ public static class AbstractionLicenceSchemaConverter
             return null;
         }
 
-        var purposes = naldDataLine.Purposes;
+        var naldPurposes = naldDataLine.Purposes;
         NaldDataPurpose purpose;
 
-        if (purposes.Count == 1)
+        // There is only one, so must be that
+        if (naldPurposes.Count == 1)
         {
-            purpose = purposes[0];
+            purpose = naldPurposes[0];
         }
         else
         {
+            var relevantDescription = description?.Split(" at ")[0];
+            
             // TODO - Work out which purpose matches the description
 
             purpose = naldDataLine.Purposes

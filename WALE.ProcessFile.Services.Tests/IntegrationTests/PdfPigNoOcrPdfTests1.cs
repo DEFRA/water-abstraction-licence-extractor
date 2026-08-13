@@ -2038,7 +2038,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         var point1TTextWithoutPurposeAndPoint= point1.SubResults[2];
         Assert.Equal("PointTextWithoutPurposeAndPoint", point1TTextWithoutPurposeAndPoint.MatchedLabel!.Name);
-        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741",
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741 marked 'Point A' and 'Point B' on Map 1.",
             string.Join(' ', point1TTextWithoutPurposeAndPoint.Text?.Select(x => x.Text).ToArray()!));
         
         var pointPurposeGroup2 = pointsResult.SubResults[1];
@@ -2071,21 +2071,28 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("6/33/47/*S/0172/R01", primaryLicence.LicenceNumber?.Value);
 
         var points = primaryLicence.Points;
-        Assert.Equal(50, points.Length);
+        Assert.Equal(47, points.Length);
         
         var primaryPoint1 = points[0];
         Assert.Equal("2.1", primaryPoint1.Id);
-        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741", primaryPoint1.Description);
+        Assert.Equal("Between National Grid References TL 55782 94571 and TL 55844 94741 marked 'Point A' and 'Point B' on Map 1", primaryPoint1.Description);
         Assert.Equal(2, primaryPoint1.PurposeIds!.Length);
         Assert.Equal("4.1", primaryPoint1.PurposeIds[0]);
         Assert.Equal("4.2", primaryPoint1.PurposeIds[1]);
         
         var primaryPoint2 = points[1];
-        Assert.Equal("2.2", primaryPoint2.Id);
-        Assert.Equal(1241, primaryPoint2.Description!.Length);
-        Assert.StartsWith("National Grid References From To TL558449", primaryPoint2.Description);
+        Assert.Equal("2.2 TL5584494741 to TL5453692523", primaryPoint2.Id);
+        Assert.Equal(33, primaryPoint2.Description!.Length);
+        Assert.StartsWith("From TL5584494741 to TL5453692523", primaryPoint2.Description);
         Assert.Single(primaryPoint2.PurposeIds!);
         Assert.Equal("4.3", primaryPoint2.PurposeIds![0]);
+        
+        var primaryPoint47 = points[46];
+        Assert.Equal("2.2 TL5616889665 to TL5658389810", primaryPoint47.Id);
+        Assert.Equal(33, primaryPoint47.Description!.Length);
+        Assert.StartsWith("From TL5616889665 to TL5658389810", primaryPoint47.Description);
+        Assert.Single(primaryPoint47.PurposeIds!);
+        Assert.Equal("4.3", primaryPoint47.PurposeIds![0]);
 
         var purposes = primaryLicence.Purposes;
         Assert.Equal(3, purposes.Length);
@@ -2780,7 +2787,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("LV20190619", primaryLicence.LicenceVersion.LicenceVersionId);
 
         Assert.Single(primaryLicence.Points);
-        Assert.Equal("At National Grid Reference SJ 5179 4988",
+        Assert.Equal("At National Grid Reference SJ 5179 4988 marked \"C\" on the map",
             primaryLicence.Points.First().Description);
 
         Assert.Single(primaryLicence.Purposes);

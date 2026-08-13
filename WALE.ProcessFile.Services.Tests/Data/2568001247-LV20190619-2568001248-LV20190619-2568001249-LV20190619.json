@@ -191,7 +191,7 @@
           ],
           "id": "2.1",
           "altId": "C",
-          "description": "At National Grid Reference SJ 5179 4988"
+          "description": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
         }
       ],
       "purposes": [
@@ -442,6 +442,7 @@
         "scrapedLicenceNumber": "25 68 001 249",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],
@@ -497,7 +498,7 @@
           ],
           "id": "2.1",
           "altId": "A",
-          "description": "At National Grid Reference SJ 5158 5029"
+          "description": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
         }
       ],
       "purposes": [
@@ -746,6 +747,7 @@
         "scrapedLicenceNumber": "25 68 001 247",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],
@@ -801,7 +803,7 @@
           ],
           "id": "2.1",
           "altId": "B",
-          "description": "At National Grid Reference SJ 5168 5015"
+          "description": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
         }
       ],
       "purposes": [
@@ -1050,6 +1052,7 @@
         "scrapedLicenceNumber": "25 68 001 248",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],

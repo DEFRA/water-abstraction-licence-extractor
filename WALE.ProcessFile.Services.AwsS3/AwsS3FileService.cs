@@ -278,6 +278,20 @@ public class AwsS3FileService(
             });
     }
 
+    public async Task CopyAsync(string filename, string destinationBucketName)
+    {
+        var client = GetS3Client();
+        
+        await client.CopyObjectAsync(
+            new CopyObjectRequest
+            {
+                SourceBucket = FolderPath,
+                SourceKey = filename,
+                DestinationBucket = destinationBucketName,
+                DestinationKey = filename
+            });
+    }
+
     private AmazonS3Client GetS3Client()
     {
         if (_client != null)

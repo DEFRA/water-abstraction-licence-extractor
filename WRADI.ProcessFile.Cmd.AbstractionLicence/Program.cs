@@ -74,10 +74,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
     filesToProcess = filesToProcess
         //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Key.Contains("22715041", StringComparison.OrdinalIgnoreCase))
-        //.Where(x => x.Value.Item2.RegionCode == 3) // North east
+        //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
+        .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        .Take(20)
+        //.Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -121,7 +121,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
         
-        foreach (var (filePath, (dmsFileData, naldLicence)) in filesToProcess)
+        var shuffledFilesToProcess = filesToProcess.OrderBy(_ => Guid.NewGuid()).ToList();
+        
+        // Shuffling helps to get less locks, as files tend to be linked to other files with similar numbers
+        foreach (var (filePath, (dmsFileData, naldLicence)) in shuffledFilesToProcess)
         {
             if (services.DelayPerProcessMs > 0)
             {
@@ -200,6 +203,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+    // TODO some logging during the below (as it takes > 1 min with 2000 files, with no output)
+    
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
@@ -208,6 +213,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
 
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Calculated combined aggregates at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
         allLicenceSets,

@@ -198,4 +198,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
+
+    public Task CopyAsync(string filename, string destinationBucketName)
+    {
+        throw new NotImplementedException();
+    }
 }

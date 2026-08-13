@@ -1,6 +1,6 @@
 namespace WRADI.Core.AbstractionLicence.Models;
 
-public class NaldCartesianReference
+public class CartesianReference
 {
     public int ReferenceIndex { get; set; }
     public int? East { get; set; }

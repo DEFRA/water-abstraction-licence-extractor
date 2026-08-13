@@ -469,7 +469,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Points);
         Assert.Equal("A", agreedSchemaLicence.Points[0].Name);
-        Assert.Equal("SE 57396 22415", agreedSchemaLicence.Points[0].GridRef);
+        Assert.Single(agreedSchemaLicence.Points[0].NationalGridReferences!);
+        Assert.Equal("SE 57396 22415", agreedSchemaLicence.Points[0].NationalGridReferences![0].ToString());
         Assert.Equal("2.1", agreedSchemaLicence.Points[0].Id);
         Assert.Equal("A", agreedSchemaLicence.Points[0].AltId);
         Assert.Equal("At National Grid Reference SE 57396 22415 marked 'A' on the map", agreedSchemaLicence.Points[0].Description);

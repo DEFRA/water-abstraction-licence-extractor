@@ -10,7 +10,9 @@ public class PointOfAbstraction : Point
     
     public string? Name { get; init; }
     
-    public string? GridRef { get; init; }
+    public List<NationalGridReference>? NationalGridReferences { get; set; } = [];
+    
+    public List<CartesianReference>? CartesianReferences { get; set; } = [];
     
     public TimeCutoff? TimeCutoff { get; set; }
     

@@ -10,8 +10,8 @@ public class NaldDataPoint
     public string? AaptAptpCode { get; init; }
     public string? AaptAptsCode { get; init; }
     public string? AapcCode { get; init; }
-    public List<NationalGridReference> NationalGridReferences { get; init; } = [];
-    public List<CartesianReference> CartesianReferences { get; init; } = [];
+    public List<WALE.ProcessFile.Core.Models.NationalGridReference> NationalGridReferences { get; init; } = [];
+    public List<WALE.ProcessFile.Core.Models.CartesianReference> CartesianReferences { get; init; } = [];
     public List<int> PurposeIds { get; init; } = [];
 
     public override string ToString()

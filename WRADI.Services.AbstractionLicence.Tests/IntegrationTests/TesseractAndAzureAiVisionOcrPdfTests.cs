@@ -145,10 +145,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
-        Assert.Equal("SE 3266 8147", licence.Points[0].GridRef);
+        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].Description);
-        Assert.Equal("SE 3266 8147", licence.Points[0].GridRef);
+        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Id);
 
         Assert.NotNull(licence.Purposes);
@@ -267,15 +267,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Equal(2, licence.Points.Length);
-        Assert.Equal("SE 2858 7577", licence.Points[0].GridRef);
+        Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].Description);
-        Assert.Equal("SE 2858 7577", licence.Points[0].GridRef);
+        Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("(1)", licence.Points[0].Id);
-        Assert.Equal("SE 2850 7629", licence.Points[1].GridRef);
+        Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("B", licence.Points[1].Name);
         Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].Description);
-        Assert.Equal("SE 2850 7629", licence.Points[1].GridRef);
+        Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("(2)", licence.Points[1].Id);
 
         Assert.NotNull(licence.Purposes);
@@ -400,10 +400,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
-        Assert.Equal("SE 2865 7639", licence.Points[0].GridRef);
+        Assert.Equal("SE 2865 7639", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].Description);
-        Assert.Equal("SE 2865 7639", licence.Points[0].GridRef);
+        Assert.Equal("SE 2865 7639", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Id);
 
         Assert.NotNull(licence.Purposes);

@@ -10,8 +10,10 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using CartesianReference = WRADI.Core.AbstractionLicence.Models.CartesianReference;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
+using NationalGridReference = WRADI.Core.AbstractionLicence.Models.NationalGridReference;
 
 namespace WRADI.DocumentType.AbstractionLicence.Converters;
 
@@ -3865,7 +3867,9 @@ public static class AbstractionLicenceSchemaConverter
                     new PointOfAbstraction
                     {
                         Name = name,
-                        GridRef = gridRef,
+                        NationalGridReferences = !string.IsNullOrEmpty(gridRef)
+                            ? [GetGridReference(gridRef)!]
+                            : null,
                         Description = description,
                         Id = pointNumber,
                         AltId = letterId,
@@ -3894,6 +3898,60 @@ public static class AbstractionLicenceSchemaConverter
         return returnList.ToArray();
     }
 
+    private static NationalGridReference? GetGridReference(string? gridRef)
+    {
+        if (string.IsNullOrEmpty(gridRef))
+        {
+            return null;
+        }
+
+        var gridRefNoLetters = gridRef.Replace(" ", string.Empty);
+
+        if (gridRefNoLetters.Length == 10)
+        {
+            var letters = gridRefNoLetters[..2];
+            var east = gridRefNoLetters.Substring(2, 4);
+            var north = gridRefNoLetters.Substring(7, 4);
+
+            return new NationalGridReference
+            {
+                Sheet = letters,
+                East = east,
+                North = north
+            };
+        }
+        
+        if (gridRefNoLetters.Length != 12)
+        {
+            return null;
+        }
+        
+        var letters = gridRefNoLetters[..2];
+        var east = gridRefNoLetters.Substring(2, 5);
+        var north = gridRefNoLetters.Substring(7, 5);
+
+        return new NationalGridReference
+        {
+            Sheet = letters,
+            East = east,
+            North = north
+        };
+    }
+
+    private NationalGridReference Get10LetterGridRef()
+    {
+        var letters = gridRefNoLetters[..2];
+        var east = gridRefNoLetters.Substring(2, 4);
+        var north = gridRefNoLetters.Substring(7, 4);
+
+        return new NationalGridReference
+        {
+            Sheet = letters,
+            East = east,
+            North = north
+        };
+    }
+    
     private static (string? Name, string? GridRef, string? LetterId) GetPointNameGridRefLetterId(
         string? description)
     {
@@ -3978,7 +4036,7 @@ public static class AbstractionLicenceSchemaConverter
             Id = point.PointId.ToString(),
             Name = point.PointName,
             NationalGridReferences = point.NationalGridReferences.Select(n =>
-                new NaldNationalGridReference
+                new NationalGridReference
                 {
                     ReferenceIndex = n.ReferenceIndex,
                     Sheet = n.Sheet,
@@ -3986,7 +4044,7 @@ public static class AbstractionLicenceSchemaConverter
                     North = n.North
                 }).ToList(),
             CartesianReferences = point.CartesianReferences.Select(c =>
-                new NaldCartesianReference
+                new CartesianReference
                 {
                     ReferenceIndex = c.ReferenceIndex,
                     East = c.East,

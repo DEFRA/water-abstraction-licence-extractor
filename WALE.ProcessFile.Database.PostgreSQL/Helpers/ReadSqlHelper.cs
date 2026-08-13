@@ -241,11 +241,7 @@ public static class ReadSqlHelper
                          section.verification_section_id
                   WHERE section.licence_list_item_id =
                         licence_list_item.licence_list_item_id
-                  AND EXISTS (
-                SELECT 1
-                FROM unnest(item.verification_types) AS verification_type
-                WHERE lower(verification_type) = lower(@VerificationType)
-            )
+                  AND lower(item.current_verification_type) = lower(@VerificationType)
               )
             """);
 

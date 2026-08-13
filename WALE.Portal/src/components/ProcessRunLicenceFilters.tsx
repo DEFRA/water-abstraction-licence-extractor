@@ -380,6 +380,8 @@ export function ProcessRunLicenceFilters({
                     <option value="Removed">Removed</option>
                     <option value="Edited">Edited</option>
                     <option value="Added">Added</option>
+                    <option value="RequestBusinessReview">Request Business Review</option>
+                    <option value="CompleteBusinessReview">Complete Business Review</option>
                     <option value="NoVerification">No Verification</option>
                 </select>
             </td>

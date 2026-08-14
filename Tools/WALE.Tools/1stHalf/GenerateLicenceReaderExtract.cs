@@ -539,7 +539,8 @@ public static class GenerateLicenceReaderExtract
                     templateDict[configuration.RegionId],
                     fileTypeService,
                     dmsExtractInfo,
-                    cacheService));
+                    cacheService,
+                    outputService));
             
             if (scrapingTasks.Count != maxConcurrentScrapers)
             {
@@ -613,7 +614,8 @@ public static class GenerateLicenceReaderExtract
         TemplateTypeIdentifierService templateService,
         FileTypeIdentifierService fileTypeService,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IOutputService outputService)
     {
         IPdfDataExtractorService? pdfDataExtractor = null;
         
@@ -658,6 +660,11 @@ public static class GenerateLicenceReaderExtract
                     pdfDataExtractor,
                     configuration);
 
+                await pdfDataExtractor.SaveMatchResultAsync(
+                    internalJson,
+                    fileMetadata.FileId,
+                    0);
+                
                 ConsoleHelper.WriteLine(
                     $"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
             }
@@ -672,7 +679,13 @@ public static class GenerateLicenceReaderExtract
                     FileId = fileMetadata.FileId,
                     NumberOfPages = tex.NumberOfPages
                 };
-
+                
+                await outputService.SaveErrorMatchesResultAsync(
+                    fileMetadata.FileName!,
+                    fileMetadata.FileId,
+                    0,
+                    tex.ToString());
+                
                 await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
                 return null;
             }
@@ -688,6 +701,12 @@ public static class GenerateLicenceReaderExtract
                     NumberOfPages = tex.NumberOfPages
                 };
 
+                await outputService.SaveErrorMatchesResultAsync(
+                    fileMetadata.FileName!,
+                    fileMetadata.FileId,
+                    0,
+                    tex.ToString());
+                
                 await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
                 return null;
             }
@@ -713,6 +732,12 @@ public static class GenerateLicenceReaderExtract
                     FileId = fileMetadata.FileId
                 };
 
+                await outputService.SaveErrorMatchesResultAsync(
+                    fileMetadata.FileName!,
+                    fileMetadata.FileId,
+                    0,
+                    ex.ToString());
+                
                 await cacheService.SaveDmsFileReaderResultAsync(failedResult);
                 return null;
             }

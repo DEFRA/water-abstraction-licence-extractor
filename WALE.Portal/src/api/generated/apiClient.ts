@@ -4910,7 +4910,7 @@ export class Aggregate implements IAggregate {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5037,7 +5037,7 @@ export interface IAggregate {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5118,7 +5118,7 @@ export class AggregateWithContext implements IAggregateWithContext {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5245,7 +5245,7 @@ export interface IAggregateWithContext {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -6542,6 +6542,7 @@ export interface ILicenceFinderResult {
 
 export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     licenceSectionItemId!: string;
+    currentVerificationType?: string | undefined;
     verificationTypes!: string[];
     scrapedDataIsDifferent?: boolean;
 
@@ -6566,6 +6567,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                     this[property] = _data[property];
             }
             this.licenceSectionItemId = _data["licenceSectionItemId"];
+            this.currentVerificationType = _data["currentVerificationType"];
             if (Array.isArray(_data["verificationTypes"])) {
                 this.verificationTypes = [] as any;
                 for (let item of _data["verificationTypes"])
@@ -6589,6 +6591,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 data[property] = this[property];
         }
         data["licenceSectionItemId"] = this.licenceSectionItemId;
+        data["currentVerificationType"] = this.currentVerificationType;
         if (Array.isArray(this.verificationTypes)) {
             data["verificationTypes"] = [];
             for (let item of this.verificationTypes)
@@ -6601,6 +6604,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
 
 export interface ILicenceSectionItemSummary {
     licenceSectionItemId: string;
+    currentVerificationType?: string | undefined;
     verificationTypes: string[];
     scrapedDataIsDifferent?: boolean;
 

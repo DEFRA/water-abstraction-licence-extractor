@@ -117,12 +117,15 @@ public static class GenerateLicenceReaderExtract
         
         const int takeAtOnce = 10_000;
 
+        var licenceNumberSuccessorsTask = absLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
         var dmsExtractInfoTask = GetDmsExtractInfoAsync(cacheService, takeAtOnce);
         var allNaldData = await GetAllNaldDataAsync(absLicenceCacheService, takeAtOnce);
         
         ConsoleHelper.WriteLine("Finished getting all nald data");
         
-        var licenceNumberService = new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        var licenceNumberService = new AbstractionLicenceNumber(
+            allNaldData.AbstractionAndImpoundmentLicences!,
+            await licenceNumberSuccessorsTask);
         var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
 
         foreach (var naldLine in allNaldData.AbstractionLicences!)

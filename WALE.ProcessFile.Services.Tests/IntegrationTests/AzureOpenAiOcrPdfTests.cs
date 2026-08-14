@@ -56,7 +56,7 @@ public class AzureOpenAiOcrPdfTests
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");

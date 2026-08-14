@@ -406,6 +406,19 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
 
+        // Swap out linked licence numbers to newest ones where needed
+        foreach (var linkedLicence in linkedLicences)
+        {
+            var (hasSuccessor, history) = lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
+
+            if (!hasSuccessor)
+            {
+                continue;
+            }
+
+            linkedLicence.LicenceNumber = history[0].FollowOnLicenceNumber;
+        }
+        
         var combinedAggregates = new List<Aggregate>(aggregates);
         
         foreach (var (_, (_, _, list)) in sectionDataDict)

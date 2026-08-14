@@ -93,4 +93,13 @@ public class NaldDataController(
         var naldData = await abstractionLicenceCacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
         return Ok(naldData);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetNaldLicenceNumberHistoryAsync()
+    {
+        var history =
+            await abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
+        
+        return Ok(history);
+    }
 }

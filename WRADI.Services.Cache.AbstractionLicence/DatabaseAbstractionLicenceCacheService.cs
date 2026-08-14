@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -117,5 +118,11 @@ public class DatabaseAbstractionLicenceCacheService(
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
     {
         return databaseReadService.GetLicenceFinderResultAsync(fileId);
+    }
+
+    public async Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    {
+        var list = await databaseReadService.GetNaldLicenceNumberHistoryAsync();
+        return list.ToDictionary(k => k.LicenceNumber!, v => v); 
     }
 }

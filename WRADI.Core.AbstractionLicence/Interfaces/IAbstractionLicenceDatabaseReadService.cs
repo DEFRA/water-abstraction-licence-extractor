@@ -93,4 +93,6 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<int> GetLicencesListSearchCountAsync(
         int processRunId,
         ProcessRunQuery query);
+
+    Task<List<NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync();
 }

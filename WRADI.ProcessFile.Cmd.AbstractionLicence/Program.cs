@@ -76,9 +76,9 @@ async Task ProgramAsync(IConfiguration configurationItem)
         //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("ne0270029011", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Value.Item2.RegionCode == 3) // North east
+        //.Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(20)
+       .Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);

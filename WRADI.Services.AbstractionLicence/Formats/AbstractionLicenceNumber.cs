@@ -179,7 +179,7 @@ public partial class AbstractionLicenceNumber(
         while (item != null)
         {
             history.Add(item);
-            item = _licenceHistory!.GetValueOrDefault(item.LicenceNumber);
+            item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0]);
         }
         
         return (hasSuccessor, history);

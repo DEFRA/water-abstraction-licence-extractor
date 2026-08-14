@@ -409,14 +409,15 @@ public static class AbstractionLicenceSchemaConverter
         // Swap out linked licence numbers to newest ones where needed
         foreach (var linkedLicence in linkedLicences)
         {
-            var (hasSuccessor, history) = lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
+            var (hasSuccessor, history) =
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
 
             if (!hasSuccessor)
             {
                 continue;
             }
 
-            linkedLicence.LicenceNumber = history[0].FollowOnLicenceNumber;
+            linkedLicence.LicenceNumber = history[0].FollowOnLicenceNumbers[0];
         }
         
         var combinedAggregates = new List<Aggregate>(aggregates);

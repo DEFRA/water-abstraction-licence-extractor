@@ -625,7 +625,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             CancellationToken.None);
     }
 
-    public async Task<List<NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    public async Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync()
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -1034,7 +1034,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                "FOLL_LIC_NO"
                            """;
 
-        return (await QueryAsync<NaldLicenceNumberHistory>(
+        return (await QueryAsync<NaldLicenceNumberHistoryDb>(
             connection,
             sql,
             0,

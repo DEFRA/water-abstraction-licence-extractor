@@ -123,6 +123,26 @@ public class DatabaseAbstractionLicenceCacheService(
     public async Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
     {
         var list = await databaseReadService.GetNaldLicenceNumberHistoryAsync();
-        return list.ToDictionary(k => k.LicenceNumber!, v => v); 
+        var dict = new Dictionary<string, NaldLicenceNumberHistory>();
+
+        foreach (var item in list)
+        {
+            var licenceNumber = item.LicenceNumber!.ToLower();
+            
+            if (dict.ContainsKey(licenceNumber))
+            {
+                dict[licenceNumber].FollowOnLicenceNumbers.Add(item.FollowOnLicenceNumber!);
+                continue;
+            }
+            
+            dict.Add(licenceNumber, new NaldLicenceNumberHistory
+            {
+                LicenceNumber = item.LicenceNumber,
+                FollowOnLicenceNumbers = [item.FollowOnLicenceNumber!],
+                Source = item.Source
+            });
+        }
+
+        return dict;
     }
 }

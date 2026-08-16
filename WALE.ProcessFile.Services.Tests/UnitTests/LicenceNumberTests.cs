@@ -8,7 +8,7 @@ public class LicenceNumberTests
     public void Constructor_ShouldThrowArgumentNullException_WhenDatabaseReadServiceIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new AbstractionLicenceNumber(null!));
+        Assert.Throws<ArgumentNullException>(() => new AbstractionLicenceNumber(null!, []));
     }
 
     [Theory]

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -283,6 +284,20 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
         
         return JsonSerializer.Deserialize<LicenceFinderResult>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    {
+        var path = "/Extractor/NaldData/GetNaldLicenceNumberHistory";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<Dictionary<string, NaldLicenceNumberHistory>>(
             content,
             JsonHelper.GetSerializerOptions())!;
     }

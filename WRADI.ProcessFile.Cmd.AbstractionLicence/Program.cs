@@ -58,6 +58,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
     await outputService.SetupAsync();
 
     var firstNamesTask = cacheService.GetFirstNamesAsync();
+    var licenceNumberSuccessorsTask = abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
     
     var abstractionAndImpoundmentLicencesTask =
         SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(abstractionLicenceCacheService);
@@ -74,10 +75,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
     filesToProcess = filesToProcess
         //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Key.Contains("22715041", StringComparison.OrdinalIgnoreCase))
+        //.Where(x => x.Key.Contains("ne0270029011", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        .Take(20)
+       .Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -94,8 +95,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRun = await processRunTask;
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
+    var licenceNumberSuccessors = await licenceNumberSuccessorsTask;
     
-    var licenceNumberService = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    var licenceNumberService = new AbstractionLicenceNumber(
+        abstractionAndImpoundmentLicences,
+        licenceNumberSuccessors);
+        
     services.LicenceNumberService = licenceNumberService;
     
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
@@ -256,7 +261,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     string naldLicenceNumber)
 {
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of " +
+        $"{totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
     
     try
     {

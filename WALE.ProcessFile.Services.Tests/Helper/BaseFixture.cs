@@ -38,7 +38,7 @@ public class BaseFixture : IDisposable
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);
             }
 
-            _licenceNumberService = new AbstractionLicenceNumber(licences);
+            _licenceNumberService = new AbstractionLicenceNumber(licences, []);
             return _licenceNumberService;
             
         }

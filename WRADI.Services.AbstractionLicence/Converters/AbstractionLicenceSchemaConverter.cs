@@ -1,3 +1,4 @@
+using Amazon.Runtime.Internal;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -406,6 +407,38 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
 
+        var swappedOutLinkedLicences = new List<LinkedLicence>();
+        
+        // Swap out linked licence numbers to newest ones where needed
+        foreach (var linkedLicence in linkedLicences)
+        {
+            var (hasSuccessor, history) =
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
+
+            if (!hasSuccessor)
+            {
+                swappedOutLinkedLicences.Add(linkedLicence);
+                continue;
+            }
+
+            var extendedHistory = ExtendedHistory(linkedLicence, history);
+            
+            foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
+            {
+                var clonedLinkedLicence = linkedLicence.Clone();
+                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+
+                foreach (var containedIn in clonedLinkedLicence.ContainedIn!)
+                {
+                    containedIn.History = extendedHistory;   
+                }
+                
+                swappedOutLinkedLicences.Add(clonedLinkedLicence);
+            }
+        }
+
+        linkedLicences = swappedOutLinkedLicences;
+        
         var combinedAggregates = new List<Aggregate>(aggregates);
         
         foreach (var (_, (_, _, list)) in sectionDataDict)
@@ -479,6 +512,59 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
+    private static List<NaldLicenceNumberHistoryOutput> ExtendedHistory(
+        LinkedLicence linkedLicence,
+        List<NaldLicenceNumberHistory> history)
+    {
+        var returnList = new List<NaldLicenceNumberHistoryOutput>();
+        var first = true;
+
+        var scraped = linkedLicence.ContainedIn?
+            .Any(ci => ci.Source is InformationSource.Document
+                or InformationSource.OtherDocument) == true;
+        var fromNald = linkedLicence.ContainedIn?
+            .Any(ci => ci.Source == InformationSource.Nald) == true;
+
+        string ogStatus;
+
+        if (scraped && fromNald)
+        {
+            const string asScrapedAndLinkedFromSourceLinkedLicenceInNald =
+                "AsScrapedAndLinkedFromSourceLinkedLicenceInNald";   
+            
+            ogStatus = asScrapedAndLinkedFromSourceLinkedLicenceInNald;
+        }
+        else if (fromNald)
+        {
+            const string asLinkedFromSourceLinkedLicenceInNald =
+                "AsLinkedFromSourceLinkedLicenceInNald";
+
+            ogStatus = asLinkedFromSourceLinkedLicenceInNald;
+        }
+        else
+        {
+            const string asScraped = "AsScraped";
+            ogStatus = asScraped;
+        }
+        
+        const string furtherUpdate = "FurtherUpdate";
+        
+        foreach (var item in history)
+        {
+            returnList.Add(new NaldLicenceNumberHistoryOutput
+            {
+                FollowOnLicenceNumbers = item.FollowOnLicenceNumbers,
+                LicenceNumber = item.LicenceNumber,
+                Status = first ? ogStatus : furtherUpdate,
+                Source = item.Source
+            });
+
+            first = false;
+        }
+        
+        return returnList;
+    }
+    
     private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
         PromoteAnyIndividualLimitsThatShouldBeAggregates(
             AbstractionLimitGroup[] individuals,
@@ -682,7 +768,9 @@ public static class AbstractionLicenceSchemaConverter
                 foreach (var sectionItem in sectionItems)
                 {
                     if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName
-                        && fs.Direction == sectionItem.Direction))
+                        && fs.Direction == sectionItem.Direction
+                        && fs.History == null
+                        && sectionItem.History == null))
                     {
                         continue;
                     }
@@ -690,10 +778,12 @@ public static class AbstractionLicenceSchemaConverter
                     // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
                     // in documents
                     if (containedIn.Any(fs =>
-                            sectionItem.Source != InformationSource.Nald
-                            && fs.LineNumber == sectionItem.LineNumber
-                            && fs.PageNumber == sectionItem.PageNumber
-                            && fs.Direction == sectionItem.Direction))
+                        sectionItem.Source != InformationSource.Nald
+                        && fs.LineNumber == sectionItem.LineNumber
+                        && fs.PageNumber == sectionItem.PageNumber
+                        && fs.Direction == sectionItem.Direction
+                        && fs.History == null
+                        && sectionItem.History == null))
                     {
                         continue;
                     }

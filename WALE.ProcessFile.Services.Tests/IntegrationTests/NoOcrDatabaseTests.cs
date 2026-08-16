@@ -78,7 +78,7 @@ public class NoOcrDatabaseTests
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>

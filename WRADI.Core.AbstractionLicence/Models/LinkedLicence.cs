@@ -32,4 +32,25 @@ public class LinkedLicence
     public LicenceType LicenceType { get; set; }
     
     public int? RegionId { get; set; }
+
+    public LinkedLicence Clone()
+    {
+        // TOOD, source gen
+        return new LinkedLicence
+        {
+            LicenceNumber = LicenceNumber,
+            RawScrapedLicenceNumber = RawScrapedLicenceNumber,
+            DmsPermitNumber = DmsPermitNumber,
+            DmsPath = DmsPath,
+            DmsFileId = DmsFileId,
+            Filename = Filename,
+            LicenceVersion = LicenceVersion,
+            Condition = Condition,
+            IsBecauseOfAggregate = IsBecauseOfAggregate,
+            ContainedIn = ContainedIn?.Select(ci => ci.Clone()).ToArray(),
+            NaldStatus = NaldStatus,
+            LicenceType = LicenceType,
+            RegionId = RegionId
+        };
+    }
 }

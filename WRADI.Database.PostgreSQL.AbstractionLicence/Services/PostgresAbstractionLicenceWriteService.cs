@@ -527,7 +527,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.LicenceSets,
             cancellationToken);
 
-        await UpsertVerificationsAsync(
+        await ReplaceVerificationsAsync(
             connection,
             transaction,
             item.ProcessRunId,
@@ -1099,7 +1099,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 cancellationToken: cancellationToken));
     }
     
-    private static async Task UpsertVerificationsAsync(
+    private static async Task ReplaceVerificationsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         int processRunId,
@@ -1107,6 +1107,21 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         IReadOnlyCollection<LicenceSectionVerificationSummary> sections,
         CancellationToken cancellationToken)
     {
+        const string deleteSql = """
+                                 DELETE FROM licence_list_item_verification_section
+                                 WHERE licence_list_item_id = @LicenceListItemId;
+                                 """;
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                deleteSql,
+                new
+                {
+                    LicenceListItemId = licenceListItemId
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+        
         foreach (var section in sections)
         {
             cancellationToken.ThrowIfCancellationRequested();

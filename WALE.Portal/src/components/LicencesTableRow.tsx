@@ -39,14 +39,14 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
             <td>{dashesIfNullOrEmpty(item.issueDate)}</td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
-            <td className='default-hidden'>
+            <td>
                 <LinkedLicencesList 
                     item={item} 
                     data={data} 
                     onOpenReport={onOpenReport}
                 />
             </td>
-            <td className='licenceSetTd'>
+            <td className='licenceSetTd default-hidden'>
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}

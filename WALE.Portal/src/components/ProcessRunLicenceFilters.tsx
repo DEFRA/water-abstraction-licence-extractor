@@ -373,6 +373,7 @@ export function ProcessRunLicenceFilters({
                     }
                 >
                     <option value="">All</option>
+                    <option value="Flagged">Flagged</option>
                     <option value="AutoConfirm">AutoConfirm</option>
                     <option value="AutoWarn">AutoWarn</option>
                     <option value="AutoFail">AutoFail</option>

@@ -360,6 +360,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.NotNull(agreedSchemaLicence.Points[0].ContainedIn);
         Assert.Single(agreedSchemaLicence.Points[0].ContainedIn!);
         Assert.Equal("SourceOfSupply", agreedSchemaLicence.Points[0].ContainedIn![0].SectionName);
+        Assert.Equal(InformationSource.Document, agreedSchemaLicence.Points[0].ContainedIn![0].Source);
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
         

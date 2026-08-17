@@ -3909,26 +3909,17 @@ public static class AbstractionLicenceSchemaConverter
 
         if (gridRefNoLetters.Length == 10)
         {
-            var letters = gridRefNoLetters[..2];
-            var east = gridRefNoLetters.Substring(2, 4);
-            var north = gridRefNoLetters.Substring(7, 4);
+            return Get10LetterGridRef(gridRefNoLetters);
+        }
+        
+        return gridRefNoLetters.Length != 12 ? null : Get12LetterGridRef(gridRefNoLetters);
+    }
 
-            return new NationalGridReference
-            {
-                Sheet = letters,
-                East = east,
-                North = north
-            };
-        }
-        
-        if (gridRefNoLetters.Length != 12)
-        {
-            return null;
-        }
-        
+    private static NationalGridReference Get10LetterGridRef(string gridRefNoLetters)
+    {
         var letters = gridRefNoLetters[..2];
-        var east = gridRefNoLetters.Substring(2, 5);
-        var north = gridRefNoLetters.Substring(7, 5);
+        var east = gridRefNoLetters.Substring(2, 4);
+        var north = gridRefNoLetters.Substring(6, 4);
 
         return new NationalGridReference
         {
@@ -3937,12 +3928,12 @@ public static class AbstractionLicenceSchemaConverter
             North = north
         };
     }
-
-    private NationalGridReference Get10LetterGridRef()
+    
+    private static NationalGridReference Get12LetterGridRef(string gridRefNoLetters)
     {
         var letters = gridRefNoLetters[..2];
-        var east = gridRefNoLetters.Substring(2, 4);
-        var north = gridRefNoLetters.Substring(7, 4);
+        var east = gridRefNoLetters.Substring(2, 5);
+        var north = gridRefNoLetters.Substring(7, 5);
 
         return new NationalGridReference
         {

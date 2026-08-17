@@ -1553,6 +1553,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.NotNull(primaryLicence.Points[0].ContainedIn);
         Assert.Single(primaryLicence.Points[0].ContainedIn!);
         Assert.Equal("Points", primaryLicence.Points[0].ContainedIn![0].SectionName);
+        Assert.Equal(InformationSource.Document, primaryLicence.Points[0].ContainedIn![0].Source);
     }
 
     [Fact]

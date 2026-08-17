@@ -527,7 +527,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.LicenceSets,
             cancellationToken);
 
-        await UpsertVerificationsAsync(
+        await ReplaceVerificationsAsync(
             connection,
             transaction,
             item.ProcessRunId,
@@ -1099,7 +1099,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 cancellationToken: cancellationToken));
     }
     
-    private static async Task UpsertVerificationsAsync(
+    private static async Task ReplaceVerificationsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         int processRunId,

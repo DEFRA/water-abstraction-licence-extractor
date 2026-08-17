@@ -3477,6 +3477,11 @@ private static void AddLicenceListItemFilters(
         sql,
         parameters,
         query.VerificationType);
+
+    ReadSqlHelper.AddLicenceNumbersFilter(
+        sql,
+        parameters,
+        query.LicenceNumbers);
 }
 
     // TODO move to a 'Core' layer

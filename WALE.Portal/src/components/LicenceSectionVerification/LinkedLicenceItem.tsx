@@ -10,7 +10,8 @@ import {
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
 import {ValidationError} from "./ValidationError.tsx";
 import NaldStatusTag from "../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFileId} from "../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
+import {useFileIdMap} from "../../utils/useFileIdMap.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -26,7 +27,6 @@ interface LinkedLicenceItemProps {
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
@@ -44,19 +44,19 @@ export const LinkedLicenceItem = ({
                                       onOverride,
                                       onRequestBusinessReview,
                                       onCompleteBusinessReview,
-                                      data,
                                       onOpenReport,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
     const [errors, setErrors] = React.useState<Record<string, string>>({});
+    const {getFileId} = useFileIdMap();
     const linkedLicence = linkedLicenceProp;
 
     if (!linkedLicence) {
         return null;
     }
 
-    const linkedFilename = getFileId(data || [], linkedLicence.licenceNumber);
+    const linkedFilename = getFileId(linkedLicence.licenceNumber);
 
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {

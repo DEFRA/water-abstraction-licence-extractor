@@ -1,4 +1,3 @@
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
 
 export const getVerificationTypeColor = (type: string): string => {
     switch (type) {
@@ -82,18 +81,10 @@ export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
     return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
 };
 
-export function getFileId(data: OutputListDataItem[], licenceNumber: string | undefined) {
-    if (licenceNumber == undefined) {
+export function getFileId(fileIdMap: Record<string, string> | undefined, licenceNumber: string | undefined): string | false {
+    if (!licenceNumber || !fileIdMap) {
         return false;
     }
 
-    for (let itemNumber in data) {
-        let item = data[itemNumber];
-
-        if (item.licenceNumber === licenceNumber) {
-            return item.fileId;
-        }
-    }
-
-    return false;
+    return fileIdMap[licenceNumber] ?? false;
 }

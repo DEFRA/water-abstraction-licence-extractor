@@ -1,18 +1,17 @@
 import {
     LinkedLicence,
-    NullableOfInformationDirection,
-    OutputListDataItem
+    NullableOfInformationDirection
 } from "../api/generated/apiClient.ts";
 import {NaldStatusTag} from "./NaldStatusTag.tsx";
-import {getFileId} from "../utils/verificationUtils.ts";
+import {useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
-    data: OutputListDataItem[];
     onOpenReport: (filename: string) => void;
 }
 
-export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: LinkedLicencesListItemProps) {
+export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
+    const {getFileId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
@@ -31,7 +30,7 @@ export function LinkedLicencesListItem({linkedLicence, data, onOpenReport}: Link
             ? "lightseagreen" 
             : "black";
 
-    let linkedFilename = getFileId(data, licenceNumber);
+    let linkedFilename = getFileId(licenceNumber);
 
     if (linkedFilename) {
         return (

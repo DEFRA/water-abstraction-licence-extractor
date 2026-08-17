@@ -44,6 +44,13 @@ public class FileDataController(
     }
     
     [HttpGet]
+    public async Task<ActionResult<Dictionary<Guid, string>>> GetLicenceFileIdMapAsync([FromQuery] int processRunId)
+    {
+        var result = await GetLicenceFileIdsAsync(processRunId);
+        return Ok(result);
+    }
+
+    [HttpGet]
     public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId, [FromQuery] int processRunId)
     {
         var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);

@@ -2067,6 +2067,39 @@ export class Client {
     /**
      * @return OK
      */
+    getNaldLicenceNumberHistory(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetNaldLicenceNumberHistory";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetNaldLicenceNumberHistory(_response);
+        });
+    }
+
+    protected processGetNaldLicenceNumberHistory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     saveNoOcrPageTextLines(body: SaveNoOcrPageTextLinesRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NoOcr/SaveNoOcrPageTextLines";
         url_ = url_.replace(/[?&]$/, "");
@@ -3140,6 +3173,57 @@ export class Client {
             });
         }
         return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getLicenceFileIdMap(processRunId: number | undefined): Promise<{ [key: string]: string; }> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetLicenceFileIdMap?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceFileIdMap(_response);
+        });
+    }
+
+    protected processGetLicenceFileIdMap(response: Response): Promise<{ [key: string]: string; }> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (result200 as any)![key] = resultData200[key] !== undefined ? resultData200[key] : null as any;
+                }
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<{ [key: string]: string; }>(null as any);
     }
 
     /**
@@ -5319,6 +5403,7 @@ export class ContainedInInformation implements IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -5345,6 +5430,11 @@ export class ContainedInInformation implements IContainedInInformation {
             this.sectionName = _data["sectionName"];
             this.linkReason = _data["linkReason"];
             this.acinCode = _data["acinCode"];
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+            }
             if (_data["sourceFields"]) {
                 this.sourceFields = {} as any;
                 for (let key in _data["sourceFields"]) {
@@ -5375,6 +5465,11 @@ export class ContainedInInformation implements IContainedInInformation {
         data["sectionName"] = this.sectionName;
         data["linkReason"] = this.linkReason;
         data["acinCode"] = this.acinCode;
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item ? item.toJSON() : undefined as any);
+        }
         if (this.sourceFields) {
             data["sourceFields"] = {};
             for (let key in this.sourceFields) {
@@ -5394,6 +5489,7 @@ export interface IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -7499,6 +7595,74 @@ export interface INaldCartesianReference {
     referenceIndex?: number;
     east?: number | undefined;
     north?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistoryOutput {
+    status?: string | undefined;
+    licenceNumber?: string | undefined;
+    followOnLicenceNumbers?: string[];
+    source?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: INaldLicenceNumberHistoryOutput) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.status = _data["status"];
+            this.licenceNumber = _data["licenceNumber"];
+            if (Array.isArray(_data["followOnLicenceNumbers"])) {
+                this.followOnLicenceNumbers = [] as any;
+                for (let item of _data["followOnLicenceNumbers"])
+                    this.followOnLicenceNumbers!.push(item);
+            }
+            this.source = _data["source"];
+        }
+    }
+
+    static fromJS(data: any): NaldLicenceNumberHistoryOutput {
+        data = typeof data === 'object' ? data : {};
+        let result = new NaldLicenceNumberHistoryOutput();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["status"] = this.status;
+        data["licenceNumber"] = this.licenceNumber;
+        if (Array.isArray(this.followOnLicenceNumbers)) {
+            data["followOnLicenceNumbers"] = [];
+            for (let item of this.followOnLicenceNumbers)
+                data["followOnLicenceNumbers"].push(item);
+        }
+        data["source"] = this.source;
+        return data;
+    }
+}
+
+export interface INaldLicenceNumberHistoryOutput {
+    status?: string | undefined;
+    licenceNumber?: string | undefined;
+    followOnLicenceNumbers?: string[];
+    source?: string | undefined;
 
     [key: string]: any;
 }

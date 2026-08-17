@@ -12,13 +12,12 @@ interface VerificationContentProps {
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }
 
 type SubTabType = 'scraped' | 'current' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem, data, onOpenReport }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem, onOpenReport }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -105,11 +104,10 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         onVerified={handleVerified}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
-                        data={data}
                         onOpenReport={onOpenReport}
                     >
-                        <LinkedLicences 
-                            licence={licence} 
+                        <LinkedLicences
+                            licence={licence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             history={history}
@@ -127,11 +125,10 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         processRunId={processRunId}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
-                        data={data}
                         onOpenReport={onOpenReport}
                     >
-                        <LinkedLicences 
-                            licence={licence} 
+                        <LinkedLicences
+                            licence={licence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

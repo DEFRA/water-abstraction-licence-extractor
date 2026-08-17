@@ -3,11 +3,10 @@ import LinkedLicencesListItem from "./LinkedLicencesListItem";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
-    data: OutputListDataItem[];
     onOpenReport: (fileId: string) => void;
 }
 
-export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesListProps) {
+export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps) {
     if (!item.linkedLicences?.length) {
         return 'No Linked Licences';
     }
@@ -17,7 +16,6 @@ export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesLis
             <LinkedLicencesListItem
                 key={index}
                 linkedLicence={ll}
-                data={data}
                 onOpenReport={onOpenReport}
             />
         ))}

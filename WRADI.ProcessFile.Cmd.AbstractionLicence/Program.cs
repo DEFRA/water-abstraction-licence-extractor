@@ -68,7 +68,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
             services.DmsReportPath!,
             false,
             abstractionLicenceCacheService,
-            configuration.GetRequiredValue<bool>("CheckWeHaveFileToProcess"));
+            configuration.GetValue<bool>("CheckWeHaveFileToProcess"));
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess

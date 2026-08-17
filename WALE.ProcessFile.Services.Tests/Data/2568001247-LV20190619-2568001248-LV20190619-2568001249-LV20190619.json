@@ -180,7 +180,15 @@
       "points": [
         {
           "name": "C",
-          "gridRef": "SJ 5179 4988",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5179",
+              "north": "4988"
+            }
+          ],
+          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",
@@ -487,7 +495,15 @@
       "points": [
         {
           "name": "A",
-          "gridRef": "SJ 5158 5029",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5158",
+              "north": "5029"
+            }
+          ],
+          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",
@@ -792,7 +808,15 @@
       "points": [
         {
           "name": "B",
-          "gridRef": "SJ 5168 5015",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5168",
+              "north": "5015"
+            }
+          ],
+          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",

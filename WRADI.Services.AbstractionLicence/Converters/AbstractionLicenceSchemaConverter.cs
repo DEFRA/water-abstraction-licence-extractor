@@ -3771,6 +3771,27 @@ public static class AbstractionLicenceSchemaConverter
                     foreach (var tableLine in tableLines)
                     {
                         var id = $"{tableLine.Columns[0].Text} to {tableLine.Columns[1].Text}";
+
+                        var containedInList1 = new List<ContainedInInformation>
+                        {
+                            new()
+                            {
+                                Source = InformationSource.Document,
+                                SectionName = sectionName,
+                                PageNumber = tableLine.PageNumber,
+                                LineNumber = tableLine.LineNumber
+                            }
+                        };
+
+                        var naldData2 = GetNaldPointData(naldDataLine, tableLine.Text);
+
+                        if (naldData2 != null)
+                        {
+                            containedInList1.Add(new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald
+                            });
+                        }
                         
                         returnList.Add(
                             new PointOfAbstraction
@@ -3780,14 +3801,8 @@ public static class AbstractionLicenceSchemaConverter
                                 AltId = id,
                                 PurposeIds = purposeIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPointData(naldDataLine, tableLine.Text),
-                                ContainedIn = [new()
-                                {
-                                    Source = InformationSource.Document,
-                                    SectionName = sectionName,
-                                    PageNumber = tableLine.PageNumber,
-                                    LineNumber = tableLine.LineNumber
-                                }]
+                                
+                                ContainedIn = containedInList1.ToArray()
                             });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -3826,6 +3841,27 @@ public static class AbstractionLicenceSchemaConverter
                         var words = tableLine.Text.Split(' ');
                         var subId = words[0]; // e.g. A, D, E
 
+                        var containedInList2 = new List<ContainedInInformation>
+                        {
+                            new()
+                            {
+                                Source = InformationSource.Document,
+                                SectionName = sectionName,
+                                PageNumber = tableLine.PageNumber,
+                                LineNumber = tableLine.LineNumber
+                            }
+                        };
+
+                        var naldData1 = GetNaldPointData(naldDataLine, tableLine.Text);
+                        
+                        if (naldData1 != null)
+                        {
+                            containedInList2.Add(new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald
+                            });
+                        }
+                        
                         returnList.Add(
                             new PointOfAbstraction
                             {
@@ -3834,14 +3870,7 @@ public static class AbstractionLicenceSchemaConverter
                                 AltId = subId,
                                 PurposeIds = purposeIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPointData(naldDataLine, tableLine.Text),
-                                ContainedIn = [new()
-                                {
-                                    Source = InformationSource.Document,
-                                    SectionName = sectionName,
-                                    PageNumber = tableLine.PageNumber,
-                                    LineNumber = tableLine.LineNumber
-                                }]
+                                ContainedIn = containedInList2.ToArray()
                             });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
@@ -3862,6 +3891,27 @@ public static class AbstractionLicenceSchemaConverter
                 description = FormattingHelper.TrimFormatting(description, false, true);
                 
                 var (name, gridRef, letterId) = GetPointNameGridRefLetterId(description);
+
+                var naldData = GetNaldPointData(naldDataLine, description);
+
+                var containedInList = new List<ContainedInInformation>
+                {
+                    new()
+                    {
+                        Source = InformationSource.Document,
+                        SectionName = sectionName,
+                        PageNumber = point.LabelStartPageNumber,
+                        LineNumber = point.LabelStartLineNumber
+                    }
+                };
+
+                if (naldData != null)
+                {
+                    containedInList.Add(new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    });
+                }
                 
                 returnList.Add(
                     new PointOfAbstraction
@@ -3875,14 +3925,7 @@ public static class AbstractionLicenceSchemaConverter
                         AltId = letterId,
                         PurposeIds = purposeIds,
                         TimeCutoff = timeCutoff,
-                        NaldData = GetNaldPointData(naldDataLine, description),
-                        ContainedIn = [new()
-                        {
-                            Source = InformationSource.Document,
-                            SectionName = sectionName,
-                            PageNumber = point.LabelStartPageNumber,
-                            LineNumber = point.LabelStartLineNumber
-                        }]
+                        ContainedIn = containedInList.ToArray()
                     });
             }
         }

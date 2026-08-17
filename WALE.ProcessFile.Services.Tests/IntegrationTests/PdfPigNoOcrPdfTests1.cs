@@ -1541,7 +1541,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         
         var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
         
-//        Assert.Single(primaryLicence.LinkedLicences);
+        Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("6/33/56/*G/0274/R02", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
@@ -1549,7 +1549,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         
         Assert.Equal(7, primaryLicence.Points.Length);
-        Assert.Equal("National Grid Reference Map Label Map Reference", primaryLicence.Points[0].Description); // TODO wrong
+        Assert.Equal("TL 75736 94136 Abstraction point A Map 1", primaryLicence.Points[0].Description);
         Assert.NotNull(primaryLicence.Points[0].ContainedIn);
         Assert.Single(primaryLicence.Points[0].ContainedIn!);
         Assert.Equal("Points", primaryLicence.Points[0].ContainedIn![0].SectionName);
@@ -1996,7 +1996,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("TL5584494741 TL5453692523", pointsResult.Text![6].Text);
         Assert.Equal("TL5502493346 TL5522093137", pointsResult.Text![7].Text);
         
-        Assert.Equal(50, pointsResult.SubResults.Count); // TODO should probably be 47
+        Assert.Equal(2, pointsResult.SubResults.Count);
 
         var pointPurposeGroup1 = pointsResult.SubResults[0];
         Assert.Equal("PointPurposeGroup", pointPurposeGroup1.MatchedLabel!.Name);

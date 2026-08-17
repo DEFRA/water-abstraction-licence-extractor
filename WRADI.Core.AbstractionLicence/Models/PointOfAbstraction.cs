@@ -4,7 +4,7 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class PointOfAbstraction : Point
 {
-    public NaldPointData? NaldData { get; set; }
+    //public NaldPointData? NaldData { get; set; }
 
     public string[]? PurposeIds { get; init; }
     
@@ -22,10 +22,10 @@ public class PointOfAbstraction : Point
     {
         Description = string.Empty,
         Id = string.Empty,
-        NaldData = new NaldPointData
+        /*NaldData = new NaldPointData
         {
             Id = "something"
-        },
+        },*/
         PurposeIds = [
             "4.1"
         ],

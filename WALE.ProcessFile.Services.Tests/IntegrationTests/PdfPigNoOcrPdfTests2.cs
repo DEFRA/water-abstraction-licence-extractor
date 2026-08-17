@@ -1494,8 +1494,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             .SelectMany(point => point.SubResults.Where(x => x.MatchedLabel?.Name == "Point"))
             .ToList();
         
-        Assert.Equal(21, pointsAll.Count); // TODO should be 20
-        Assert.StartsWith("A SE 06", pointsAll[1].Text?.FirstOrDefault()?.Text);
+        Assert.Equal(20, pointsAll.Count);
+        Assert.StartsWith("A SE 06", pointsAll[0].Text?.FirstOrDefault()?.Text);
         Assert.StartsWith("T SE 02", pointsAll.Last().Text?.FirstOrDefault()?.Text);
         
         var companyName = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -1519,9 +1519,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("22711064-LV20230307", agreedSchemaLicence.Id);
         Assert.Equal("LV20230307", agreedSchemaLicence.LicenceVersion.LicenceVersionId);
 
-        Assert.Equal(21, agreedSchemaLicence.Points.Length);
+        Assert.Equal(20, agreedSchemaLicence.Points.Length);
         
-        var point = agreedSchemaLicence.Points[1];
+        var point = agreedSchemaLicence.Points[0];
         Assert.Equal("A", point.Id);
         Assert.StartsWith("SE 066 152", point.Description);
         Assert.Equal(16, point.Description!.Length);
@@ -1548,7 +1548,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, limitG.Purposes!.Length);
         Assert.Equal(0, limitG.Purposes.Count(c => c.IsImplicit != true));
         Assert.Null(limit.Points);
-        Assert.Equal(21, limitG.Points!.Length);
+        Assert.Equal(20, limitG.Points!.Length);
         Assert.Equal(0, limitG.Points.Count(c => c.IsImplicit != true));
         Assert.Equal(5840000, limit.Value);
         
@@ -1874,25 +1874,28 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
         
-        Assert.Equal(4, agreedSchemaLicence.Points.Length);
-        Assert.Equal("A", agreedSchemaLicence.Points[0].Id);
-        Assert.Equal("SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
-        Assert.Equal("B", agreedSchemaLicence.Points[1].Id);
-        Assert.Equal("SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
-        Assert.Equal("D", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
-        Assert.Equal("E", agreedSchemaLicence.Points[3].Id);
-        Assert.Equal("SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
+        Assert.Equal(4, agreedSchemaLicence.Points.Length); // Table
+        Assert.Equal("2.1 A", agreedSchemaLicence.Points[0].Id);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].AltId);
+        Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description);
+        Assert.Equal("2.1 B", agreedSchemaLicence.Points[1].Id);
+        Assert.Equal("B", agreedSchemaLicence.Points[1].AltId);
+        Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description);
+        Assert.Equal("2.1 D", agreedSchemaLicence.Points[2].Id);
+        Assert.Equal("D", agreedSchemaLicence.Points[2].AltId);
+        Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].Id);
+        Assert.Equal("E", agreedSchemaLicence.Points[3].AltId);
+        Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description);
         
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
-        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
-        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[1].Value);
-        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[2].Value);        
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
         
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(22, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
+        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[0].Value);
+        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[1].Value);
+        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[2].Value);    
     }
     
     [Fact]
@@ -2024,10 +2027,10 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(7, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
+        
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
+        Assert.Equal(22, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
 
         Assert.Equal(4, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -2209,9 +2212,15 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
-        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
-        Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Individual!.SelectMany(x => x.Limits).Count());
-        Assert.Equal(19, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
+        
+        Assert.NotNull(agreedSchemaLicence.Points);
+        Assert.Equal(4, agreedSchemaLicence.Points.Length);
+        
+        Assert.NotNull(agreedSchemaLicence.Purposes);
+        Assert.Equal(3, agreedSchemaLicence.Purposes.Length);
+        
+        Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
+        Assert.Equal(22, agreedSchemaLicence.AbstractionLimits.Aggregates!.SelectMany(x => x.Limits).Count());
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -3328,6 +3337,10 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
 
         Assert.Equal("2/27/15/041", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]?.ToString());
+
+        Assert.NotNull(agreedSchemaLicence.Points);
+        Assert.Single(agreedSchemaLicence.Points);
+        Assert.Equal("1 Inland water (reservoir) known as Watersheddles Reservoir at Keighley, West Yorkshire", agreedSchemaLicence.Points[0].Description); // TODO shouldnt have the 1
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);

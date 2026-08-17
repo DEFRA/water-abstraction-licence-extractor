@@ -844,7 +844,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "PointPurposeGroup",
                         TextStart = [
                             new("For Purpose "),
-                            new(string.Empty) { SingleLinePerItem = true }, // TODO look into this more at some point
+                            //new(string.Empty) { SingleLinePerItem = true }, // TODO look into this more at some point
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [
@@ -1006,6 +1006,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                         Position =  LabelPosition.TextToFindIsBetweenLabels,
                                         TextStart = [
                                             new("Location Description Map"),
+                                            new("National Grid Reference Map Label Map Reference"),
                                         ],
                                         TextEnd = [
                                             new("[END_OF_BLOCK]")
@@ -1145,6 +1146,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                     new("MEAN OF ABSTRACTION"),
                     new("Land(s) on which water is authorised to be used"),
                     new("Quantity(ies) of Water Authorised to be Abstracted"),
+                    new("2. POINTS OF ABSTRACTION"),
                     new("POINT OF ABSTRACTION[END_OF_COLUMN]")
                     {
                         ColumnMustStartWith = true,
@@ -1170,7 +1172,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "PointPurposeGroup",
                         TextStart = [
                             new("For Purpose "),
-                            new(string.Empty) { SingleLinePerItem = true },
+                            //new(string.Empty) { SingleLinePerItem = true }, // TODO look into this more at some point
                             new("[START_OF_BLOCK]")
                         ],
                         TextEnd = [

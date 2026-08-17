@@ -355,7 +355,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         
         Assert.Equal("1/23/01/001", agreedSchemaLicence.LicenceNumber!.Value);
         
-        Assert.Equal(7, agreedSchemaLicence.Points.Length);
+        Assert.Equal(7, agreedSchemaLicence.Points.Length); // Point per line
         Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.Points[0].Name);
         Assert.NotNull(agreedSchemaLicence.Points[0].ContainedIn);
         Assert.Single(agreedSchemaLicence.Points[0].ContainedIn!);

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Dapper;
 
@@ -271,6 +272,34 @@ public static class ReadSqlHelper
             verificationType.Trim());
     }
     
+    public static void AddLicenceNumbersFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string[]? licenceNumbers)
+    {
+        var filteredLicenceNumbers = licenceNumbers?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (filteredLicenceNumbers is not { Length: > 0 })
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND lower(licence_number) = ANY(@LicenceNumbers)
+            """);
+
+        parameters.Add(
+            "LicenceNumbers",
+            filteredLicenceNumbers
+                .Select(x => x.ToLowerInvariant())
+                .ToArray());
+    }
+
     public static void AddOrdering(
         StringBuilder sql,
         string? sortField,

@@ -172,12 +172,12 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         if (!knownItem) {
             const licenceNumber = getLicenceNumber(fileId);
             if (licenceNumber) {
-                waleApiClient.getProcessRun(
+                waleApiClient.getProcessRunList(
                     processRunId,
                     'N/A',
                     '',
                     0,
-                    1,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,
@@ -193,7 +193,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                     undefined,
                     [licenceNumber]
                 ).then(result => {
-                    const resolvedItem = result.records?.[0];
+                    const resolvedItem = result.records?.find(item => item.fileId === fileId);
                     if (resolvedItem) {
                         updateModalOutputItem(fileId, resolvedItem);
                     }

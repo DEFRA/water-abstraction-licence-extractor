@@ -112,7 +112,9 @@ public static class FindLabelGroupMatchesHelper
                     
                     if (lookingForSingleLine)
                     {
+                        previousLines ??= line.PreviousLines(lines, label);
                         nextLines ??= line.NextLines(lines, label);
+                        
                         var nextLine = nextLines.FirstOrDefault();
                         
                         var thisLineStartsWithCapital = char.IsUpper(partialLine.Text[0]);
@@ -123,10 +125,13 @@ public static class FindLabelGroupMatchesHelper
                             && char.IsUpper(nextLine.Text[0]);
 
                         const int maxNoneWrappedLineLength = 60;
+                        
                         var lineIsNotWrapping = partialLine.Text.Length <= maxNoneWrappedLineLength;
+                        var previousLineIsNotWrapping = previousLines.Count == 0 || previousLines[0].Text.Length <= maxNoneWrappedLineLength;
                         
                         var matchesRule = thisLineStartsWithCapital
                             && lineIsNotWrapping
+                            && previousLineIsNotWrapping
                             && (nextLineStartsWithCapital || thisIsLastLine);
 
                         if (matchesRule)

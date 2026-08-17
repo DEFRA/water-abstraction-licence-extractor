@@ -3662,10 +3662,23 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
         }
 
-        var pointPurposeGroups = pointsResults.SubResults
-            .Where(sr => sr.MatchedLabelName == "PointPurposeGroup")
+        List<LabelGroupResult> pointPurposeGroups;
+        
+        var pointPurposeGroupSingleLinePerItem = pointsResults.SubResults
+            .Where(sr => sr.MatchedLabelName == "PointPurposeGroupSingleLinePerItem")
             .ToList();
 
+        if (pointPurposeGroupSingleLinePerItem.Count > 1)
+        {
+            pointPurposeGroups = pointPurposeGroupSingleLinePerItem;
+        }
+        else
+        {
+            pointPurposeGroups = pointsResults.SubResults
+                .Where(sr => sr.MatchedLabelName == "PointPurposeGroup")
+                .ToList();
+        }
+        
         var anyNoneEmptyStringMatches = pointPurposeGroups
             .Any(ppg => ppg.MatchedLabelTextFirstLine != string.Empty);
 

@@ -22,8 +22,8 @@ public class PointOfAbstraction : Point
 
     public static PointOfAbstraction Template => new()
     {
-        Description1 = string.Empty,
-        Id = string.Empty,
+        DocumentDescription = string.Empty,
+        DocumentId = string.Empty,
         // TODO known as, Near etc...
         PurposeIds = [
             "4.1"

@@ -471,9 +471,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("A", agreedSchemaLicence.Points[0].Name);
         Assert.Single(agreedSchemaLicence.Points[0].NationalGridReferences!);
         Assert.Equal("SE 57396 22415", agreedSchemaLicence.Points[0].NationalGridReferences![0].ToString());
-        Assert.Equal("2.1", agreedSchemaLicence.Points[0].Id);
-        Assert.Equal("A", agreedSchemaLicence.Points[0].AltId);
-        Assert.Equal("At National Grid Reference SE 57396 22415 marked 'A' on the map", agreedSchemaLicence.Points[0].Description1);
+        Assert.Equal("2.1", agreedSchemaLicence.Points[0].DocumentId);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].AltDocumentId);
+        Assert.Equal("At National Grid Reference SE 57396 22415 marked 'A' on the map", agreedSchemaLicence.Points[0].DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -486,13 +486,13 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
         
         Assert.Equal("6.1", agreedSchemaLicence.AbstractionLimits.Individual[0].DocumentIdentifier);
-        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].Id);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].IsImplicit);
         Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].Id);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].IsImplicit);
         
         Assert.Equal("6.2", agreedSchemaLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
-        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].Id);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].IsImplicit);
         Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].Id);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].IsImplicit);
@@ -501,7 +501,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
         Assert.Equal("6.3", agreedSchemaLicence.AbstractionLimits.Aggregates[0].DocumentIdentifier);
-        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].Id);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes!.Length);
@@ -511,7 +511,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);        
         
         Assert.Equal("6.4", agreedSchemaLicence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
-        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].Id);
+        Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].IsImplicit);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes!.Length);
@@ -1307,24 +1307,24 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(5, agreedSchemaLicence.Points.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal("2.1", point.Id);
-        Assert.EndsWith("National Grid Reference SE 15454 02535 marked \"A\" on the map", point.Description1);
+        Assert.Equal("2.1", point.DocumentId);
+        Assert.EndsWith("National Grid Reference SE 15454 02535 marked \"A\" on the map", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal("2.2", point.Id);
-        Assert.EndsWith("National Grid Reference SE 15253 01352 marked \"B\" on the map", point.Description1);
+        Assert.Equal("2.2", point.DocumentId);
+        Assert.EndsWith("National Grid Reference SE 15253 01352 marked \"B\" on the map", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[2];
-        Assert.Equal("2.3", point.Id);
-        Assert.EndsWith("National Grid Reference SE 15820 01918 marked \"C\" on the map", point.Description1);
+        Assert.Equal("2.3", point.DocumentId);
+        Assert.EndsWith("National Grid Reference SE 15820 01918 marked \"C\" on the map", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[3];
-        Assert.Equal("2.4", point.Id);
-        Assert.EndsWith("National Grid Reference SE 15192 03582 marked \"D\" on the map", point.Description1);
+        Assert.Equal("2.4", point.DocumentId);
+        Assert.EndsWith("National Grid Reference SE 15192 03582 marked \"D\" on the map", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[4];
-        Assert.Equal("2.5", point.Id);
-        Assert.EndsWith("National Grid Reference SE 13596 03969 marked \"E\" on the map", point.Description1); // TODO should be "E" not "E
+        Assert.Equal("2.5", point.DocumentId);
+        Assert.EndsWith("National Grid Reference SE 13596 03969 marked \"E\" on the map", point.DocumentDescription); // TODO should be "E" not "E
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -1427,24 +1427,24 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal("2.1", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 069 076 marked 'A' on map 2", point.Description1);
+        Assert.Equal("2.1", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 069 076 marked 'A' on map 2", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal("2.2", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 054 096 marked 'B' on map 2", point.Description1);
+        Assert.Equal("2.2", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 054 096 marked 'B' on map 2", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[2];
-        Assert.Equal("2.3", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 047 105 marked 'C' on map 2", point.Description1);
+        Assert.Equal("2.3", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 047 105 marked 'C' on map 2", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[3];
-        Assert.Equal("2.4", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 073 115 marked 'D' on map 1", point.Description1);
+        Assert.Equal("2.4", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 073 115 marked 'D' on map 1", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[4];
-        Assert.Equal("2.5", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 098 130 marked 'E' on map 1", point.Description1);
+        Assert.Equal("2.5", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 098 130 marked 'E' on map 1", point.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -1522,9 +1522,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(20, agreedSchemaLicence.Points.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal("A", point.Id);
-        Assert.StartsWith("SE 066 152", point.Description1);
-        Assert.Equal(16, point.Description1!.Length);
+        Assert.Equal("A", point.DocumentId);
+        Assert.StartsWith("SE 066 152", point.DocumentDescription);
+        Assert.Equal(16, point.DocumentDescription!.Length);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -1598,12 +1598,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var point = agreedSchemaLicence.Points[0];
-        Assert.Equal("2.1", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 039 152 marked 'A' on map 1", point.Description1);
+        Assert.Equal("2.1", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 039 152 marked 'A' on map 1", point.DocumentDescription);
         
         point = agreedSchemaLicence.Points[1];
-        Assert.Equal("2.2", point.Id);
-        Assert.EndsWith("At National Grid Reference SE 052 166 marked 'B' on map 1", point.Description1);
+        Assert.Equal("2.2", point.DocumentId);
+        Assert.EndsWith("At National Grid Reference SE 052 166 marked 'B' on map 1", point.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
@@ -1875,18 +1875,18 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length); // Table
-        Assert.Equal("2.1 A", agreedSchemaLicence.Points[0].Id);
-        Assert.Equal("A", agreedSchemaLicence.Points[0].AltId);
-        Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].Description1);
-        Assert.Equal("2.1 B", agreedSchemaLicence.Points[1].Id);
-        Assert.Equal("B", agreedSchemaLicence.Points[1].AltId);
-        Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].Description1);
-        Assert.Equal("2.1 D", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("D", agreedSchemaLicence.Points[2].AltId);
-        Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].Description1);
-        Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].Id);
-        Assert.Equal("E", agreedSchemaLicence.Points[3].AltId);
-        Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].Description1);
+        Assert.Equal("2.1 A", agreedSchemaLicence.Points[0].DocumentId);
+        Assert.Equal("A", agreedSchemaLicence.Points[0].AltDocumentId);
+        Assert.Equal("A SE 80360 41490 Southfield Farm, Everingham, York. 1", agreedSchemaLicence.Points[0].DocumentDescription);
+        Assert.Equal("2.1 B", agreedSchemaLicence.Points[1].DocumentId);
+        Assert.Equal("B", agreedSchemaLicence.Points[1].AltDocumentId);
+        Assert.Equal("B SE 80490 43730 Ponds Farm, Everingham, York. 1", agreedSchemaLicence.Points[1].DocumentDescription);
+        Assert.Equal("2.1 D", agreedSchemaLicence.Points[2].DocumentId);
+        Assert.Equal("D", agreedSchemaLicence.Points[2].AltDocumentId);
+        Assert.Equal("D SE 70910 39340 Ellerton, East Riding of Yorkshire. 2", agreedSchemaLicence.Points[2].DocumentDescription);
+        Assert.Equal("2.1 E", agreedSchemaLicence.Points[3].DocumentId);
+        Assert.Equal("E", agreedSchemaLicence.Points[3].AltDocumentId);
+        Assert.Equal("E SE 73917 47832 Low Farm, Sutton Upon Derwent, Yorkshire. 3", agreedSchemaLicence.Points[3].DocumentDescription);
         
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual!);
@@ -3340,7 +3340,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.NotNull(agreedSchemaLicence.Points);
         Assert.Single(agreedSchemaLicence.Points);
-        Assert.Equal("1 Inland water (reservoir) known as Watersheddles Reservoir at Keighley, West Yorkshire", agreedSchemaLicence.Points[0].Description1); // TODO shouldnt have the 1
+        Assert.Equal("1 Inland water (reservoir) known as Watersheddles Reservoir at Keighley, West Yorkshire", agreedSchemaLicence.Points[0].DocumentDescription); // TODO shouldnt have the 1
         
         Assert.Null(agreedSchemaLicence.DefinitionOfYear);
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);

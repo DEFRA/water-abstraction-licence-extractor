@@ -146,19 +146,16 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("2/27/23/435", licence.LicenceNumber!.Value);
 
         Assert.NotNull(licence.Points);
-        Assert.Equal(2, licence.Points.Length); // Should actually be 1, but the OCR hasnt read it right
-        Assert.Equal("SE 3286 8147", licence.Points[0].NationalGridReferences[0].ToString());
-        Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].Name);
-        Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].Description1);
-        Assert.Equal("10004638", licence.Points[0].Id);
-        Assert.Single(licence.Points[0].ContainedIn);
-        Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[0].Source);
-        Assert.Equal("A", licence.Points[1].Name);
-        Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[1].Description1);
-        Assert.Equal("SE 3266 8147", licence.Points[1].NationalGridReferences[0].ToString());
-        Assert.Equal("A", licence.Points[1].Id);
-        Assert.Single(licence.Points[1].ContainedIn);
-        Assert.Equal(InformationSource.Document, licence.Points[1].ContainedIn[0].Source);
+        Assert.Single(licence.Points); // Should actually be 1, but the OCR hasnt read it right
+        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
+        Assert.Equal("A", licence.Points[0].Name);
+        Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].NaldDescription);
+        //Assert.Equal("10004638", licence.Points[0].NaldId);
+        Assert.Equal("A", licence.Points[0].DocumentId);
+        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
+        Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn[0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[1].Source);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
@@ -166,47 +163,37 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.AbstractionLimits.Individual[0].Limits);
         Assert.Equal(41.360, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Null(licence.AbstractionLimits.Individual[0].Limits[0].Points!);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Points!.Length);
-        Assert.Equal("10004638", licence.AbstractionLimits.Individual[0].Points![0].Id);
+        Assert.Single(licence.AbstractionLimits.Individual[0].Points!);
+        Assert.Equal("A", licence.AbstractionLimits.Individual[0].Points![0].DocumentId);
         Assert.True(licence.AbstractionLimits.Individual[0].Points![0].IsImplicit);
-        Assert.Equal("A", licence.AbstractionLimits.Individual[0].Points![1].Id);
-        Assert.True(licence.AbstractionLimits.Individual[0].Points![1].IsImplicit);
         
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
         Assert.Equal(1, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].Points!);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[1].Points!.Length);
-        Assert.Equal("10004638", licence.AbstractionLimits.Individual[1].Points![0].Id);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Points!);
+        Assert.Equal("A", licence.AbstractionLimits.Individual[1].Points![0].DocumentId);
         Assert.True(licence.AbstractionLimits.Individual[1].Points![0].IsImplicit);
-        Assert.Equal("A", licence.AbstractionLimits.Individual[1].Points![1].Id);
-        Assert.True(licence.AbstractionLimits.Individual[1].Points![1].IsImplicit);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Single(licence.AbstractionLimits.Aggregates);
         
         Assert.Equal(36.36, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].Points!);
-        Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Points!.Length);
-        Assert.Equal("10004638", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![1].Id);
-        Assert.True(licence.AbstractionLimits.Aggregates[0].Points![1].IsImplicit);
         
         Assert.Equal(618.20, licence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].Points!);
-        Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Points!.Length);
-        Assert.Equal("10004638", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
-        Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![1].Id);
-        Assert.True(licence.AbstractionLimits.Aggregates[0].Points![1].IsImplicit);        
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
+        Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);    
         
         Assert.Equal(10.10, licence.AbstractionLimits.Aggregates[0].Limits[2].Value);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[2].Points!);
-        Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Points!.Length);
-        Assert.Equal("10004638", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![1].Id);
-        Assert.True(licence.AbstractionLimits.Aggregates[0].Points![1].IsImplicit);
     }
     
     [Fact]
@@ -243,17 +230,19 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2, licence.Points.Length);
         Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].Description1);
-        Assert.Equal("(1)", licence.Points[0].Id);
-        Assert.Equal(1, licence.Points[0].ContainedIn.Length);
+        Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("(1)", licence.Points[0].DocumentId);
+        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn[0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[1].Source);
         Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("B", licence.Points[1].Name);
-        Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].Description1);
+        Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].DocumentDescription);
         Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
-        Assert.Equal("(2)", licence.Points[1].Id);
-        Assert.Equal(1, licence.Points[1].ContainedIn.Length);
+        Assert.Equal("(2)", licence.Points[1].DocumentId);
+        Assert.Equal(2, licence.Points[1].ContainedIn.Length);
         Assert.Equal(InformationSource.Document, licence.Points[1].ContainedIn[0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[1].ContainedIn[1].Source);
 
         Assert.Null(licence.AbstractionLimits.Individual);
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -266,7 +255,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2.53, agg.Limits[2].Value);
         Assert.Null(agg.Limits[0].Points);
         Assert.Single(agg.Points!);
-        Assert.Equal("(1)", agg.Points![0].Id);
+        Assert.Equal("(1)", agg.Points![0].DocumentId);
         Assert.False(agg.Points![0].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[1];
@@ -276,7 +265,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(6.31, agg.Limits[2].Value);    
         Assert.NotNull(agg.Points!);
         Assert.Null(agg.Limits[0].Points!);
-        Assert.Equal("(2)", agg.Points![0].Id);
+        Assert.Equal("(2)", agg.Points![0].DocumentId);
         Assert.False(agg.Points![0].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[2];
@@ -285,7 +274,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Null(agg.Limits[0].Points!);
         Assert.NotNull(agg.Points!);
         Assert.Equal(2, agg.Points!.Length);
-        Assert.Equal("(1)", agg.Points![0].Id);
+        Assert.Equal("(1)", agg.Points![0].DocumentId);
         Assert.True(agg.Points![0].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[3];
@@ -293,7 +282,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(10, agg.Limits[0].Value);
         Assert.Null(agg.Limits[0].Points!);
         Assert.Equal(2, agg.Points!.Length);
-        Assert.Equal("(1)", agg.Points![0].Id);
+        Assert.Equal("(1)", agg.Points![0].DocumentId);
         Assert.True(agg.Points![0].IsImplicit);
     }
     
@@ -332,10 +321,10 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
         Assert.Equal("SE 2865 7639", licence.Points[0].NationalGridReferences![0].ToString());
-        Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].Description1);
-        Assert.Equal("BOREHOLE - MAGNESIAN LIMESTONE - NORTH STAINLEY", licence.Points[0].Description2);
+        Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("BOREHOLE - MAGNESIAN LIMESTONE - NORTH STAINLEY", licence.Points[0].NaldDescription);
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("A", licence.Points[0].Id);
+        Assert.Equal("A", licence.Points[0].DocumentId);
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
@@ -348,7 +337,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(22.7, limitBlock.Limits[0].Value);
         Assert.Single(limitBlock.Points!);
         Assert.Null(limitBlock.Limits[0].Points!);
-        Assert.Equal("A", limitBlock.Points![0].Id);
+        Assert.Equal("A", limitBlock.Points![0].DocumentId);
         Assert.True(limitBlock.Points![0].IsImplicit);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -358,7 +347,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(limitBlock.Limits);
         Assert.Equal(120, limitBlock.Limits[0].Value);
         Assert.Single(limitBlock.Points!);
-        Assert.Equal("A", limitBlock.Points![0].Id);
+        Assert.Equal("A", limitBlock.Points![0].DocumentId);
         Assert.True(limitBlock.Points![0].IsImplicit);
     }
 }

@@ -45,7 +45,7 @@
           ],
           "points": [
             {
-              "id": "2.1",
+              "documentId": "2.1",
               "isImplicit": true
             }
           ],
@@ -92,7 +92,7 @@
           ],
           "points": [
             {
-              "id": "2.1",
+              "documentId": "2.1",
               "isImplicit": true
             }
           ],
@@ -139,7 +139,7 @@
           ],
           "points": [
             {
-              "id": "2.1",
+              "documentId": "2.1",
               "isImplicit": true
             }
           ],
@@ -197,9 +197,9 @@
               "pageNumber": 4
             }
           ],
-          "id": "2.1",
-          "altId": "C",
-          "description1": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
+          "documentId": "2.1",
+          "altDocumentId": "C",
+          "documentDescription": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
         }
       ],
       "purposes": [
@@ -259,7 +259,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -291,7 +291,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -340,7 +340,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -512,9 +512,9 @@
               "pageNumber": 4
             }
           ],
-          "id": "2.1",
-          "altId": "A",
-          "description1": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
+          "documentId": "2.1",
+          "altDocumentId": "A",
+          "documentDescription": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
         }
       ],
       "purposes": [
@@ -574,7 +574,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -606,7 +606,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -655,7 +655,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -825,9 +825,9 @@
               "pageNumber": 4
             }
           ],
-          "id": "2.1",
-          "altId": "B",
-          "description1": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
+          "documentId": "2.1",
+          "altDocumentId": "B",
+          "documentDescription": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
         }
       ],
       "purposes": [
@@ -887,7 +887,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -919,7 +919,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],
@@ -968,7 +968,7 @@
             ],
             "points": [
               {
-                "id": "2.1",
+                "documentId": "2.1",
                 "isImplicit": true
               }
             ],

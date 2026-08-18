@@ -1426,6 +1426,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                 Name = "DocumentPurposesAll",
                 TextStart =
                 [
+                    new("3. PURPOSE OF ABSTRACTION"),
                     new("PURPOSE OF ABSTRACTION"),
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
@@ -1436,6 +1437,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                 ],
                 TextEnd =
                 [
+                    new("4. MAXIMUM QUANTITY OF WATER TO BE") { LineMustStartWith = true },
+                    new("MAXIMUM QUANTITY OF WATER TO BE") { LineMustStartWith = true },
                     new("PERIODS OF ABSTRACTION"),
                     new("PERIOD(S) OF ABSTRACTION"),
                     new("PERIOD OF ABSTRACTION"),
@@ -2057,6 +2060,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING THE") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED DURING") { IfMultiplePreferLongest = true },                   
                     new("MAXIMUM QUANTITY OF WATER TO BE ABSTRACTED") { IfMultiplePreferLongest = true },
+                    new("QUANTITY OF WATER TO BE ABSTRACTED DURING THE") { IfMultiplePreferLongest = true },
                     new("MAXIMUM QUANTITIES") { ColumnMustStartWith = true },
                     new("Quantity(ies) of Water Authorised to be Abstracted During a Period or Periods Specified"),                    
                     new("Quantity(ies) of water authorised to be abstracted during a period"),
@@ -2733,7 +2737,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Text =
                         [
                             new("per year"),
-                            new("per annum")
+                            new("per annum"),
+                            new("aggregate annual abstraction")
                         ],
                         Position = LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter,
                         Format = "Units",
@@ -2954,7 +2959,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Text =
                         [
                             new("per year"),
-                            new("per annum")
+                            new("per annum"),
+                            new("aggregate annual abstraction")
                         ],
                         Position = LabelPosition.RelatedCategoryPosition,
                         RelatedCategoryName = "PerUnits",

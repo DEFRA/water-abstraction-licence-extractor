@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Models;
 
 namespace WRADI.Core.AbstractionLicence.Interfaces;
@@ -48,4 +49,6 @@ public interface IAbstractionLicenceCacheService
     Task ClearVersionFilesToDownloadAsync();
     
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
+    
+    Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync();
 }

@@ -73,7 +73,7 @@ public static class TestsForAiPrompts
                 var chatClient = azureClient.GetChatClient(deploymentName);
                 var cacheService = new FileSystemCacheService("Cache/");
                 var outputService = new FileSystemOutputService("Output/");
-                var licenceNumberService = new AbstractionLicenceNumber([]);
+                var licenceNumberService = new AbstractionLicenceNumber([], []);
                 
                 var imagePrompts = await GetImagePromptsAsync(
                     pdfFilename,

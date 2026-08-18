@@ -46,7 +46,6 @@ export interface LicenceSectionBodyProps {
     onItemVerificationRequested?: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => void;
     onVerificationCancelled?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }
 
@@ -60,11 +59,10 @@ interface LicenceSectionProps {
     onRefresh?: () => void;
     onVerified?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }
 
-export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem, data, onOpenReport }: LicenceSectionProps) {
+export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem, onOpenReport }: LicenceSectionProps) {
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
@@ -211,7 +209,6 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             setShowVerificationPrompt(false);
                         },
                         outputListDataItem: outputListDataItem,
-                        data: data,
                         onOpenReport: onOpenReport
                     } as any)}
                 </div>

@@ -16,4 +16,6 @@ public sealed class VerificationSectionRow
     public bool ScrapedDataIsDifferent { get; init; }
 
     public string[] VerificationTypes { get; init; } = [];
+
+    public string? CurrentVerificationType { get; set; }
 }

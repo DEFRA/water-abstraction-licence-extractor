@@ -108,10 +108,20 @@ public static class SharedHelper
         IAbstractionLicenceOutputService outputService,
         ProcessRun processRun)
     {
+        // NOTE - This function takes > 7 mins at 2000 files as of 2026-Aug-12
+        
         var savedLicenceSetIds = new HashSet<string>();
 
+        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - UpdateAndSaveLicenceSetsAsync " +
+            $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        var idx = 0;
+        
         foreach (var licenceSetGroup in licenceSetGroups)
         {
+            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - UpdateAndSaveLicenceSetsAsync {idx++} " +
+                $"of {licenceSetGroups.Count} done");
+            
             if (licenceSetGroup.Count == 0)
             {
                 // This shouldn't happen

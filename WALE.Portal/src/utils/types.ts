@@ -35,6 +35,5 @@ export interface ReportModal {
     position: { top: number; left: number };
     size: { width: string; height: string };
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }

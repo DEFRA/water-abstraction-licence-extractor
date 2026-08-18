@@ -1,3 +1,4 @@
+using Amazon.Runtime.Internal;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -205,13 +206,13 @@ public static class AbstractionLicenceSchemaConverter
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
         }
-        
+
         var linkedLicences = new List<LinkedLicence>();
         
         if (naldLinkedLicenceHelper != null)
         {
             var naldLinkedLicences =
-                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber);
+                naldLinkedLicenceHelper.GetLinkedLicences(licenceNumber, true);
 
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
@@ -249,7 +250,6 @@ public static class AbstractionLicenceSchemaConverter
                     DmsPermitNumber = thisDmsFileData?.PermitNumber,
                     DmsPath = thisDmsFileData?.DmsPath,
                     LicenceType = outputLicenceType,
-                    IsBecauseOfAggregate = true,
                     ContainedIn =
                     [
                         new ContainedInInformation
@@ -407,6 +407,38 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
 
+        var swappedOutLinkedLicences = new List<LinkedLicence>();
+        
+        // Swap out linked licence numbers to newest ones where needed
+        foreach (var linkedLicence in linkedLicences)
+        {
+            var (hasSuccessor, history) =
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
+
+            if (!hasSuccessor)
+            {
+                swappedOutLinkedLicences.Add(linkedLicence);
+                continue;
+            }
+
+            var extendedHistory = ExtendedHistory(linkedLicence, history);
+            
+            foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
+            {
+                var clonedLinkedLicence = linkedLicence.Clone();
+                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+
+                foreach (var containedIn in clonedLinkedLicence.ContainedIn!)
+                {
+                    containedIn.History = extendedHistory;   
+                }
+                
+                swappedOutLinkedLicences.Add(clonedLinkedLicence);
+            }
+        }
+
+        linkedLicences = swappedOutLinkedLicences;
+        
         var combinedAggregates = new List<Aggregate>(aggregates);
         
         foreach (var (_, (_, _, list)) in sectionDataDict)
@@ -480,6 +512,59 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
+    private static List<NaldLicenceNumberHistoryOutput> ExtendedHistory(
+        LinkedLicence linkedLicence,
+        List<NaldLicenceNumberHistory> history)
+    {
+        var returnList = new List<NaldLicenceNumberHistoryOutput>();
+        var first = true;
+
+        var scraped = linkedLicence.ContainedIn?
+            .Any(ci => ci.Source is InformationSource.Document
+                or InformationSource.OtherDocument) == true;
+        var fromNald = linkedLicence.ContainedIn?
+            .Any(ci => ci.Source == InformationSource.Nald) == true;
+
+        string ogStatus;
+
+        if (scraped && fromNald)
+        {
+            const string asScrapedAndLinkedFromSourceLinkedLicenceInNald =
+                "AsScrapedAndLinkedFromSourceLinkedLicenceInNald";   
+            
+            ogStatus = asScrapedAndLinkedFromSourceLinkedLicenceInNald;
+        }
+        else if (fromNald)
+        {
+            const string asLinkedFromSourceLinkedLicenceInNald =
+                "AsLinkedFromSourceLinkedLicenceInNald";
+
+            ogStatus = asLinkedFromSourceLinkedLicenceInNald;
+        }
+        else
+        {
+            const string asScraped = "AsScraped";
+            ogStatus = asScraped;
+        }
+        
+        const string furtherUpdate = "FurtherUpdate";
+        
+        foreach (var item in history)
+        {
+            returnList.Add(new NaldLicenceNumberHistoryOutput
+            {
+                FollowOnLicenceNumbers = item.FollowOnLicenceNumbers,
+                LicenceNumber = item.LicenceNumber,
+                Status = first ? ogStatus : furtherUpdate,
+                Source = item.Source
+            });
+
+            first = false;
+        }
+        
+        return returnList;
+    }
+    
     private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
         PromoteAnyIndividualLimitsThatShouldBeAggregates(
             AbstractionLimitGroup[] individuals,
@@ -567,8 +652,15 @@ public static class AbstractionLicenceSchemaConverter
                     
                     if (isAllPoints)
                     {
+                        var areExplicit = individualExplicitPointsCount == points.Length;
+                        
                         pointsLoop = points
-                            .Select(Point (p) => p)
+                            .Select (p => new Point
+                            {
+                                Id = p.Id,
+                                Description = p.Description,
+                                IsImplicit = !areExplicit
+                            })
                             .ToArray();
                     }
 
@@ -603,11 +695,18 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     var purposesLoop = individual.Purposes;
                     var isAllPurposes = individual.Purposes?.Length == purposes.Length;
-                    
+
                     if (isAllPurposes)
                     {
+                        var areExplicit = individualExplicitPurposesCount == purposes.Length;
+                        
                         purposesLoop = purposes
-                            .Select(Purpose (p) => p)
+                            .Select (p => new Purpose
+                            {
+                                Id = p.Id,
+                                Description = p.Description,
+                                IsImplicit = !areExplicit
+                            })
                             .ToArray();
                     }
 
@@ -669,7 +768,9 @@ public static class AbstractionLicenceSchemaConverter
                 foreach (var sectionItem in sectionItems)
                 {
                     if (containedIn.Any(fs => fs.SectionName == sectionItem.SectionName
-                        && fs.Direction == sectionItem.Direction))
+                        && fs.Direction == sectionItem.Direction
+                        && fs.History == null
+                        && sectionItem.History == null))
                     {
                         continue;
                     }
@@ -677,10 +778,12 @@ public static class AbstractionLicenceSchemaConverter
                     // Use case for this is Additional and ReasonsForConditions sometimes being the same thing
                     // in documents
                     if (containedIn.Any(fs =>
-                            sectionItem.Source != InformationSource.Nald
-                            && fs.LineNumber == sectionItem.LineNumber
-                            && fs.PageNumber == sectionItem.PageNumber
-                            && fs.Direction == sectionItem.Direction))
+                        sectionItem.Source != InformationSource.Nald
+                        && fs.LineNumber == sectionItem.LineNumber
+                        && fs.PageNumber == sectionItem.PageNumber
+                        && fs.Direction == sectionItem.Direction
+                        && fs.History == null
+                        && sectionItem.History == null))
                     {
                         continue;
                     }
@@ -1830,6 +1933,11 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
+        foreach (var abstractionLimitGroup in abstractionLimits)
+        {
+            NullOutLimitLevelPointsAndPurposesIfRelevant(abstractionLimitGroup, abstractionLimitGroup.Limits);   
+        }
+        
         return (sectionLinkedLicences, abstractionLimits, aggregates);
     }
 
@@ -2403,6 +2511,11 @@ public static class AbstractionLicenceSchemaConverter
             allIndividualGroups.Clear();
         }
         
+        foreach (var individualGroup in allIndividualGroups)
+        {
+            NullOutLimitLevelPointsAndPurposesIfRelevant(individualGroup, individualGroup.Limits);   
+        }
+        
         return (
             allAggregates.ToArray(),
             allIndividualGroups.ToArray(),
@@ -2888,7 +3001,7 @@ public static class AbstractionLicenceSchemaConverter
             .ToList();
 
         const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
-            = "shall not exceed the quantity authorised to be abstracted under this licence.";
+            = "shall not exceed the quantity authorised to be abstracted under this licence";
         
         var shouldCopyIndividualValues = abstractionLimitPointSubText.Contains(
             shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
@@ -2945,6 +3058,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Point
                 {
                     Id = p.Id,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();
@@ -2957,6 +3071,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Purpose
                 {
                     Id = p.Id,
+                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
                     IsImplicit = true
                 })
                 .ToList();
@@ -3170,6 +3285,11 @@ public static class AbstractionLicenceSchemaConverter
 
         if (aggregateAbstractionLimits.Count == 0)
         {
+            foreach (var linkedLicenceNumber in linkedLicenceNumbers)
+            {
+                linkedLicenceNumber.IsBecauseOfAggregate = false;
+            }
+            
             sectionLinkedLicences.AddRange(linkedLicenceNumbers);
             return;
         }
@@ -3247,29 +3367,7 @@ public static class AbstractionLicenceSchemaConverter
             aggregate.SubType = SubType.PurposeToPurpose;
         }
 
-        if (aggregate.Purposes.Length > 0)
-        {
-            foreach (var aggregateLimit in aggregateAbstractionLimits)
-            {
-                aggregateLimit.Purposes = null;
-            }
-        }
-        else if (aggregate.Purposes.Length == 0)
-        {
-            aggregate.Purposes = null;
-        }
-
-        if (aggregatePointsLength > 0)
-        {
-            foreach (var aggregateLimit in aggregateAbstractionLimits)
-            {
-                aggregateLimit.Points = null;
-            }
-        }
-        else if (aggregate.Points.Length == 0)
-        {
-            aggregate.Points = null;
-        }
+        NullOutLimitLevelPointsAndPurposesIfRelevant(aggregate, aggregateAbstractionLimits);
 
         if (!isExcludedLinkReason)
         {
@@ -3279,6 +3377,35 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
+    private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
+        AbstractionLimitGroup limitGroup,
+        List<AbstractionLimit> abstractionLimits)
+    {
+        if (limitGroup.Purposes?.Length > 0)
+        {
+            foreach (var aggregateLimit in abstractionLimits)
+            {
+                aggregateLimit.Purposes = null;
+            }
+        }
+        else if (limitGroup.Purposes?.Length == 0)
+        {
+            limitGroup.Purposes = null;
+        }
+
+        if (limitGroup.Points?.Length > 0)
+        {
+            foreach (var aggregateLimit in abstractionLimits)
+            {
+                aggregateLimit.Points = null;
+            }
+        }
+        else if (limitGroup.Points?.Length == 0)
+        {
+            limitGroup.Points = null;
+        }
+    }
+    
     private static int GetPositionRelativeToDateLines(
         List<LabelGroupResult>? dateLines,
         LabelGroupResult line)
@@ -4246,6 +4373,7 @@ public static class AbstractionLicenceSchemaConverter
             "per month" => LimitPeriodType.PerMonth,
             "per annum" => LimitPeriodType.PerYear,
             "per year" => LimitPeriodType.PerYear,
+            "aggregate annual abstraction" => LimitPeriodType.PerYear,            
             "in total" => LimitPeriodType.InTotal,
             "total annual quantity" => LimitPeriodType.InTotal,
             "consecutive five year" => LimitPeriodType.Per5Years,

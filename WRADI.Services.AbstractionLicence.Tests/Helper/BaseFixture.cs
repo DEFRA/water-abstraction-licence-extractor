@@ -1,12 +1,11 @@
 using System.Collections.Concurrent;
-using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 
-namespace WALE.ProcessFile.Services.Tests.Helper;
+namespace WRADI.Services.AbstractionLicence.Tests.Helper;
 
-public class BaseFixture : IDisposable
+public class BaseFixture
 {
     private readonly ConcurrentDictionary<short, List<NaldLicence>> _licencesAlternateFormatValues = [];
     private static readonly SemaphoreSlim SetupLicenceNumbersLock = new(1, 1);
@@ -46,26 +45,5 @@ public class BaseFixture : IDisposable
         {
             SetupLicenceNumbersLock.Release();
         }
-    }
-    
-    private static readonly SemaphoreSlim FirstNamesLock = new(1, 1);
-    
-    public async Task<HashSet<string>> FirstNamesCsvTask()
-    {
-        await FirstNamesLock.WaitAsync();
-        
-        try
-        {
-            return await CompanyNameHelper.GetFirstNamesCsvFromFileAsync();
-        }
-        finally
-        {
-            FirstNamesLock.Release();
-        }
-    }
-    
-    public void Dispose()
-    {
-        // Cleanup resources
     }
 }

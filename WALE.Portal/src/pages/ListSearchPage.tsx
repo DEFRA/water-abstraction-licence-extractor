@@ -17,9 +17,28 @@ import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
+import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListSearchPage() {
     const [searchParams] = useSearchParams();
+    const processRunId = searchParams.get('processRunId');
+    const parsedProcessRunId = Number(processRunId);
+
+    const processRunIdNumber =
+        processRunId !== null &&
+        Number.isInteger(parsedProcessRunId)
+            ? parsedProcessRunId
+            : 0;
+
+    return (
+        <FileIdMapProvider processRunId={processRunIdNumber}>
+            <ListSearchPageContent processRunId={processRunIdNumber}/>
+        </FileIdMapProvider>
+    );
+}
+
+function ListSearchPageContent({processRunId}: {processRunId: number}) {
+    const {getLicenceNumber} = useFileIdMap();
     const [pageNumber, setPageNumber] = useState(1);
     const [query, setQuery] = useState<ProcessRunQuery>({
         searchTerm: '',
@@ -40,15 +59,6 @@ function ListSearchPage() {
         sortAscending: undefined,
         licenceNumbers: []
     });
-    const processRunId = searchParams.get('processRunId');
-    const parsedProcessRunId = Number(processRunId);
-
-    const processRunIdNumber =
-        processRunId !== null &&
-        Number.isInteger(parsedProcessRunId)
-            ? parsedProcessRunId
-            : 0;
-    
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -75,7 +85,7 @@ function ListSearchPage() {
                 take: query.take
             };
 
-            let filterKey = parseInt(processRunId ?? '0') +
+            let filterKey = processRunId +
                 (currentQuery.searchTerm ?? '') +
                 '' +
                 currentQuery.skip +
@@ -105,7 +115,7 @@ function ListSearchPage() {
             setLoading(true);
             
             const listDataItems = await waleApiClient.getProcessRunList(
-                parseInt(processRunId ?? '0'),
+                processRunId,
                 currentQuery.searchTerm,
                 '',
                 currentQuery.skip,
@@ -156,12 +166,47 @@ function ListSearchPage() {
         updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string, item?: OutputListDataItem) => {
-        openReport(fileId, parseInt(processRunId ?? '0'), item, outputList, openReportWithId);
-    }, [openReport, processRunId, outputList]);
+    const openReportWithId = useCallback((fileId: string) => {
+        const knownItem = outputList.find(item => item.fileId === fileId);
+        openReport(fileId, processRunId, knownItem, openReportWithId);
+
+        if (!knownItem) {
+            const licenceNumber = getLicenceNumber(fileId);
+            if (licenceNumber) {
+                waleApiClient.getProcessRunList(
+                    processRunId,
+                    'N/A',
+                    '',
+                    0,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    [licenceNumber]
+                ).then(result => {
+                    const resolvedItem = result.records?.find(item => item.fileId === fileId);
+                    if (resolvedItem) {
+                        updateModalOutputItem(fileId, resolvedItem);
+                    }
+                }).catch(err => {
+                    console.error('Error resolving linked licence report data:', err);
+                });
+            }
+        }
+    }, [openReport, processRunId, outputList, getLicenceNumber, updateModalOutputItem]);
 
     const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
-        openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
+        openLicenceSetReport(fileId, licenceSetId, processRunId);
     }, [openLicenceSetReport, processRunId]);
 
     const updateQuery = <K extends keyof ProcessRunQuery>(
@@ -191,8 +236,13 @@ function ListSearchPage() {
     if (loading) return <div className="container"><p>Loading...</p></div>;
     if (error) return <div className="container error"><p>Error: {error}</p></div>;
 
+    // @ts-ignore
+    const toHome = () => window.location = '/';
+    
     return (
         <div className="list-page-container">
+            <div style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer'}} onClick={toHome}>&#8617;</div>
+            
             <h1>
                 <a
                     href="#"
@@ -241,7 +291,7 @@ function ListSearchPage() {
 
             {activeTab === 'licences' && (
                 <div id="licences">
-                    <RefreshLicenceListData processRunId={processRunIdNumber} />
+                    <RefreshLicenceListData processRunId={processRunId} />
                     <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
                    
                         <Paging
@@ -278,11 +328,10 @@ function ListSearchPage() {
                         <tbody>
                         {outputList.map((item, index) => (
                             <LicencesTableRow
-                                item={item} 
-                                key={index} 
-                                data={outputList} 
+                                item={item}
+                                key={index}
                                 oddRow={index % 2 === 0}
-                                onOpenReport={(fileId) => openReportWithId(fileId, item)}
+                                onOpenReport={openReportWithId}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />

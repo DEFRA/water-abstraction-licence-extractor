@@ -285,7 +285,7 @@ public class LicenceListItemModelService
             SourceData = JsonSerializer.Serialize(
                 source,
                 JsonHelper.GetSerializerOptions()),
-            IsBecauseOfAggregate = true
+            IsBecauseOfAggregate = source.IsBecauseOfAggregate
         };
     }
 

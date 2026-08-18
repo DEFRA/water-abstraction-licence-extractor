@@ -42,8 +42,10 @@ public class FileProcessSingleService(
         await outputService.SetupAsync();
 
         var fileId = FileHelper.ExtractFileId(fileProcessSingleRequest.FilePath);
-        var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
 
+        var firstNamesCsvTask = cacheService.GetFirstNamesAsync();
+        var licenceNumberSuccessorsTask = abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
+        
         var abstractionAndImpoundmentLicencesTask =
             SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(abstractionLicenceCacheService);
         
@@ -51,7 +53,9 @@ public class FileProcessSingleService(
             abstractionLicenceCacheService,
             fileId!.Value);
         
-        var licenceNumberService = new AbstractionLicenceNumber(await abstractionAndImpoundmentLicencesTask);
+        var licenceNumberService = new AbstractionLicenceNumber(
+            await abstractionAndImpoundmentLicencesTask,
+            await licenceNumberSuccessorsTask);
         
         var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
             abstractionLicenceCacheService,

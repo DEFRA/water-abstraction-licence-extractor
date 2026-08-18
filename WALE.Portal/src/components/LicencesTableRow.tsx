@@ -7,14 +7,13 @@ import LinkedLicencesList from "./LinkedLicencesList";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
-    data: OutputListDataItem[];
     oddRow: boolean;
     onOpenReport: (fileId: string) => void;
     onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
-function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -39,14 +38,13 @@ function LicencesTableRow({item, data, oddRow, onOpenReport, onOpenLicenceSetRep
             <td>{dashesIfNullOrEmpty(item.issueDate)}</td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
-            <td className='default-hidden'>
-                <LinkedLicencesList 
-                    item={item} 
-                    data={data} 
+            <td>
+                <LinkedLicencesList
+                    item={item}
                     onOpenReport={onOpenReport}
                 />
             </td>
-            <td className='licenceSetTd'>
+            <td className='licenceSetTd default-hidden'>
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}

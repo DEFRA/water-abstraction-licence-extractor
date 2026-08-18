@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Dapper;
 
@@ -231,6 +232,27 @@ public static class ReadSqlHelper
             return;
         }
 
+        if (verificationType.Equals(
+                "Flagged",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND EXISTS (
+                      SELECT 1
+                      FROM licence_list_item_verification_section section
+                      INNER JOIN licence_list_item_verification_item item
+                          ON item.verification_section_id =
+                             section.verification_section_id
+                      WHERE section.licence_list_item_id =
+                            licence_list_item.licence_list_item_id
+                        AND item.scraped_data_is_different = true
+                  )
+                """);
+
+            return;
+        }
+
         sql.AppendLine(
             """
               AND EXISTS (
@@ -241,11 +263,7 @@ public static class ReadSqlHelper
                          section.verification_section_id
                   WHERE section.licence_list_item_id =
                         licence_list_item.licence_list_item_id
-                  AND EXISTS (
-                SELECT 1
-                FROM unnest(item.verification_types) AS verification_type
-                WHERE lower(verification_type) = lower(@VerificationType)
-            )
+                    AND lower(item.current_verification_type) = lower(@VerificationType)
               )
             """);
 
@@ -254,6 +272,34 @@ public static class ReadSqlHelper
             verificationType.Trim());
     }
     
+    public static void AddLicenceNumbersFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string[]? licenceNumbers)
+    {
+        var filteredLicenceNumbers = licenceNumbers?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (filteredLicenceNumbers is not { Length: > 0 })
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND lower(licence_number) = ANY(@LicenceNumbers)
+            """);
+
+        parameters.Add(
+            "LicenceNumbers",
+            filteredLicenceNumbers
+                .Select(x => x.ToLowerInvariant())
+                .ToArray());
+    }
+
     public static void AddOrdering(
         StringBuilder sql,
         string? sortField,

@@ -5,26 +5,21 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Models;
 
 namespace WRADI.DocumentType.AbstractionLicence.Formats;
 
-public partial class AbstractionLicenceNumber : ILicenceNumberService
+public partial class AbstractionLicenceNumber(
+    List<NaldLicence> licences,
+    Dictionary<string, NaldLicenceNumberHistory> licenceHistory) : ILicenceNumberService
 {
-    private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex;
+    private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex =
+        BuildIndex(licences ?? throw new ArgumentNullException());
 
-    public AbstractionLicenceNumber(List<NaldLicence> licences)
-    {
-        ArgumentNullException.ThrowIfNull(licences);
-        _licenceIndex = BuildIndex(licences);
-    }
+    private readonly Dictionary<string, NaldLicenceNumberHistory> _licenceHistory = licenceHistory
+        ?? throw new ArgumentNullException();
 
     private Dictionary<string, List<LicenceIndexEntry>> GetLicenceIndex() => _licenceIndex;
-
-    public class LicenceIndexEntry
-    {
-        public required NaldLicence NaldLicence { get; init; }
-        public required List<string> Segments { get; init; }
-    }
 
     private static Dictionary<string, List<LicenceIndexEntry>> BuildIndex(List<NaldLicence> licences)
     {
@@ -74,10 +69,10 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
             .ToList();
     }
 
-    [GeneratedRegex(@"[^a-zA-Z0-9.]+")]
+    [GeneratedRegex("[^a-zA-Z0-9.]+")]
     private static partial Regex NonAlphanumericOrDotRegex();
 
-    [GeneratedRegex(@"[^a-zA-Z0-9]+")]
+    [GeneratedRegex("[^a-zA-Z0-9]+")]
     private static partial Regex NonAlphanumericRegex();
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
@@ -171,6 +166,23 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
         }
 
         return (matchedLines.Count > 0, matchedLines);
+    }
+
+    public (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
+        string? licenceNumber)
+    {
+        var item = _licenceHistory.GetValueOrDefault(licenceNumber!.ToLower());
+        var hasSuccessor = item != null;
+
+        var history = new List<NaldLicenceNumberHistory>();
+
+        while (item != null)
+        {
+            history.Add(item);
+            item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0]);
+        }
+        
+        return (hasSuccessor, history);
     }
 
     public List<NaldLicence> GetNaldLicences(string licenceNumber)

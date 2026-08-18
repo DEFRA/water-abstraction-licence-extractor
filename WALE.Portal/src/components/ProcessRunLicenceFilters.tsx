@@ -336,7 +336,7 @@ export function ProcessRunLicenceFilters({
                     <option value="ImplicitBackLink">Implicit back link</option>
                     <option value="OtherConditions">Other Conditions</option>
                     <option value="FurtherProvisions">Further Provisions</option>
-                    <option value="NoRecords">No Records</option>
+                    <option value="NoRecords">No Linked Licences</option>
                 </select>
             </td>
 
@@ -373,6 +373,7 @@ export function ProcessRunLicenceFilters({
                     }
                 >
                     <option value="">All</option>
+                    <option value="Flagged">Flagged</option>
                     <option value="AutoConfirm">AutoConfirm</option>
                     <option value="AutoWarn">AutoWarn</option>
                     <option value="AutoFail">AutoFail</option>
@@ -380,7 +381,9 @@ export function ProcessRunLicenceFilters({
                     <option value="Removed">Removed</option>
                     <option value="Edited">Edited</option>
                     <option value="Added">Added</option>
-                    <option value="NoVerification">No Verification</option>
+                    <option value="RequestBusinessReview">Request Business Review</option>
+                    <option value="CompleteBusinessReview">Complete Business Review</option>
+                    <option value="NoVerification">No Verifications</option>
                 </select>
             </td>
         </tr>

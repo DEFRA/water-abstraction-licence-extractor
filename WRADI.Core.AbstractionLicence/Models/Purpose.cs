@@ -2,9 +2,13 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class Purpose
 {
-    public string? Id { get; init; }
+    public string? DocumentId { get; init; }
     
-    public string? Description { get; set; }
+    public string? NaldId { get; init; }
+    
+    public string? DocumentDescription { get; set; }
+    
+    public string? NaldDescription { get; set; }
     
     public bool? IsImplicit { get; set; }
 }

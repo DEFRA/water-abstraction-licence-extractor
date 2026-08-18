@@ -477,10 +477,10 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         
         Assert.NotNull(agreedSchemaLicence.Purposes);
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("4.1", agreedSchemaLicence.Purposes[0].Id);
-        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].Description);
-        Assert.Equal("4.2", agreedSchemaLicence.Purposes[1].Id);
-        Assert.Equal("Trickle irrigation", agreedSchemaLicence.Purposes[1].Description);
+        Assert.Equal("4.1", agreedSchemaLicence.Purposes[0].DocumentId);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.2", agreedSchemaLicence.Purposes[1].DocumentId);
+        Assert.Equal("Trickle irrigation", agreedSchemaLicence.Purposes[1].DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Individual.Length);
@@ -488,13 +488,13 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("6.1", agreedSchemaLicence.AbstractionLimits.Individual[0].DocumentIdentifier);
         Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[0].Points![0].IsImplicit);
-        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].Id);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[0].Purposes![0].IsImplicit);
         
         Assert.Equal("6.2", agreedSchemaLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
         Assert.Equal("2.1", agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].DocumentId);
         Assert.True(agreedSchemaLicence.AbstractionLimits.Individual[1].Points![0].IsImplicit);
-        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].Id);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Individual[1].Purposes![0].IsImplicit);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -505,9 +505,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes!.Length);
-        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].Id);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);
-        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);        
         
         Assert.Equal("6.4", agreedSchemaLicence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
@@ -515,9 +515,9 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.True(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Points![0].IsImplicit);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes!.Length);
-        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].Id);
+        Assert.Equal("4.2", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].IsImplicit);
-        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![1].Id);
+        Assert.Equal("4.1", agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![1].DocumentId);
         Assert.False(agreedSchemaLicence.AbstractionLimits.Aggregates[1].Purposes![0].IsImplicit);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates[1].LinkedLicences);
         Assert.Equal(17, agreedSchemaLicence.AbstractionLimits.Aggregates[1].LinkedLicences!.Length);
@@ -1330,12 +1330,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal("4.1", purpose.Id);
-        Assert.Equal("Public water supply", purpose.Description);
+        Assert.Equal("4.1", purpose.DocumentId);
+        Assert.Equal("Public water supply", purpose.DocumentDescription);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal("4.2", purpose.Id);
-        Assert.StartsWith("Transfer from W", purpose.Description);
+        Assert.Equal("4.2", purpose.DocumentId);
+        Assert.StartsWith("Transfer from W", purpose.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
@@ -1346,19 +1346,19 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var limit = limitG.Limits[0];
         
         Assert.Single(limitG.Purposes!);
-        Assert.Equal("4.1", limitG.Purposes![0].Id);
+        Assert.Equal("4.1", limitG.Purposes![0].DocumentId);
         Assert.Equal(38640, limit.Value);
 
         limit = limitG.Limits[1];
         Assert.Single(limitG.Purposes!);
-        Assert.Equal("4.1", limitG.Purposes![0].Id);
+        Assert.Equal("4.1", limitG.Purposes![0].DocumentId);
         Assert.Equal(10140000, limit.Value);
 
         limitG = agreedSchemaLicence.AbstractionLimits.Individual[1];
         limit = limitG.Limits[0];
         
         Assert.Single(limitG.Purposes!);
-        Assert.Equal("4.2", limitG.Purposes![0].Id);
+        Assert.Equal("4.2", limitG.Purposes![0].DocumentId);
         Assert.Equal(2482000, limit.Value);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Aggregates);
@@ -1367,8 +1367,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
         Assert.Equal("22705026-LV20210930-ILPU", aggregate.Id);
         Assert.Equal(2, aggregate.Purposes!.Length);
-        Assert.Equal("4.1", aggregate.Purposes[0].Id);
-        Assert.Equal("4.2", aggregate.Purposes[1].Id);
+        Assert.Equal("4.1", aggregate.Purposes[0].DocumentId);
+        Assert.Equal("4.2", aggregate.Purposes[1].DocumentId);
         
         Assert.Equal(2, aggregate.Limits.Count);
 
@@ -1450,12 +1450,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal("4.1", purpose.Id);
-        Assert.Equal("Public water supply", purpose.Description);
+        Assert.Equal("4.1", purpose.DocumentId);
+        Assert.Equal("Public water supply", purpose.DocumentDescription);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal("4.2", purpose.Id);
-        Assert.StartsWith("Transfer for the purpose ", purpose.Description);
+        Assert.Equal("4.2", purpose.DocumentId);
+        Assert.StartsWith("Transfer for the purpose ", purpose.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
@@ -1530,12 +1530,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal("4.1", purpose.Id);
-        Assert.Equal("Public water supply", purpose.Description);
+        Assert.Equal("4.1", purpose.DocumentId);
+        Assert.Equal("Public water supply", purpose.DocumentDescription);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal("4.2", purpose.Id);
-        Assert.StartsWith("Transfer for the", purpose.Description);
+        Assert.Equal("4.2", purpose.DocumentId);
+        Assert.StartsWith("Transfer for the", purpose.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
@@ -1609,12 +1609,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
         
         var purpose = agreedSchemaLicence.Purposes[0];
-        Assert.Equal("4.1", purpose.Id);
-        Assert.Equal("Public water supply", purpose.Description);
+        Assert.Equal("4.1", purpose.DocumentId);
+        Assert.Equal("Public water supply", purpose.DocumentDescription);
         
         purpose = agreedSchemaLicence.Purposes[1];
-        Assert.Equal("4.2", purpose.Id);
-        Assert.StartsWith("Transfer for the purpose", purpose.Description);
+        Assert.Equal("4.2", purpose.DocumentId);
+        Assert.StartsWith("Transfer for the purpose", purpose.DocumentDescription);
         
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual);
@@ -1761,10 +1761,10 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Power production: hydro-electric power generation", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Power production: hydro-electric power generation", agreedSchemaLicence.Purposes[0].DocumentDescription);
         Assert.Equal(CutoffType.Upto,  agreedSchemaLicence.Purposes[0].TimeCutoff!.CutoffType); 
         Assert.Equal("Up to and including 31 March 2030", agreedSchemaLicence.Purposes[0].TimeCutoff!.Date);        
-        Assert.Equal("Fish farming", agreedSchemaLicence.Purposes[1].Description);
+        Assert.Equal("Fish farming", agreedSchemaLicence.Purposes[1].DocumentDescription);
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
@@ -1799,8 +1799,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("9/40/04/0476/G", agreedSchemaLicence.LicenceNumber!.Value);
         
         Assert.Equal(4, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Agriculture other than spray or trickle irrigation", agreedSchemaLicence.Purposes[0].Description);
-        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[1].Description);
+        Assert.Equal("Agriculture other than spray or trickle irrigation", agreedSchemaLicence.Purposes[0].DocumentDescription);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[1].DocumentDescription);
         // Ideally would check other purposes but the important thing was the licence number was read correctly 
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -1844,7 +1844,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Equal(3, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Spray irrigation", agreedSchemaLicence.Purposes[0].DocumentDescription);
         
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

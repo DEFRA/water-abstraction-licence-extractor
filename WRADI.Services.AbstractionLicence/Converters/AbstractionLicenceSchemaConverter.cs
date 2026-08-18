@@ -618,8 +618,8 @@ public static class AbstractionLicenceSchemaConverter
                         purposesLoop = purposes
                             .Select (p => new Purpose
                             {
-                                Id = p.Id,
-                                Description = p.Description,
+                                DocumentId = p.DocumentId,
+                                DocumentDescription = p.DocumentDescription,
                                 IsImplicit = !areExplicit
                             })
                             .ToArray();
@@ -2531,8 +2531,8 @@ public static class AbstractionLicenceSchemaConverter
                         .Select(p => new Purpose
                         {
                             IsImplicit = true,
-                            Id = p.Id,
-                            Description = p.Description
+                            DocumentId = p.DocumentId,
+                            DocumentDescription = p.DocumentDescription
                         })
                         .ToArray(),
                     DocumentIdentifier = documentIdentifier,
@@ -2596,8 +2596,8 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(pcs =>
                 {
                     var text = FormattingHelper.CapitaliseFirstLetter(pcs.Text!.FirstOrDefault()?.Text);
-                    var documentPurpose = allPurposes.FirstOrDefault(ap => ap.Id == text
-                        || ap.Description?.Equals(text, StringComparison.InvariantCultureIgnoreCase) == true);
+                    var documentPurpose = allPurposes.FirstOrDefault(ap => ap.DocumentId == text
+                        || ap.DocumentDescription?.Equals(text, StringComparison.InvariantCultureIgnoreCase) == true);
 
                     if (documentPurpose == null)
                     {
@@ -2606,8 +2606,8 @@ public static class AbstractionLicenceSchemaConverter
                     
                     var purpose = new Purpose
                     {
-                        Id = documentPurpose.Id,
-                        Description = documentPurpose.Description,
+                        DocumentId = documentPurpose.DocumentId,
+                        DocumentDescription = documentPurpose.DocumentDescription,
                         IsImplicit = false
                     };
 
@@ -2615,7 +2615,7 @@ public static class AbstractionLicenceSchemaConverter
                 })
                 .Where(p => p != null)
                 .Select(p => p!)
-                .GroupBy(x => x.Id)
+                .GroupBy(x => x.DocumentId)
                 .Select(x => x.First())
                 .ToList()
             : null;
@@ -2624,20 +2624,20 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var documentPurpose in allPurposes)
         {
-            var documentPurposeNameSet = !string.IsNullOrEmpty(documentPurpose.Description);
-            var documentPurposeIdSet = !string.IsNullOrEmpty(documentPurpose.Id);
+            var documentPurposeNameSet = !string.IsNullOrEmpty(documentPurpose.DocumentDescription);
+            var documentPurposeIdSet = !string.IsNullOrEmpty(documentPurpose.DocumentId);
             
-            var nameInSingleQuotes = $"'{documentPurpose.Description}'";
-            var idInSingleQuotes = $"'{documentPurpose.Id}'";
+            var nameInSingleQuotes = $"'{documentPurpose.DocumentDescription}'";
+            var idInSingleQuotes = $"'{documentPurpose.DocumentId}'";
             
             var textContainsPurposeName1 = documentPurposeNameSet &&
                 abstractionLimitPointSubText.Contains(
                     nameInSingleQuotes,
                     StringComparison.OrdinalIgnoreCase);
             
-            var textContainsPurposeName2 = documentPurposeNameSet && documentPurpose.Description!.Length > 10 &&
+            var textContainsPurposeName2 = documentPurposeNameSet && documentPurpose.DocumentDescription!.Length > 10 &&
                 abstractionLimitPointSubText.Contains(
-                    documentPurpose.Description!,
+                    documentPurpose.DocumentDescription!,
                     StringComparison.OrdinalIgnoreCase);
             
              var textContainsPurposeId1 = documentPurposeIdSet &&
@@ -2646,9 +2646,9 @@ public static class AbstractionLicenceSchemaConverter
                     StringComparison.OrdinalIgnoreCase);
             
             var textContainsPurposeId2 = documentPurposeIdSet
-                && documentPurpose.Id?.Contains(')') == true
+                && documentPurpose.DocumentId?.Contains(')') == true
                 && abstractionLimitPointSubText.Contains(
-                    documentPurpose.Id!,
+                    documentPurpose.DocumentId!,
                     StringComparison.OrdinalIgnoreCase);
 
             var textContains = textContainsPurposeName1
@@ -2657,9 +2657,9 @@ public static class AbstractionLicenceSchemaConverter
                 || textContainsPurposeId2;
 
             var matchedDocumentPurpose = limitPurposes?
-                .FirstOrDefault(lp => lp.Id?.Equals(documentPurpose.Id, StringComparison.OrdinalIgnoreCase) == true
-                    || lp.Id?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true
-                    || lp.Description?.Equals(documentPurpose.Description, StringComparison.OrdinalIgnoreCase) == true);
+                .FirstOrDefault(lp => lp.DocumentId?.Equals(documentPurpose.DocumentId, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.DocumentId?.Equals(documentPurpose.DocumentDescription, StringComparison.OrdinalIgnoreCase) == true
+                    || lp.DocumentDescription?.Equals(documentPurpose.DocumentDescription, StringComparison.OrdinalIgnoreCase) == true);
 
             var allPurposesContains = matchedDocumentPurpose != null;
             
@@ -2671,8 +2671,8 @@ public static class AbstractionLicenceSchemaConverter
             limitPurposes ??= [];
             limitPurposes.Add(new Purpose
             {
-                Id = documentPurpose.Id,
-                Description = documentPurpose.Description,
+                DocumentId = documentPurpose.DocumentId,
+                DocumentDescription = documentPurpose.DocumentDescription,
                 IsImplicit = false
             });
         }
@@ -2981,8 +2981,8 @@ public static class AbstractionLicenceSchemaConverter
             limitPurposes = allPurposes
                 .Select(p => new Purpose
                 {
-                    Id = p.Id,
-                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
+                    DocumentId = p.DocumentId,
+                    DocumentDescription = !string.IsNullOrEmpty(p.DocumentId) ? null : p.DocumentDescription,
                     IsImplicit = true
                 })
                 .ToList();
@@ -3134,11 +3134,11 @@ public static class AbstractionLicenceSchemaConverter
                     : string.Empty;
 
                 var groupPurposesStr = individualGroup.Purposes?.Count(p => p.IsImplicit != true) > 0
-                    ? string.Join(',', individualGroup.Purposes.Select(p => p.Id))
+                    ? string.Join(',', individualGroup.Purposes.Select(p => p.DocumentId))
                     : string.Empty;
 
                 var limitPurposesStr = abstractionLimit.Purposes?.Count(p => p.IsImplicit != true) > 0
-                    ? string.Join(',', abstractionLimit.Purposes.Select(p => p.Id))
+                    ? string.Join(',', abstractionLimit.Purposes.Select(p => p.DocumentId))
                     : string.Empty;
 
                 if (individualGroup.Limits.Count > 0
@@ -3151,7 +3151,7 @@ public static class AbstractionLicenceSchemaConverter
                             : string.Empty;
 
                         groupPurposesStr = ig.Purposes?.Count(p => p.IsImplicit != true) > 0
-                            ? string.Join(',', ig.Purposes.Select(p => p.Id))
+                            ? string.Join(',', ig.Purposes.Select(p => p.DocumentId))
                             : string.Empty;
 
                         return groupPointsStr == limitPointsStr && groupPurposesStr == limitPurposesStr;
@@ -3362,8 +3362,8 @@ public static class AbstractionLicenceSchemaConverter
             [
                 new Purpose
                 {
-                    Id = "Transfer",
-                    Description = "Transfer",
+                    DocumentId = "Transfer",
+                    DocumentDescription = "Transfer",
                     IsImplicit = false
                 }
             ];
@@ -4217,38 +4217,33 @@ public static class AbstractionLicenceSchemaConverter
         return null;
     }
 
-    private static NaldPurposeData? GetNaldPurposeData(NaldData? naldDataLine, string? description)
+    private static NaldPurposeData? GetNaldPurposeData(
+        List<NaldPurposeData> naldPurposes,
+        string? description,
+        List<string> usedNaldPurposeIds)
     {
-        if (naldDataLine?.Purposes.Count is null or 0)
+        if (naldPurposes.Count == 0)
         {
             return null;
         }
 
-        var naldPurposes = naldDataLine.Purposes;
-        NaldDataPurpose purpose;
-
         // There is only one, so must be that
         if (naldPurposes.Count == 1)
         {
-            purpose = naldPurposes[0];
+            return naldPurposes[0];
         }
-        else
+
+        foreach (var naldPurpose in naldPurposes)
         {
-            var relevantDescription = description?.Split(" at ")[0];
+            if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
+            {
+                continue;
+            }
             
-            // TODO - Work out which purpose matches the description
-
-            purpose = naldDataLine.Purposes
-                .First(p => p.Id != 0);
+            return naldPurpose;
         }
 
-        return new NaldPurposeData
-        {
-            Id = purpose.Id.ToString(),
-            Code = purpose.CategoryUse.Code,
-            UseCode = purpose.CategoryUse.UseCode.ToString(),
-            UseDescription = purpose.CategoryUse.UseDescription
-        };
+        return null;
     }
 
     private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
@@ -4300,6 +4295,17 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
+        var naldPurposes = naldDataLine?.Purposes
+            .Select(purpose => new NaldPurposeData
+            {
+                Id = purpose.Id.ToString(),
+                Code = purpose.CategoryUse.Code,
+                UseCode = purpose.CategoryUse.UseCode.ToString(),
+                UseDescription = purpose.CategoryUse.UseDescription
+            })
+            .ToList() ?? [];
+        
+        var usedNaldPurposeIds = new List<string>();
         var pointPurposeGroupCount = -1;
 
         foreach (var purposePointGroup in purposeResults.SubResults)
@@ -4356,6 +4362,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 var upToAndIncludeLine = tLines?
                     .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
+                
                 TimeCutoff? timeCutoff = null;
 
                 if (upToAndIncludeLine != null)
@@ -4375,6 +4382,17 @@ public static class AbstractionLicenceSchemaConverter
 
                 var number = purposeNumber?.Text?.FirstOrDefault()?.Text;
 
+                var containedInList = new List<ContainedInInformation>
+                {
+                    new()
+                    {
+                        Source = InformationSource.Document,
+                        SectionName = "Purposes",
+                        PageNumber = purpose.LabelStartPageNumber,
+                        LineNumber = purpose.LabelStartLineNumber
+                    }
+                };
+                
                 if (purposes.Count == 1)
                 {
                     // TODO more of this should be done in the parser
@@ -4384,13 +4402,28 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+
+                            if (naldData != null)
+                            {
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
-                                Id = number,
-                                Description = point.Trim(),
+                                DocumentId = number,
+                                DocumentDescription = point.Trim(),
+                                NaldDescription = naldData?.UseDescription,
+                                NaldId = naldData?.Id,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4404,13 +4437,28 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData != null)
+                            {
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
-                                Id = number,
-                                Description = point.Trim(),
+                                DocumentId = number,
+                                DocumentDescription = point.Trim(),
+                                NaldId = naldData?.Id,
+                                NaldDescription = naldData?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4424,13 +4472,28 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData != null)
+                            {
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
-                                Id = number,
-                                Description = point.Trim(),
+                                DocumentId = number,
+                                DocumentDescription = point.Trim(),
+                                NaldId = naldData?.Id,
+                                NaldDescription = naldData?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4444,13 +4507,28 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData != null)
+                            {
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
-                                Id = number,
-                                Description = point.Trim(),
+                                DocumentId = number,
+                                DocumentDescription = point.Trim(),
+                                NaldId = naldData?.Id,
+                                NaldDescription = naldData?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4464,29 +4542,83 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData != null)
+                            {
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
-                                Id = number,
-                                Description = point.Trim(),
+                                DocumentId = number,
+                                DocumentDescription = point.Trim(),
+                                NaldId = naldData?.Id,
+                                NaldDescription = naldData?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
                         continue;
                     }
                 }
+                
+                var naldData1 = GetNaldPurposeData(
+                    naldPurposes,
+                    description,
+                    usedNaldPurposeIds);
 
+                if (naldData1 != null)
+                {
+                    containedInList.Add(new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    });
+                }
+                
                 returnList.Add(new PurposeOfAbstraction
                 {
-                    Id = number,
-                    Description = description,
+                    DocumentId = number,
+                    DocumentDescription = description,
+                    NaldId = naldData1?.Id,
+                    NaldDescription = naldData1?.UseDescription,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPurposeData(naldDataLine, description)
+                    ContainedIn = containedInList.ToArray()
                 });
             }
+        }
+
+        foreach (var naldPurpose in naldPurposes)
+        {
+            if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
+            {
+                continue;
+            }
+            
+            var naldContainedInList = new List<ContainedInInformation>
+            {
+                new()
+                {
+                    Source = InformationSource.Nald
+                }
+            };
+
+            returnList.Add(
+                new PurposeOfAbstraction
+                {
+                    DocumentId = naldPurpose.Id,
+                    NaldDescription = naldPurpose.UseDescription,
+                    ContainedIn = naldContainedInList.ToArray()
+                });
         }
 
         return returnList.ToArray();

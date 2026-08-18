@@ -328,6 +328,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
+        
+        Assert.NotNull(licence.Purposes);
+        Assert.Equal(2, licence.Purposes.Length);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);

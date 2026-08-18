@@ -2099,20 +2099,20 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(3, purposes.Length);
         
         var primaryPurpose1 = purposes[0];
-        Assert.Equal("4.1", primaryPurpose1.Id);
-        Assert.StartsWith("Transfer for subsequent discharge and", primaryPurpose1.Description);
+        Assert.Equal("4.1", primaryPurpose1.DocumentId);
+        Assert.StartsWith("Transfer for subsequent discharge and", primaryPurpose1.DocumentDescription);
         Assert.Single(primaryPurpose1.PointIds!);
         Assert.Equal("2.1", primaryPurpose1.PointIds![0]);
         
         var primaryPurpose2 = purposes[1];
-        Assert.Equal("4.2", primaryPurpose2.Id);
-        Assert.StartsWith("Filling a reservoir for subsequent", primaryPurpose2.Description);
+        Assert.Equal("4.2", primaryPurpose2.DocumentId);
+        Assert.StartsWith("Filling a reservoir for subsequent", primaryPurpose2.DocumentDescription);
         Assert.Single(primaryPurpose2.PointIds!);
         Assert.Equal("2.1", primaryPurpose2.PointIds![0]);
         
         var primaryPurpose3 = purposes[2];
-        Assert.Equal("4.3", primaryPurpose3.Id);
-        Assert.Equal("Spray Irrigation", primaryPurpose3.Description);
+        Assert.Equal("4.3", primaryPurpose3.DocumentId);
+        Assert.Equal("Spray Irrigation", primaryPurpose3.DocumentDescription);
         Assert.Single(primaryPurpose3.PointIds!);
         Assert.Equal("2.2", primaryPurpose3.PointIds![0]);
         
@@ -2792,7 +2792,7 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             primaryLicence.Points.First().DocumentDescription);
 
         Assert.Single(primaryLicence.Purposes);
-        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().Description);
+        Assert.Equal("Fish farm and fishery", primaryLicence.Purposes.First().DocumentDescription);
         
         Assert.Null(primaryLicence.LicenceVersion.ExpiryDate);
         Assert.Equal(new DateTime(2019, 06, 19), primaryLicence.LicenceVersion.EffectiveDate);

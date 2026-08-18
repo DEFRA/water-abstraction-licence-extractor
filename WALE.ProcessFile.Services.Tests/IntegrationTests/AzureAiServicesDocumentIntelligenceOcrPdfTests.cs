@@ -1601,8 +1601,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Through flow for Pugneys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
-        Assert.Equal("Augmentation of Pugneys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].Description);
+        Assert.Equal("Through flow for Pugneys Country Park Lake", agreedSchemaLicence.Purposes[0].DocumentDescription);
+        Assert.Equal("Augmentation of Pugneys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].DocumentDescription);
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
@@ -1654,7 +1654,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Single(agreedSchemaLicence.Purposes);
-        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].DocumentDescription);
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
 

@@ -64,7 +64,7 @@ public static class JsOutputHelper
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
-            Purposes = licence.Purposes.Select(p => p.Description).ToArray(),
+            Purposes = licence.Purposes.Select(p => p.DocumentDescription).ToArray(),
             Points = licence.Points.Select(p => p.DocumentDescription).ToArray(),
             LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,

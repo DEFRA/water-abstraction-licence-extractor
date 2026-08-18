@@ -28,8 +28,8 @@ public class MeanOfAbstraction
             Purposes = [
                 new()
                 {
-                    Description = string.Empty,
-                    Id = string.Empty
+                    DocumentDescription = string.Empty,
+                    DocumentId = string.Empty
                 }
             ],
             Units = string.Empty,

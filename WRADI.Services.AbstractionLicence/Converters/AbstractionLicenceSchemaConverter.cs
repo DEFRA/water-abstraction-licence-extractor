@@ -71,7 +71,7 @@ public static class AbstractionLicenceSchemaConverter
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
 
-        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, source) =
+        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, _) =
             GetLicenceNumber(matchesResult, naldLicenceNumber, noneSchemaData);
 
         var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
@@ -2489,6 +2489,10 @@ public static class AbstractionLicenceSchemaConverter
             .FirstOrDefault()?
             .Text;
         
+        var naldLimits = naldDataLine?.Purposes
+            .Select(purpose => (purpose.Quantity, purpose))
+            .ToList() ?? [];
+        
         if (limitPointTable != null)
         {
             var tableLines = limitPointTable.Text!;
@@ -3176,6 +3180,132 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
+        foreach (var (limits, purpose) in naldLimits)
+        {
+            var purposes = new Purpose[]
+            {
+                new()
+                {
+                    NaldId = purpose.Id.ToString()
+                }
+            };
+            
+            var points = purpose.PointIds
+                .Select(p => new Point { NaldId = p.ToString() })
+                .ToArray();
+            
+            if (limits.AnnualQty != null)
+            {
+                var yearlyLimit = new AbstractionLimit
+                {
+                    Units = ExpandCharToUnits(limits.AnnualQtyUsability),
+                    Value = limits.AnnualQty,
+                    PeriodType = LimitPeriodType.PerYear,
+                    Purposes = purposes,
+                    Points = points
+                };
+
+                var matchingIndividualGroup = individualGroups
+                    .FirstOrDefault(ig => ig.Limits
+                        .Any(l =>
+                            l.PeriodType == LimitPeriodType.PerYear
+                            && (l.Units == yearlyLimit.Units || l.Units == UnitsForComparison(yearlyLimit.Units))
+                            && AreValuesEqual(l.Value, yearlyLimit.Value)));
+
+                if (matchingIndividualGroup != null)
+                {
+                    
+                }
+            }
+            
+            if (limits.DailyQty != null)
+            {
+                var dailyLimit = new AbstractionLimit
+                {
+                    Units = ExpandCharToUnits(limits.DailyQtyUsability),
+                    Value = limits.DailyQty,
+                    PeriodType = LimitPeriodType.PerDay,
+                    Purposes = purposes,
+                    Points = points
+                };
+
+                var matchingIndividualGroup = individualGroups
+                    .SelectMany(ig => ig.Limits
+                        .Select(l => new IndividualGroupWithLimitTuple
+                        {
+                            Group = ig,
+                            Limit = l
+                        }))
+                    .FirstOrDefault(grp =>
+                        grp.Limit.PeriodType == LimitPeriodType.PerDay
+                        && (grp.Limit.Units == dailyLimit.Units
+                            || grp.Limit.Units == UnitsForComparison(dailyLimit.Units))
+                        && AreValuesEqual(grp.Limit.Value, dailyLimit.Value));
+
+                if (matchingIndividualGroup != null)
+                {
+                    var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
+                    containedInList.Add(new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    });
+                    
+                    matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
+                }
+                else
+                {
+                    // TODO - add it as a new limit to some group (this? a new one?)
+                }
+            }
+            
+            if (limits.InstQty != null)
+            {
+                var instantLimit = new AbstractionLimit
+                {
+                    Units = ExpandCharToUnits(limits.InstQtyUsability),
+                    Value = limits.InstQty,
+                    PeriodType = LimitPeriodType.PerSecond,
+                    Purposes = purposes,
+                    Points = points
+                };
+                
+                var matchingIndividualGroup = individualGroups
+                    .FirstOrDefault(ig => ig.Limits
+                        .Any(l =>
+                            l.PeriodType == LimitPeriodType.PerSecond
+                            && (l.Units == instantLimit.Units || l.Units == UnitsForComparison(instantLimit.Units))
+                            && AreValuesEqual(l.Value, instantLimit.Value)));
+
+                if (matchingIndividualGroup != null)
+                {
+                }
+            }
+            
+            if (limits.HourlyQty != null)
+            {
+                var hourlyLimit = new AbstractionLimit
+                {
+                    Units = ExpandCharToUnits(limits.HourlyQtyUsability),
+                    Value = limits.HourlyQty,
+                    PeriodType = LimitPeriodType.PerHour,
+                    Purposes = purposes,
+                    Points = points
+                };
+                
+                var matchingIndividualGroup = individualGroups
+                    .FirstOrDefault(ig => ig.Limits
+                        .Any(l =>
+                            l.PeriodType == LimitPeriodType.PerHour
+                            && (l.Units == hourlyLimit.Units || l.Units == UnitsForComparison(hourlyLimit.Units))
+                            && AreValuesEqual(l.Value, hourlyLimit.Value)));
+
+                if (matchingIndividualGroup != null)
+                {
+                    
+                }
+            }
+        }
+        
         var notIncludedList = new List<AbstractionLimitGroup>();
 
         foreach (var individualGroup in individualGroups)
@@ -3288,6 +3418,46 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
+    private class IndividualGroupWithLimitTuple
+    {
+        public AbstractionLimitGroup Group { get; set; }
+        
+        public AbstractionLimit Limit { get; set; }
+    }
+    
+    private static bool AreValuesEqual(double? value1, double? value2)
+    {
+        if (value1 == null || value2 == null)
+        {
+            return false;
+        }
+
+        var minValue1 = value1 - 0.1;
+        var maxValue1 = value1 + 0.1;
+        
+        return value2 >= minValue1
+            && value2 <= maxValue1;
+    }
+    
+    private static string UnitsForComparison(string units)
+    {
+        if (units == "litres")
+        {
+            return "cubic metres";
+        }
+
+        return units;
+    }
+    
+    private static string ExpandCharToUnits(char? letter)
+    {
+        return letter switch
+        {
+            'L' => "litres",
+            _ => "UNKNOWN"
+        };
+    }
+    
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
         AbstractionLimitGroup limitGroup,
         List<AbstractionLimit> abstractionLimits)

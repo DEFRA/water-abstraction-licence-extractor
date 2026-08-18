@@ -4,11 +4,13 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class PointOfAbstraction : Point
 {
-    //public NaldPointData? NaldData { get; set; }
-
     public string[]? PurposeIds { get; init; }
     
     public string? Name { get; init; }
+    
+    public string? KnownAs { get; set; }
+    
+    public string? Near { get; set; }
     
     public List<NationalGridReference>? NationalGridReferences { get; set; } = [];
     
@@ -17,15 +19,12 @@ public class PointOfAbstraction : Point
     public TimeCutoff? TimeCutoff { get; set; }
     
     public ContainedInInformation[]? ContainedIn { get; set; }
-    
+
     public static PointOfAbstraction Template => new()
     {
-        Description = string.Empty,
+        Description1 = string.Empty,
         Id = string.Empty,
-        /*NaldData = new NaldPointData
-        {
-            Id = "something"
-        },*/
+        // TODO known as, Near etc...
         PurposeIds = [
             "4.1"
         ],

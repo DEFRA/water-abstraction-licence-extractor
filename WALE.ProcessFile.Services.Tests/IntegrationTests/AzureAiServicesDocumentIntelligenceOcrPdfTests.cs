@@ -1375,13 +1375,13 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(SingletonFirstNamesF
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
         Assert.Equal("(1)", agreedSchemaLicence.Points[0].Id);
-        Assert.Equal("TA 0417 2942", agreedSchemaLicence.Points[0].Description);
+        Assert.Equal("TA 0417 2942", agreedSchemaLicence.Points[0].Description1);
         Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
-        Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
+        Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description1);
         Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
-        Assert.Equal("TA 0677 3514 & TA 0678 3508 &", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("TA 0677 3514 & TA 0678 3508 &", agreedSchemaLicence.Points[2].Description1);
         Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
-        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\" and \"F\" on the map", agreedSchemaLicence.Points[3].Description);
+        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\" and \"F\" on the map", agreedSchemaLicence.Points[3].Description1);
         
         // TODO 1 for each point
         

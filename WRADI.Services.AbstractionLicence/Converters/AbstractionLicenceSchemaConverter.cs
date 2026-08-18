@@ -28,7 +28,6 @@ public static class AbstractionLicenceSchemaConverter
         IAbstractionLicenceCacheService cacheService,
         int processRunId)
     {
-        
         var dmsFileIdInfo = await RecordFileIdAsync(
             dmsFileData,
             lookupConfiguration,
@@ -574,7 +573,7 @@ public static class AbstractionLicenceSchemaConverter
                             .Select (p => new Point
                             {
                                 Id = p.Id,
-                                Description = p.Description,
+                                Description1 = p.Description1,
                                 IsImplicit = !areExplicit
                             })
                             .ToArray();
@@ -2970,7 +2969,7 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(p => new Point
                 {
                     Id = p.Id,
-                    Description = !string.IsNullOrEmpty(p.Id) ? null : p.Description,
+                    Description1 = !string.IsNullOrEmpty(p.Id) ? null : p.Description1,
                     IsImplicit = true
                 })
                 .ToList();
@@ -3809,7 +3808,7 @@ public static class AbstractionLicenceSchemaConverter
                         returnList.Add(
                             new PointOfAbstraction
                             {
-                                Description = $"From {id}",
+                                Description1 = $"From {id}",
                                 Id = $"{pointNumber} {id}", // e.g 2.1 - From TL123 to TL456
                                 AltId = id,
                                 PurposeIds = purposeIds,
@@ -3878,7 +3877,7 @@ public static class AbstractionLicenceSchemaConverter
                         returnList.Add(
                             new PointOfAbstraction
                             {
-                                Description = tableLine.Text,
+                                Description1 = tableLine.Text,
                                 Id = $"{pointNumber} {subId}", // e.g 2.1 - A
                                 AltId = subId,
                                 PurposeIds = purposeIds,
@@ -3907,6 +3906,12 @@ public static class AbstractionLicenceSchemaConverter
 
                 var naldData = GetNaldPointData(naldDataLine, description);
 
+                var knownAsParts = description?.Split("known as ");
+                var knownAs = knownAsParts?.Length >= 2 ? knownAsParts[1].Split(" near")[0] : null;
+
+                var nearParts = description?.Split("near ");
+                var near = nearParts?.Length >= 2 ? nearParts[1].Split(",")[0] : null;
+                
                 var containedInList = new List<ContainedInInformation>
                 {
                     new()
@@ -3918,22 +3923,66 @@ public static class AbstractionLicenceSchemaConverter
                     }
                 };
 
+                var naldDescription = (string?)null;
+
                 if (naldData != null)
                 {
-                    containedInList.Add(new ContainedInInformation
+                    var naldNgr = naldData.NationalGridReferences.Count >= 1 ?
+                        naldData.NationalGridReferences[0] : null;
+
+                    var containsGridRef = naldNgr != null &&
+                      description?.Contains($"{naldNgr.Sheet} {naldNgr.East} {naldNgr.North}") == true;
+
+                    var containsKnownAs = !string.IsNullOrEmpty(knownAs) &&
+                        naldData.Name?.Contains(knownAs, StringComparison.OrdinalIgnoreCase) == true;
+                    var containsNear = !string.IsNullOrEmpty(near) &&
+                        naldData.Name?.Contains(near, StringComparison.OrdinalIgnoreCase) == true;
+                    
+                    var isSame = containsGridRef || containsKnownAs || containsNear;
+                    
+                    if (isSame)
                     {
-                        Source = InformationSource.Nald
-                    });
+                        naldDescription = naldData.Name;
+                        
+                        containedInList.Add(new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        });
+                    }
+                    else
+                    {
+                        var naldContainedInList = new List<ContainedInInformation>
+                        {
+                            new()
+                            {
+                                Source = InformationSource.Nald
+                            }
+                        };
+                        
+                        returnList.Add(
+                            new PointOfAbstraction
+                            {
+                                Id = naldData.Id,
+                                Name = naldData.Name,
+                                NationalGridReferences = naldData.NationalGridReferences,
+                                CartesianReferences = naldData.CartesianReferences,
+                                Description1 = naldData.Name,
+                                ContainedIn = naldContainedInList.ToArray()
+                            });
+                    }
                 }
                 
                 returnList.Add(
                     new PointOfAbstraction
                     {
                         Name = name,
+                        KnownAs = knownAs,
+                        Near = near,
                         NationalGridReferences = !string.IsNullOrEmpty(gridRef)
                             ? [GetGridReference(gridRef)!]
                             : null,
-                        Description = description,
+                        Description1 = description,
+                        Description2 = naldDescription,
                         Id = pointNumber,
                         AltId = letterId,
                         PurposeIds = purposeIds,

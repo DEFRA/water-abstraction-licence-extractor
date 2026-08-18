@@ -25,7 +25,7 @@ public static class FormattingHelper
             return cachedData;
         }
 
-        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber!, regionCode);
+        var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
         NaldDataCache.TryAdd(key, naldData);
 
         return naldData;

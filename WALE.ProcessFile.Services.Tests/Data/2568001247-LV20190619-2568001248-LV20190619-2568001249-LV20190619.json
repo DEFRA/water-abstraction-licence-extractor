@@ -199,7 +199,7 @@
           ],
           "id": "2.1",
           "altId": "C",
-          "description": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
+          "description1": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
         }
       ],
       "purposes": [
@@ -514,7 +514,7 @@
           ],
           "id": "2.1",
           "altId": "A",
-          "description": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
+          "description1": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
         }
       ],
       "purposes": [
@@ -827,7 +827,7 @@
           ],
           "id": "2.1",
           "altId": "B",
-          "description": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
+          "description1": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
         }
       ],
       "purposes": [

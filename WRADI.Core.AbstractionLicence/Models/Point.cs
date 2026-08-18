@@ -6,7 +6,9 @@ public class Point
     
     public string? AltId { get; init; }
     
-    public string? Description { get; set; }
+    public string? Description1 { get; set; }
+    
+    public string? Description2 { get; set; }
     
     public bool? IsImplicit { get; set; }
 }

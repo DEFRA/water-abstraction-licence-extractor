@@ -21,7 +21,7 @@ public class MeanOfAbstraction
             Points = [
                 new()
                 {
-                    Description = string.Empty,
+                    Description1 = string.Empty,
                     Id = string.Empty
                 }
             ],

@@ -199,9 +199,11 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                         <p>
                             {pendingVerificationType === 'ConfirmNone' ? (
                                 `Are you sure you want to confirm there are no ${title.toLowerCase()} for this licence?`
+                            ) : pendingVerificationItemId === 'None Outgoing' ? (
+                                `Are you sure you want to ${getVerificationActionText(pendingVerificationType)} the absence of outgoing linked licences for this licence?`
                             ) : (
                                 <>
-                                    Are you sure you want to {getVerificationActionText(pendingVerificationType)} 
+                                    Are you sure you want to {getVerificationActionText(pendingVerificationType)}
                                     {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
                                 </>
                             )}

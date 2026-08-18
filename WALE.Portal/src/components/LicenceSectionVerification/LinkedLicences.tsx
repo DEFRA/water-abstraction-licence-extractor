@@ -170,22 +170,56 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                             )}
                             {!scrapedView && (
-                                <button
-                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                    style={{
-                                        padding: '6px 20px',
-                                        backgroundColor: '#52c41a',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        marginTop: noneOutgoingVerification ? '12px' : '0'
-                                    }}
-                                >
-                                    Confirm No Outgoing Linked Licences
-                                </button>
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px',
+                                    justifyContent: 'center',
+                                    marginTop: noneOutgoingVerification ? '12px' : '0'
+                                }}>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                        style={{
+                                            padding: '6px 20px',
+                                            backgroundColor: '#52c41a',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Confirm No Outgoing Linked Licences
+                                    </button>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('RequestBusinessReview', 'None Outgoing')}
+                                        style={{
+                                            padding: '4px 12px',
+                                            backgroundColor: 'darkorange',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Request Business Review - None Outgoing
+                                    </button>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
+                                        style={{
+                                            padding: '4px 12px',
+                                            backgroundColor: 'purple',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Complete Business Review - None Outgoing
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}

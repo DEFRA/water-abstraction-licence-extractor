@@ -4222,25 +4222,48 @@ public static class AbstractionLicenceSchemaConverter
         string? description,
         List<string> usedNaldPurposeIds)
     {
-        if (naldPurposes.Count == 0)
+        var filterPurposes = naldPurposes
+            .Where(p => !usedNaldPurposeIds.Contains(p.Id!))
+            .ToList();
+     
+        if (filterPurposes.Count == 0)
         {
             return null;
         }
 
         // There is only one, so must be that
-        if (naldPurposes.Count == 1)
+        if (filterPurposes.Count == 1)
         {
-            return naldPurposes[0];
+            return filterPurposes[0];
         }
 
-        foreach (var naldPurpose in naldPurposes)
+        var descriptionSuggestsTransfer =
+            description?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+            || description?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+        
+        foreach (var naldPurpose in filterPurposes)
         {
             if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
             {
                 continue;
             }
-            
-            return naldPurpose;
+
+            if (descriptionSuggestsTransfer)
+            {
+                var naldSuggestsTransfer =
+                    naldPurpose.UseDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+                    || naldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+
+                if (naldSuggestsTransfer)
+                {
+                    return naldPurpose;
+                }
+            }
+
+            if (naldPurpose.UseDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return naldPurpose;
+            }
         }
 
         return null;
@@ -4409,6 +4432,8 @@ public static class AbstractionLicenceSchemaConverter
 
                             if (naldData != null)
                             {
+                                usedNaldPurposeIds.Add(naldData.Id!);
+                                
                                 containedInList.Add(new ContainedInInformation
                                 {
                                     Source = InformationSource.Nald
@@ -4444,6 +4469,8 @@ public static class AbstractionLicenceSchemaConverter
                             
                             if (naldData != null)
                             {
+                                usedNaldPurposeIds.Add(naldData.Id!);
+                                
                                 containedInList.Add(new ContainedInInformation
                                 {
                                     Source = InformationSource.Nald
@@ -4479,6 +4506,8 @@ public static class AbstractionLicenceSchemaConverter
                             
                             if (naldData != null)
                             {
+                                usedNaldPurposeIds.Add(naldData.Id!);
+                                
                                 containedInList.Add(new ContainedInInformation
                                 {
                                     Source = InformationSource.Nald
@@ -4514,6 +4543,8 @@ public static class AbstractionLicenceSchemaConverter
                             
                             if (naldData != null)
                             {
+                                usedNaldPurposeIds.Add(naldData.Id!);
+                                
                                 containedInList.Add(new ContainedInInformation
                                 {
                                     Source = InformationSource.Nald
@@ -4549,6 +4580,8 @@ public static class AbstractionLicenceSchemaConverter
                             
                             if (naldData != null)
                             {
+                                usedNaldPurposeIds.Add(naldData.Id!);
+                                
                                 containedInList.Add(new ContainedInInformation
                                 {
                                     Source = InformationSource.Nald
@@ -4578,6 +4611,8 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (naldData1 != null)
                 {
+                    usedNaldPurposeIds.Add(naldData1.Id!);
+                    
                     containedInList.Add(new ContainedInInformation
                     {
                         Source = InformationSource.Nald
@@ -4601,6 +4636,27 @@ public static class AbstractionLicenceSchemaConverter
         {
             if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
             {
+                continue;
+            }
+
+            var purposesWithoutNaldData = returnList
+                .Where(p => p.ContainedIn!.All(ci => ci.Source != InformationSource.Nald))
+                .ToList();
+
+            if (purposesWithoutNaldData.Count == 1)
+            {
+                usedNaldPurposeIds.Add(naldPurpose.Id!);
+
+                var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
+                containedInClone.Add(new ContainedInInformation
+                {
+                    Source = InformationSource.Nald
+                });
+                
+                purposesWithoutNaldData[0].NaldDescription = naldPurpose.UseDescription;
+                purposesWithoutNaldData[0].NaldId = naldPurpose.Id!;
+                purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
+                
                 continue;
             }
             

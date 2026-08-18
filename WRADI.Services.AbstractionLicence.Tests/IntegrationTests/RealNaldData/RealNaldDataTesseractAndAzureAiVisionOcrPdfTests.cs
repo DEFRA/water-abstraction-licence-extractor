@@ -151,12 +151,23 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].DocumentDescription);
         Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].NaldDescription);
-        //Assert.Equal("10004638", licence.Points[0].NaldId);
+        Assert.Equal("10004638", licence.Points[0].NaldId);
         Assert.Equal("A", licence.Points[0].DocumentId);
         Assert.Equal(2, licence.Points[0].ContainedIn.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn[0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[1].Source);
 
+        Assert.NotNull(licence.Purposes);
+        Assert.Equal(2, licence.Purposes.Length);
+        Assert.Equal("(1)", licence.Purposes[0].DocumentId);
+        Assert.Equal("Spray Irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("10029939", licence.Purposes[0].NaldId);
+        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("(2)", licence.Purposes[1].DocumentId);
+        Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("10029938", licence.Purposes[1].NaldId);
+        Assert.Equal("General Farming & Domestic", licence.Purposes[1].NaldDescription);      
+        
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
 
@@ -244,6 +255,17 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(InformationSource.Document, licence.Points[1].ContainedIn[0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[1].ContainedIn[1].Source);
 
+        Assert.NotNull(licence.Purposes);
+        Assert.Equal(2, licence.Purposes.Length);
+        Assert.Equal("(a)", licence.Purposes[0].DocumentId);
+        Assert.Equal("Private Water Supply", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("10019820", licence.Purposes[0].NaldId);
+        Assert.Equal("General Use Relating To Secondary Category (Medium Loss)", licence.Purposes[0].NaldDescription);
+        Assert.Equal("(b)", licence.Purposes[1].DocumentId);
+        Assert.Equal("Reservoir Storage for subsequent stream compensation", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("10021258", licence.Purposes[1].NaldId);
+        Assert.Equal("Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
+        
         Assert.Null(licence.AbstractionLimits.Individual);
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Equal(4, licence.AbstractionLimits.Aggregates!.Length);
@@ -330,7 +352,12 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
         
         Assert.NotNull(licence.Purposes);
-        Assert.Equal(2, licence.Purposes.Length);
+        Assert.Single(licence.Purposes);
+        Assert.Null(licence.Purposes[0].DocumentId);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("10030785", licence.Purposes[0].NaldId);
+        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);

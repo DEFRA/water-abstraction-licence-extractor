@@ -51,7 +51,7 @@
           ],
           "purposes": [
             {
-              "id": "4.1",
+              "documentId": "4.1",
               "isImplicit": true
             }
           ]
@@ -98,7 +98,7 @@
           ],
           "purposes": [
             {
-              "id": "4.1",
+              "documentId": "4.1",
               "isImplicit": true
             }
           ]
@@ -145,7 +145,7 @@
           ],
           "purposes": [
             {
-              "id": "4.1",
+              "documentId": "4.1",
               "isImplicit": true
             }
           ]
@@ -203,8 +203,16 @@
       ],
       "purposes": [
         {
-          "id": "4.1",
-          "description": "Fish farm and fishery"
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
+          "documentId": "4.1",
+          "documentDescription": "Fish farm and fishery"
         }
       ],
       "periodsOfAbstraction": [
@@ -264,7 +272,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -296,7 +304,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -345,7 +353,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -517,8 +525,16 @@
       ],
       "purposes": [
         {
-          "id": "4.1",
-          "description": "Fish farm and fishery"
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
+          "documentId": "4.1",
+          "documentDescription": "Fish farm and fishery"
         }
       ],
       "periodsOfAbstraction": [
@@ -578,7 +594,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -610,7 +626,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -659,7 +675,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -829,8 +845,16 @@
       ],
       "purposes": [
         {
-          "id": "4.1",
-          "description": "Fish farm and fishery"
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
+          "documentId": "4.1",
+          "documentDescription": "Fish farm and fishery"
         }
       ],
       "periodsOfAbstraction": [
@@ -890,7 +914,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -922,7 +946,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]
@@ -971,7 +995,7 @@
             ],
             "purposes": [
               {
-                "id": "4.1",
+                "documentId": "4.1",
                 "isImplicit": true
               }
             ]

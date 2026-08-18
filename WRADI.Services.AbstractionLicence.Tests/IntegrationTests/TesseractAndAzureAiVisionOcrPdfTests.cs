@@ -41,7 +41,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests
                             {
                                 PointName = "absdsd",
                                 RegionCode = 3,
-                                PointId = 54556
+                                PointId = 54556,
+                                NationalGridReferences = [
+                                    new()
+                                    {
+                                        East = "2865",
+                                        North = "7639",
+                                        Sheet = "SE"
+                                    }
+                                ]
                             }
                         ]
                     }

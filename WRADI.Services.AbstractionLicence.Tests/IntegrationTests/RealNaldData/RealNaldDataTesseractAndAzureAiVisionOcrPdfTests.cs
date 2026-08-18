@@ -146,8 +146,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("2/27/23/435", licence.LicenceNumber!.Value);
 
         Assert.NotNull(licence.Points);
-        Assert.Single(licence.Points); // Should actually be 1, but the OCR hasnt read it right
-        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
+        Assert.Single(licence.Points);
+        Assert.Equal("SE 3286 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].DocumentDescription);
         Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].NaldDescription);

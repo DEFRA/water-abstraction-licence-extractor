@@ -3830,6 +3830,9 @@ public static class AbstractionLicenceSchemaConverter
 
                         var naldDescription2 = (string?)null;
                         var naldId2 = (string?)null;
+
+                        List<NationalGridReference>? nationalGridReferences2 = null;
+                        List<CartesianReference>? cartesianReferences2 = null;
                         
                         if (naldPoint2 != null)
                         {
@@ -3837,8 +3840,8 @@ public static class AbstractionLicenceSchemaConverter
                             
                             naldDescription2 = naldPoint2.Name;
                             naldId2 = naldPoint2.Id;
-                            
-                            // TODO set the cartesian and NGR etc...
+                            nationalGridReferences2 = naldPoint2.NationalGridReferences;
+                            cartesianReferences2 = naldPoint2.CartesianReferences;
                             
                             containedInList1.Add(new ContainedInInformation
                             {
@@ -3854,6 +3857,8 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = $"{pointNumber} {id}", // e.g 2.1 - From TL123 to TL456
                                 NaldId = naldId2,
                                 AltDocumentId = id,
+                                NationalGridReferences = nationalGridReferences2,
+                                CartesianReferences = cartesianReferences2,
                                 PurposeIds = purposeIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList1.ToArray()
@@ -3915,14 +3920,17 @@ public static class AbstractionLicenceSchemaConverter
                         
                         var naldDescription1 = (string?)null;
                         var naldId1 = (string?)null;
+                        List<NationalGridReference>? nationalGridReferences1 = null;
+                        List<CartesianReference>? cartesianReferences1 = null;
                         
                         if (naldPoint1 != null)
                         {
                             usedNaldPointIds.Add(naldPoint1.Id!);
+
                             naldDescription1 = naldPoint1.Name;
                             naldId1 = naldPoint1.Id;
-                            
-                            // TODO ngrs etc...
+                            nationalGridReferences1 = naldPoint1.NationalGridReferences;
+                            cartesianReferences1 = naldPoint1.CartesianReferences;
                             
                             containedInList2.Add(new ContainedInInformation
                             {
@@ -3938,6 +3946,8 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = $"{pointNumber} {subId}", // e.g 2.1 - A
                                 AltDocumentId = subId,
                                 NaldId = naldId1,
+                                NationalGridReferences = nationalGridReferences1,
+                                CartesianReferences = cartesianReferences1,
                                 PurposeIds = purposeIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList2.ToArray()
@@ -3979,6 +3989,13 @@ public static class AbstractionLicenceSchemaConverter
                 var naldDescription = (string?)null;
                 var naldId = (string?)null;
                 var naldPoint = GetNaldPointData(naldPoints, description, knownAs, near, usedNaldPointIds);
+
+                List<NationalGridReference>? nationalGridReferences =
+                    !string.IsNullOrEmpty(gridRef)
+                        ? [GetGridReference(gridRef)!]
+                        : null;
+
+                List<CartesianReference>? cartesianReferences = null;
                 
                 if (naldPoint != null)
                 {
@@ -3986,8 +4003,8 @@ public static class AbstractionLicenceSchemaConverter
                     
                     naldDescription = naldPoint.Name;
                     naldId = naldPoint.Id;
-                    
-                    // TODO set the cartesian and NGR etc...
+                    nationalGridReferences = naldPoint.NationalGridReferences;
+                    cartesianReferences = naldPoint.CartesianReferences;
                     
                     containedInList.Add(new ContainedInInformation
                     {
@@ -4001,9 +4018,8 @@ public static class AbstractionLicenceSchemaConverter
                         Name = name,
                         KnownAs = knownAs,
                         Near = near,
-                        NationalGridReferences = !string.IsNullOrEmpty(gridRef)
-                            ? [GetGridReference(gridRef)!]
-                            : null,
+                        NationalGridReferences = nationalGridReferences,
+                        CartesianReferences = cartesianReferences,
                         DocumentDescription = description,
                         NaldDescription = naldDescription,
                         NaldId = naldId,
@@ -4182,13 +4198,9 @@ public static class AbstractionLicenceSchemaConverter
             {
                 continue;
             }
-            
-            var naldNgr = naldPoint.NationalGridReferences.Count >= 1 ?
-                naldPoint.NationalGridReferences[0] : null;
 
-            var containsGridRef = naldNgr != null &&
-                description.Contains($"{naldNgr.Sheet} {naldNgr.East} {naldNgr.North}") == true;
-
+            var containsGridRef = naldPoint.NationalGridReferences
+                .Any(ngr => description.Contains($"{ngr.Sheet} {ngr.East} {ngr.North}"));
             var containsKnownAs = !string.IsNullOrEmpty(knownAs) &&
                 naldPoint.Name?.Contains(knownAs, StringComparison.OrdinalIgnoreCase) == true;
             var containsNear = !string.IsNullOrEmpty(near) &&

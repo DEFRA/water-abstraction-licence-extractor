@@ -188,7 +188,6 @@
               "north": "4988"
             }
           ],
-          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",
@@ -503,7 +502,6 @@
               "north": "5029"
             }
           ],
-          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",
@@ -816,7 +814,6 @@
               "north": "5015"
             }
           ],
-          "cartesianReferences": [],
           "containedIn": [
             {
               "source": "Document",

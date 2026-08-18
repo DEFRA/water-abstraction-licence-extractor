@@ -358,7 +358,6 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("10030785", licence.Purposes[0].NaldId);
         Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
         
-
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);
 

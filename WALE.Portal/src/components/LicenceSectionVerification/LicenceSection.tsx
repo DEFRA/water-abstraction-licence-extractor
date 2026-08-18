@@ -61,19 +61,33 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
         setShowVerificationPrompt(true);
     };
 
-    const getVerificationActionText = (type: string | null) => {
-        switch (type) {
-            case 'Edit':
-                return 'save changes for';
-            case 'Added':
-                return 'add';
-            case 'RequestBusinessReview':
-                return 'request a business review of';
-            case 'CompleteBusinessReview':
-                return 'complete a business review of';
-            default:
-                return type?.toLowerCase();
+    const getVerificationActionText = (type: string | null, itemId?: string) => {
+        if (type === 'ConfirmNone') {
+            return `confirm there are no ${title.toLowerCase()}`;
         }
+
+        const actionVerb = (() => {
+            switch (type) {
+                case 'Edit':
+                    return 'save changes for';
+                case 'Added':
+                    return 'add';
+                case 'RequestBusinessReview':
+                    return 'request a business review of';
+                case 'CompleteBusinessReview':
+                    return 'complete a business review of';
+                default:
+                    return type?.toLowerCase();
+            }
+        })();
+
+        if (itemId === 'None Outgoing') {
+            return `${actionVerb} the absence of ${title.toLowerCase()}`;
+        }
+
+        return itemId
+            ? `${actionVerb} the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${itemId}`
+            : `${actionVerb} the ${title}`;
     };
 
     const confirmVerification = async () => {
@@ -197,16 +211,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     }}>
                         <h4 style={{ marginTop: 0 }}>Verification Confirmation</h4>
                         <p>
-                            {pendingVerificationType === 'ConfirmNone' ? (
-                                `Are you sure you want to confirm there are no ${title.toLowerCase()} for this licence?`
-                            ) : pendingVerificationItemId === 'None Outgoing' ? (
-                                `Are you sure you want to ${getVerificationActionText(pendingVerificationType)} the absence of outgoing linked licences for this licence?`
-                            ) : (
-                                <>
-                                    Are you sure you want to {getVerificationActionText(pendingVerificationType)}
-                                    {pendingVerificationItemId ? ` the ${itemType || (title.endsWith('s') ? title.slice(0, -1) : title)} ${pendingVerificationItemId}` : ` the ${title}`} for this licence?
-                                </>
-                            )}
+                            Are you sure you want to {getVerificationActionText(pendingVerificationType, pendingVerificationItemId)} for this licence?
                         </p>
                         <div style={{ marginBottom: '15px' }}>
                             <label htmlFor="verificationNotes" style={{ display: 'block', marginBottom: '5px' }}>Notes:</label>

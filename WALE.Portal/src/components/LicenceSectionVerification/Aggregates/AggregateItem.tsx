@@ -135,34 +135,6 @@ export const AggregateItem = ({
     };
     const handleRemoveLimit = (index: number) => update({limits: limits.filter((_, i) => i !== index)});
 
-    const handleAddLimitPoint = (limitIndex: number) => {
-        const limitPoints = (limits[limitIndex].points ?? []) as Point[];
-        handleLimitChange(limitIndex, 'points', [...limitPoints, new Point({id: '', description: ''})]);
-    };
-    const handleLimitPointChange = (limitIndex: number, pointIndex: number, field: keyof Point, value: any) => {
-        const limitPoints = [...((limits[limitIndex].points ?? []) as Point[])];
-        limitPoints[pointIndex] = new Point({...limitPoints[pointIndex], [field]: value});
-        handleLimitChange(limitIndex, 'points', limitPoints);
-    };
-    const handleRemoveLimitPoint = (limitIndex: number, pointIndex: number) => {
-        const limitPoints = ((limits[limitIndex].points ?? []) as Point[]).filter((_, i) => i !== pointIndex);
-        handleLimitChange(limitIndex, 'points', limitPoints);
-    };
-
-    const handleAddLimitPurpose = (limitIndex: number) => {
-        const limitPurposes = (limits[limitIndex].purposes ?? []) as Purpose[];
-        handleLimitChange(limitIndex, 'purposes', [...limitPurposes, new Purpose({id: '', description: ''})]);
-    };
-    const handleLimitPurposeChange = (limitIndex: number, purposeIndex: number, field: keyof Purpose, value: any) => {
-        const limitPurposes = [...((limits[limitIndex].purposes ?? []) as Purpose[])];
-        limitPurposes[purposeIndex] = new Purpose({...limitPurposes[purposeIndex], [field]: value});
-        handleLimitChange(limitIndex, 'purposes', limitPurposes);
-    };
-    const handleRemoveLimitPurpose = (limitIndex: number, purposeIndex: number) => {
-        const limitPurposes = ((limits[limitIndex].purposes ?? []) as Purpose[]).filter((_, i) => i !== purposeIndex);
-        handleLimitChange(limitIndex, 'purposes', limitPurposes);
-    };
-
     // --- TimePeriod / TimeCutoff ---
     const handleTimePeriodChange = (field: keyof TimePeriod, value: any) =>
         update({timePeriod: new TimePeriod({...aggregate.timePeriod, [field]: value})});
@@ -232,23 +204,10 @@ export const AggregateItem = ({
                         <ValidationError message={errors.subType}/>
                     </div>
                     <div>
-                        <label style={labelStyle}>NALD Type:</label>
-                        <input type="text" value={aggregate.naldType || ''}
-                               onChange={(e) => handleChange('naldType', e.target.value)} style={inputStyle}/>
-                    </div>
-                    <div>
                         <label style={labelStyle}>Document Identifier:</label>
                         <input type="text" value={aggregate.documentIdentifier || ''}
                                onChange={(e) => handleChange('documentIdentifier', e.target.value)}
                                style={inputStyle}/>
-                    </div>
-                    <div style={{paddingBottom: '6px'}}>
-                        <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                            <input type="checkbox" checked={!!aggregate.isExplicitlyAggregate}
-                                   onChange={(e) => handleChange('isExplicitlyAggregate', e.target.checked)}
-                                   style={{marginRight: '6px'}}/>
-                            Explicitly Aggregate
-                        </label>
                     </div>
                 </div>
 
@@ -325,29 +284,9 @@ export const AggregateItem = ({
                         <div key={idx} style={cardStyle}>
                             <div style={rowStyle}>
                                 <div>
-                                    <label style={labelStyle}>Source:</label>
-                                    <select value={section.source ?? InformationSource.Document}
-                                            onChange={(e) => handleContainedInChange(idx, 'source', e.target.value as InformationSource)}
-                                            style={inputStyle}>
-                                        {Object.values(InformationSource).map(v => <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </div>
-                                <div>
                                     <label style={labelStyle}>Section Name:</label>
                                     <input type="text" value={section.sectionName || ''}
                                            onChange={(e) => handleContainedInChange(idx, 'sectionName', e.target.value)}
-                                           style={inputStyle}/>
-                                </div>
-                                <div>
-                                    <label style={labelStyle}>Link Reason:</label>
-                                    <input type="text" value={section.linkReason || ''}
-                                           onChange={(e) => handleContainedInChange(idx, 'linkReason', e.target.value)}
-                                           style={inputStyle}/>
-                                </div>
-                                <div>
-                                    <label style={labelStyle}>ACIN Code:</label>
-                                    <input type="text" value={section.acinCode || ''}
-                                           onChange={(e) => handleContainedInChange(idx, 'acinCode', e.target.value)}
                                            style={inputStyle}/>
                                 </div>
                                 <div style={{display: 'flex', justifyContent: 'flex-end'}}>
@@ -368,14 +307,10 @@ export const AggregateItem = ({
                         <div key={idx} style={{display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center'}}>
                             <input type="text" placeholder="Id" value={point.id || ''}
                                    onChange={(e) => handlePointChange(idx, 'id', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
+                            <input type="text" placeholder="AltId" value={point.altId || ''}
+                                   onChange={(e) => handlePointChange(idx, 'altId', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
                             <input type="text" placeholder="Description" value={point.description || ''}
                                    onChange={(e) => handlePointChange(idx, 'description', e.target.value)} style={{...inputStyle, flex: 1}}/>
-                            <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap'}}>
-                                <input type="checkbox" checked={!!point.isImplicit}
-                                       onChange={(e) => handlePointChange(idx, 'isImplicit', e.target.checked)}
-                                       style={{marginRight: '4px'}}/>
-                                Implicit
-                            </label>
                             <button onClick={() => handleRemovePoint(idx)} style={removeButtonStyle}>Remove</button>
                         </div>
                     ))}
@@ -393,12 +328,6 @@ export const AggregateItem = ({
                                    onChange={(e) => handlePurposeChange(idx, 'id', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
                             <input type="text" placeholder="Description" value={purpose.description || ''}
                                    onChange={(e) => handlePurposeChange(idx, 'description', e.target.value)} style={{...inputStyle, flex: 1}}/>
-                            <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap'}}>
-                                <input type="checkbox" checked={!!purpose.isImplicit}
-                                       onChange={(e) => handlePurposeChange(idx, 'isImplicit', e.target.checked)}
-                                       style={{marginRight: '4px'}}/>
-                                Implicit
-                            </label>
                             <button onClick={() => handleRemovePurpose(idx)} style={removeButtonStyle}>Remove</button>
                         </div>
                     ))}
@@ -411,8 +340,6 @@ export const AggregateItem = ({
                     </div>
                     {limits.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
                     {limits.map((limit, limitIdx) => {
-                        const limitPoints = (limit.points ?? []) as Point[];
-                        const limitPurposes = (limit.purposes ?? []) as Purpose[];
                         return (
                             <div key={limitIdx} style={cardStyle}>
                                 <div style={rowStyle}>
@@ -436,73 +363,9 @@ export const AggregateItem = ({
                                                onChange={(e) => handleLimitChange(limitIdx, 'units', e.target.value)}
                                                style={inputStyle}/>
                                     </div>
-                                    <div>
-                                        <label style={labelStyle}>Additional Text:</label>
-                                        <input type="text" value={limit.valueAdditionalText || ''}
-                                               onChange={(e) => handleLimitChange(limitIdx, 'valueAdditionalText', e.target.value)}
-                                               style={inputStyle}/>
-                                    </div>
-                                    <div style={{paddingBottom: '6px'}}>
-                                        <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                                            <input type="checkbox" checked={!!limit.implicitLimit}
-                                                   onChange={(e) => handleLimitChange(limitIdx, 'implicitLimit', e.target.checked)}
-                                                   style={{marginRight: '6px'}}/>
-                                            Implicit
-                                        </label>
-                                    </div>
-                                    <div style={{paddingBottom: '6px'}}>
-                                        <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                                            <input type="checkbox" checked={!!limit.isAverage}
-                                                   onChange={(e) => handleLimitChange(limitIdx, 'isAverage', e.target.checked)}
-                                                   style={{marginRight: '6px'}}/>
-                                            Is Average
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <label style={labelStyle}>Average Period (days):</label>
-                                        <input type="number" value={limit.averagePeriod ?? ''}
-                                               onChange={(e) => handleLimitChange(limitIdx, 'averagePeriod', e.target.value === '' ? undefined : Number(e.target.value))}
-                                               style={inputStyle}/>
-                                    </div>
                                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                                         <button onClick={() => handleRemoveLimit(limitIdx)} style={removeButtonStyle}>Remove Limit</button>
                                     </div>
-                                </div>
-
-                                <div style={{marginTop: '10px'}}>
-                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
-                                        <span style={{fontSize: '0.8rem', fontWeight: 600}}>Limit Points:</span>
-                                        <button onClick={() => handleAddLimitPoint(limitIdx)} style={addButtonStyle}>+ Add</button>
-                                    </div>
-                                    {limitPoints.map((point, pointIdx) => (
-                                        <div key={pointIdx} style={{display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center'}}>
-                                            <input type="text" placeholder="Id" value={point.id || ''}
-                                                   onChange={(e) => handleLimitPointChange(limitIdx, pointIdx, 'id', e.target.value)}
-                                                   style={{...inputStyle, flex: '0 0 100px'}}/>
-                                            <input type="text" placeholder="Description" value={point.description || ''}
-                                                   onChange={(e) => handleLimitPointChange(limitIdx, pointIdx, 'description', e.target.value)}
-                                                   style={{...inputStyle, flex: 1}}/>
-                                            <button onClick={() => handleRemoveLimitPoint(limitIdx, pointIdx)} style={removeButtonStyle}>Remove</button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div style={{marginTop: '10px'}}>
-                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
-                                        <span style={{fontSize: '0.8rem', fontWeight: 600}}>Limit Purposes:</span>
-                                        <button onClick={() => handleAddLimitPurpose(limitIdx)} style={addButtonStyle}>+ Add</button>
-                                    </div>
-                                    {limitPurposes.map((purpose, purposeIdx) => (
-                                        <div key={purposeIdx} style={{display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center'}}>
-                                            <input type="text" placeholder="Id" value={purpose.id || ''}
-                                                   onChange={(e) => handleLimitPurposeChange(limitIdx, purposeIdx, 'id', e.target.value)}
-                                                   style={{...inputStyle, flex: '0 0 100px'}}/>
-                                            <input type="text" placeholder="Description" value={purpose.description || ''}
-                                                   onChange={(e) => handleLimitPurposeChange(limitIdx, purposeIdx, 'description', e.target.value)}
-                                                   style={{...inputStyle, flex: 1}}/>
-                                            <button onClick={() => handleRemoveLimitPurpose(limitIdx, purposeIdx)} style={removeButtonStyle}>Remove</button>
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
                         );
@@ -548,9 +411,7 @@ export const AggregateItem = ({
     return (
         <div className="aggregate-item" style={{padding: '12px', borderBottom: '1px solid #eee'}}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
-                <p style={{margin: 0}}><strong>Source Licence:</strong> {aggregate.sourceLicenceNumber || 'N/A'} (v{aggregate.sourceLicenceVersionId || 'N/A'})</p>
                 <p style={{margin: 0}}><strong>Type:</strong> {aggregate.primaryType || 'N/A'} / {aggregate.subType || 'N/A'}</p>
-                <p style={{margin: 0}}><strong>NALD Type:</strong> {aggregate.naldType || 'N/A'}</p>
                 <p style={{margin: 0}}><strong>Limits:</strong> {limits.length}</p>
             </div>
             {linkedLicences.length > 0 && (
@@ -567,7 +428,6 @@ export const AggregateItem = ({
                                 <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center'}}>
                                     <div><strong>Source:</strong> {section.source || 'N/A'}</div>
                                     <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
-                                    <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
                                     {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
                                         <button
                                             onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}

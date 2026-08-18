@@ -3,7 +3,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(60)]
+[Migration(61)]
 public sealed class AddAggregateIdsColumnToLicenceListItem : Migration
 {
     public override void Up()

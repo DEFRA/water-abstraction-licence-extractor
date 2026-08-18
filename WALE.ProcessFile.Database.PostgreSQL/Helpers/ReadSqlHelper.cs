@@ -164,7 +164,9 @@ public static class ReadSqlHelper
                            linked_licence.linked_licence_id
                     WHERE linked_licence.licence_list_item_id =
                           licence_list_item.licence_list_item_id
-                      AND link_location.direction = 'Incoming'
+                    GROUP BY linked_licence.linked_licence_id
+                    HAVING COUNT(*) = 1
+                       AND MAX(link_location.direction) = 'Incoming'
                 )
                 """);
 

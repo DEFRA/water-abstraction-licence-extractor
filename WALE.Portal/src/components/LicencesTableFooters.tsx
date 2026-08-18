@@ -20,7 +20,7 @@ export function LicencesTableFooters({ totals }: LicencesTableFootersProps) {
                 <td>{totals.issuer}</td>
                 <td>{totals.meansFound}</td>
                 <td>{totals.linkedLicences}</td>
-                <td>{totals.licenceSets}</td>
+                <td className={'default-hidden'}>{totals.licenceSets}</td>
                 <td>{totals.latestLicenceSectionVerifications}</td>
             </tr>
             <tr>

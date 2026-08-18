@@ -172,8 +172,9 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             {!scrapedView && (
                                 <div style={{
                                     display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
                                     gap: '8px',
-                                    justifyContent: 'center',
                                     marginTop: noneOutgoingVerification ? '12px' : '0'
                                 }}>
                                     <button
@@ -194,12 +195,13 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     <button
                                         onClick={() => onItemVerificationRequested?.('RequestBusinessReview', 'None Outgoing')}
                                         style={{
-                                            padding: '4px 12px',
+                                            padding: '6px 12px',
                                             backgroundColor: 'darkorange',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
                                             cursor: 'pointer',
+                                            fontWeight: '600',
                                             fontSize: '0.85rem'
                                         }}
                                     >
@@ -208,12 +210,13 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     <button
                                         onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
                                         style={{
-                                            padding: '4px 12px',
+                                            padding: '6px 12px',
                                             backgroundColor: 'purple',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
                                             cursor: 'pointer',
+                                            fontWeight: '600',
                                             fontSize: '0.85rem'
                                         }}
                                     >

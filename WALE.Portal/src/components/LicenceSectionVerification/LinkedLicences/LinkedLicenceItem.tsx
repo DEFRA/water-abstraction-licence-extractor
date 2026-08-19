@@ -7,8 +7,10 @@ import {
     OutputListDataItem,
     LicenceSectionVerification
 } from "../../../api/generated/apiClient.ts";
-import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo.tsx";
 import {ValidationError} from "../ValidationError.tsx";
+import {ContainedInList} from "../ContainedInList.tsx";
+import {ContainedInEdit} from "../ContainedInEdit.tsx";
+import {VerificationActions} from "../VerificationActions.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
 import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
@@ -224,137 +226,28 @@ export const LinkedLicenceItem = ({
                             </button>
                         )}
                     </div>
-                    <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
-                        {(linkedLicence.containedIn || []).map((section, idx) => {
-                            if (section.direction !== NullableOfInformationDirection.Outgoing) {
-                                return null;
-                            }
-                            return (
-                                <li key={idx} style={{
-                                    marginBottom: '12px',
-                                    padding: '12px',
-                                    border: '1px solid #eee',
-                                    borderRadius: '4px',
-                                    backgroundColor: 'white'
-                                }}>
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                        gap: '12px',
-                                        alignItems: 'end'
-                                    }}>
-                                        <div>
-                                            <label style={{
-                                                display: 'block',
-                                                fontSize: '0.75rem',
-                                                marginBottom: '4px',
-                                                fontWeight: '600'
-                                            }}>Source:</label>
-                                            <input
-                                                type="text"
-                                                value={section.source || ''}
-                                                readOnly
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '4px 8px',
-                                                    border: '1px solid #d9d9d9',
-                                                    borderRadius: '4px',
-                                                    boxSizing: 'border-box',
-                                                    backgroundColor: '#f0f0f0'
-                                                }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label style={{
-                                                display: 'block',
-                                                fontSize: '0.75rem',
-                                                marginBottom: '4px',
-                                                fontWeight: '600'
-                                            }}>Section Name:</label>
-                                            <input
-                                                type="text"
-                                                value={section.sectionName || ''}
-                                                onChange={(e) => handleSectionChange(idx, 'sectionName', e.target.value)}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '4px 8px',
-                                                    border: errors[`section_${idx}_sectionName`] ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
-                                                    borderRadius: '4px',
-                                                    boxSizing: 'border-box'
-                                                }}
-                                            />
-                                            <ValidationError message={errors[`section_${idx}_sectionName`]} style={{fontSize: '0.7rem'}} />
-                                        </div>
-                                        <div>
-                                            <label style={{
-                                                display: 'block',
-                                                fontSize: '0.75rem',
-                                                marginBottom: '4px',
-                                                fontWeight: '600'
-                                            }}>Link Reason:</label>
-                                            <input
-                                                type="text"
-                                                value={section.linkReason || ''}
-                                                onChange={(e) => handleSectionChange(idx, 'linkReason', e.target.value)}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '4px 8px',
-                                                    border: errors[`section_${idx}_linkReason`] ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
-                                                    borderRadius: '4px',
-                                                    boxSizing: 'border-box'
-                                                }}
-                                            />
-                                            <ValidationError message={errors[`section_${idx}_linkReason`]} style={{fontSize: '0.7rem'}} />
-                                        </div>
-                                        {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
-                                            <div style={{paddingBottom: '2px'}}>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onJumpToPage && onJumpToPage(section.pageNumber!);
-                                                    }}
-                                                    title={`Jump to page ${section.pageNumber}`}
-                                                    style={{
-                                                        background: '#f0f0f0',
-                                                        border: '1px solid #d9d9d9',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '1rem',
-                                                        padding: '2px 6px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px'
-                                                    }}
-                                                >
-                                                    📄 <span
-                                                    style={{fontSize: '0.7rem'}}>Page {section.pageNumber}</span>
-                                                </button>
-                                            </div>
-                                        )}
-                                        <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'end'}}>
-                                            {!scrapedView && (
-                                                <button
-                                                    onClick={() => handleRemoveSection(idx)}
-                                                    disabled={hasOnlyOneOutgoingSection(linkedLicence.containedIn)}
-                                                    style={{
-                                                        padding: '4px 8px',
-                                                        fontSize: '0.75rem',
-                                                        backgroundColor: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? '#f5f5f5' : '#ff7875',
-                                                        color: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? 'rgba(0, 0, 0, 0.25)' : 'white',
-                                                        border: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? '1px solid #d9d9d9' : 'none',
-                                                        borderRadius: '4px',
-                                                        cursor: hasOnlyOneOutgoingSection(linkedLicence.containedIn) ? 'not-allowed' : 'pointer'
-                                                    }}
-                                                >
-                                                    Remove Section
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                    {(() => {
+                        const outgoingSections = (linkedLicence.containedIn || [])
+                            .map((section, originalIndex) => ({section, originalIndex}))
+                            .filter(({section}) => section.direction === NullableOfInformationDirection.Outgoing);
+
+                        return (
+                            <ContainedInEdit
+                                sections={outgoingSections.map(o => o.section)}
+                                onChange={(idx, field, value) => handleSectionChange(outgoingSections[idx].originalIndex, field, value)}
+                                onRemove={(idx) => handleRemoveSection(outgoingSections[idx].originalIndex)}
+                                onJumpToPage={onJumpToPage}
+                                showLinkReason
+                                canRemove={() => !hasOnlyOneOutgoingSection(linkedLicence.containedIn)}
+                                getFieldError={(idx, field) => {
+                                    const originalIndex = outgoingSections[idx].originalIndex;
+                                    return field === 'sectionName'
+                                        ? errors[`section_${originalIndex}_sectionName`]
+                                        : errors[`section_${originalIndex}_linkReason`];
+                                }}
+                            />
+                        );
+                    })()}
                 </div>
                 <div style={{display: 'flex', gap: '8px', marginTop: '24px', justifyContent: 'flex-end'}}>
                     <button
@@ -408,174 +301,23 @@ export const LinkedLicenceItem = ({
                     Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>
             </div>
             {hasAnyOutgoingSections(linkedLicence.containedIn) && (
-                <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
-                    <strong style={{display: 'block', marginBottom: '8px'}}>Contained In:</strong>
-                    <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
-                        {linkedLicence.containedIn!.map((section, idx) => {
-                            if (section.direction !== NullableOfInformationDirection.Outgoing) {
-                                return null;
-                            }
-                            return (
-                                <li key={idx} style={{
-                                    marginBottom: '8px',
-                                    padding: '8px',
-                                    backgroundColor: '#f9f9f9',
-                                    borderRadius: '4px'
-                                }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '8px 16px',
-                                        alignItems: 'center'
-                                    }}>
-                                        <div><strong>Source:</strong> {section.source || 'N/A'}</div>
-                                        <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
-                                        <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
-                                        {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
-                                            <button
-                                                onClick={() => {
-                                                    onJumpToPage && onJumpToPage(section.pageNumber!);
-                                                }}
-                                                title={`Jump to page ${section.pageNumber}`}
-                                                style={{
-                                                    background: 'none',
-                                                    border: '1px solid #d9d9d9',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem',
-                                                    padding: '2px 6px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '4px'
-                                                }}
-                                            >
-                                                📄 <span style={{fontSize: '0.75rem'}}>Page {section.pageNumber}</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </div>
+                <ContainedInList
+                    sections={(linkedLicence.containedIn || []).filter(s => s.direction === NullableOfInformationDirection.Outgoing)}
+                    onJumpToPage={onJumpToPage}
+                    showLinkReason
+                />
             )}
-            {!scrapedView && (onVerify || onReject || onOverride) && (
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginTop: '16px',
-                    gap: '16px'
-                }}>
-                    <div style={{ flex: 1 }}>
-                        {(() => {
-                            const licenceNumber = linkedLicence.licenceNumber;
-                            if (!licenceNumber || isEditing) return null;
-
-                            const latestVerification = (history || [])
-                                .filter(v => v.licenceSectionName === 'Linked Licences' && v.licenceSectionItemId === licenceNumber)
-                                .sort((a, b) => {
-                                    const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
-                                    const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
-                                    return dateB - dateA;
-                                })[0];
-
-                            if (!latestVerification) return null;
-
-                            return <LicenceSectionVerificationInfo verification={latestVerification}/>;
-                        })()}
-                    </div>
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        alignItems: 'flex-end'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            gap: '8px',
-                            alignItems: 'center'
-                        }}>
-                            <button
-                                onClick={onVerify}
-                                style={{
-                                    padding: '4px 12px',
-                                    backgroundColor: '#52c41a',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Confirm
-                            </button>
-                            <button
-                                onClick={onReject}
-                                style={{
-                                    padding: '4px 12px',
-                                    backgroundColor: '#ff4d4f',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Remove
-                            </button>
-                            <button
-                                onClick={onOverride}
-                                style={{
-                                    padding: '4px 12px',
-                                    backgroundColor: '#1890ff',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Edit
-                            </button>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            gap: '8px',
-                            alignItems: 'center'
-                        }}>
-                            <button
-                                onClick={onRequestBusinessReview}
-                                style={{
-                                    padding: '4px 12px',
-                                    backgroundColor: 'darkorange',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Request Business Review
-                            </button>
-                            <button
-                                onClick={onCompleteBusinessReview}
-                                style={{
-                                    padding: '4px 12px',
-                                    backgroundColor: 'purple',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Complete Business Review
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <VerificationActions
+                scrapedView={scrapedView}
+                history={history}
+                licenceSectionName="Linked Licences"
+                itemId={linkedLicence.licenceNumber}
+                onVerify={onVerify}
+                onReject={onReject}
+                onOverride={onOverride}
+                onRequestBusinessReview={onRequestBusinessReview}
+                onCompleteBusinessReview={onCompleteBusinessReview}
+            />
         </div>
     );
 };

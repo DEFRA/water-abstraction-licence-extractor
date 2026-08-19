@@ -14,8 +14,10 @@ import {
     InformationSource,
     LicenceSectionVerification
 } from "../../../api/generated/apiClient.ts";
-import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo.tsx";
 import {ValidationError} from "../ValidationError.tsx";
+import {ContainedInList} from "../ContainedInList.tsx";
+import {ContainedInEdit} from "../ContainedInEdit.tsx";
+import {VerificationActions} from "../VerificationActions.tsx";
 import {computeAggregateId} from "../../../utils/aggregateUtils.ts";
 
 interface AggregateItemProps {
@@ -37,11 +39,18 @@ interface AggregateItemProps {
 }
 
 const labelStyle: React.CSSProperties = {display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: 600};
-const inputStyle: React.CSSProperties = {width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box'};
+const topLevelLabelStyle: React.CSSProperties = {display: 'block', fontSize: '0.9rem', marginBottom: '4px', fontWeight: 600};
+const inputStyle: React.CSSProperties = {width: '100%', height: '30px', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box'};
 const rowStyle: React.CSSProperties = {display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', alignItems: 'end'};
 const cardStyle: React.CSSProperties = {marginBottom: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: 'white'};
 const addButtonStyle: React.CSSProperties = {padding: '4px 12px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'};
-const removeButtonStyle: React.CSSProperties = {padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'};
+const removeButtonStyle: React.CSSProperties = {height: '30px', padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', boxSizing: 'border-box'};
+const removeButtonDisabledStyle: React.CSSProperties = {...removeButtonStyle, backgroundColor: '#f5f5f5', color: 'rgba(0, 0, 0, 0.25)', border: '1px solid #d9d9d9', cursor: 'not-allowed'};
+
+const LIMIT_UNITS_OPTIONS = [
+    'megalitres', 'litres', 'thousand cubic metres', 'cubic metres',
+    'megagallons', 'thousand gallons', 'million gallons', 'gallons'
+];
 
 export const AggregateItem = ({
                                    aggregate: aggregateProp,
@@ -58,7 +67,21 @@ export const AggregateItem = ({
                                    history
                                }: AggregateItemProps) => {
     const [errors, setErrors] = React.useState<Record<string, string>>({});
+    const [showTimePeriod, setShowTimePeriod] = React.useState<boolean>(!!aggregateProp?.timePeriod);
+    const [showTimeCutoff, setShowTimeCutoff] = React.useState<boolean>(!!aggregateProp?.timeCutoff);
     const aggregate = aggregateProp;
+
+    // AggregateItem is not remounted between edit sessions (stable key={index} in Aggregates.tsx's
+    // list, and discard restores data into the same slot), so plain useState initializers only run
+    // once. Re-derive the show/hide toggles — and clear stale errors — every time editing (re)starts.
+    React.useEffect(() => {
+        if (isEditing) {
+            setShowTimePeriod(!!aggregate?.timePeriod);
+            setShowTimeCutoff(!!aggregate?.timeCutoff);
+            setErrors({});
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditing]);
 
     if (!aggregate) {
         return null;
@@ -126,7 +149,7 @@ export const AggregateItem = ({
 
     // --- Limits (each with its own nested points/purposes) ---
     const handleAddLimit = () => update({
-        limits: [...limits, new AbstractionLimit({periodType: LimitPeriodType.Unknown, points: [], purposes: []})]
+        limits: [...limits, new AbstractionLimit({points: [], purposes: []})]
     });
     const handleLimitChange = (index: number, field: keyof AbstractionLimit, value: any) => {
         const next = [...limits];
@@ -141,19 +164,83 @@ export const AggregateItem = ({
     const handleTimeCutoffChange = (field: keyof TimeCutoff, value: any) =>
         update({timeCutoff: new TimeCutoff({...aggregate.timeCutoff, [field]: value})});
 
+    const handleShowTimePeriodToggle = (checked: boolean) => {
+        setShowTimePeriod(checked);
+        if (checked && !aggregate.timePeriod) {
+            update({timePeriod: new TimePeriod({startDate: '', endDate: '', inclusive: false})});
+        }
+        // unchecking: don't touch aggregate.timePeriod here — only nulled at save time in handleEdit
+    };
+    const handleShowTimeCutoffToggle = (checked: boolean) => {
+        setShowTimeCutoff(checked);
+        if (checked && !aggregate.timeCutoff) {
+            update({timeCutoff: new TimeCutoff({cutoffType: NullableOfCutoffType.NotApplicable, date: ''})});
+        }
+        // unchecking: don't touch aggregate.timeCutoff here — only nulled at save time in handleEdit
+    };
+
     const handleEdit = () => {
         const newErrors: Record<string, string> = {};
 
         if (!aggregate.primaryType || aggregate.primaryType === PrimaryType.NotSet) {
             newErrors.primaryType = 'Primary Type is required';
         }
-        if (!aggregate.subType || aggregate.subType === NullableOfSubType.NotSet) {
-            newErrors.subType = 'Sub Type is required';
+        // Sub Type is optional — not validated.
+
+        linkedLicences.forEach((ll, idx) => {
+            if (!ll || !ll.trim()) newErrors[`linkedLicence_${idx}`] = 'Linked Licence cannot be empty';
+        });
+
+        if (showTimePeriod) {
+            if (!aggregate.timePeriod?.startDate) newErrors.timePeriodStartDate = 'Start Date is required';
+            if (!aggregate.timePeriod?.endDate) newErrors.timePeriodEndDate = 'End Date is required';
+        }
+        if (showTimeCutoff) {
+            if (!aggregate.timeCutoff?.cutoffType) newErrors.timeCutoffType = 'Cutoff Type is required';
+            if (!aggregate.timeCutoff?.date) newErrors.timeCutoffDate = 'Date is required';
         }
 
-        setErrors(newErrors);
+        limits.forEach((limit, idx) => {
+            if (!limit.periodType) newErrors[`limit_${idx}_periodType`] = 'Period Type is required';
+            if (limit.value === undefined || limit.value === null || Number.isNaN(limit.value)) {
+                newErrors[`limit_${idx}_value`] = 'Value is required';
+            }
+            if (!limit.units) newErrors[`limit_${idx}_units`] = 'Units is required';
+        });
 
-        if (Object.keys(newErrors).length === 0 && onOverride) {
+        containedIn.forEach((section, idx) => {
+            if (!section.sectionName || !section.sectionName.trim()) {
+                newErrors[`containedIn_${idx}_sectionName`] = 'Section Name is required';
+            }
+        });
+
+        points.forEach((point, idx) => {
+            if (!(point.id?.trim() || point.altId?.trim() || point.description?.trim())) {
+                newErrors[`point_${idx}`] = 'At least one of Id, AltId or Description is required';
+            }
+        });
+
+        purposes.forEach((purpose, idx) => {
+            if (!(purpose.id?.trim() || purpose.description?.trim())) {
+                newErrors[`purpose_${idx}`] = 'At least one of Id or Description is required';
+            }
+        });
+
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) {
+            return;
+        }
+
+        // Null out hidden groups only now, at save time — never reactively on uncheck,
+        // which would lose data if the user re-checks the box before saving.
+        if (!showTimePeriod || !showTimeCutoff) {
+            update({
+                ...(!showTimePeriod ? {timePeriod: undefined} : {}),
+                ...(!showTimeCutoff ? {timeCutoff: undefined} : {}),
+            });
+        }
+
+        if (onOverride) {
             onOverride();
         }
     };
@@ -177,12 +264,11 @@ export const AggregateItem = ({
             }}>
                 <p style={{margin: '0 0 16px 0', fontSize: '0.85rem', color: '#555'}}>
                     <strong>Source Licence:</strong> {aggregate.sourceLicenceNumber || 'N/A'} (version {aggregate.sourceLicenceVersionId || 'N/A'})
-                    <span style={{marginLeft: '8px', color: '#999'}}>— taken from this licence, not editable</span>
                 </p>
 
                 <div style={rowStyle}>
                     <div>
-                        <label style={labelStyle}>Primary Type:</label>
+                        <label style={topLevelLabelStyle}>Primary Type:</label>
                         <select
                             value={aggregate.primaryType ?? PrimaryType.NotSet}
                             onChange={(e) => handleChange('primaryType', e.target.value as PrimaryType)}
@@ -193,7 +279,7 @@ export const AggregateItem = ({
                         <ValidationError message={errors.primaryType}/>
                     </div>
                     <div>
-                        <label style={labelStyle}>Sub Type:</label>
+                        <label style={topLevelLabelStyle}>Sub Type:</label>
                         <select
                             value={aggregate.subType ?? NullableOfSubType.NotSet}
                             onChange={(e) => handleChange('subType', e.target.value as NullableOfSubType)}
@@ -203,8 +289,11 @@ export const AggregateItem = ({
                         </select>
                         <ValidationError message={errors.subType}/>
                     </div>
+                </div>
+
+                <div style={{...rowStyle, marginTop: '12px'}}>
                     <div>
-                        <label style={labelStyle}>Document Identifier:</label>
+                        <label style={topLevelLabelStyle}>Document Identifier:</label>
                         <input type="text" value={aggregate.documentIdentifier || ''}
                                onChange={(e) => handleChange('documentIdentifier', e.target.value)}
                                style={inputStyle}/>
@@ -218,11 +307,18 @@ export const AggregateItem = ({
                     </div>
                     {linkedLicences.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
                     {linkedLicences.map((ll, idx) => (
-                        <div key={idx} style={{display: 'flex', gap: '8px', marginBottom: '6px'}}>
-                            <input type="text" value={ll}
-                                   onChange={(e) => handleLinkedLicenceChange(idx, e.target.value)}
-                                   style={{...inputStyle, flex: 1}}/>
-                            <button onClick={() => handleRemoveLinkedLicence(idx)} style={removeButtonStyle}>Remove</button>
+                        <div key={idx} style={cardStyle}>
+                            <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
+                                <div style={{flex: 1}}>
+                                    <label style={labelStyle}>Licence Number:</label>
+                                    <input type="text" value={ll}
+                                           onChange={(e) => handleLinkedLicenceChange(idx, e.target.value)}
+                                           style={{...inputStyle, borderColor: errors[`linkedLicence_${idx}`] ? '#ff4d4f' : '#d9d9d9'}}/>
+                                </div>
+                                <button onClick={() => handleRemoveLinkedLicence(idx)} disabled={linkedLicences.length <= 1}
+                                        style={linkedLicences.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
+                            </div>
+                            <ValidationError message={errors[`linkedLicence_${idx}`]}/>
                         </div>
                     ))}
                 </div>
@@ -230,48 +326,76 @@ export const AggregateItem = ({
                 <div style={{marginTop: '16px'}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
                         <strong style={{fontSize: '0.9rem'}}>Time Period:</strong>
+                        <label style={{fontSize: '0.8rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                            <input type="checkbox" checked={showTimePeriod}
+                                   onChange={(e) => handleShowTimePeriodToggle(e.target.checked)}
+                                   style={{marginRight: '6px'}}/>
+                            Include Time Period
+                        </label>
                     </div>
-                    <div style={rowStyle}>
-                        <div>
-                            <label style={labelStyle}>Start Date:</label>
-                            <input type="date" value={aggregate.timePeriod?.startDate?.substring(0, 10) || ''}
-                                   onChange={(e) => handleTimePeriodChange('startDate', e.target.value)} style={inputStyle}/>
+                    {showTimePeriod && (
+                        <div style={cardStyle}>
+                            <div style={rowStyle}>
+                                <div>
+                                    <label style={labelStyle}>Start Date:</label>
+                                    <input type="date" value={aggregate.timePeriod?.startDate?.substring(0, 10) || ''}
+                                           onChange={(e) => handleTimePeriodChange('startDate', e.target.value)}
+                                           style={{...inputStyle, borderColor: errors.timePeriodStartDate ? '#ff4d4f' : '#d9d9d9'}}/>
+                                    <ValidationError message={errors.timePeriodStartDate}/>
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>End Date:</label>
+                                    <input type="date" value={aggregate.timePeriod?.endDate?.substring(0, 10) || ''}
+                                           onChange={(e) => handleTimePeriodChange('endDate', e.target.value)}
+                                           style={{...inputStyle, borderColor: errors.timePeriodEndDate ? '#ff4d4f' : '#d9d9d9'}}/>
+                                    <ValidationError message={errors.timePeriodEndDate}/>
+                                </div>
+                                <div>
+                                    <label style={{fontSize: '0.75rem', height: '30px', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                                        <input type="checkbox" checked={!!aggregate.timePeriod?.inclusive}
+                                               onChange={(e) => handleTimePeriodChange('inclusive', e.target.checked)}
+                                               style={{marginRight: '6px'}}/>
+                                        Inclusive
+                                    </label>
+                                    <ValidationError message={undefined}/>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label style={labelStyle}>End Date:</label>
-                            <input type="date" value={aggregate.timePeriod?.endDate?.substring(0, 10) || ''}
-                                   onChange={(e) => handleTimePeriodChange('endDate', e.target.value)} style={inputStyle}/>
-                        </div>
-                        <div style={{paddingBottom: '6px'}}>
-                            <label style={{fontSize: '0.75rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                                <input type="checkbox" checked={!!aggregate.timePeriod?.inclusive}
-                                       onChange={(e) => handleTimePeriodChange('inclusive', e.target.checked)}
-                                       style={{marginRight: '6px'}}/>
-                                Inclusive
-                            </label>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div style={{marginTop: '16px'}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
                         <strong style={{fontSize: '0.9rem'}}>Time Cutoff:</strong>
+                        <label style={{fontSize: '0.8rem', display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                            <input type="checkbox" checked={showTimeCutoff}
+                                   onChange={(e) => handleShowTimeCutoffToggle(e.target.checked)}
+                                   style={{marginRight: '6px'}}/>
+                            Include Time Cutoff
+                        </label>
                     </div>
-                    <div style={rowStyle}>
-                        <div>
-                            <label style={labelStyle}>Cutoff Type:</label>
-                            <select value={aggregate.timeCutoff?.cutoffType ?? NullableOfCutoffType.NotApplicable}
-                                    onChange={(e) => handleTimeCutoffChange('cutoffType', e.target.value as NullableOfCutoffType)}
-                                    style={inputStyle}>
-                                {Object.values(NullableOfCutoffType).map(v => <option key={v} value={v}>{v}</option>)}
-                            </select>
+                    {showTimeCutoff && (
+                        <div style={cardStyle}>
+                            <div style={rowStyle}>
+                                <div>
+                                    <label style={labelStyle}>Cutoff Type:</label>
+                                    <select value={aggregate.timeCutoff?.cutoffType ?? NullableOfCutoffType.NotApplicable}
+                                            onChange={(e) => handleTimeCutoffChange('cutoffType', e.target.value as NullableOfCutoffType)}
+                                            style={{...inputStyle, borderColor: errors.timeCutoffType ? '#ff4d4f' : '#d9d9d9'}}>
+                                        {Object.values(NullableOfCutoffType).map(v => <option key={v} value={v}>{v}</option>)}
+                                    </select>
+                                    <ValidationError message={errors.timeCutoffType}/>
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Date:</label>
+                                    <input type="date" value={aggregate.timeCutoff?.date?.substring(0, 10) || ''}
+                                           onChange={(e) => handleTimeCutoffChange('date', e.target.value)}
+                                           style={{...inputStyle, borderColor: errors.timeCutoffDate ? '#ff4d4f' : '#d9d9d9'}}/>
+                                    <ValidationError message={errors.timeCutoffDate}/>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label style={labelStyle}>Date:</label>
-                            <input type="date" value={aggregate.timeCutoff?.date?.substring(0, 10) || ''}
-                                   onChange={(e) => handleTimeCutoffChange('date', e.target.value)} style={inputStyle}/>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div style={{marginTop: '16px'}}>
@@ -280,21 +404,14 @@ export const AggregateItem = ({
                         <button onClick={handleAddContainedIn} style={addButtonStyle}>+ Add Section</button>
                     </div>
                     {containedIn.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
-                    {containedIn.map((section, idx) => (
-                        <div key={idx} style={cardStyle}>
-                            <div style={rowStyle}>
-                                <div>
-                                    <label style={labelStyle}>Section Name:</label>
-                                    <input type="text" value={section.sectionName || ''}
-                                           onChange={(e) => handleContainedInChange(idx, 'sectionName', e.target.value)}
-                                           style={inputStyle}/>
-                                </div>
-                                <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                    <button onClick={() => handleRemoveContainedIn(idx)} style={removeButtonStyle}>Remove</button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                    <ContainedInEdit
+                        sections={containedIn}
+                        onChange={handleContainedInChange}
+                        onRemove={handleRemoveContainedIn}
+                        onJumpToPage={onJumpToPage}
+                        canRemove={() => containedIn.length > 1}
+                        getFieldError={(idx, field) => field === 'sectionName' ? errors[`containedIn_${idx}_sectionName`] : undefined}
+                    />
                 </div>
 
                 <div style={{marginTop: '16px'}}>
@@ -304,14 +421,27 @@ export const AggregateItem = ({
                     </div>
                     {points.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
                     {points.map((point, idx) => (
-                        <div key={idx} style={{display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center'}}>
-                            <input type="text" placeholder="Id" value={point.id || ''}
-                                   onChange={(e) => handlePointChange(idx, 'id', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
-                            <input type="text" placeholder="AltId" value={point.altId || ''}
-                                   onChange={(e) => handlePointChange(idx, 'altId', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
-                            <input type="text" placeholder="Description" value={point.description || ''}
-                                   onChange={(e) => handlePointChange(idx, 'description', e.target.value)} style={{...inputStyle, flex: 1}}/>
-                            <button onClick={() => handleRemovePoint(idx)} style={removeButtonStyle}>Remove</button>
+                        <div key={idx} style={cardStyle}>
+                            <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
+                                <div style={{flex: '0 0 100px'}}>
+                                    <label style={labelStyle}>Id:</label>
+                                    <input type="text" value={point.id || ''}
+                                           onChange={(e) => handlePointChange(idx, 'id', e.target.value)} style={inputStyle}/>
+                                </div>
+                                <div style={{flex: '0 0 100px'}}>
+                                    <label style={labelStyle}>Alt Id:</label>
+                                    <input type="text" value={point.altId || ''}
+                                           onChange={(e) => handlePointChange(idx, 'altId', e.target.value)} style={inputStyle}/>
+                                </div>
+                                <div style={{flex: 1}}>
+                                    <label style={labelStyle}>Description:</label>
+                                    <input type="text" value={point.description || ''}
+                                           onChange={(e) => handlePointChange(idx, 'description', e.target.value)} style={inputStyle}/>
+                                </div>
+                                <button onClick={() => handleRemovePoint(idx)} disabled={points.length <= 1}
+                                        style={points.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
+                            </div>
+                            <ValidationError message={errors[`point_${idx}`]}/>
                         </div>
                     ))}
                 </div>
@@ -323,12 +453,22 @@ export const AggregateItem = ({
                     </div>
                     {purposes.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
                     {purposes.map((purpose, idx) => (
-                        <div key={idx} style={{display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center'}}>
-                            <input type="text" placeholder="Id" value={purpose.id || ''}
-                                   onChange={(e) => handlePurposeChange(idx, 'id', e.target.value)} style={{...inputStyle, flex: '0 0 100px'}}/>
-                            <input type="text" placeholder="Description" value={purpose.description || ''}
-                                   onChange={(e) => handlePurposeChange(idx, 'description', e.target.value)} style={{...inputStyle, flex: 1}}/>
-                            <button onClick={() => handleRemovePurpose(idx)} style={removeButtonStyle}>Remove</button>
+                        <div key={idx} style={cardStyle}>
+                            <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
+                                <div style={{flex: '0 0 100px'}}>
+                                    <label style={labelStyle}>Id:</label>
+                                    <input type="text" value={purpose.id || ''}
+                                           onChange={(e) => handlePurposeChange(idx, 'id', e.target.value)} style={inputStyle}/>
+                                </div>
+                                <div style={{flex: 1}}>
+                                    <label style={labelStyle}>Description:</label>
+                                    <input type="text" value={purpose.description || ''}
+                                           onChange={(e) => handlePurposeChange(idx, 'description', e.target.value)} style={inputStyle}/>
+                                </div>
+                                <button onClick={() => handleRemovePurpose(idx)} disabled={purposes.length <= 1}
+                                        style={purposes.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
+                            </div>
+                            <ValidationError message={errors[`purpose_${idx}`]}/>
                         </div>
                     ))}
                 </div>
@@ -342,29 +482,38 @@ export const AggregateItem = ({
                     {limits.map((limit, limitIdx) => {
                         return (
                             <div key={limitIdx} style={cardStyle}>
-                                <div style={rowStyle}>
-                                    <div>
-                                        <label style={labelStyle}>Period Type:</label>
-                                        <select value={limit.periodType ?? LimitPeriodType.Unknown}
-                                                onChange={(e) => handleLimitChange(limitIdx, 'periodType', e.target.value as LimitPeriodType)}
-                                                style={inputStyle}>
-                                            {Object.values(LimitPeriodType).map(v => <option key={v} value={v}>{v}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
+                                <div style={{display: 'flex', gap: '12px', alignItems: 'end', flexWrap: 'nowrap'}}>
+                                    <div style={{flex: 1, minWidth: 0}}>
                                         <label style={labelStyle}>Value:</label>
                                         <input type="number" value={limit.value ?? ''}
                                                onChange={(e) => handleLimitChange(limitIdx, 'value', e.target.value === '' ? undefined : Number(e.target.value))}
-                                               style={inputStyle}/>
+                                               style={{...inputStyle, borderColor: errors[`limit_${limitIdx}_value`] ? '#ff4d4f' : '#d9d9d9'}}/>
+                                        <ValidationError message={errors[`limit_${limitIdx}_value`]}/>
                                     </div>
-                                    <div>
+                                    <div style={{flex: 1, minWidth: 0}}>
                                         <label style={labelStyle}>Units:</label>
-                                        <input type="text" value={limit.units || ''}
-                                               onChange={(e) => handleLimitChange(limitIdx, 'units', e.target.value)}
-                                               style={inputStyle}/>
+                                        <select value={limit.units || ''}
+                                                onChange={(e) => handleLimitChange(limitIdx, 'units', e.target.value || undefined)}
+                                                style={{...inputStyle, borderColor: errors[`limit_${limitIdx}_units`] ? '#ff4d4f' : '#d9d9d9'}}>
+                                            <option value="">-- Select --</option>
+                                            {LIMIT_UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                                        </select>
+                                        <ValidationError message={errors[`limit_${limitIdx}_units`]}/>
                                     </div>
-                                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                        <button onClick={() => handleRemoveLimit(limitIdx)} style={removeButtonStyle}>Remove Limit</button>
+                                    <div style={{flex: 1, minWidth: 0}}>
+                                        <label style={labelStyle}>Period Type:</label>
+                                        <select value={limit.periodType ?? ''}
+                                                onChange={(e) => handleLimitChange(limitIdx, 'periodType', e.target.value === '' ? undefined : e.target.value as LimitPeriodType)}
+                                                style={{...inputStyle, borderColor: errors[`limit_${limitIdx}_periodType`] ? '#ff4d4f' : '#d9d9d9'}}>
+                                            <option value="">-- Select --</option>
+                                            {Object.values(LimitPeriodType).filter(v => v !== LimitPeriodType.InTotal).map(v => <option key={v} value={v}>{v}</option>)}
+                                        </select>
+                                        <ValidationError message={errors[`limit_${limitIdx}_periodType`]}/>
+                                    </div>
+                                    <div style={{flex: '0 0 auto'}}>
+                                        <button onClick={() => handleRemoveLimit(limitIdx)} disabled={limits.length <= 1}
+                                                style={{...(limits.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle), whiteSpace: 'nowrap'}}>Remove</button>
+                                        <ValidationError message={undefined}/>
                                     </div>
                                 </div>
                             </div>
@@ -410,36 +559,49 @@ export const AggregateItem = ({
 
     return (
         <div className="aggregate-item" style={{padding: '12px', borderBottom: '1px solid #eee'}}>
-            <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
-                <p style={{margin: 0}}><strong>Type:</strong> {aggregate.primaryType || 'N/A'} / {aggregate.subType || 'N/A'}</p>
-                <p style={{margin: 0}}><strong>Limits:</strong> {limits.length}</p>
+            <div style={{marginBottom: '8px'}}>
+                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}><strong>Id:</strong> {aggregate.id || 'N/A'}</p>
+                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem', display: 'flex', gap: '24px'}}>
+                    <span><strong>Primary Type:</strong> {aggregate.primaryType || 'N/A'}</span>
+                    <span><strong>Sub Type:</strong> {aggregate.subType || 'N/A'}</span>
+                </p>
+                <p style={{margin: 0, fontSize: '0.9rem'}}><strong>Document Identifier:</strong> {aggregate.documentIdentifier || 'N/A'}</p>
             </div>
             {linkedLicences.length > 0 && (
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
                     <strong>Linked Licences:</strong> {linkedLicences.join(', ')}
                 </p>
             )}
-            {containedIn.length > 0 && (
+            {aggregate.timePeriod && (
+                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
+                    <strong>Time Period:</strong> {aggregate.timePeriod.startDate?.substring(0, 10) || 'N/A'} to {aggregate.timePeriod.endDate?.substring(0, 10) || 'N/A'}
+                    {aggregate.timePeriod.inclusive ? ' (Inclusive)' : ' (Exclusive)'}
+                </p>
+            )}
+            {aggregate.timeCutoff && (
+                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
+                    <strong>Time Cutoff:</strong> {aggregate.timeCutoff.cutoffType || 'N/A'}
+                    {aggregate.timeCutoff.date ? ` ${aggregate.timeCutoff.date.substring(0, 10)}` : ''}
+                </p>
+            )}
+            {limits.length > 0 && (
                 <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
-                    <strong style={{display: 'block', marginBottom: '8px'}}>Contained In:</strong>
+                    <strong style={{display: 'block', marginBottom: '8px'}}>Limits:</strong>
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
-                        {containedIn.map((section, idx) => (
+                        {limits.map((limit, idx) => (
                             <li key={idx} style={{marginBottom: '8px', padding: '8px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
                                 <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center'}}>
-                                    <div><strong>Source:</strong> {section.source || 'N/A'}</div>
-                                    <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
-                                    {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (
-                                        <button
-                                            onClick={() => onJumpToPage && onJumpToPage(section.pageNumber!)}
-                                            title={`Jump to page ${section.pageNumber}`}
-                                            style={{
-                                                background: 'none', border: '1px solid #d9d9d9', borderRadius: '4px',
-                                                cursor: 'pointer', fontSize: '0.85rem', padding: '2px 6px',
-                                                display: 'flex', alignItems: 'center', gap: '4px'
-                                            }}
-                                        >
-                                            📄 <span style={{fontSize: '0.75rem'}}>Page {section.pageNumber}</span>
-                                        </button>
+                                    <div><strong>Value:</strong> {limit.value ?? 'N/A'}</div>
+                                    <div><strong>Units:</strong> {limit.units || 'N/A'}</div>
+                                    <div><strong>Period Type:</strong> {limit.periodType || 'N/A'}</div>
+                                    {limit.isAverage && (
+                                        <div><strong>Average Period:</strong> {limit.averagePeriod ?? 'N/A'}</div>
+                                    )}
+                                    {limit.implicitLimit && (
+                                        <div><strong>Implicit Limit:</strong> Yes</div>
+                                    )}
+                                    {limit.valueAdditionalText && (
+                                        <div><strong>Additional Text:</strong> {limit.valueAdditionalText}</div>
                                     )}
                                 </div>
                             </li>
@@ -447,36 +609,42 @@ export const AggregateItem = ({
                     </ul>
                 </div>
             )}
-            {!scrapedView && (onVerify || onReject || onOverride) && (
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '16px', gap: '16px'}}>
-                    <div style={{flex: 1}}>
-                        {(() => {
-                            const latestVerification = (history || [])
-                                .filter(v => v.licenceSectionName === 'Aggregates' && v.licenceSectionItemId === itemId)
-                                .sort((a, b) => {
-                                    const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
-                                    const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
-                                    return dateB - dateA;
-                                })[0];
-
-                            if (!latestVerification) return null;
-
-                            return <LicenceSectionVerificationInfo verification={latestVerification}/>;
-                        })()}
-                    </div>
-                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end'}}>
-                        <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                            <button onClick={onVerify} style={{padding: '4px 12px', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Confirm</button>
-                            <button onClick={onReject} style={{padding: '4px 12px', backgroundColor: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Remove</button>
-                            <button onClick={onOverride} style={{padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Edit</button>
-                        </div>
-                        <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                            <button onClick={onRequestBusinessReview} style={{padding: '4px 12px', backgroundColor: 'darkorange', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Request Business Review</button>
-                            <button onClick={onCompleteBusinessReview} style={{padding: '4px 12px', backgroundColor: 'purple', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Complete Business Review</button>
-                        </div>
-                    </div>
+            {points.length > 0 && (
+                <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
+                    <strong style={{display: 'block', marginBottom: '8px'}}>Points:</strong>
+                    <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
+                        {points.map((point, idx) => (
+                            <li key={idx} style={{marginBottom: '4px', padding: '6px 8px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                                {[point.id, point.altId, point.description].filter(v => v && v.trim()).join(' / ') || 'N/A'}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             )}
+            {purposes.length > 0 && (
+                <div style={{marginTop: '12px', fontSize: '0.9rem'}}>
+                    <strong style={{display: 'block', marginBottom: '8px'}}>Purposes:</strong>
+                    <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
+                        {purposes.map((purpose, idx) => (
+                            <li key={idx} style={{marginBottom: '4px', padding: '6px 8px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                                {[purpose.id, purpose.description].filter(v => v && v.trim()).join(' / ') || 'N/A'}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            <ContainedInList sections={containedIn} onJumpToPage={onJumpToPage}/>
+            <VerificationActions
+                scrapedView={scrapedView}
+                history={history}
+                licenceSectionName="Aggregates"
+                itemId={itemId}
+                onVerify={onVerify}
+                onReject={onReject}
+                onOverride={onOverride}
+                onRequestBusinessReview={onRequestBusinessReview}
+                onCompleteBusinessReview={onCompleteBusinessReview}
+            />
         </div>
     );
 };

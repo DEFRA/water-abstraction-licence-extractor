@@ -4,7 +4,12 @@ import {
     Aggregate,
     LicenceSectionVerification,
     PrimaryType,
-    NullableOfSubType
+    NullableOfSubType,
+    ContainedInInformation,
+    InformationSource,
+    Point,
+    Purpose,
+    AbstractionLimit
 } from "../../../api/generated/apiClient.ts";
 import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
@@ -128,11 +133,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 sourceLicenceVersionId: licence?.licenceVersion?.licenceVersionId,
                 primaryType: PrimaryType.NotSet,
                 subType: NullableOfSubType.NotSet,
-                linkedLicences: [],
-                containedIn: [],
-                points: [],
-                purposes: [],
-                limits: []
+                linkedLicences: [''],
+                containedIn: [new ContainedInInformation({source: InformationSource.Document, sectionName: '', linkReason: ''})],
+                points: [new Point({id: '', description: ''})],
+                purposes: [new Purpose({id: '', description: ''})],
+                limits: [new AbstractionLimit({points: [], purposes: []})]
             });
             const newList = [...aggregates, newAggregate];
             setAggregates(newList);

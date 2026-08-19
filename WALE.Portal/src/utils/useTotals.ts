@@ -55,7 +55,7 @@ function countNonEmpty(
         // Handle arrays
         if (Array.isArray(emptyValue)) {
             if (Array.isArray(value) && value.length > 0) {
-                count++;
+                count += value.length;
             }
             continue;
         }
@@ -81,7 +81,6 @@ function countNonEmpty(
             count++;
         }
     }
-
     return count;
 }
 

@@ -64,7 +64,13 @@ public static class AggregateVerificationMergeHelper
             }
         }
 
-        return (ids, summaries);
+        // Drop entries that were Added and eventually Removed
+        var compactedSummaries = summaries
+            .Where(s => ids.Contains(s.LicenceSectionItemId)
+                        || !(s.VerificationTypes.Contains("Added") && s.VerificationTypes.Contains("Removed")))
+            .ToList();
+
+        return (ids, compactedSummaries);
     }
 
     public static List<Aggregate> MergeAggregates(

@@ -11,6 +11,7 @@ import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
+import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
 import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
@@ -283,8 +284,23 @@ export const LinkedLicenceItem = ({
         );
     }
 
+    const summary = (
+        <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.9rem'}}>
+            <strong>{linkedFilename ? (
+                <a href="#" onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onOpenReport?.(linkedFilename);
+                }}>{linkedLicence.licenceNumber || 'N/A'}</a>
+            ) : (
+                linkedLicence.licenceNumber || 'N/A'
+            )}</strong>
+            <NaldStatusTag status={linkedLicence.naldStatus}/>
+        </div>
+    );
+
     return (
-        <div className="linked-licence-item" style={{padding: '12px', borderBottom: '1px solid #eee'}}>
+        <CollapsibleItem summary={summary}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
                 <p style={{margin: 0}}><strong>Linked Licence
                     Number:</strong> {linkedFilename ? (
@@ -318,6 +334,6 @@ export const LinkedLicenceItem = ({
                 onRequestBusinessReview={onRequestBusinessReview}
                 onCompleteBusinessReview={onCompleteBusinessReview}
             />
-        </div>
+        </CollapsibleItem>
     );
 };

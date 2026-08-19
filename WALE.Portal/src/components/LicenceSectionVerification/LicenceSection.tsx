@@ -1,6 +1,7 @@
 import {type ReactElement, useState, useRef, cloneElement} from 'react';
 import { LicenceSectionVerification, OutputListDataItem } from '../../api/generated/apiClient';
 import { waleApiClient } from '../../api/apiClient';
+import { CollapsibleItem } from './CollapsibleItem';
 
 /**
  * Interface that all licence section body components must implement.
@@ -63,7 +64,6 @@ interface LicenceSectionProps {
 }
 
 export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem, onOpenReport }: LicenceSectionProps) {
-    const [isOpen, setIsOpen] = useState(initialOpen);
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
@@ -193,40 +193,25 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
     };
 
     return (
-        <div className="licence-section" style={{ border: '1px solid #ccc', marginBottom: '10px', borderRadius: '4px' }}>
-            <div 
-                className="licence-section-header" 
-                style={{ 
-                    padding: '10px', 
-                    backgroundColor: '#f5f5f5', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}
-                onClick={() => setIsOpen(!isOpen)}
+        <>
+            <CollapsibleItem
+                variant="section"
+                defaultOpen={initialOpen}
+                summary={<h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>}
             >
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
-                <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
-                </div>
-            </div>
-            {isOpen && (
-                <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
-                    {cloneElement(children, { 
-                        ref: bodyRef,
-                        key: resetKey,
-                        onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => handleVerification(type, itemId),
-                        onVerificationCancelled: () => {
-                            setPendingVerificationType(null);
-                            setPendingVerificationItemId(undefined);
-                            setShowVerificationPrompt(false);
-                        },
-                        outputListDataItem: outputListDataItem,
-                        onOpenReport: onOpenReport
-                    } as any)}
-                </div>
-            )}
+                {cloneElement(children, {
+                    ref: bodyRef,
+                    key: resetKey,
+                    onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => handleVerification(type, itemId),
+                    onVerificationCancelled: () => {
+                        setPendingVerificationType(null);
+                        setPendingVerificationItemId(undefined);
+                        setShowVerificationPrompt(false);
+                    },
+                    outputListDataItem: outputListDataItem,
+                    onOpenReport: onOpenReport
+                } as any)}
+            </CollapsibleItem>
             {showVerificationPrompt && (
                 <div style={{
                     position: 'fixed',
@@ -263,9 +248,9 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => { 
-                                setShowVerificationPrompt(false); 
-                                setPendingVerificationType(null); 
+                            <button onClick={() => {
+                                setShowVerificationPrompt(false);
+                                setPendingVerificationType(null);
                                 if (bodyRef.current && (bodyRef.current as any).onVerificationCancelled) {
                                     (bodyRef.current as any).onVerificationCancelled();
                                 }
@@ -275,6 +260,6 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

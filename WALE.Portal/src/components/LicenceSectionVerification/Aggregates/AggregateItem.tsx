@@ -18,6 +18,7 @@ import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
+import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import {computeAggregateId} from "../../../utils/aggregateUtils.ts";
 
 interface AggregateItemProps {
@@ -557,8 +558,14 @@ export const AggregateItem = ({
 
     const itemId = computeAggregateId(aggregate);
 
+    const summary = (
+        <div style={{fontSize: '0.9rem'}}>
+            <strong>{aggregate.id || 'N/A'}</strong>
+        </div>
+    );
+
     return (
-        <div className="aggregate-item" style={{padding: '12px', borderBottom: '1px solid #eee'}}>
+        <CollapsibleItem summary={summary}>
             <div style={{marginBottom: '8px'}}>
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}><strong>Id:</strong> {aggregate.id || 'N/A'}</p>
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem', display: 'flex', gap: '24px'}}>
@@ -645,6 +652,6 @@ export const AggregateItem = ({
                 onRequestBusinessReview={onRequestBusinessReview}
                 onCompleteBusinessReview={onCompleteBusinessReview}
             />
-        </div>
+        </CollapsibleItem>
     );
 };

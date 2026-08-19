@@ -4441,6 +4441,11 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
+            if (CheckPurposeMapping(naldPurpose.SecondaryCategoryDescription, naldPurpose.UseDescription, description))
+            {
+                return naldPurpose;
+            }
+            
             if (description == naldPurpose.SecondaryCategoryDescription || description == naldPurpose.UseDescription)
             {
                 return naldPurpose;
@@ -4450,7 +4455,9 @@ public static class AbstractionLicenceSchemaConverter
             {
                 var naldSuggestsTransfer =
                     naldPurpose.UseDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || naldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+                    || naldPurpose.SecondaryCategoryDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+                    || naldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true
+                    || naldPurpose.SecondaryCategoryDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
 
                 if (naldSuggestsTransfer)
                 {
@@ -4458,13 +4465,45 @@ public static class AbstractionLicenceSchemaConverter
                 }
             }
 
-            if (naldPurpose.UseDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true)
+            if (naldPurpose.UseDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true
+                || naldPurpose.SecondaryCategoryDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true)
             {
                 return naldPurpose;
             }
         }
 
         return null;
+    }
+
+    private static bool CheckPurposeMapping(
+        string? naldSecondaryCategoryDescription,
+        string? naldUseDescription,
+        string? documentDescription)
+    {
+        if (string.IsNullOrEmpty(documentDescription))
+        {
+            return false;
+        }
+        
+        // Key is document purpose description, Value is Nald purpose name
+        var documentToNaldPurposeMapping = new Dictionary<string, string>
+        {
+            { "agriculture (other than spray irrigation)", "general farming & domestic" },
+            { "reservoir storage for subsequent stream compensation", "transfer between sources (pre water act 2003)" }
+        };
+
+        var documentDescriptionLower = documentDescription.ToLower();//
+        var documentPurposeIsMapped = documentToNaldPurposeMapping.ContainsKey(documentDescriptionLower);
+
+        if (!documentPurposeIsMapped)
+        {
+            return false;
+        }
+
+        var mappedNaldValue = documentToNaldPurposeMapping[documentDescriptionLower];
+        
+        return mappedNaldValue.Equals(naldSecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase)
+            || mappedNaldValue.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)

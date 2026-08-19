@@ -152,12 +152,6 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
-
-        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
-        
-        if (licence.Points[0].NationalGridReferences[0].ToString() != "SE 3286 8147")
-        {
-        }
         
         Assert.Equal("SE 3286 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
@@ -166,6 +160,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("10004638", licence.Points[0].NaldId);
         Assert.Equal("A", licence.Points[0].DocumentId);
 
+        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn[0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[1].Source);
 

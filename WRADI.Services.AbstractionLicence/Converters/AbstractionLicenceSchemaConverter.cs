@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -13,6 +14,7 @@ using WRADI.DocumentType.AbstractionLicence.Helpers;
 using CartesianReference = WRADI.Core.AbstractionLicence.Models.CartesianReference;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
+using LinkedLicence = WRADI.Core.AbstractionLicence.Models.LinkedLicence;
 using NationalGridReference = WRADI.Core.AbstractionLicence.Models.NationalGridReference;
 
 namespace WRADI.DocumentType.AbstractionLicence.Converters;
@@ -424,7 +426,8 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         individual = combinedIndividual.ToArray();
-
+        AddNaldLimits(naldDataLine, individual, aggregates);
+        
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
             aggregates,
@@ -480,6 +483,140 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
+    private static void AddNaldLimits(
+        NaldData? naldDataLine,
+        AbstractionLimitGroup[] individuals,
+        Aggregate[] aggregates)
+    {
+        var naldLimits = naldDataLine?.Purposes
+            .Select(purpose => (purpose.Quantity, purpose))
+            .ToList() ?? [];
+
+        var existingLimitGroups = individuals.ToList();
+        existingLimitGroups.AddRange(aggregates);
+        
+        // Get Nald limits
+        foreach (var (quantity, purpose) in naldLimits)
+        {
+            var purposes = new Purpose[]
+            {
+                new()
+                {
+                    NaldId = purpose.Id.ToString()
+                }
+            };
+            
+            var points = purpose.PointIds
+                .Select(p => new Point { NaldId = p.ToString() })
+                .ToArray();
+            
+            AddNaldLimit(
+                quantity.AnnualQty,
+                quantity.AnnualQtyUsability,
+                LimitPeriodType.PerYear,
+                existingLimitGroups,
+                purposes,
+                points);
+            
+            AddNaldLimit(
+                quantity.DailyQty,
+                quantity.DailyQtyUsability,
+                LimitPeriodType.PerDay,
+                existingLimitGroups,
+                purposes,
+                points);
+            
+            AddNaldLimit(
+                quantity.HourlyQty,
+                quantity.HourlyQtyUsability,
+                LimitPeriodType.PerHour,
+                existingLimitGroups,
+                purposes,
+                points);
+            
+            AddNaldLimit(
+                quantity.InstQty,
+                quantity.InstQtyUsability,
+                LimitPeriodType.PerSecond,
+                existingLimitGroups,
+                purposes,
+                points);
+        }
+    }
+
+    private static void AddNaldLimit(
+        double? value,
+        char? units,
+        LimitPeriodType periodType,
+        List<AbstractionLimitGroup> existingLimitGroups,
+        Purpose[] purposes,
+        Point[] points)
+    {
+        if (value == null)
+        {
+            return;
+        }
+        
+        var limit = new AbstractionLimit
+        {
+            Units = ExpandCharToUnits(units),
+            Value = value,
+            PeriodType = periodType,
+            Purposes = purposes,
+            Points = points
+        };
+
+        var matchingIndividualGroup = existingLimitGroups
+            .SelectMany(ig => ig.Limits
+                .Select(l => new IndividualGroupWithLimitTuple
+                {
+                    Group = ig,
+                    Limit = l
+                }))
+            .FirstOrDefault(grp =>
+                grp.Limit.PeriodType == periodType
+                && UnitsForComparison(grp.Limit.Units) == UnitsForComparison(limit.Units)
+                && AreValuesEqual(ValueInBaseUnits(grp.Limit.Value, grp.Limit.Units), ValueInBaseUnits(limit.Value, limit.Units)));
+
+        if (matchingIndividualGroup != null)
+        {
+            var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
+
+            if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+            {
+                // Already have it in contained in
+                return;
+            }
+            
+            containedInList.Add(new ContainedInInformation
+            {
+                Source = InformationSource.Nald
+            });
+                    
+            matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
+        }
+        else
+        {
+            // TODO - add it as a new limit to some group (this? a new one?)
+            throw new Exception("Add new group");
+        }
+    }
+
+    private static double? ValueInBaseUnits(double? value, string? units)
+    {
+        if (string.IsNullOrEmpty(units))
+        {
+            return value;
+        }
+        
+        if (units is "thousand cubic metres")
+        {
+            return value * 1000.0;
+        }
+        
+        return value;
+    }
+    
     private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
         PromoteAnyIndividualLimitsThatShouldBeAggregates(
             AbstractionLimitGroup[] individuals,
@@ -2489,10 +2626,6 @@ public static class AbstractionLicenceSchemaConverter
             .FirstOrDefault()?
             .Text;
         
-        var naldLimits = naldDataLine?.Purposes
-            .Select(purpose => (purpose.Quantity, purpose))
-            .ToList() ?? [];
-        
         if (limitPointTable != null)
         {
             var tableLines = limitPointTable.Text!;
@@ -3179,132 +3312,6 @@ public static class AbstractionLicenceSchemaConverter
                 individualGroup.Limits.Add(abstractionLimit);
             }
         }
-
-        foreach (var (limits, purpose) in naldLimits)
-        {
-            var purposes = new Purpose[]
-            {
-                new()
-                {
-                    NaldId = purpose.Id.ToString()
-                }
-            };
-            
-            var points = purpose.PointIds
-                .Select(p => new Point { NaldId = p.ToString() })
-                .ToArray();
-            
-            if (limits.AnnualQty != null)
-            {
-                var yearlyLimit = new AbstractionLimit
-                {
-                    Units = ExpandCharToUnits(limits.AnnualQtyUsability),
-                    Value = limits.AnnualQty,
-                    PeriodType = LimitPeriodType.PerYear,
-                    Purposes = purposes,
-                    Points = points
-                };
-
-                var matchingIndividualGroup = individualGroups
-                    .FirstOrDefault(ig => ig.Limits
-                        .Any(l =>
-                            l.PeriodType == LimitPeriodType.PerYear
-                            && (l.Units == yearlyLimit.Units || l.Units == UnitsForComparison(yearlyLimit.Units))
-                            && AreValuesEqual(l.Value, yearlyLimit.Value)));
-
-                if (matchingIndividualGroup != null)
-                {
-                    
-                }
-            }
-            
-            if (limits.DailyQty != null)
-            {
-                var dailyLimit = new AbstractionLimit
-                {
-                    Units = ExpandCharToUnits(limits.DailyQtyUsability),
-                    Value = limits.DailyQty,
-                    PeriodType = LimitPeriodType.PerDay,
-                    Purposes = purposes,
-                    Points = points
-                };
-
-                var matchingIndividualGroup = individualGroups
-                    .SelectMany(ig => ig.Limits
-                        .Select(l => new IndividualGroupWithLimitTuple
-                        {
-                            Group = ig,
-                            Limit = l
-                        }))
-                    .FirstOrDefault(grp =>
-                        grp.Limit.PeriodType == LimitPeriodType.PerDay
-                        && (grp.Limit.Units == dailyLimit.Units
-                            || grp.Limit.Units == UnitsForComparison(dailyLimit.Units))
-                        && AreValuesEqual(grp.Limit.Value, dailyLimit.Value));
-
-                if (matchingIndividualGroup != null)
-                {
-                    var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
-                    containedInList.Add(new ContainedInInformation
-                    {
-                        Source = InformationSource.Nald
-                    });
-                    
-                    matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
-                }
-                else
-                {
-                    // TODO - add it as a new limit to some group (this? a new one?)
-                }
-            }
-            
-            if (limits.InstQty != null)
-            {
-                var instantLimit = new AbstractionLimit
-                {
-                    Units = ExpandCharToUnits(limits.InstQtyUsability),
-                    Value = limits.InstQty,
-                    PeriodType = LimitPeriodType.PerSecond,
-                    Purposes = purposes,
-                    Points = points
-                };
-                
-                var matchingIndividualGroup = individualGroups
-                    .FirstOrDefault(ig => ig.Limits
-                        .Any(l =>
-                            l.PeriodType == LimitPeriodType.PerSecond
-                            && (l.Units == instantLimit.Units || l.Units == UnitsForComparison(instantLimit.Units))
-                            && AreValuesEqual(l.Value, instantLimit.Value)));
-
-                if (matchingIndividualGroup != null)
-                {
-                }
-            }
-            
-            if (limits.HourlyQty != null)
-            {
-                var hourlyLimit = new AbstractionLimit
-                {
-                    Units = ExpandCharToUnits(limits.HourlyQtyUsability),
-                    Value = limits.HourlyQty,
-                    PeriodType = LimitPeriodType.PerHour,
-                    Purposes = purposes,
-                    Points = points
-                };
-                
-                var matchingIndividualGroup = individualGroups
-                    .FirstOrDefault(ig => ig.Limits
-                        .Any(l =>
-                            l.PeriodType == LimitPeriodType.PerHour
-                            && (l.Units == hourlyLimit.Units || l.Units == UnitsForComparison(hourlyLimit.Units))
-                            && AreValuesEqual(l.Value, hourlyLimit.Value)));
-
-                if (matchingIndividualGroup != null)
-                {
-                    
-                }
-            }
-        }
         
         var notIncludedList = new List<AbstractionLimitGroup>();
 
@@ -3439,9 +3446,14 @@ public static class AbstractionLicenceSchemaConverter
             && value2 <= maxValue1;
     }
     
-    private static string UnitsForComparison(string units)
+    private static string? UnitsForComparison(string? units)
     {
-        if (units == "litres")
+        if (string.IsNullOrEmpty(units))
+        {
+            return units;
+        }
+        
+        if (units is "litres" or "cubic meters" or "thousand cubic metres")
         {
             return "cubic metres";
         }

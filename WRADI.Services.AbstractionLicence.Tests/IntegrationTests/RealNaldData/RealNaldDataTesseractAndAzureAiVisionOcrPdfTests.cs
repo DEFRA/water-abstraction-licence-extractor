@@ -166,7 +166,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(2)", licence.Purposes[1].DocumentId);
         Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].DocumentDescription);
         Assert.Equal("10029938", licence.Purposes[1].NaldId);
-        Assert.Equal("General Farming & Domestic", licence.Purposes[1].NaldDescription);      
+        Assert.Equal("General Farming & Domestic", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);

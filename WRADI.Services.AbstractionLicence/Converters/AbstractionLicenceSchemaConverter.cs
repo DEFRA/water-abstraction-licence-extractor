@@ -559,7 +559,7 @@ public static class AbstractionLicenceSchemaConverter
         
         var limit = new AbstractionLimit
         {
-            Units = ExpandCharToUnits(units),
+            Units = periodType == LimitPeriodType.PerSecond ? "litres" : "cubic meters",
             Value = value,
             PeriodType = periodType,
             Purposes = purposes,
@@ -3453,21 +3453,12 @@ public static class AbstractionLicenceSchemaConverter
             return units;
         }
         
-        if (units is "litres" or "cubic meters" or "thousand cubic metres")
+        if (units is "cubic meters" or "thousand cubic metres")
         {
             return "cubic metres";
         }
 
         return units;
-    }
-    
-    private static string ExpandCharToUnits(char? letter)
-    {
-        return letter switch
-        {
-            'L' => "litres",
-            _ => "UNKNOWN"
-        };
     }
     
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
@@ -4430,6 +4421,11 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
+            if (description == naldPurpose.SecondaryCategoryDescription || description == naldPurpose.UseDescription)
+            {
+                return naldPurpose;
+            }
+            
             if (descriptionSuggestsTransfer)
             {
                 var naldSuggestsTransfer =
@@ -4504,6 +4500,7 @@ public static class AbstractionLicenceSchemaConverter
             .Select(purpose => new NaldPurposeData
             {
                 Id = purpose.Id.ToString(),
+                SecondaryCategoryDescription = purpose.CategoryUse.SecondaryCategoryDescription,
                 Code = purpose.CategoryUse.Code,
                 UseCode = purpose.CategoryUse.UseCode.ToString(),
                 UseDescription = purpose.CategoryUse.UseDescription

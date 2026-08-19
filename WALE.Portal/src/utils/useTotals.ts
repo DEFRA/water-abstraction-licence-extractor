@@ -81,7 +81,6 @@ function countNonEmpty(
             count++;
         }
     }
-
     return count;
 }
 

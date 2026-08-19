@@ -17,6 +17,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 
@@ -36,10 +38,12 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             []);
 
         AbsLicCacheService = realAbsLicCacheService;
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -137,7 +141,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -147,13 +152,20 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
+
+        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
+        
+        if (licence.Points[0].NationalGridReferences[0].ToString() != "SE 3286 8147")
+        {
+        }
+        
         Assert.Equal("SE 3286 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].DocumentDescription);
         Assert.Equal("BOREHOLE - SHERWOOD SANDSTONE - SINDERBY", licence.Points[0].NaldDescription);
         Assert.Equal("10004638", licence.Points[0].NaldId);
         Assert.Equal("A", licence.Points[0].DocumentId);
-        Assert.Equal(2, licence.Points[0].ContainedIn.Length);
+
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn[0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn[1].Source);
 
@@ -242,7 +254,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -363,7 +376,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, abstractionLicence.Count);
         Assert.Single(abstractionLicence.First().Licences);

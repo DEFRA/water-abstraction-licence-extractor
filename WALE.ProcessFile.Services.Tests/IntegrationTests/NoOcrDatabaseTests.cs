@@ -20,6 +20,8 @@ using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -55,6 +57,7 @@ public class NoOcrDatabaseTests
             AbsLicReadService,
             AbsLicWriteService);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -73,6 +76,11 @@ public class NoOcrDatabaseTests
     public NoOcrDatabaseTests()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+    }
+
+    static NoOcrDatabaseTests()
+    {
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
@@ -290,7 +298,7 @@ public class NoOcrDatabaseTests
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Models;
 using CartesianReference = WALE.ProcessFile.Core.Models.CartesianReference;
 using NationalGridReference = WALE.ProcessFile.Core.Models.NationalGridReference;

@@ -14,6 +14,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 
@@ -33,10 +35,12 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             []);
 
         AbsLicCacheService = realAbsLicCacheService;
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -125,7 +129,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);

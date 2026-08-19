@@ -4,15 +4,16 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using CartesianReference = WRADI.Core.AbstractionLicence.Models.CartesianReference;
 using Date = WALE.ProcessFile.Services.Formats.Date;
+using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
 using LinkedLicence = WRADI.Core.AbstractionLicence.Models.LinkedLicence;
 using NationalGridReference = WRADI.Core.AbstractionLicence.Models.NationalGridReference;
@@ -28,6 +29,7 @@ public static class AbstractionLicenceSchemaConverter
         NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
         LookupConfiguration lookupConfiguration,
         IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         int processRunId)
     {
         var dmsFileIdInfo = await RecordFileIdAsync(
@@ -83,8 +85,7 @@ public static class AbstractionLicenceSchemaConverter
                 confidence)
             : null;
 
-        var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            cacheService,
+        var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
             licenceNumber,
             regionCode);
         
@@ -132,8 +133,9 @@ public static class AbstractionLicenceSchemaConverter
                 naldDataLine,
                 matchesResult.RegionCode,
                 noneSchemaData,
-                lookupConfiguration!,
-                cacheService);
+                lookupConfiguration,
+                cacheService,
+                naldDataLookupService);
 
         var companyNameMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -204,6 +206,7 @@ public static class AbstractionLicenceSchemaConverter
                 noneSchemaData,
                 lookupConfiguration,
                 cacheService,
+                naldDataLookupService,
                 individual);
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
@@ -281,14 +284,16 @@ public static class AbstractionLicenceSchemaConverter
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration!,
-            cacheService));
+            cacheService,
+            naldDataLookupService));
         
         linkedLicences.AddRange(await GetPointsLinkedLicencesAsync(
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration!,
-            cacheService));
+            cacheService,
+            naldDataLookupService));
         
         foreach (var (_, (list, _, _)) in sectionDataDict)
         {
@@ -304,7 +309,8 @@ public static class AbstractionLicenceSchemaConverter
                 matchesResult.RegionCode,
                 noneSchemaData,
                 lookupConfiguration,
-                cacheService);
+                cacheService,
+                naldDataLookupService);
 
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
@@ -312,14 +318,15 @@ public static class AbstractionLicenceSchemaConverter
             linkedLicences,
             licenceNumber!,
             lookupConfiguration,
-            cacheService);
+            naldDataLookupService);
 
         var anywhereInDocumentLinkedLicences = await GetAnywhereInDocumentLinkedLicencesAsync(
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration,
-            cacheService);
+            cacheService,
+            naldDataLookupService);
 
         var additionalLinkedLicenceCount = 1;
         
@@ -793,7 +800,7 @@ public static class AbstractionLicenceSchemaConverter
         List<LinkedLicence> linkedLicences,
         string? licenceNumber,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
         var tempLinkedLicencesGrp = linkedLicences
             .GroupBy(linkedLicence => (
@@ -870,7 +877,7 @@ public static class AbstractionLicenceSchemaConverter
                     .LicenceVersion.Clone() ?? new LicenceVersion(),
                 regionId,
                 lookupConfiguration.CacheService,
-                cacheService,
+                naldDataLookupService,
                 linkedLicencesGroup
                     .OrderByDescending(ll => ll.IsBecauseOfAggregate).FirstOrDefault()?.IsBecauseOfAggregate), regionId));
         }
@@ -1069,7 +1076,7 @@ public static class AbstractionLicenceSchemaConverter
         LicenceVersion licenceVersion,
         int? regionId,
         ICacheService cacheService,
-        IAbstractionLicenceCacheService abstractionLicenceCacheService,
+        INaldDataLookupService naldDataLookupService,
         bool? isBecauseOfAggregate)
     {
         var licenceOrPermitNumber = linkedLicenceNumber;
@@ -1083,8 +1090,7 @@ public static class AbstractionLicenceSchemaConverter
             throw new Exception("regionId is null");
         }
         
-        var naldDataLineTask = Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            abstractionLicenceCacheService,
+        var naldDataLineTask = naldDataLookupService.GetNaldDataLineAsync(
             licenceOrPermitNumber,
             regionId.Value);
         
@@ -1119,6 +1125,7 @@ public static class AbstractionLicenceSchemaConverter
         int processRunId,
         LookupConfiguration lookupConfiguration,
         IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         DmsFileData? dmsDataForFile = null,
         string? naldLicenceNumber = null)
     {
@@ -1131,6 +1138,7 @@ public static class AbstractionLicenceSchemaConverter
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
             lookupConfiguration,
             cacheService,
+            naldDataLookupService,
             processRunId);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
@@ -1141,7 +1149,8 @@ public static class AbstractionLicenceSchemaConverter
             previouslyParsedPaths,
             processRunId,
             lookupConfiguration,
-            cacheService);
+            cacheService,
+            naldDataLookupService);
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -1256,7 +1265,8 @@ public static class AbstractionLicenceSchemaConverter
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 lookupConfiguration,
-                cacheService);
+                cacheService,
+                naldDataLookupService);
 
             var newLicenceSetIds = new List<LicenceSetReference>
             {
@@ -1353,7 +1363,8 @@ public static class AbstractionLicenceSchemaConverter
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var returnList = new List<LicenceSet>();
 
@@ -1419,7 +1430,7 @@ public static class AbstractionLicenceSchemaConverter
                             incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId,
                             lookupConfiguration.CacheService,
-                            cacheService,
+                            naldDataLookupService,
                             null);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
@@ -1473,7 +1484,7 @@ public static class AbstractionLicenceSchemaConverter
                         licence.LinkedLicences.ToList(),
                         licence.LicenceNumber?.Value,
                         lookupConfiguration,
-                        cacheService)).ToArray();
+                        naldDataLookupService)).ToArray();
                 }
             }
         }
@@ -1642,7 +1653,8 @@ public static class AbstractionLicenceSchemaConverter
         List<string> previouslyParsedFiles,
         int processRunId,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var returnLicences = new List<Licence>();
         
@@ -1707,8 +1719,7 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
                 linkedLicence.LicenceNumber,
                 primaryLicence.RegionId!.Value);
 
@@ -1766,6 +1777,7 @@ public static class AbstractionLicenceSchemaConverter
                 (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
                 lookupConfiguration,
                 cacheService,
+                naldDataLookupService,
                 processRunId);
 
             if (licence.Status == ScrapeStatus.Error)
@@ -1916,6 +1928,7 @@ public static class AbstractionLicenceSchemaConverter
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
             IAbstractionLicenceCacheService cacheService,
+            INaldDataLookupService naldDataLookupService,
             AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var section = matches
@@ -1958,6 +1971,7 @@ public static class AbstractionLicenceSchemaConverter
                     sectionLinkedLicences,
                     noneSchemaData,
                     cacheService,
+                    naldDataLookupService,
                     previouslyFoundIndividualLimits);
             }
 
@@ -1977,7 +1991,8 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        cacheService,
+                        naldDataLookupService));
             }
         }
 
@@ -1997,7 +2012,8 @@ public static class AbstractionLicenceSchemaConverter
         int count,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
         
@@ -2005,8 +2021,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumberLoop,
             lookupConfiguration.CacheService);
         
-        var naldDataLineLoop = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            cacheService,
+        var naldDataLineLoop = await naldDataLookupService.GetNaldDataLineAsync(
             licenceNumberLoop,
             regionCode);
 
@@ -2064,7 +2079,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
@@ -2092,8 +2108,7 @@ public static class AbstractionLicenceSchemaConverter
                 linkedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
                 linkedLicenceNumber,
                 regionCode);
             
@@ -2156,7 +2171,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         if (licenceHistorySection == null)
         {
@@ -2182,9 +2198,7 @@ public static class AbstractionLicenceSchemaConverter
                 licenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
-                lln, regionCode);
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(lln, regionCode);
             
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
@@ -2230,7 +2244,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var purposeSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Purposes");
@@ -2266,7 +2281,8 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        cacheService,
+                        naldDataLookupService));
                 }
             }
         }
@@ -2279,7 +2295,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var pointsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Points");
@@ -2315,7 +2332,8 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        cacheService,
+                        naldDataLookupService));
                 }
             }
         }
@@ -2510,7 +2528,8 @@ public static class AbstractionLicenceSchemaConverter
             int regionCode,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
-            IAbstractionLicenceCacheService cacheService)
+            IAbstractionLicenceCacheService cacheService,
+            INaldDataLookupService naldDataLookupService)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
@@ -2551,6 +2570,7 @@ public static class AbstractionLicenceSchemaConverter
                 allAggregateLinkedLicences,
                 noneSchemaData,
                 cacheService,
+                naldDataLookupService,
                 []);
         }
 
@@ -2585,6 +2605,7 @@ public static class AbstractionLicenceSchemaConverter
         List<LinkedLicence> sectionLinkedLicences,
         Dictionary<string, object?> noneSchemaData,
         IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
@@ -3000,8 +3021,7 @@ public static class AbstractionLicenceSchemaConverter
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine2 = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine2 = await naldDataLookupService.GetNaldDataLineAsync(
                 naldLicenceNumber,
                 regionCode);
 
@@ -4988,7 +5008,8 @@ public static class AbstractionLicenceSchemaConverter
     public static async Task<List<LicenceSet>> AddAdditionalLicenceSetsAsync(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
@@ -4996,7 +5017,8 @@ public static class AbstractionLicenceSchemaConverter
             licenceSetGroups,
             true,
             lookupConfiguration,
-            cacheService));
+            cacheService,
+            naldDataLookupService));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         return distinctLicenceSets;

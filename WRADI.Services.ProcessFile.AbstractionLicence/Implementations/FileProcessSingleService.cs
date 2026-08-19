@@ -9,6 +9,7 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
 
 namespace WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
@@ -19,7 +20,8 @@ public class FileProcessSingleService(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IOutputService outputService,
     IFileService fileService,
-    IPdfDataExtractorService pdfDataExtractor)
+    IPdfDataExtractorService pdfDataExtractor,
+    INaldDataLookupService naldDataLookupService)
     : IFileProcessSingleService
 {
     public async Task<bool> RunAsync(
@@ -92,6 +94,7 @@ public class FileProcessSingleService(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
+                naldDataLookupService,
                 naldLicence.LicenceNumber,
                 processRun);
 
@@ -134,7 +137,8 @@ public class FileProcessSingleService(
             
             await AddCompleteProcessRunDataAsync(
                 processRun,
-                lookupConfig);
+                lookupConfig,
+                naldDataLookupService);
 
             FireAndForgetDataRefresh(processRun.ProcessRunId);
             return true;
@@ -172,6 +176,7 @@ public class FileProcessSingleService(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
+        INaldDataLookupService naldDataLookupService,
         string naldLicenceNumber,
         ProcessRun processRun)
     {
@@ -216,6 +221,7 @@ public class FileProcessSingleService(
                 processRun.ProcessRunId,
                 lookupConfig,
                 abstractionLicenceCacheService,
+                naldDataLookupService,
                 dmsDataForFile,
                 naldLicenceNumber));
         }
@@ -248,7 +254,8 @@ public class FileProcessSingleService(
     
     private async Task AddCompleteProcessRunDataAsync(
         ProcessRun processRun,
-        LookupConfiguration lookupConfiguration)
+        LookupConfiguration lookupConfiguration,
+        INaldDataLookupService naldDataLookupService)
     {
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(FileProcessSingleService)} - started processing all license sets at " +
@@ -265,7 +272,8 @@ public class FileProcessSingleService(
         var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
             lookupConfiguration,
-            abstractionLicenceCacheService);
+            abstractionLicenceCacheService,
+            naldDataLookupService);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);

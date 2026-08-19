@@ -18,6 +18,8 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 
@@ -62,10 +64,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             realAbsLicCacheService,
             naldData,
             []);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -163,7 +168,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -285,7 +291,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -416,7 +423,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, abstractionLicence.Count);
         Assert.Single(abstractionLicence.First().Licences);
@@ -428,12 +436,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
+        Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal("absdsd", licence.Points[0].NaldDescription);
         Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].DocumentDescription);
         Assert.Equal("A", licence.Points[0].Name);
         Assert.Equal("A", licence.Points[0].DocumentId);
         Assert.Equal("54556", licence.Points[0].NaldId);
-        Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
         Assert.Equal("SE 2865 7639", licence.Points[0].NationalGridReferences![0].ToString());

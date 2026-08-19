@@ -1,15 +1,15 @@
 using System.Collections.Concurrent;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
 
-namespace WRADI.Core.AbstractionLicence.Helpers;
+namespace WRADI.DocumentType.AbstractionLicence.Services;
 
-public static class FormattingHelper
+public class NaldDataLookupService(IAbstractionLicenceCacheService cacheService) : INaldDataLookupService
 {
-    private static readonly ConcurrentDictionary<string, NaldData?> NaldDataCache = new();
-
-    public static async Task<NaldData?> GetNaldDataLineAsync(
-        IAbstractionLicenceCacheService cacheService,
+    private readonly ConcurrentDictionary<string, NaldData?> _naldDataCache = new();
+    
+    public async Task<NaldData?> GetNaldDataLineAsync(
         string? licenceNumber,
         int regionCode)
     {
@@ -20,14 +20,14 @@ public static class FormattingHelper
         
         var key = $"{regionCode}|{licenceNumber}";
 
-        if (NaldDataCache.TryGetValue(key, out var cachedData))
+        if (_naldDataCache.TryGetValue(key, out var cachedData))
         {
             return cachedData;
         }
 
         var naldData = await cacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
-        NaldDataCache.TryAdd(key, naldData);
-
+        _naldDataCache.TryAdd(key, naldData);
+        
         return naldData;
     }
 }

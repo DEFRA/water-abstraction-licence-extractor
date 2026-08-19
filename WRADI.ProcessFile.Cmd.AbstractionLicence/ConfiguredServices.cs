@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
 
 namespace WRADI.ProcessFile.Cmd.AbstractionLicence;
 
@@ -16,6 +17,8 @@ public class ConfiguredServices
     public ILicenceNumberService? LicenceNumberService { get; set; }
     
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
+    
+    public INaldDataLookupService? NaldDataLookupService { get; init; }
     
     public int MaxConcurrentScrapers { get; init; }
     

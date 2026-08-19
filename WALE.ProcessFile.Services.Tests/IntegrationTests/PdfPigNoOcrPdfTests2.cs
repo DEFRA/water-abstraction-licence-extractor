@@ -18,6 +18,8 @@ using FakeItEasy;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -39,6 +41,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             realAbsLicCacheService,
             NaldData,
             FileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -54,6 +58,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -328,7 +333,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -417,7 +422,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
@@ -444,7 +449,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -617,7 +622,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -726,7 +731,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -813,7 +818,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -933,7 +938,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -1028,7 +1033,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
@@ -1070,7 +1075,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -1199,7 +1204,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
         Assert.Equal("2/26/32/328", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
@@ -1290,7 +1295,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -1410,7 +1415,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -1506,7 +1511,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -1581,7 +1586,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Single(agreedSchemaLicenceGroup.Licences);
 
@@ -1678,7 +1683,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -1725,7 +1730,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
 
@@ -1756,7 +1761,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
         
@@ -1793,7 +1798,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(4, 2, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
         Assert.Equal("9/40/04/0476/G", agreedSchemaLicence.LicenceNumber!.Value);
@@ -1830,7 +1835,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(3, licenceGroups.Count);
 
@@ -1940,7 +1945,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets[1];
@@ -2104,7 +2109,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
         
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
         
@@ -2152,7 +2157,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2271,7 +2276,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 2, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -2316,7 +2321,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder2),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2372,7 +2377,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2415,7 +2421,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2454,7 +2461,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2503,7 +2511,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -2535,7 +2544,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2567,7 +2577,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -2599,7 +2610,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2681,7 +2693,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -2804,7 +2817,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -2840,7 +2854,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2874,7 +2889,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2909,7 +2925,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2946,7 +2963,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -2982,7 +3000,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -3016,7 +3035,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3058,7 +3078,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
         
@@ -3093,7 +3114,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3125,7 +3147,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3157,7 +3180,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3189,7 +3213,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3221,7 +3246,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3253,7 +3279,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(licenceSets);
         
@@ -3285,7 +3312,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(3, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         
@@ -3326,7 +3354,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             _pdfDataExtractor,
             -1,
             await LookupConfigurationAsync(5, 3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
         

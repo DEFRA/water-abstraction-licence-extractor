@@ -20,6 +20,8 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.ProcessFile.Cmd.AbstractionLicence;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -144,7 +146,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
                     loopLookupConfig,
                     abstractionLicenceCacheService,
                     dmsFileData,
-                    naldLicence.LicenceNumber));
+                    naldLicence.LicenceNumber,
+                    services.NaldDataLookupService!));
 
             while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
@@ -203,7 +206,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
-        abstractionLicenceCacheService);
+        abstractionLicenceCacheService,
+        services.NaldDataLookupService!);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -253,7 +257,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     LookupConfiguration lookupConfig,
     IAbstractionLicenceCacheService cacheService,
     DmsFileData dmsDataForFile,
-    string naldLicenceNumber)
+    string naldLicenceNumber,
+    INaldDataLookupService naldDataLookupService)
 {
     var dtStart = DateTime.Now;
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
@@ -291,6 +296,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             processRun.ProcessRunId,
             lookupConfig,
             cacheService,
+            naldDataLookupService,
             dmsDataForFile,
             naldLicenceNumber);
 
@@ -569,6 +575,7 @@ ConfiguredServices ConfigureServices(
         OutputService = outputService,
         AbstractionLicenceOutputService =
             abstractionLicenceOutputService,
+        NaldDataLookupService = new NaldDataLookupService(abstractionLicenceCacheService),
         LicenceNumberService = null,
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,

@@ -433,7 +433,10 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         individual = combinedIndividual.ToArray();
-        AddNaldLimits(naldDataLine, individual, aggregates);
+        
+        // TODO - add NALD aggregates
+        
+        individual = AddNaldLimits(naldDataLine, individual, aggregates);
         
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
@@ -490,15 +493,17 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    private static void AddNaldLimits(
+    private static AbstractionLimitGroup[] AddNaldLimits(
         NaldData? naldDataLine,
         AbstractionLimitGroup[] individuals,
         Aggregate[] aggregates)
     {
         if (naldDataLine == null)
         {
-            return;
+            return individuals;
         }
+     
+        var individualsList = individuals.ToList();
         
         var existingLimitGroups = individuals.ToList();
         existingLimitGroups.AddRange(aggregates);
@@ -539,29 +544,35 @@ public static class AbstractionLicenceSchemaConverter
                 LimitPeriodType.PerYear,
                 existingLimitGroups,
                 purposes,
-                points);
+                points,
+                ref individualsList);
             
             AddNaldLimit(
                 quantity.DailyQty,
                 LimitPeriodType.PerDay,
                 existingLimitGroups,
                 purposes,
-                points);
+                points,
+                ref individualsList);
             
             AddNaldLimit(
                 quantity.HourlyQty,
                 LimitPeriodType.PerHour,
                 existingLimitGroups,
                 purposes,
-                points);
+                points,
+                ref individualsList);
             
             AddNaldLimit(
                 quantity.InstQty,
                 LimitPeriodType.PerSecond,
                 existingLimitGroups,
                 purposes,
-                points);
+                points,
+                ref individualsList);
         }
+
+        return individualsList.ToArray();
     }
 
     private static void AddNaldLimit(
@@ -569,7 +580,8 @@ public static class AbstractionLicenceSchemaConverter
         LimitPeriodType periodType,
         List<AbstractionLimitGroup> existingLimitGroups,
         Purpose[] purposes,
-        Point[] points)
+        Point[] points,
+        ref List<AbstractionLimitGroup> individuals)
     {
         if (value == null)
         {
@@ -577,7 +589,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         const string litres = "litres";
-        const string cubicMeters = "cubic meters";
+        const string cubicMeters = "cubic metres";
         
         var abstractionLimit = new AbstractionLimit
         {
@@ -621,8 +633,19 @@ public static class AbstractionLicenceSchemaConverter
         }
         else
         {
-            // TODO - add it as a new limit to some group (this? a new one?)
-            throw new Exception("Add new group");
+            var newGroup = new AbstractionLimitGroup
+            {
+                ContainedIn =
+                [
+                    new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    }
+                ],
+                Limits = [abstractionLimit]
+            };
+            
+            individuals.Add(newGroup);
         }
     }
 

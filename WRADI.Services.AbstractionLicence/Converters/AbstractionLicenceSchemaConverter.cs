@@ -495,31 +495,47 @@ public static class AbstractionLicenceSchemaConverter
         AbstractionLimitGroup[] individuals,
         Aggregate[] aggregates)
     {
-        var naldLimits = naldDataLine?.Purposes
-            .Select(purpose => (purpose.Quantity, purpose))
-            .ToList() ?? [];
-
+        if (naldDataLine == null)
+        {
+            return;
+        }
+        
         var existingLimitGroups = individuals.ToList();
         existingLimitGroups.AddRange(aggregates);
+     
+        var groupedNaldLimits = naldDataLine.Purposes
+            .GroupBy(l => new
+            {
+                l.Quantity.AnnualQty,
+                l.Quantity.DailyQty,
+                l.Quantity.HourlyQty,
+                l.Quantity.InstQty
+            })
+            .ToList();
         
         // Get Nald limits
-        foreach (var (quantity, purpose) in naldLimits)
+        foreach (var groupedNaldLimit in groupedNaldLimits)
         {
-            var purposes = new Purpose[]
-            {
-                new()
-                {
-                    NaldId = purpose.Id.ToString()
-                }
-            };
+            var naldLimits = groupedNaldLimit
+                .Select(purpose => (purpose.Quantity, purpose))
+                .ToList();
+
+            var purposes = naldLimits
+                .Select(x => new Purpose
+                    {
+                        NaldId = x.purpose.Id.ToString()
+                    })
+                .ToArray();
+
+            var quantity = naldLimits.First().Quantity;
             
-            var points = purpose.PointIds
+            var points = naldLimits
+                .SelectMany(nl => nl.purpose.PointIds)
                 .Select(p => new Point { NaldId = p.ToString() })
                 .ToArray();
             
             AddNaldLimit(
                 quantity.AnnualQty,
-                quantity.AnnualQtyUsability,
                 LimitPeriodType.PerYear,
                 existingLimitGroups,
                 purposes,
@@ -527,7 +543,6 @@ public static class AbstractionLicenceSchemaConverter
             
             AddNaldLimit(
                 quantity.DailyQty,
-                quantity.DailyQtyUsability,
                 LimitPeriodType.PerDay,
                 existingLimitGroups,
                 purposes,
@@ -535,7 +550,6 @@ public static class AbstractionLicenceSchemaConverter
             
             AddNaldLimit(
                 quantity.HourlyQty,
-                quantity.HourlyQtyUsability,
                 LimitPeriodType.PerHour,
                 existingLimitGroups,
                 purposes,
@@ -543,7 +557,6 @@ public static class AbstractionLicenceSchemaConverter
             
             AddNaldLimit(
                 quantity.InstQty,
-                quantity.InstQtyUsability,
                 LimitPeriodType.PerSecond,
                 existingLimitGroups,
                 purposes,
@@ -553,7 +566,6 @@ public static class AbstractionLicenceSchemaConverter
 
     private static void AddNaldLimit(
         double? value,
-        char? units,
         LimitPeriodType periodType,
         List<AbstractionLimitGroup> existingLimitGroups,
         Purpose[] purposes,
@@ -563,10 +575,13 @@ public static class AbstractionLicenceSchemaConverter
         {
             return;
         }
+
+        const string litres = "litres";
+        const string cubicMeters = "cubic meters";
         
-        var limit = new AbstractionLimit
+        var abstractionLimit = new AbstractionLimit
         {
-            Units = periodType == LimitPeriodType.PerSecond ? "litres" : "cubic meters",
+            Units = periodType == LimitPeriodType.PerSecond ? litres : cubicMeters,
             Value = value,
             PeriodType = periodType,
             Purposes = purposes,
@@ -574,16 +589,18 @@ public static class AbstractionLicenceSchemaConverter
         };
 
         var matchingIndividualGroup = existingLimitGroups
-            .SelectMany(ig => ig.Limits
-                .Select(l => new IndividualGroupWithLimitTuple
+            .SelectMany(limitGroup => limitGroup.Limits
+                .Select(limit => new IndividualGroupWithLimitTuple
                 {
-                    Group = ig,
-                    Limit = l
+                    Group = limitGroup,
+                    Limit = limit
                 }))
-            .FirstOrDefault(grp =>
-                grp.Limit.PeriodType == periodType
-                && UnitsForComparison(grp.Limit.Units) == UnitsForComparison(limit.Units)
-                && AreValuesEqual(ValueInBaseUnits(grp.Limit.Value, grp.Limit.Units), ValueInBaseUnits(limit.Value, limit.Units)));
+            .FirstOrDefault(individualGroup =>
+                individualGroup.Limit.PeriodType == periodType
+                && UnitsForComparison(individualGroup.Limit.Units) == UnitsForComparison(abstractionLimit.Units)
+                && AreValuesEqual(
+                    ValueInBaseUnits(individualGroup.Limit.Value, individualGroup.Limit.Units),
+                    ValueInBaseUnits(abstractionLimit.Value, abstractionLimit.Units)));
 
         if (matchingIndividualGroup != null)
         {
@@ -599,7 +616,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 Source = InformationSource.Nald
             });
-                    
+
             matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
         }
         else

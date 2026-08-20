@@ -200,9 +200,9 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
-        var path = $"/Extractor/Licence/GetByFileId?fileId={fileId}&processRunId={processRunId}";
+        var path = $"/Extractor/Licence/GetByFileId?fileId={fileId}&processRunId={processRunId}&applyVerifications={applyVerifications}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -218,9 +218,9 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false)
     {
-        var path = $"/Extractor/Licence/GetByLicenceNumber?licenceNumber={licenceNumber}&processRunId={processRunId}";
+        var path = $"/Extractor/Licence/GetByLicenceNumber?licenceNumber={licenceNumber}&processRunId={processRunId}&applyVerifications={applyVerifications}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

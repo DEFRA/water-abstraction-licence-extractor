@@ -1211,9 +1211,10 @@ export class Client {
     /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    getByFileId(fileId: string | undefined, processRunId: number | undefined): Promise<void> {
+    getByFileId(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetByFileId?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -1223,6 +1224,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1254,9 +1259,10 @@ export class Client {
     /**
      * @param licenceNumber (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined): Promise<void> {
+    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetByLicenceNumber?";
         if (licenceNumber === null)
             throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
@@ -1266,6 +1272,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3229,9 +3239,10 @@ export class Client {
     /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    licence(fileId: string | undefined, processRunId: number | undefined): Promise<Licence> {
+    licence(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<Licence> {
         let url_ = this.baseUrl + "/BFF/FileData/Licence?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -3241,6 +3252,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3276,9 +3291,10 @@ export class Client {
     /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    licenceString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
+    licenceString(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceString?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -3288,6 +3304,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -7926,6 +7946,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     purposes?: string[] | undefined;
     points?: string[] | undefined;
     limitsCount?: number;
+    aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
@@ -7970,6 +7991,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                     this.points!.push(item);
             }
             this.limitsCount = _data["limitsCount"];
+            if (Array.isArray(_data["aggregateIds"])) {
+                this.aggregateIds = [] as any;
+                for (let item of _data["aggregateIds"])
+                    this.aggregateIds!.push(item);
+            }
             this.aggregatesCount = _data["aggregatesCount"];
             this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
@@ -8024,6 +8050,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                 data["points"].push(item);
         }
         data["limitsCount"] = this.limitsCount;
+        if (Array.isArray(this.aggregateIds)) {
+            data["aggregateIds"] = [];
+            for (let item of this.aggregateIds)
+                data["aggregateIds"].push(item);
+        }
         data["aggregatesCount"] = this.aggregatesCount;
         data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
@@ -8059,6 +8090,7 @@ export interface IOutputListDataItem {
     purposes?: string[] | undefined;
     points?: string[] | undefined;
     limitsCount?: number;
+    aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;

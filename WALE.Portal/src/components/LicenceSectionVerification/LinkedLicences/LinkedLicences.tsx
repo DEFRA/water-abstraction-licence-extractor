@@ -6,12 +6,12 @@ import {
     LicenceSectionVerification,
     ContainedInInformation,
     InformationSource
-} from "../../api/generated/apiClient.ts";
-import {waleApiClient} from "../../api/apiClient.ts";
-import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
+} from "../../../api/generated/apiClient.ts";
+import {waleApiClient} from "../../../api/apiClient.ts";
+import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "../LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
-import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo";
-import {hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
+import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
+import {hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;

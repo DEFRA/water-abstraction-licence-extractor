@@ -1,11 +1,20 @@
 import {type ReactElement, useState, useRef, cloneElement} from 'react';
 import { LicenceSectionVerification, OutputListDataItem } from '../../api/generated/apiClient';
 import { waleApiClient } from '../../api/apiClient';
+import { CollapsibleItem } from './CollapsibleItem';
 
 /**
  * Interface that all licence section body components must implement.
  * This allows the parent LicenceSection to control view/edit mode and get edited data.
  */
+export interface VerificationRequestPayload {
+    verificationType: string;
+    itemId?: string;
+    data?: any;
+    scrapedData?: any;
+    snapshotData?: any;
+}
+
 export interface ILicenceSectionBody {
     /**
      * Returns the current data of the section as JSON.
@@ -21,6 +30,16 @@ export interface ILicenceSectionBody {
      * Returns a snapshot of the data of the section, before the current session's edits, as JSON.
      */
     getSnapshotData: (itemId?: string) => any;
+
+    /**
+     * Optional override for sections that need custom save behaviour instead of the default single-
+     * verification POST (e.g. Aggregates, where editing PrimaryType/SubType/LinkedLicences changes the
+     * item's Id and must be saved as Removed(oldId) + Added(newId) rather than a single Edited). If
+     * implemented and returns a non-empty array, LicenceSection POSTs each entry in order instead of
+     * building one verification from getData/getScrapedData/getSnapshotData. Return null/undefined to
+     * fall back to the default single-verification behaviour.
+     */
+    getVerificationRequests?: (verificationType: string, itemId?: string) => VerificationRequestPayload[] | null;
 }
 
 export interface LicenceSectionBodyProps {
@@ -45,7 +64,6 @@ interface LicenceSectionProps {
 }
 
 export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem, onOpenReport }: LicenceSectionProps) {
-    const [isOpen, setIsOpen] = useState(initialOpen);
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
@@ -122,21 +140,42 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
             }
 
             console.log(`Creating ${verificationType} Verification for`, title, 'Item:', pendingVerificationItemId, 'Data:', JSON.stringify(data, null, 2));
-            
-            try {
-                const verification = new LicenceSectionVerification({
-                    licenceFileId: licenceFileId,
-                    processRunId: processRunId,
-                    licenceSectionName: title,
-                    licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
-                    licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
-                    licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
-                    verificationType: verificationType,
-                    licenceSectionItemId: pendingVerificationItemId,
-                    notes: verificationNotes
-                });
 
-                await waleApiClient.createLicenceSectionVerification(verification);
+            try {
+                const overrideRequests = bodyRef.current.getVerificationRequests?.(verificationType, pendingVerificationItemId);
+
+                if (overrideRequests && overrideRequests.length > 0) {
+                    for (const req of overrideRequests) {
+                        const verification = new LicenceSectionVerification({
+                            licenceFileId: licenceFileId,
+                            processRunId: processRunId,
+                            licenceSectionName: title,
+                            licenceSectionScrapedValue: req.scrapedData ? JSON.stringify(req.scrapedData) : undefined,
+                            licenceSectionSnapshotValue: req.verificationType === 'Added' ? undefined : (req.snapshotData ? JSON.stringify(req.snapshotData) : undefined),
+                            licenceSectionOverrideValue: (req.verificationType === 'Edited' || req.verificationType === 'Added') ? JSON.stringify(req.data) : undefined,
+                            verificationType: req.verificationType,
+                            licenceSectionItemId: req.itemId,
+                            notes: verificationNotes
+                        });
+
+                        await waleApiClient.createLicenceSectionVerification(verification);
+                    }
+                } else {
+                    const verification = new LicenceSectionVerification({
+                        licenceFileId: licenceFileId,
+                        processRunId: processRunId,
+                        licenceSectionName: title,
+                        licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
+                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
+                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
+                        verificationType: verificationType,
+                        licenceSectionItemId: pendingVerificationItemId,
+                        notes: verificationNotes
+                    });
+
+                    await waleApiClient.createLicenceSectionVerification(verification);
+                }
+
                 setResetKey(prev => prev + 1);
                 if (onRefresh) {
                     onRefresh();
@@ -154,40 +193,25 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
     };
 
     return (
-        <div className="licence-section" style={{ border: '1px solid #ccc', marginBottom: '10px', borderRadius: '4px' }}>
-            <div 
-                className="licence-section-header" 
-                style={{ 
-                    padding: '10px', 
-                    backgroundColor: '#f5f5f5', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}
-                onClick={() => setIsOpen(!isOpen)}
+        <>
+            <CollapsibleItem
+                variant="section"
+                defaultOpen={initialOpen}
+                summary={<h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>}
             >
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
-                <div className="licence-section-actions" onClick={(e) => e.stopPropagation()}>
-                    <span style={{ marginLeft: '10px' }}>{isOpen ? '▲' : '▼'}</span>
-                </div>
-            </div>
-            {isOpen && (
-                <div className="licence-section-body" style={{ padding: '10px', borderTop: '1px solid #ccc' }}>
-                    {cloneElement(children, { 
-                        ref: bodyRef,
-                        key: resetKey,
-                        onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => handleVerification(type, itemId),
-                        onVerificationCancelled: () => {
-                            setPendingVerificationType(null);
-                            setPendingVerificationItemId(undefined);
-                            setShowVerificationPrompt(false);
-                        },
-                        outputListDataItem: outputListDataItem,
-                        onOpenReport: onOpenReport
-                    } as any)}
-                </div>
-            )}
+                {cloneElement(children, {
+                    ref: bodyRef,
+                    key: resetKey,
+                    onItemVerificationRequested: (type: 'Confirm' | 'Remove' | 'Edit' | 'Added' | 'ConfirmNone' | 'RequestBusinessReview' | 'CompleteBusinessReview', itemId?: string) => handleVerification(type, itemId),
+                    onVerificationCancelled: () => {
+                        setPendingVerificationType(null);
+                        setPendingVerificationItemId(undefined);
+                        setShowVerificationPrompt(false);
+                    },
+                    outputListDataItem: outputListDataItem,
+                    onOpenReport: onOpenReport
+                } as any)}
+            </CollapsibleItem>
             {showVerificationPrompt && (
                 <div style={{
                     position: 'fixed',
@@ -224,9 +248,9 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => { 
-                                setShowVerificationPrompt(false); 
-                                setPendingVerificationType(null); 
+                            <button onClick={() => {
+                                setShowVerificationPrompt(false);
+                                setPendingVerificationType(null);
                                 if (bodyRef.current && (bodyRef.current as any).onVerificationCancelled) {
                                     (bodyRef.current as any).onVerificationCancelled();
                                 }
@@ -236,6 +260,6 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

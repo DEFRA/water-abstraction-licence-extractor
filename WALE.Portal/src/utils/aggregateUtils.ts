@@ -19,7 +19,7 @@ export function computeAggregateId(aggregate: Aggregate): string {
     const stripSeparators = (value: string) => value.replace(/\//g, '').replace(/ /g, '');
 
     const primary = primaryAbbreviation[aggregate.primaryType ?? 'NotSet'] ?? '';
-    const sub = subAbbreviation[aggregate.subType ?? 'NotSet'] ?? '';
+    const sub = aggregate.subType ? (subAbbreviation[aggregate.subType] ?? '') : '';
     const licenceNumber = stripSeparators(aggregate.sourceLicenceNumber ?? '');
     const linkedSuffix = (aggregate.linkedLicences ?? [])
         .map(ll => `-${stripSeparators(ll)}`)

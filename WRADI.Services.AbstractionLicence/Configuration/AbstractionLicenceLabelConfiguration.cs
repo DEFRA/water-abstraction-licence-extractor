@@ -1516,7 +1516,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                     new("PURPOSE OF ABSTRACTION"),
                     new("PURPOSE(S) OF ABSTRACTION"),
                     new("PURPOSES OF ABSTRACTION"),
-                    new("Purpose for which water is authorised to be used[END_OF_LINE]"),
+                    new("C. Purpose for which water is authorised to be used[END_OF_LINE]"),
+                    new("Purpose for which water is authorised to be used[END_OF_LINE]") { LineMustStartWith = true },
                     new("Purpose(s) for which water is authorised to be used"),
                     new("Purpose for which the water is to be used") { LineMustStartWith = true },
                     new("Purpose for which water is to be used :") { LineMustStartWith = true }

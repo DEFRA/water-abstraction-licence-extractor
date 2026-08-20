@@ -50,7 +50,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -115,8 +115,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                )
                        LIMIT 1) AS HasAggCondition
                FROM nald."NALD_ABS_LICENCES"
-               WHERE "FGAC_REGION_CODE" = @RegionCode
-                    AND (
+               WHERE (
                """;
 
         var idx = 0;
@@ -139,8 +138,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                """;
 
         var paramsObj = new DynamicParameters();
-        paramsObj.Add("@RegionCode", regionCode);
-        
         idx = 0;
         
         foreach (var licenceNumberLoop in licenceNumbers)
@@ -161,7 +158,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         
         var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
 
-        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
+        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, dataLine.FgacRegionCode);
         versions = versions
             .OrderByDescending(v => v.IssueNo)
             .ThenBy(v => v.IncrNo)
@@ -177,13 +174,13 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             naldData!.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var quantitiesTask = GetNaldLicenceQuantitiesAsync(
             naldData.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var purposes = await purposesTask;
         
@@ -191,7 +188,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);
             
-            var points = await GetNaldLicencePointsAsync(purpose.Id!, regionCode);
+            var points = await GetNaldLicencePointsAsync(purpose.Id!, dataLine.FgacRegionCode);
             
             foreach (var point in points)
             {

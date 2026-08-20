@@ -1,4 +1,3 @@
-import React from "react";
 import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
 

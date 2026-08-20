@@ -1,4 +1,3 @@
-import React from "react";
 import {ContainedInInformation} from "../../api/generated/apiClient.ts";
 
 interface ContainedInListProps {

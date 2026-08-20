@@ -1404,7 +1404,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            join nald."NALD_LIC_CONDITIONS" lc
                                ON pu."ID" = lc."AABP_ID"
                                AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
-                               AND lc."ACIN_CODE" = 'AGG'
                                AND (lc."PARAM1" IS NOT NULL 
                                    OR lc."PARAM2" IS NOT NULL 
                                    OR lc."TEXT" IS NOT NULL)

@@ -169,11 +169,11 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(1)", licence.Purposes[0].DocumentId);
         Assert.Equal("Spray Irrigation", licence.Purposes[0].DocumentDescription);
         Assert.Equal("10029939", licence.Purposes[0].NaldId);
-        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
         Assert.Equal("(2)", licence.Purposes[1].DocumentId);
         Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].DocumentDescription);
         Assert.Equal("10029938", licence.Purposes[1].NaldId);
-        Assert.Equal("General Farming & Domestic", licence.Purposes[1].NaldDescription);
+        Assert.Equal("General Agriculture | General Farming & Domestic", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
@@ -281,11 +281,11 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(a)", licence.Purposes[0].DocumentId);
         Assert.Equal("Private Water Supply", licence.Purposes[0].DocumentDescription);
         Assert.Equal("10019820", licence.Purposes[0].NaldId);
-        Assert.Equal("General Use Relating To Secondary Category (Medium Loss)", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | General Use Relating To Secondary Category (Medium Loss)", licence.Purposes[0].NaldDescription);
         Assert.Equal("(b)", licence.Purposes[1].DocumentId);
         Assert.Equal("Reservoir Storage for subsequent stream compensation", licence.Purposes[1].DocumentDescription);
         Assert.Equal("10021258", licence.Purposes[1].NaldId);
-        Assert.Equal("Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
+        Assert.Equal("Non-Remedial River/Wetland Support | Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
         
         Assert.Null(licence.AbstractionLimits.Individual);
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -398,7 +398,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Null(licence.Purposes[0].DocumentId);
         Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
         Assert.Equal("10030785", licence.Purposes[0].NaldId);
-        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);

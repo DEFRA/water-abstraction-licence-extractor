@@ -4486,10 +4486,16 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         // Key is document purpose description, Value is Nald purpose name
-        var documentToNaldPurposeMapping = new Dictionary<string, string>
+        var documentToNaldPurposeMapping = new Dictionary<string, string[]>
         {
-            { "agriculture (other than spray irrigation)", "general farming & domestic" },
-            { "reservoir storage for subsequent stream compensation", "transfer between sources (pre water act 2003)" }
+            { "agriculture (other than spray irrigation)", ["general farming & domestic"] },
+            { "reservoir storage for subsequent stream compensation", ["transfer between sources (pre water act 2003)"] },
+            { "private water supply", [
+                "general use relating to secondary category (very low loss)",
+                "general use relating to secondary category (low loss)",
+                "general use relating to secondary category (medium loss)",
+                "general use relating to secondary category (high loss)"
+            ]}
         };
 
         var documentDescriptionLower = documentDescription.ToLower();//
@@ -4500,10 +4506,10 @@ public static class AbstractionLicenceSchemaConverter
             return false;
         }
 
-        var mappedNaldValue = documentToNaldPurposeMapping[documentDescriptionLower];
-        
-        return mappedNaldValue.Equals(naldSecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase)
-            || mappedNaldValue.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase);
+        var mappedNaldValues = documentToNaldPurposeMapping[documentDescriptionLower];
+
+        return mappedNaldValues.Any(v => v.Equals(naldSecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase))
+               || mappedNaldValues.Any(v => v.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
@@ -4682,7 +4688,9 @@ public static class AbstractionLicenceSchemaConverter
                             {
                                 DocumentId = number,
                                 DocumentDescription = point.Trim(),
-                                NaldDescription = naldData?.UseDescription,
+                                NaldDescription = naldData?.UseDescription != null
+                                    ? $"{naldData.SecondaryCategoryDescription} | {naldData.UseDescription}"
+                                    : null,
                                 NaldId = naldData?.Id,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
@@ -4720,7 +4728,9 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = number,
                                 DocumentDescription = point.Trim(),
                                 NaldId = naldData?.Id,
-                                NaldDescription = naldData?.UseDescription,
+                                NaldDescription = naldData?.UseDescription != null
+                                    ? $"{naldData.SecondaryCategoryDescription} | {naldData.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -4757,7 +4767,9 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = number,
                                 DocumentDescription = point.Trim(),
                                 NaldId = naldData?.Id,
-                                NaldDescription = naldData?.UseDescription,
+                                NaldDescription = naldData?.UseDescription != null
+                                    ? $"{naldData.SecondaryCategoryDescription} | {naldData.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -4794,7 +4806,9 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = number,
                                 DocumentDescription = point.Trim(),
                                 NaldId = naldData?.Id,
-                                NaldDescription = naldData?.UseDescription,
+                                NaldDescription = naldData?.UseDescription != null
+                                    ? $"{naldData.SecondaryCategoryDescription} | {naldData.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -4831,7 +4845,9 @@ public static class AbstractionLicenceSchemaConverter
                                 DocumentId = number,
                                 DocumentDescription = point.Trim(),
                                 NaldId = naldData?.Id,
-                                NaldDescription = naldData?.UseDescription,
+                                NaldDescription = naldData?.UseDescription != null
+                                    ? $"{naldData.SecondaryCategoryDescription} | {naldData.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -4862,7 +4878,9 @@ public static class AbstractionLicenceSchemaConverter
                     DocumentId = number,
                     DocumentDescription = description,
                     NaldId = naldData1?.Id,
-                    NaldDescription = naldData1?.UseDescription,
+                    NaldDescription = naldData1?.UseDescription != null
+                        ? $"{naldData1.SecondaryCategoryDescription} | {naldData1.UseDescription}"
+                        : null,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
                     ContainedIn = containedInList.ToArray()

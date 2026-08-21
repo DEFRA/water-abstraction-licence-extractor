@@ -605,7 +605,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
+        Assert.Single(licence.AbstractionLimits.Individual);
         Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
         Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
@@ -620,16 +620,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(43180, licence.AbstractionLimits.Individual[0].Limits[2].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
-        
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Null(licence.AbstractionLimits.Individual[1].ContainedIn![0].LinkReason);
-        Assert.Null(licence.AbstractionLimits.Individual[1].ContainedIn![0].SectionName);
-        Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
-        Assert.Equal(4.17, licence.AbstractionLimits.Individual[1].Limits[0].Value);
-        Assert.Equal("litres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
-        Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
         
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }    

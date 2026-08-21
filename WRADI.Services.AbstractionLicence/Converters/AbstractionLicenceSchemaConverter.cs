@@ -540,7 +540,7 @@ public static class AbstractionLicenceSchemaConverter
                 .ToArray();
             
             AddNaldLimit(
-                quantity.AnnualQty,
+                ConvertToCorrectMagnitude(quantity.AnnualQty, quantity.AnnualQtyUsability),
                 LimitPeriodType.PerYear,
                 existingLimitGroups,
                 purposes,
@@ -548,7 +548,7 @@ public static class AbstractionLicenceSchemaConverter
                 ref individualsList);
             
             AddNaldLimit(
-                quantity.DailyQty,
+                ConvertToCorrectMagnitude(quantity.DailyQty, quantity.DailyQtyUsability),
                 LimitPeriodType.PerDay,
                 existingLimitGroups,
                 purposes,
@@ -556,7 +556,7 @@ public static class AbstractionLicenceSchemaConverter
                 ref individualsList);
             
             AddNaldLimit(
-                quantity.HourlyQty,
+                ConvertToCorrectMagnitude(quantity.HourlyQty, quantity.HourlyQtyUsability),
                 LimitPeriodType.PerHour,
                 existingLimitGroups,
                 purposes,
@@ -564,7 +564,7 @@ public static class AbstractionLicenceSchemaConverter
                 ref individualsList);
             
             AddNaldLimit(
-                quantity.InstQty,
+                ConvertToCorrectMagnitude(quantity.InstQty, quantity.InstQtyUsability),
                 LimitPeriodType.PerSecond,
                 existingLimitGroups,
                 purposes,
@@ -575,6 +575,17 @@ public static class AbstractionLicenceSchemaConverter
         return individualsList.ToArray();
     }
 
+    private static double? ConvertToCorrectMagnitude(double? value, char? usability)
+    {
+        return usability switch
+        {
+            'L' => value,
+            'D' => value / 10.0,
+            null => value,
+            _ => throw new Exception($"Usability not mapped - {usability}")
+        };
+    }
+    
     private static void AddNaldLimit(
         double? value,
         LimitPeriodType periodType,
@@ -3499,8 +3510,9 @@ public static class AbstractionLicenceSchemaConverter
             return false;
         }
 
-        var minValue1 = value1 - 0.1;
-        var maxValue1 = value1 + 0.1;
+        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests
+        var minValue1 = value1 - 0.01;
+        var maxValue1 = value1 + 0.01;
         
         return value2 >= minValue1
             && value2 <= maxValue1;

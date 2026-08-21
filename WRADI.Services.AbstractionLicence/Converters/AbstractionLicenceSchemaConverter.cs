@@ -632,21 +632,16 @@ public static class AbstractionLicenceSchemaConverter
     {
         toAdd = [];
         
-        if (limitsLeft.Count > limitsRight.Count)
-        {
-            return false;
-        }
+        var onlyOnLeft = limitsLeft
+            .Where(ll => limitsRight.All(lr => lr.PeriodType != ll.PeriodType))
+            .ToList();
         
         var onlyOnRight = limitsRight
             .Where(lr => limitsLeft.All(ll => ll.PeriodType != lr.PeriodType))
             .ToList();
-
-        if (onlyOnRight.Count > 1)
-        {
-            return false;
-        }
         
         var orderedLimitsLeft = limitsLeft
+            .Where(ll => !onlyOnLeft.Contains(ll))
             .OrderBy(l => l.PeriodType)
             .ToList();
         
@@ -655,6 +650,11 @@ public static class AbstractionLicenceSchemaConverter
             .OrderBy(l => l.PeriodType)
             .ToList();
 
+        if (orderedLimitsLeft.Count < 2)
+        {
+            return false;
+        }
+        
         for (var idx = 0; idx < orderedLimitsLeft.Count; idx++)
         {
             var limitLeft  = orderedLimitsLeft[idx];

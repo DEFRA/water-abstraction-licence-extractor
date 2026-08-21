@@ -176,7 +176,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("General Agriculture | General Farming & Domestic", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        Assert.Equal(4, licence.AbstractionLimits.Individual.Length); // TODO probably wrong
+        Assert.Equal(3, licence.AbstractionLimits.Individual.Length);
 
         Assert.Single(licence.AbstractionLimits.Individual[0].Limits);
         Assert.Equal(41.360, licence.AbstractionLimits.Individual[0].Limits[0].Value);
@@ -204,9 +204,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
-        //Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].ContainedIn!.Length);
+        Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);
-        //Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Aggregates[0].ContainedIn![1].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Aggregates[0].ContainedIn![1].Source);
         
         Assert.Equal(36.36, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].Points!);
@@ -288,7 +288,6 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("Non-Remedial River/Wetland Support | Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
         
         Assert.Equal(2, licence.AbstractionLimits.Individual!.Length);
-        // TODO really should be null but its 2 because it can't find seconds in the document for some reason - look at
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Equal(4, licence.AbstractionLimits.Aggregates!.Length);

@@ -111,7 +111,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     public async Task WhenX_NotCheckingAbstractionLimits_ThenFoundCorrectly_IncludesAgreedSchema()
     {
         // Arrange
-
         const string filename = "Application –Transfer– Issued Licence –05072022.pdf";
         const int regionCode = 3;
         
@@ -186,7 +185,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     public async Task WhenY1()
     {
         // Arrange
-
         const string filename = "1.3-licence-07.02.2023.pdf";
         const int regionCode = 5;
         
@@ -295,7 +293,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     public async Task WhenY2()
     {
         // Arrange
-
         const string filename = "5-licence_lobwood_final.pdf";
         const int regionCode = 5;
         
@@ -463,7 +460,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     public async Task WhenY4()
     {
         // Arrange
-
         const string filename = "6.5.4_Application_New_Issued_Licence_20.08.2014.pdf";
         const int regionCode = 5;
         
@@ -546,7 +542,6 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     public async Task WhenY5()
     {
         // Arrange
-
         const string filename = "Abstraction Licence 7310604.pdf";
         const int regionCode = 4;
         

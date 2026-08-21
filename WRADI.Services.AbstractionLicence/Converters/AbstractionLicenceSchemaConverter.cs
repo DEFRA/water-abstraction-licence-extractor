@@ -601,36 +601,40 @@ public static class AbstractionLicenceSchemaConverter
             Points = points
         };
 
-        var matchingIndividualGroup = existingLimitGroups
+        var matchingIndividualGroups = existingLimitGroups
             .SelectMany(limitGroup => limitGroup.Limits
                 .Select(limit => new IndividualGroupWithLimitTuple
                 {
                     Group = limitGroup,
                     Limit = limit
                 }))
-            .FirstOrDefault(individualGroup =>
+            .Where(individualGroup =>
                 individualGroup.Limit.PeriodType == periodType
                 && UnitsForComparison(individualGroup.Limit.Units) == UnitsForComparison(abstractionLimit.Units)
                 && AreValuesEqual(
                     ValueInBaseUnits(individualGroup.Limit.Value, individualGroup.Limit.Units),
-                    ValueInBaseUnits(abstractionLimit.Value, abstractionLimit.Units)));
-
-        if (matchingIndividualGroup != null)
+                    ValueInBaseUnits(abstractionLimit.Value, abstractionLimit.Units)))
+            .ToList();
+        
+        if (matchingIndividualGroups.Count >= 1)
         {
-            var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
-
-            if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+            foreach (var matchingIndividualGroup in matchingIndividualGroups)
             {
-                // Already have it in contained in
-                return;
+                var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
+
+                if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                {
+                    // Already have it in contained in
+                    return;
+                }
+
+                containedInList.Add(new ContainedInInformation
+                {
+                    Source = InformationSource.Nald
+                });
+
+                matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
             }
-            
-            containedInList.Add(new ContainedInInformation
-            {
-                Source = InformationSource.Nald
-            });
-
-            matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
         }
         else
         {

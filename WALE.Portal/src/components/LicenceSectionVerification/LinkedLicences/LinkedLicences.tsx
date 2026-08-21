@@ -43,19 +43,19 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
-            getData: (itemId?: string) => {
+            getData: async (itemId?: string) => {
                 if (itemId) {
                     return linkedLicences.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }
                 return linkedLicences;
             },
-            getScrapedData: (itemId?: string) => {
+            getScrapedData: async (itemId?: string) => {
                 if (itemId) {
                     return scrapedData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }
                 return scrapedData;
             },
-            getSnapshotData: (itemId?: string) => {
+            getSnapshotData: async (itemId?: string) => {
                 if (itemId) {
                     return snapshotData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }

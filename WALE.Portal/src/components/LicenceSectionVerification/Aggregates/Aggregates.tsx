@@ -1,4 +1,4 @@
-import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
+import {useState, useImperativeHandle, forwardRef, useEffect, useRef} from 'react';
 import {
     type Licence,
     Aggregate,
@@ -15,7 +15,6 @@ import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
-import {computeAggregateId} from "../../../utils/aggregateUtils.ts";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
 
@@ -32,6 +31,12 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
         const [aggregates, setAggregates] = useState<Aggregate[]>([]);
         const [scrapedData, setScrapedData] = useState<Aggregate[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<Aggregate[] | null>(null);
+
+        // Tracks requests to calculate aggregate IDs
+        const [aggregateIds, setAggregateIds] = useState<string[]>([]);
+        const [scrapedDataIds, setScrapedDataIds] = useState<string[]>([]);
+        const [snapshotDataIds, setSnapshotDataIds] = useState<string[]>([]);
+        const aggregateIdsRequestRef = useRef(0);
 
         const noAggregatesVerification = (history || [])
             .filter(v => v.licenceSectionName === 'Aggregates' && v.licenceSectionItemId === NO_AGGREGATES_ITEM_ID)
@@ -50,25 +55,28 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
-            getData: (itemId?: string) => {
+            getData: async (itemId?: string) => {
                 if (itemId) {
-                    return aggregates.find(a => computeAggregateId(a) === itemId);
+                    const idx = aggregateIds.indexOf(itemId);
+                    return idx >= 0 ? aggregates[idx] : undefined;
                 }
                 return aggregates;
             },
-            getScrapedData: (itemId?: string) => {
+            getScrapedData: async (itemId?: string) => {
                 if (itemId) {
-                    return scrapedData?.find(a => computeAggregateId(a) === itemId);
+                    const idx = scrapedDataIds.indexOf(itemId);
+                    return idx >= 0 ? scrapedData?.[idx] : undefined;
                 }
                 return scrapedData;
             },
-            getSnapshotData: (itemId?: string) => {
+            getSnapshotData: async (itemId?: string) => {
                 if (itemId) {
-                    return snapshotData?.find(a => computeAggregateId(a) === itemId);
+                    const idx = snapshotDataIds.indexOf(itemId);
+                    return idx >= 0 ? snapshotData?.[idx] : undefined;
                 }
                 return snapshotData;
             },
-            getVerificationRequests: (verificationType: string): VerificationRequestPayload[] | null => {
+            getVerificationRequests: async (verificationType: string): Promise<VerificationRequestPayload[] | null> => {
                 // Editing an aggregate's PrimaryType/SubType/LinkedLicences changes its computed Id — that
                 // can't be expressed as a single 'Edited' verification (which assumes the item's identity
                 // is unchanged), so it must be saved as Removed(oldId) + Added(newId) instead.
@@ -81,8 +89,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                     return null;
                 }
 
-                const newId = computeAggregateId(currentItem);
-                const oldId = computeAggregateId(originalItem);
+                const [newId, oldId] = await waleApiClient.aggregateIds([currentItem, originalItem]);
 
                 if (newId === oldId) {
                     return null; // no Id-affecting field changed — default single 'Edited' POST
@@ -96,7 +103,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             onVerificationCancelled: () => {
                 setIsWaitingForVerification(false);
             }
-        }), [aggregates, scrapedData, snapshotData, editingIndex, originalItem]);
+        }), [aggregates, scrapedData, snapshotData, aggregateIds, scrapedDataIds, snapshotDataIds, editingIndex, originalItem]);
 
         useEffect(() => {
             const fetchAggregates = async () => {
@@ -107,6 +114,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 try {
                     const scraped = licence.abstractionLimits?.aggregates ?? [];
                     setScrapedData(scraped.map(a => Aggregate.fromJS(a)));
+                    setScrapedDataIds(scraped.length > 0 ? await waleApiClient.aggregateIds(scraped) : []);
 
                     if (scrapedView) {
                         setAggregates(scraped);
@@ -115,6 +123,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                         const currentAggregates = merged.abstractionLimits?.aggregates ?? [];
                         setAggregates(currentAggregates);
                         setSnapshotData(currentAggregates.map(a => Aggregate.fromJS(a)));
+                        setSnapshotDataIds(currentAggregates.length > 0 ? await waleApiClient.aggregateIds(currentAggregates) : []);
                     }
                 } catch (err) {
                     console.error("Error fetching aggregates:", err);
@@ -126,6 +135,29 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
 
             fetchAggregates();
         }, [licence?.dmsFileId, processRunId, scrapedView]);
+
+        // Debounced so editing PrimaryType/SubType/LinkedLicences doesn't fire a request per keystroke;
+        // the request-sequence ref discards a stale response if a newer edit resolves first.
+        useEffect(() => {
+            if (aggregates.length === 0) {
+                setAggregateIds([]);
+                return;
+            }
+
+            const handle = setTimeout(async () => {
+                const requestId = ++aggregateIdsRequestRef.current;
+                try {
+                    const ids = await waleApiClient.aggregateIds(aggregates);
+                    if (requestId === aggregateIdsRequestRef.current) {
+                        setAggregateIds(ids);
+                    }
+                } catch (err) {
+                    console.error('Error computing aggregate ids:', err);
+                }
+            }, 350);
+
+            return () => clearTimeout(handle);
+        }, [aggregates]);
 
         const handleAddAggregate = () => {
             const newAggregate = new Aggregate({
@@ -223,11 +255,12 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                         </div>
                     )}
                     {!isLoading && !error && aggregates.map((aggregate, index) => {
-                        const itemId = computeAggregateId(aggregate);
+                        const itemId = aggregateIds[index];
                         return (
                             <AggregateItem
                                 key={index}
                                 aggregate={aggregate}
+                                itemId={itemId}
                                 isEditing={editingIndex === index && !isWaitingForVerification}
                                 isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                 onUpdate={(updated) => handleUpdateAggregate(index, updated)}
@@ -238,10 +271,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                 onReject={() => onItemVerificationRequested?.('Remove', itemId)}
                                 onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
                                 onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
-                                onOverride={() => {
+                                onOverride={async () => {
                                     if (editingIndex === index) {
                                         setIsWaitingForVerification(true);
-                                        onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', itemId);
+                                        const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
+                                        onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
                                     } else {
                                         setEditingIndex(index);
                                         setIsAddingNew(false);

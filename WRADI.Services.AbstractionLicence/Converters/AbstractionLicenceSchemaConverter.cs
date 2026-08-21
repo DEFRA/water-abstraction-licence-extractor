@@ -4535,7 +4535,8 @@ public static class AbstractionLicenceSchemaConverter
                 "general use relating to secondary category (low loss)",
                 "general use relating to secondary category (medium loss)",
                 "general use relating to secondary category (high loss)"
-            ]}
+            ]},
+            { "domestic & sanitation", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public services"]}
         };
 
         var documentDescriptionLower = documentDescription.ToLower();//

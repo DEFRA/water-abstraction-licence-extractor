@@ -340,14 +340,14 @@ export const AggregateItem = ({
                             <div style={rowStyle}>
                                 <div>
                                     <label style={labelStyle}>Start Date:</label>
-                                    <input type="date" value={aggregate.timePeriod?.startDate?.substring(0, 10) || ''}
+                                    <input type="text" value={aggregate.timePeriod?.startDate || ''}
                                            onChange={(e) => handleTimePeriodChange('startDate', e.target.value)}
                                            style={{...inputStyle, borderColor: errors.timePeriodStartDate ? '#ff4d4f' : '#d9d9d9'}}/>
                                     <ValidationError message={errors.timePeriodStartDate}/>
                                 </div>
                                 <div>
                                     <label style={labelStyle}>End Date:</label>
-                                    <input type="date" value={aggregate.timePeriod?.endDate?.substring(0, 10) || ''}
+                                    <input type="text" value={aggregate.timePeriod?.endDate || ''}
                                            onChange={(e) => handleTimePeriodChange('endDate', e.target.value)}
                                            style={{...inputStyle, borderColor: errors.timePeriodEndDate ? '#ff4d4f' : '#d9d9d9'}}/>
                                     <ValidationError message={errors.timePeriodEndDate}/>
@@ -390,7 +390,7 @@ export const AggregateItem = ({
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Date:</label>
-                                    <input type="date" value={aggregate.timeCutoff?.date?.substring(0, 10) || ''}
+                                    <input type="text" value={aggregate.timeCutoff?.date || ''}
                                            onChange={(e) => handleTimeCutoffChange('date', e.target.value)}
                                            style={{...inputStyle, borderColor: errors.timeCutoffDate ? '#ff4d4f' : '#d9d9d9'}}/>
                                     <ValidationError message={errors.timeCutoffDate}/>
@@ -580,14 +580,14 @@ export const AggregateItem = ({
             )}
             {aggregate.timePeriod && (
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
-                    <strong>Time Period:</strong> {aggregate.timePeriod.startDate?.substring(0, 10) || 'N/A'} to {aggregate.timePeriod.endDate?.substring(0, 10) || 'N/A'}
+                    <strong>Time Period:</strong> {aggregate.timePeriod.startDate || 'N/A'} to {aggregate.timePeriod.endDate || 'N/A'}
                     {aggregate.timePeriod.inclusive ? ' (Inclusive)' : ' (Exclusive)'}
                 </p>
             )}
             {aggregate.timeCutoff && (
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
                     <strong>Time Cutoff:</strong> {aggregate.timeCutoff.cutoffType || 'N/A'}
-                    {aggregate.timeCutoff.date ? ` ${aggregate.timeCutoff.date.substring(0, 10)}` : ''}
+                    {aggregate.timeCutoff.date ? ` ${aggregate.timeCutoff.date}` : ''}
                 </p>
             )}
             {limits.length > 0 && (

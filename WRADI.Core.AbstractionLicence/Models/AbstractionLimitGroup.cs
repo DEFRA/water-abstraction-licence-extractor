@@ -10,7 +10,7 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     
     public TimeCutoff? TimeCutoff { get; set; }
     
-    public List<AbstractionLimit> Limits { get; init; } = [];
+    public List<AbstractionLimit> Limits { get; set; } = [];
     
     public ContainedInInformation[]? ContainedIn { get; set; }
 

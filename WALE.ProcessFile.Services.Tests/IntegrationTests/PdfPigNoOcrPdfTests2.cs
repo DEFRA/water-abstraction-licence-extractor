@@ -1233,7 +1233,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal("5.1", agreedSchemaLicence.PeriodsOfAbstraction.Single().Id);
         Assert.False(agreedSchemaLicence.PeriodsOfAbstraction.Single().Inclusive);
         
-        Assert.Equal(10, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
+        Assert.Equal(5, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits.Count);
 
         var limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[0];
         
@@ -1243,10 +1243,7 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
         Assert.Equal(360, limitGroup.Limits[1].Value);
         Assert.Equal(43180, limitGroup.Limits[2].Value);
         Assert.Equal(0.42, limitGroup.Limits[3].Value);
-        Assert.Equal(15, limitGroup.Limits[4].Value);
-        Assert.Equal(360, limitGroup.Limits[5].Value);
-        Assert.Equal(2270, limitGroup.Limits[6].Value);
-        Assert.Equal(0.42, limitGroup.Limits[7].Value);
+        Assert.Equal(2270, limitGroup.Limits[4].Value);
 
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates);
         

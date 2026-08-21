@@ -448,6 +448,11 @@ public static class AbstractionLicenceSchemaConverter
             licenceVersion.LicenceVersionId,
             naldDataLine);
 
+        RemoveDuplicateLimitsPerGroup(individual);
+        RemoveDuplicateLimitsPerGroup(aggregates
+            .Select(AbstractionLimitGroup (agg) => agg)
+            .ToArray());
+        
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -492,6 +497,28 @@ public static class AbstractionLicenceSchemaConverter
             LicenceType = licenceType,
             RegionId = naldDataLine?.FgacRegionCode ?? regionCode
         };
+    }
+
+    private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
+    {
+        foreach (var grp in individual)
+        {
+            grp.Limits = grp.Limits
+                .GroupBy(l => new
+                {
+                    l.Value,
+                    l.Units,
+                    l.PeriodType,
+                    Points = l.Points?
+                        .Select(p => $"{p.DocumentId}_{p.NaldId}")
+                        .ToArray(),
+                    Purposes = l.Purposes?
+                        .Select(p => $"{p.DocumentId}_{string.Join('_', p.NaldIds ?? [])}")
+                        .ToArray()
+                })
+                .Select(g => g.First())
+                .ToList();
+        }
     }
 
     private static AbstractionLimitGroup[] AddNaldLimits(
@@ -539,60 +566,56 @@ public static class AbstractionLicenceSchemaConverter
                 .SelectMany(nl => nl.purpose.PointIds)
                 .Select(p => new Point { NaldId = p.ToString() })
                 .ToArray();
-            
-            AddNaldLimit(
-                quantity.AnnualQty,
-                LimitPeriodType.PerYear,
+
+            var limitsIncludingNull = new List<AbstractionLimit?>
+            {
+                GetAbstractionLimit(quantity.AnnualQty,
+                    LimitPeriodType.PerYear,
+                    purposes,
+                    points),
+                GetAbstractionLimit(quantity.DailyQty,
+                    LimitPeriodType.PerDay,
+                    purposes,
+                    points),
+                GetAbstractionLimit(quantity.HourlyQty,
+                    LimitPeriodType.PerHour,
+                    purposes,
+                    points),
+                GetAbstractionLimit(quantity.InstQty,
+                    LimitPeriodType.PerSecond,
+                    purposes,
+                    points),
+            };
+
+            var limits = limitsIncludingNull
+                .Where(l => l != null)
+                .Select(l => l!)
+                .ToList();
+
+            AddNaldLimitGroup(
+                limits,
                 existingLimitGroups,
-                purposes,
-                points,
-                ref individualsList);
-            
-            AddNaldLimit(
-                quantity.DailyQty,
-                LimitPeriodType.PerDay,
-                existingLimitGroups,
-                purposes,
-                points,
-                ref individualsList);
-            
-            AddNaldLimit(
-                quantity.HourlyQty,
-                LimitPeriodType.PerHour,
-                existingLimitGroups,
-                purposes,
-                points,
-                ref individualsList);
-            
-            AddNaldLimit(
-                quantity.InstQty,
-                LimitPeriodType.PerSecond,
-                existingLimitGroups,
-                purposes,
-                points,
                 ref individualsList);
         }
 
         return individualsList.ToArray();
     }
-    
-    private static void AddNaldLimit(
+
+    private static AbstractionLimit? GetAbstractionLimit(
         double? value,
         LimitPeriodType periodType,
-        List<AbstractionLimitGroup> existingLimitGroups,
         Purpose[] purposes,
-        Point[] points,
-        ref List<AbstractionLimitGroup> individuals)
+        Point[] points)
     {
         if (value == null)
         {
-            return;
+            return null;
         }
 
         const string litres = "litres";
         const string cubicMeters = "cubic metres";
-        
-        var abstractionLimit = new AbstractionLimit
+
+        return new AbstractionLimit
         {
             Units = periodType == LimitPeriodType.PerSecond ? litres : cubicMeters,
             Value = value,
@@ -600,27 +623,84 @@ public static class AbstractionLicenceSchemaConverter
             Purposes = purposes,
             Points = points
         };
+    }
 
+    private static bool IsLimitGroupEqual(
+        List<AbstractionLimit> limitsLeft,
+        List<AbstractionLimit> limitsRight,
+        out List<AbstractionLimit> toAdd)
+    {
+        toAdd = [];
+        
+        if (limitsLeft.Count > limitsRight.Count)
+        {
+            return false;
+        }
+        
+        var onlyOnRight = limitsRight
+            .Where(lr => limitsLeft.All(ll => ll.PeriodType != lr.PeriodType))
+            .ToList();
+
+        if (onlyOnRight.Count > 1)
+        {
+            return false;
+        }
+        
+        var orderedLimitsLeft = limitsLeft
+            .OrderBy(l => l.PeriodType)
+            .ToList();
+        
+        var orderedLimitsRight = limitsRight
+            .Where(lr => !onlyOnRight.Contains(lr))
+            .OrderBy(l => l.PeriodType)
+            .ToList();
+
+        for (var idx = 0; idx < orderedLimitsLeft.Count; idx++)
+        {
+            var limitLeft  = orderedLimitsLeft[idx];
+            var limitRight = orderedLimitsRight[idx];
+
+            if (limitLeft.PeriodType != limitRight.PeriodType
+                || UnitsForComparison(limitLeft.Units) != UnitsForComparison(limitRight.Units)
+                || !AreValuesEqual(
+                        ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
+                        ValueInBaseUnits(limitRight.Value, limitRight.Units)))
+            {
+                return false;
+            }
+        }
+
+        toAdd = onlyOnRight;
+        return true;
+    }
+    
+    private static void AddNaldLimitGroup(
+        List<AbstractionLimit> limits,
+        List<AbstractionLimitGroup> existingLimitGroups,
+        ref List<AbstractionLimitGroup> individuals)
+    {
+        if (limits.Count == 0)
+        {
+            return;
+        }
+        
+        var toAdd = new List<AbstractionLimit>();
+        
         var matchingIndividualGroups = existingLimitGroups
-            .SelectMany(limitGroup => limitGroup.Limits
-                .Select(limit => new IndividualGroupWithLimitTuple
-                {
-                    Group = limitGroup,
-                    Limit = limit
-                }))
             .Where(individualGroup =>
-                individualGroup.Limit.PeriodType == periodType
-                && UnitsForComparison(individualGroup.Limit.Units) == UnitsForComparison(abstractionLimit.Units)
-                && AreValuesEqual(
-                    ValueInBaseUnits(individualGroup.Limit.Value, individualGroup.Limit.Units),
-                    ValueInBaseUnits(abstractionLimit.Value, abstractionLimit.Units)))
+            {
+                var result = IsLimitGroupEqual(individualGroup.Limits, limits, out var igToAdd);
+
+                toAdd.AddRange(igToAdd);
+                return result;
+            })
             .ToList();
         
         if (matchingIndividualGroups.Count >= 1)
         {
             foreach (var matchingIndividualGroup in matchingIndividualGroups)
             {
-                var containedInList = matchingIndividualGroup.Group.ContainedIn!.ToList();
+                var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
 
                 if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
                 {
@@ -633,25 +713,30 @@ public static class AbstractionLicenceSchemaConverter
                     Source = InformationSource.Nald
                 });
 
-                matchingIndividualGroup.Group.ContainedIn = containedInList.ToArray();
+                matchingIndividualGroup.ContainedIn = containedInList.ToArray();
             }
-        }
-        else
-        {
-            var newGroup = new AbstractionLimitGroup
+
+            if (toAdd.Count == 0)
             {
-                ContainedIn =
-                [
-                    new ContainedInInformation
-                    {
-                        Source = InformationSource.Nald
-                    }
-                ],
-                Limits = [abstractionLimit]
-            };
-            
-            individuals.Add(newGroup);
+                return;
+            }
+
+            limits = toAdd;
         }
+        
+        var newGroup = new AbstractionLimitGroup
+        {
+            ContainedIn =
+            [
+                new ContainedInInformation
+                {
+                    Source = InformationSource.Nald
+                }
+            ],
+            Limits = limits
+        };
+            
+        individuals.Add(newGroup);
     }
 
     private static double? ValueInBaseUnits(double? value, string? units)

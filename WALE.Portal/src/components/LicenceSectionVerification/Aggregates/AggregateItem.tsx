@@ -19,10 +19,10 @@ import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
-import {computeAggregateId} from "../../../utils/aggregateUtils.ts";
 
 interface AggregateItemProps {
     aggregate?: Aggregate;
+    itemId?: string;
     isEditing?: boolean;
     isAddingNew?: boolean;
     onUpdate?: (updated: Aggregate) => void;
@@ -55,6 +55,7 @@ const LIMIT_UNITS_OPTIONS = [
 
 export const AggregateItem = ({
                                    aggregate: aggregateProp,
+                                   itemId,
                                    isEditing,
                                    onUpdate,
                                    onDiscard,
@@ -555,8 +556,6 @@ export const AggregateItem = ({
             </div>
         );
     }
-
-    const itemId = computeAggregateId(aggregate);
 
     const summary = (
         <div style={{fontSize: '0.9rem'}}>

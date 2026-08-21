@@ -19,17 +19,17 @@ export interface ILicenceSectionBody {
     /**
      * Returns the current data of the section as JSON.
      */
-    getData: (itemId?: string) => any;
+    getData: (itemId?: string) => Promise<any>;
 
     /**
      * Returns the original scraped data of the section as JSON.
      */
-    getScrapedData: (itemId?: string) => any;
+    getScrapedData: (itemId?: string) => Promise<any>;
 
     /**
      * Returns a snapshot of the data of the section, before the current session's edits, as JSON.
      */
-    getSnapshotData: (itemId?: string) => any;
+    getSnapshotData: (itemId?: string) => Promise<any>;
 
     /**
      * Optional override for sections that need custom save behaviour instead of the default single-
@@ -39,7 +39,7 @@ export interface ILicenceSectionBody {
      * building one verification from getData/getScrapedData/getSnapshotData. Return null/undefined to
      * fall back to the default single-verification behaviour.
      */
-    getVerificationRequests?: (verificationType: string, itemId?: string) => VerificationRequestPayload[] | null;
+    getVerificationRequests?: (verificationType: string, itemId?: string) => Promise<VerificationRequestPayload[] | null>;
 }
 
 export interface LicenceSectionBodyProps {
@@ -115,9 +115,9 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
         const isBusinessReview = pendingVerificationType === 'RequestBusinessReview' || pendingVerificationType === 'CompleteBusinessReview';
         
         if (bodyRef.current) {
-            const data = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getData(pendingVerificationItemId);
-            const scrapedData = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getScrapedData(pendingVerificationItemId);
-            const snapshotData = (isConfirmNone || isBusinessReview) ? undefined : bodyRef.current.getSnapshotData(pendingVerificationItemId);
+            const data = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getData(pendingVerificationItemId);
+            const scrapedData = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getScrapedData(pendingVerificationItemId);
+            const snapshotData = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getSnapshotData(pendingVerificationItemId);
             
             // Map the pending verification type to the required verificationType string
             let verificationType: string;
@@ -142,7 +142,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
             console.log(`Creating ${verificationType} Verification for`, title, 'Item:', pendingVerificationItemId, 'Data:', JSON.stringify(data, null, 2));
 
             try {
-                const overrideRequests = bodyRef.current.getVerificationRequests?.(verificationType, pendingVerificationItemId);
+                const overrideRequests = await bodyRef.current.getVerificationRequests?.(verificationType, pendingVerificationItemId);
 
                 if (overrideRequests && overrideRequests.length > 0) {
                     for (const req of overrideRequests) {

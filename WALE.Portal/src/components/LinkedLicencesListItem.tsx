@@ -4,6 +4,7 @@ import {
 } from "../api/generated/apiClient.ts";
 import {NaldStatusTag} from "./NaldStatusTag.tsx";
 import {useFileIdMap} from "../utils/useFileIdMap.tsx";
+import {AggregateTag} from "./AggregateTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -17,17 +18,17 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
-    
+
     let text = backLink
         ? 'Implicit back link'
         : linkedLicence.containedIn!.length ?
             linkedLicence.containedIn![0].sectionName
             : "?";
-    
-    let color = backLink 
-        ? "#888" 
-        : abstractionLimits 
-            ? "lightseagreen" 
+
+    let color = backLink
+        ? "#888"
+        : abstractionLimits
+            ? "lightseagreen"
             : "black";
 
     let linkedFilename = getFileId(licenceNumber);
@@ -42,14 +43,16 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                        onOpenReport(linkedFilename);
                    }}>{styledLicenceNumber}
                 </a>
-                <NaldStatusTag status={linkedLicence.naldStatus} />
+                <NaldStatusTag status={linkedLicence.naldStatus}/>
+                <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
             </li>
         );
     } else {
         return (
             <li title={text} style={{color}}>
                 {styledLicenceNumber}
-                <NaldStatusTag status={linkedLicence.naldStatus} />
+                <NaldStatusTag status={linkedLicence.naldStatus}/>
+                <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
             </li>
         );
     }

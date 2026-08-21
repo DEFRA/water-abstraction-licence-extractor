@@ -337,6 +337,9 @@ export function ProcessRunLicenceFilters({
                     <option value="OtherConditions">Other Conditions</option>
                     <option value="FurtherProvisions">Further Provisions</option>
                     <option value="NoRecords">No Linked Licences</option>
+                    <option value="NaldStatusLive">Live</option>
+                    <option value="NaldStatusRevoked">Revoked</option>
+                    <option value="NaldStatusExpired">Expired</option>
                 </select>
             </td>
 
@@ -383,7 +386,8 @@ export function ProcessRunLicenceFilters({
                     <option value="Added">Added</option>
                     <option value="RequestBusinessReview">Request Business Review</option>
                     <option value="CompleteBusinessReview">Complete Business Review</option>
-                    <option value="NoVerification">No Verifications</option>
+                    <option value="AllVerifications">All Verifications</option>
+                    <option value="NoVerifications">No Verifications</option>
                 </select>
             </td>
         </tr>

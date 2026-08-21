@@ -157,7 +157,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Private Water Supply", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10081510", licence.Purposes[0].NaldId);
+        Assert.Equal("10081510", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Private Water Supply | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Household", licence.Purposes[0].NaldDescription);
 
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
@@ -165,7 +165,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[1].ContainedIn![1].Source);
         Assert.Equal("4.2", licence.Purposes[1].DocumentId);
         Assert.Equal("Agriculture (other than Spray Irrigation)", licence.Purposes[1].DocumentDescription);
-        Assert.Equal("10080708", licence.Purposes[1].NaldId);
+        Assert.Equal("10080708", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Private Water Undertaking | " +
             "General Farming & Domestic", licence.Purposes[1].NaldDescription); 
         
@@ -232,7 +232,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for\npublic water supply", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10082040", licence.Purposes[0].NaldId);
+        Assert.Equal("10082040", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Water Supply Related | Transfer Between Sources (Post Water Act 2003)", licence.Purposes[0].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
@@ -341,7 +341,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Public water supply", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10083975", licence.Purposes[0].NaldId);
+        Assert.Equal("10083975", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Public Water Supply | Potable Water Supply - Direct", licence.Purposes[0].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
@@ -453,7 +453,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Transfer for the purpose of dewatering", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10097553", licence.Purposes[0].NaldId);
+        Assert.Equal("10097553", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Extractive | Dewatering", licence.Purposes[0].NaldDescription);
         
         Assert.Null(licence.AbstractionLimits.Individual);
@@ -510,7 +510,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10053626", licence.Purposes[0].NaldId);
+        Assert.Equal("10053626", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Sports Grounds/Facilities | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
@@ -543,7 +543,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }
     
-     [Fact]
+    [Fact]
     public async Task WhenY5()
     {
         // Arrange
@@ -593,7 +593,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].DocumentId);
         Assert.Equal("Lake compentation", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("10081442", licence.Purposes[0].NaldId);
+        Assert.Equal("10081442", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Make-Up Or Top Up Water", licence.Purposes[0].NaldDescription);
         Assert.NotNull(licence.Purposes[1].ContainedIn);
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
@@ -601,15 +601,16 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Nald, licence.Purposes[1].ContainedIn![1].Source);
         Assert.Equal("4.2", licence.Purposes[1].DocumentId);
         Assert.Equal("Domestic & Sanitation", licence.Purposes[1].DocumentDescription);
-        Assert.Equal("10081441", licence.Purposes[1].NaldId);
+        Assert.Equal("10081441", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        Assert.Single(licence.AbstractionLimits.Individual);
+        Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
         Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
         Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].ContainedIn![1].Source);
+        // TODO some bug here about it not picking up purposes properly
         Assert.Equal(10, licence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(15, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
@@ -621,6 +622,104 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
         
+        // This is only here because the document has an incorrect litres per second value (miscalculated by an order of mangitude)
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
+        Assert.Equal(4.17, licence.AbstractionLimits.Individual[1].Limits[0].Value);
+        Assert.Equal("litres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
+        
         Assert.Null(licence.AbstractionLimits.Aggregates);
-    }    
+    }
+    
+    [Fact]
+    public async Task WhenY6()
+    {
+        // Arrange
+
+        const string filename = "Application  new  -licence issued  (08072024).pdf";
+        const int regionCode = 1;
+        
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultList = resultFull.Matches!;
+        
+        // Assert
+        Assert.Equal(17, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("NE/026/0032/074", licence.LicenceNumber!.Value);
+        
+        Assert.NotNull(licence.Points);
+        Assert.Equal(2, licence.Points.Length);
+        Assert.NotNull(licence.Points[0].ContainedIn);
+        Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
+        Assert.Equal("2.1", licence.Points[0].DocumentId);
+        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08011 44263, TA 08425 44263, TA 08425 44044 and TA 08011 44044, known as Pond S", licence.Points[0].DocumentDescription);
+        Assert.Equal("10043134", licence.Points[0].NaldId);
+        Assert.Equal("POND S", licence.Points[0].NaldDescription);
+        Assert.NotNull(licence.Points[1].ContainedIn);
+        Assert.Equal(2, licence.Points[1].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.Points[1].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[1].ContainedIn![1].Source);
+        Assert.Equal("2.2", licence.Points[1].DocumentId);
+        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08482 43956, TA 08749 43955, TA 08749 43776 and TA 08482 43776, known as Pond T", licence.Points[1].DocumentDescription);
+        Assert.Equal("10043135", licence.Points[1].NaldId);
+        Assert.Equal("POND T", licence.Points[1].NaldDescription);
+        
+        Assert.NotNull(licence.Purposes);
+        Assert.Single(licence.Purposes);
+        Assert.NotNull(licence.Purposes[0].ContainedIn);
+        Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
+        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal(2, licence.Purposes[0].NaldIds!.Length);
+        Assert.Equal("10089062", licence.Purposes[0].NaldIds![0]);
+        Assert.Equal("10089063", licence.Purposes[0].NaldIds![1]);
+        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].ContainedIn![1].Source);
+        Assert.Equal(4, licence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.Equal(103, licence.AbstractionLimits.Individual[0].Limits[0].Value);
+        Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
+        Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[0].Limits[0].PeriodType);
+        Assert.Equal(1363, licence.AbstractionLimits.Individual[0].Limits[1].Value);
+        Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[1].Units);
+        Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[0].Limits[1].PeriodType);
+        Assert.Equal(103_000, licence.AbstractionLimits.Individual[0].Limits[2].Value);
+        Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
+        Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
+        
+        Assert.NotNull(licence.AbstractionLimits.Aggregates);
+        Assert.Single(licence.AbstractionLimits.Aggregates);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
+        // TODO bring in aggregates from NALD and this will then work
+        /*Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Aggregates[0].ContainedIn![1].Source);
+        Assert.Equal(4, licence.AbstractionLimits.Aggregates[0].Limits.Count);*/
+    }
 }

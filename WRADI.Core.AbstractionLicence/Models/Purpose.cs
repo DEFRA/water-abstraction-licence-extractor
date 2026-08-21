@@ -4,7 +4,7 @@ public class Purpose
 {
     public string? DocumentId { get; init; }
     
-    public string? NaldId { get; set; }
+    public string[]? NaldIds { get; set; }
     
     public string? DocumentDescription { get; set; }
     

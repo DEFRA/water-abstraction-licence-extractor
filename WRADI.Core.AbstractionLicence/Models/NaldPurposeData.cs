@@ -11,4 +11,6 @@ public class NaldPurposeData
     public string? UseDescription { get; init; }
     
     public string? SecondaryCategoryDescription { get; set; }
+    
+    public string QuantityIdentifier { get; set; }
 }

@@ -300,7 +300,7 @@ export const LinkedLicenceItem = ({
     );
 
     return (
-        <CollapsibleItem summary={summary}>
+        <CollapsibleItem summary={summary} defaultOpen={true}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
                 <p style={{margin: 0}}><strong>Linked Licence
                     Number:</strong> {linkedFilename ? (

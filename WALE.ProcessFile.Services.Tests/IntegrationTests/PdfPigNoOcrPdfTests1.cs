@@ -3025,13 +3025,23 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
 
         Assert.Equal(2, primaryLicence.AbstractionLimits?.Individual?.Length);
         Assert.Equal("6.1", primaryLicence.AbstractionLimits!.Individual![0].DocumentIdentifier);
+        Assert.NotNull(primaryLicence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Single(primaryLicence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, primaryLicence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
 
-        Assert.Single(primaryLicence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal("FurtherConditions", primaryLicence.AbstractionLimits.Individual[1].ContainedIn![0].SectionName);
         Assert.Equal("9.3", primaryLicence.AbstractionLimits.Individual[1].DocumentIdentifier);
+        Assert.NotNull(primaryLicence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Single(primaryLicence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, primaryLicence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
         
         Assert.Equal(2, primaryLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Equal("6.2", primaryLicence.AbstractionLimits.Aggregates[0].DocumentIdentifier);
+        Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
+        Assert.Single(primaryLicence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, primaryLicence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn![0].Source);
         Assert.Equal("9.4", primaryLicence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
+        Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates[1].Limits[0].ContainedIn);
+        Assert.Single(primaryLicence.AbstractionLimits.Aggregates[1].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, primaryLicence.AbstractionLimits.Aggregates[1].Limits[0].ContainedIn![0].Source);
     }
 }

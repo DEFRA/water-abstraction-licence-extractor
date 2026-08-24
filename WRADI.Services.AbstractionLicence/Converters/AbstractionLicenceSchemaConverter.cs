@@ -565,6 +565,7 @@ public static class AbstractionLicenceSchemaConverter
                         _ => throw new Exception("Period type not known")
                     };
                 })
+                .Where(g => g.Key != null)
                 .ToList();
 
             // Get Nald limits
@@ -695,6 +696,8 @@ public static class AbstractionLicenceSchemaConverter
         List<AbstractionLimitGroup> existingLimitGroups,
         ref List<AbstractionLimitGroup> individuals)
     {
+        var unmatchedNaldLimits = new List<AbstractionLimit>();
+        
         foreach (var naldLimit in naldLimits)
         {
             var matchingIndividualGroups = existingLimitGroups
@@ -712,7 +715,7 @@ public static class AbstractionLicenceSchemaConverter
                         if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
                         {
                             // Already have it in contained in
-                            return;
+                            continue;
                         }
 
                         containedInList.Add(new ContainedInInformation
@@ -727,13 +730,20 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
-            var newGroup = new AbstractionLimitGroup
-            {
-                Limits = naldLimits
-            };
-            
-            individuals.Add(newGroup);
+            unmatchedNaldLimits.Add(naldLimit);
         }
+
+        if (unmatchedNaldLimits.Count == 0)
+        {
+            return;
+        }
+        
+        var newGroup = new AbstractionLimitGroup
+        {
+            Limits = unmatchedNaldLimits
+        };
+            
+        individuals.Add(newGroup);
     }
 
     private static double? ValueInBaseUnits(double? value, string? units)

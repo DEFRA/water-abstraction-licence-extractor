@@ -33,15 +33,25 @@
               "isAverage": false
             }
           ],
+          "containedIn": [
+            {
+              "source": "Document",
+              "direction": "Outgoing",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "ShallNotExceed",
+              "lineNumber": 18,
+              "pageNumber": 4
+            }
+          ],
           "points": [
             {
-              "documentId": "2.1",
+              "id": "2.1",
               "isImplicit": true
             }
           ],
           "purposes": [
             {
-              "documentId": "4.1",
+              "id": "4.1",
               "isImplicit": true
             }
           ]
@@ -70,15 +80,25 @@
               "isAverage": false
             }
           ],
+          "containedIn": [
+            {
+              "source": "Document",
+              "direction": "Outgoing",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "ShallNotExceed",
+              "lineNumber": 18,
+              "pageNumber": 4
+            }
+          ],
           "points": [
             {
-              "documentId": "2.1",
+              "id": "2.1",
               "isImplicit": true
             }
           ],
           "purposes": [
             {
-              "documentId": "4.1",
+              "id": "4.1",
               "isImplicit": true
             }
           ]
@@ -107,15 +127,25 @@
               "isAverage": false
             }
           ],
+          "containedIn": [
+            {
+              "source": "Document",
+              "direction": "Outgoing",
+              "sectionName": "AbstractionLimits",
+              "linkReason": "ShallNotExceed",
+              "lineNumber": 18,
+              "pageNumber": 4
+            }
+          ],
           "points": [
             {
-              "documentId": "2.1",
+              "id": "2.1",
               "isImplicit": true
             }
           ],
           "purposes": [
             {
-              "documentId": "4.1",
+              "id": "4.1",
               "isImplicit": true
             }
           ]
@@ -166,9 +196,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "2.1",
-          "altDocumentId": "C",
-          "documentDescription": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
+          "id": "2.1",
+          "altId": "C",
+          "description": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
         }
       ],
       "purposes": [
@@ -181,9 +211,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "4.1",
-          "naldIds": [],
-          "documentDescription": "Fish farm and fishery"
+          "id": "4.1",
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -237,13 +267,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -269,13 +299,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -318,13 +348,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -489,9 +519,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "2.1",
-          "altDocumentId": "A",
-          "documentDescription": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
+          "id": "2.1",
+          "altId": "A",
+          "description": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
         }
       ],
       "purposes": [
@@ -504,9 +534,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "4.1",
-          "naldIds": [],
-          "documentDescription": "Fish farm and fishery"
+          "id": "4.1",
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -560,13 +590,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -592,13 +622,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -641,13 +671,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -810,9 +840,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "2.1",
-          "altDocumentId": "B",
-          "documentDescription": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
+          "id": "2.1",
+          "altId": "B",
+          "description": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
         }
       ],
       "purposes": [
@@ -825,9 +855,9 @@
               "pageNumber": 4
             }
           ],
-          "documentId": "4.1",
-          "naldIds": [],
-          "documentDescription": "Fish farm and fishery"
+          "id": "4.1",
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -881,13 +911,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -913,13 +943,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]
@@ -962,13 +992,13 @@
             ],
             "points": [
               {
-                "documentId": "2.1",
+                "id": "2.1",
                 "isImplicit": true
               }
             ],
             "purposes": [
               {
-                "documentId": "4.1",
+                "id": "4.1",
                 "isImplicit": true
               }
             ]

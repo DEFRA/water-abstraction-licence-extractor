@@ -13,6 +13,7 @@ public class AggregateWithContext : Aggregate
             TimePeriod = aggregate.TimePeriod,
             TimeCutoff = aggregate.TimeCutoff,
             Limits = aggregate.Limits,
+            ContainedIn = aggregate.ContainedIn,
 
             AggregateSetId = aggregate.AggregateSetId,
             SourceLicenceNumber = aggregate.SourceLicenceNumber,

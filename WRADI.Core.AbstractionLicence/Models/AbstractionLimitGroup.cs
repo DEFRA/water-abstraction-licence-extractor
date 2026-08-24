@@ -43,6 +43,7 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
             CutoffType = CutoffType.From,
             Date = null
         },
-        Limits = [AbstractionLimit.Template]
+        Limits = [AbstractionLimit.Template],
+        ContainedIn = []
     };
 }

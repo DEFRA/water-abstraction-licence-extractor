@@ -6,4 +6,9 @@ public class NationalGridReference
     public string? Sheet { get; init; }
     public string? East { get; init; }
     public string? North { get; init; }
+    
+    public override string ToString()
+    {
+        return $"{Sheet} {East} {North}";
+    }
 }

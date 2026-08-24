@@ -194,16 +194,16 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.Points);
         Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].Description);
         Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
-        Assert.Equal("A", licence.Points[0].DocumentId);
+        Assert.Equal("A", licence.Points[0].Id);
 
         Assert.NotNull(licence.Purposes);
         Assert.Equal(2, licence.Purposes.Length);
-        Assert.Equal("(1)", licence.Purposes[0].DocumentId);
-        Assert.Equal("Spray Irrigation", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("(2)", licence.Purposes[1].DocumentId);
-        Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("(1)", licence.Purposes[0].Id);
+        Assert.Equal("Spray Irrigation", licence.Purposes[0].Description);
+        Assert.Equal("(2)", licence.Purposes[1].Id);
+        Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].Description);
 
         Assert.NotNull(licence.PeriodsOfAbstraction);
         Assert.Equal(2, licence.PeriodsOfAbstraction.Length);
@@ -221,10 +221,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Individual[0].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Individual[0].Points!);
-        Assert.Equal("A", licence.AbstractionLimits.Individual[0].Points![0].DocumentId);
+        Assert.Equal("A", licence.AbstractionLimits.Individual[0].Points![0].Id);
         Assert.True(licence.AbstractionLimits.Individual[0].Points![0].IsImplicit);
         Assert.Single(licence.AbstractionLimits.Individual[0].Purposes!);
-        Assert.Equal("(1)", licence.AbstractionLimits.Individual[0].Purposes![0].DocumentId);
+        Assert.Equal("(1)", licence.AbstractionLimits.Individual[0].Purposes![0].Id);
         Assert.False(licence.AbstractionLimits.Individual[0].Purposes![0].IsImplicit);
         
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
@@ -236,10 +236,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Individual[1].Points!);
-        Assert.Equal("A", licence.AbstractionLimits.Individual[1].Points![0].DocumentId);
+        Assert.Equal("A", licence.AbstractionLimits.Individual[1].Points![0].Id);
         Assert.True(licence.AbstractionLimits.Individual[1].Points![0].IsImplicit);
         Assert.Single(licence.AbstractionLimits.Individual[1].Purposes!);
-        Assert.Equal("(2)", licence.AbstractionLimits.Individual[1].Purposes![0].DocumentId);
+        Assert.Equal("(2)", licence.AbstractionLimits.Individual[1].Purposes![0].Id);
         Assert.False(licence.AbstractionLimits.Individual[1].Purposes![0].IsImplicit);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -255,12 +255,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
         Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Purposes!.Length);
-        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].DocumentId);
+        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);
-        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
+        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].ContainedIn);
@@ -269,12 +269,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Aggregates[0].Limits[1].PeriodType);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].Points!);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
         Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Purposes!.Length);
-        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].DocumentId);
+        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);
-        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
+        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[2].ContainedIn);
@@ -283,12 +283,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Aggregates[0].Limits[2].PeriodType);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[2].Points!);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
-        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].DocumentId);
+        Assert.Equal("A", licence.AbstractionLimits.Aggregates[0].Points![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Points![0].IsImplicit);
         Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].Purposes!.Length);
-        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].DocumentId);
+        Assert.Equal("(1)", licence.AbstractionLimits.Aggregates[0].Purposes![0].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![0].IsImplicit);
-        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
+        Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
     }
     
@@ -327,21 +327,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2, licence.Points.Length);
         Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].Description);
         Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
-        Assert.Equal("(1)", licence.Points[0].DocumentId);
+        Assert.Equal("(1)", licence.Points[0].Id);
         Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("B", licence.Points[1].Name);
-        Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].DocumentDescription);
+        Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].Description);
         Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
-        Assert.Equal("(2)", licence.Points[1].DocumentId);
+        Assert.Equal("(2)", licence.Points[1].Id);
 
         Assert.NotNull(licence.Purposes);
         Assert.Equal(2, licence.Purposes.Length);
-        Assert.Equal("(a)", licence.Purposes[0].DocumentId);
-        Assert.Equal("Private Water Supply", licence.Purposes[0].DocumentDescription);
-        Assert.Equal("(b)", licence.Purposes[1].DocumentId);
-        Assert.Equal("Reservoir Storage for subsequent stream compensation", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("(a)", licence.Purposes[0].Id);
+        Assert.Equal("Private Water Supply", licence.Purposes[0].Description);
+        Assert.Equal("(b)", licence.Purposes[1].Id);
+        Assert.Equal("Reservoir Storage for subsequent stream compensation", licence.Purposes[1].Description);
 
         Assert.Null(licence.AbstractionLimits.Individual);
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -369,13 +369,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerSecond, agg.Limits[2].PeriodType);
         Assert.Null(agg.Limits[0].Points);
         Assert.Single(agg.Points!);
-        Assert.Equal("(1)", agg.Points![0].DocumentId);
+        Assert.Equal("(1)", agg.Points![0].Id);
         Assert.False(agg.Points![0].IsImplicit);
         Assert.Null(agg.Limits[0].Purposes);
         Assert.Equal(2, agg.Purposes!.Length);
-        Assert.Equal("(a)", agg.Purposes![0].DocumentId);
+        Assert.Equal("(a)", agg.Purposes![0].Id);
         Assert.True(agg.Purposes![0].IsImplicit);
-        Assert.Equal("(b)", agg.Purposes![1].DocumentId);
+        Assert.Equal("(b)", agg.Purposes![1].Id);
         Assert.True(agg.Purposes![1].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[1];
@@ -400,12 +400,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerSecond, agg.Limits[2].PeriodType);        
         Assert.NotNull(agg.Points!);
         Assert.Null(agg.Limits[0].Points!);
-        Assert.Equal("(2)", agg.Points![0].DocumentId);
+        Assert.Equal("(2)", agg.Points![0].Id);
         Assert.False(agg.Points![0].IsImplicit);
         Assert.Equal(2, agg.Purposes!.Length);
-        Assert.Equal("(a)", agg.Purposes![0].DocumentId);
+        Assert.Equal("(a)", agg.Purposes![0].Id);
         Assert.True(agg.Purposes![0].IsImplicit);
-        Assert.Equal("(b)", agg.Purposes![1].DocumentId);
+        Assert.Equal("(b)", agg.Purposes![1].Id);
         Assert.True(agg.Purposes![1].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[2];
@@ -419,13 +419,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Null(agg.Limits[0].Points!);
         Assert.NotNull(agg.Points!);
         Assert.Equal(2, agg.Points!.Length);
-        Assert.Equal("(1)", agg.Points![0].DocumentId);
+        Assert.Equal("(1)", agg.Points![0].Id);
         Assert.True(agg.Points![0].IsImplicit);
         Assert.Single(agg.Purposes!);
-        Assert.Equal("(2)", agg.Points![1].DocumentId);
+        Assert.Equal("(2)", agg.Points![1].Id);
         Assert.True(agg.Points![1].IsImplicit);
         Assert.Single(agg.Purposes!);        
-        Assert.Equal("(a)", agg.Purposes![0].DocumentId);
+        Assert.Equal("(a)", agg.Purposes![0].Id);
         Assert.False(agg.Purposes![0].IsImplicit);
         
         agg = licence.AbstractionLimits.Aggregates[3];
@@ -438,13 +438,13 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerYear, agg.Limits[0].PeriodType);
         Assert.Null(agg.Limits[0].Points!);
         Assert.Equal(2, agg.Points!.Length);
-        Assert.Equal("(1)", agg.Points![0].DocumentId);
+        Assert.Equal("(1)", agg.Points![0].Id);
         Assert.True(agg.Points![0].IsImplicit);
         Assert.Single(agg.Purposes!);
-        Assert.Equal("(2)", agg.Points![1].DocumentId);
+        Assert.Equal("(2)", agg.Points![1].Id);
         Assert.True(agg.Points![1].IsImplicit);
         Assert.Single(agg.Purposes!);        
-        Assert.Equal("(b)", agg.Purposes![0].DocumentId);
+        Assert.Equal("(b)", agg.Purposes![0].Id);
         Assert.False(agg.Purposes![0].IsImplicit);
     }
     
@@ -485,9 +485,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.Points);
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal("absdsd", licence.Points[0].NaldDescription);
-        Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].Description);
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("A", licence.Points[0].DocumentId);
+        Assert.Equal("A", licence.Points[0].Id);
         Assert.Equal("54556", licence.Points[0].NaldId);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
@@ -495,8 +495,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Purposes);
         Assert.Single(licence.Purposes);
-        Assert.Null(licence.Purposes[0].DocumentId);
-        Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Null(licence.Purposes[0].Id);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);
@@ -511,10 +511,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(LimitPeriodType.PerHour, limitBlock.Limits[0].PeriodType);
         Assert.Single(limitBlock.Points!);
         Assert.Null(limitBlock.Limits[0].Points!);
-        Assert.Equal("A", limitBlock.Points![0].DocumentId);
+        Assert.Equal("A", limitBlock.Points![0].Id);
         Assert.True(limitBlock.Points![0].IsImplicit);
         Assert.Single(limitBlock.Purposes!);
-        Assert.Null(limitBlock.Purposes![0].DocumentId);
+        Assert.Null(limitBlock.Purposes![0].Id);
         Assert.True(limitBlock.Purposes![0].IsImplicit);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
@@ -529,10 +529,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(120, limitBlock.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitBlock.Limits[0].PeriodType); 
         Assert.Single(limitBlock.Points!);
-        Assert.Equal("A", limitBlock.Points![0].DocumentId);
+        Assert.Equal("A", limitBlock.Points![0].Id);
         Assert.True(limitBlock.Points![0].IsImplicit);
         Assert.Single(limitBlock.Purposes!);
-        Assert.Null(limitBlock.Purposes![0].DocumentId);
+        Assert.Null(limitBlock.Purposes![0].Id);
         Assert.False(limitBlock.Purposes![0].IsImplicit);
     }
 }

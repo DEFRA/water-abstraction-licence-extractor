@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 
 namespace WRADI.Core.AbstractionLicence.Models;
@@ -22,8 +23,8 @@ public class PointOfAbstraction : Point
 
     public static PointOfAbstraction Template => new()
     {
-        DocumentDescription = string.Empty,
-        DocumentId = string.Empty,
+        Description = string.Empty,
+        Id = string.Empty,
         // TODO known as, Near etc...
         PurposeIds = [
             "4.1"

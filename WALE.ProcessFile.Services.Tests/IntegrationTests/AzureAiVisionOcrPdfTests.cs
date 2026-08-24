@@ -1309,14 +1309,14 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal(45460.92, limitGroup.Limits[0].Value);
         Assert.Null(limitGroup.Limits[0].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(1)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(1)", limitGroup.Points![0].Id);
         
         Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
         Assert.Equal(13638276, limitGroup.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
         Assert.Null(limitGroup.Limits[1].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(1)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(1)", limitGroup.Points![0].Id);
         
         limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[1];
         
@@ -1325,14 +1325,14 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
         Assert.Null(limitGroup.Limits[0].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(2)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(2)", limitGroup.Points![0].Id);
         
         Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
         Assert.Equal(18184368, limitGroup.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
         Assert.Null(limitGroup.Limits[1].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(2)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(2)", limitGroup.Points![0].Id);
         
         limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[2];
         
@@ -1341,14 +1341,14 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
         Assert.Null(limitGroup.Limits[0].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(3)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(3)", limitGroup.Points![0].Id);
         
         Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
         Assert.Equal(16593236, limitGroup.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
         Assert.Null(limitGroup.Limits[1].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(3)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(3)", limitGroup.Points![0].Id);
         
         limitGroup = agreedSchemaLicence.AbstractionLimits.Individual[3];
         
@@ -1357,24 +1357,24 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         Assert.Equal(LimitPeriodType.PerDay, limitGroup.Limits[0].PeriodType);
         Assert.Null(limitGroup.Limits[0].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(4)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(4)", limitGroup.Points![0].Id);
         
         Assert.Equal("cubic metres", limitGroup.Limits[1].Units);
         Assert.Equal(5819000, limitGroup.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitGroup.Limits[1].PeriodType);
         Assert.Null(limitGroup.Limits[1].Points!);
         Assert.Single(limitGroup.Points!);
-        Assert.Equal("(4)", limitGroup.Points![0].DocumentId);
+        Assert.Equal("(4)", limitGroup.Points![0].Id);
         
         Assert.Equal(4, agreedSchemaLicence.Points.Length);
-        Assert.Equal("(1)", agreedSchemaLicence.Points[0].DocumentId);
-        Assert.Equal("TA 0417 2942", agreedSchemaLicence.Points[0].DocumentDescription);
-        Assert.Equal("(2)", agreedSchemaLicence.Points[1].DocumentId);
-        Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].DocumentDescription);
-        Assert.Equal("(3)", agreedSchemaLicence.Points[2].DocumentId);
-        Assert.Equal("TA 0677 3514 & TA 0678 3508 &", agreedSchemaLicence.Points[2].DocumentDescription);
-        Assert.Equal("(4)", agreedSchemaLicence.Points[3].DocumentId);
-        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\" and \"F\" on the map", agreedSchemaLicence.Points[3].DocumentDescription);
+        Assert.Equal("(1)", agreedSchemaLicence.Points[0].Id);
+        Assert.Equal("TA 0417 2942", agreedSchemaLicence.Points[0].Description);
+        Assert.Equal("(2)", agreedSchemaLicence.Points[1].Id);
+        Assert.Equal("TA 0472 3425", agreedSchemaLicence.Points[1].Description);
+        Assert.Equal("(3)", agreedSchemaLicence.Points[2].Id);
+        Assert.Equal("TA 0677 3514 & TA 0678 3508 &", agreedSchemaLicence.Points[2].Description);
+        Assert.Equal("(4)", agreedSchemaLicence.Points[3].Id);
+        Assert.Equal("TA 0269 3303 & TA 0268 3302 marked \"A\", \"B\", \"C\", \"D\", \"E\" and \"F\" on the map", agreedSchemaLicence.Points[3].Description);
         
         // TODO 1 for each point
         
@@ -1595,8 +1595,8 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Equal(2, agreedSchemaLicence.Purposes.Length);
-        Assert.Equal("Through flow for Pugneys Country Park Lake", agreedSchemaLicence.Purposes[0].DocumentDescription);
-        Assert.Equal("Augmentation of Pugneys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].DocumentDescription);
+        Assert.Equal("Through flow for Pugneys Country Park Lake", agreedSchemaLicence.Purposes[0].Description);
+        Assert.Equal("Augmentation of Pugneys Country Park Lake for subsequent bowser abstraction", agreedSchemaLicence.Purposes[1].Description);
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }
@@ -1650,7 +1650,7 @@ public class AzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixtu
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.Single();
         
         Assert.Single(agreedSchemaLicence.Purposes);
-        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].DocumentDescription);
+        Assert.Equal("Agriculture", agreedSchemaLicence.Purposes[0].Description);
         
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
     }

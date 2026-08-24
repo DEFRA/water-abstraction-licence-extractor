@@ -143,8 +143,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("Between National Grid References NZ 6008 0569 and NZ 6037 0556 marked 'A' and 'B' on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("Between National Grid References NZ 6008 0569 and NZ 6037 0556 marked 'A' and 'B' on the map", licence.Points[0].Description);
         Assert.Equal("10008265", licence.Points[0].NaldId);
         Assert.Equal("SPRING - SUPERFICIAL DRIFT - INGLEBY GREENHOW", licence.Points[0].NaldDescription);
         
@@ -154,16 +154,16 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Private Water Supply", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Private Water Supply", licence.Purposes[0].Description);
         Assert.Equal("10081510", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Private Water Supply | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Household", licence.Purposes[0].NaldDescription);
 
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[1].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[1].ContainedIn![1].Source);
-        Assert.Equal("4.2", licence.Purposes[1].DocumentId);
-        Assert.Equal("Agriculture (other than Spray Irrigation)", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("4.2", licence.Purposes[1].Id);
+        Assert.Equal("Agriculture (other than Spray Irrigation)", licence.Purposes[1].Description);
         Assert.Equal("10080708", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Private Water Undertaking | " +
             "General Farming & Domestic", licence.Purposes[1].NaldDescription); 
@@ -217,8 +217,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("At National Grid Reference SX 39921 85071 marked 'A' on the maps", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("At National Grid Reference SX 39921 85071 marked 'A' on the maps", licence.Points[0].Description);
         Assert.Equal("10040099", licence.Points[0].NaldId);
         Assert.Equal("RIVER LYD AT LIFTON", licence.Points[0].NaldDescription);
         
@@ -228,8 +228,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for\npublic water supply", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for\npublic water supply", licence.Purposes[0].Description);
         Assert.Equal("10082040", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Water Supply Related | Transfer Between Sources (Post Water Act 2003)", licence.Purposes[0].NaldDescription);
         
@@ -325,8 +325,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("At National Grid Reference SE 07537 51958 marked 'A' on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("At National Grid Reference SE 07537 51958 marked 'A' on the map", licence.Points[0].Description);
         Assert.Equal("32021", licence.Points[0].NaldId);
         Assert.Equal("RIVER WHARFE - LOBWOOD", licence.Points[0].NaldDescription);
         
@@ -336,8 +336,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Public water supply", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Public water supply", licence.Purposes[0].Description);
         Assert.Equal("10083975", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Public Water Supply | Potable Water Supply - Direct", licence.Purposes[0].NaldDescription);
         
@@ -441,15 +441,15 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("Within the area marked 'Abstraction area' on the map and not outside the boundary formed by straight lines running between the following National Grid References: TL 19954 08765, TL 20170 08737, TL 20476 08428, TL 20364 08178, TL 19755 07824 and TL 19432 08396", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("Within the area marked 'Abstraction area' on the map and not outside the boundary formed by straight lines running between the following National Grid References: TL 19954 08765, TL 20170 08737, TL 20476 08428, TL 20364 08178, TL 19755 07824 and TL 19432 08396", licence.Points[0].Description);
         Assert.Equal("10034108", licence.Points[0].NaldId);
         Assert.Equal("HATFIELD ROAD QUARRY, HATFIELD, NEAR ST. ALBANS, POINT A", licence.Points[0].NaldDescription);
         Assert.NotNull(licence.Points[1].ContainedIn);
         Assert.Single(licence.Points[1].ContainedIn!);
         Assert.Equal(InformationSource.Nald, licence.Points[1].ContainedIn![0].Source); // NALD has a 2nd point
-        Assert.Equal("10034109", licence.Points[1].DocumentId); // TODO why document id? should just be ID i guess
-        Assert.Equal("HATFIELD ROAD QUARRY, HATFIELD, NEAR ST. ALBANS, POINT B", licence.Points[1].DocumentDescription); // TODO why document description should just be ID i guess
+        Assert.Equal("10034109", licence.Points[1].Id); // TODO why document id? should just be ID i guess
+        Assert.Equal("HATFIELD ROAD QUARRY, HATFIELD, NEAR ST. ALBANS, POINT B", licence.Points[1].Description); // TODO why document description should just be ID i guess
         //Assert.Equal("10034108", licence.Points[1].NaldId);
         //Assert.Equal("HATFIELD ROAD QUARRY, HATFIELD, NEAR ST. ALBANS, POINT A", licence.Points[1].NaldDescription);
         
@@ -459,8 +459,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Transfer for the purpose of dewatering", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Transfer for the purpose of dewatering", licence.Purposes[0].Description);
         Assert.Equal("10097553", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Extractive | Dewatering", licence.Purposes[0].NaldDescription);
         
@@ -504,8 +504,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("At National Grid Reference SX 95850 89130 marked 'A' on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("At National Grid Reference SX 95850 89130 marked 'A' on the map", licence.Points[0].Description);
         Assert.Equal("66883", licence.Points[0].NaldId);
         Assert.Equal("TOPSHAM ROAD SPORTS GROUND BOREHOLE", licence.Points[0].NaldDescription);
         
@@ -515,8 +515,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
         Assert.Equal("10053626", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Sports Grounds/Facilities | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
         
@@ -592,8 +592,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("At National Grid Reference TA 04990 38509 at the point marked \"A\" on the map", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("At National Grid Reference TA 04990 38509 at the point marked \"A\" on the map", licence.Points[0].Description);
         Assert.Equal("10007720", licence.Points[0].NaldId);
         Assert.Equal("BOREHOLE-CHALK-BEVERLEY", licence.Points[0].NaldDescription);
         
@@ -603,16 +603,16 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Lake compentation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Lake compentation", licence.Purposes[0].Description);
         Assert.Equal("10081442", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Make-Up Or Top Up Water", licence.Purposes[0].NaldDescription);
         Assert.NotNull(licence.Purposes[1].ContainedIn);
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[1].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[1].ContainedIn![1].Source);
-        Assert.Equal("4.2", licence.Purposes[1].DocumentId);
-        Assert.Equal("Domestic & Sanitation", licence.Purposes[1].DocumentDescription);
+        Assert.Equal("4.2", licence.Purposes[1].Id);
+        Assert.Equal("Domestic & Sanitation", licence.Purposes[1].Description);
         Assert.Equal("10081441", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldDescription);
         
@@ -703,16 +703,16 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
-        Assert.Equal("2.1", licence.Points[0].DocumentId);
-        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08011 44263, TA 08425 44263, TA 08425 44044 and TA 08011 44044, known as Pond S", licence.Points[0].DocumentDescription);
+        Assert.Equal("2.1", licence.Points[0].Id);
+        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08011 44263, TA 08425 44263, TA 08425 44044 and TA 08011 44044, known as Pond S", licence.Points[0].Description);
         Assert.Equal("10043134", licence.Points[0].NaldId);
         Assert.Equal("POND S", licence.Points[0].NaldDescription);
         Assert.NotNull(licence.Points[1].ContainedIn);
         Assert.Equal(2, licence.Points[1].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Points[1].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Points[1].ContainedIn![1].Source);
-        Assert.Equal("2.2", licence.Points[1].DocumentId);
-        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08482 43956, TA 08749 43955, TA 08749 43776 and TA 08482 43776, known as Pond T", licence.Points[1].DocumentDescription);
+        Assert.Equal("2.2", licence.Points[1].Id);
+        Assert.Equal("Within the area edged red on the map only, which is also contained within the boundary formed by straight lines running between the following National Grid References: - TA 08482 43956, TA 08749 43955, TA 08749 43776 and TA 08482 43776, known as Pond T", licence.Points[1].Description);
         Assert.Equal("10043135", licence.Points[1].NaldId);
         Assert.Equal("POND T", licence.Points[1].NaldDescription);
         
@@ -722,8 +722,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
-        Assert.Equal("4.1", licence.Purposes[0].DocumentId);
-        Assert.Equal("Spray irrigation", licence.Purposes[0].DocumentDescription);
+        Assert.Equal("4.1", licence.Purposes[0].Id);
+        Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
         Assert.Equal(2, licence.Purposes[0].NaldIds!.Length);
         Assert.Equal("10089062", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("10089063", licence.Purposes[0].NaldIds![1]);

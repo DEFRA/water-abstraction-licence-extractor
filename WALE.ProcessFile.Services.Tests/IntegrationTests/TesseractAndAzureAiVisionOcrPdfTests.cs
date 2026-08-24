@@ -375,7 +375,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Equal(63645, agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Value);
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Individual![0].Limits[0].Points!);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual![0].Points!);
-        Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![0].Points![0].DocumentId); 
+        Assert.Equal("Catcleugh Reservoir", agreedSchemaLicence.AbstractionLimits.Individual![0].Points![0].Id); 
         
         Assert.Equal(3, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         
@@ -403,8 +403,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![1].Limits[0].Points!);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points!.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points!.Count(c => c.IsImplicit != true));
-        Assert.Equal("Colt Crag Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points![0].DocumentId);
-        Assert.Equal("Little Swinburn Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points![1].DocumentId);
+        Assert.Equal("Colt Crag Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points![0].Id);
+        Assert.Equal("Little Swinburn Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![1].Points![1].Id);
         
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits);
         Assert.Equal("cubic metres", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits[0].Units);
@@ -416,8 +416,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFix
         Assert.Null(agreedSchemaLicence.AbstractionLimits.Aggregates![2].Limits[0].Points!);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points!.Length);
         Assert.Equal(2, agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points!.Count(c => c.IsImplicit != true));
-        Assert.Equal("Little Swinburn Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points![0].DocumentId);
-        Assert.Equal("West Hallington Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points![1].DocumentId); // TODO the resevoirs listed are actually a bit different
+        Assert.Equal("Little Swinburn Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points![0].Id);
+        Assert.Equal("West Hallington Reservoir", agreedSchemaLicence.AbstractionLimits.Aggregates![2].Points![1].Id); // TODO the resevoirs listed are actually a bit different
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("1/23/01/159", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

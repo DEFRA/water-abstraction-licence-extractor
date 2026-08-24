@@ -12,8 +12,8 @@ public class PurposeOfAbstraction : Purpose
     
     public static PurposeOfAbstraction Template => new()
     {
-        DocumentDescription = string.Empty,
-        DocumentId = string.Empty,
+        Description = string.Empty,
+        Id = string.Empty,
         PointIds = [
             "2.1"
         ],

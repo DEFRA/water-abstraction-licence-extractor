@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Core.Models;
+
 namespace WRADI.Core.AbstractionLicence.Models;
 
 public class NaldPointData

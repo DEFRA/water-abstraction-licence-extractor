@@ -11,6 +11,8 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     public TimeCutoff? TimeCutoff { get; set; }
     
     public List<AbstractionLimit> Limits { get; set; } = [];
+    
+    public ContainedInInformation[]? ContainedIn { get; set; }
 
     public AbstractionLimitGroup Clone()
     {
@@ -21,7 +23,8 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
             TimeCutoff = TimeCutoff,
             Limits = Limits.ToList(),
             Points = Points?.ToArray(),
-            Purposes = Purposes?.ToArray()
+            Purposes = Purposes?.ToArray(),
+            ContainedIn = ContainedIn?.ToArray()
         };
     }
     

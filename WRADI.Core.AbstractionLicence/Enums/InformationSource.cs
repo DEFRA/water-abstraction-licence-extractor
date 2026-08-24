@@ -5,5 +5,6 @@ public enum InformationSource
     Unknown,
     Nald,
     Document,
-    OtherDocument
+    OtherDocument,
+    MixedSourcesOrMixedReasons
 }

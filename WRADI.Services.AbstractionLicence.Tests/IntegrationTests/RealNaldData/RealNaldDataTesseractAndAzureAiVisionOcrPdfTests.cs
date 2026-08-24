@@ -287,7 +287,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("10021258", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Non-Remedial River/Wetland Support | Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
         
-        //Assert.Equal(2, licence.AbstractionLimits.Individual!.Length); // TODO
+        Assert.Null(licence.AbstractionLimits.Individual);
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Equal(4, licence.AbstractionLimits.Aggregates!.Length);

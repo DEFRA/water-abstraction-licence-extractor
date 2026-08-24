@@ -249,6 +249,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);  
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[0].Units);
         Assert.Equal(36.36, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
@@ -262,9 +263,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
-        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);  
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].ContainedIn);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[1].Units);
         Assert.Equal(618.20, licence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Aggregates[0].Limits[1].PeriodType);
@@ -278,9 +277,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].DocumentId);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
-        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);  
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[2].ContainedIn);
         Assert.Equal("litres", licence.AbstractionLimits.Aggregates[0].Limits[2].Units);
         Assert.Equal(10.10, licence.AbstractionLimits.Aggregates[0].Limits[2].Value);
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Aggregates[0].Limits[2].PeriodType);

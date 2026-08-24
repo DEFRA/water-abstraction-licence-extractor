@@ -54,7 +54,10 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
     private static bool IsAutoOrBusinessReview(string? verificationType)
         => verificationType is "AutoWarn" or "AutoFail"
-            or "RequestBusinessReview" or "CompleteBusinessReview";
+           || IsBusinessReview(verificationType);
+
+    private static bool IsBusinessReview(string? verificationType)
+        => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
 
     private static void ProcessOutgoingVerifications(IEnumerable<LicenceSectionVerification> verifications,
         OutputListDataItem listRow, List<LicenceSectionItemSummary> sectionSummaries,
@@ -197,11 +200,21 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             sectionSummaries.Add(new LicenceSectionItemSummary
             {
                 LicenceSectionItemId = verification.LicenceSectionItemId!,
-                VerificationTypes = [verification.VerificationType!]
+                VerificationTypes = [verification.VerificationType!],
+                CurrentVerificationType = verification.VerificationType!
             });
         }
         else
         {
+            // New business review tags should override previous ones - clear the previous ones first
+            if (IsBusinessReview(verification.VerificationType))
+            {
+                existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                    .Where(x => !IsBusinessReview(x))
+                    .ToArray();
+            }
+            
+            existingSummary.CurrentVerificationType = verification.VerificationType!;
             if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes

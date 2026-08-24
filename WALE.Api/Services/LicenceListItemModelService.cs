@@ -65,6 +65,7 @@ public class LicenceListItemModelService
 
             LimitsCount = source.limitsCount,
             AggregatesCount = source.aggregatesCount,
+            AggregateIds = source.aggregateIds ?? [],
             Ocr = source.ocr,
             IssueDate = ParseDateOnly(source.issueDate),
             Issuer = source.issuer,
@@ -104,7 +105,7 @@ public class LicenceListItemModelService
             points = licence.Points,
 
             limitsCount = licence.LimitsCount,
-            aggregatesCount = licence.AggregatesCount,
+            aggregateIds = licence.AggregateIds,
             naldHasAggregateCondition = licence.NaldAggregate,
             ocr = licence.Ocr,
             issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
@@ -284,7 +285,7 @@ public class LicenceListItemModelService
             SourceData = JsonSerializer.Serialize(
                 source,
                 JsonHelper.GetSerializerOptions()),
-            IsBecauseOfAggregate = true
+            IsBecauseOfAggregate = source.IsBecauseOfAggregate
         };
     }
 

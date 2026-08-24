@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import type {Licence, LicenceSectionVerification, OutputListDataItem} from "../../api/generated/apiClient.ts";
 import {LicenceSection} from "./LicenceSection";
 import {ScrapedLicenceSection} from "./ScrapedLicenceSection";
-import {LinkedLicences} from "./LinkedLicences";
+import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
+import {Aggregates} from "./Aggregates/Aggregates.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -12,13 +13,12 @@ interface VerificationContentProps {
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }
 
 type SubTabType = 'scraped' | 'current' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem, data, onOpenReport }: VerificationContentProps) {
+export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem, onOpenReport }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -105,11 +105,29 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         onVerified={handleVerified}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
-                        data={data}
                         onOpenReport={onOpenReport}
                     >
-                        <LinkedLicences 
-                            licence={licence} 
+                        <LinkedLicences
+                            licence={licence}
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                            history={history}
+                        />
+                    </LicenceSection>
+                    <LicenceSection
+                        title="Aggregates"
+                        itemType="aggregate"
+                        licenceFileId={licence.dmsFileId!}
+                        processRunId={processRunId}
+                        onRefresh={onRefresh}
+                        onVerified={handleVerified}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                        onOpenReport={onOpenReport}
+                    >
+                        <Aggregates
+                            licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             history={history}
@@ -127,11 +145,28 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                         processRunId={processRunId}
                         initialOpen={true}
                         outputListDataItem={outputListDataItem}
-                        data={data}
                         onOpenReport={onOpenReport}
                     >
-                        <LinkedLicences 
-                            licence={licence} 
+                        <LinkedLicences
+                            licence={licence}
+                            onJumpToPage={onJumpToPage}
+                            outputListDataItem={outputListDataItem}
+                            scrapedView={true}
+                            history={history}
+                        />
+                    </ScrapedLicenceSection>
+                    <ScrapedLicenceSection
+                        title="Aggregates"
+                        itemType="aggregate"
+                        licenceFileId={licence.dmsFileId!}
+                        processRunId={processRunId}
+                        initialOpen={true}
+                        outputListDataItem={outputListDataItem}
+                        onOpenReport={onOpenReport}
+                    >
+                        <Aggregates
+                            licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

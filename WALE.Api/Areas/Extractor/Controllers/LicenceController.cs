@@ -30,18 +30,20 @@ public class LicenceController(
     [HttpGet]
     public async Task<IActionResult> GetByFileIdAsync(
         [FromQuery] Guid fileId,
-        [FromQuery] int processRunId)
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
     {
-        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
         return Ok(licence);
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetByLicenceNumberAsync(
         [FromQuery] string licenceNumber,
-        [FromQuery] int processRunId)
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
     {
-        var licence = await abstractionLicenceOutputService.GetLicenceAsync(licenceNumber, processRunId);
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(licenceNumber, processRunId, applyVerifications);
         return Ok(licence);
     }
     

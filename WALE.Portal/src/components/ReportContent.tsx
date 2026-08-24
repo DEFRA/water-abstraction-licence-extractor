@@ -16,13 +16,12 @@ interface ReportContentProps {
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    data?: OutputListDataItem[];
     onOpenReport?: (fileId: string) => void;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, data, onOpenReport}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -49,9 +48,9 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                 waleApiClient.matchesResult(fileId),
                 waleApiClient.matchesResultString(fileId),
-                waleApiClient.licence(fileId, processRunId),
+                waleApiClient.licence(fileId, processRunId, false),
                 waleApiClient.licenceSets(fileId),
-                waleApiClient.licenceString(fileId, processRunId),
+                waleApiClient.licenceString(fileId, processRunId, false),
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
@@ -280,7 +279,6 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     onJumpToPage={jumpToPage}
                                     onRefresh={handleRefresh}
                                     outputListDataItem={outputListDataItem}
-                                    data={data}
                                     onOpenReport={onOpenReport}
                                 />
                             </div>

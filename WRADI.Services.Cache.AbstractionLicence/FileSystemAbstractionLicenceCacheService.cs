@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -97,6 +98,11 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
     {
         throw new NotImplementedException();
     }

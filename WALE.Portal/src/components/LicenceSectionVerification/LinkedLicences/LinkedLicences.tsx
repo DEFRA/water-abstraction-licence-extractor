@@ -6,12 +6,12 @@ import {
     LicenceSectionVerification,
     ContainedInInformation,
     InformationSource
-} from "../../api/generated/apiClient.ts";
-import {waleApiClient} from "../../api/apiClient.ts";
-import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "./LicenceSection";
+} from "../../../api/generated/apiClient.ts";
+import {waleApiClient} from "../../../api/apiClient.ts";
+import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "../LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
-import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo";
-import {hasAnyOutgoingSections} from "../../utils/verificationUtils.ts";
+import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
+import {hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -21,7 +21,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, data, onOpenReport, scrapedView, history}, ref) => {
+    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, onOpenReport, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
@@ -43,19 +43,19 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
-            getData: (itemId?: string) => {
+            getData: async (itemId?: string) => {
                 if (itemId) {
                     return linkedLicences.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }
                 return linkedLicences;
             },
-            getScrapedData: (itemId?: string) => {
+            getScrapedData: async (itemId?: string) => {
                 if (itemId) {
                     return scrapedData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }
                 return scrapedData;
             },
-            getSnapshotData: (itemId?: string) => {
+            getSnapshotData: async (itemId?: string) => {
                 if (itemId) {
                     return snapshotData?.find((ll, index) => (ll.licenceNumber || ll.permitNumber || `item-${index}`) === itemId);
                 }
@@ -100,7 +100,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber]);
+        }, [licence?.dmsPermitNumber, outputListDataItem]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({
@@ -170,22 +170,59 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                             )}
                             {!scrapedView && (
-                                <button
-                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
-                                    style={{
-                                        padding: '6px 20px',
-                                        backgroundColor: '#52c41a',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        marginTop: noneOutgoingVerification ? '12px' : '0'
-                                    }}
-                                >
-                                    Confirm No Outgoing Linked Licences
-                                </button>
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginTop: noneOutgoingVerification ? '12px' : '0'
+                                }}>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
+                                        style={{
+                                            padding: '6px 20px',
+                                            backgroundColor: '#52c41a',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Confirm No Outgoing Linked Licences
+                                    </button>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('RequestBusinessReview', 'None Outgoing')}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'darkorange',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Request Business Review - None Outgoing
+                                    </button>
+                                    <button
+                                        onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: 'purple',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Complete Business Review - None Outgoing
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -225,7 +262,6 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 }
                             }}
                             outputListDataItem={outputListDataItem}
-                            data={data}
                             onOpenReport={onOpenReport}
                             scrapedView={scrapedView}
                             history={history}

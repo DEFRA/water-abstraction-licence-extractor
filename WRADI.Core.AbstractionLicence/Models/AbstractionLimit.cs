@@ -19,6 +19,8 @@ public class AbstractionLimit : PeriodAndPointRestricted
     public int? AveragePeriod { get; set; }
     
     public string? ValueAdditionalText { get; set; }
+    
+    public ContainedInInformation[]? ContainedIn { get; set; }
 
     public AbstractionLimit Clone()
     {
@@ -34,7 +36,8 @@ public class AbstractionLimit : PeriodAndPointRestricted
             Purposes = Purposes,
             ImplicitLimit = ImplicitLimit,
             IsAverage = IsAverage,
-            AveragePeriod = AveragePeriod
+            AveragePeriod = AveragePeriod,
+            ContainedIn = ContainedIn
         };
     }
 

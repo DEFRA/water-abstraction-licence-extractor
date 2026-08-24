@@ -522,11 +522,11 @@ public static class AbstractionLicenceSchemaConverter
     }
 
     private static AbstractionLimitGroup[] AddNaldLimits(
-        NaldData? naldDataLine,
+        NaldData? naldData,
         AbstractionLimitGroup[] individuals,
         Aggregate[] aggregates)
     {
-        if (naldDataLine == null)
+        if (naldData == null)
         {
             return individuals;
         }
@@ -535,68 +535,72 @@ public static class AbstractionLicenceSchemaConverter
         
         var existingLimitGroups = individuals.ToList();
         existingLimitGroups.AddRange(aggregates);
-     
-        var groupedNaldLimits = naldDataLine.Purposes
-            .GroupBy(l => new
-            {
-                l.Quantity.AnnualQty,
-                l.Quantity.DailyQty,
-                l.Quantity.HourlyQty,
-                l.Quantity.InstQty
-            })
-            .ToList();
-        
-        // Get Nald limits
-        foreach (var groupedNaldLimit in groupedNaldLimits)
+
+        var periodTypes = new List<LimitPeriodType>
         {
-            var naldLimits = groupedNaldLimit
-                .Select(purpose => (purpose.Quantity, purpose))
-                .ToList();
+            LimitPeriodType.PerYear,
+            LimitPeriodType.PerDay,
+            LimitPeriodType.PerHour,
+            LimitPeriodType.PerSecond
+        };
 
-            var purposes = naldLimits
-                .Select(x => new Purpose
+        var containedIn = new ContainedInInformation
+        {
+            Source = InformationSource.Nald
+        };
+        
+        var limits = new List<AbstractionLimit>();
+        
+        foreach (var periodType in periodTypes)
+        {
+            var groupedNaldLimits = naldData.Purposes
+                .GroupBy(l =>
+                {
+                    return periodType switch
                     {
-                        NaldIds = [x.purpose.Id.ToString()] // TOOD check the grouping here
-                    })
-                .ToArray();
-
-            var quantity = naldLimits.First().Quantity;
-            
-            var points = naldLimits
-                .SelectMany(nl => nl.purpose.PointIds)
-                .Select(p => new Point { NaldId = p.ToString() })
-                .ToArray();
-
-            var limitsIncludingNull = new List<AbstractionLimit?>
-            {
-                GetAbstractionLimit(quantity.AnnualQty,
-                    LimitPeriodType.PerYear,
-                    purposes,
-                    points),
-                GetAbstractionLimit(quantity.DailyQty,
-                    LimitPeriodType.PerDay,
-                    purposes,
-                    points),
-                GetAbstractionLimit(quantity.HourlyQty,
-                    LimitPeriodType.PerHour,
-                    purposes,
-                    points),
-                GetAbstractionLimit(quantity.InstQty,
-                    LimitPeriodType.PerSecond,
-                    purposes,
-                    points),
-            };
-
-            var limits = limitsIncludingNull
-                .Where(l => l != null)
-                .Select(l => l!)
+                        LimitPeriodType.PerYear => l.Quantity.AnnualQty,
+                        LimitPeriodType.PerDay => l.Quantity.DailyQty,
+                        LimitPeriodType.PerHour => l.Quantity.HourlyQty,
+                        LimitPeriodType.PerSecond => l.Quantity.InstQty,
+                        _ => throw new Exception("Period type not known")
+                    };
+                })
                 .ToList();
 
-            AddNaldLimitGroup(
-                limits,
-                existingLimitGroups,
-                ref individualsList);
+            // Get Nald limits
+            foreach (var groupedLimit in groupedNaldLimits)
+            {
+                var purposes = groupedLimit
+                    .Select(x => new Purpose
+                    {
+                        NaldIds = [x.Id.ToString()] // TOOD check the grouping here
+                    })
+                    .ToArray();
+
+                var points = groupedLimit
+                    .SelectMany(nl => nl.PointIds)
+                    .Distinct()
+                    .Select(p => new Point { NaldId = p.ToString() })
+                    .ToArray();
+
+                var limit = GetAbstractionLimit(
+                    groupedLimit.Key,
+                    periodType,
+                    purposes,
+                    points,
+                    containedIn);
+
+                if (limit != null)
+                {
+                    limits.Add(limit);
+                }
+            }
         }
+        
+        AddNaldLimits(
+            limits,
+            existingLimitGroups,
+            ref individualsList);
 
         return individualsList.ToArray();
     }
@@ -605,7 +609,8 @@ public static class AbstractionLicenceSchemaConverter
         double? value,
         LimitPeriodType periodType,
         Purpose[] purposes,
-        Point[] points)
+        Point[] points,
+        ContainedInInformation containedIn)
     {
         if (value == null)
         {
@@ -621,11 +626,12 @@ public static class AbstractionLicenceSchemaConverter
             Value = value,
             PeriodType = periodType,
             Purposes = purposes,
-            Points = points
+            Points = points,
+            ContainedIn = [containedIn]
         };
     }
 
-    private static bool IsLimitGroupEqual(
+    /*private static bool IsLimitGroupEqual(
         List<AbstractionLimit> limitsLeft,
         List<AbstractionLimit> limitsRight,
         out List<AbstractionLimit> toAdd)
@@ -660,11 +666,7 @@ public static class AbstractionLicenceSchemaConverter
             var limitLeft  = orderedLimitsLeft[idx];
             var limitRight = orderedLimitsRight[idx];
 
-            if (limitLeft.PeriodType != limitRight.PeriodType
-                || UnitsForComparison(limitLeft.Units) != UnitsForComparison(limitRight.Units)
-                || !AreValuesEqual(
-                        ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
-                        ValueInBaseUnits(limitRight.Value, limitRight.Units)))
+            if (!AreLimitsEqual(limitLeft, limitRight))
             {
                 return false;
             }
@@ -672,71 +674,66 @@ public static class AbstractionLicenceSchemaConverter
 
         toAdd = onlyOnRight;
         return true;
+    }*/
+
+    private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
+    {
+        return limitLeft.PeriodType == limitRight.PeriodType
+               && UnitsForComparison(limitLeft.Units) == UnitsForComparison(limitRight.Units)
+               && AreValuesEqual(
+                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
+                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
     }
     
-    private static void AddNaldLimitGroup(
-        List<AbstractionLimit> limits,
+    private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
+    {
+        return group.Limits.Any(groupLimit => AreLimitsEqual(groupLimit, limitToFind));
+    }
+    
+    private static void AddNaldLimits(
+        List<AbstractionLimit> naldLimits,
         List<AbstractionLimitGroup> existingLimitGroups,
         ref List<AbstractionLimitGroup> individuals)
     {
-        if (limits.Count == 0)
+        foreach (var naldLimit in naldLimits)
         {
-            return;
-        }
-        
-        var toAdd = new List<AbstractionLimit>();
-        
-        var matchingIndividualGroups = existingLimitGroups
-            .Where(individualGroup =>
-            {
-                var result = IsLimitGroupEqual(individualGroup.Limits, limits, out var igToAdd);
+            var matchingIndividualGroups = existingLimitGroups
+                .Where(individualGroup => GroupContainsLimit(individualGroup, naldLimit))
+                .ToList();
 
-                toAdd.AddRange(igToAdd);
-                return result;
-            })
-            .ToList();
-        
-        if (matchingIndividualGroups.Count >= 1)
-        {
-            foreach (var matchingIndividualGroup in matchingIndividualGroups)
+            if (matchingIndividualGroups.Count >= 1)
             {
-                var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
-
-                if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                foreach (var matchingIndividualGroup in matchingIndividualGroups)
                 {
-                    // Already have it in contained in
-                    return;
+                    foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
+                    {
+                        var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();
+
+                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                        {
+                            // Already have it in contained in
+                            return;
+                        }
+
+                        containedInList.Add(new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        });
+
+                        matchingIndividualGroupLimit.ContainedIn = containedInList.ToArray();
+                    }
                 }
-
-                containedInList.Add(new ContainedInInformation
-                {
-                    Source = InformationSource.Nald
-                });
-
-                matchingIndividualGroup.ContainedIn = containedInList.ToArray();
+                
+                continue;
             }
 
-            if (toAdd.Count == 0)
+            var newGroup = new AbstractionLimitGroup
             {
-                return;
-            }
-
-            limits = toAdd;
-        }
-        
-        var newGroup = new AbstractionLimitGroup
-        {
-            ContainedIn =
-            [
-                new ContainedInInformation
-                {
-                    Source = InformationSource.Nald
-                }
-            ],
-            Limits = limits
-        };
+                Limits = naldLimits
+            };
             
-        individuals.Add(newGroup);
+            individuals.Add(newGroup);
+        }
     }
 
     private static double? ValueInBaseUnits(double? value, string? units)
@@ -861,7 +858,6 @@ public static class AbstractionLicenceSchemaConverter
                         TimeCutoff = individual.TimeCutoff,
                         DocumentIdentifier = individual.DocumentIdentifier,
                         Limits = individual.Limits,
-                        ContainedIn = individual.ContainedIn,
                         SourceLicenceNumber = licenceNumber,
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
@@ -907,7 +903,6 @@ public static class AbstractionLicenceSchemaConverter
                         TimeCutoff = individual.TimeCutoff,
                         DocumentIdentifier = individual.DocumentIdentifier,
                         Limits = individual.Limits,
-                        ContainedIn = individual.ContainedIn,
                         SourceLicenceNumber = licenceNumber,
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
@@ -2824,7 +2819,6 @@ public static class AbstractionLicenceSchemaConverter
                         })
                         .ToArray(),
                     DocumentIdentifier = documentIdentifier,
-                    ContainedIn = containedIn,
                     Limits =
                     [
                         new()
@@ -2832,28 +2826,32 @@ public static class AbstractionLicenceSchemaConverter
                             Value = hourlyQuantity,
                             PeriodType = LimitPeriodType.PerHour,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = dailyQuantity,
                             PeriodType = LimitPeriodType.PerDay,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = yearlyQuantity,
                             PeriodType = LimitPeriodType.PerYear,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = instantRate,
                             PeriodType = LimitPeriodType.PerSecond,
                             Units = "litres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         }
                     ]
                 };
@@ -3225,7 +3223,6 @@ public static class AbstractionLicenceSchemaConverter
                                 .ToList(),
                             Points = previouslyFoundIndividualLimit.Points,
                             Purposes = previouslyFoundIndividualLimit.Purposes,
-                            ContainedIn = previouslyFoundIndividualLimit.ContainedIn,
                             IsExplicitlyAggregate = true
                         }
                     )
@@ -3281,7 +3278,6 @@ public static class AbstractionLicenceSchemaConverter
             {
                 TimeCutoff = timeCutoff,
                 DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn,
                 Limits = [],
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray()
@@ -3294,8 +3290,7 @@ public static class AbstractionLicenceSchemaConverter
                 Limits = [],
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray(),
-                DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn
+                DocumentIdentifier = documentIdentifier
             });
 
             foreach (var datePurpose in datePurposesTimePeriods)
@@ -3304,7 +3299,6 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     TimePeriod = GetTimePeriod(datePurpose),
                     DocumentIdentifier = documentIdentifier,
-                    ContainedIn = containedIn,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray()
@@ -3318,7 +3312,6 @@ public static class AbstractionLicenceSchemaConverter
             {
                 Limits = [],
                 DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn,
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray()
             });
@@ -3400,7 +3393,8 @@ public static class AbstractionLicenceSchemaConverter
                     Value = number,
                     Units = units,
                     Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
+                    Purposes = limitPurposes?.ToArray(),
+                    ContainedIn = containedIn
                 };
 
                 if (isAggregate)
@@ -3451,8 +3445,7 @@ public static class AbstractionLicenceSchemaConverter
                             Points = abstractionLimit.Points,
                             Purposes = abstractionLimit.Purposes,
                             Limits = [],
-                            DocumentIdentifier = documentIdentifier,
-                            ContainedIn = containedIn
+                            DocumentIdentifier = documentIdentifier
                         };
 
                         individualGroups.Add(individualGroup);
@@ -3540,8 +3533,7 @@ public static class AbstractionLicenceSchemaConverter
             Purposes = purposesLoop?.ToArray() ?? [],
             TimeCutoff = timeCutoff,
             TimePeriod = timePeriod,
-            DocumentIdentifier = documentIdentifier,
-            ContainedIn = containedIn
+            DocumentIdentifier = documentIdentifier
         };
 
         var aggregatePointsLength = aggregate.Points.Count(p => p.IsImplicit != true);
@@ -3885,6 +3877,13 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
         }
 
+        var containedIn = new ContainedInInformation
+        {
+            Source = InformationSource.Document,
+            PageNumber = meansResult.LabelStartPageNumber,
+            LineNumber = meansResult.LabelStartLineNumber
+        };
+
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults
@@ -3948,7 +3947,8 @@ public static class AbstractionLicenceSchemaConverter
                     {
                         PeriodType = periodType,
                         Units = perSecondUnits,
-                        Value = perSecondValue
+                        Value = perSecondValue,
+                        ContainedIn = [containedIn]
                     }
                     : null
             });

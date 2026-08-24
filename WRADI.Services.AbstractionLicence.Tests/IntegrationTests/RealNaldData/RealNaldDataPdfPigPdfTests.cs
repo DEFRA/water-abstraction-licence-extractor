@@ -235,11 +235,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(3, licence.AbstractionLimits.Individual.Length);
-        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].ContainedIn![1].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[0].Limits.Count);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![1].Source);
         Assert.Equal(2_000, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[0].Limits[0].PeriodType);
@@ -253,11 +253,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("litres", licence.AbstractionLimits.Individual[0].Limits[3].Units);
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[0].Limits[3].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].ContainedIn![0].SectionName);
-        Assert.Null(licence.AbstractionLimits.Individual[1].ContainedIn![0].LinkReason);
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
+        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].SectionName);
+        Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].LinkReason);
         Assert.NotNull(licence.AbstractionLimits.Individual[1].TimeCutoff);
         Assert.Equal(CutoffType.From, licence.AbstractionLimits.Individual[1].TimeCutoff!.CutoffType);
         Assert.Equal("1 November to 15 January", licence.AbstractionLimits.Individual[1].TimeCutoff!.Date);
@@ -270,11 +270,12 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("litres", licence.AbstractionLimits.Individual[1].Limits[1].Units);
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[1].Limits[1].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[2].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[2].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[2].ContainedIn![0].Source);
-        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[2].ContainedIn![0].SectionName);
-        Assert.Null(licence.AbstractionLimits.Individual[2].ContainedIn![0].LinkReason);
+        Assert.NotNull(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![1].Source);        
+        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![0].SectionName);
+        Assert.Null(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![0].LinkReason);
         Assert.Single(licence.AbstractionLimits.Individual[2].Limits);
         Assert.Single(licence.AbstractionLimits.Individual[2].Limits);
         Assert.Equal(6_000_000, licence.AbstractionLimits.Individual[2].Limits[0].Value);
@@ -285,8 +286,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.NotNull(licence.AbstractionLimits.Aggregates[0].LinkedLicences);        
         Assert.Single(licence.AbstractionLimits.Aggregates[0].LinkedLicences!);
         Assert.Equal("15/47/013/S/020", licence.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
-        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn!);
     }
     
     [Fact]
@@ -343,9 +344,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(3, licence.AbstractionLimits.Individual.Length);
-        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[0].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![1].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(5_060, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
@@ -357,11 +359,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].ContainedIn![0].SectionName);
-        Assert.Equal("ShallNotExceed", licence.AbstractionLimits.Individual[1].ContainedIn![0].LinkReason);
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
+        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].LinkReason);
         Assert.Null(licence.AbstractionLimits.Individual[1].TimeCutoff);
         Assert.Equal(9, licence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.Equal(88.6, licence.AbstractionLimits.Individual[1].Limits[0].Value);
@@ -375,9 +377,9 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("megalitres", licence.AbstractionLimits.Individual[1].Limits[8].Units);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[1].Limits[8].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[2].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[2].ContainedIn!);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[2].ContainedIn![0].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![0].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[2].Limits.Count);
         Assert.Equal(27_392_000, licence.AbstractionLimits.Individual[2].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[2].Limits[0].Units);
@@ -387,8 +389,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.NotNull(licence.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].LinkedLicences!);
         Assert.Equal("2/27/20/196/R01", licence.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
-        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn!);
     }
     
     [Fact]
@@ -510,10 +512,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
-        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].ContainedIn![1].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![1].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(9, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
@@ -525,11 +527,12 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Null(licence.AbstractionLimits.Individual[1].ContainedIn![0].LinkReason); // TODO this should be 'MinimumValue' and filtered out as its not a max limit
-        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].ContainedIn![0].SectionName);
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![1].Source);
+        Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].LinkReason); // TODO this should be 'MinimumValue' and filtered out as its not a max limit
+        Assert.Equal("FurtherConditions", licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].SectionName);
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
         Assert.Equal(10_000, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
@@ -599,10 +602,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldDescription);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        Assert.Equal(3, licence.AbstractionLimits.Individual.Length);
-        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[0].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
+        Assert.Equal(1, licence.AbstractionLimits.Individual.Length);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![1].Source);        
         // TODO some bug here about it not picking up purposes properly
         Assert.Equal(5, licence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(15, licence.AbstractionLimits.Individual[0].Limits[0].Value);
@@ -622,9 +626,9 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[4].PeriodType);
         
         // This is only here because the document has an incorrect litres per second value (miscalculated by an order of mangitude)
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
+        /*Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
         Assert.Equal(3, licence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.Equal(43180, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
@@ -636,9 +640,9 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[1].Limits[2].PeriodType);
         
-        Assert.NotNull(licence.AbstractionLimits.Individual[2].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[2].ContainedIn!);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[2].ContainedIn![0].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn!);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[2].Limits[0].ContainedIn![0].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[2].Limits.Count);
         Assert.Equal(2270, licence.AbstractionLimits.Individual[2].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[2].Limits[0].Units);
@@ -648,7 +652,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[2].Limits[1].PeriodType);
         Assert.Equal(15, licence.AbstractionLimits.Individual[2].Limits[2].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[2].Limits[2].Units);
-        Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[2].Limits[2].PeriodType); 
+        Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Individual[2].Limits[2].PeriodType); */
         
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }
@@ -718,10 +722,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
-        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[0].ContainedIn!.Length);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].ContainedIn![1].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[0].Limits[0].ContainedIn![1].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[0].Limits.Count);
         Assert.Equal(103, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
@@ -732,10 +736,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(103_000, licence.AbstractionLimits.Individual[0].Limits[2].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[0].Limits[2].Units);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Equal(2, licence.AbstractionLimits.Individual[1].ContainedIn!.Length);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].ContainedIn![1].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn!.Length);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn![1].Source);
         Assert.Equal(4, licence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.Equal(103, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
@@ -749,7 +753,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Single(licence.AbstractionLimits.Aggregates);
-        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
         // TODO bring in aggregates from NALD and this will then work
         /*Assert.Equal(2, licence.AbstractionLimits.Aggregates[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);

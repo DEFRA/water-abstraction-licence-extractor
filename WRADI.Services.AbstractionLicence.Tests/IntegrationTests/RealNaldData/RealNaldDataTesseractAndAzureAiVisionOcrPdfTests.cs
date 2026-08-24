@@ -405,12 +405,12 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.AbstractionLimits.Individual!);
 
         var limitBlock = licence.AbstractionLimits.Individual[0];
+        
+        Assert.Equal(4, limitBlock.Limits.Count);
         Assert.NotNull(limitBlock.Limits[0].ContainedIn);
         Assert.Equal(2, limitBlock.Limits[0].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, limitBlock.Limits[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, limitBlock.Limits[0].ContainedIn![1].Source);
-        
-        Assert.Equal(4, limitBlock.Limits.Count);
         Assert.Equal(22.7, limitBlock.Limits[0].Value);
         Assert.Single(limitBlock.Points!);
         Assert.Null(limitBlock.Limits[0].Points!);
@@ -421,10 +421,11 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.AbstractionLimits.Aggregates!);
 
         limitBlock = licence.AbstractionLimits.Aggregates[0];
-        Assert.NotNull(limitBlock.Limits[0].ContainedIn);
-        Assert.Single(limitBlock.Limits[0].ContainedIn!); // TODO why not 2
         
         Assert.Single(limitBlock.Limits);
+        Assert.NotNull(limitBlock.Limits[0].ContainedIn);
+        Assert.Single(limitBlock.Limits[0].ContainedIn!); // TODO why not 2
+        Assert.Equal(InformationSource.Document, limitBlock.Limits[0].ContainedIn![0].Source);
         Assert.Equal(120, limitBlock.Limits[0].Value);
         Assert.Single(limitBlock.Points!);
         Assert.Equal("A", limitBlock.Points![0].DocumentId);

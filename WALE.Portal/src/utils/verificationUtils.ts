@@ -32,7 +32,7 @@ export const getVerificationTypeBackgroundColor = (type: string): string => {
         case 'AutoFail':
             return 'red';
         case 'Edited':
-            return '#1890ff';
+            return 'blue';
         case 'AutoWarn':
             return 'darkorange';
         case 'Added':

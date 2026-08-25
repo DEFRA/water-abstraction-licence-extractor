@@ -102,6 +102,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             CacheService,
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);

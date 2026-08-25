@@ -282,6 +282,7 @@ public static class FindLabelGroupMatchesHelper
                         outputService = lookupConfiguration.OutputService,
                         cacheService = lookupConfiguration.CacheService,
                         licenceNumberService = lookupConfiguration.LicenceNumberService,
+                        dmsLookupService = lookupConfiguration.DmsLookupService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
@@ -464,7 +465,7 @@ public static class FindLabelGroupMatchesHelper
                 continue;
             }
             
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(licenceNumber.Text, lookupConfiguration.CacheService);
+            var dmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(licenceNumber.Text, lookupConfiguration.CacheService);
                     
             if (dmsFileData == null)
             {
@@ -492,7 +493,7 @@ public static class FindLabelGroupMatchesHelper
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionId = regionCode;
             
-            var linkedDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+            var linkedDmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 relatedLicenceNumber,
                 lookupConfiguration.CacheService);
 

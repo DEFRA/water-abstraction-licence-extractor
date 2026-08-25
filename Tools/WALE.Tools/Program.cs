@@ -5,11 +5,11 @@ using WALE.Tools.Config;
 
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
-//workflow = "ImportNaldData";
+workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-workflow = "GenerateLicenceReaderExtract";
+//workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 //workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
@@ -38,7 +38,7 @@ switch (workflow)
         // - Fetch number of pages
         // Addendum / schedule
 
-        var includeVersionMatch = true;
+        var includeVersionMatch = false;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
     
     case "DuplicateLicenceIdentificationExtractBySize": // INFREQUENT - Identify duplicates by file size

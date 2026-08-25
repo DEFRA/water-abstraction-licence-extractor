@@ -51,7 +51,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -101,6 +102,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             CacheService,
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }
@@ -447,7 +449,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
 
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
-        
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, regionCode);
         var resultList = resultFull.Matches!;

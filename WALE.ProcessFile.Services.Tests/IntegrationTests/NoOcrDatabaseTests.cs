@@ -34,7 +34,8 @@ public class NoOcrDatabaseTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -121,6 +122,7 @@ public class NoOcrDatabaseTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(3),
+            new DmsLookupService(),
             3,
             DateTime.Now,
             useLockExclusivity: false);

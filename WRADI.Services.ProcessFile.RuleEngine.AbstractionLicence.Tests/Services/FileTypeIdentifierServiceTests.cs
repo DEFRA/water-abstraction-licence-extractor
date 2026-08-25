@@ -100,6 +100,7 @@ public class FileTypeIdentifierServiceTests
             new FileSystemCacheService(""),
             new FileSystemOutputService(""),
             null,
+            null,
             1,
             DateTime.Now);
     }

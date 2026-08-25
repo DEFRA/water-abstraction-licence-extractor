@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -8,8 +7,6 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    private static readonly ConcurrentDictionary<string, DmsFileData?> DmsFileDataCache = new();
-
     public static string? CapitaliseFirstLetter(string? text)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length == 0)
@@ -53,26 +50,6 @@ public static class FormattingHelper
             stripped,
             licenceNumberNoSeperators
         ];
-    }
-
-    public static async Task<DmsFileData?> GetDmsFileDataAsync(
-        string? licenceNumber,
-        ICacheService cacheService)
-    {
-        if (string.IsNullOrEmpty(licenceNumber))
-        {
-            return null;
-        }
-        
-        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData) && cachedData != null)
-        {
-            return cachedData;
-        }
-        
-        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
-        DmsFileDataCache.TryAdd(licenceNumber, dmsFileData);
-        
-        return dmsFileData;
     }
     
     public static string? StripForComparison(

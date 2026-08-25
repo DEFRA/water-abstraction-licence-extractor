@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
@@ -58,6 +59,8 @@ public class FileProcessSingleService(
         var licenceNumberService = new AbstractionLicenceNumber(
             await abstractionAndImpoundmentLicencesTask,
             await licenceNumberSuccessorsTask);
+
+        var dmsLookupService = new DmsLookupService();
         
         var naldLinkedLicenceHelperTask = NaldLinkedLicenceHelper.CreateAsync(
             abstractionLicenceCacheService,
@@ -73,6 +76,7 @@ public class FileProcessSingleService(
             cacheService,
             outputService,
             licenceNumberService,
+            dmsLookupService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,

@@ -46,7 +46,8 @@ public class CompareOcrPdfTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -166,6 +167,7 @@ public class CompareOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync((short)regionCode),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }

@@ -30,8 +30,9 @@ public class FunctionInputModel
     public List<string>? previouslyParsedPaths { get; set; }
     public IOutputService? outputService { get; set; }
     public ICacheService? cacheService { get; set; }
-    public ILicenceNumberServiceCore? licenceNumberService;
-    public IDocumentLineService? documentLineService;
+    public ILicenceNumberServiceCore? licenceNumberService { get; set; }
+    public IDmsLookupService? dmsLookupService { get; set; }
+    public IDocumentLineService? documentLineService { get; set; }
     public IPdfDataExtractorService? pdfDataExtractorService { get; set; }
     public int processRunId { get; set; }
     public int regionCode { get; set; }

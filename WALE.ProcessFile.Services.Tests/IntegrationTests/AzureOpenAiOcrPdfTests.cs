@@ -47,7 +47,8 @@ public class AzureOpenAiOcrPdfTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -98,6 +99,7 @@ public class AzureOpenAiOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(4),
+            new DmsLookupService(),
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is
     }

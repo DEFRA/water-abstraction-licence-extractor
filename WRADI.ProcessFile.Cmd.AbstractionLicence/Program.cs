@@ -38,7 +38,7 @@ return;
 
 async Task ProgramAsync(IConfiguration configurationItem)
 {
-    ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started");
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     var startDateTimeUtc = DateTime.UtcNow;
     
     var services = ConfigureServices(configurationItem);
@@ -77,7 +77,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
     filesToProcess = filesToProcess
         //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        //.Where(x => x.Key.Contains("ne0270029011", StringComparison.OrdinalIgnoreCase))
+        .Where(x => x.Key.Contains("c11fb8ba-7a2d-4141-b154-0fff1e7c7002", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
        .Take(10)
@@ -118,6 +118,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
         services.CacheService!,
         services.OutputService!,
         services.LicenceNumberService!,
+        services.DmsLookupService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,
@@ -297,6 +298,9 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
                 processRun.ProcessRunId);
         }
 
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started ToLicenceSetsAsync {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
         var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             matchesResult!,
             pdfDataExtractor,
@@ -309,7 +313,7 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
         ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd:{pdfDataExtractor.Id}  - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         return licenceSets;
     }
@@ -584,6 +588,7 @@ ConfiguredServices ConfigureServices(
             abstractionLicenceOutputService,
         NaldDataLookupService = new NaldDataLookupService(abstractionLicenceCacheService),
         LicenceNumberService = null,
+        DmsLookupService = new DmsLookupService(),
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

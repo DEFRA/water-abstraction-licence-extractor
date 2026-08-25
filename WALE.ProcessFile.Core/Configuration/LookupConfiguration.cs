@@ -10,6 +10,7 @@ public class LookupConfiguration(
     ICacheService cacheService,
     IOutputService outputService,
     ILicenceNumberServiceCore licenceNumberService,
+    IDmsLookupService dmsLookupService,
     int regionId,
     DateTime requestedAt,
     int currentLockRetryCount = 0,
@@ -30,6 +31,8 @@ public class LookupConfiguration(
     public IOutputService OutputService { get; set; } = outputService;
 
     public ILicenceNumberServiceCore LicenceNumberService { get; set; } = licenceNumberService;
+    
+    public IDmsLookupService DmsLookupService { get; set; } = dmsLookupService;
 
     public int RegionId { get; set; } = regionId;
 
@@ -56,6 +59,7 @@ public class LookupConfiguration(
             CacheService,
             OutputService,
             LicenceNumberService,
+            DmsLookupService,
             RegionId,
             RequestedAt,
             CurrentLockRetryCount,

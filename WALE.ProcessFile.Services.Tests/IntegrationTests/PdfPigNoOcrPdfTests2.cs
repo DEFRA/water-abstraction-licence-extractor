@@ -24,9 +24,9 @@ using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[Collection("PdfPigNoOcrPdfTests2 Collection")]
 [EnableParallelization]
-[Collection("First Names 1")]
-public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
+public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
@@ -50,7 +50,8 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
 
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -121,49 +122,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
             }
         };
     
-    private static Dictionary<string, DmsFileData> FileLicenceMappingWithout52 =>
-        new()
-        {
-            { 
-                FormattingHelper.StripForComparison("25 68 001 247", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("25 68 001 248", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            }
-        };
-    
-    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
-    {
-        LiveLicences = [
-            "2568001247",
-            "2568001249"
-        ],
-        LapsedLicences = [],
-        ExpiredLicences = [],
-        RevokedLicences = [],
-        ImpoundmentLicences = []
-    };
     
     private static readonly Dictionary<string, List<NaldData>> NaldData = GetNaldData();
 
@@ -213,11 +171,12 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     {
         return new LookupConfiguration(
             AbstractionLicenceLabelConfiguration.GetLabels(),
-            await firstNamesFixture.FirstNamesCsvTask(),
+            await fixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
-            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            await fixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -252,7 +211,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenObscureCompanyName_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
-
         const string filename = "Application NA New Issued Licence 11765926.pdf";
         
         // Act
@@ -342,7 +300,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenPersonalNameNoTitle_AndAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
-
         const string filename = "Application - New - Issued Licence 31.01.2017 9655530.pdf";
         
         // Act
@@ -531,7 +488,6 @@ public class PdfPigNoOcrPdfTests2(SingletonFirstNamesFixture firstNamesFixture)
     [Fact]
     public async Task WhenMultipleNamesWithNoTitle_And3ConditionsOfAbstractionLimitsToBeFound_ThenFoundCorrectly()
     {
-
         const string filename = "Application Issued New Licence 2 23.2.2024.pdf";
         
         // Act

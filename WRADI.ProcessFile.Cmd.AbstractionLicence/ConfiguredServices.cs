@@ -16,6 +16,8 @@ public class ConfiguredServices
     
     public ILicenceNumberService? LicenceNumberService { get; set; }
     
+    public IDmsLookupService? DmsLookupService { get; set; }
+    
     public List<IPdfDataExtractorService>? PdfDataExtractorServices { get; init; }
     
     public INaldDataLookupService? NaldDataLookupService { get; init; }

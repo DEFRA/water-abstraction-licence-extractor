@@ -344,7 +344,7 @@ public static class ApplicableToMost
                     
                 foreach (var licenceNumberLine in licenceNumberLinesF)
                 {
-                    var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+                    var dmsFileData = await request.dmsLookupService!.GetDmsFileDataAsync(
                         licenceNumberLine.Text,
                         request.cacheService!);
                     

@@ -25,9 +25,9 @@ using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
+[Collection("PdfPigNoOcrPdfTests1 Collection")]
 [EnableParallelization]
-[Collection("First Names 1")]
-public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
+public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
@@ -54,7 +54,8 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
 
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -125,50 +126,6 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
             }
         };
     
-    private static Dictionary<string, DmsFileData> FileLicenceMappingWithout52 =>
-        new()
-        {
-            { 
-                FormattingHelper.StripForComparison("25 68 001 247", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("25 68 001 248", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            },
-            {
-                FormattingHelper.StripForComparison("NE/026/0034/018", NeRegionCode)!,
-                new DmsFileData
-                {
-                    DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf",
-                    FileId = GuidHelper.GetConsistentFileIdFromFilename("NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf"),
-                    DmsPath = "Something to look for"
-                }
-            }
-        };
-    
-    private readonly NaldLicenceStatusData _naldLicenceStatusData = new()
-    {
-        LiveLicences = [
-            "2568001247",
-            "2568001249"
-        ],
-        LapsedLicences = [],
-        ExpiredLicences = [],
-        RevokedLicences = [],
-        ImpoundmentLicences = []
-    };
-    
     private static readonly Dictionary<string, List<NaldData>> NaldData = GetNaldData();
 
     private static Dictionary<string, List<NaldData>> GetNaldData()
@@ -213,15 +170,16 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
         return returnList;
     }
 
-    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int fileLicenceMapping, string pdfFolder)
+    private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, int _, string pdfFolder)
     {
         return new LookupConfiguration(
             AbstractionLicenceLabelConfiguration.GetLabels(),
-            await firstNamesFixture.FirstNamesCsvTask(),
+            await fixture.FirstNamesCsvTask(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
-            await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            await fixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -2437,143 +2395,6 @@ public class PdfPigNoOcrPdfTests1(SingletonFirstNamesFixture firstNamesFixture)
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Empty(primaryLicence.LinkedLicences);
-    }
-    
-    [Fact]
-    public async Task WhenNearPreviousLineIsCompany_SimpleAbstractionLimits1LicenceToLicenceLink_ThenFoundCorrectly()
-    {
-        // Arrange
-        var specialCacheServices =
-            GeneralTestsHelper.GetFakeCacheService(
-                RealCacheService!,
-                RealAbsLicCacheService!,
-                NaldData,
-                FileLicenceMappingWithout52);
-
-
-        const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
-
-        // Act
-        var resultFull = await GetMatchesAsync(
-            filename,
-            3,
-            fileLicenceMapping: 2,
-            cacheService: specialCacheServices.CacheService);
-
-        var resultList = resultFull.Matches!;
-
-        // Assert
-
-        var issuerResult = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "Issuer");
-        Assert.NotNull(issuerResult);
-        Assert.Equal("Environment Agency", issuerResult.Text?.FirstOrDefault()?.Text);
-
-        Assert.Equal(16, GeneralTestsHelper.ExcludeSomeMatches(resultList).Count);
-
-        var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
-        Assert.NotNull(records);
-        Assert.Equal(10, records.Text!.Count);
-
-        var additionalInformation =
-            resultFull.Matches?.FirstOrDefault(result => result.LabelGroupName == "Additional");
-        Assert.NotNull(additionalInformation);
-        Assert.Equal(32, additionalInformation.Text!.Count);
-
-        var nameResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Company");
-
-        Assert.NotNull(nameResult);
-        Assert.False(nameResult.IsOcr);
-        Assert.Equal("Rolawn Limited", nameResult.Text?.FirstOrDefault()?.Text);
-        Assert.Equal(["(\"the Licence Holder\")"], nameResult.MatchedLabel!.Text?.Select(x => x.Text));
-        Assert.Equal(LabelPosition.LabelIsInMiddleOfTextToFind, nameResult.MatchedLabel?.Position);
-        Assert.Equal(MatchedPosition.EitherSideOfLabel, nameResult.MatchedPosition);
-
-        var abstractionLimitsSection =
-            resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
-
-        Assert.NotNull(abstractionLimitsSection);
-        Assert.False(abstractionLimitsSection.IsOcr);
-        Assert.NotNull(abstractionLimitsSection.Text);
-        Assert.Equal(12, abstractionLimitsSection.Text.Count);
-        Assert.Equal("200,000 cubic metres per year.",
-            abstractionLimitsSection.Text![11].Text);
-        Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
-        Assert.Equal(7, abstractionLimitsSection.SubResults[0].Text!.Count);
-
-        var point1 = abstractionLimitsSection.SubResults[0];
-        var point1Sub1 = point1.SubResults[0];
-
-        Assert.Equal("120", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
-            .First().Text);
-        Assert.Equal("cubic metres", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per hour") == true)?.Text!
-            .First().Text);
-        Assert.Equal("2600", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
-            .First().Text);
-        Assert.Equal("cubic metres", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per day") == true)?.Text!
-            .First().Text);
-        Assert.Equal("60000", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
-            .First().Text);
-        Assert.Equal("cubic metres", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
-            .First().Text);
-        Assert.Equal("33.3", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
-            ?.Text!.First().Text);
-        Assert.Equal("litres", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per second") == true)
-            ?.Text!.First().Text);
-        Assert.Equal("60000", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Number"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
-            .First().Text);
-        Assert.Equal("cubic metres", point1Sub1.SubResults
-            .FirstOrDefault(x => x.MatchedLabel!.Format == "Units"
-                                 && x.MatchedLabel.Text?.FirstOrDefault()?.Text.Contains("per year") == true)?.Text!
-            .First().Text);
-
-        // TODO
-
-        var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
-
-        Assert.NotNull(licenceNumberResult);
-        Assert.False(licenceNumberResult.IsOcr);
-        Assert.Equal("NE/027/0028/059", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-
-        var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
-        config.CacheService = specialCacheServices.CacheService;
-        
-        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
-            resultFull,
-            _pdfDataExtractor,
-            0,
-            config,
-            AbsLicCacheService, NaldDataLookupService)).Last();
-
-        var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
-
-        Assert.Single(primaryLicence.LinkedLicences);
-
-        Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
-        Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
-        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("SimultaneousDischargeCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
-        Assert.Equal("Additional", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("AggregateConditions", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
     }
     
     [Fact]

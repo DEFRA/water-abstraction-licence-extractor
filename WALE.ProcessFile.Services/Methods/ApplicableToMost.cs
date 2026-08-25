@@ -284,7 +284,7 @@ public static class ApplicableToMost
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
-                    // If its a floating number, its usually some weird internal refernece number
+                    // If its a floating number, its usually some weird internal reference number
                     if (licenceNumberLines.Count == 1
                         && licenceNumberLines[0].Text == request.line.Text
                         && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
@@ -293,7 +293,7 @@ public static class ApplicableToMost
                         licenceNumberLines = [];
                     }
                     
-                    // If its a number then 'M', its usually some weird internal refernece number
+                    // If its a number then 'M', its usually some weird internal reference number
                     if (licenceNumberLines.Count == 1
                         && request.line.Text == $"{licenceNumberLines[0].Text} M"
                         && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))

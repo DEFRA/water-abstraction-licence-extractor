@@ -68,8 +68,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
     const [showSingles, setShowSingles] = useState(false);
 
     const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
-
-    const totals = useTotals(outputList);
+    const [verifyType, setVerifyType] = useState('');
+    const totals = useTotals(outputList, verifyType);
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -137,6 +137,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             );
 
             setOutputList(listDataItems.records);
+            setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
             setIssueDates(listDataItems.issueDates ?? []);

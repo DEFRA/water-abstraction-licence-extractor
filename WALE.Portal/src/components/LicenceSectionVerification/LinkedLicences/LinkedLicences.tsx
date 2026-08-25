@@ -11,7 +11,7 @@ import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "../LicenceSection";
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
-import {hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
+import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -181,7 +181,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
                                         style={{
                                             padding: '6px 20px',
-                                            backgroundColor: '#52c41a',
+                                            backgroundColor: getVerificationTypeBackgroundColor('Confirmed'),
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
@@ -196,7 +196,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         onClick={() => onItemVerificationRequested?.('RequestBusinessReview', 'None Outgoing')}
                                         style={{
                                             padding: '6px 12px',
-                                            backgroundColor: 'darkorange',
+                                            backgroundColor: getVerificationTypeBackgroundColor('RequestBusinessReview'),
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
@@ -211,7 +211,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
                                         style={{
                                             padding: '6px 12px',
-                                            backgroundColor: 'purple',
+                                            backgroundColor: getVerificationTypeBackgroundColor('CompleteBusinessReview'),
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
@@ -274,7 +274,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             onClick={handleAddLicence}
                             style={{
                                 padding: '10px 24px',
-                                backgroundColor: '#1890ff',
+                                backgroundColor: getVerificationTypeBackgroundColor('Added'),
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',

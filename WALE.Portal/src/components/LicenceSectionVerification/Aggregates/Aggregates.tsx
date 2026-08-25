@@ -15,6 +15,7 @@ import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
+import {getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
 
@@ -229,7 +230,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     onClick={() => onItemVerificationRequested?.('ConfirmNone', NO_AGGREGATES_ITEM_ID)}
                                     style={{
                                         padding: '6px 20px',
-                                        backgroundColor: 'green',
+                                        backgroundColor: getVerificationTypeBackgroundColor('Confirmed'),
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
@@ -296,7 +297,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                             onClick={handleAddAggregate}
                             style={{
                                 padding: '10px 24px',
-                                backgroundColor: '#1890ff',
+                                backgroundColor: getVerificationTypeBackgroundColor('Added'),
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',

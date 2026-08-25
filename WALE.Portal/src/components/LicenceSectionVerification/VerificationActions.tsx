@@ -1,5 +1,6 @@
 import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationInfo} from "./LicenceSectionVerificationInfo.tsx";
+import {getVerificationTypeBackgroundColor} from "../../utils/verificationUtils.ts";
 
 interface VerificationActionsProps {
     scrapedView?: boolean;
@@ -54,13 +55,13 @@ export const VerificationActions = ({
             </div>
             <div style={{display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end'}}>
                 <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <button disabled={!itemId} onClick={onVerify} style={{padding: '4px 12px', backgroundColor: 'green', color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Confirm</button>
-                    <button disabled={!itemId} onClick={onReject} style={{padding: '4px 12px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Remove</button>
-                    <button onClick={onOverride} style={{padding: '4px 12px', backgroundColor: '#1890ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Edit</button>
+                    <button disabled={!itemId} onClick={onVerify} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Confirmed'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Confirm</button>
+                    <button disabled={!itemId} onClick={onReject} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Removed'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Remove</button>
+                    <button onClick={onOverride} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Edited'), color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Edit</button>
                 </div>
                 <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <button disabled={!itemId} onClick={onRequestBusinessReview} style={{padding: '4px 12px', backgroundColor: 'darkorange', color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Request Business Review</button>
-                    <button disabled={!itemId} onClick={onCompleteBusinessReview} style={{padding: '4px 12px', backgroundColor: 'darkgreen', color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Complete Business Review</button>
+                    <button disabled={!itemId} onClick={onRequestBusinessReview} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('RequestBusinessReview'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Request Business Review</button>
+                    <button disabled={!itemId} onClick={onCompleteBusinessReview} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('CompleteBusinessReview'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Complete Business Review</button>
                 </div>
             </div>
         </div>

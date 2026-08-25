@@ -181,7 +181,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
                                         style={{
                                             padding: '6px 20px',
-                                            backgroundColor: '#52c41a',
+                                            backgroundColor: 'green',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
@@ -211,7 +211,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
                                         style={{
                                             padding: '6px 12px',
-                                            backgroundColor: 'purple',
+                                            backgroundColor: 'darkgreen',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',

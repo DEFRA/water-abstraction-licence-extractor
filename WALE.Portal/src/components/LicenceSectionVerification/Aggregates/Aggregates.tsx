@@ -229,7 +229,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     onClick={() => onItemVerificationRequested?.('ConfirmNone', NO_AGGREGATES_ITEM_ID)}
                                     style={{
                                         padding: '6px 20px',
-                                        backgroundColor: '#52c41a',
+                                        backgroundColor: 'green',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',

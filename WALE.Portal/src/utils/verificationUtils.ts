@@ -24,23 +24,23 @@ export const getVerificationTypeColor = (type: string): string => {
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
         case 'Confirmed':
-            return 'inherit';
-        case 'AutoConfirm':
             return 'green';
+        case 'AutoConfirm':
+            return 'lightgreen';
         case 'Removed':
-            return 'inherit';
+            return 'red';
         case 'AutoFail':
             return 'red';
         case 'Edited':
-            return 'inherit';
+            return '#1890ff';
         case 'AutoWarn':
             return 'darkorange';
         case 'Added':
-            return 'inherit';
+            return '#1890ff';
         case 'RequestBusinessReview':
             return 'darkorange';
         case 'CompleteBusinessReview':
-            return 'purple';
+            return 'darkgreen';
         default:
             return 'inherit';
     }
@@ -49,23 +49,23 @@ export const getVerificationTypeBackgroundColor = (type: string): string => {
 export const getVerificationTypeInitials = (type: string): string => {
     switch (type) {
         case 'Confirmed':
-            return '✅';
+            return 'C';
         case 'AutoConfirm':
             return 'AC';
         case 'Removed':
-            return '❌';
+            return 'X';
         case 'Edited':
-            return '✏️';
+            return 'E';
         case 'Added':
-            return '➕';
+            return '+';
         case 'AutoFail':
             return 'AF';
         case 'AutoWarn':
             return 'AW';
         case 'RequestBusinessReview':
-            return 'RBR';
+            return 'BR';
         case 'CompleteBusinessReview':
-            return 'CBR';
+            return 'BC';
         default:
             return '';
     }

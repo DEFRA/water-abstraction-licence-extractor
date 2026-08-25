@@ -2062,6 +2062,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                 Possibilities = new List<TextToMatch>
                                 {
                                     new("megalitres"),
+                                    new("mega litres"),                                    
                                     new("litres"),
                                     new("cubic metres"),
                                     new("cubic meters"),
@@ -2747,6 +2748,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2775,6 +2777,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         {
                             // This is actually (unintentionally) the order of preference when on the same line
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2802,6 +2805,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2834,6 +2838,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2866,6 +2871,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2893,6 +2899,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),
@@ -2920,6 +2927,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Possibilities = new List<TextToMatch>
                         {
                             new("megalitres"),
+                            new("mega litres"),                            
                             new("litres"),
                             new("thousand cubic metres"),
                             new("cubic metres"),

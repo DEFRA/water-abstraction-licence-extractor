@@ -276,7 +276,7 @@ public static class FormattingHelper
                     // Part 4 - 123
                     part4 = first5Digits[..3];
                 }
-                else if (secondChar == '0')
+                /*else if (secondChar == '0')
                 {
                     // Second section is padded with 0, means the first section must not be
                     
@@ -286,7 +286,7 @@ public static class FormattingHelper
                     
                     // Part 4 - 123
                     part4 = first5Digits[..3];
-                }
+                }*/
                 // 1/21/00, 1/22/01-06, 1/23/01-05, 1/24/01-05, 1/25/01-06
                 else if (part1 == "1"
                     && part2 is "21" or "22" or "23" or "24" or "25")

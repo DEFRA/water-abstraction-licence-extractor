@@ -432,4 +432,41 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("A", limitBlock.Points![0].Id);
         Assert.True(limitBlock.Points![0].IsImplicit);
     }
+    
+    [Fact]
+    public async Task SomeZeroSwappingInLinkedLicences()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "22710112__2-27-10-112 6959593.PDF";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 3, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(6, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder4);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("2/27/10/112", licence.LicenceNumber!.Value);
+        
+        Assert.Equal(3, licence.LinkedLicences.Length);
+        Assert.Equal("2/27/10/031", licence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("2/27/10/049", licence.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("2/27/10/076", licence.LinkedLicences[2].LicenceNumber);
+    }
 }

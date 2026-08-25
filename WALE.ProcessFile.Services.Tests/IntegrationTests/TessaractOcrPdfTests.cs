@@ -1487,7 +1487,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
-        Assert.Equal(35, agreedSchemaLicence.LinkedLicences.Length); // TODO should count these at some point
+        Assert.Equal(36, agreedSchemaLicence.LinkedLicences.Length); // TODO should count these at some point
     }
 
     [Fact]

@@ -348,9 +348,9 @@ public static class AbstractionLicenceSchemaConverter
                     linkedLicence.LicenceNumber,
                     regionCode));
 
-            if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
+            if (!found && !string.IsNullOrEmpty(licenceNumber))
             {
-                found = anywhereInDocumentLinkedLicence.LicenceNumber == scrapedLicenceNumber;
+                found = anywhereInDocumentLinkedLicence.LicenceNumber == licenceNumber;
             }
 
             if (!found && licenceHistoryLinkedLicences.Count > 0)

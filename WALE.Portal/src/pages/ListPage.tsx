@@ -59,6 +59,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
     const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'actions'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
+    const [verifyType, setVerifyType] = useState('');
+    
 
     const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
 
@@ -66,7 +68,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         filteredData,
     } = useFiltering(outputList);
 
-    const totals = useTotals(filteredData);
+    const totals = useTotals(filteredData, verifyType);
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -136,6 +138,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
             );
 
             setOutputList(listDataItems.records);
+            setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
             setIssueDates(listDataItems.issueDates ?? []);

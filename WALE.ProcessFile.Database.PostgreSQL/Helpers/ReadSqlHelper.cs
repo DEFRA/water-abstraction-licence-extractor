@@ -181,6 +181,46 @@ public static class ReadSqlHelper
 
             return;
         }
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "HasRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                   
+                )
+                """);
+
+            return;
+        }
+
+        if (string.Equals(
+                linkedLicencesType,
+                "NoRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                   
+                )
+                """);
+
+            return;
+        }
 
         if (string.Equals(
                 linkedLicencesType,

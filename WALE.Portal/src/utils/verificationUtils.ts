@@ -23,24 +23,24 @@ export const getVerificationTypeColor = (type: string): string => {
 
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
-        case 'Confirmed':
-            return 'green';
         case 'AutoConfirm':
-            return 'lightgreen';
+            return '#00D100';
+        case 'Confirmed':
+            return '#00A300';
+        case 'CompleteBusinessReview':
+            return '#004700';
         case 'Removed':
             return 'red';
         case 'AutoFail':
             return 'red';
         case 'Edited':
             return 'blue';
-        case 'AutoWarn':
-            return 'darkorange';
         case 'Added':
             return '#1890ff';
+        case 'AutoWarn':
+            return 'darkorange';
         case 'RequestBusinessReview':
             return 'darkorange';
-        case 'CompleteBusinessReview':
-            return 'darkgreen';
         default:
             return 'inherit';
     }

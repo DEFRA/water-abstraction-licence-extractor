@@ -1077,9 +1077,6 @@ public static class AbstractionLicenceSchemaConverter
                 linkedLicence.RegionId!.Value));
 
         var uniqueLinkedLicences = new List<(LinkedLicence linkedLicence, int regionId)>();
-
-        DateTime tStart;
-        double dDuration = 0;
         
         foreach (var linkedLicencesGroup in groupedLinkedLicences)
         {
@@ -1131,8 +1128,6 @@ public static class AbstractionLicenceSchemaConverter
                 licenceNumberStr,
                 regionId);
 
-            tStart = DateTime.Now;
-
             uniqueLinkedLicences.Add((await ToLinkedLicenceAsync(
                     linkedLicenceNumber,
                     linkedLicencesGroup
@@ -1157,8 +1152,6 @@ public static class AbstractionLicenceSchemaConverter
                     lookupConfiguration.DmsLookupService,
                     linkedLicencesGroup
                     .OrderByDescending(ll => ll.IsBecauseOfAggregate).FirstOrDefault()?.IsBecauseOfAggregate), regionId));
-            
-            dDuration += (DateTime.Now - tStart).TotalMilliseconds;
         }
         
         uniqueLinkedLicences = uniqueLinkedLicences
@@ -1185,9 +1178,6 @@ public static class AbstractionLicenceSchemaConverter
             newLinkedLicences.Add(linkedLicence.Item1);
         }
 
-        ConsoleHelper.WriteLine(
-            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - ConsolidateLinkedLicencesAsync->ToLinkedLicenceAsync took {dDuration}ms");
-        
         return newLinkedLicences;
     }
     
@@ -1679,9 +1669,6 @@ public static class AbstractionLicenceSchemaConverter
         INaldDataLookupService naldDataLookupService)
     {
         var returnList = new List<LicenceSet>();
-
-        DateTime tStart;
-        double dDuration = 0;
         
         var allLicencesInSets = licenceSetGroups
             .SelectMany(ls => ls)
@@ -1798,21 +1785,14 @@ public static class AbstractionLicenceSchemaConverter
                         licence.LicenceSets = newLicenceSetIds.ToArray();
                     }
                     
-                    tStart = DateTime.Now;
-
                     licence.LinkedLicences = (await ConsolidateLinkedLicencesAsync(
                         licence.LinkedLicences.ToList(),
                         licence.LicenceNumber?.Value,
                         lookupConfiguration,
                         naldDataLookupService)).ToArray();
-                    
-                    dDuration += (DateTime.Now - tStart).TotalMilliseconds;
                 }
             }
         }
-
-        ConsoleHelper.WriteLine(
-            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - ConsolidateLinkedLicencesAsync took {dDuration}ms");
         
         returnList = returnList
             .GroupBy(i => i.LicenceSetId)

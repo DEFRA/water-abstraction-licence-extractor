@@ -26,7 +26,7 @@ export const getVerificationTypeBackgroundColor = (type: string): string => {
         case 'AutoConfirm':
             return '#00D100';
         case 'Confirmed':
-            return '#00A300';
+            return '#008000';
         case 'CompleteBusinessReview':
             return '#004700';
         case 'Removed':

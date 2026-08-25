@@ -1392,7 +1392,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                        AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
                                        AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
-                                   )    
+                                   )
                            join nald."NALD_ABS_LIC_PURPOSES" pu
                                ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
                                AND ver."INCR_NO" = pu."AABV_INCR_NO"
@@ -1401,8 +1401,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            join nald."NALD_LIC_CONDITIONS" lc
                                ON pu."ID" = lc."AABP_ID"
                                AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
-                               AND (lc."PARAM1" IS NOT NULL 
-                                   OR lc."PARAM2" IS NOT NULL 
+                               AND (lc."PARAM1" IS NOT NULL
+                                   OR lc."PARAM2" IS NOT NULL
                                    OR lc."TEXT" IS NOT NULL)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)

@@ -78,4 +78,9 @@ public class LocalFileService(string folderPath) : IFileService
     {
         throw new NotImplementedException();
     }
+
+    public Task<string> GetPresignedUrlAsync(string filename)
+    {
+        throw new NotImplementedException();
+    }
 }

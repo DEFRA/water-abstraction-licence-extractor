@@ -23,4 +23,6 @@ public interface IFileService
     Task<bool> ExistsAsync(string filename);
     
     public Task RenameAsync(string originalFilename, string newFilename);
+    
+    public Task<string> GetPresignedUrlAsync(string filename);
 }

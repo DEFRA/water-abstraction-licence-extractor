@@ -12,6 +12,13 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class FilesController(IFileService fileService) : Controller
 {
     [HttpGet]
+    public async Task<ActionResult> GetAsync([FromQuery] string filename)
+    {
+        var presignedUrl = await fileService.GetPresignedUrlAsync(filename);
+        return Redirect(presignedUrl);
+    }  
+    
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<string>>> ListAllAsync()
     {
         var result = await fileService.GetAllFilesAsync();

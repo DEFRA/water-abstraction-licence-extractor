@@ -3622,6 +3622,44 @@ export class Client {
     }
 
     /**
+     * @param filename (optional) 
+     * @return OK
+     */
+    get5(filename: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Files/Get?";
+        if (filename === null)
+            throw new globalThis.Error("The parameter 'filename' cannot be null.");
+        else if (filename !== undefined)
+            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet5(_response);
+        });
+    }
+
+    protected processGet5(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     listAll(): Promise<string[]> {
@@ -4701,6 +4739,7 @@ export class AbstractionLimit implements IAbstractionLimit {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4728,6 +4767,11 @@ export class AbstractionLimit implements IAbstractionLimit {
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
             this.valueAdditionalText = _data["valueAdditionalText"];
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4761,6 +4805,11 @@ export class AbstractionLimit implements IAbstractionLimit {
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
         data["valueAdditionalText"] = this.valueAdditionalText;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4783,6 +4832,7 @@ export interface IAbstractionLimit {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4797,6 +4847,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4824,6 +4875,11 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
             this.valueAdditionalText = _data["valueAdditionalText"];
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4857,6 +4913,11 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
         data["valueAdditionalText"] = this.valueAdditionalText;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4879,6 +4940,7 @@ export interface IAbstractionLimit2 {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -5279,7 +5341,7 @@ export class AggregateWithContext implements IAggregateWithContext {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -5324,7 +5386,7 @@ export class AggregateWithContext implements IAggregateWithContext {
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+                    this.containedIn!.push(item);
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -5376,7 +5438,7 @@ export class AggregateWithContext implements IAggregateWithContext {
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
-                data["containedIn"].push(item ? item.toJSON() : undefined as any);
+                data["containedIn"].push(item);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -5406,9 +5468,65 @@ export interface IAggregateWithContext {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
+
+    [key: string]: any;
+}
+
+export class CartesianReference implements ICartesianReference {
+    referenceIndex?: number;
+    east?: number | undefined;
+    north?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICartesianReference) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.referenceIndex = _data["referenceIndex"];
+            this.east = _data["east"];
+            this.north = _data["north"];
+        }
+    }
+
+    static fromJS(data: any): CartesianReference {
+        data = typeof data === 'object' ? data : {};
+        let result = new CartesianReference();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["referenceIndex"] = this.referenceIndex;
+        data["east"] = this.east;
+        data["north"] = this.north;
+        return data;
+    }
+}
+
+export interface ICartesianReference {
+    referenceIndex?: number;
+    east?: number | undefined;
+    north?: number | undefined;
 
     [key: string]: any;
 }
@@ -6154,6 +6272,7 @@ export enum InformationSource {
     Nald = "Nald",
     Document = "Document",
     OtherDocument = "OtherDocument",
+    MixedSourcesOrMixedReasons = "MixedSourcesOrMixedReasons",
 }
 
 export class LabelGroupResult implements ILabelGroupResult {
@@ -7611,62 +7730,6 @@ export interface IMeanOfAbstraction {
     [key: string]: any;
 }
 
-export class NaldCartesianReference implements INaldCartesianReference {
-    referenceIndex?: number;
-    east?: number | undefined;
-    north?: number | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: INaldCartesianReference) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.referenceIndex = _data["referenceIndex"];
-            this.east = _data["east"];
-            this.north = _data["north"];
-        }
-    }
-
-    static fromJS(data: any): NaldCartesianReference {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldCartesianReference();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["referenceIndex"] = this.referenceIndex;
-        data["east"] = this.east;
-        data["north"] = this.north;
-        return data;
-    }
-}
-
-export interface INaldCartesianReference {
-    referenceIndex?: number;
-    east?: number | undefined;
-    north?: number | undefined;
-
-    [key: string]: any;
-}
-
 export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistoryOutput {
     status?: string | undefined;
     licenceNumber?: string | undefined;
@@ -7744,7 +7807,7 @@ export enum NaldLicenceStatus {
     Curr = "Curr",
 }
 
-export class NaldNationalGridReference implements INaldNationalGridReference {
+export class NationalGridReference implements INationalGridReference {
     referenceIndex?: number;
     sheet?: string | undefined;
     east?: string | undefined;
@@ -7752,7 +7815,7 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
 
     [key: string]: any;
 
-    constructor(data?: INaldNationalGridReference) {
+    constructor(data?: INationalGridReference) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7774,9 +7837,9 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
         }
     }
 
-    static fromJS(data: any): NaldNationalGridReference {
+    static fromJS(data: any): NationalGridReference {
         data = typeof data === 'object' ? data : {};
-        let result = new NaldNationalGridReference();
+        let result = new NationalGridReference();
         result.init(data);
         return result;
     }
@@ -7795,159 +7858,11 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
     }
 }
 
-export interface INaldNationalGridReference {
+export interface INationalGridReference {
     referenceIndex?: number;
     sheet?: string | undefined;
     east?: string | undefined;
     north?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class NaldPointData implements INaldPointData {
-    id?: string | undefined;
-    name?: string | undefined;
-    nationalGridReferences?: NaldNationalGridReference[];
-    cartesianReferences?: NaldCartesianReference[];
-    naldPurposeIds?: number[];
-
-    [key: string]: any;
-
-    constructor(data?: INaldPointData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.name = _data["name"];
-            if (Array.isArray(_data["nationalGridReferences"])) {
-                this.nationalGridReferences = [] as any;
-                for (let item of _data["nationalGridReferences"])
-                    this.nationalGridReferences!.push(NaldNationalGridReference.fromJS(item));
-            }
-            if (Array.isArray(_data["cartesianReferences"])) {
-                this.cartesianReferences = [] as any;
-                for (let item of _data["cartesianReferences"])
-                    this.cartesianReferences!.push(NaldCartesianReference.fromJS(item));
-            }
-            if (Array.isArray(_data["naldPurposeIds"])) {
-                this.naldPurposeIds = [] as any;
-                for (let item of _data["naldPurposeIds"])
-                    this.naldPurposeIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): NaldPointData {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldPointData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["name"] = this.name;
-        if (Array.isArray(this.nationalGridReferences)) {
-            data["nationalGridReferences"] = [];
-            for (let item of this.nationalGridReferences)
-                data["nationalGridReferences"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.cartesianReferences)) {
-            data["cartesianReferences"] = [];
-            for (let item of this.cartesianReferences)
-                data["cartesianReferences"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.naldPurposeIds)) {
-            data["naldPurposeIds"] = [];
-            for (let item of this.naldPurposeIds)
-                data["naldPurposeIds"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface INaldPointData {
-    id?: string | undefined;
-    name?: string | undefined;
-    nationalGridReferences?: NaldNationalGridReference[];
-    cartesianReferences?: NaldCartesianReference[];
-    naldPurposeIds?: number[];
-
-    [key: string]: any;
-}
-
-export class NaldPurposeData implements INaldPurposeData {
-    id?: string | undefined;
-    code?: string | undefined;
-    useCode?: string | undefined;
-    useDescription?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: INaldPurposeData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.code = _data["code"];
-            this.useCode = _data["useCode"];
-            this.useDescription = _data["useDescription"];
-        }
-    }
-
-    static fromJS(data: any): NaldPurposeData {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldPurposeData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["code"] = this.code;
-        data["useCode"] = this.useCode;
-        data["useDescription"] = this.useDescription;
-        return data;
-    }
-}
-
-export interface INaldPurposeData {
-    id?: string | undefined;
-    code?: string | undefined;
-    useCode?: string | undefined;
-    useDescription?: string | undefined;
 
     [key: string]: any;
 }
@@ -8536,7 +8451,9 @@ export interface IPeriodOfAbstraction {
 export class Point implements IPoint {
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8558,7 +8475,9 @@ export class Point implements IPoint {
             }
             this.id = _data["id"];
             this.altId = _data["altId"];
+            this.naldId = _data["naldId"];
             this.description = _data["description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8578,7 +8497,9 @@ export class Point implements IPoint {
         }
         data["id"] = this.id;
         data["altId"] = this.altId;
+        data["naldId"] = this.naldId;
         data["description"] = this.description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -8587,22 +8508,28 @@ export class Point implements IPoint {
 export interface IPoint {
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
 
 export class PointOfAbstraction implements IPointOfAbstraction {
-    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     name?: string | undefined;
-    gridRef?: string | undefined;
+    knownAs?: string | undefined;
+    near?: string | undefined;
+    nationalGridReferences?: NationalGridReference[] | undefined;
+    cartesianReferences?: CartesianReference[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8622,14 +8549,24 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldData = _data["naldData"] ? NaldPointData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["purposeIds"])) {
                 this.purposeIds = [] as any;
                 for (let item of _data["purposeIds"])
                     this.purposeIds!.push(item);
             }
             this.name = _data["name"];
-            this.gridRef = _data["gridRef"];
+            this.knownAs = _data["knownAs"];
+            this.near = _data["near"];
+            if (Array.isArray(_data["nationalGridReferences"])) {
+                this.nationalGridReferences = [] as any;
+                for (let item of _data["nationalGridReferences"])
+                    this.nationalGridReferences!.push(NationalGridReference.fromJS(item));
+            }
+            if (Array.isArray(_data["cartesianReferences"])) {
+                this.cartesianReferences = [] as any;
+                for (let item of _data["cartesianReferences"])
+                    this.cartesianReferences!.push(CartesianReference.fromJS(item));
+            }
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
@@ -8638,7 +8575,9 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             }
             this.id = _data["id"];
             this.altId = _data["altId"];
+            this.naldId = _data["naldId"];
             this.description = _data["description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8656,14 +8595,24 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.purposeIds)) {
             data["purposeIds"] = [];
             for (let item of this.purposeIds)
                 data["purposeIds"].push(item);
         }
         data["name"] = this.name;
-        data["gridRef"] = this.gridRef;
+        data["knownAs"] = this.knownAs;
+        data["near"] = this.near;
+        if (Array.isArray(this.nationalGridReferences)) {
+            data["nationalGridReferences"] = [];
+            for (let item of this.nationalGridReferences)
+                data["nationalGridReferences"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.cartesianReferences)) {
+            data["cartesianReferences"] = [];
+            for (let item of this.cartesianReferences)
+                data["cartesianReferences"].push(item ? item.toJSON() : undefined as any);
+        }
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
@@ -8672,22 +8621,28 @@ export class PointOfAbstraction implements IPointOfAbstraction {
         }
         data["id"] = this.id;
         data["altId"] = this.altId;
+        data["naldId"] = this.naldId;
         data["description"] = this.description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
 
 export interface IPointOfAbstraction {
-    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     name?: string | undefined;
-    gridRef?: string | undefined;
+    knownAs?: string | undefined;
+    near?: string | undefined;
+    nationalGridReferences?: NationalGridReference[] | undefined;
+    cartesianReferences?: CartesianReference[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9037,6 +8992,8 @@ export interface IProcessRunResponse {
 export class Purpose implements IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9058,6 +9015,12 @@ export class Purpose implements IPurpose {
             }
             this.id = _data["id"];
             this.description = _data["description"];
+            if (Array.isArray(_data["naldIds"])) {
+                this.naldIds = [] as any;
+                for (let item of _data["naldIds"])
+                    this.naldIds!.push(item);
+            }
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -9077,6 +9040,12 @@ export class Purpose implements IPurpose {
         }
         data["id"] = this.id;
         data["description"] = this.description;
+        if (Array.isArray(this.naldIds)) {
+            data["naldIds"] = [];
+            for (let item of this.naldIds)
+                data["naldIds"].push(item);
+        }
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -9085,17 +9054,21 @@ export class Purpose implements IPurpose {
 export interface IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
 
 export class PurposeOfAbstraction implements IPurposeOfAbstraction {
-    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: any[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9115,15 +9088,25 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldData = _data["naldData"] ? NaldPurposeData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["pointIds"])) {
                 this.pointIds = [] as any;
                 for (let item of _data["pointIds"])
                     this.pointIds!.push(item);
             }
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             this.id = _data["id"];
             this.description = _data["description"];
+            if (Array.isArray(_data["naldIds"])) {
+                this.naldIds = [] as any;
+                for (let item of _data["naldIds"])
+                    this.naldIds!.push(item);
+            }
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -9141,26 +9124,38 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.pointIds)) {
             data["pointIds"] = [];
             for (let item of this.pointIds)
                 data["pointIds"].push(item);
         }
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         data["id"] = this.id;
         data["description"] = this.description;
+        if (Array.isArray(this.naldIds)) {
+            data["naldIds"] = [];
+            for (let item of this.naldIds)
+                data["naldIds"].push(item);
+        }
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
 
 export interface IPurposeOfAbstraction {
-    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: any[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;

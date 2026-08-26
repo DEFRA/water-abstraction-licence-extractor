@@ -198,4 +198,15 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<string> GetPresignedUrlAsync(string filename)
+    {
+        var path = $"/BFF/Files/Get?filename={filename}";
+       
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
+        
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync();
+    }
 }

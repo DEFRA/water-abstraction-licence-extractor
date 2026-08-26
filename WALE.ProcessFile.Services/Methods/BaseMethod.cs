@@ -132,7 +132,7 @@ public static class BaseMethod
 
                         foreach (var licenceNumberLine in licenceNumberLines)
                         {
-                            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+                            var dmsFileData = await request.dmsLookupService!.GetDmsFileDataAsync(
                                 licenceNumberLine.Text,
                                 request.cacheService!);
                     

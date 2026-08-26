@@ -19,6 +19,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -35,6 +37,8 @@ public class CompareOcrPdfTests
             realAbsLicCacheService,
             [],
             _fileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -42,7 +46,8 @@ public class CompareOcrPdfTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -56,6 +61,7 @@ public class CompareOcrPdfTests
         return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
 
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
     
@@ -161,6 +167,7 @@ public class CompareOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync((short)regionCode),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }

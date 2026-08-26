@@ -11,8 +11,11 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using Date = WALE.ProcessFile.Services.Formats.Date;
+using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
+using LinkedLicence = WRADI.Core.AbstractionLicence.Models.LinkedLicence;
 
 namespace WRADI.DocumentType.AbstractionLicence.Converters;
 
@@ -25,9 +28,9 @@ public static class AbstractionLicenceSchemaConverter
         NaldLinkedLicenceHelper? naldLinkedLicenceHelper,
         LookupConfiguration lookupConfiguration,
         IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         int processRunId)
     {
-        
         var dmsFileIdInfo = await RecordFileIdAsync(
             dmsFileData,
             lookupConfiguration,
@@ -71,7 +74,7 @@ public static class AbstractionLicenceSchemaConverter
 
         noneSchemaData.TryAdd(TemplateFeatures.MultipleScheduleOfConditions, hasMultipleScheduleOfConditions);
 
-        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, source) =
+        var (licenceNumber, scrapedLicenceNumber, confidence, ocrConfidence, _) =
             GetLicenceNumber(matchesResult, naldLicenceNumber, noneSchemaData);
 
         var licenceNumberWithConfidence = !string.IsNullOrEmpty(licenceNumber)
@@ -81,8 +84,7 @@ public static class AbstractionLicenceSchemaConverter
                 confidence)
             : null;
 
-        var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            cacheService,
+        var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
             licenceNumber,
             regionCode);
         
@@ -130,8 +132,9 @@ public static class AbstractionLicenceSchemaConverter
                 naldDataLine,
                 matchesResult.RegionCode,
                 noneSchemaData,
-                lookupConfiguration!,
-                cacheService);
+                lookupConfiguration,
+                cacheService,
+                naldDataLookupService);
 
         var companyNameMatch = matchesResult.Matches!
             .FirstOrDefault(result => result.LabelGroupName == "Company");
@@ -202,6 +205,7 @@ public static class AbstractionLicenceSchemaConverter
                 noneSchemaData,
                 lookupConfiguration,
                 cacheService,
+                naldDataLookupService,
                 individual);
             
             sectionDataDict.Add(sectionToLookAt, sectionData);
@@ -216,7 +220,7 @@ public static class AbstractionLicenceSchemaConverter
 
             foreach (var naldLinkedLicence in naldLinkedLicences)
             {
-                var thisDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+                var thisDmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                     naldLinkedLicence.NaldLicence.LicenceNumber,
                     lookupConfiguration.CacheService);
 
@@ -279,14 +283,16 @@ public static class AbstractionLicenceSchemaConverter
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration!,
-            cacheService));
+            cacheService,
+            naldDataLookupService));
         
         linkedLicences.AddRange(await GetPointsLinkedLicencesAsync(
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration!,
-            cacheService));
+            cacheService,
+            naldDataLookupService));
         
         foreach (var (_, (list, _, _)) in sectionDataDict)
         {
@@ -302,7 +308,7 @@ public static class AbstractionLicenceSchemaConverter
                 matchesResult.RegionCode,
                 noneSchemaData,
                 lookupConfiguration,
-                cacheService);
+                naldDataLookupService);
 
         // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
@@ -310,14 +316,14 @@ public static class AbstractionLicenceSchemaConverter
             linkedLicences,
             licenceNumber!,
             lookupConfiguration,
-            cacheService);
+            naldDataLookupService);
 
         var anywhereInDocumentLinkedLicences = await GetAnywhereInDocumentLinkedLicencesAsync(
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
             lookupConfiguration,
-            cacheService);
+            naldDataLookupService);
 
         var additionalLinkedLicenceCount = 1;
         
@@ -342,9 +348,9 @@ public static class AbstractionLicenceSchemaConverter
                     linkedLicence.LicenceNumber,
                     regionCode));
 
-            if (!found && !string.IsNullOrEmpty(scrapedLicenceNumber))
+            if (!found && !string.IsNullOrEmpty(licenceNumber))
             {
-                found = anywhereInDocumentLinkedLicence.LicenceNumber == scrapedLicenceNumber;
+                found = anywhereInDocumentLinkedLicence.LicenceNumber == licenceNumber;
             }
 
             if (!found && licenceHistoryLinkedLicences.Count > 0)
@@ -456,7 +462,11 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         individual = combinedIndividual.ToArray();
-
+        
+        // TODO - add NALD aggregates
+        
+        individual = AddNaldLimits(naldDataLine, individual, aggregates);
+        
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
             aggregates,
@@ -465,7 +475,14 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber,
             licenceVersion.LicenceVersionId,
             naldDataLine);
+        
+        HoistContainedInSections(individual, aggregates);
 
+        RemoveDuplicateLimitsPerGroup(individual);
+        RemoveDuplicateLimitsPerGroup(aggregates
+            .Select(AbstractionLimitGroup (agg) => agg)
+            .ToArray());
+        
         if (aggregates.Length == 0)
         {
             aggregates = null;
@@ -565,6 +582,317 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
     
+    private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
+    {
+        foreach (var grp in individual)
+        {
+            grp.Limits = grp.Limits
+                .GroupBy(l => new
+                {
+                    l.Value,
+                    l.Units,
+                    l.PeriodType,
+                    Points = l.Points?
+                        .Select(p => $"{p.Id}_{p.NaldId}")
+                        .ToArray(),
+                    Purposes = l.Purposes?
+                        .Select(p => $"{p.Id}_{string.Join('_', p.NaldIds ?? [])}")
+                        .ToArray()
+                })
+                .Select(g => g.First())
+                .ToList();
+        }
+    }
+
+    private static AbstractionLimitGroup[] AddNaldLimits(
+        NaldData? naldData,
+        AbstractionLimitGroup[] individuals,
+        Aggregate[] aggregates)
+    {
+        if (naldData == null)
+        {
+            return individuals;
+        }
+     
+        var individualsList = individuals.ToList();
+        
+        var existingLimitGroups = individuals.ToList();
+        existingLimitGroups.AddRange(aggregates);
+
+        var periodTypes = new List<LimitPeriodType>
+        {
+            LimitPeriodType.PerYear,
+            LimitPeriodType.PerDay,
+            LimitPeriodType.PerHour,
+            LimitPeriodType.PerSecond
+        };
+
+        var containedIn = new ContainedInInformation
+        {
+            Source = InformationSource.Nald
+        };
+        
+        var limits = new List<AbstractionLimit>();
+        
+        foreach (var periodType in periodTypes)
+        {
+            var groupedNaldLimits = naldData.Purposes
+                .GroupBy(l =>
+                {
+                    return periodType switch
+                    {
+                        LimitPeriodType.PerYear => l.Quantity.AnnualQty,
+                        LimitPeriodType.PerDay => l.Quantity.DailyQty,
+                        LimitPeriodType.PerHour => l.Quantity.HourlyQty,
+                        LimitPeriodType.PerSecond => l.Quantity.InstQty,
+                        _ => throw new Exception("Period type not known")
+                    };
+                })
+                .Where(g => g.Key != null)
+                .ToList();
+
+            // Get Nald limits
+            foreach (var groupedLimit in groupedNaldLimits)
+            {
+                var purposes = groupedLimit
+                    .Select(x => new Purpose
+                    {
+                        NaldIds = [x.Id.ToString()] // TOOD check the grouping here
+                    })
+                    .ToArray();
+
+                var points = groupedLimit
+                    .SelectMany(nl => nl.PointIds)
+                    .Distinct()
+                    .Select(p => new Point { NaldId = p.ToString() })
+                    .ToArray();
+
+                var limit = GetAbstractionLimit(
+                    groupedLimit.Key,
+                    periodType,
+                    purposes,
+                    points,
+                    containedIn);
+
+                if (limit != null)
+                {
+                    limits.Add(limit);
+                }
+            }
+        }
+        
+        AddNaldLimits(
+            limits,
+            existingLimitGroups,
+            ref individualsList);
+
+        return individualsList.ToArray();
+    }
+
+    private static AbstractionLimit? GetAbstractionLimit(
+        double? value,
+        LimitPeriodType periodType,
+        Purpose[] purposes,
+        Point[] points,
+        ContainedInInformation containedIn)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        const string litres = "litres";
+        const string cubicMeters = "cubic metres";
+
+        return new AbstractionLimit
+        {
+            Units = periodType == LimitPeriodType.PerSecond ? litres : cubicMeters,
+            Value = value,
+            PeriodType = periodType,
+            Purposes = purposes,
+            Points = points,
+            ContainedIn = [containedIn]
+        };
+    }
+
+    /*private static bool IsLimitGroupEqual(
+        List<AbstractionLimit> limitsLeft,
+        List<AbstractionLimit> limitsRight,
+        out List<AbstractionLimit> toAdd)
+    {
+        toAdd = [];
+        
+        var onlyOnLeft = limitsLeft
+            .Where(ll => limitsRight.All(lr => lr.PeriodType != ll.PeriodType))
+            .ToList();
+        
+        var onlyOnRight = limitsRight
+            .Where(lr => limitsLeft.All(ll => ll.PeriodType != lr.PeriodType))
+            .ToList();
+        
+        var orderedLimitsLeft = limitsLeft
+            .Where(ll => !onlyOnLeft.Contains(ll))
+            .OrderBy(l => l.PeriodType)
+            .ToList();
+        
+        var orderedLimitsRight = limitsRight
+            .Where(lr => !onlyOnRight.Contains(lr))
+            .OrderBy(l => l.PeriodType)
+            .ToList();
+
+        if (orderedLimitsLeft.Count < 2)
+        {
+            return false;
+        }
+        
+        for (var idx = 0; idx < orderedLimitsLeft.Count; idx++)
+        {
+            var limitLeft  = orderedLimitsLeft[idx];
+            var limitRight = orderedLimitsRight[idx];
+
+            if (!AreLimitsEqual(limitLeft, limitRight))
+            {
+                return false;
+            }
+        }
+
+        toAdd = onlyOnRight;
+        return true;
+    }*/
+
+    private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
+    {
+        return limitLeft.PeriodType == limitRight.PeriodType
+               && UnitsForComparison(limitLeft.Units) == UnitsForComparison(limitRight.Units)
+               && AreValuesEqual(
+                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
+                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
+    }
+    
+    private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
+    {
+        return group.Limits.Any(groupLimit => AreLimitsEqual(groupLimit, limitToFind));
+    }
+    
+    private static void AddNaldLimits(
+        List<AbstractionLimit> naldLimits,
+        List<AbstractionLimitGroup> existingLimitGroups,
+        ref List<AbstractionLimitGroup> individuals)
+    {
+        var unmatchedNaldLimits = new List<AbstractionLimit>();
+        
+        foreach (var naldLimit in naldLimits)
+        {
+            var matchingIndividualGroups = existingLimitGroups
+                .Where(individualGroup => GroupContainsLimit(individualGroup, naldLimit))
+                .ToList();
+
+            if (matchingIndividualGroups.Count >= 1)
+            {
+                foreach (var matchingIndividualGroup in matchingIndividualGroups)
+                {
+                    foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
+                    {
+                        var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();
+
+                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                        {
+                            // Already have it in contained in
+                            continue;
+                        }
+
+                        containedInList.Add(new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        });
+
+                        matchingIndividualGroupLimit.ContainedIn = containedInList.ToArray();
+                    }
+                }
+                
+                continue;
+            }
+
+            unmatchedNaldLimits.Add(naldLimit);
+        }
+
+        if (unmatchedNaldLimits.Count == 0)
+        {
+            return;
+        }
+        
+        var newGroup = new AbstractionLimitGroup
+        {
+            Limits = unmatchedNaldLimits
+        };
+            
+        individuals.Add(newGroup);
+    }
+
+    private static double? ValueInBaseUnits(double? value, string? units)
+    {
+        if (string.IsNullOrEmpty(units))
+        {
+            return value;
+        }
+        
+        if (units is "thousand cubic metres")
+        {
+            return value * 1000.0;
+        }
+        
+        return value;
+    }
+
+    private static void HoistContainedInSections(
+        AbstractionLimitGroup[] individuals,
+        Aggregate[] aggregates)
+    {
+        var allLimitGroups = individuals.ToList();
+        allLimitGroups.AddRange(aggregates);
+        
+        foreach (var limitGroup in allLimitGroups)
+        {
+            var allSame = true;
+
+            var firstLimit = limitGroup.Limits.First();
+            var firstLimitProviders = string.Join('_', 
+                firstLimit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
+
+            foreach (var limit in limitGroup.Limits.Skip(1))
+            {
+                var limitProviders = string.Join('_',
+                    limit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
+
+                if (limitProviders != firstLimitProviders)
+                {
+                    allSame = false;
+                    break;
+                }
+            }
+
+            if (!allSame)
+            {
+                limitGroup.ContainedIn =
+                [
+                    new()
+                    {
+                        Source = InformationSource.MixedSourcesOrMixedReasons
+                    }
+                ];
+                
+                continue;
+            }
+            
+            limitGroup.ContainedIn = firstLimit.ContainedIn;
+            
+            foreach (var limit in limitGroup.Limits)
+            {
+                limit.ContainedIn = null;
+            }
+        }
+    }
+
     private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
         PromoteAnyIndividualLimitsThatShouldBeAggregates(
             AbstractionLimitGroup[] individuals,
@@ -672,7 +1000,6 @@ public static class AbstractionLicenceSchemaConverter
                         TimeCutoff = individual.TimeCutoff,
                         DocumentIdentifier = individual.DocumentIdentifier,
                         Limits = individual.Limits,
-                        ContainedIn = individual.ContainedIn,
                         SourceLicenceNumber = licenceNumber,
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
@@ -718,7 +1045,6 @@ public static class AbstractionLicenceSchemaConverter
                         TimeCutoff = individual.TimeCutoff,
                         DocumentIdentifier = individual.DocumentIdentifier,
                         Limits = individual.Limits,
-                        ContainedIn = individual.ContainedIn,
                         SourceLicenceNumber = licenceNumber,
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
@@ -741,18 +1067,18 @@ public static class AbstractionLicenceSchemaConverter
         List<LinkedLicence> linkedLicences,
         string? licenceNumber,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
-        var tempLinkedLicencesGrp = linkedLicences
+        var groupedLinkedLicences = linkedLicences
             .GroupBy(linkedLicence => (
                 FormattingHelper.StripForComparison(
                     linkedLicence.LicenceNumber,
                     linkedLicence.RegionId!.Value),
                 linkedLicence.RegionId!.Value));
 
-        var tempLinkedLicences = new List<(LinkedLicence linkedLicence, int regionId)>();
-
-        foreach (var linkedLicencesGroup in tempLinkedLicencesGrp)
+        var uniqueLinkedLicences = new List<(LinkedLicence linkedLicence, int regionId)>();
+        
+        foreach (var linkedLicencesGroup in groupedLinkedLicences)
         {
             var containedIn = new List<ContainedInInformation>();
 
@@ -802,32 +1128,33 @@ public static class AbstractionLicenceSchemaConverter
                 licenceNumberStr,
                 regionId);
 
-            tempLinkedLicences.Add((await ToLinkedLicenceAsync(
-                linkedLicenceNumber,
-                linkedLicencesGroup
-                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
-                    .RawScrapedLicenceNumber,
-                linkedLicencesGroup
-                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.DmsPermitNumber))?
-                    .DmsPermitNumber,
-                linkedLicencesGroup
-                    .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
-                    .Filename,
-                linkedLicencesGroup
-                    .FirstOrDefault(ll => ll.Condition != null)?
-                    .Condition,
-                containedIn.ToArray(),
-                linkedLicencesGroup
-                    .FirstOrDefault(ll => ll.LicenceVersion.DmsFileIdStatus != null)?
-                    .LicenceVersion.Clone() ?? new LicenceVersion(),
-                regionId,
-                lookupConfiguration.CacheService,
-                cacheService,
-                linkedLicencesGroup
+            uniqueLinkedLicences.Add((await ToLinkedLicenceAsync(
+                    linkedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.RawScrapedLicenceNumber))?
+                        .RawScrapedLicenceNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.DmsPermitNumber))?
+                        .DmsPermitNumber,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => !string.IsNullOrEmpty(ll.Filename))?
+                        .Filename,
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.Condition != null)?
+                        .Condition,
+                    containedIn.ToArray(),
+                    linkedLicencesGroup
+                        .FirstOrDefault(ll => ll.LicenceVersion.DmsFileIdStatus != null)?
+                        .LicenceVersion.Clone() ?? new LicenceVersion(),
+                    regionId,
+                    lookupConfiguration.CacheService,
+                    naldDataLookupService, 
+                    lookupConfiguration.DmsLookupService,
+                    linkedLicencesGroup
                     .OrderByDescending(ll => ll.IsBecauseOfAggregate).FirstOrDefault()?.IsBecauseOfAggregate), regionId));
         }
         
-        tempLinkedLicences = tempLinkedLicences
+        uniqueLinkedLicences = uniqueLinkedLicences
             .Where(linkedLicence =>
                 !LicenceNumberContainsOther(
                     licenceNumber,
@@ -837,13 +1164,13 @@ public static class AbstractionLicenceSchemaConverter
 
         var newLinkedLicences = new List<LinkedLicence>();
 
-        foreach (var linkedLicence in tempLinkedLicences)
+        foreach (var linkedLicence in uniqueLinkedLicences)
         {
-            if (newLinkedLicences.Any(linkedLicence2 =>
+            if (newLinkedLicences.Any(newLinkedLicence =>
                 LicenceNumberContainsOther(
-                    linkedLicence2.LicenceNumber,
-                    linkedLicence.Item1.LicenceNumber,
-                    linkedLicence.Item1.RegionId!.Value)))
+                    newLinkedLicence.LicenceNumber,
+                    linkedLicence.linkedLicence.LicenceNumber,
+                    linkedLicence.linkedLicence.RegionId!.Value)))
             {
                 continue;
             }
@@ -1021,7 +1348,8 @@ public static class AbstractionLicenceSchemaConverter
         LicenceVersion licenceVersion,
         int? regionId,
         ICacheService cacheService,
-        IAbstractionLicenceCacheService abstractionLicenceCacheService,
+        INaldDataLookupService naldDataLookupService,
+        IDmsLookupService dmsLookupService,
         bool? isBecauseOfAggregate)
     {
         var licenceOrPermitNumber = linkedLicenceNumber;
@@ -1035,12 +1363,11 @@ public static class AbstractionLicenceSchemaConverter
             throw new Exception("regionId is null");
         }
         
-        var naldDataLineTask = Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            abstractionLicenceCacheService,
+        var naldDataLineTask = naldDataLookupService.GetNaldDataLineAsync(
             licenceOrPermitNumber,
             regionId.Value);
         
-        var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+        var dmsFileData = await dmsLookupService.GetDmsFileDataAsync(
             linkedLicenceNumber,
             cacheService);
 
@@ -1071,6 +1398,7 @@ public static class AbstractionLicenceSchemaConverter
         int processRunId,
         LookupConfiguration lookupConfiguration,
         IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         DmsFileData? dmsDataForFile = null,
         string? naldLicenceNumber = null)
     {
@@ -1083,6 +1411,7 @@ public static class AbstractionLicenceSchemaConverter
             (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
             lookupConfiguration,
             cacheService,
+            naldDataLookupService,
             processRunId);
 
         var previouslyParsedPaths = new List<string> { matchesResult.Filename! };
@@ -1093,7 +1422,11 @@ public static class AbstractionLicenceSchemaConverter
             previouslyParsedPaths,
             processRunId,
             lookupConfiguration,
-            cacheService);
+            cacheService,
+            naldDataLookupService);
+        
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Got {linkedLicences.Count} linked licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -1197,18 +1530,43 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Starting aggregating sets / adding incoming " +
+            $"links for {allLicences.Count} licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
         foreach (var licence in allLicences)
         {
+            var tStart = DateTime.Now;
+            double duration = -1;
+            
             if (licence.AbstractionLimits.Aggregates != null)
             {
                 PopulateAggregateSetIds(licence.AbstractionLimits.Aggregates, allLicences);
-            }
+                
+                duration = (DateTime.Now - tStart).TotalMilliseconds;
 
+                if (duration > 100)
+                {
+                    ConsoleHelper.WriteLine(
+                        $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - PopulateAggregateSetIds took {duration}ms");
+                }
+            }
+            
+            tStart = DateTime.Now;
+            
             await AddIncomingLinksAsync(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
                 false,
                 lookupConfiguration,
-                cacheService);
+                naldDataLookupService);
+
+            duration = (DateTime.Now - tStart).TotalMilliseconds;
+
+            if (duration > 100)
+            {
+                ConsoleHelper.WriteLine(
+                    $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - AddIncomingLinksAsync took {duration}ms");
+            }
 
             var newLicenceSetIds = new List<LicenceSetReference>
             {
@@ -1240,6 +1598,9 @@ public static class AbstractionLicenceSchemaConverter
             // Add LicenceSetIds to licence
             licence.LicenceSets = newLicenceSetIds.ToArray();
         }
+        
+        ConsoleHelper.WriteLine(
+            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return returnList;
     }
@@ -1305,17 +1666,17 @@ public static class AbstractionLicenceSchemaConverter
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
         bool addImplicitLicenceSet,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
         var returnList = new List<LicenceSet>();
-
+        
         var allLicencesInSets = licenceSetGroups
             .SelectMany(ls => ls)
             .SelectMany(ls => ls.Licences)
             .GroupBy(l => l.LicenceNumber?.Value)
             .Select(lg => lg.First())
             .ToList();
-
+        
         foreach (var licenceSetGroup in licenceSetGroups)
         {
             foreach (var licenceSet in licenceSetGroup)
@@ -1326,12 +1687,14 @@ public static class AbstractionLicenceSchemaConverter
                     {
                         continue;
                     }
-
+                    
                     var incomingLinks = GetLicencesReferencingLicenceInDocument(
                         allLicencesInSets,
                         licence.LicenceNumber?.Value!);
-
-                    var outgoingLinks = licence.LinkedLicences.Select(lll => lll.LicenceNumber!).ToList();
+                    
+                    var outgoingLinks = licence.LinkedLicences
+                        .Select(lll => lll.LicenceNumber!)
+                        .ToList();
 
                     var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
                     incomingAndOutgoingLinks.AddRange(outgoingLinks);
@@ -1371,7 +1734,8 @@ public static class AbstractionLicenceSchemaConverter
                             incomingLicence?.LicenceVersion.Clone() ?? new LicenceVersion(),
                             licence.RegionId,
                             lookupConfiguration.CacheService,
-                            cacheService,
+                            naldDataLookupService,
+                            lookupConfiguration.DmsLookupService,
                             null);
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
@@ -1420,16 +1784,16 @@ public static class AbstractionLicenceSchemaConverter
 
                         licence.LicenceSets = newLicenceSetIds.ToArray();
                     }
-
+                    
                     licence.LinkedLicences = (await ConsolidateLinkedLicencesAsync(
                         licence.LinkedLicences.ToList(),
                         licence.LicenceNumber?.Value,
                         lookupConfiguration,
-                        cacheService)).ToArray();
+                        naldDataLookupService)).ToArray();
                 }
             }
         }
-
+        
         returnList = returnList
             .GroupBy(i => i.LicenceSetId)
             .Select(g => g.First())
@@ -1594,7 +1958,8 @@ public static class AbstractionLicenceSchemaConverter
         List<string> previouslyParsedFiles,
         int processRunId,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var returnLicences = new List<Licence>();
         
@@ -1628,7 +1993,7 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+            var dmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 linkedLicence.LicenceNumber,
                 lookupConfiguration.CacheService);
 
@@ -1659,8 +2024,7 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
                 linkedLicence.LicenceNumber,
                 primaryLicence.RegionId!.Value);
 
@@ -1718,6 +2082,7 @@ public static class AbstractionLicenceSchemaConverter
                 (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
                 lookupConfiguration,
                 cacheService,
+                naldDataLookupService,
                 processRunId);
 
             if (licence.Status == ScrapeStatus.Error)
@@ -1868,6 +2233,7 @@ public static class AbstractionLicenceSchemaConverter
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
             IAbstractionLicenceCacheService cacheService,
+            INaldDataLookupService naldDataLookupService,
             AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var section = matches
@@ -1909,7 +2275,7 @@ public static class AbstractionLicenceSchemaConverter
                     aggregates,
                     sectionLinkedLicences,
                     noneSchemaData,
-                    cacheService,
+                    naldDataLookupService,
                     previouslyFoundIndividualLimits);
             }
 
@@ -1929,7 +2295,7 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        naldDataLookupService));
             }
         }
 
@@ -1949,16 +2315,15 @@ public static class AbstractionLicenceSchemaConverter
         int count,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
         var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
         
-        var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+        var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
             licenceNumberLoop,
             lookupConfiguration.CacheService);
         
-        var naldDataLineLoop = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-            cacheService,
+        var naldDataLineLoop = await naldDataLookupService.GetNaldDataLineAsync(
             licenceNumberLoop,
             regionCode);
 
@@ -2016,7 +2381,7 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
         var generalLinkedLicenceNumbers = matches
             .Where(result => result.LabelGroupName == "LinkedLicenceNumber")
@@ -2040,12 +2405,11 @@ public static class AbstractionLicenceSchemaConverter
 
             var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
-            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+            var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 linkedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
                 linkedLicenceNumber,
                 regionCode);
             
@@ -2108,7 +2472,7 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        INaldDataLookupService naldDataLookupService)
     {
         if (licenceHistorySection == null)
         {
@@ -2130,13 +2494,11 @@ public static class AbstractionLicenceSchemaConverter
             var lln = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
             
-            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+            var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 licenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
-                lln, regionCode);
+            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(lln, regionCode);
             
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
@@ -2182,7 +2544,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var purposeSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Purposes");
@@ -2218,7 +2581,7 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        naldDataLookupService));
                 }
             }
         }
@@ -2231,7 +2594,8 @@ public static class AbstractionLicenceSchemaConverter
         int regionCode,
         Dictionary<string, object?> noneSchemaData,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var pointsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == "Points");
@@ -2267,7 +2631,7 @@ public static class AbstractionLicenceSchemaConverter
                         count++,
                         noneSchemaData,
                         lookupConfiguration,
-                        cacheService));
+                        naldDataLookupService));
                 }
             }
         }
@@ -2298,6 +2662,16 @@ public static class AbstractionLicenceSchemaConverter
             || !text.Contains(textToFind))
         {
             return null;
+        }
+        
+        if (text.Contains("rate of flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.RateOfFlow;
+        }
+        
+        if (text.Contains("minimum value", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.MinimumValue;
         }
 
         if (text.Contains("lapsed licence", StringComparison.OrdinalIgnoreCase))
@@ -2462,7 +2836,8 @@ public static class AbstractionLicenceSchemaConverter
             int regionCode,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
-            IAbstractionLicenceCacheService cacheService)
+            IAbstractionLicenceCacheService cacheService,
+            INaldDataLookupService naldDataLookupService)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
@@ -2502,7 +2877,7 @@ public static class AbstractionLicenceSchemaConverter
                 allAggregates,
                 allAggregateLinkedLicences,
                 noneSchemaData,
-                cacheService,
+                naldDataLookupService,
                 []);
         }
 
@@ -2536,7 +2911,7 @@ public static class AbstractionLicenceSchemaConverter
         List<Aggregate> allAggregates,
         List<LinkedLicence> sectionLinkedLicences,
         Dictionary<string, object?> noneSchemaData,
-        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
         AbstractionLimitGroup[] previouslyFoundIndividualLimits)
     {
         var individualGroups = new List<AbstractionLimitGroup>();
@@ -2625,7 +3000,6 @@ public static class AbstractionLicenceSchemaConverter
                         })
                         .ToArray(),
                     DocumentIdentifier = documentIdentifier,
-                    ContainedIn = containedIn,
                     Limits =
                     [
                         new()
@@ -2633,28 +3007,32 @@ public static class AbstractionLicenceSchemaConverter
                             Value = hourlyQuantity,
                             PeriodType = LimitPeriodType.PerHour,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = dailyQuantity,
                             PeriodType = LimitPeriodType.PerDay,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = yearlyQuantity,
                             PeriodType = LimitPeriodType.PerYear,
                             Units = "cubic metres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         },
                         new()
                         {
                             Value = instantRate,
                             PeriodType = LimitPeriodType.PerSecond,
                             Units = "litres",
-                            Points = points
+                            Points = points,
+                            ContainedIn = containedIn
                         }
                     ]
                 };
@@ -2948,12 +3326,11 @@ public static class AbstractionLicenceSchemaConverter
                 (string?)JsonHelper.CastFromJsonTypeToNative(linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"]) ??
                 null;
 
-            var dmsFileDataTask = FormattingHelper.GetDmsFileDataAsync(
+            var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine2 = await Core.AbstractionLicence.Helpers.FormattingHelper.GetNaldDataLineAsync(
-                cacheService,
+            var naldDataLine2 = await naldDataLookupService.GetNaldDataLineAsync(
                 naldLicenceNumber,
                 regionCode);
 
@@ -3027,7 +3404,6 @@ public static class AbstractionLicenceSchemaConverter
                                 .ToList(),
                             Points = previouslyFoundIndividualLimit.Points,
                             Purposes = previouslyFoundIndividualLimit.Purposes,
-                            ContainedIn = previouslyFoundIndividualLimit.ContainedIn,
                             IsExplicitlyAggregate = true
                         }
                     )
@@ -3083,7 +3459,6 @@ public static class AbstractionLicenceSchemaConverter
             {
                 TimeCutoff = timeCutoff,
                 DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn,
                 Limits = [],
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray()
@@ -3096,8 +3471,7 @@ public static class AbstractionLicenceSchemaConverter
                 Limits = [],
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray(),
-                DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn
+                DocumentIdentifier = documentIdentifier
             });
 
             foreach (var datePurpose in datePurposesTimePeriods)
@@ -3106,7 +3480,6 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     TimePeriod = GetTimePeriod(datePurpose),
                     DocumentIdentifier = documentIdentifier,
-                    ContainedIn = containedIn,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
                     Purposes = limitPurposes?.ToArray()
@@ -3120,7 +3493,6 @@ public static class AbstractionLicenceSchemaConverter
             {
                 Limits = [],
                 DocumentIdentifier = documentIdentifier,
-                ContainedIn = containedIn,
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray()
             });
@@ -3202,7 +3574,8 @@ public static class AbstractionLicenceSchemaConverter
                     Value = number,
                     Units = units,
                     Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
+                    Purposes = limitPurposes?.ToArray(),
+                    ContainedIn = containedIn
                 };
 
                 if (isAggregate)
@@ -3253,8 +3626,7 @@ public static class AbstractionLicenceSchemaConverter
                             Points = abstractionLimit.Points,
                             Purposes = abstractionLimit.Purposes,
                             Limits = [],
-                            DocumentIdentifier = documentIdentifier,
-                            ContainedIn = containedIn
+                            DocumentIdentifier = documentIdentifier
                         };
 
                         individualGroups.Add(individualGroup);
@@ -3264,7 +3636,7 @@ public static class AbstractionLicenceSchemaConverter
                 individualGroup.Limits.Add(abstractionLimit);
             }
         }
-
+        
         var notIncludedList = new List<AbstractionLimitGroup>();
 
         foreach (var individualGroup in individualGroups)
@@ -3342,8 +3714,7 @@ public static class AbstractionLicenceSchemaConverter
             Purposes = purposesLoop?.ToArray() ?? [],
             TimeCutoff = timeCutoff,
             TimePeriod = timePeriod,
-            DocumentIdentifier = documentIdentifier,
-            ContainedIn = containedIn
+            DocumentIdentifier = documentIdentifier
         };
 
         var aggregatePointsLength = aggregate.Points.Count(p => p.IsImplicit != true);
@@ -3376,7 +3747,37 @@ public static class AbstractionLicenceSchemaConverter
 
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
+    
+    private static bool AreValuesEqual(double? value1, double? value2)
+    {
+        if (value1 == null || value2 == null)
+        {
+            return false;
+        }
 
+        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests
+        var minValue1 = value1 - 0.01;
+        var maxValue1 = value1 + 0.01;
+        
+        return value2 >= minValue1
+            && value2 <= maxValue1;
+    }
+    
+    private static string? UnitsForComparison(string? units)
+    {
+        if (string.IsNullOrEmpty(units))
+        {
+            return units;
+        }
+        
+        if (units is "cubic meters" or "thousand cubic metres")
+        {
+            return "cubic metres";
+        }
+
+        return units;
+    }
+    
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
         AbstractionLimitGroup limitGroup,
         List<AbstractionLimit> abstractionLimits)
@@ -3464,7 +3865,12 @@ public static class AbstractionLicenceSchemaConverter
     private static bool IsExcludedLinkReason(string? linkReason)
     {
         return linkReason is LinkReason.SimultaneousDischargeCondition
-            or LinkReason.CompensationFlow;
+            or LinkReason.CompensatoryDischargeCondition
+            or LinkReason.DewateringDischargeCondition
+            or LinkReason.ReadingsDischargedAugmentationCondition
+            or LinkReason.CompensationFlow
+            or LinkReason.RateOfFlow
+            or LinkReason.MinimumValue;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
@@ -3657,6 +4063,13 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add("Confidence:MeansOfAbstraction", meansResult.Confidence);
         }
 
+        var containedIn = new ContainedInInformation
+        {
+            Source = InformationSource.Document,
+            PageNumber = meansResult.LabelStartPageNumber,
+            LineNumber = meansResult.LabelStartLineNumber
+        };
+
         foreach (var meanResult in meansResult.SubResults)
         {
             var textWithoutNumber = meanResult.SubResults
@@ -3720,7 +4133,8 @@ public static class AbstractionLicenceSchemaConverter
                     {
                         PeriodType = periodType,
                         Units = perSecondUnits,
-                        Value = perSecondValue
+                        Value = perSecondValue,
+                        ContainedIn = [containedIn]
                     }
                     : null
             });
@@ -3750,9 +4164,62 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add($"Confidence:{sectionName}", pointsResults.Confidence);
         }
 
+        var naldPoints = naldDataLine?.Points
+            .Select(point =>
+                new NaldPointData
+                {
+                    Id = point.PointId.ToString(),
+                    Name = point.PointName,
+                    NationalGridReferences = point.NationalGridReferences.Select(n =>
+                        new NationalGridReference
+                        {
+                            ReferenceIndex = n.ReferenceIndex,
+                            Sheet = n.Sheet,
+                            East = n.East,
+                            North = n.North
+                        }).ToList(),
+                    CartesianReferences = point.CartesianReferences.Select(c =>
+                        new CartesianReference
+                        {
+                            ReferenceIndex = c.ReferenceIndex,
+                            East = c.East,
+                            North = c.North
+                        }).ToList(),
+                    NaldPurposeIds = point.PurposeIds
+                })
+            .ToList() ?? [];
+
+        var usedNaldPointIds = new List<string>();
+        List<LabelGroupResult> pointPurposeGroups;
+        
+        var pointPurposeGroupSingleLinePerItem = pointsResults.SubResults
+            .Where(sr => sr.MatchedLabelName == "PointPurposeGroupSingleLinePerItem")
+            .ToList();
+
+        if (pointPurposeGroupSingleLinePerItem.Count > 1)
+        {
+            pointPurposeGroups = pointPurposeGroupSingleLinePerItem;
+        }
+        else
+        {
+            pointPurposeGroups = pointsResults.SubResults
+                .Where(sr => sr.MatchedLabelName == "PointPurposeGroup")
+                .ToList();
+        }
+        
+        var anyNoneEmptyStringMatches = pointPurposeGroups
+            .Any(ppg => ppg.MatchedLabelTextFirstLine != string.Empty);
+
+        if (anyNoneEmptyStringMatches)
+        {
+            pointPurposeGroups = pointPurposeGroups
+                .Where(ppg => ppg.MatchedLabelTextFirstLine != string.Empty)
+                .ToList();
+        }
+        
         var pointPurposeGroupCount = -1;
         
-        foreach (var pointPurposeGroup in pointsResults.SubResults)
+        foreach (var pointPurposeGroup in pointPurposeGroups)
         {
             if (pointPurposeGroup.Confidence != null)
             {
@@ -3816,6 +4283,95 @@ public static class AbstractionLicenceSchemaConverter
                     };
                 }
 
+                // 63347S0172R01 has one
+                var fromToPointTable = DataHelper.GetFirstMatchByLabel(point.SubResults, "FromToPointTable");
+
+                if (noneSchemaData.ContainsKey(TemplateFeatures.FromToPointsTable))
+                {
+                    if (fromToPointTable != null)
+                    {
+                        noneSchemaData[TemplateFeatures.FromToPointsTable] = true;
+                    }
+                }
+                else
+                {
+                    noneSchemaData.Add(TemplateFeatures.FromToPointsTable, fromToPointTable != null);
+                }
+
+                if (fromToPointTable != null)
+                {
+                    if (fromToPointTable.Confidence != null)
+                    {
+                        noneSchemaData.Add(
+                            $"Confidence:{sectionName}_PointPurposeGroup_{pointPurposeGroupCount}_Point_{pointCount}_FromToPointTable",
+                            fromToPointTable.Confidence);
+                    }
+
+                    var tableLines = fromToPointTable.Text!;
+
+                    foreach (var tableLine in tableLines)
+                    {
+                        var id = $"{tableLine.Columns[0].Text} to {tableLine.Columns[1].Text}";
+
+                        var containedInList1 = new List<ContainedInInformation>
+                        {
+                            new()
+                            {
+                                Source = InformationSource.Document,
+                                SectionName = sectionName,
+                                PageNumber = tableLine.PageNumber,
+                                LineNumber = tableLine.LineNumber
+                            }
+                        };
+                        
+                        var naldPoint2 = GetNaldPointData(
+                            naldPoints,
+                            tableLine.Text,
+                            GetKnownAs(tableLine.Text),
+                            GetNear(tableLine.Text),
+                            usedNaldPointIds);
+
+                        var naldDescription2 = (string?)null;
+                        var naldId2 = (string?)null;
+
+                        List<NationalGridReference>? nationalGridReferences2 = null;
+                        List<CartesianReference>? cartesianReferences2 = null;
+                        
+                        if (naldPoint2 != null)
+                        {
+                            usedNaldPointIds.Add(naldPoint2.Id!);
+                            
+                            naldDescription2 = naldPoint2.Name;
+                            naldId2 = naldPoint2.Id;
+                            nationalGridReferences2 = naldPoint2.NationalGridReferences;
+                            cartesianReferences2 = naldPoint2.CartesianReferences;
+                            
+                            containedInList1.Add(new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald
+                            });
+                        }
+                        
+                        returnList.Add(
+                            new PointOfAbstraction
+                            {
+                                Description = $"From {id}",
+                                NaldDescription = naldDescription2,
+                                Id = $"{pointNumber} {id}", // e.g 2.1 - From TL123 to TL456
+                                NaldId = naldId2,
+                                AltId = id,
+                                NationalGridReferences = nationalGridReferences2,
+                                CartesianReferences = cartesianReferences2,
+                                PurposeIds = purposeIds,
+                                TimeCutoff = timeCutoff,
+                                ContainedIn = containedInList1.ToArray()
+                            });
+                        // Format is 'Abstraction National Grid Location Description Map'
+                    }
+
+                    continue;
+                }
+
                 // NE0260034052 has one
                 var pointTable = DataHelper.GetFirstMatchByLabel(point.SubResults, "PointTable");
 
@@ -3847,23 +4403,58 @@ public static class AbstractionLicenceSchemaConverter
                         var words = tableLine.Text.Split(' ');
                         var subId = words[0]; // e.g. A, D, E
 
-                        returnList.Add(new PointOfAbstraction
+                        var containedInList2 = new List<ContainedInInformation>
                         {
-                            Description = tableLine.Text,
-                            Id = $"{pointNumber} {subId}", // e.g 2.1 - A
-                            AltId = subId,
-                            PurposeIds = purposeIds,
-                            TimeCutoff = timeCutoff,
-                            NaldData = GetNaldPointData(naldDataLine,
-                                tableLine.Text), // TODO needs to get the correct point
-                            ContainedIn = [new()
+                            new()
                             {
                                 Source = InformationSource.Document,
                                 SectionName = sectionName,
                                 PageNumber = tableLine.PageNumber,
                                 LineNumber = tableLine.LineNumber
-                            }]
-                        });
+                            }
+                        };
+
+                        var naldPoint1 = GetNaldPointData(
+                            naldPoints,
+                            tableLine.Text,
+                            GetKnownAs(tableLine.Text),
+                            GetNear(tableLine.Text),
+                            usedNaldPointIds);
+                        
+                        var naldDescription1 = (string?)null;
+                        var naldId1 = (string?)null;
+                        List<NationalGridReference>? nationalGridReferences1 = null;
+                        List<CartesianReference>? cartesianReferences1 = null;
+                        
+                        if (naldPoint1 != null)
+                        {
+                            usedNaldPointIds.Add(naldPoint1.Id!);
+
+                            naldDescription1 = naldPoint1.Name;
+                            naldId1 = naldPoint1.Id;
+                            nationalGridReferences1 = naldPoint1.NationalGridReferences;
+                            cartesianReferences1 = naldPoint1.CartesianReferences;
+                            
+                            containedInList2.Add(new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald
+                            });
+                        }
+                        
+                        returnList.Add(
+                            new PointOfAbstraction
+                            {
+                                Description = tableLine.Text,
+                                NaldDescription = naldDescription1,
+                                Id = $"{pointNumber} {subId}", // e.g 2.1 - A
+                                AltId = subId,
+                                NaldId = naldId1,
+                                NationalGridReferences = nationalGridReferences1,
+                                CartesianReferences = cartesianReferences1,
+                                PurposeIds = purposeIds,
+                                TimeCutoff = timeCutoff,
+                                ContainedIn = containedInList2.ToArray()
+                            });
                         // Format is 'Abstraction National Grid Location Description Map'
                     }
 
@@ -3880,58 +4471,97 @@ public static class AbstractionLicenceSchemaConverter
                 }
 
                 var description = string.Join(' ', allTextWithoutNumber);
-
-                // If its like 'A SE' or 'B NE' get rid of the A and B
-                if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
-                {
-                    description = description[2..];
-                }
-
-                var parts = description.Split(" at ");
-                var name = parts[0];
-                var gridRef = parts.Length >= 2 ? parts[1] : null;
-
-                if (parts.Length == 1 && description.Contains("National Grid Reference"))
-                {
-                    parts = description.Split("National Grid Reference");
-
-                    name = null;
-                    gridRef = parts[1].Trim();
-                }
+                description = FormattingHelper.TrimFormatting(description, false, true);
                 
-                gridRef = gridRef?.Replace("point ", string.Empty);
-
-                var pointText = string.Join(" ", point.Text?.Select(p => p.Text).ToArray() ?? []);
-
-                var letterIdParts = pointText.Replace("\"", "'").Split("marked '");
-                var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
-
-                if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
-                {
-                    name = letterId;
-                }
+                var (name, gridRef, letterId) = GetPointNameGridRefLetterId(description);
                 
-                returnList.Add(new PointOfAbstraction
+                var knownAs = GetKnownAs(description);
+                var near = GetNear(description);
+                
+                var containedInList = new List<ContainedInInformation>
                 {
-                    Name = name,
-                    GridRef = gridRef,
-                    Description = description,
-                    Id = pointNumber,
-                    AltId = letterId,
-                    PurposeIds = purposeIds,
-                    TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPointData(naldDataLine, description),
-                    ContainedIn = [new()
+                    new()
                     {
                         Source = InformationSource.Document,
                         SectionName = sectionName,
                         PageNumber = point.LabelStartPageNumber,
                         LineNumber = point.LabelStartLineNumber
-                    }]
-                });
+                    }
+                };
+
+                var naldDescription = (string?)null;
+                var naldId = (string?)null;
+                var naldPoint = GetNaldPointData(naldPoints, description, knownAs, near, usedNaldPointIds);
+
+                List<NationalGridReference>? nationalGridReferences =
+                    !string.IsNullOrEmpty(gridRef)
+                        ? [GetGridReference(gridRef)!]
+                        : null;
+
+                List<CartesianReference>? cartesianReferences = null;
+                
+                if (naldPoint != null)
+                {
+                    usedNaldPointIds.Add(naldPoint.Id!);
+                    
+                    naldDescription = naldPoint.Name;
+                    naldId = naldPoint.Id;
+                    nationalGridReferences = naldPoint.NationalGridReferences;
+                    cartesianReferences = naldPoint.CartesianReferences;
+                    
+                    containedInList.Add(new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    });
+                }
+                
+                returnList.Add(
+                    new PointOfAbstraction
+                    {
+                        Name = name,
+                        KnownAs = knownAs,
+                        Near = near,
+                        NationalGridReferences = nationalGridReferences,
+                        CartesianReferences = cartesianReferences,
+                        Description = description,
+                        NaldDescription = naldDescription,
+                        NaldId = naldId,
+                        Id = pointNumber,
+                        AltId = letterId,
+                        PurposeIds = purposeIds,
+                        TimeCutoff = timeCutoff,
+                        ContainedIn = containedInList.ToArray()
+                    });
             }
         }
 
+        foreach (var naldPoint in naldPoints)
+        {
+            if (usedNaldPointIds.Contains(naldPoint.Id!))
+            {
+                continue;
+            }
+            
+            var naldContainedInList = new List<ContainedInInformation>
+            {
+                new()
+                {
+                    Source = InformationSource.Nald
+                }
+            };
+
+            returnList.Add(
+                new PointOfAbstraction
+                {
+                    Id = naldPoint.Id,
+                    Name = naldPoint.Name,
+                    NationalGridReferences = naldPoint.NationalGridReferences,
+                    CartesianReferences = naldPoint.CartesianReferences,
+                    Description = naldPoint.Name,
+                    ContainedIn = naldContainedInList.ToArray()
+                });
+        }
+        
         foreach (var item in returnList)
         {
             if (string.IsNullOrEmpty(item.Id) && !string.IsNullOrEmpty(item.Name))
@@ -3943,86 +4573,262 @@ public static class AbstractionLicenceSchemaConverter
         return returnList.ToArray();
     }
 
-    private static NaldPointData? GetNaldPointData(NaldData? naldDataLine, string description)
+    private static string? GetKnownAs(string? description)
     {
-        if (naldDataLine?.Points.Count is null or 0)
+        var knownAsParts = description?.Split("known as ");
+        return knownAsParts?.Length >= 2 ? knownAsParts[1].Split(" near")[0] : null;
+    }
+    
+    private static string? GetNear(string? description)
+    {
+        var nearParts = description?.Split("near ");
+        return nearParts?.Length >= 2 ? nearParts[1].Split(",")[0] : null;
+    }
+    
+    private static NationalGridReference? GetGridReference(string? gridRef)
+    {
+        if (string.IsNullOrEmpty(gridRef))
         {
             return null;
         }
 
-        var points = naldDataLine.Points;
-        NaldDataPoint? point;
+        var gridRefNoLetters = gridRef.Replace(" ", string.Empty);
 
-        if (points.Count == 1)
+        if (gridRefNoLetters.Length == 10)
         {
-            point = points[0];
+            return Get10LetterGridRef(gridRefNoLetters);
         }
-        else
-        {
-            var relevantDescription = description.Split(" at ")[0];
-            
-            point = points
-                .FirstOrDefault(p =>
-                    p.PointName?.Equals(relevantDescription, StringComparison.OrdinalIgnoreCase) == true);
-        }
-
-        if (point is null)
-        {
-            return null;
-        }
-
-        return new NaldPointData
-        {
-            Id = point.PointId.ToString(),
-            Name = point.PointName,
-            NationalGridReferences = point.NationalGridReferences.Select(n =>
-                new NaldNationalGridReference
-                {
-                    ReferenceIndex = n.ReferenceIndex,
-                    Sheet = n.Sheet,
-                    East = n.East,
-                    North = n.North
-                }).ToList(),
-            CartesianReferences = point.CartesianReferences.Select(c =>
-                new NaldCartesianReference
-                {
-                    ReferenceIndex = c.ReferenceIndex,
-                    East = c.East,
-                    North = c.North
-                }).ToList(),
-            NaldPurposeIds = point.PurposeIds
-        };
+        
+        return gridRefNoLetters.Length != 12 ? null : Get12LetterGridRef(gridRefNoLetters);
     }
 
-    private static NaldPurposeData? GetNaldPurposeData(NaldData? naldDataLine, string? description)
+    private static NationalGridReference Get10LetterGridRef(string gridRefNoLetters)
     {
-        if (naldDataLine?.Purposes.Count is null or 0)
+        var letters = gridRefNoLetters[..2];
+        var east = gridRefNoLetters.Substring(2, 4);
+        var north = gridRefNoLetters.Substring(6, 4);
+
+        return new NationalGridReference
+        {
+            Sheet = letters,
+            East = east,
+            North = north
+        };
+    }
+    
+    private static NationalGridReference Get12LetterGridRef(string gridRefNoLetters)
+    {
+        var letters = gridRefNoLetters[..2];
+        var east = gridRefNoLetters.Substring(2, 5);
+        var north = gridRefNoLetters.Substring(7, 5);
+
+        return new NationalGridReference
+        {
+            Sheet = letters,
+            East = east,
+            North = north
+        };
+    }
+    
+    private static (string? Name, string? GridRef, string? LetterId) GetPointNameGridRefLetterId(
+        string? description)
+    {
+        if (string.IsNullOrEmpty(description))
+        {
+            return (null, null, null);
+        }
+        
+        // If its like 'A SE' or 'B NE' get rid of the A and B
+        if (description.Length > 2 && char.IsAsciiLetterUpper(description[0]) && description[1] == ' ')
+        {
+            description = description[2..];
+        }
+
+        var parts = description.Split(" at ");
+        var name = parts[0];
+        var gridRef = parts.Length >= 2 ? parts[1] : null;
+
+        if (parts.Length == 1 && description.Contains("National Grid Reference"))
+        {
+            parts = description.Split("National Grid Reference");
+
+            name = null;
+            gridRef = parts[1].Trim();
+        }
+
+        if (gridRef?.Contains(" marked") == true)
+        {
+            parts = gridRef.Split(" marked");
+            gridRef = parts[0];
+        }
+        
+        gridRef = gridRef?.Replace("point ", string.Empty);
+
+        var letterIdParts = description.Replace("\"", "'").Split("marked '");
+        var letterId = letterIdParts.Length >= 2 ? letterIdParts[1].Replace("\"", "'").Split('\'')[0] : null;
+
+        if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(letterId))
+        {
+            name = letterId;
+        }
+
+        return (name, gridRef, letterId);
+    }
+
+    private static NaldPointData? GetNaldPointData(
+        List<NaldPointData> naldPoints,
+        string? description,
+        string? knownAs,
+        string? near,
+        List<string> usedNaldPointIds)
+    {
+        if (string.IsNullOrEmpty(description))
         {
             return null;
         }
-
-        var purposes = naldDataLine.Purposes;
-        NaldDataPurpose purpose;
-
-        if (purposes.Count == 1)
+        
+        switch (naldPoints.Count)
         {
-            purpose = purposes[0];
-        }
-        else
-        {
-            // TODO - Work out which purpose matches the description
-
-            purpose = naldDataLine.Purposes
-                .First(p => p.Id != 0);
+            case 0:
+                return null;
+            case 1:
+                return naldPoints[0];
         }
 
-        return new NaldPurposeData
+        foreach (var naldPoint in naldPoints)
         {
-            Id = purpose.Id.ToString(),
-            Code = purpose.CategoryUse.Code,
-            UseCode = purpose.CategoryUse.UseCode.ToString(),
-            UseDescription = purpose.CategoryUse.UseDescription
+            if (usedNaldPointIds.Contains(naldPoint.Id!))
+            {
+                continue;
+            }
+
+            var containsGridRef = naldPoint.NationalGridReferences
+                .Any(ngr => description.Contains($"{ngr.Sheet} {ngr.East} {ngr.North}"));
+            var containsKnownAs = !string.IsNullOrEmpty(knownAs) &&
+                naldPoint.Name?.Contains(knownAs, StringComparison.OrdinalIgnoreCase) == true;
+            var containsNear = !string.IsNullOrEmpty(near) &&
+                naldPoint.Name?.Contains(near, StringComparison.OrdinalIgnoreCase) == true;
+                
+            var isSame = containsGridRef || containsKnownAs || containsNear;
+
+            if (isSame)
+            {
+                return naldPoint;
+            }
+        }
+
+        return null;
+    }
+
+    private static NaldPurposeData[] GetNaldPurposeData(
+        List<NaldPurposeData> naldPurposes,
+        string? description,
+        List<string> usedNaldPurposeIds)
+    {
+        var filterPurposes = naldPurposes
+            .Where(p => !usedNaldPurposeIds.Contains(p.Id!))
+            .ToList();
+
+        if (filterPurposes.Count == 0)
+        {
+            return [];
+        }
+        
+        var groupedPurposes = filterPurposes
+            .GroupBy(pu => $"{pu.Code}_{pu.QuantityIdentifier}")
+            .ToList();
+     
+        // There is only one, so must be that
+        if (groupedPurposes.Count == 1)
+        {
+            return groupedPurposes[0].ToArray();
+        }
+
+        var descriptionSuggestsTransfer =
+            description?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+            || description?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+        
+        foreach (var loopNaldPurposes in groupedPurposes)
+        {
+            if (usedNaldPurposeIds.Contains(loopNaldPurposes.First().Id!))
+            {
+                continue;
+            }
+
+            var firstNaldPurpose = loopNaldPurposes.First();
+            
+            if (CheckPurposeMapping(firstNaldPurpose.SecondaryCategoryDescription, firstNaldPurpose.UseDescription, description))
+            {
+                return loopNaldPurposes.ToArray();
+            }
+            
+            if (description == firstNaldPurpose.SecondaryCategoryDescription || description == firstNaldPurpose.UseDescription)
+            {
+                return loopNaldPurposes.ToArray();
+            }
+            
+            if (descriptionSuggestsTransfer)
+            {
+                var naldSuggestsTransfer =
+                    firstNaldPurpose.UseDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
+                    || firstNaldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true
+                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+
+                if (naldSuggestsTransfer)
+                {
+                    return loopNaldPurposes.ToArray();
+                }
+            }
+
+            if (firstNaldPurpose.UseDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true
+                || firstNaldPurpose.SecondaryCategoryDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return loopNaldPurposes.ToArray();
+            }
+        }
+
+        return [];
+    }
+
+    private static bool CheckPurposeMapping(
+        string? naldSecondaryCategoryDescription,
+        string? naldUseDescription,
+        string? documentDescription)
+    {
+        if (string.IsNullOrEmpty(documentDescription))
+        {
+            return false;
+        }
+        
+        // Key is document purpose description, Value is Nald purpose name
+        var documentToNaldPurposeMapping = new Dictionary<string, string[]>
+        {
+            { "agriculture (other than spray irrigation)", ["general farming & domestic"] },
+            { "reservoir storage for subsequent stream compensation", ["transfer between sources (pre water act 2003)"] },
+            { "private water supply", [
+                "general use relating to secondary category (very low loss)",
+                "general use relating to secondary category (low loss)",
+                "general use relating to secondary category (medium loss)",
+                "general use relating to secondary category (high loss)"
+            ]},
+            { "domestic & sanitation", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public services"]},
+            { "ground source heating and cooling pump", ["heat pump"]},
+            { "domestic", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public Services"]},
         };
+
+        var documentDescriptionLower = documentDescription.ToLower();//
+        var documentPurposeIsMapped = documentToNaldPurposeMapping.ContainsKey(documentDescriptionLower);
+
+        if (!documentPurposeIsMapped)
+        {
+            return false;
+        }
+
+        var mappedNaldValues = documentToNaldPurposeMapping[documentDescriptionLower];
+
+        return mappedNaldValues.Any(v => v.Equals(naldSecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase))
+               || mappedNaldValues.Any(v => v.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
@@ -4074,6 +4880,20 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
+        var naldPurposes = naldDataLine?.Purposes
+            .Select(purpose => new NaldPurposeData
+            {
+                Id = purpose.Id.ToString(),
+                SecondaryCategoryDescription = purpose.CategoryUse.SecondaryCategoryDescription,
+                Code = purpose.CategoryUse.Code,
+                UseCode = purpose.CategoryUse.UseCode.ToString(),
+                UseDescription = purpose.CategoryUse.UseDescription,
+                QuantityIdentifier = $"{purpose.Quantity.AnnualQty}_{purpose.Quantity.DailyQty}" +
+                    $"_{purpose.Quantity.HourlyQty}_{purpose.Quantity.InstQty}"
+            })
+            .ToList() ?? [];
+        
+        var usedNaldPurposeIds = new List<string>();
         var pointPurposeGroupCount = -1;
 
         foreach (var purposePointGroup in purposeResults.SubResults)
@@ -4130,6 +4950,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 var upToAndIncludeLine = tLines?
                     .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
+                
                 TimeCutoff? timeCutoff = null;
 
                 if (upToAndIncludeLine != null)
@@ -4149,6 +4970,17 @@ public static class AbstractionLicenceSchemaConverter
 
                 var number = purposeNumber?.Text?.FirstOrDefault()?.Text;
 
+                var containedInList = new List<ContainedInInformation>
+                {
+                    new()
+                    {
+                        Source = InformationSource.Document,
+                        SectionName = "Purposes",
+                        PageNumber = purpose.LabelStartPageNumber,
+                        LineNumber = purpose.LabelStartLineNumber
+                    }
+                };
+                
                 if (purposes.Count == 1)
                 {
                     // TODO more of this should be done in the parser
@@ -4158,13 +4990,35 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+
+                            if (naldData.Length >= 1)
+                            {
+                                foreach (var naldPurpose in naldData)
+                                {
+                                    usedNaldPurposeIds.Add(naldPurpose.Id!);
+                                }
+                                
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
                                 Id = number,
                                 Description = point.Trim(),
+                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
+                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
+                                    : null,
+                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4178,13 +5032,35 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData.Length >= 1)
+                            {
+                                foreach (var naldPurpose in naldData)
+                                {
+                                    usedNaldPurposeIds.Add(naldPurpose.Id!);
+                                }
+                                
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
                                 Id = number,
                                 Description = point.Trim(),
+                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
+                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
+                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4198,13 +5074,35 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData.Length >= 1)
+                            {
+                                foreach (var naldPurpose in naldData)
+                                {
+                                    usedNaldPurposeIds.Add(naldPurpose.Id!);
+                                }
+                                
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
                                 Id = number,
                                 Description = point.Trim(),
+                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
+                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
+                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4218,13 +5116,35 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData.Length >= 1)
+                            {
+                                foreach (var naldPurpose in naldData)
+                                {
+                                    usedNaldPurposeIds.Add(naldPurpose.Id!);
+                                }
+                                
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
                                 Id = number,
                                 Description = point.Trim(),
+                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
+                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
+                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
@@ -4238,29 +5158,120 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
+                            var naldData = GetNaldPurposeData(
+                                naldPurposes,
+                                point.Trim(),
+                                usedNaldPurposeIds);
+                            
+                            if (naldData.Length >= 1)
+                            {
+                                foreach (var naldPurpose in naldData)
+                                {
+                                    usedNaldPurposeIds.Add(naldPurpose.Id!);
+                                }
+                                
+                                containedInList.Add(new ContainedInInformation
+                                {
+                                    Source = InformationSource.Nald
+                                });
+                            }
+                            
                             returnList.Add(new PurposeOfAbstraction
                             {
                                 Id = number,
                                 Description = point.Trim(),
+                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
+                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
+                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
+                                    : null,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
-                                NaldData = GetNaldPurposeData(naldDataLine, point.Trim())
+                                ContainedIn = containedInList.ToArray()
                             });
                         }
 
                         continue;
                     }
                 }
+                
+                var naldData1 = GetNaldPurposeData(
+                    naldPurposes,
+                    description,
+                    usedNaldPurposeIds);
 
+                if (naldData1.Length >= 1)
+                {
+                    foreach (var naldPurpose in naldData1)
+                    {
+                        usedNaldPurposeIds.Add(naldPurpose.Id!);
+                    }
+                    
+                    containedInList.Add(new ContainedInInformation
+                    {
+                        Source = InformationSource.Nald
+                    });
+                }
+                
                 returnList.Add(new PurposeOfAbstraction
                 {
                     Id = number,
                     Description = description,
+                    NaldIds = naldData1.Select(nd => nd.Id!).ToArray(),
+                    NaldDescription = naldData1.FirstOrDefault()?.UseDescription != null
+                        ? $"{naldData1.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData1.FirstOrDefault()?.UseDescription}"
+                        : null,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
-                    NaldData = GetNaldPurposeData(naldDataLine, description)
+                    ContainedIn = containedInList.ToArray()
                 });
             }
+        }
+
+        // TODO! should be grouped purposes probably
+        
+        foreach (var naldPurpose in naldPurposes)
+        {
+            if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
+            {
+                continue;
+            }
+
+            var purposesWithoutNaldData = returnList
+                .Where(p => p.ContainedIn!.All(ci => ci.Source != InformationSource.Nald))
+                .ToList();
+
+            if (purposesWithoutNaldData.Count == 1)
+            {
+                usedNaldPurposeIds.Add(naldPurpose.Id!);
+
+                var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
+                containedInClone.Add(new ContainedInInformation
+                {
+                    Source = InformationSource.Nald
+                });
+                
+                purposesWithoutNaldData[0].NaldDescription = naldPurpose.UseDescription;
+                purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
+                purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
+                
+                continue;
+            }
+            
+            var naldContainedInList = new List<ContainedInInformation>
+            {
+                new()
+                {
+                    Source = InformationSource.Nald
+                }
+            };
+
+            returnList.Add(
+                new PurposeOfAbstraction
+                {
+                    Id = naldPurpose.Id,
+                    NaldDescription = naldPurpose.UseDescription,
+                    ContainedIn = naldContainedInList.ToArray()
+                });
         }
 
         return returnList.ToArray();
@@ -4395,7 +5406,8 @@ public static class AbstractionLicenceSchemaConverter
     public static async Task<List<LicenceSet>> AddAdditionalLicenceSetsAsync(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService)
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
@@ -4403,7 +5415,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceSetGroups,
             true,
             lookupConfiguration,
-            cacheService));
+            naldDataLookupService));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         return distinctLicenceSets;

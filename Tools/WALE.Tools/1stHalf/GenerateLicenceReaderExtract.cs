@@ -126,6 +126,9 @@ public static class GenerateLicenceReaderExtract
         var licenceNumberService = new AbstractionLicenceNumber(
             allNaldData.AbstractionAndImpoundmentLicences!,
             await licenceNumberSuccessorsTask);
+
+        var dmsLookupService = new DmsLookupService();
+        
         var comparableAbstractionLicences = new Dictionary<string, List<NaldAbstractionLicenceDataLine>>();
 
         foreach (var naldLine in allNaldData.AbstractionLicences!)
@@ -208,6 +211,7 @@ public static class GenerateLicenceReaderExtract
             absLicenceCacheService,
             outputService,
             licenceNumberService,
+            dmsLookupService,
             maxConcurrentScrapers,
             naldLiveLicenceDataByLowercasePermitNumber,
             await dmsExtractInfoTask,
@@ -335,6 +339,7 @@ public static class GenerateLicenceReaderExtract
         IAbstractionLicenceCacheService abstractionLicenceCacheService,
         IOutputService outputService,
         ILicenceNumberService licenceNumberService,
+        IDmsLookupService dmsLookupService,
         int maxConcurrentScrapers,
         Dictionary<string, NaldAbstractionLicenceDataLine> naldLiveLicenceDataByLowercasePermitNumber,
         Dictionary<string, List<DmsExtract>> dmsExtractInfo,
@@ -479,6 +484,7 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             licenceNumberService,
+            dmsLookupService,
             -1,
             DateTime.Now,
             skipFileIfMoreThenPages: 25,

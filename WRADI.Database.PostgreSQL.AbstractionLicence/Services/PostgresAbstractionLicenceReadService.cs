@@ -50,7 +50,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -115,8 +115,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                )
                        LIMIT 1) AS HasAggCondition
                FROM nald."NALD_ABS_LICENCES"
-               WHERE "FGAC_REGION_CODE" = @RegionCode
-                    AND (
+               WHERE (
                """;
 
         var idx = 0;
@@ -139,8 +138,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                """;
 
         var paramsObj = new DynamicParameters();
-        paramsObj.Add("@RegionCode", regionCode);
-        
         idx = 0;
         
         foreach (var licenceNumberLoop in licenceNumbers)
@@ -161,7 +158,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         
         var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
 
-        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
+        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, dataLine.FgacRegionCode);
         versions = versions
             .OrderByDescending(v => v.IssueNo)
             .ThenBy(v => v.IncrNo)
@@ -177,13 +174,13 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             naldData!.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var quantitiesTask = GetNaldLicenceQuantitiesAsync(
             naldData.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var purposes = await purposesTask;
         
@@ -191,7 +188,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);
             
-            var points = await GetNaldLicencePointsAsync(purpose.Id!, regionCode);
+            var points = await GetNaldLicencePointsAsync(purpose.Id!, dataLine.FgacRegionCode);
             
             foreach (var point in points)
             {
@@ -1395,7 +1392,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                        AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
                                        AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
-                                   )    
+                                   )
                            join nald."NALD_ABS_LIC_PURPOSES" pu
                                ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
                                AND ver."INCR_NO" = pu."AABV_INCR_NO"
@@ -1404,8 +1401,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            join nald."NALD_LIC_CONDITIONS" lc
                                ON pu."ID" = lc."AABP_ID"
                                AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
-                               AND (lc."PARAM1" IS NOT NULL 
-                                   OR lc."PARAM2" IS NOT NULL 
+                               AND (lc."PARAM1" IS NOT NULL
+                                   OR lc."PARAM2" IS NOT NULL
                                    OR lc."TEXT" IS NOT NULL)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)

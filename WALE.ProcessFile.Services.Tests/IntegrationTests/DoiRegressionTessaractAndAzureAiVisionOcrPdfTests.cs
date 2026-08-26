@@ -18,13 +18,15 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 [EnableParallelization]
 [Collection("First Names 2")]
-public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNamesFixture firstNamesFixture)
+public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
@@ -39,6 +41,8 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             realAbsLicCacheService,
             _naldData,
             _fileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -46,7 +50,8 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -54,6 +59,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -98,6 +104,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             CacheService,
             OutputService,
             await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }
@@ -144,7 +151,8 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -175,7 +183,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("1966-10-14", agreedSchemaLicence.LicenceVersion.IssueDate!.Value.ToString("yyyy-MM-dd"));
@@ -203,7 +211,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -232,7 +240,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -261,7 +269,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -290,7 +298,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -319,7 +327,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -348,7 +356,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -377,7 +385,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -406,7 +414,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -435,7 +443,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -464,7 +472,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -493,7 +501,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         
@@ -522,7 +530,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
 
@@ -553,7 +561,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(SingletonFirstNam
             _pdfDataExtractorCombined5,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         

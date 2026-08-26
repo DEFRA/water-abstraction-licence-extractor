@@ -3,20 +3,20 @@ namespace WALE.ProcessFile.Core.Constants;
 public static class LinkReason
 {
     public const string DischargeAndReabstractionCondition = "DischargeAndReabstractionCondition";
-    public const string SimultaneousDischargeCondition = "SimultaneousDischargeCondition";
+    public const string SimultaneousDischargeCondition = "SimultaneousDischargeCondition"; // Excluded link reason
     public const string SimultaneousAbstractionCondition = "SimultaneousAbstractionCondition";
     public const string SimultaneousCompensatoryDischargeCondition = "SimultaneousCompensatoryDischargeCondition";
-    public const string CompensatoryDischargeCondition = "CompensatoryDischargeCondition";
+    public const string CompensatoryDischargeCondition = "CompensatoryDischargeCondition"; // Excluded link reason
     public const string ReadInConjunction = "ReadInConjunction";
     public const string DonorLicence = "DonorLicence";
     public const string UsedInConjunction = "UsedInConjunction";
     public const string AggregateConditions = "AggregateConditions";
     public const string EmergencyCircumstances = "EmergencyCircumstances";
-    public const string DewateringDischargeCondition = "DewateringDischargeCondition";
+    public const string DewateringDischargeCondition = "DewateringDischargeCondition"; // Excluded link reason
     public const string WhenAddedTo = "WhenAddedTo";
     public const string SubsequentAbstraction = "SubsequentAbstraction";
     public const string ReAbstraction = "ReAbstraction";
-    public const string ReadingsDischargedAugmentationCondition = "ReadingsDischargedAugmentationCondition";
+    public const string ReadingsDischargedAugmentationCondition = "ReadingsDischargedAugmentationCondition"; // Excluded link reason
     public const string AggregateCondition = "AggregateCondition";
     public const string ShallNotExceed = "ShallNotExceed";
     public const string Supporting = "Supporting";
@@ -29,5 +29,7 @@ public static class LinkReason
     public const string Revocation = "Revocation";
     public const string InAnEmergency = "InAnEmergency";
     public const string AuthorisedBy = "AuthorisedBy";
-    public const string CompensationFlow = "CompensationFlow";
+    public const string CompensationFlow = "CompensationFlow"; // Excluded link reason
+    public const string RateOfFlow = "RateOfFlow"; // Excluded link reason
+    public const string MinimumValue = "MinimumValue"; // Excluded link reason    
 }

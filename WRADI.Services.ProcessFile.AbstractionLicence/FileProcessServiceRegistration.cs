@@ -13,6 +13,8 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
 using WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
@@ -215,6 +217,8 @@ public static class FileProcessServiceRegistration
         });
 
         services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();
+        services.AddSingleton<INaldDataLookupService, NaldDataLookupService>();
+        
         services.AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
         {
             var settings = sp.GetRequiredService<FileProcessAppSettings>();

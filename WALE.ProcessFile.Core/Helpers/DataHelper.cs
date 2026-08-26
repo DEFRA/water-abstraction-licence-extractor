@@ -134,7 +134,7 @@ public static partial class DataHelper
     
     public static string RemoveExcludes(
         LabelToMatch label,
-        string betweenText,
+        string text,
         bool trimPunctuationStart,
         bool trimPunctuationEnd,
         int? individualWordLineIndex,
@@ -143,12 +143,12 @@ public static partial class DataHelper
         removesUsed = null;
         
         if ((label.Remove?.Any() != true && label.IgnoreMatchIfContains?.Any() != true)
-            || string.IsNullOrEmpty(betweenText))
+            || string.IsNullOrEmpty(text))
         {
-            return betweenText;
+            return text;
         }
         
-        var returnStr = betweenText;
+        var returnStr = text;
         var removesUsedList = new List<string>();
 
         if (label.Remove != null)

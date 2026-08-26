@@ -135,37 +135,59 @@ public partial class AbstractionLicenceNumber(
                 }
 
                 var candidateSegments = ExtractSegments(candidateText);
-
+                var matchedEntries = new List<LicenceIndexEntry>();
+                
                 foreach (var entry in entries)
                 {
                     if (!AllChecksMatch(candidateSegments, candidateText, entry))
                     {
                         continue;
                     }
+                    
+                    matchedEntries.Add(entry);
+                }
 
-                    var existingColumn = line.Columns.FirstOrDefault();
-                    var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
-                        candidateText,
-                        existingColumn?.OcrConfidence,
-                        existingColumn?.Words.FirstOrDefault()?.Coordinates));
+                if (matchedEntries.Count == 0)
+                {
+                    continue;
+                }
+
+                var bestMatch = matchedEntries
+                    .OrderByDescending(entry => entry.NaldLicence.LicenceNumber == candidateText)
+                    .First();
+                
+                var existingColumn = line.Columns.FirstOrDefault();
+                var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
+                    candidateText,
+                    existingColumn?.OcrConfidence,
+                    existingColumn?.Words.FirstOrDefault()?.Coordinates));
+                
+                // Passed all checks so add a clone of the line containing the matched NALD licence number
+                var matchedLine = line.Clone([candidateTextColumn]);
+                matchedLine.AdditionalData ??= new Dictionary<string, object>();
+                matchedLine.AdditionalData.Add("NaldLicenceNumber", bestMatch.NaldLicence.LicenceNumber);
                     
-                    // Passed all checks so add a clone of the line containing the matched NALD licence number
-                    var matchedLine = line.Clone([candidateTextColumn]);
-                    matchedLine.AdditionalData ??= new Dictionary<string, object>();
-                    matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
-                        
-                    matchedLines.Add(matchedLine);
-                    
-                    // Exit early if we're looking for a single instance match
-                    if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
-                    {
-                        return (true, matchedLines);
-                    }
+                matchedLines.Add(matchedLine);
+                
+                // Exit early if we're looking for a single instance match
+                if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                {
+                    return (true, matchedLines);
                 }
             }
         }
 
-        return (matchedLines.Count > 0, matchedLines);
+        var returnMatchedLines = matchedLines
+            .GroupBy(matchedLine => new
+            {
+                matchedLine.Text,
+                matchedLine.PageNumber,
+                matchedLine.LineNumber
+            })
+            .Select(grp => grp.First())
+            .ToList();
+        
+        return (matchedLines.Count > 0, returnMatchedLines);
     }
 
     public (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
@@ -219,6 +241,7 @@ public partial class AbstractionLicenceNumber(
         foreach (var subLine in subLines)
         {
             var licenceNumberCandidates = LicenceNumbersRegex().Matches(subLine);
+            
             if (licenceNumberCandidates.Count == 0)
             {
                 continue;
@@ -236,9 +259,23 @@ public partial class AbstractionLicenceNumber(
 
                 var candidateSegments = ExtractSegments(candidateText);
 
-                resultList
-                    .AddRange(entries.Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
-                        .Select(entry => entry.NaldLicence));
+                var matchedEntries = entries
+                    .Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
+                    .Select(entry => entry.NaldLicence)
+                    .ToList();
+                
+                if (matchedEntries.Count == 0)
+                {
+                    continue;
+                }
+                
+                var bestMatch = matchedEntries
+                    .OrderByDescending(entry => candidateText.Contains(
+                        entry.LicenceNumber,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .First();
+                
+                resultList.Add(bestMatch);
             }
         }
 

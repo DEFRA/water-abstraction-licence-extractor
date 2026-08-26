@@ -201,7 +201,7 @@ public partial class AbstractionLicenceNumber(
         while (item != null)
         {
             history.Add(item);
-            item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0]);
+            item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0].ToLower());
         }
         
         return (hasSuccessor, history);

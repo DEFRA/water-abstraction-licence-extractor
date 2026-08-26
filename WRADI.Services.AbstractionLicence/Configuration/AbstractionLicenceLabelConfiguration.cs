@@ -2485,7 +2485,23 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("For Purpose ")
                             {
                                 LineMustStartWith = true
-                            }
+                            },
+                            new("6.1 Purpose")
+                            {
+                                LineMustStartWith = true
+                            },
+                            new("6.2 Purpose")
+                            {
+                                LineMustStartWith = true
+                            },
+                            new("6.3 Purpose")
+                            {
+                                LineMustStartWith = true
+                            },
+                            new("6.4 Purpose")
+                            {
+                                LineMustStartWith = true
+                            },
                         ],
                         TextEnd =
                         [
@@ -2500,7 +2516,11 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("(a)"),
                             new("(b)"),
                             new("(c)"),
-                            new("(d)")
+                            new("(d)"),
+                            new("4.1"),
+                            new("4.2"),
+                            new("4.3"),
+                            new("4.4"),
                         ],
                         SubLabels =
                         [

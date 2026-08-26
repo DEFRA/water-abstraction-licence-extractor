@@ -2663,6 +2663,16 @@ public static class AbstractionLicenceSchemaConverter
         {
             return null;
         }
+        
+        if (text.Contains("rate of flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.RateOfFlow;
+        }
+        
+        if (text.Contains("minimum value", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.MinimumValue;
+        }
 
         if (text.Contains("lapsed licence", StringComparison.OrdinalIgnoreCase))
         {
@@ -3855,7 +3865,12 @@ public static class AbstractionLicenceSchemaConverter
     private static bool IsExcludedLinkReason(string? linkReason)
     {
         return linkReason is LinkReason.SimultaneousDischargeCondition
-            or LinkReason.CompensationFlow;
+            or LinkReason.CompensatoryDischargeCondition
+            or LinkReason.DewateringDischargeCondition
+            or LinkReason.ReadingsDischargedAugmentationCondition
+            or LinkReason.CompensationFlow
+            or LinkReason.RateOfFlow
+            or LinkReason.MinimumValue;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
@@ -4797,7 +4812,9 @@ public static class AbstractionLicenceSchemaConverter
                 "general use relating to secondary category (medium loss)",
                 "general use relating to secondary category (high loss)"
             ]},
-            { "domestic & sanitation", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public services"]}
+            { "domestic & sanitation", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public services"]},
+            { "ground source heating and cooling pump", ["heat pump"]},
+            { "domestic", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public Services"]},
         };
 
         var documentDescriptionLower = documentDescription.ToLower();//

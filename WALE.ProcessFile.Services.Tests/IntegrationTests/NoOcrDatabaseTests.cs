@@ -111,7 +111,7 @@ public class NoOcrDatabaseTests
             }
         };
 
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private readonly Dictionary<string, List<NaldAbstractionData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {

@@ -142,15 +142,16 @@ public static class ApplicableToMost
                 .SelectMany(c => c.Words)
                 .Select((w, idx) =>
                 {
-                    w.Text = DataHelper.RemoveExcludes(
+                    var clonedWord = w.Clone();
+                    clonedWord.Text = DataHelper.RemoveExcludes(
                         matchedLabel,
-                        w.Text,
+                        clonedWord.Text,
                         idx == 0,
                         false,
                         idx,
                         out _);
 
-                    return w;
+                    return clonedWord;
                 })
                 .ToList();
 

@@ -773,6 +773,11 @@ public static class FormattingHelper
         {
             return licenceNumber;
         }
+
+        if (numberOfSlashes >= 3 && licenceNumber.EndsWith("GR", StringComparison.OrdinalIgnoreCase))
+        {
+            return licenceNumber;
+        }
         
         return NotNE_PadLicenceNumber(licenceNumber, regionCode);
     }

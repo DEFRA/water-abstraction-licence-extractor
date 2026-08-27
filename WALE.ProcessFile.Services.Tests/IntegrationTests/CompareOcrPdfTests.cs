@@ -36,6 +36,7 @@ public class CompareOcrPdfTests
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

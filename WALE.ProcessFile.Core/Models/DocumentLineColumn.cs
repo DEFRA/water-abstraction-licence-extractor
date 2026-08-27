@@ -153,6 +153,7 @@ public class DocumentLineColumn
                 throw new Exception($"Words don't contain input text '{inputTextWordTrimmedText}';\n\nWords - '{inputWordsForDisplay}'\nText  - '{inputText}'");
             }
 
+            // Use the none punctuation fixed versions from now
             var startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.OrdinalIgnoreCase);
 
             if (startPos == -1)
@@ -161,11 +162,16 @@ public class DocumentLineColumn
                     lw => lw.Text.StartsWith(inputTextWord.Text, StringComparison.OrdinalIgnoreCase)
                           || lw.Text.EndsWith(inputTextWord.Text, StringComparison.OrdinalIgnoreCase));
 
+                if (position == -1)
+                {
+                    throw new Exception("Issue (1) with difference between punctuation and none-punctuation versions");
+                }
+                
                 startPos = inputWordsCopy[position].Text.IndexOf(inputTextWord.Text, StringComparison.OrdinalIgnoreCase);
                 
                 if (startPos == -1)
                 {
-                    throw new Exception("Issue with difference between punctuation and none-punctuation versions");
+                    throw new Exception("Issue (2) with difference between punctuation and none-punctuation versions");
                 }
             }
             

@@ -40,6 +40,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(FirstNamesFixture
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
@@ -93,7 +94,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(FirstNamesFixture
         RevokedLicences = [],
         ImpoundmentLicences = []
     };
-    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private static readonly Dictionary<string, List<NaldAbstractionData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {

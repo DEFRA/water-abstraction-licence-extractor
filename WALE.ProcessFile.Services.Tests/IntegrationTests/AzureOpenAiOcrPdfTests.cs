@@ -37,6 +37,7 @@ public class AzureOpenAiOcrPdfTests
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

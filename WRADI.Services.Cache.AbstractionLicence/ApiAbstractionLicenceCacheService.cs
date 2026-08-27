@@ -109,7 +109,26 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         var content = await response.Content.ReadAsStringAsync();
         return int.Parse(content);
     }
-    
+
+    public async Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode)
+    {
+        var path = $"/Extractor/NaldData/GetImpoundment?licenceNumber={licenceNumber}&regionCode={regionCode}";
+        
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+        
+        return JsonSerializer.Deserialize<NaldImpoundmentData>(
+            content,
+            JsonHelper.GetSerializerOptions());
+    }
+
     public async Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         var dtStart = DateTime.UtcNow;
@@ -254,7 +273,7 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         return list;
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
     {
         var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}";
         
@@ -268,7 +287,7 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             return null;
         }
         
-        return JsonSerializer.Deserialize<NaldData>(
+        return JsonSerializer.Deserialize<NaldAbstractionData>(
             content,
             JsonHelper.GetSerializerOptions());
     }

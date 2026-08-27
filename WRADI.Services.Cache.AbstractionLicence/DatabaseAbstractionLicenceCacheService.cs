@@ -60,6 +60,11 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
     }
 
+    public Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode)
+    {
+        return databaseReadService.GetNaldImpoundmentLicenceAsync(licenceNumber);
+    }
+
     public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
@@ -110,9 +115,9 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
     {
-        return databaseReadService.GetNaldLicenceAsync(licenceNumber);
+        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber);
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)

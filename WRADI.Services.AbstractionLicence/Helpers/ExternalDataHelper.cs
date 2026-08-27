@@ -7,11 +7,11 @@ namespace WRADI.DocumentType.AbstractionLicence.Helpers;
 
 public static class ExternalDataHelper
 {
-    public static Dictionary<string, List<NaldData>> TransformNaldData(
+    public static Dictionary<string, List<NaldAbstractionData>> TransformNaldData(
         NaldDataCollection data,
         Dictionary<string, DmsFileData> licenceNumbersWithFilenames)
     {
-        var returnList = new Dictionary<string, NaldData>();
+        var returnList = new Dictionary<string, NaldAbstractionData>();
         var internalLicenceIdsNotInDataset = new HashSet<string>();
 
         foreach (var line in data.AbstractionLicences!)
@@ -54,7 +54,7 @@ public static class ExternalDataHelper
             data.AbstractionLicencePoints!,
             ref purposeToLicenceMapping);
 
-        var changedKeyList = new Dictionary<string, List<NaldData>>();
+        var changedKeyList = new Dictionary<string, List<NaldAbstractionData>>();
 
         foreach (var (_, naldData) in returnList)
         {
@@ -75,7 +75,7 @@ public static class ExternalDataHelper
     private static void AddNaldAbstractionLicenceVersionData(
         List<NaldLicenceVersionDataLine> naldCurrentVersionDataLines,
         HashSet<string> licenceNumbersNotInDataset,
-        ref Dictionary<string, NaldData> generalNaldData)
+        ref Dictionary<string, NaldAbstractionData> generalNaldData)
     {
         foreach (var versionDataLine in naldCurrentVersionDataLines
             .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
@@ -92,7 +92,7 @@ public static class ExternalDataHelper
     private static void AddNaldAbstractionLicenceQuantitiesData(
         List<NaldLicenceQuantitiesDataLine> naldLicenceQuantitiesDataLines,
         HashSet<string> licenceNumbersNotInDataset,
-        ref Dictionary<string, NaldData> generalNaldData)
+        ref Dictionary<string, NaldAbstractionData> generalNaldData)
     {
         foreach (var quantitiesDataLine in naldLicenceQuantitiesDataLines
             .Where(x => !licenceNumbersNotInDataset.Contains(x.LookupKey)))
@@ -113,12 +113,12 @@ public static class ExternalDataHelper
         }
     }
 
-    private static Dictionary<string, NaldData> AddNaldAbstractionLicencePurposeData(
+    private static Dictionary<string, NaldAbstractionData> AddNaldAbstractionLicencePurposeData(
         List<NaldLicencePurposeDataLine> naldLicencePurposeDataLines,
         HashSet<string> licenceNumbersNotInDataset,
-        ref Dictionary<string, NaldData> generalNaldData)
+        ref Dictionary<string, NaldAbstractionData> generalNaldData)
     {
-        var returnDict = new Dictionary<string, NaldData>();
+        var returnDict = new Dictionary<string, NaldAbstractionData>();
 
         foreach (var purposeDataLine in naldLicencePurposeDataLines
             .Where(x => !licenceNumbersNotInDataset.Contains(x.LicenceIdLookupKey)))
@@ -143,7 +143,7 @@ public static class ExternalDataHelper
 
     private static void AddNaldAbstractionLicencePointsData(
         List<NaldLicencePointDataLine> naldLicencePointDataLines,
-        ref Dictionary<string, NaldData> purposeToLicenceMapping)
+        ref Dictionary<string, NaldAbstractionData> purposeToLicenceMapping)
     {
         foreach (var pointDataLine in naldLicencePointDataLines)
         {

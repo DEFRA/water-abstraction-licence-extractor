@@ -50,7 +50,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber)
+    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -1039,6 +1039,28 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             ).ToList();
     }
 
+    public async Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = """
+                  SELECT 
+                        "ID" as Id,
+                        "LIC_NO" as LicenceNumber,
+                        "REV_DATE" as RevocationDate,
+                        "FGAC_REGION_CODE" as FgacRegionCode
+                  FROM nald."NALD_IMP_LICENCES"
+                  WHERE
+                      "LIC_NO" = @LicNo
+                  """;
+        
+        return await QueryFirstOrDefaultAsync<NaldImpoundmentData>(
+            connection,
+            sql,
+            0,
+            new { LicNo = licenceNumber });
+    }
+
     public async Task<List<Licence>> GetLicencesSearchAsync(
         int processRunId,
         ProcessRunQuery query)
@@ -1445,7 +1467,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    "LIC_NO" AS LicenceNumber,
                                    "FGAC_REGION_CODE" AS RegionCode,
                                    "ID" AS Id,
-                                   0 AS Type
+                                   3 AS Type
                                FROM nald."NALD_ABS_LICENCES"
                                
                                UNION ALL
@@ -1454,7 +1476,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    "LIC_NO" AS LicenceNumber,
                                    "FGAC_REGION_CODE" AS RegionCode,
                                    "ID" AS Id,
-                                   1 AS Type
+                                   4 AS Type
                                FROM nald."NALD_IMP_LICENCES"
                             )
                            ORDER BY

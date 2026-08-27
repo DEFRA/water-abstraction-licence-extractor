@@ -41,7 +41,12 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     {
         throw new NotImplementedException();
     }
-    
+
+    public Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         throw new NotImplementedException();
@@ -92,7 +97,7 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
     {
         throw new NotImplementedException();
     }

@@ -61,7 +61,7 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
-    Task<NaldData?> GetNaldLicenceAsync(string licenceNumber);
+    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber);
     
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
@@ -95,4 +95,6 @@ public interface IAbstractionLicenceDatabaseReadService
         ProcessRunQuery query);
 
     Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync();
+    
+    Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber);
 }

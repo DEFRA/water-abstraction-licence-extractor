@@ -42,6 +42,7 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             RealCacheService,
             RealAbsLicCacheService,
             NaldData,
+            [],
             FileLicenceMappingWithout52);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
@@ -115,16 +116,16 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             }
         };
     
-    private static readonly Dictionary<string, List<NaldData>> NaldData = GetNaldData();
+    private static readonly Dictionary<string, List<NaldAbstractionData>> NaldData = GetNaldData();
 
-    private static Dictionary<string, List<NaldData>> GetNaldData()
+    private static Dictionary<string, List<NaldAbstractionData>> GetNaldData()
     {
-        var returnList = new Dictionary<string, List<NaldData>>
+        var returnList = new Dictionary<string, List<NaldAbstractionData>>
         {
             {
                 "1|2568001247",
                 [
-                    new NaldData
+                    new NaldAbstractionData
                     {
                         AsrcCode = "G",
                         LicenceNumber = "25/68/001/247",
@@ -135,7 +136,7 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             {
                 "1|2568001248",
                 [
-                    new NaldData
+                    new NaldAbstractionData
                     {
                         AsrcCode = "S",
                         LicenceNumber = "25/68/001/248",
@@ -146,7 +147,7 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             {
                 "1|2568001249",
                 [
-                    new NaldData
+                    new NaldAbstractionData
                     {
                         AsrcCode = "S",
                         LicenceNumber = "25/68/001/249",
@@ -209,8 +210,8 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
                 RealCacheService!,
                 RealAbsLicCacheService!,
                 NaldData,
+                [],
                 FileLicenceMappingWithout52);
-
 
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 

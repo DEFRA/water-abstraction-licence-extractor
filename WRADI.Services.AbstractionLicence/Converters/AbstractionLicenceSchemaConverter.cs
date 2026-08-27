@@ -1,4 +1,3 @@
-using Amazon.Runtime.Internal;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -13,7 +12,6 @@ using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
-using WRADI.DocumentType.AbstractionLicence.Services;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
@@ -1365,21 +1363,23 @@ public static class AbstractionLicenceSchemaConverter
             throw new Exception("regionId is null");
         }
         
-        var naldDataLineTask = naldDataLookupService.GetNaldAbstractionDataLineAsync(
-            licenceOrPermitNumber,
-            regionId.Value);
-        
-        var dmsFileData = await dmsLookupService.GetDmsFileDataAsync(
+        var dmsFileDataTask = dmsLookupService.GetDmsFileDataAsync(
             linkedLicenceNumber,
             cacheService);
+        
+        var (regionCode, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            licenceOrPermitNumber,
+            licenceOrPermitNumber,
+            "Abstraction", // TODO - pass this through
+            regionId.Value,
+            naldDataLookupService);
 
-        var naldDataLine = await naldDataLineTask;
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+        var dmsFileData = await dmsFileDataTask;
 
         return new LinkedLicence
         {
-            LicenceNumber = linkedLicenceNumber,
-            RegionId = naldDataLine?.FgacRegionCode ?? regionId,
+            LicenceNumber = licenceNumber,
+            RegionId = regionCode,
             RawScrapedLicenceNumber = scrapedLinkedLicenceNumber,
             DmsPermitNumber = dmsFileData?.PermitNumber,
             DmsFileId = dmsFileData?.FileId,
@@ -1387,7 +1387,7 @@ public static class AbstractionLicenceSchemaConverter
             Filename = filename,
             Condition = condition,
             ContainedIn = containedIn,
-            NaldStatus = naldStatus,
+            NaldStatus = licenceStatus,
             LicenceType = licenceType,
             LicenceVersion = licenceVersion,
             IsBecauseOfAggregate = isBecauseOfAggregate
@@ -2319,17 +2319,20 @@ public static class AbstractionLicenceSchemaConverter
         LookupConfiguration lookupConfiguration,
         INaldDataLookupService naldDataLookupService)
     {
-        var licenceNumberLoop = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+        var (scrapedLicenceNumber, naldLicenceNumber, naldLicenceType) =
+            GetNaldLicenceNumberAndType(linkedLicenceNumber);
         
         var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
-            licenceNumberLoop,
+            scrapedLicenceNumber,
             lookupConfiguration.CacheService);
         
-        var naldDataLineLoop = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
-            licenceNumberLoop,
-            regionCode);
-
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLineLoop);
+        var (regionId, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            naldLicenceNumber,
+            scrapedLicenceNumber,
+            naldLicenceType,
+            regionCode,
+            naldDataLookupService);
+        
         var dmsFileData = await dmsFileDataTask;
 
         if (linkedLicenceNumber.Confidence != null)
@@ -2340,13 +2343,13 @@ public static class AbstractionLicenceSchemaConverter
 
         return new LinkedLicence
         {
-            LicenceNumber = licenceNumberLoop,
-            RegionId = naldDataLineLoop?.FgacRegionCode ?? regionCode,
-            RawScrapedLicenceNumber = licenceNumberLoop,
+            LicenceNumber = licenceNumber,
+            RegionId = regionId,
+            RawScrapedLicenceNumber = scrapedLicenceNumber,
             DmsPermitNumber = dmsFileData?.PermitNumber,
             Filename = dmsFileData?.DestinationFileName,
             DmsPath = dmsFileData?.DmsPath,
-            NaldStatus = naldStatus,
+            NaldStatus = licenceStatus,
             LicenceType = licenceType,
             ContainedIn =
             [
@@ -2378,6 +2381,21 @@ public static class AbstractionLicenceSchemaConverter
         throw new Exception("Cannot find parent");
     }
 
+    private static (string? scrapedLicenceNumber, string? NaldLicenceNumber, string? NaldLicenceType)
+        GetNaldLicenceNumberAndType(LabelGroupResult labelGroupResult)
+    {
+        var scrapedLicenceNumber = labelGroupResult.Text?.FirstOrDefault()?.Text;
+        var additionalData = labelGroupResult.Text?.FirstOrDefault()?.AdditionalData;
+        
+        var naldLicenceNumber = (string?)JsonHelper.CastFromJsonTypeToNative(
+            additionalData?[AbstractionLicenceNumber.NaldLicenceNumberKey]) ?? null;
+            
+        var naldLicenceType = (string?)JsonHelper.CastFromJsonTypeToNative(
+            additionalData?[AbstractionLicenceNumber.NaldLicenceTypeKey]) ?? null;
+
+        return (scrapedLicenceNumber, naldLicenceNumber, naldLicenceType);
+    }
+    
     private static async Task<List<LinkedLicence>> GetAnywhereInDocumentLinkedLicencesAsync(
         List<LabelGroupResult> matches,
         int regionCode,
@@ -2404,18 +2422,9 @@ public static class AbstractionLicenceSchemaConverter
             {
                 continue;
             }
-
-            var scrapedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-            var naldLicenceNumber =
-                (string?)JsonHelper.CastFromJsonTypeToNative(
-                    generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceNumberKey]) ??
-                null;
             
-            var naldLicenceType =
-                (string?)JsonHelper.CastFromJsonTypeToNative(
-                    generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceTypeKey]) ??
-                null;
+            var (scrapedLicenceNumber, naldLicenceNumber, naldLicenceType) =
+                GetNaldLicenceNumberAndType(generalLinkedLicenceNumber);
             
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
@@ -2550,16 +2559,20 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var linkedLicenceNumber in licenceHistoryLinkedLicenceNumbers)
         {
-            var lln = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-            var licenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+            var (scrapedLicenceNumber, naldLicenceNumber, naldLicenceType) =
+                GetNaldLicenceNumberAndType(linkedLicenceNumber);
             
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
-                licenceNumber,
+                scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
+
+            var (regionId, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+                naldLicenceNumber,
+                scrapedLicenceNumber,
+                naldLicenceType,
+                regionCode,
+                naldDataLookupService);
             
-            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(lln, regionCode);
-            
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
             if (linkedLicenceNumber.Confidence != null)
@@ -2570,13 +2583,13 @@ public static class AbstractionLicenceSchemaConverter
 
             returnList.Add(new LinkedLicence
             {
-                LicenceNumber = lln,
-                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
-                RawScrapedLicenceNumber = lln,
+                LicenceNumber = licenceNumber,
+                RegionId = regionId,
+                RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
-                NaldStatus = naldStatus,
+                NaldStatus = licenceStatus,
                 LicenceType = licenceType,
                 ContainedIn =
                 [
@@ -2587,7 +2600,7 @@ public static class AbstractionLicenceSchemaConverter
                         SectionName = DocumentSectionNames.LicenceHistory,
                         LinkReason =
                             GetLinkReason([licenceHistorySection],
-                                lln), // We haven't split licence history into sections like the others
+                                scrapedLicenceNumber), // We haven't split licence history into sections like the others
                         LineNumber = linkedLicenceNumber.LabelStartLineNumber,
                         PageNumber = linkedLicenceNumber.LabelStartPageNumber
                     }
@@ -3379,18 +3392,9 @@ public static class AbstractionLicenceSchemaConverter
         {
             var condition = (Condition?)null; // TODO
 
-            var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
-
-            var naldLicenceNumber =
-                (string?)JsonHelper.CastFromJsonTypeToNative(
-                    linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceNumberKey]) ??
-                null;
+            var (scrapedLicenceNumber, naldLicenceNumber, naldLicenceType) =
+                GetNaldLicenceNumberAndType(linkedLicenceNumber);
             
-            var naldLicenceType =
-                (string?)JsonHelper.CastFromJsonTypeToNative(
-                    linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceTypeKey]) ??
-                null;
-
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);

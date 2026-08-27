@@ -3356,10 +3356,26 @@ private static async Task<
         parameters,
         query);
 
-    ReadSqlHelper.AddOrdering(
-        sql,
-        query.SortField,
-        query.SortAscending);
+    if (!string.IsNullOrEmpty(query.SearchTermClean) &&
+        string.IsNullOrWhiteSpace(query.SortField))
+    {
+        sql.AppendLine(
+            """
+            ORDER BY
+                array_position(
+                    string_to_array(lower(search_text), ' '),
+                    lower(@SearchTerm)
+                ) ASC NULLS LAST
+            """);
+    }
+    else
+    {
+        ReadSqlHelper.AddOrdering(
+            sql,
+            query.SortField,
+            query.SortAscending);  
+    }
+ 
 
     sql.AppendLine(
         """

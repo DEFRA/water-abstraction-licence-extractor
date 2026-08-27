@@ -18,12 +18,12 @@ public static class ReadSqlHelper
 
         sql.AppendLine(
             """
-              AND search_text ILIKE @SearchTerm
+              AND search_text ILIKE '%' || @SearchTerm || '%'
             """);
 
         parameters.Add(
             "SearchTerm",
-            $"%{searchTerm.Trim()}%");
+            searchTerm.Trim());
     }
     
     public static void AddStringFilter(
@@ -444,7 +444,7 @@ public static class ReadSqlHelper
                 "verification_sections_count",
             "verificationitemscount" =>
                 "verification_items_count",
-            _ => "licence_list_item_id"
+            _ => "licence_number"
         };
 
         var direction = sortAscending
@@ -454,7 +454,7 @@ public static class ReadSqlHelper
         sql.AppendLine(
             $"""
              ORDER BY {column} {direction},
-                      licence_list_item_id ASC
+                      licence_number ASC
              """);
     }
 }

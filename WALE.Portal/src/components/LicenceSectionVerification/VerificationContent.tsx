@@ -9,6 +9,7 @@ import {Aggregates} from "./Aggregates/Aggregates.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
+    currentLicence?: Licence | null;
     processRunId: number;
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
@@ -18,7 +19,7 @@ interface VerificationContentProps {
 
 type SubTabType = 'scraped' | 'current' | 'history';
 
-export function VerificationContent({ licence, processRunId, onJumpToPage, onRefresh, outputListDataItem, onOpenReport }: VerificationContentProps) {
+export function VerificationContent({ licence, currentLicence, processRunId, onJumpToPage, onRefresh, outputListDataItem, onOpenReport }: VerificationContentProps) {
     const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
     const [history, setHistory] = useState<LicenceSectionVerification[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -109,6 +110,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <LinkedLicences
                             licence={licence}
+                            currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             history={history}
@@ -127,7 +129,7 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <Aggregates
                             licence={licence}
-                            processRunId={processRunId}
+                            currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             history={history}
@@ -166,7 +168,6 @@ export function VerificationContent({ licence, processRunId, onJumpToPage, onRef
                     >
                         <Aggregates
                             licence={licence}
-                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

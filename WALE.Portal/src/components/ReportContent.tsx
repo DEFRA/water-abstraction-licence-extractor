@@ -29,6 +29,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [reportData, setReportData] = useState<MatchesResult | null>(null);
     const [matchesResultString, setMatchesResultString] = useState<string | null>(null);
     const [reportData2, setReportData2] = useState<Licence | null>(null);
+    const [currentLicence, setCurrentLicence] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
     const [licenceString, setLicenceString] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
@@ -45,10 +46,11 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             setLoading(true);
             
             // Load data using API client
-            const [matchesResult, matchesResultString, licenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+            const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
                 waleApiClient.matchesResult(fileId),
                 waleApiClient.matchesResultString(fileId),
                 waleApiClient.licence(fileId, processRunId, false),
+                waleApiClient.licence(fileId, processRunId, true),
                 waleApiClient.licenceSets(fileId),
                 waleApiClient.licenceString(fileId, processRunId, false),
             ]);
@@ -56,6 +58,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
             if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
             if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
+            if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
             if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
             if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
 
@@ -275,6 +278,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                             <div id="overview">
                                 <VerificationContent
                                     licence={reportData2}
+                                    currentLicence={currentLicence}
                                     processRunId={processRunId}
                                     onJumpToPage={jumpToPage}
                                     onRefresh={handleRefresh}

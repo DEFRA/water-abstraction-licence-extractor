@@ -3,11 +3,11 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
-using AggregateVerificationMergeHelper = WRADI.Core.AbstractionLicence.Helpers.AggregateVerificationMergeHelper;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Strategies;
 
 namespace WRADI.Services.Output.AbstractionLicence;
 
@@ -170,7 +170,7 @@ public class DatabaseAbstractionLicenceOutputService(
 
         return licence == null || !applyVerifications
             ? licence
-            : await ApplyAggregateVerificationsAsync(licence, licence.DmsFileId ?? fileId);
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId ?? fileId, processRunId);
     }
 
     public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false)
@@ -179,23 +179,30 @@ public class DatabaseAbstractionLicenceOutputService(
 
         return licence == null || !applyVerifications || licence.DmsFileId is null
             ? licence
-            : await ApplyAggregateVerificationsAsync(licence, licence.DmsFileId.Value);
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId.Value, processRunId);
     }
 
-    private async Task<Licence> ApplyAggregateVerificationsAsync(Licence licence, Guid fileId)
+    private async Task<Licence> ApplyVerificationsAsync(Licence licence, Guid fileId, int processRunId)
     {
-        var verifications = await databaseReadService.GetLicenceSectionVerificationsAsync(fileId);
-        var aggregateVerifications = verifications.Where(v => v.LicenceSectionName == "Aggregates");
+        var verificationLicenceMergeStrategies =
+            new List<IVerificationLicenceMergeStrategy>
+            {
+                new LinkedLicencesVerificationLicenceMergeStrategy(),
+                new AggregatesVerificationLicenceMergeStrategy()
+            }.ToDictionary(s => s.SectionName);
 
-        var merged = AggregateVerificationMergeHelper.MergeAggregates(
-            licence.AbstractionLimits.Aggregates,
-            aggregateVerifications);
+        var verificationsBySection = await GetVerificationLookupsBySectionNameAsync(processRunId);
+        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
 
-        return licence.CloneWithAbstractionLimits(new AbstractionLimits
+        foreach (var (sectionName, strategy) in verificationLicenceMergeStrategies)
         {
-            Individual = licence.AbstractionLimits.Individual,
-            Aggregates = merged.ToArray()
-        });
+            if (verificationsBySection.TryGetValue(sectionName, out var sectionVerificationLookups))
+            {
+                licence = strategy.ApplyVerifications(licence, sectionVerificationLookups, fileId, fileIdToLicenceNumberMapping);
+            }
+        }
+
+        return licence;
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)

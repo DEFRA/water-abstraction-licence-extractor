@@ -442,9 +442,15 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                description, 
                                start_date_time_utc, 
                                end_date_time_utc, 
-                               number_of_files 
+                               number_of_files,
+                               (
+                                   SELECT COUNT(*)
+                                       FROM licence_list_item
+                                       WHERE process_run_id = process_run.process_run_id
+                                         AND status = 'Live'
+                               ) AS SuccessCount
                            FROM process_run
-                           WHERE end_date_time_utc IS NOT NULL
+                           WHERE end_date_time_utc IS NOT NULL;
                            """;
 
         return (await QueryAsync<ProcessRun>(

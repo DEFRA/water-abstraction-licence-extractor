@@ -2403,14 +2403,18 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
-            var linkedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
+            var scrapedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
+            var naldLicenceNumber =
+                (string?)JsonHelper.CastFromJsonTypeToNative(generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"]) ??
+                null;
+            
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
-                linkedLicenceNumber,
+                scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
             var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
-                linkedLicenceNumber,
+                naldLicenceNumber,
                 regionCode);
             
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
@@ -2424,9 +2428,9 @@ public static class AbstractionLicenceSchemaConverter
 
             returnList.Add(new LinkedLicence
             {
-                LicenceNumber = linkedLicenceNumber,
+                LicenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber,
                 RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
-                RawScrapedLicenceNumber = linkedLicenceNumber,
+                RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
@@ -2439,7 +2443,7 @@ public static class AbstractionLicenceSchemaConverter
                         Source = InformationSource.Document,
                         Direction = InformationDirection.Outgoing,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.LabelStartPageNumber),
-                        LinkReason = GetLinkReason([generalLinkedLicenceNumber], linkedLicenceNumber),
+                        LinkReason = GetLinkReason([generalLinkedLicenceNumber], scrapedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LabelStartLineNumber,
                         PageNumber = generalLinkedLicenceNumber.LabelStartPageNumber
                     }

@@ -37,6 +37,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

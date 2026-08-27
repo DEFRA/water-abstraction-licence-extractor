@@ -40,6 +40,7 @@ public class DoiRegressionTessaractAndAzureAiVisionOcrPdfTests(FirstNamesFixture
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

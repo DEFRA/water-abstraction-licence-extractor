@@ -40,6 +40,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             realCacheService,
             realAbsLicCacheService,
             NaldData,
+            [],
             FileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

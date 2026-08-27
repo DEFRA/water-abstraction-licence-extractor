@@ -42,6 +42,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

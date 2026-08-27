@@ -40,6 +40,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

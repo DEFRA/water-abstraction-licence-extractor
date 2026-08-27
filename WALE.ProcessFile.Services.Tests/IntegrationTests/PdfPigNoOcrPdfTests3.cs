@@ -42,6 +42,7 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             RealCacheService,
             RealAbsLicCacheService,
             NaldData,
+            [],
             FileLicenceMappingWithout52);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
@@ -209,8 +210,8 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
                 RealCacheService!,
                 RealAbsLicCacheService!,
                 NaldData,
+                [],
                 FileLicenceMappingWithout52);
-
 
         const string filename = "Application Minor Variation Issued Licence 11.12.2019 11149448.pdf";
 

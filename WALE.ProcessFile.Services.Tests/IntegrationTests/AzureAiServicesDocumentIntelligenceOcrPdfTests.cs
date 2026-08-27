@@ -40,6 +40,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

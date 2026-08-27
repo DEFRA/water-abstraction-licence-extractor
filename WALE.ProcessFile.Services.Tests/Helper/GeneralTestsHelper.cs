@@ -26,7 +26,8 @@ public static class GeneralTestsHelper
         GetFakeCacheService(
             ICacheService realCacheService,
             IAbstractionLicenceCacheService realAbsLiceCacheService,
-            Dictionary<string, List<NaldAbstractionData>> naldData,
+            Dictionary<string, List<NaldAbstractionData>> naldAbstractionData,
+            Dictionary<string, List<NaldImpoundmentData>> naldImpoundmentData,
             Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
@@ -71,7 +72,7 @@ public static class GeneralTestsHelper
                 {
                     var key = $"{regionCode}|{strippedLicenceNumber}";
 
-                    if (!naldData.TryGetValue(key, out var value))
+                    if (!naldAbstractionData.TryGetValue(key, out var value))
                     {
                         continue;
                     }
@@ -81,6 +82,33 @@ public static class GeneralTestsHelper
                 }
                 
                 return Task.FromResult((NaldAbstractionData?)null);
+            });
+        
+        A
+            .CallTo(() => fakeCacheAbsLic.GetNaldImpoundmentLicenceAsync(A<string>._, A<int>._))
+            .ReturnsLazily(x =>
+            {
+                var licenceNumberInNaldFormat = (string)x.Arguments[0]!;
+                var regionCode = (int)x.Arguments[1]!;
+                
+                var strippedLicenceNumbers = FormattingHelper.StripForComparisonMultipleOptions(
+                    licenceNumberInNaldFormat,
+                    regionCode);
+
+                foreach (var strippedLicenceNumber in strippedLicenceNumbers)
+                {
+                    var key = $"{regionCode}|{strippedLicenceNumber}";
+
+                    if (!naldImpoundmentData.TryGetValue(key, out var value))
+                    {
+                        continue;
+                    }
+                
+                    var naldRow = (NaldImpoundmentData?)value[0];
+                    return Task.FromResult(naldRow);   
+                }
+                
+                return Task.FromResult((NaldImpoundmentData?)null);
             });
 
         return (fakeCache, fakeCacheAbsLic);

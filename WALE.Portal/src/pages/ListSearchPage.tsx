@@ -56,7 +56,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         linkedLicencesType: '',
         verificationType: undefined,
         sortField: '',
-        sortAscending: undefined,
+        sortAscending: true,
         licenceNumbers: []
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);

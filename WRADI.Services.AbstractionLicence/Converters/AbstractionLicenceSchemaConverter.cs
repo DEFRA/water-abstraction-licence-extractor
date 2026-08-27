@@ -1151,7 +1151,10 @@ public static class AbstractionLicenceSchemaConverter
                     naldDataLookupService, 
                     lookupConfiguration.DmsLookupService,
                     linkedLicencesGroup
-                    .OrderByDescending(ll => ll.IsBecauseOfAggregate).FirstOrDefault()?.IsBecauseOfAggregate), regionId));
+                        .OrderByDescending(ll => ll.IsBecauseOfAggregate)
+                        .FirstOrDefault()?
+                        .IsBecauseOfAggregate,
+                    linkedLicencesGroup.First().LicenceType.ToString()), regionId));
         }
         
         uniqueLinkedLicences = uniqueLinkedLicences
@@ -1350,7 +1353,8 @@ public static class AbstractionLicenceSchemaConverter
         ICacheService cacheService,
         INaldDataLookupService naldDataLookupService,
         IDmsLookupService dmsLookupService,
-        bool? isBecauseOfAggregate)
+        bool? isBecauseOfAggregate,
+        string naldLicenceType)
     {
         var licenceOrPermitNumber = linkedLicenceNumber;
         if (string.IsNullOrWhiteSpace(linkedLicenceNumber))
@@ -1370,7 +1374,7 @@ public static class AbstractionLicenceSchemaConverter
         var (regionCode, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
             licenceOrPermitNumber,
             licenceOrPermitNumber,
-            "Abstraction", // TODO - pass this through
+            naldLicenceType,
             regionId.Value,
             naldDataLookupService);
 
@@ -1738,7 +1742,8 @@ public static class AbstractionLicenceSchemaConverter
                             lookupConfiguration.CacheService,
                             naldDataLookupService,
                             lookupConfiguration.DmsLookupService,
-                            null);
+                            null,
+                            "Abstraction");
 
                         licence.LinkedLicences = new List<LinkedLicence>(licence.LinkedLicences)
                         {

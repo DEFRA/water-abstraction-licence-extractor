@@ -4,7 +4,6 @@ import {
     NullableOfInformationDirection,
     ContainedInInformation,
     InformationSource,
-    OutputListDataItem,
     LicenceSectionVerification
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
@@ -29,7 +28,6 @@ interface LinkedLicenceItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    outputListDataItem?: OutputListDataItem;
     onOpenReport?: (fileId: string) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];

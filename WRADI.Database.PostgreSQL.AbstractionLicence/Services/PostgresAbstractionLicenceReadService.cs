@@ -1356,6 +1356,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.ProcessRunId = processRunId;
         return data;
     }
     

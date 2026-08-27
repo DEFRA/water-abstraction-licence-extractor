@@ -21,14 +21,14 @@ const NO_AGGREGATES_ITEM_ID = 'None';
 
 interface AggregatesProps extends LicenceSectionBodyProps {
     licence?: Licence;
-    processRunId?: number;
+    currentLicence?: Licence | null;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
 
 export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
-    ({licence, processRunId, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
         const [aggregates, setAggregates] = useState<Aggregate[]>([]);
         const [scrapedData, setScrapedData] = useState<Aggregate[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<Aggregate[] | null>(null);
@@ -119,9 +119,8 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
 
                     if (scrapedView) {
                         setAggregates(scraped);
-                    } else if (processRunId) {
-                        const merged = await waleApiClient.licence(licence.dmsFileId, processRunId, true);
-                        const currentAggregates = merged.abstractionLimits?.aggregates ?? [];
+                    } else if (currentLicence) {
+                        const currentAggregates = currentLicence.abstractionLimits?.aggregates ?? [];
                         setAggregates(currentAggregates);
                         setSnapshotData(currentAggregates.map(a => Aggregate.fromJS(a)));
                         setSnapshotDataIds(currentAggregates.length > 0 ? await waleApiClient.aggregateIds(currentAggregates) : []);
@@ -135,7 +134,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             };
 
             fetchAggregates();
-        }, [licence?.dmsFileId, processRunId, scrapedView]);
+        }, [licence?.dmsFileId, currentLicence, scrapedView]);
 
         // Debounced so editing PrimaryType/SubType/LinkedLicences doesn't fire a request per keystroke;
         // the request-sequence ref discards a stale response if a newer edit resolves first.

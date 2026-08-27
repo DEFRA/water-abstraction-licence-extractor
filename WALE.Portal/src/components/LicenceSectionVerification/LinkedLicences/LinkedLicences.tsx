@@ -15,13 +15,14 @@ import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
+    currentLicence?: Licence | null;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, onJumpToPage, onItemVerificationRequested, outputListDataItem, onOpenReport, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
@@ -79,7 +80,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                     setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
-                        const currentOutgoingLinkedLicences = (outputListDataItem?.linkedLicences || [])
+                        const currentOutgoingLinkedLicences = (currentLicence?.linkedLicences || [])
                             .filter(ll => hasAnyOutgoingSections(ll.containedIn))
                             .map(ll => {
                                 const licence = LinkedLicence.fromJS(ll);
@@ -100,7 +101,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber, outputListDataItem]);
+        }, [licence?.dmsPermitNumber, currentLicence]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({
@@ -261,7 +262,6 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     setIsWaitingForVerification(false);
                                 }
                             }}
-                            outputListDataItem={outputListDataItem}
                             onOpenReport={onOpenReport}
                             scrapedView={scrapedView}
                             history={history}

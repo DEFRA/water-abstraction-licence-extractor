@@ -10,8 +10,10 @@ using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
+using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
@@ -84,11 +86,11 @@ public static class AbstractionLicenceSchemaConverter
                 confidence)
             : null;
 
-        var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
+        var naldAbstractionDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
             licenceNumber,
             regionCode);
         
-        var licenceVersion = GetLicenceVersion(matches, naldDataLine, noneSchemaData, dmsFileIdInfo);
+        var licenceVersion = GetLicenceVersion(matches, naldAbstractionDataLine, noneSchemaData, dmsFileIdInfo);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -97,13 +99,13 @@ public static class AbstractionLicenceSchemaConverter
         var sourceOfSupply = GetPoints(
             "SourceOfSupply",
             matches,
-            naldDataLine,
+            naldAbstractionDataLine,
             ref noneSchemaData);
         
         var points = GetPoints(
             "Points",
             matches,
-            naldDataLine,
+            naldAbstractionDataLine,
             ref noneSchemaData);
 
         if (points.Length == 0 && sourceOfSupply.Length != 0)
@@ -114,12 +116,12 @@ public static class AbstractionLicenceSchemaConverter
         
         var purposes = GetPurposes(
             matches,
-            naldDataLine,
+            naldAbstractionDataLine,
             ref noneSchemaData);
 
         var periods = GetPeriods(
             matches,
-            naldDataLine,
+            naldAbstractionDataLine,
             ref noneSchemaData);
 
         var (aggregates, individual, aggregateLinkedLicences) =
@@ -129,7 +131,7 @@ public static class AbstractionLicenceSchemaConverter
                 licenceVersion.LicenceVersionId,
                 points,
                 purposes,
-                naldDataLine,
+                naldAbstractionDataLine,
                 matchesResult.RegionCode,
                 noneSchemaData,
                 lookupConfiguration,
@@ -171,7 +173,7 @@ public static class AbstractionLicenceSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
         
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldAbstractionDataLine);
 
         var sectionDataDict = new Dictionary<
             string,
@@ -201,7 +203,7 @@ public static class AbstractionLicenceSchemaConverter
                 licenceVersion.LicenceVersionId,
                 points,
                 purposes,
-                naldDataLine,
+                naldAbstractionDataLine,
                 noneSchemaData,
                 lookupConfiguration,
                 cacheService,
@@ -465,7 +467,7 @@ public static class AbstractionLicenceSchemaConverter
         
         // TODO - add NALD aggregates
         
-        individual = AddNaldLimits(naldDataLine, individual, aggregates);
+        individual = AddNaldLimits(naldAbstractionDataLine, individual, aggregates);
         
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
@@ -474,7 +476,7 @@ public static class AbstractionLicenceSchemaConverter
             purposes,
             licenceNumber,
             licenceVersion.LicenceVersionId,
-            naldDataLine);
+            naldAbstractionDataLine);
         
         HoistContainedInSections(individual, aggregates);
 
@@ -499,12 +501,12 @@ public static class AbstractionLicenceSchemaConverter
             Individual = individual
         };
         
-        if (!string.IsNullOrEmpty(naldDataLine?.ArepEiucCode))
+        if (!string.IsNullOrEmpty(naldAbstractionDataLine?.ArepEiucCode))
         {
-            noneSchemaData.Add("ArepEuicCode", naldDataLine.ArepEiucCode);
+            noneSchemaData.Add("ArepEuicCode", naldAbstractionDataLine.ArepEiucCode);
         }
         
-        var naldHasAggCondition = naldDataLine?.HasAggCondition ?? false;
+        var naldHasAggCondition = naldAbstractionDataLine?.HasAggCondition ?? false;
         
         return new Licence
         {
@@ -525,7 +527,7 @@ public static class AbstractionLicenceSchemaConverter
             NaldStatus = naldStatus,
             NaldHasAggregateCondition = naldHasAggCondition,
             LicenceType = licenceType,
-            RegionId = naldDataLine?.FgacRegionCode ?? regionCode
+            RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode
         };
     }
 
@@ -605,7 +607,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
     private static AbstractionLimitGroup[] AddNaldLimits(
-        NaldData? naldData,
+        NaldAbstractionData? naldData,
         AbstractionLimitGroup[] individuals,
         Aggregate[] aggregates)
     {
@@ -901,7 +903,7 @@ public static class AbstractionLicenceSchemaConverter
             PurposeOfAbstraction[] purposes,
             string? licenceNumber,
             string? licenceVersionId,
-            NaldData? naldDataLine)
+            NaldAbstractionData? naldDataLine)
     {
         // TODO should eventually do this for periods
         
@@ -1199,7 +1201,7 @@ public static class AbstractionLicenceSchemaConverter
 
     private static LicenceVersion GetLicenceVersion(
         List<LabelGroupResult> matches,
-        NaldData? naldDataLine,
+        NaldAbstractionData? naldDataLine,
         Dictionary<string, object?> noneSchemaData,
         DmsFileIdInformation? dmsFileIdInformation)
     {
@@ -1259,7 +1261,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
     private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
-        NaldData? naldData)
+        NaldAbstractionData? naldData)
     {
         if (naldData == null)
         {
@@ -1363,7 +1365,7 @@ public static class AbstractionLicenceSchemaConverter
             throw new Exception("regionId is null");
         }
         
-        var naldDataLineTask = naldDataLookupService.GetNaldDataLineAsync(
+        var naldDataLineTask = naldDataLookupService.GetNaldAbstractionDataLineAsync(
             licenceOrPermitNumber,
             regionId.Value);
         
@@ -2024,7 +2026,7 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
             
-            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
+            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
                 linkedLicence.LicenceNumber,
                 primaryLicence.RegionId!.Value);
 
@@ -2229,7 +2231,7 @@ public static class AbstractionLicenceSchemaConverter
             string? licenceVersionId,
             PointOfAbstraction[] allPoints,
             PurposeOfAbstraction[] allPurposes,
-            NaldData? naldDataLine,
+            NaldAbstractionData? naldDataLine,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
             IAbstractionLicenceCacheService cacheService,
@@ -2323,7 +2325,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumberLoop,
             lookupConfiguration.CacheService);
         
-        var naldDataLineLoop = await naldDataLookupService.GetNaldDataLineAsync(
+        var naldDataLineLoop = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
             licenceNumberLoop,
             regionCode);
 
@@ -2406,18 +2408,26 @@ public static class AbstractionLicenceSchemaConverter
             var scrapedLicenceNumber = generalLinkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
             var naldLicenceNumber =
-                (string?)JsonHelper.CastFromJsonTypeToNative(generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"]) ??
+                (string?)JsonHelper.CastFromJsonTypeToNative(
+                    generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceNumberKey]) ??
+                null;
+            
+            var naldLicenceType =
+                (string?)JsonHelper.CastFromJsonTypeToNative(
+                    generalLinkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceTypeKey]) ??
                 null;
             
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
-            
-            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(
+
+            var (regionId, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
-                regionCode);
+                scrapedLicenceNumber,
+                naldLicenceType,
+                regionCode,
+                naldDataLookupService);
             
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
 
             if (generalLinkedLicenceNumber.Confidence != null)
@@ -2428,13 +2438,13 @@ public static class AbstractionLicenceSchemaConverter
 
             returnList.Add(new LinkedLicence
             {
-                LicenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber,
-                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
+                LicenceNumber = licenceNumber,
+                RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 Filename = dmsFileData?.DestinationFileName,
                 DmsPath = dmsFileData?.DmsPath,
-                NaldStatus = naldStatus,
+                NaldStatus = licenceStatus,
                 LicenceType = licenceType,
                 ContainedIn =
                 [
@@ -2454,6 +2464,51 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
+    private static async Task<(
+        int RegionId,
+        string? LicenceNumber,
+        LicenceType LicenceType,
+        NaldLicenceStatus LicenceStatus)>
+        GetNaldLicenceDataAsync(
+            string? naldLicenceNumber,
+            string? scrapedLicenceNumber,
+            string? naldLicenceType,
+            int regionCode,
+            INaldDataLookupService naldDataLookupService)
+    {
+        int regionId;
+        string? licenceNumber;
+        LicenceType licenceType;
+        NaldLicenceStatus licenceStatus;
+
+        if (naldLicenceType == "Impoundment")
+        {
+            var naldDataLine = await naldDataLookupService.GetNaldImpoundmentDataLineAsync(
+                naldLicenceNumber,
+                regionCode);
+                
+            regionId = naldDataLine?.FgacRegionCode ?? regionCode;
+            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+                
+            licenceType = LicenceType.Impoundment;
+            licenceStatus = naldDataLine?.RevocationDate == null ?
+                NaldLicenceStatus.Live
+                : NaldLicenceStatus.Revoked;
+        }
+        else
+        {
+            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
+                naldLicenceNumber,
+                regionCode);
+
+            regionId = naldDataLine?.FgacRegionCode ?? regionCode;
+            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+            (licenceStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+        }
+        
+        return (regionId, licenceNumber, licenceType, licenceStatus);
+    }
+    
     private static string GetUnknownSectionName(int pageNumber)
     {
         return pageNumber switch
@@ -2502,7 +2557,7 @@ public static class AbstractionLicenceSchemaConverter
                 licenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine = await naldDataLookupService.GetNaldDataLineAsync(lln, regionCode);
+            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(lln, regionCode);
             
             var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
             var dmsFileData = await dmsFileDataTask;
@@ -2836,7 +2891,7 @@ public static class AbstractionLicenceSchemaConverter
             string? licenceVersionId,
             PointOfAbstraction[] allPoints,
             PurposeOfAbstraction[] allPurposes,
-            NaldData? naldDataLine,
+            NaldAbstractionData? naldDataLine,
             int regionCode,
             Dictionary<string, object?> noneSchemaData,
             LookupConfiguration lookupConfiguration,
@@ -2907,7 +2962,7 @@ public static class AbstractionLicenceSchemaConverter
         string? licenceVersionId,
         PointOfAbstraction[] allPoints,
         PurposeOfAbstraction[] allPurposes,
-        NaldData? naldDataLine,
+        NaldAbstractionData? naldDataLine,
         int regionCode,
         string sectionName,
         LookupConfiguration lookupConfiguration,
@@ -3327,29 +3382,37 @@ public static class AbstractionLicenceSchemaConverter
             var scrapedLicenceNumber = linkedLicenceNumber.Text?.FirstOrDefault()?.Text;
 
             var naldLicenceNumber =
-                (string?)JsonHelper.CastFromJsonTypeToNative(linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?["NaldLicenceNumber"]) ??
+                (string?)JsonHelper.CastFromJsonTypeToNative(
+                    linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceNumberKey]) ??
+                null;
+            
+            var naldLicenceType =
+                (string?)JsonHelper.CastFromJsonTypeToNative(
+                    linkedLicenceNumber.Text?.FirstOrDefault()?.AdditionalData?[AbstractionLicenceNumber.NaldLicenceTypeKey]) ??
                 null;
 
             var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var naldDataLine2 = await naldDataLookupService.GetNaldDataLineAsync(
+            var (regionId, licenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
-                regionCode);
-
-            var (naldStatus, licenceType) = GetLicenceStatusAndType(naldDataLine2);
+                scrapedLicenceNumber,
+                naldLicenceType,
+                regionCode,
+                naldDataLookupService);
+            
             var dmsFileData = await dmsFileDataTask;
             
             linkedLicenceNumbers.Add(new LinkedLicence
             {
-                LicenceNumber = naldDataLine2?.LicenceNumber ?? scrapedLicenceNumber,
-                RegionId = naldDataLine?.FgacRegionCode ?? regionCode,
+                LicenceNumber = licenceNumber2,
+                RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
                 DmsPath = dmsFileData?.DmsPath,
                 Filename = dmsFileData?.DestinationFileName,
-                NaldStatus = naldStatus,
+                NaldStatus = licenceStatus,
                 LicenceType = licenceType,
                 Condition = condition,
                 IsBecauseOfAggregate = meetsAggregateConditions,
@@ -3932,7 +3995,7 @@ public static class AbstractionLicenceSchemaConverter
 
     private static PeriodOfAbstraction[] GetPeriods(
         List<LabelGroupResult> matches,
-        NaldData? naldDataLine,
+        NaldAbstractionData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
@@ -4150,7 +4213,7 @@ public static class AbstractionLicenceSchemaConverter
     private static PointOfAbstraction[] GetPoints(
         string sectionName,
         List<LabelGroupResult> matches,
-        NaldData? naldDataLine,
+        NaldAbstractionData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add($"Nald{sectionName}Data", naldDataLine?.Points ?? []);
@@ -4835,7 +4898,7 @@ public static class AbstractionLicenceSchemaConverter
                || mappedNaldValues.Any(v => v.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static string? GetNaldPeriodStartDate(NaldData? naldDataLine, string? description)
+    private static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
     {
         if (naldDataLine == null)
         {
@@ -4854,7 +4917,7 @@ public static class AbstractionLicenceSchemaConverter
         return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
     }
 
-    private static string? GetNaldPeriodEndDate(NaldData? naldDataLine, string? description)
+    private static string? GetNaldPeriodEndDate(NaldAbstractionData? naldDataLine, string? description)
     {
         if (naldDataLine?.Periods.Count is null or 0)
         {
@@ -4871,7 +4934,7 @@ public static class AbstractionLicenceSchemaConverter
 
     private static PurposeOfAbstraction[] GetPurposes(
         List<LabelGroupResult> matches,
-        NaldData? naldDataLine,
+        NaldAbstractionData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
@@ -5398,7 +5461,7 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    private static string? GetNaldType(NaldData? naldDataLine)
+    private static string? GetNaldType(NaldAbstractionData? naldDataLine)
     {
         var naldAggregateCondition = naldDataLine?.AggregateConditions;
 

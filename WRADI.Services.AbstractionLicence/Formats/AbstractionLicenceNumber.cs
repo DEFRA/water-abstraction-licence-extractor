@@ -19,6 +19,9 @@ public partial class AbstractionLicenceNumber(
     private readonly Dictionary<string, NaldLicenceNumberHistory> _licenceHistory = licenceHistory
         ?? throw new ArgumentNullException();
 
+    public static readonly string NaldLicenceNumberKey = "NaldLicenceNumber";
+    public static readonly string NaldLicenceTypeKey = "NaldLicenceType";
+    
     private Dictionary<string, List<LicenceIndexEntry>> GetLicenceIndex() => _licenceIndex;
 
     private static Dictionary<string, List<LicenceIndexEntry>> BuildIndex(List<NaldLicence> licences)
@@ -165,10 +168,11 @@ public partial class AbstractionLicenceNumber(
                 // Passed all checks so add a clone of the line containing the matched NALD licence number
                 var matchedLine = line.Clone([candidateTextColumn]);
                 matchedLine.AdditionalData ??= new Dictionary<string, object>();
-                matchedLine.AdditionalData.Add("NaldLicenceNumber", bestMatch.NaldLicence.LicenceNumber);
-                    
+                matchedLine.AdditionalData.Add(NaldLicenceNumberKey, bestMatch.NaldLicence.LicenceNumber);
+                matchedLine.AdditionalData.Add(NaldLicenceTypeKey, bestMatch.NaldLicence.Type.ToString());
+
                 matchedLines.Add(matchedLine);
-                
+
                 // Exit early if we're looking for a single instance match
                 if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
                 {

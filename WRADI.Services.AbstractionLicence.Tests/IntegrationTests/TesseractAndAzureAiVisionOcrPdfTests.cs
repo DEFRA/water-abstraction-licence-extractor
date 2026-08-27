@@ -32,11 +32,11 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
 
-        var naldData = new Dictionary<string, List<NaldData>>
+        var naldData = new Dictionary<string, List<NaldAbstractionData>>
         {
                 { "3|2_27_22_395",
                 [
-                    new NaldData
+                    new NaldAbstractionData
                     {
                         Points = [
                             new()

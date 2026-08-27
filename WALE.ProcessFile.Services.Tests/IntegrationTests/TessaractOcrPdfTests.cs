@@ -113,10 +113,10 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         ImpoundmentLicences = []
     };
 
-    private static readonly Dictionary<string, List<NaldData>> _naldData = new()
+    private static readonly Dictionary<string, List<NaldAbstractionData>> _naldData = new()
     {
         {
-            "28/39/28/312", [new NaldData
+            "28/39/28/312", [new NaldAbstractionData
             {
                 FgacRegionCode = 1
             }]

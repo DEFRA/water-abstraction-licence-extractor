@@ -6,7 +6,7 @@ namespace WRADI.Core.AbstractionLicence.Helpers;
 
 public static class NaldHelper
 {
-    public static NaldData? NaldAbstractionLicenceDataLineToNaldData(
+    public static NaldAbstractionData? NaldAbstractionLicenceDataLineToNaldData(
         NaldAbstractionLicenceDataLine? line)
     {
         if (line == null)
@@ -18,7 +18,7 @@ public static class NaldHelper
             line.LicenceNo,
             line.FgacRegionCode);
         
-        var naldData = new NaldData
+        var naldData = new NaldAbstractionData
         {
             Id = line.Id,
             ExpiryDate = line.ExpiryDate,
@@ -37,7 +37,7 @@ public static class NaldHelper
     
     public static void AddNaldAbstractionLicenceVersionData(
         NaldLicenceVersionDataLine? versionDataLine,
-        NaldData? naldData)
+        NaldAbstractionData? naldData)
     {
         if (versionDataLine == null || naldData == null)
         {
@@ -58,7 +58,7 @@ public static class NaldHelper
 
     public static void AddNaldAbstractionLicenceQuantitiesData(
         NaldLicenceQuantitiesDataLine? quantitiesDataLine,
-        NaldData? naldData)
+        NaldAbstractionData? naldData)
     {
         if (quantitiesDataLine == null || naldData == null)
         {
@@ -81,7 +81,7 @@ public static class NaldHelper
 
     public static void AddNaldAbstractionLicencePurposeData(
         NaldLicencePurposeDataLine? purposeDataLine,
-        NaldData? naldData)
+        NaldAbstractionData? naldData)
     {
         if (purposeDataLine == null || naldData == null)
         {
@@ -139,7 +139,7 @@ public static class NaldHelper
 
     public static void AddNaldAbstractionLicencePointsData(
         NaldLicencePointDataLine? pointDataLine,
-        NaldData? naldData)
+        NaldAbstractionData? naldData)
     {
         if (pointDataLine == null || naldData == null)
         {

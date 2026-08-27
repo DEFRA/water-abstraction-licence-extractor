@@ -1,6 +1,6 @@
 namespace WRADI.Core.AbstractionLicence.Models;
 
-public class NaldData
+public class NaldAbstractionData
 {
     public int Id { get; set; }
     public string? LicenceNumber { get; set; }

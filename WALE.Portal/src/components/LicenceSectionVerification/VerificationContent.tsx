@@ -50,6 +50,8 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
         fetchHistory();
     }, [fetchHistory]);
 
+    const activeHistory = history.filter(v => !v.deletedDateTimeUtc);
+
     return (
         <div id="properties" style={{ padding: '10px' }}>
             <div id="simpleOverview" style={{ textAlign: 'right' }}>
@@ -113,7 +115,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
-                            history={history}
+                            history={activeHistory}
                         />
                     </LicenceSection>
                     <LicenceSection
@@ -132,7 +134,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
-                            history={history}
+                            history={activeHistory}
                         />
                     </LicenceSection>
                 </div>
@@ -154,7 +156,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}
-                            history={history}
+                            history={activeHistory}
                         />
                     </ScrapedLicenceSection>
                     <ScrapedLicenceSection
@@ -171,17 +173,19 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}
-                            history={history}
+                            history={activeHistory}
                         />
                     </ScrapedLicenceSection>
                 </div>
             )}
 
             {activeSubTab === 'history' && (
-                <LicenceVerificationHistory 
+                <LicenceVerificationHistory
                     verifications={history}
                     isLoading={isLoadingHistory}
                     onJumpToPage={onJumpToPage}
+                    onRefresh={onRefresh}
+                    onDeleted={handleVerified}
                 />
             )}
         </div>

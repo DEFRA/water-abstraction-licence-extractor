@@ -408,7 +408,29 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 CreatedDateTimeUtc = DateTime.UtcNow
             });
     }
-    
+
+    public async Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE licence_section_verification
+                           SET deleted_date_time_utc = @DeletedDateTimeUtc
+                           WHERE licence_section_verification_id = @LicenceSectionVerificationId
+                             AND deleted_date_time_utc IS NULL
+                           RETURNING licence_section_verification_id
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSectionVerificationId = licenceSectionVerificationId,
+                DeletedDateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task<long> UpsertLicenceListItemAsync(
         UpsertLicenceListItem item,
         CancellationToken cancellationToken = default)

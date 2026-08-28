@@ -5,6 +5,7 @@ interface CollapsibleItemProps {
     defaultOpen?: boolean;
     variant?: 'item' | 'section';
     children: ReactNode;
+    bodyOverlay?: ReactNode;
 }
 
 const VARIANT_STYLES: Record<'item' | 'section', {
@@ -19,7 +20,7 @@ const VARIANT_STYLES: Record<'item' | 'section', {
     section: {border: '#aaa', headerBg: '#e8e8e8', bodyBorder: '#aaa', headerPadding: '10px', bodyPadding: '10px'},
 };
 
-export function CollapsibleItem({summary, defaultOpen = false, variant = 'item', children}: CollapsibleItemProps) {
+export function CollapsibleItem({summary, defaultOpen = false, variant = 'item', children, bodyOverlay}: CollapsibleItemProps) {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const s = VARIANT_STYLES[variant];
 
@@ -33,8 +34,9 @@ export function CollapsibleItem({summary, defaultOpen = false, variant = 'item',
                 <span style={{marginLeft: '10px'}}>{isOpen ? '▲' : '▼'}</span>
             </div>
             {isOpen && (
-                <div style={{padding: s.bodyPadding, borderTop: `1px solid ${s.bodyBorder}`}}>
+                <div style={{padding: s.bodyPadding, borderTop: `1px solid ${s.bodyBorder}`, position: 'relative'}}>
                     {children}
+                    {bodyOverlay}
                 </div>
             )}
         </div>

@@ -40,7 +40,9 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
-    
+
+    Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
+
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);

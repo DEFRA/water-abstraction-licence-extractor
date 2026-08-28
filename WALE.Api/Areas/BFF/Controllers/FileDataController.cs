@@ -122,6 +122,21 @@ public class FileDataController(
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<ActionResult<int>> DeleteLicenceSectionVerification(
+        [FromBody] LicenceSectionVerification verification)
+    {
+        var result = await abstractionLicenceOutputService.DeleteLicenceSectionVerificationAsync(
+            verification.LicenceSectionVerificationId);
+
+        if (result != 0)
+        {
+            await RefreshLicenceListData(verification);
+        }
+
+        return Ok(result);
+    }
+
     private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
         var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);

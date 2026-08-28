@@ -243,7 +243,12 @@ public class DatabaseAbstractionLicenceOutputService(
     {
         return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);
     }
-    
+
+    public Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
+    {
+        return databaseWriteService.DeleteLicenceSectionVerificationAsync(licenceSectionVerificationId);
+    }
+
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         return await databaseReadService.GetTotalLicenceCountAsync(processRunId, processRunQuery);

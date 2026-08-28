@@ -290,6 +290,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";

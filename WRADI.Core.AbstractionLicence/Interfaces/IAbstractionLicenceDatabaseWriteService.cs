@@ -14,7 +14,9 @@ public interface IAbstractionLicenceDatabaseWriteService
     Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetAggregateSetId, string serialize, int processRunId);
     
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
-    
+
+    Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
+
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
     Task ClearLicenceFinderResultsAsync();

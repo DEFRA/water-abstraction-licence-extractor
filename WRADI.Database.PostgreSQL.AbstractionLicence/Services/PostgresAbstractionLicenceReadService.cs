@@ -2162,7 +2162,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
-                               created_date_time_utc AS CreatedDateTimeUtc
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
                            ORDER BY created_date_time_utc DESC
@@ -2190,12 +2191,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
-                               created_date_time_utc AS CreatedDateTimeUtc
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
                            FROM licence_section_verification
                            WHERE process_run_id <= @MaxProcessRunId
-                           ORDER BY 
-                               licence_file_id, 
-                               licence_section_name, 
+                             AND deleted_date_time_utc IS NULL
+                           ORDER BY
+                               licence_file_id,
+                               licence_section_name,
                                created_date_time_utc DESC,
                                licence_section_verification_id DESC
                            """;

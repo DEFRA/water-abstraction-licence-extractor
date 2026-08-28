@@ -14,6 +14,7 @@ import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
 import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
+import NaldOnlyTag from "../../NaldOnlyTag.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -159,8 +160,9 @@ export const LinkedLicenceItem = ({
                                 backgroundColor: !isAddingNew ? '#f0f0f0' : 'white'
                             }}
                         />
-                        <ValidationError message={errors.licenceNumber} />
+                        <ValidationError message={errors.licenceNumber}/>
                         <NaldStatusTag status={linkedLicence.naldStatus}/>
+                        <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
                     </div>
                     <div style={{flex: 1}}>
                         <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px'}}>Permit
@@ -179,7 +181,7 @@ export const LinkedLicenceItem = ({
                                 backgroundColor: !isAddingNew ? '#f0f0f0' : 'white'
                             }}
                         />
-                        <ValidationError message={errors.permitNumber} />
+                        <ValidationError message={errors.permitNumber}/>
                     </div>
 
                     <div style={{marginTop: '16px'}}>
@@ -294,22 +296,25 @@ export const LinkedLicenceItem = ({
                 linkedLicence.licenceNumber || 'N/A'
             )}</strong>
             <NaldStatusTag status={linkedLicence.naldStatus}/>
+            <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
         </div>
     );
 
     return (
         <CollapsibleItem summary={summary} defaultOpen={true}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
-                <p style={{margin: 0}}><strong>Linked Licence
-                    Number:</strong> {linkedFilename ? (
+                <p style={{margin: 0}}><strong>Linked Licence Number:</strong>
+                    {linkedFilename ? (
                         <a href="#" onClick={(e) => {
                             e.preventDefault();
                             onOpenReport?.(linkedFilename);
                         }}>{linkedLicence.licenceNumber || 'N/A'}</a>
                     ) : (
                         linkedLicence.licenceNumber || 'N/A'
-                    )}<NaldStatusTag
-                    status={linkedLicence.naldStatus}/></p>
+                    )}
+                    <NaldStatusTag status={linkedLicence.naldStatus}/>
+                    <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                </p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
                 <div style={{marginBottom: '8px'}}><strong>Because of
                     Aggregate:</strong> {linkedLicence.isBecauseOfAggregate ? 'Yes' : 'No'}</div>

@@ -146,4 +146,45 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Single(licence.AbstractionLimits.Aggregates); // This test is mainly to check we don't get two entries here
     }
+    
+    [Fact]
+    public async Task WhenB_C()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "22719166__Application - Transfer -Application New Licence Issued 26_11_2020 00_00_00 11595640.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, 4, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(19, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("2/27/19/166", licence.LicenceNumber!.Value);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Single(licence.AbstractionLimits.Individual);
+        
+        Assert.Null(licence.AbstractionLimits.Aggregates);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.Single(licence.LinkedLicences); // This test is mainly to check we don't get two entries here
+        Assert.Equal("2/27/01/009", licence.LinkedLicences[0].LicenceNumber);
+    }
 }

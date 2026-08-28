@@ -2746,6 +2746,11 @@ public static class AbstractionLicenceSchemaConverter
             return LinkReason.RateOfFlow;
         }
         
+        if (text.Contains("when the flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.WhenTheFlow;
+        }
+        
         if (text.Contains("minimum value", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.MinimumValue;
@@ -3946,6 +3951,7 @@ public static class AbstractionLicenceSchemaConverter
             or LinkReason.ReadingsDischargedAugmentationCondition
             or LinkReason.CompensationFlow
             or LinkReason.RateOfFlow
+            or LinkReason.WhenTheFlow            
             or LinkReason.MinimumValue;
     }
 

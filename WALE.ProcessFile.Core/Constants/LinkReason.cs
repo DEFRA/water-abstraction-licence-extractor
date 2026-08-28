@@ -31,5 +31,6 @@ public static class LinkReason
     public const string AuthorisedBy = "AuthorisedBy";
     public const string CompensationFlow = "CompensationFlow"; // Excluded link reason
     public const string RateOfFlow = "RateOfFlow"; // Excluded link reason
+    public const string WhenTheFlow = "WhenTheFlow"; // Excluded link reason    
     public const string MinimumValue = "MinimumValue"; // Excluded link reason    
 }

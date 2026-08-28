@@ -16,6 +16,7 @@ import {type ILicenceSectionBody, type LicenceSectionBodyProps, type Verificatio
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
+import {compareAlphanumeric} from "../../../utils/formatting.ts";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
 
@@ -254,41 +255,45 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                             <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && aggregates.map((aggregate, index) => {
-                        const itemId = aggregateIds[index];
-                        return (
-                            <AggregateItem
-                                key={index}
-                                aggregate={aggregate}
-                                itemId={itemId}
-                                isEditing={editingIndex === index && !isWaitingForVerification}
-                                isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
-                                onUpdate={(updated) => handleUpdateAggregate(index, updated)}
-                                onRemove={() => handleRemoveAggregate(index)}
-                                onDiscard={handleDiscard}
-                                onJumpToPage={onJumpToPage}
-                                onVerify={() => onItemVerificationRequested?.('Confirm', itemId)}
-                                onReject={() => onItemVerificationRequested?.('Remove', itemId)}
-                                onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
-                                onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
-                                onOverride={async () => {
-                                    if (editingIndex === index) {
-                                        setIsWaitingForVerification(true);
-                                        const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
-                                        onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
-                                    } else {
-                                        setEditingIndex(index);
-                                        setIsAddingNew(false);
-                                        setOriginalItem(Aggregate.fromJS(aggregate));
-                                        setIsWaitingForVerification(false);
-                                    }
-                                }}
-                                onOpenReport={onOpenReport}
-                                scrapedView={scrapedView}
-                                history={history}
-                            />
-                        );
-                    })}
+                    {!isLoading && !error && aggregates
+                        .map((_, i) => i)
+                        .sort((a, b) => compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
+                        .map((index) => {
+                            const aggregate = aggregates[index];
+                            const itemId = aggregateIds[index];
+                            return (
+                                <AggregateItem
+                                    key={index}
+                                    aggregate={aggregate}
+                                    itemId={itemId}
+                                    isEditing={editingIndex === index && !isWaitingForVerification}
+                                    isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
+                                    onUpdate={(updated) => handleUpdateAggregate(index, updated)}
+                                    onRemove={() => handleRemoveAggregate(index)}
+                                    onDiscard={handleDiscard}
+                                    onJumpToPage={onJumpToPage}
+                                    onVerify={() => onItemVerificationRequested?.('Confirm', itemId)}
+                                    onReject={() => onItemVerificationRequested?.('Remove', itemId)}
+                                    onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
+                                    onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
+                                    onOverride={async () => {
+                                        if (editingIndex === index) {
+                                            setIsWaitingForVerification(true);
+                                            const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
+                                            onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
+                                        } else {
+                                            setEditingIndex(index);
+                                            setIsAddingNew(false);
+                                            setOriginalItem(Aggregate.fromJS(aggregate));
+                                            setIsWaitingForVerification(false);
+                                        }
+                                    }}
+                                    onOpenReport={onOpenReport}
+                                    scrapedView={scrapedView}
+                                    history={history}
+                                />
+                            );
+                        })}
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (

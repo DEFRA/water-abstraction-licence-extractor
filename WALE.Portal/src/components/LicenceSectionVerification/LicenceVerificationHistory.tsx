@@ -8,6 +8,8 @@ interface LicenceVerificationHistoryProps {
     verifications: LicenceSectionVerification[] | undefined;
     isLoading: boolean;
     onJumpToPage?: (pageNumber: number) => void;
+    onRefresh?: () => void;
+    onDeleted?: () => void;
 }
 
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
@@ -15,7 +17,7 @@ const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
     "Aggregates": AggregateItem
 };
 
-export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage}: LicenceVerificationHistoryProps) {
+export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage, onRefresh, onDeleted}: LicenceVerificationHistoryProps) {
     if (isLoading) {
         return <div>Loading history...</div>;
     }
@@ -34,6 +36,23 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
         const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
         return dateB - dateA;
     });
+
+    const groupKey = (v: LicenceSectionVerification) => `${v.licenceSectionName ?? ''}|${v.licenceSectionItemId ?? ''}`;
+
+    const latestActiveIdByGroup = new Map<string, number>();
+    (verifications || [])
+        .filter(v => !v.deletedDateTimeUtc)
+        .sort((a, b) => {
+            const dateA = a.createdDateTimeUtc ? new Date(a.createdDateTimeUtc).getTime() : 0;
+            const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
+            return dateB - dateA;
+        })
+        .forEach(v => {
+            const key = groupKey(v);
+            if (!latestActiveIdByGroup.has(key) && v.licenceSectionVerificationId != null) {
+                latestActiveIdByGroup.set(key, v.licenceSectionVerificationId);
+            }
+        });
 
     const renderVerificationContent = (verification: LicenceSectionVerification) => {
         const sectionName = verification.licenceSectionName || '';
@@ -103,15 +122,23 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
 
     return (
         <div>
-            {sortedVerifications.map((verification, index) => (
-                <LicenceSectionVerificationHistory
-                    key={verification.licenceSectionVerificationId || index}
-                    verification={verification}
-                    initialOpen={index === 0}
-                >
-                    {renderVerificationContent(verification)}
-                </LicenceSectionVerificationHistory>
-            ))}
+            {sortedVerifications.map((verification, index) => {
+                const canDelete = !verification.deletedDateTimeUtc &&
+                    latestActiveIdByGroup.get(groupKey(verification)) === verification.licenceSectionVerificationId;
+
+                return (
+                    <LicenceSectionVerificationHistory
+                        key={verification.licenceSectionVerificationId || index}
+                        verification={verification}
+                        initialOpen={index === 0}
+                        canDelete={canDelete}
+                        onRefresh={onRefresh}
+                        onDeleted={onDeleted}
+                    >
+                        {renderVerificationContent(verification)}
+                    </LicenceSectionVerificationHistory>
+                );
+            })}
         </div>
     );
 }

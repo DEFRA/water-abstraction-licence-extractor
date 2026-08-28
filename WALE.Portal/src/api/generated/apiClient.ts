@@ -2075,6 +2075,49 @@ export class Client {
     }
 
     /**
+     * @param licenceNumber (optional) 
+     * @param regionCode (optional) 
+     * @return OK
+     */
+    getImpoundment2(licenceNumber: string | undefined, regionCode: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetImpoundment?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (regionCode === null)
+            throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
+        else if (regionCode !== undefined)
+            url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetImpoundment2(_response);
+        });
+    }
+
+    protected processGetImpoundment2(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     getNaldLicenceNumberHistory(): Promise<void> {
@@ -3603,6 +3646,48 @@ export class Client {
     }
 
     protected processCreateLicenceSectionVerification(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    deleteLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/DeleteLicenceSectionVerification";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLicenceSectionVerification(_response);
+        });
+    }
+
+    protected processDeleteLicenceSectionVerification(response: Response): Promise<number> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -6907,6 +6992,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+    deletedDateTimeUtc?: Date | undefined;
 
     [key: string]: any;
 
@@ -6937,6 +7023,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.notes = _data["notes"];
             this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
+            this.deletedDateTimeUtc = _data["deletedDateTimeUtc"] ? new Date(_data["deletedDateTimeUtc"].toString()) : undefined as any;
         }
     }
 
@@ -6965,6 +7052,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["notes"] = this.notes;
         data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
+        data["deletedDateTimeUtc"] = this.deletedDateTimeUtc ? this.deletedDateTimeUtc.toISOString() : undefined as any;
         return data;
     }
 }
@@ -6982,6 +7070,7 @@ export interface ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+    deletedDateTimeUtc?: Date | undefined;
 
     [key: string]: any;
 }

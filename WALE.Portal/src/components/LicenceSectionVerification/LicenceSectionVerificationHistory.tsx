@@ -56,40 +56,38 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                         )}
                     </h3>
                 }
+                bodyOverlay={isDeleted ? (
+                    <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(128,128,128,0.6)', pointerEvents: 'none' }} />
+                ) : undefined}
             >
-                <div style={{ position: 'relative' }}>
-                    {children}
-                    {verification.processRunId && (
-                        <div
-                            className="licence-section-footer"
-                            style={{
-                                marginTop: '10px',
-                                paddingTop: '5px',
-                                borderTop: '1px dashed #eee',
-                                fontSize: '0.8rem',
-                                color: '#666',
-                                textAlign: 'right'
-                            }}
+                {children}
+                {verification.processRunId && (
+                    <div
+                        className="licence-section-footer"
+                        style={{
+                            marginTop: '10px',
+                            paddingTop: '5px',
+                            borderTop: '1px dashed #eee',
+                            fontSize: '0.8rem',
+                            color: '#666',
+                            textAlign: 'right'
+                        }}
+                    >
+                        {notes && (<span>Notes: {notes}<br/></span>)}
+                        Verified at: {dateTime}<br/>
+                        Verified against process run: {verification.processRunId}<br/>
+                    </div>
+                )}
+                {canDelete && !isDeleted && (
+                    <div style={{ marginTop: '10px', textAlign: 'right' }}>
+                        <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            style={{ padding: '4px 12px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
                         >
-                            {notes && (<span>Notes: {notes}<br/></span>)}
-                            Verified at: {dateTime}<br/>
-                            Verified against process run: {verification.processRunId}<br/>
-                        </div>
-                    )}
-                    {canDelete && !isDeleted && (
-                        <div style={{ marginTop: '10px', textAlign: 'right' }}>
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                style={{ padding: '4px 12px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    )}
-                    {isDeleted && (
-                        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(128,128,128,0.6)', pointerEvents: 'none' }} />
-                    )}
-                </div>
+                            Delete
+                        </button>
+                    </div>
+                )}
             </CollapsibleItem>
             {showDeleteConfirm && (
                 <div style={{

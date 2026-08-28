@@ -277,38 +277,6 @@
                 "isImplicit": true
               }
             ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
           }
         ],
         "aggregates": [
@@ -600,38 +568,6 @@
                 "isImplicit": true
               }
             ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
           }
         ],
         "aggregates": [
@@ -907,38 +843,6 @@
                 "linkReason": "AggregateCondition",
                 "lineNumber": 14,
                 "pageNumber": 4
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
               }
             ],
             "points": [

@@ -12,6 +12,7 @@ import {type ILicenceSectionBody, type LicenceSectionBodyProps} from "../Licence
 import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
+import {compareAlphanumeric} from "../../../utils/formatting.ts";
 
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
@@ -237,36 +238,45 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && linkedLicences.map((ll, index) => (
-                        <LinkedLicenceItem
-                            key={index}
-                            linkedLicence={ll}
-                            isEditing={editingIndex === index && !isWaitingForVerification}
-                            isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
-                            onUpdate={(updated) => handleUpdateLicence(index, updated)}
-                            onRemove={() => handleRemoveLicence(index)}
-                            onDiscard={handleDiscard}
-                            onJumpToPage={onJumpToPage}
-                            onVerify={() => onItemVerificationRequested?.('Confirm', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                            onOverride={() => {
-                                if (editingIndex === index) {
-                                    setIsWaitingForVerification(true);
-                                    onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
-                                } else {
-                                    setEditingIndex(index);
-                                    setIsAddingNew(false);
-                                    setOriginalItem(LinkedLicence.fromJS(ll));
-                                    setIsWaitingForVerification(false);
-                                }
-                            }}
-                            onOpenReport={onOpenReport}
-                            scrapedView={scrapedView}
-                            history={history}
-                        />
-                    ))}
+                    {!isLoading && !error && linkedLicences
+                        .map((_, i) => i)
+                        .sort((a, b) => compareAlphanumeric(
+                            linkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
+                            linkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
+                        ))
+                        .map((index) => {
+                            const ll = linkedLicences[index];
+                            return (
+                                <LinkedLicenceItem
+                                    key={index}
+                                    linkedLicence={ll}
+                                    isEditing={editingIndex === index && !isWaitingForVerification}
+                                    isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
+                                    onUpdate={(updated) => handleUpdateLicence(index, updated)}
+                                    onRemove={() => handleRemoveLicence(index)}
+                                    onDiscard={handleDiscard}
+                                    onJumpToPage={onJumpToPage}
+                                    onVerify={() => onItemVerificationRequested?.('Confirm', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                                    onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                                    onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                                    onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
+                                    onOverride={() => {
+                                        if (editingIndex === index) {
+                                            setIsWaitingForVerification(true);
+                                            onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
+                                        } else {
+                                            setEditingIndex(index);
+                                            setIsAddingNew(false);
+                                            setOriginalItem(LinkedLicence.fromJS(ll));
+                                            setIsWaitingForVerification(false);
+                                        }
+                                    }}
+                                    onOpenReport={onOpenReport}
+                                    scrapedView={scrapedView}
+                                    history={history}
+                                />
+                            );
+                        })}
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (

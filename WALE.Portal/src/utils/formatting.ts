@@ -18,3 +18,7 @@ export function dashesIfNull(i: number | null | undefined): string {
     }
     return i!.toString();
 }
+
+export function compareAlphanumeric(a: string | null | undefined, b: string | null | undefined): number {
+    return (a ?? '').localeCompare(b ?? '', undefined, {numeric: true, sensitivity: 'base'});
+}

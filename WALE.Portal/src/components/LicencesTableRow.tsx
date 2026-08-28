@@ -1,6 +1,6 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
-import {dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
+import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
@@ -53,37 +53,41 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             </td>
             <td>
                 {((item.licenceSectionVerifications?.length ?? 0) > 0 ?
-                    item.licenceSectionVerifications!.map((section) => (
-                        <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>
-                            <strong>{section.licenceSectionName}</strong>
-                            <UnorderedListOfStrings items={
-                                (section.licenceSectionItems || []).map((v) => {
-                                    const itemId = v.licenceSectionItemId ?? "Unknown";
-                                    return (
-                                        <span key={itemId}>
-                                            {itemId}{' '}
-                                            {(v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                <span key={idx} title={vt ?? ''} style={{
-                                                    backgroundColor: getVerificationTypeBackgroundColor(vt),
-                                                    color: 'white',
-                                                    fontSize: '0.7em',
-                                                    padding: '1px 3px',
-                                                    borderRadius: '3px',
-                                                    marginRight: '2px',
-                                                    verticalAlign: 'middle',
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'sans-serif'
-                                                }}>
-                                                    {getVerificationTypeInitials(vt)}
+                    [...item.licenceSectionVerifications!]
+                        .sort((a, b) => compareAlphanumeric(a.licenceSectionName, b.licenceSectionName))
+                        .map((section) => (
+                            <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>
+                                <strong>{section.licenceSectionName}</strong>
+                                <UnorderedListOfStrings items={
+                                    [...(section.licenceSectionItems || [])]
+                                        .sort((a, b) => compareAlphanumeric(a.licenceSectionItemId, b.licenceSectionItemId))
+                                        .map((v) => {
+                                            const itemId = v.licenceSectionItemId ?? "Unknown";
+                                            return (
+                                                <span key={itemId}>
+                                                    {itemId}{' '}
+                                                    {(v.verificationTypes || []).map((vt: string, idx: number) => (
+                                                        <span key={idx} title={vt ?? ''} style={{
+                                                            backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                            color: 'white',
+                                                            fontSize: '0.7em',
+                                                            padding: '1px 3px',
+                                                            borderRadius: '3px',
+                                                            marginRight: '2px',
+                                                            verticalAlign: 'middle',
+                                                            fontWeight: 'bold',
+                                                            fontFamily: 'sans-serif'
+                                                        }}>
+                                                            {getVerificationTypeInitials(vt)}
+                                                        </span>
+                                                    ))}
+                                                    {v.scrapedDataIsDifferent && '🚩'}
                                                 </span>
-                                            ))}
-                                            {v.scrapedDataIsDifferent && '🚩'}
-                                        </span>
-                                    );
-                                })
-                            }/>
-                        </div>
-                    ))
+                                            );
+                                        })
+                                }/>
+                            </div>
+                        ))
                     : 'No verifications')}
             </td>
         </tr>

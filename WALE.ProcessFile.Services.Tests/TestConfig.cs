@@ -40,66 +40,6 @@ public static class TestConfig
     }
 
     [field: AllowNull, MaybeNull]
-    public static string PdfFolder2
-    {
-        get
-        {
-            if (field != null)
-            {
-                return field;
-            }
-            
-            field = Config["PdfFolder2"]!;
-            return field;
-        }
-    }
-
-    [field: AllowNull, MaybeNull]
-    public static string PdfFolder3
-    {
-        get
-        {
-            if (field != null)
-            {
-                return field;
-            }
-            
-            field = Config["PdfFolder3"]!;
-            return field;
-        }
-    }
-
-    [field: AllowNull, MaybeNull]
-    public static string PdfFolder4
-    {
-        get
-        {
-            if (field != null)
-            {
-                return field;
-            }
-            
-            field = Config["PdfFolder4"]!;
-            return field;
-        }
-    }
-
-    [field: AllowNull, MaybeNull]
-    public static string PdfFolder5
-    {
-        get
-        {
-            if (field != null)
-            {
-                return field;
-            }
-            
-            field = Config["PdfFolder5"]!;
-            return field;
-        }
-    }
-
-    [field: AllowNull, MaybeNull]
     public static string AiVisionEndpoint
     {
         get

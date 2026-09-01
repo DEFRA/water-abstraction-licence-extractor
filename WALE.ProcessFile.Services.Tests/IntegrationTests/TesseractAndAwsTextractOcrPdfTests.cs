@@ -108,16 +108,12 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             DateTime.Now);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int _ = 1, int regionCode = 3)
     {
-        var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (useExtractor == 4) folder = TestConfig.PdfFolder4;
-        if (useExtractor == 5) folder = TestConfig.PdfFolder5;
-        
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(folder, regionCode),
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             [fileName],
             0)).Item!;
     }
@@ -430,7 +426,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
 
         var licence = schemaData[0].Licences[0];
@@ -477,7 +473,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
@@ -523,7 +519,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);

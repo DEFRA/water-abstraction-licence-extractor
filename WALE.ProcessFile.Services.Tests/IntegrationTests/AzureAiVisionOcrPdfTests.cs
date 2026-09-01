@@ -108,16 +108,12 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             DateTime.Now);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int _ = 1)
     {
-        var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
-        if (number == 3) pdfFolder = TestConfig.PdfFolder3;
-        else if (number == 5) pdfFolder = TestConfig.PdfFolder5;
-        
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -200,7 +196,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder3),
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
@@ -1590,7 +1586,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder2),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService,
             NaldDataLookupService);
         
@@ -1619,7 +1615,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder2),
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
             AbsLicCacheService,
             NaldDataLookupService);
         
@@ -1645,7 +1641,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder2),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService,
             NaldDataLookupService);
         
@@ -1673,7 +1669,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(2, TestConfig.PdfFolder2),
+            await LookupConfigurationAsync(2, TestConfig.PdfFolder),
             AbsLicCacheService,
             NaldDataLookupService);
         

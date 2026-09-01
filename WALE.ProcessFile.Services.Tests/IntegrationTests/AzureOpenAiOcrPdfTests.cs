@@ -89,8 +89,6 @@ public class AzureOpenAiOcrPdfTests
     
     private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
-    private string PdfFolder => TestConfig.PdfFolder;
-
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
@@ -110,7 +108,7 @@ public class AzureOpenAiOcrPdfTests
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(PdfFolder),
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
             
             [fileName],
             0)).Item!;

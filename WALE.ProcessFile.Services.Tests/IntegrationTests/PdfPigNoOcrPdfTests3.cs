@@ -178,15 +178,11 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
     private async Task<MatchesResult> GetMatchesAsync(
         string fileName,
         int regionCode,
-        int folderNumber = 1,
+        int _ = 1,
         int fileLicenceMapping = 1,
         ICacheService? cacheService = null)
     {
-        var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder2;
-        if (folderNumber == 3) pdfFolder = TestConfig.PdfFolder3;
-        if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
-
-        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, pdfFolder);
+        var lookupConfig = await LookupConfigurationAsync(regionCode, fileLicenceMapping, TestConfig.PdfFolder);
         
         if (cacheService != null)
         {

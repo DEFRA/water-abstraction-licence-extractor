@@ -106,23 +106,12 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             DateTime.Now);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int _ = 1)
     {
-        string f;
-
-        switch (folderNumber)
-        {
-            case 5:
-                f = TestConfig.PdfFolder5;
-                break;
-            default:
-                throw new Exception("Number not known");
-        }
-        
         return (await _pdfDataExtractorCombined5.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, f),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -147,7 +136,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -178,7 +167,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -206,7 +195,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -235,7 +224,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -264,7 +253,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -293,7 +282,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -322,7 +311,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -351,7 +340,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -380,7 +369,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -409,7 +398,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -438,7 +427,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -467,7 +456,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -496,7 +485,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -525,7 +514,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -554,7 +543,7 @@ public class DoiRegressionTessaractAndAwsTextractOcrPdfTests(SingletonAwsTextrac
             resultFull,
             _pdfDataExtractorCombined5,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder5),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();

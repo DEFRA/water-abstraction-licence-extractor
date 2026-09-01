@@ -59,22 +59,12 @@ public class PdfPigNoOcrPdfTests
         DocnetAlternativeDocumentService,
         MessageQueueService);
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useFolder, int regionCode)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
     {
-        var folder = useFolder switch
-        {
-            1 => TestConfig.PdfFolder,
-            2 => TestConfig.PdfFolder2,            
-            3 => TestConfig.PdfFolder3,
-            4 => TestConfig.PdfFolder4,
-            5 => TestConfig.PdfFolder5,
-            _ => throw new Exception("Number not known")
-        };
-
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, folder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -118,13 +108,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "NE0270023036__Application - New - Issued Licence 03.03.2017 9705232.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(21, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -156,13 +146,13 @@ public class PdfPigNoOcrPdfTests
         const string filename = "22719166__Application - Transfer -Application New Licence Issued 26_11_2020 00_00_00 11595640.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 4, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(19, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

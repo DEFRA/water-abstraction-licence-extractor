@@ -177,11 +177,8 @@ public class CompareOcrPdfTests
         string providerName,
         string fileName,
         int regionCode,
-        int folderNumber)
+        int _)
     {
-        var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
-
         var provider = providerName switch
         {
             "TesseractSparseTextOsd" => _tesseractSparseTextOsdPdfDataExtractor,
@@ -195,7 +192,7 @@ public class CompareOcrPdfTests
         return (await provider.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }

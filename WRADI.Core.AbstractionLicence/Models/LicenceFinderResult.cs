@@ -98,22 +98,22 @@ public class LicenceFinderResult
     /// <summary>
     /// Number Of Pages Template
     /// </summary>
-    public int? NumberOfPages{ get; set; }
+    public int? NumberOfPages { get; set; }
     
     /// <summary>
     /// If DOI matches signature date
     /// </summary>
-    public bool DoiSignatureDateMatch{ get; set; }
+    public bool DoiSignatureDateMatch { get; set; }
     
     /// <summary>
     /// If licence is handled in version match
     /// </summary>
-    public bool IncludedInVersionMatch{ get; set; }
+    public bool IncludedInVersionMatch { get; set; }
     
     /// <summary>
     /// If single licence identified in version match
     /// </summary>
-    public bool? SingleLicenceInVersionMatch{ get; set; }
+    public bool? SingleLicenceInVersionMatch { get; set; }
 
     /// <summary>
     /// The URL of the matched file from versionMatch
@@ -123,12 +123,12 @@ public class LicenceFinderResult
     /// <summary>
     /// If duplicate Licences are found in version Match results
     /// </summary>
-    public bool? DuplicateLicenceInVersionMatchResult{ get; set; }
+    public bool? DuplicateLicenceInVersionMatchResult { get; set; }
     
     /// <summary>
     /// NALD Issue in version Match results
     /// </summary>
-    public bool? NaldIssue{ get; set; }
+    public bool? NaldIssue { get; set; }
     
     /// <summary>
     /// File Id
@@ -158,4 +158,6 @@ public class LicenceFinderResult
     public bool SeenInDmsExtract { get; set; }
     
     public bool? WeHaveDownloaded { get; set; }
+    
+    public bool? LiveLicenceFound { get; set; }
 }

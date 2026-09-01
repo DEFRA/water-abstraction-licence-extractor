@@ -316,7 +316,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     is_water_company,
                                     folder_name_auto_correct,
                                     seen_in_dms_extract,
-                                    we_have_downloaded)
+                                    we_have_downloaded,
+                                    live_licence_found)
                                VALUES (
                                     @PermitNumber,
                                     @DmsPermitNumber,
@@ -349,7 +350,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     @IsWaterCompany,
                                     @FolderNameAutoCorrect,
                                     @SeenInDmsExtract,
-                                    @WeHaveDownloaded)
+                                    @WeHaveDownloaded,
+                                    @LiveLicenceFound)
                            """;
 
         await ExecuteAsync(

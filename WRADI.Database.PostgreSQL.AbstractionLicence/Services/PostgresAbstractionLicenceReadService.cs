@@ -242,7 +242,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                is_water_company,
                                folder_name_auto_correct,
                                seen_in_dms_extract,
-                               we_have_downloaded
+                               we_have_downloaded,
+                               live_licence_found
                            FROM public.licence_finder_result
                            WHERE file_id = @FileId
                            """;
@@ -2246,7 +2247,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                is_water_company,
                                folder_name_auto_correct,
                                seen_in_dms_extract,
-                               we_have_downloaded
+                               we_have_downloaded,
+                               live_licence_found
                            FROM public.licence_finder_result
                            ORDER BY
                                permit_number,

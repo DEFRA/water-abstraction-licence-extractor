@@ -31,9 +31,11 @@ public class LocalFileService(string folderPath) : IFileService
 
     public Task<Stream?> GetFileAsStreamAsync(string filename)
     {
+        var path = $"{FolderPath}{filename}";
+        
         return Task.FromResult<Stream?>(
             File.Open(
-                $"{FolderPath}{filename}",
+                path,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read));

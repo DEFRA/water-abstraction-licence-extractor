@@ -58,22 +58,12 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         DocnetAlternativeDocumentService,
         MessageQueueService);
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useFolder, int regionCode)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
     {
-        var folder = useFolder switch
-        {
-            1 => TestConfig.PdfFolder,
-            2 => TestConfig.PdfFolder2,            
-            3 => TestConfig.PdfFolder3,
-            4 => TestConfig.PdfFolder4,
-            5 => TestConfig.PdfFolder5,
-            _ => throw new Exception("Number not known")
-        };
-
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, folder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -116,13 +106,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 3;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(16, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -190,13 +180,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 5;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(19, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -271,13 +261,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 5;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(23, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -365,13 +355,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 7;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(16, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -428,13 +418,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 5;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(20, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -503,13 +493,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 4;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(19, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -614,13 +604,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 3;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(21, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -716,13 +706,13 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         const int regionCode = 1;
         
         // Act
-        var resultFull = await GetMatchesAsync(filename, 1, regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode);
         var resultList = resultFull.Matches!;
         
         // Assert
         Assert.Equal(17, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

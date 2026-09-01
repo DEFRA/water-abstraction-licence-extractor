@@ -70,22 +70,12 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         DocnetAlternativeDocumentService,
         MessageQueueService);
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useFolder, int regionCode)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
     {
-        var folder = useFolder switch
-        {
-            1 => TestConfig.PdfFolder,
-            2 => TestConfig.PdfFolder2,            
-            3 => TestConfig.PdfFolder3,
-            4 => TestConfig.PdfFolder4,
-            5 => TestConfig.PdfFolder5,
-            _ => throw new Exception("Number not known")
-        };
-
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, folder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -129,13 +119,13 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22723435__cc941f55-ce5d-dbbf-9126-a69b8382e3ea.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 5, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(7, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -237,13 +227,13 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22722395A__Non-Application Licence Document (22.10.2001).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(13, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder3);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -360,13 +350,13 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22722395__Licence (PDF) 24.08.2006 7556094.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 4, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(21, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder4);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -442,13 +432,13 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22710112__2-27-10-112 6959593.PDF";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 3, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(6, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder4);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

@@ -92,15 +92,12 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             DateTime.Now);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int _ = 1)
     {
-        var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (number == 5) pdfFolder = TestConfig.PdfFolder5;
-        
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -252,7 +249,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder3),
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
 
         var licence = schemaData[0].Licences[0];

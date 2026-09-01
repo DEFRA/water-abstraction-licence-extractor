@@ -138,29 +138,12 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             DateTime.Now);
     }
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int folderNumber = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int _ = 1)
     {
-        string f;
-
-        switch (folderNumber)
-        {
-            case 1:
-                f = TestConfig.PdfFolder;
-                break;
-            case 3:
-                f = TestConfig.PdfFolder3;
-                break;
-            case 4:
-                f = TestConfig.PdfFolder4;
-                break;
-            default:
-                throw new Exception("Number not known");
-        }
-        
         return (await _pdfDataExtractorCombined1.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, f),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -1914,7 +1897,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             resultFull,
             _pdfDataExtractorCombined1,
             0,
-            await LookupConfigurationAsync(1, TestConfig.PdfFolder4),
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService,
             NaldDataLookupService);
         

@@ -319,7 +319,7 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= configuration.MinimumRowsForDigital;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile

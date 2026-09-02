@@ -22,6 +22,9 @@ public class ContainedInInformation
     // Will only be set for Nald licences
     public List<NaldLicenceNumberHistoryOutput>? History { get; set; }
     
+    // Will only be set for Document licences
+    public string? DocumentIdentifier { get; init; }
+    
     public Dictionary<string, string?>? SourceFields { get; set; }
     
     public int? LineNumber { get; init; }
@@ -36,6 +39,7 @@ public class ContainedInInformation
             Direction = Direction,
             SectionName = SectionName,
             LinkReason = LinkReason,
+            DocumentIdentifier = DocumentIdentifier,
             AcinCode = AcinCode,
             History = History,
             SourceFields = SourceFields,

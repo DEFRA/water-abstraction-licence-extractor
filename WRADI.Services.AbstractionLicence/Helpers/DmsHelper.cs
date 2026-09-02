@@ -51,7 +51,6 @@ public static class DmsHelper
     {
         var dtStartGetDms = DateTime.Now;
         
-        //var filesAndMapping = GetFilesAndMappingFromFolders(services.PdfFolderPath!);
         (Dictionary<string, (DmsFileData, NaldLicenceSimple)> FilenamesWithLicenceNumbers,
             Dictionary<string, (DmsFileData, NaldLicenceSimple)> LicenceNumbersWithFilenames) filesAndMapping;
     
@@ -235,6 +234,11 @@ public static class DmsHelper
         foreach (var licenceFinderResult in licenceFinderResults)
         {
             if (licenceFinderResult.FileId == null || licenceFinderResult.FileId.Contains('('))
+            {
+                continue;
+            }
+
+            if (licenceFinderResult.LiveLicenceFound != true)
             {
                 continue;
             }

@@ -1682,9 +1682,17 @@ public static class AbstractionLicenceSchemaConverter
             .GroupBy(l => l.LicenceNumber?.Value)
             .Select(lg => lg.First())
             .ToList();
-        
+
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAsync)} " +
+            $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        var idx = 0;
+
         foreach (var licenceSetGroup in licenceSetGroups)
         {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAsync)} {idx++} " +
+                $"of {licenceSetGroups.Count} done");
+            
             foreach (var licenceSet in licenceSetGroup)
             {
                 foreach (var licence in licenceSet.Licences)
@@ -5510,8 +5518,16 @@ public static class AbstractionLicenceSchemaConverter
         List<IReadOnlyList<LicenceSet>> initialLicenceSetGroups,
         List<LicenceSet> distinctLicenceSets)
     {
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddImplicitExplicitAndEncompassingLicenceSets)} " +
+            $"started for {initialLicenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
+        var idx = 0;
+        
         foreach (var licenceSetGroup in initialLicenceSetGroups)
         {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddImplicitExplicitAndEncompassingLicenceSets)} {idx++} " +
+                $"of {initialLicenceSetGroups.Count} done");
+            
             if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
             {
                 continue;

@@ -17,9 +17,11 @@ public class OutputListDataItem
     public string?[]? points { get; set; }
     
     public int limitsCount { get; set; }
-    
-    public int aggregatesCount { get; set; }
-    
+
+    public string[]? aggregateIds { get; set; }
+
+    public int aggregatesCount => aggregateIds?.Length ?? 0;
+
     public bool? naldHasAggregateCondition { get; set; }
     
     public bool ocr { get; set; }

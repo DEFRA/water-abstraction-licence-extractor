@@ -9,4 +9,7 @@ public interface ILicenceNumberServiceCore
         LabelToMatch label,
         bool isOcr,
         Dictionary<string, object?> additionalInformationStore);
+
+    (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
+        string? licenceNumber);
 }

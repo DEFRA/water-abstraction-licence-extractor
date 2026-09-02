@@ -20,12 +20,20 @@ public class FileDataController(
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
+    public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
+        [FromQuery] int processRunId)
+    {
+        var result = await outputService.GetSimpleMatchResults(processRunId);
+        return Ok(result);
+    }
+    
+    [HttpGet]
     public async Task<ActionResult<MatchesResult?>> MatchesResult([FromQuery] Guid fileId)
     {
         var result = await outputService.GetMatchesResultAsync(fileId);
         return Ok(result);
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultAsync(
         [FromQuery] Guid fileId,
@@ -34,7 +42,7 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(fileId, processRunId);
         return Ok(result);
     }
-    
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
     public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
@@ -42,29 +50,42 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(fileId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
-    
+
     [HttpGet]
-    public async Task<ActionResult<Licence?>> Licence([FromQuery] Guid fileId, [FromQuery] int processRunId)
+    public async Task<ActionResult<Dictionary<Guid, string>>> GetLicenceFileIdMapAsync([FromQuery] int processRunId)
     {
-        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var result = await GetLicenceFileIdsAsync(processRunId);
         return Ok(result);
     }
-    
+
+    [HttpGet]
+    public async Task<ActionResult<Licence?>> Licence(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
+    {
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
+        return Ok(result);
+    }
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
-    public async Task<ActionResult<string?>> LicenceStringAsync([FromQuery] Guid fileId, [FromQuery] int processRunId)
+    public async Task<ActionResult<string?>> LicenceStringAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId,
+        [FromQuery] bool applyVerifications = false)
     {
-        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSets([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
         return Ok(results);
     }
-    
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
     public async Task<ActionResult<string?>> LicenceSetsStringAsync([FromQuery] Guid fileId)
@@ -80,7 +101,7 @@ public class FileDataController(
         var results = await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(licenceFileId);
         return Ok(results);
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> GetAllVerificationsAsync(
         [FromQuery] int maxProcessRunId = int.MaxValue)
@@ -92,6 +113,10 @@ public class FileDataController(
     }
 
     [HttpPost]
+    public ActionResult<string[]> AggregateIds([FromBody] Aggregate[] aggregates)
+        => Ok(aggregates.Select(a => a.Id).ToArray());
+
+    [HttpPost]
     public async Task<ActionResult<int>> CreateLicenceSectionVerification(
         [FromBody] LicenceSectionVerification verification)
     {
@@ -101,6 +126,22 @@ public class FileDataController(
         {
             await RefreshLicenceListData(verification);
         }
+
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<int>> DeleteLicenceSectionVerification(
+        [FromBody] LicenceSectionVerification verification)
+    {
+        var result = await abstractionLicenceOutputService.DeleteLicenceSectionVerificationAsync(
+            verification.LicenceSectionVerificationId);
+
+        if (result != 0)
+        {
+            await RefreshLicenceListData(verification);
+        }
+
         return Ok(result);
     }
 
@@ -116,17 +157,17 @@ public class FileDataController(
             {
                 licenceList.Add(verification.LicenceSectionItemId);
             }
-            
-            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId, licenceList.ToArray());
+
+            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
+                licenceList.ToArray());
         }
     }
 
     private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)
     {
         var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
-   
+
         return fileIdToLicenceNumberMapping[fileId];
- 
     }
 
     private async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)

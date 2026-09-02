@@ -19,6 +19,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -34,7 +36,10 @@ public class CompareOcrPdfTests
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -42,7 +47,8 @@ public class CompareOcrPdfTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -53,9 +59,10 @@ public class CompareOcrPdfTests
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
 
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
     
@@ -161,6 +168,7 @@ public class CompareOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync((short)regionCode),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }
@@ -169,11 +177,8 @@ public class CompareOcrPdfTests
         string providerName,
         string fileName,
         int regionCode,
-        int folderNumber)
+        int _)
     {
-        var pdfFolder = folderNumber == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (folderNumber == 5) pdfFolder = TestConfig.PdfFolder5;
-
         var provider = providerName switch
         {
             "TesseractSparseTextOsd" => _tesseractSparseTextOsdPdfDataExtractor,
@@ -187,7 +192,7 @@ public class CompareOcrPdfTests
         return (await provider.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }

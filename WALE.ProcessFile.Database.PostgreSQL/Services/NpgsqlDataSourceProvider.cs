@@ -9,7 +9,13 @@ public class NpgsqlDataSourceProvider : INpgsqlDataSourceProvider
     public static readonly List<(int, string)> Queries = [];
     public static int QueryNumber = 0;
     
-    public NpgsqlDataSourceProvider(string host, int port, string databaseName, string username, string password)
+    public NpgsqlDataSourceProvider(
+        string host,
+        int port,
+        string databaseName,
+        string username,
+        string password,
+        int maxPoolSize = 30)
     {
         var connectionString = new NpgsqlConnectionStringBuilder
         {
@@ -21,7 +27,7 @@ public class NpgsqlDataSourceProvider : INpgsqlDataSourceProvider
             Timeout = 0,
             CommandTimeout = 0,
             Pooling = true,
-            MaxPoolSize = 30
+            MaxPoolSize = maxPoolSize
         };
 
         DataSource = NpgsqlDataSource.Create(connectionString);

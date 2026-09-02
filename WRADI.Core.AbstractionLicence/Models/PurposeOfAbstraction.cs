@@ -4,20 +4,16 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class PurposeOfAbstraction : Purpose
 {
-    public NaldPurposeData? NaldData { get; set; }
-    
     public string[]? PointIds { get; set; }
     
     public TimeCutoff? TimeCutoff { get; set; }
+    
+    public ContainedInInformation[]? ContainedIn { get; set; }
     
     public static PurposeOfAbstraction Template => new()
     {
         Description = string.Empty,
         Id = string.Empty,
-        NaldData = new NaldPurposeData
-        {
-            Id = "TODO"
-        },
         PointIds = [
             "2.1"
         ],

@@ -15,12 +15,12 @@ export interface Totals {
     issuer: number;
     meansFound: number;
     linkedLicences: number;
-    latestLicenceSectionVerifications: number;
+    licenceSectionVerifications: number;
     licenceSets: number;
     status: number;
 }
 
-export function useTotals(filteredData: OutputListDataItem[]): Totals {
+export function useTotals(filteredData: OutputListDataItem[], sectionVerification : string): Totals {
     return useMemo(() => {
         return {
             filename: countNonEmpty(filteredData, 'filename', ''),
@@ -35,7 +35,7 @@ export function useTotals(filteredData: OutputListDataItem[]): Totals {
             issuer: countNonEmpty(filteredData, 'issuer', ''),
             meansFound: countNonEmpty(filteredData, 'meansFound', false),
             linkedLicences: countNonEmpty(filteredData, 'linkedLicences', []),
-            latestLicenceSectionVerifications: countNonEmpty(filteredData, 'latestLicenceSectionVerifications', []),
+            licenceSectionVerifications: countNonEmptyVerificationTypes(filteredData, sectionVerification),
             licenceSets: countNonEmptyLicenceSets(filteredData),
             status: filteredData.length // Status always has a value
         };
@@ -55,7 +55,7 @@ function countNonEmpty(
         // Handle arrays
         if (Array.isArray(emptyValue)) {
             if (Array.isArray(value) && value.length > 0) {
-                count++;
+                count += value.length;
             }
             continue;
         }
@@ -81,7 +81,6 @@ function countNonEmpty(
             count++;
         }
     }
-
     return count;
 }
 
@@ -94,6 +93,40 @@ function countNonEmptyLicenceSets(data: OutputListDataItem[]): number {
             count++;
         }
     }
+
+    return count;
+}
+
+function countNonEmptyVerificationTypes(data: OutputListDataItem[], verificationType: string): number {
+    let count = 0;
+
+    for (const item of data) {
+
+        const value = item["licenceSectionVerifications"];
+
+        if (Array.isArray(value) && value.length > 0) {
+            value.forEach(section => {
+                const sectionItems = section.licenceSectionItems ?? [];
+
+                if (verificationType === "") {
+                    count += sectionItems.length;
+                } else {
+                    
+                    if (verificationType === "Flagged")
+                    {
+                        count += sectionItems.filter(sectionItem =>
+                            sectionItem.scrapedDataIsDifferent
+                        ).length;
+                    }
+                    else {
+                        count += sectionItems.filter(sectionItem =>
+                            sectionItem.verificationTypes?.includes(verificationType)
+                        ).length;
+                    }
+                }
+            });
+        }
+       }
 
     return count;
 }

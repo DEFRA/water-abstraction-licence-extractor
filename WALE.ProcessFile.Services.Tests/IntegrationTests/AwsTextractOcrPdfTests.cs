@@ -15,6 +15,8 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -35,7 +37,10 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -43,7 +48,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -51,6 +57,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -80,19 +87,17 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             CacheService,
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int number = 1)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode, int _ = 1)
     {
-        var pdfFolder = number == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (number == 5) pdfFolder = TestConfig.PdfFolder5;
-        
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, pdfFolder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -210,7 +215,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
-            AbsLicCacheService)).Last();
+            AbsLicCacheService, NaldDataLookupService)).Last();
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -244,8 +249,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(3, TestConfig.PdfFolder3),
-            AbsLicCacheService);
+            await LookupConfigurationAsync(3, TestConfig.PdfFolder),
+            AbsLicCacheService, NaldDataLookupService);
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLinkedLicenceLength, licence.LinkedLicences.Length);
@@ -269,7 +274,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(2, TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();

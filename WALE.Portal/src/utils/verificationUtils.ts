@@ -1,47 +1,26 @@
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
-
-export const getVerificationTypeColor = (type: string): string => {
-    switch (type) {
-        case 'Confirmed':
-        case 'AutoConfirm':
-            return 'green';
-        case 'Removed':
-        case 'AutoFail':
-            return 'red';
-        case 'Edited':
-        case 'AutoWarn':
-            return 'darkorange';
-        case 'Added':
-            return 'blue';
-        case 'RequestBusinessReview':
-            return 'darkorange';
-        case 'CompleteBusinessReview':
-            return 'purple';
-        default:
-            return 'inherit';
-    }
-};
+export const getVerificationTypeColor = (type: string): string =>
+    getVerificationTypeBackgroundColor(type);
 
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
-        case 'Confirmed':
-            return 'inherit';
         case 'AutoConfirm':
-            return 'green';
+            return '#00D100';
+        case 'Confirmed':
+            return '#008000';
+        case 'CompleteBusinessReview':
+            return '#004700';
         case 'Removed':
-            return 'inherit';
+            return 'red';
         case 'AutoFail':
             return 'red';
         case 'Edited':
-            return 'inherit';
+            return 'blue';
+        case 'Added':
+            return '#1890ff';
         case 'AutoWarn':
             return 'darkorange';
-        case 'Added':
-            return 'inherit';
         case 'RequestBusinessReview':
             return 'darkorange';
-        case 'CompleteBusinessReview':
-            return 'purple';
         default:
             return 'inherit';
     }
@@ -50,23 +29,23 @@ export const getVerificationTypeBackgroundColor = (type: string): string => {
 export const getVerificationTypeInitials = (type: string): string => {
     switch (type) {
         case 'Confirmed':
-            return '✅';
+            return 'C';
         case 'AutoConfirm':
             return 'AC';
         case 'Removed':
-            return '❌';
+            return 'X';
         case 'Edited':
-            return '✏️';
+            return 'E';
         case 'Added':
-            return '➕';
+            return '+';
         case 'AutoFail':
             return 'AF';
         case 'AutoWarn':
             return 'AW';
         case 'RequestBusinessReview':
-            return 'RBR';
+            return 'BR';
         case 'CompleteBusinessReview':
-            return 'CBR';
+            return 'BC';
         default:
             return '';
     }
@@ -82,18 +61,10 @@ export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
     return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
 };
 
-export function getFileId(data: OutputListDataItem[], licenceNumber: string | undefined) {
-    if (licenceNumber == undefined) {
+export function getFileId(fileIdMap: Record<string, string> | undefined, licenceNumber: string | undefined): string | false {
+    if (!licenceNumber || !fileIdMap) {
         return false;
     }
 
-    for (let itemNumber in data) {
-        let item = data[itemNumber];
-
-        if (item.licenceNumber === licenceNumber) {
-            return item.fileId;
-        }
-    }
-
-    return false;
+    return fileIdMap[licenceNumber] ?? false;
 }

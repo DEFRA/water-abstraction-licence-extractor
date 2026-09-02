@@ -14,6 +14,7 @@ public class LicenceSectionVerification
     public string? Notes { get; set; }
     public bool ScrapedDataIsDifferent { get; set; }
     public DateTime CreatedDateTimeUtc { get; set; }
+    public DateTime? DeletedDateTimeUtc { get; set; }
 }
 
 public record LicenceSectionVerificationSummary
@@ -25,6 +26,8 @@ public record LicenceSectionVerificationSummary
 public record LicenceSectionItemSummary
 {
     public required string LicenceSectionItemId { get; set; }
+    
+    public string? CurrentVerificationType { get; set; }
     public required string[] VerificationTypes { get; set; }
     public bool ScrapedDataIsDifferent { get; set; }
 }

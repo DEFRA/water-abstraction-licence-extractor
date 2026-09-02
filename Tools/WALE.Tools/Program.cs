@@ -5,7 +5,7 @@ using WALE.Tools.Config;
 
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
-//workflow = "ImportNaldData";
+workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
@@ -38,7 +38,7 @@ switch (workflow)
         // - Fetch number of pages
         // Addendum / schedule
 
-        var includeVersionMatch = true;
+        var includeVersionMatch = false;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
     
     case "CopyS3Files": // FREQUENT - Promotion of S3 files between environments (e.g. DEV to TST)

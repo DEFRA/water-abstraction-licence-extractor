@@ -17,6 +17,8 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -39,7 +41,10 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             realCacheService,
             realAbsLicCacheService,
             _naldData,
+            [],
             _fileLicenceMapping);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -47,7 +52,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -55,6 +61,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     private static readonly IAbstractionLicenceCacheService DatabaseCacheService =
         new DatabaseAbstractionLicenceCacheService(ReadService, null!);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -85,7 +92,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         ImpoundmentLicences = []
     };
     
-    private static readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private static readonly Dictionary<string, List<NaldAbstractionData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder, int regionCode)
     {
@@ -96,20 +103,17 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             CacheService,
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now);
     }
 
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useExtractor = 1, int regionCode = 3)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int _ = 1, int regionCode = 3)
     {
-        var folder = useExtractor == 1 ? TestConfig.PdfFolder : TestConfig.PdfFolder3;
-        if (useExtractor == 4) folder = TestConfig.PdfFolder4;
-        if (useExtractor == 5) folder = TestConfig.PdfFolder5;
-        
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(folder, regionCode),
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             [fileName],
             0)).Item!;
     }
@@ -190,7 +194,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -257,7 +261,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -346,7 +350,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -422,8 +426,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
-            AbsLicCacheService);
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService, NaldDataLookupService);
 
         var licence = schemaData[0].Licences[0];
         Assert.Equal(expectedLicenceNumber, licence.LicenceNumber?.Value);
@@ -442,7 +446,6 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
 
         const string filename = "12203045__Non-Application Licence Document [Original licence] (23051967).PDF";
 
-        
         // Act
         var resultFull = await GetMatchesAsync(filename, 3, regionCode);
         var resultList = resultFull.Matches!;
@@ -470,8 +473,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
-            AbsLicCacheService);
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("12203045-LV19660523", agreedSchemaLicenceGroup[0].LicenceSetId);
@@ -516,8 +519,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             resultFull,
             _pdfDataExtractor,
             0,
-            await LookupConfigurationAsync(TestConfig.PdfFolder3, regionCode),
-            AbsLicCacheService);
+            await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Equal("12405035-LV19660310", agreedSchemaLicenceGroup[0].LicenceSetId);

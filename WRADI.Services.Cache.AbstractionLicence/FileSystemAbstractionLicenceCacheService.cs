@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -40,7 +41,12 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     {
         throw new NotImplementedException();
     }
-    
+
+    public Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         throw new NotImplementedException();
@@ -91,12 +97,17 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
     {
         throw new NotImplementedException();
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
     {
         throw new NotImplementedException();
     }

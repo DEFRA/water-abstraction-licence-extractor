@@ -1,23 +1,24 @@
 import type {OutputListDataItem} from "../api/generated/apiClient.ts";
 import LinkedLicencesListItem from "./LinkedLicencesListItem";
+import {compareAlphanumeric} from "../utils/formatting.ts";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
-    data: OutputListDataItem[];
     onOpenReport: (fileId: string) => void;
 }
 
-export function LinkedLicencesList({item, data, onOpenReport}: LinkedLicencesListProps) {
+export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps) {
     if (!item.linkedLicences?.length) {
         return 'No Linked Licences';
     }
 
+    const sorted = [...item.linkedLicences].sort((a, b) => compareAlphanumeric(a.licenceNumber, b.licenceNumber));
+
     return (<ul>
-        {item.linkedLicences.map((ll, index) => (
+        {sorted.map((ll, index) => (
             <LinkedLicencesListItem
                 key={index}
                 linkedLicence={ll}
-                data={data}
                 onOpenReport={onOpenReport}
             />
         ))}

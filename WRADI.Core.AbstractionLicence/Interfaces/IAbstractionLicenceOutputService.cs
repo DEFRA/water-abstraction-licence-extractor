@@ -27,9 +27,9 @@ public interface IAbstractionLicenceOutputService
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
 
-    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
+    Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false);
 
-    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId);
+    Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 
@@ -40,7 +40,9 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
-    
+
+    Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
+
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);

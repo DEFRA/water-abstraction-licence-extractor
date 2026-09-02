@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Text;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -8,8 +7,6 @@ namespace WALE.ProcessFile.Core.Helpers;
 
 public static class FormattingHelper
 {
-    private static readonly ConcurrentDictionary<string, DmsFileData?> DmsFileDataCache = new();
-
     public static string? CapitaliseFirstLetter(string? text)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length == 0)
@@ -53,26 +50,6 @@ public static class FormattingHelper
             stripped,
             licenceNumberNoSeperators
         ];
-    }
-
-    public static async Task<DmsFileData?> GetDmsFileDataAsync(
-        string? licenceNumber,
-        ICacheService cacheService)
-    {
-        if (string.IsNullOrEmpty(licenceNumber))
-        {
-            return null;
-        }
-        
-        if (DmsFileDataCache.TryGetValue(licenceNumber, out var cachedData) && cachedData != null)
-        {
-            return cachedData;
-        }
-        
-        var dmsFileData = await cacheService.GetDmsFileDataAsync(licenceNumber);
-        DmsFileDataCache.TryAdd(licenceNumber, dmsFileData);
-        
-        return dmsFileData;
     }
     
     public static string? StripForComparison(
@@ -299,7 +276,7 @@ public static class FormattingHelper
                     // Part 4 - 123
                     part4 = first5Digits[..3];
                 }
-                else if (secondChar == '0')
+                /*else if (secondChar == '0')
                 {
                     // Second section is padded with 0, means the first section must not be
                     
@@ -309,7 +286,7 @@ public static class FormattingHelper
                     
                     // Part 4 - 123
                     part4 = first5Digits[..3];
-                }
+                }*/
                 // 1/21/00, 1/22/01-06, 1/23/01-05, 1/24/01-05, 1/25/01-06
                 else if (part1 == "1"
                     && part2 is "21" or "22" or "23" or "24" or "25")
@@ -793,6 +770,11 @@ public static class FormattingHelper
         }
 
         if (numberOfSlashes == 3 && licenceNumber.Split('/')[0].Length == 2)
+        {
+            return licenceNumber;
+        }
+
+        if (numberOfSlashes >= 3 && licenceNumber.EndsWith("GR", StringComparison.OrdinalIgnoreCase))
         {
             return licenceNumber;
         }

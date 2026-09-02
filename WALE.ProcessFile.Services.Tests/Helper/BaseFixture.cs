@@ -9,8 +9,11 @@ namespace WALE.ProcessFile.Services.Tests.Helper;
 public class BaseFixture : IDisposable
 {
     private readonly ConcurrentDictionary<short, List<NaldLicence>> _licencesAlternateFormatValues = [];
-    private static readonly SemaphoreSlim SetupLicenceNumbersLock = new(1, 1);
-    private static ILicenceNumberService? _licenceNumberService;
+
+    private readonly SemaphoreSlim _setupLicenceNumbersLock = new(1, 1);
+    private readonly SemaphoreSlim _firstNamesLock = new(1, 1);
+    
+    private ILicenceNumberService? _licenceNumberService;
     
     public async Task<ILicenceNumberService> GetLicenceNumbersServiceAsync(
         short regionCode,
@@ -21,7 +24,7 @@ public class BaseFixture : IDisposable
             return _licenceNumberService;
         }
 
-        await SetupLicenceNumbersLock.WaitAsync();
+        await _setupLicenceNumbersLock.WaitAsync();
         
         try
         {
@@ -38,21 +41,19 @@ public class BaseFixture : IDisposable
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);
             }
 
-            _licenceNumberService = new AbstractionLicenceNumber(licences);
+            _licenceNumberService = new AbstractionLicenceNumber(licences, []);
             return _licenceNumberService;
             
         }
         finally
         {
-            SetupLicenceNumbersLock.Release();
+            _setupLicenceNumbersLock.Release();
         }
     }
     
-    private static readonly SemaphoreSlim FirstNamesLock = new(1, 1);
-    
     public async Task<HashSet<string>> FirstNamesCsvTask()
     {
-        await FirstNamesLock.WaitAsync();
+        await _firstNamesLock.WaitAsync();
         
         try
         {
@@ -60,7 +61,7 @@ public class BaseFixture : IDisposable
         }
         finally
         {
-            FirstNamesLock.Release();
+            _firstNamesLock.Release();
         }
     }
     

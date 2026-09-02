@@ -5,26 +5,24 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Models;
 
 namespace WRADI.DocumentType.AbstractionLicence.Formats;
 
-public partial class AbstractionLicenceNumber : ILicenceNumberService
+public partial class AbstractionLicenceNumber(
+    List<NaldLicence> licences,
+    Dictionary<string, NaldLicenceNumberHistory> licenceHistory) : ILicenceNumberService
 {
-    private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex;
+    private readonly Dictionary<string, List<LicenceIndexEntry>> _licenceIndex =
+        BuildIndex(licences ?? throw new ArgumentNullException());
 
-    public AbstractionLicenceNumber(List<NaldLicence> licences)
-    {
-        ArgumentNullException.ThrowIfNull(licences);
-        _licenceIndex = BuildIndex(licences);
-    }
+    private readonly Dictionary<string, NaldLicenceNumberHistory> _licenceHistory = licenceHistory
+        ?? throw new ArgumentNullException();
 
+    public static readonly string NaldLicenceNumberKey = "NaldLicenceNumber";
+    public static readonly string NaldLicenceTypeKey = "NaldLicenceType";
+    
     private Dictionary<string, List<LicenceIndexEntry>> GetLicenceIndex() => _licenceIndex;
-
-    public class LicenceIndexEntry
-    {
-        public required NaldLicence NaldLicence { get; init; }
-        public required List<string> Segments { get; init; }
-    }
 
     private static Dictionary<string, List<LicenceIndexEntry>> BuildIndex(List<NaldLicence> licences)
     {
@@ -74,15 +72,15 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
             .ToList();
     }
 
-    [GeneratedRegex(@"[^a-zA-Z0-9.]+")]
+    [GeneratedRegex("[^a-zA-Z0-9.]+")]
     private static partial Regex NonAlphanumericOrDotRegex();
 
-    [GeneratedRegex(@"[^a-zA-Z0-9]+")]
+    [GeneratedRegex("[^a-zA-Z0-9]+")]
     private static partial Regex NonAlphanumericRegex();
 
     // AA/123, AA/123/123, AA/123/123/123, 'AA 123 123 123' or AA.123.123.123 (and some other variations of this)
     public const string YorkshireRegexPatten =
-        @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b";
+        @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b(?! cubic)(?! litre)(?! million)(?! mega)";
 
     (bool Success, List<DocumentLine> MatchedLines)
             ILicenceNumberServiceCore.AnyIsLicenceNumber(
@@ -140,37 +138,77 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
                 }
 
                 var candidateSegments = ExtractSegments(candidateText);
-
+                var matchedEntries = new List<LicenceIndexEntry>();
+                
                 foreach (var entry in entries)
                 {
                     if (!AllChecksMatch(candidateSegments, candidateText, entry))
                     {
                         continue;
                     }
+                    
+                    matchedEntries.Add(entry);
+                }
 
-                    var existingColumn = line.Columns.FirstOrDefault();
-                    var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
-                        candidateText,
-                        existingColumn?.OcrConfidence,
-                        existingColumn?.Words.FirstOrDefault()?.Coordinates));
-                    
-                    // Passed all checks so add a clone of the line containing the matched NALD licence number
-                    var matchedLine = line.Clone([candidateTextColumn]);
-                    matchedLine.AdditionalData ??= new Dictionary<string, object>();
-                    matchedLine.AdditionalData.Add("NaldLicenceNumber", entry.NaldLicence.LicenceNumber);
-                        
-                    matchedLines.Add(matchedLine);
-                    
-                    // Exit early if we're looking for a single instance match
-                    if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
-                    {
-                        return (true, matchedLines);
-                    }
+                if (matchedEntries.Count == 0)
+                {
+                    continue;
+                }
+
+                var bestMatch = matchedEntries
+                    .OrderByDescending(entry => entry.NaldLicence.LicenceNumber == candidateText)
+                    .First();
+                
+                var existingColumn = line.Columns.FirstOrDefault();
+                var candidateTextColumn = new DocumentLineColumn(DocumentLineColumn.TextToWords(
+                    candidateText,
+                    existingColumn?.OcrConfidence,
+                    existingColumn?.Words.FirstOrDefault()?.Coordinates));
+                
+                // Passed all checks so add a clone of the line containing the matched NALD licence number
+                var matchedLine = line.Clone([candidateTextColumn]);
+                matchedLine.AdditionalData ??= new Dictionary<string, object>();
+                matchedLine.AdditionalData.Add(NaldLicenceNumberKey, bestMatch.NaldLicence.LicenceNumber);
+                matchedLine.AdditionalData.Add(NaldLicenceTypeKey, bestMatch.NaldLicence.Type.ToString());
+
+                matchedLines.Add(matchedLine);
+
+                // Exit early if we're looking for a single instance match
+                if (label.MultipleMatchBehaviour is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue)
+                {
+                    return (true, matchedLines);
                 }
             }
         }
 
-        return (matchedLines.Count > 0, matchedLines);
+        var returnMatchedLines = matchedLines
+            .GroupBy(matchedLine => new
+            {
+                matchedLine.Text,
+                matchedLine.PageNumber,
+                matchedLine.LineNumber
+            })
+            .Select(grp => grp.First())
+            .ToList();
+        
+        return (matchedLines.Count > 0, returnMatchedLines);
+    }
+
+    public (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
+        string? licenceNumber)
+    {
+        var item = _licenceHistory.GetValueOrDefault(licenceNumber!.ToLower());
+        var hasSuccessor = item != null;
+
+        var history = new List<NaldLicenceNumberHistory>();
+
+        while (item != null)
+        {
+            history.Add(item);
+            item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0].ToLower());
+        }
+        
+        return (hasSuccessor, history);
     }
 
     public List<NaldLicence> GetNaldLicences(string licenceNumber)
@@ -207,6 +245,7 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
         foreach (var subLine in subLines)
         {
             var licenceNumberCandidates = LicenceNumbersRegex().Matches(subLine);
+            
             if (licenceNumberCandidates.Count == 0)
             {
                 continue;
@@ -224,9 +263,23 @@ public partial class AbstractionLicenceNumber : ILicenceNumberService
 
                 var candidateSegments = ExtractSegments(candidateText);
 
-                resultList
-                    .AddRange(entries.Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
-                        .Select(entry => entry.NaldLicence));
+                var matchedEntries = entries
+                    .Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
+                    .Select(entry => entry.NaldLicence)
+                    .ToList();
+                
+                if (matchedEntries.Count == 0)
+                {
+                    continue;
+                }
+                
+                var bestMatch = matchedEntries
+                    .OrderByDescending(entry => candidateText.Contains(
+                        entry.LicenceNumber,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    .First();
+                
+                resultList.Add(bestMatch);
             }
         }
 

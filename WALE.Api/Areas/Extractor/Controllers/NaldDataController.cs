@@ -90,7 +90,25 @@ public class NaldDataController(
         [FromQuery] string licenceNumber,
         [FromQuery] int regionCode)
     {
-        var naldData = await abstractionLicenceCacheService.GetNaldLicenceAsync(licenceNumber, regionCode);
+        var naldData = await abstractionLicenceCacheService.GetNaldAbstractionLicenceAsync(licenceNumber, regionCode);
         return Ok(naldData);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetImpoundmentAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int regionCode)
+    {
+        var naldData = await abstractionLicenceCacheService.GetNaldImpoundmentLicenceAsync(licenceNumber, regionCode);
+        return Ok(naldData);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetNaldLicenceNumberHistoryAsync()
+    {
+        var history =
+            await abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
+        
+        return Ok(history);
     }
 }

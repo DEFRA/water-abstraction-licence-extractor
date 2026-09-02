@@ -31,9 +31,11 @@ public class LocalFileService(string folderPath) : IFileService
 
     public Task<Stream?> GetFileAsStreamAsync(string filename)
     {
+        var path = $"{FolderPath}{filename}";
+        
         return Task.FromResult<Stream?>(
             File.Open(
-                $"{FolderPath}{filename}",
+                path,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read));
@@ -80,6 +82,11 @@ public class LocalFileService(string folderPath) : IFileService
     }
 
     public Task CopyAsync(string filename, string destinationBucketName)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public Task<string> GetPresignedUrlAsync(string filename)
     {
         throw new NotImplementedException();
     }

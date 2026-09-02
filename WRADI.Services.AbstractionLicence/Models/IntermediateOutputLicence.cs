@@ -13,7 +13,7 @@ public class IntermediateOutputLicence
     public string? LicenceNumber;
     public double? LicenceNumberOcrConfidence;
     public int LimitsCount;
-    public int AggregatesCount;
+    public string[]? AggregateIds;
     public bool? NaldHasAggregateCondition;
     public string? IssueDate;
     public string? Issuer;

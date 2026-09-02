@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -59,6 +60,11 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
     }
 
+    public Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode)
+    {
+        return databaseReadService.GetNaldImpoundmentLicenceAsync(licenceNumber);
+    }
+
     public Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take)
     {
         return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
@@ -109,13 +115,39 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
     }
 
-    public Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
     {
-        return databaseReadService.GetNaldLicenceAsync(licenceNumber, regionCode);
+        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber);
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)
     {
         return databaseReadService.GetLicenceFinderResultAsync(fileId);
+    }
+
+    public async Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    {
+        var list = await databaseReadService.GetNaldLicenceNumberHistoryAsync();
+        var dict = new Dictionary<string, NaldLicenceNumberHistory>();
+
+        foreach (var item in list)
+        {
+            var licenceNumber = item.LicenceNumber!.ToLower();
+            
+            if (dict.ContainsKey(licenceNumber))
+            {
+                dict[licenceNumber].FollowOnLicenceNumbers.Add(item.FollowOnLicenceNumber!);
+                continue;
+            }
+            
+            dict.Add(licenceNumber, new NaldLicenceNumberHistory
+            {
+                LicenceNumber = item.LicenceNumber,
+                FollowOnLicenceNumbers = [item.FollowOnLicenceNumber!],
+                Source = item.Source
+            });
+        }
+
+        return dict;
     }
 }

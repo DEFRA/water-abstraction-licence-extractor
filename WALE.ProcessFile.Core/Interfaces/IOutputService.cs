@@ -40,9 +40,9 @@ public interface IOutputService
 
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
     
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error);
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate);
     
-    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
+    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
     public Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
@@ -81,4 +81,6 @@ public interface IOutputService
 
     Task UpdateLicenceListProcessRunAsync(
         int processRunId);
+    
+    Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
 }

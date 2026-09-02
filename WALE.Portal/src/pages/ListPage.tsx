@@ -17,9 +17,21 @@ import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
+import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListPage() {
     const [searchParams] = useSearchParams();
+    const processRunId = parseInt(searchParams.get('processRunId') ?? '0');
+
+    return (
+        <FileIdMapProvider processRunId={processRunId}>
+            <ListPageContent processRunId={processRunId}/>
+        </FileIdMapProvider>
+    );
+}
+
+function ListPageContent({processRunId}: {processRunId: number}) {
+    const {getLicenceNumber} = useFileIdMap();
     const [pageNumber, setPageNumber] = useState(1);
     const [query, setQuery] = useState<ProcessRunQuery>({
         searchTerm: '',
@@ -40,7 +52,6 @@ function ListPage() {
         sortField: '',
         licenceNumbers: []
     });
-    const processRunId = searchParams.get('processRunId');
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -48,6 +59,8 @@ function ListPage() {
     const [activeTab, setActiveTab] = useState<'licences' | 'licenceSets' | 'files' | 'actions'>('licences');
 
     const [showSingles, setShowSingles] = useState(false);
+    const [verifyType, setVerifyType] = useState('');
+    
 
     const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
 
@@ -55,7 +68,7 @@ function ListPage() {
         filteredData,
     } = useFiltering(outputList);
 
-    const totals = useTotals(filteredData);
+    const totals = useTotals(filteredData, verifyType);
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -71,7 +84,7 @@ function ListPage() {
                 take: query.take
             };
 
-            let filterKey = parseInt(processRunId ?? '0') +
+            let filterKey = processRunId +
                 (currentQuery.searchTerm ?? '') +
                 '' +
                 currentQuery.skip +
@@ -103,7 +116,7 @@ function ListPage() {
             setLoading(true);
             
             const listDataItems = await waleApiClient.getProcessRun(
-                parseInt(processRunId ?? '0'),
+                processRunId,
                 currentQuery.searchTerm,
                 '',
                 currentQuery.skip,
@@ -125,6 +138,7 @@ function ListPage() {
             );
 
             setOutputList(listDataItems.records);
+            setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
             setIssueDates(listDataItems.issueDates ?? []);
@@ -154,12 +168,47 @@ function ListPage() {
         updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string, item?: OutputListDataItem) => {
-        openReport(fileId, parseInt(processRunId ?? '0'), item, outputList, openReportWithId);
-    }, [openReport, processRunId, outputList]);
+    const openReportWithId = useCallback((fileId: string) => {
+        const knownItem = outputList.find(item => item.fileId === fileId);
+        openReport(fileId, processRunId, knownItem, openReportWithId);
+
+        if (!knownItem) {
+            const licenceNumber = getLicenceNumber(fileId);
+            if (licenceNumber) {
+                waleApiClient.getProcessRunList(
+                    processRunId,
+                    'N/A',
+                    '',
+                    0,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    [licenceNumber]
+                ).then(result => {
+                    const resolvedItem = result.records?.find(item => item.fileId === fileId);
+                    if (resolvedItem) {
+                        updateModalOutputItem(fileId, resolvedItem);
+                    }
+                }).catch(err => {
+                    console.error('Error resolving linked licence report data:', err);
+                });
+            }
+        }
+    }, [openReport, processRunId, outputList, getLicenceNumber, updateModalOutputItem]);
 
     const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
-        openLicenceSetReport(fileId, licenceSetId, parseInt(processRunId ?? '0'));
+        openLicenceSetReport(fileId, licenceSetId, processRunId);
     }, [openLicenceSetReport, processRunId]);
 
     const updateQuery = <K extends keyof ProcessRunQuery>(
@@ -275,11 +324,10 @@ function ListPage() {
                         <tbody>
                         {filteredData.map((item, index) => (
                             <LicencesTableRow
-                                item={item} 
-                                key={index} 
-                                data={filteredData} 
+                                item={item}
+                                key={index}
                                 oddRow={index % 2 === 0}
-                                onOpenReport={(fileId) => openReportWithId(fileId, item)}
+                                onOpenReport={openReportWithId}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
                             />

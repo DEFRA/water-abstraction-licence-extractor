@@ -180,7 +180,14 @@
       "points": [
         {
           "name": "C",
-          "gridRef": "SJ 5179 4988",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5179",
+              "north": "4988"
+            }
+          ],
           "containedIn": [
             {
               "source": "Document",
@@ -191,13 +198,22 @@
           ],
           "id": "2.1",
           "altId": "C",
-          "description": "At National Grid Reference SJ 5179 4988"
+          "description": "At National Grid Reference SJ 5179 4988 marked \u0022C\u0022 on the map"
         }
       ],
       "purposes": [
         {
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
           "id": "4.1",
-          "description": "Fish farm and fishery"
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -247,38 +263,6 @@
                 "linkReason": "AggregateCondition",
                 "lineNumber": 14,
                 "pageNumber": 4
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
               }
             ],
             "points": [
@@ -442,6 +426,7 @@
         "scrapedLicenceNumber": "25 68 001 249",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],
@@ -486,7 +471,14 @@
       "points": [
         {
           "name": "A",
-          "gridRef": "SJ 5158 5029",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5158",
+              "north": "5029"
+            }
+          ],
           "containedIn": [
             {
               "source": "Document",
@@ -497,13 +489,22 @@
           ],
           "id": "2.1",
           "altId": "A",
-          "description": "At National Grid Reference SJ 5158 5029"
+          "description": "At National Grid Reference SJ 5158 5029 marked \u0022A\u0022 on the map"
         }
       ],
       "purposes": [
         {
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
           "id": "4.1",
-          "description": "Fish farm and fishery"
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -553,38 +554,6 @@
                 "linkReason": "AggregateCondition",
                 "lineNumber": 14,
                 "pageNumber": 4
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
               }
             ],
             "points": [
@@ -746,6 +715,7 @@
         "scrapedLicenceNumber": "25 68 001 247",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],
@@ -790,7 +760,14 @@
       "points": [
         {
           "name": "B",
-          "gridRef": "SJ 5168 5015",
+          "nationalGridReferences": [
+            {
+              "referenceIndex": 0,
+              "sheet": "SJ",
+              "east": "5168",
+              "north": "5015"
+            }
+          ],
           "containedIn": [
             {
               "source": "Document",
@@ -801,13 +778,22 @@
           ],
           "id": "2.1",
           "altId": "B",
-          "description": "At National Grid Reference SJ 5168 5015"
+          "description": "At National Grid Reference SJ 5168 5015 marked \u0022B\u0022 on the map"
         }
       ],
       "purposes": [
         {
+          "containedIn": [
+            {
+              "source": "Document",
+              "sectionName": "Purposes",
+              "lineNumber": 10,
+              "pageNumber": 4
+            }
+          ],
           "id": "4.1",
-          "description": "Fish farm and fishery"
+          "description": "Fish farm and fishery",
+          "naldIds": []
         }
       ],
       "periodsOfAbstraction": [
@@ -857,38 +843,6 @@
                 "linkReason": "AggregateCondition",
                 "lineNumber": 14,
                 "pageNumber": 4
-              }
-            ],
-            "points": [
-              {
-                "id": "2.1",
-                "isImplicit": true
-              }
-            ],
-            "purposes": [
-              {
-                "id": "4.1",
-                "isImplicit": true
-              }
-            ]
-          },
-          {
-            "documentIdentifier": "9.1",
-            "limits": [
-              {
-                "periodType": "PerDay",
-                "value": 91,
-                "units": "cubic metres",
-                "isAverage": false
-              }
-            ],
-            "containedIn": [
-              {
-                "source": "Document",
-                "direction": "Outgoing",
-                "sectionName": "FurtherConditions",
-                "lineNumber": 14,
-                "pageNumber": 5
               }
             ],
             "points": [
@@ -1050,6 +1004,7 @@
         "scrapedLicenceNumber": "25 68 001 248",
         "Features:MeansPointsTable": false,
         "NaldSourceOfSupplyData": [],
+        "Features:FromToPointsTable": false,
         "Features:PointsTable": false,
         "NaldPointsData": [],
         "NaldPurposesData": [],

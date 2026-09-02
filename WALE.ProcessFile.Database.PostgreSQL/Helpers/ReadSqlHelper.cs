@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Dapper;
 
@@ -17,12 +18,12 @@ public static class ReadSqlHelper
 
         sql.AppendLine(
             """
-              AND search_text ILIKE @SearchTerm
+              AND search_text ILIKE '%' || @SearchTerm || '%'
             """);
 
         parameters.Add(
             "SearchTerm",
-            $"%{searchTerm.Trim()}%");
+            searchTerm.Trim());
     }
     
     public static void AddStringFilter(
@@ -146,6 +147,80 @@ public static class ReadSqlHelper
         {
             return;
         }
+        
+        
+        const string naldStatusPrefix = "naldstatus";
+
+        if (linkedLicencesType.StartsWith(
+                naldStatusPrefix,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            var naldStatus = linkedLicencesType[naldStatusPrefix.Length..].Trim();
+
+            if (string.IsNullOrWhiteSpace(naldStatus))
+            {
+                return;
+            }
+
+            parameters.Add(
+                "NaldStatus",
+                naldStatus);
+
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                      AND lower(linked_licence.nald_status) =
+                          lower(@NaldStatus)
+                )
+                """);
+
+            return;
+        }
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "HasRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                   
+                )
+                """);
+
+            return;
+        }
+
+        if (string.Equals(
+                linkedLicencesType,
+                "NoRecords",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                   
+                )
+                """);
+
+            return;
+        }
 
         if (string.Equals(
                 linkedLicencesType,
@@ -163,7 +238,11 @@ public static class ReadSqlHelper
                            linked_licence.linked_licence_id
                     WHERE linked_licence.licence_list_item_id =
                           licence_list_item.licence_list_item_id
-                      AND link_location.direction = 'Incoming'
+                    GROUP BY linked_licence.linked_licence_id
+                    HAVING COUNT(*) = 1
+                       AND COUNT(*) FILTER (
+                           WHERE link_location.direction = 'Incoming'
+                       ) = 1
                 )
                 """);
 
@@ -231,6 +310,67 @@ public static class ReadSqlHelper
             return;
         }
 
+        if (verificationType.Equals(
+                "Flagged",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND EXISTS (
+                      SELECT 1
+                      FROM licence_list_item_verification_section section
+                      INNER JOIN licence_list_item_verification_item item
+                          ON item.verification_section_id =
+                             section.verification_section_id
+                      WHERE section.licence_list_item_id =
+                            licence_list_item.licence_list_item_id
+                        AND item.scraped_data_is_different = true
+                  )
+                """);
+
+            return;
+        }
+        
+        if (verificationType.Equals(
+                "NoVerifications",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM licence_list_item_verification_section section
+                      INNER JOIN licence_list_item_verification_item item
+                          ON item.verification_section_id =
+                             section.verification_section_id
+                      WHERE section.licence_list_item_id =
+                            licence_list_item.licence_list_item_id
+                  )
+                """);
+
+            return;
+        }
+        
+        if (verificationType.Equals(
+                "AllVerifications",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                  AND EXISTS (
+                      SELECT 1
+                      FROM licence_list_item_verification_section section
+                      INNER JOIN licence_list_item_verification_item item
+                          ON item.verification_section_id =
+                             section.verification_section_id
+                      WHERE section.licence_list_item_id =
+                            licence_list_item.licence_list_item_id
+                  )
+                """);
+
+            return;
+        }
+
         sql.AppendLine(
             """
               AND EXISTS (
@@ -241,11 +381,7 @@ public static class ReadSqlHelper
                          section.verification_section_id
                   WHERE section.licence_list_item_id =
                         licence_list_item.licence_list_item_id
-                  AND EXISTS (
-                SELECT 1
-                FROM unnest(item.verification_types) AS verification_type
-                WHERE lower(verification_type) = lower(@VerificationType)
-            )
+                    AND lower(item.current_verification_type) = lower(@VerificationType)
               )
             """);
 
@@ -254,6 +390,34 @@ public static class ReadSqlHelper
             verificationType.Trim());
     }
     
+    public static void AddLicenceNumbersFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string[]? licenceNumbers)
+    {
+        var filteredLicenceNumbers = licenceNumbers?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (filteredLicenceNumbers is not { Length: > 0 })
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND lower(licence_number) = ANY(@LicenceNumbers)
+            """);
+
+        parameters.Add(
+            "LicenceNumbers",
+            filteredLicenceNumbers
+                .Select(x => x.ToLowerInvariant())
+                .ToArray());
+    }
+
     public static void AddOrdering(
         StringBuilder sql,
         string? sortField,
@@ -280,7 +444,7 @@ public static class ReadSqlHelper
                 "verification_sections_count",
             "verificationitemscount" =>
                 "verification_items_count",
-            _ => "licence_list_item_id"
+            _ => "licence_number"
         };
 
         var direction = sortAscending
@@ -290,7 +454,7 @@ public static class ReadSqlHelper
         sql.AppendLine(
             $"""
              ORDER BY {column} {direction},
-                      licence_list_item_id ASC
+                      licence_number ASC
              """);
     }
 }

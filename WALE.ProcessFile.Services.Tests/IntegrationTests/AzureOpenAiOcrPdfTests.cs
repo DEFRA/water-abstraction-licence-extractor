@@ -8,7 +8,6 @@ using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureOpenAi;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
-using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -18,6 +17,8 @@ using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -36,8 +37,10 @@ public class AzureOpenAiOcrPdfTests
             realCacheService,
             realAbsLicCacheService,
             [],
+            [],
             _fileLicenceMapping);
-
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -45,7 +48,8 @@ public class AzureOpenAiOcrPdfTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IAbstractionLicenceDatabaseReadService ReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -56,9 +60,10 @@ public class AzureOpenAiOcrPdfTests
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await DatabaseCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -84,8 +89,6 @@ public class AzureOpenAiOcrPdfTests
     
     private static readonly Dictionary<string, DmsFileData> _fileLicenceMapping = new() {{"", new DmsFileData()}};
 
-    private string PdfFolder => TestConfig.PdfFolder;
-
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
         return new LookupConfiguration(
@@ -95,6 +98,7 @@ public class AzureOpenAiOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(4),
+            new DmsLookupService(),
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is
     }
@@ -104,7 +108,7 @@ public class AzureOpenAiOcrPdfTests
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(PdfFolder),
+            await LookupConfigurationAsync(TestConfig.PdfFolder),
             
             [fileName],
             0)).Item!;
@@ -192,7 +196,7 @@ public class AzureOpenAiOcrPdfTests
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

@@ -15,7 +15,7 @@ public interface IPdfDataExtractorService
         List<string> previouslyParsedFiles,
         int processRunId);
 
-    public Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId);
+    public Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
     public Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
         LabelToMatch label,

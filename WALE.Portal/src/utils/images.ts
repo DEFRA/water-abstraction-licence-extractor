@@ -11,6 +11,6 @@ export function getImageUrl(fileId: string, pageNumber: string, serviceName: str
 }
 
 export function getPdfUrl(filename: string | undefined) : string {
-    const routeUrl = `${waleApiBaseUrl}/Extractor/Files/Get`;
+    const routeUrl = `${waleApiBaseUrl}/BFF/Files/Get`;
     return `${routeUrl}?filename=${filename}`;
 }

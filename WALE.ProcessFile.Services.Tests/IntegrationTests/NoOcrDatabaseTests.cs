@@ -20,6 +20,8 @@ using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
@@ -32,7 +34,8 @@ public class NoOcrDatabaseTests
             TestConfig.PostgresPort,
             TestConfig.PostgresDbName,
             TestConfig.PostgresUsername,
-            TestConfig.PostgresPassword);
+            TestConfig.PostgresPassword,
+            maxPoolSize: 10);
     
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
@@ -55,6 +58,7 @@ public class NoOcrDatabaseTests
             AbsLicReadService,
             AbsLicWriteService);
     
+    private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
@@ -74,11 +78,16 @@ public class NoOcrDatabaseTests
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
+
+    static NoOcrDatabaseTests()
+    {
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+    }
     
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)
     {
         var allNaldData = await AbsLicCacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
-        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!);
+        return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
 
     private static Dictionary<string, DmsFileData> FileLicenceMapping =>
@@ -102,7 +111,7 @@ public class NoOcrDatabaseTests
             }
         };
 
-    private readonly Dictionary<string, List<NaldData>> _naldData = [];
+    private readonly Dictionary<string, List<NaldAbstractionData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)
     {
@@ -113,6 +122,7 @@ public class NoOcrDatabaseTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(3),
+            new DmsLookupService(),
             3,
             DateTime.Now,
             useLockExclusivity: false);
@@ -290,7 +300,7 @@ public class NoOcrDatabaseTests
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder),
-            AbsLicCacheService);
+            AbsLicCacheService, NaldDataLookupService);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.Single();
 

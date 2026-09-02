@@ -20,6 +20,8 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.ProcessFile.Cmd.AbstractionLicence;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -36,7 +38,7 @@ return;
 
 async Task ProgramAsync(IConfiguration configurationItem)
 {
-    ConsoleHelper.WriteLine("INFO - WALE.Cmd - Started");
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     var startDateTimeUtc = DateTime.UtcNow;
     
     var services = ConfigureServices(configurationItem);
@@ -58,6 +60,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
     await outputService.SetupAsync();
 
     var firstNamesTask = cacheService.GetFirstNamesAsync();
+    var licenceNumberSuccessorsTask = abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
     
     var abstractionAndImpoundmentLicencesTask =
         SharedHelper.GetNaldImpoundmentAndAbstractionLicencesAsync(abstractionLicenceCacheService);
@@ -68,11 +71,11 @@ async Task ProgramAsync(IConfiguration configurationItem)
             services.DmsReportPath!,
             false,
             abstractionLicenceCacheService,
-            false);
+            configuration.GetValue<bool>("CheckWeHaveFileToProcess"));
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
+        .Where(x => x.Key.Contains("NE0270023036", StringComparison.OrdinalIgnoreCase))
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
@@ -94,8 +97,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRun = await processRunTask;
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
-    
-    var licenceNumberService = new AbstractionLicenceNumber(abstractionAndImpoundmentLicences);
+    var licenceNumberSuccessors = await licenceNumberSuccessorsTask;
+
+    var licenceNumberService = new AbstractionLicenceNumber(
+        abstractionAndImpoundmentLicences,
+        licenceNumberSuccessors);
+        
     services.LicenceNumberService = licenceNumberService;
     
     var naldLinkedLicenceHelper = await NaldLinkedLicenceHelper.CreateAsync(
@@ -111,6 +118,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
         services.CacheService!,
         services.OutputService!,
         services.LicenceNumberService!,
+        services.DmsLookupService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,
@@ -147,7 +155,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
                     loopLookupConfig,
                     abstractionLicenceCacheService,
                     dmsFileData,
-                    naldLicence.LicenceNumber));
+                    naldLicence.LicenceNumber,
+                    services.NaldDataLookupService!));
 
             while (scrapingTasks.Count >= maxConcurrentScrapers)
             {
@@ -208,7 +217,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
-        abstractionLicenceCacheService);
+        abstractionLicenceCacheService,
+        services.NaldDataLookupService!);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
@@ -260,10 +270,13 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     LookupConfiguration lookupConfig,
     IAbstractionLicenceCacheService cacheService,
     DmsFileData dmsDataForFile,
-    string naldLicenceNumber)
+    string naldLicenceNumber,
+    INaldDataLookupService naldDataLookupService)
 {
     var dtStart = DateTime.Now;
-    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of {totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
+    
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started {pdfFilename} ({fileNumber} of " +
+        $"{totalNumber}) at {dtStart:yyyy-MM-dd HH:mm:ss}");
     
     try
     {
@@ -289,21 +302,26 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             await pdfDataExtractor.SaveMatchResultAsync(
                 matchesResult!,
                 dmsDataForFile.FileId,
-                processRun.ProcessRunId);
+                processRun.ProcessRunId,
+                lookupConfig.UseLockExclusivity);
         }
 
+        ConsoleHelper.WriteLine(
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Started ToLicenceSetsAsync {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
         var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             matchesResult!,
             pdfDataExtractor,
             processRun.ProcessRunId,
             lookupConfig,
             cacheService,
+            naldDataLookupService,
             dmsDataForFile,
             naldLicenceNumber);
 
         var duration = (DateTime.Now - dtStart).TotalMilliseconds;
         ConsoleHelper.WriteLine(
-            $"INFO - WALE.Cmd:{pdfDataExtractor.Id}  - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - WALE.Cmd:{pdfDataExtractor.Id} - Finished (save licence sets etc..) {dmsDataForFile.FileId} ({fileNumber} of {totalNumber}) in {duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         return licenceSets;
     }
@@ -576,7 +594,9 @@ ConfiguredServices ConfigureServices(
         OutputService = outputService,
         AbstractionLicenceOutputService =
             abstractionLicenceOutputService,
+        NaldDataLookupService = new NaldDataLookupService(abstractionLicenceCacheService),
         LicenceNumberService = null,
+        DmsLookupService = new DmsLookupService(),
         PdfDataExtractorServices = pdfDataExtractors,
         MaxConcurrentScrapers = maxConcurrentScrapers,
         OutputFolder = outputFolder,

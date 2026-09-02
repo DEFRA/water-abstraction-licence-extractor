@@ -14,7 +14,7 @@ public static class GeneralTestsHelper
         GetFakeCacheService(
             ICacheService realCacheService,
             IAbstractionLicenceCacheService realAbsLiceCacheService,
-            Dictionary<string, List<NaldData>> naldData,
+            Dictionary<string, List<NaldAbstractionData>> naldData,
             Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
@@ -45,7 +45,7 @@ public static class GeneralTestsHelper
             });
         
         A
-            .CallTo(() => fakeCacheAbsLic.GetNaldLicenceAsync(A<string>._, A<int>._))
+            .CallTo(() => fakeCacheAbsLic.GetNaldAbstractionLicenceAsync(A<string>._, A<int>._))
             .ReturnsLazily(x =>
             {
                 var licenceNumberInNaldFormat = (string)x.Arguments[0]!;
@@ -64,11 +64,11 @@ public static class GeneralTestsHelper
                         continue;
                     }
                 
-                    var naldRow = (NaldData?)value[0];
+                    var naldRow = (NaldAbstractionData?)value[0];
                     return Task.FromResult(naldRow);   
                 }
                 
-                return Task.FromResult((NaldData?)null);
+                return Task.FromResult((NaldAbstractionData?)null);
             });
 
         return (fakeCache, fakeCacheAbsLic);

@@ -291,6 +291,20 @@ public class AwsS3FileService(
                 DestinationKey = filename
             });
     }
+    
+    public Task<string> GetPresignedUrlAsync(string filename)
+    {
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = FolderPath,
+            Key = filename,
+            Expires = DateTime.Now.AddMinutes(2),
+            Protocol = Protocol.HTTPS
+        };
+
+        var client = GetS3Client();
+        return client.GetPreSignedURLAsync(request);
+    }
 
     private AmazonS3Client GetS3Client()
     {

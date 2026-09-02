@@ -50,7 +50,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
-    public async Task<NaldData?> GetNaldLicenceAsync(string licenceNumber, int regionCode)
+    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -115,8 +115,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                )
                        LIMIT 1) AS HasAggCondition
                FROM nald."NALD_ABS_LICENCES"
-               WHERE "FGAC_REGION_CODE" = @RegionCode
-                    AND (
+               WHERE (
                """;
 
         var idx = 0;
@@ -139,8 +138,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                """;
 
         var paramsObj = new DynamicParameters();
-        paramsObj.Add("@RegionCode", regionCode);
-        
         idx = 0;
         
         foreach (var licenceNumberLoop in licenceNumbers)
@@ -161,7 +158,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         
         var naldData = NaldHelper.NaldAbstractionLicenceDataLineToNaldData(dataLine);
 
-        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, regionCode);
+        var versions = await GetNaldLicenceVersionsAsync(dataLine.Id, dataLine.FgacRegionCode);
         versions = versions
             .OrderByDescending(v => v.IssueNo)
             .ThenBy(v => v.IncrNo)
@@ -177,13 +174,13 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             naldData!.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var quantitiesTask = GetNaldLicenceQuantitiesAsync(
             naldData.Id,
             naldData.IssueNo!.Value,
             naldData.IncrNo!.Value,
-            regionCode);
+            dataLine.FgacRegionCode);
         
         var purposes = await purposesTask;
         
@@ -191,7 +188,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicencePurposeData(purpose, naldData);
             
-            var points = await GetNaldLicencePointsAsync(purpose.Id!, regionCode);
+            var points = await GetNaldLicencePointsAsync(purpose.Id!, dataLine.FgacRegionCode);
             
             foreach (var point in points)
             {
@@ -245,7 +242,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                is_water_company,
                                folder_name_auto_correct,
                                seen_in_dms_extract,
-                               we_have_downloaded
+                               we_have_downloaded,
+                               live_licence_found
                            FROM public.licence_finder_result
                            WHERE file_id = @FileId
                            """;
@@ -625,6 +623,445 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             CancellationToken.None);
     }
 
+    public async Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               "LIC_NO" as "LicenceNumber",
+                               "FOLL_LIC_NO" as "FollowOnLicenceNumber",
+                               case MIN(
+                                   case "SOURCE"
+                                       when 'FOLL_LIC_NO' THEN 0
+                                       when 'PREV_LIC_NO' THEN 1
+                                       when 'CONVENTION' THEN 2
+                                       when 'NOTES' THEN 3
+                                   END)
+                                   when 0 THEN 'FOLL_LIC_NO'
+                                   when 1 THEN 'PREV_LIC_NO'
+                                   when 2 THEN 'CONVENTION' 
+                                   when 3 THEN 'NOTES'
+                               END as "Source"
+                           FROM (
+                               -- Straight forward follow on licences (NOTE - 5 licences that are live have a follow on anyway)
+                               SELECT
+                                   "LIC_NO",
+                                   "FOLL_LIC_NO",
+                                   'FOLL_LIC_NO' as "SOURCE"
+                               FROM nald."NALD_ABS_LICENCES"
+                               WHERE
+                                   "FOLL_LIC_NO" IS NOT NULL
+                                   AND "FOLL_LIC_NO" <> 'N/A'
+                                   AND "FOLL_LIC_NO" NOT LIKE '%AND%'
+                                   and (
+                                       "EXPIRY_DATE" IS NOT NULL
+                                       OR "REV_DATE" IS NOT NULL
+                                       OR "LAPSED_DATE" IS NOT NULL)
+                           
+                               UNION
+                           
+                               -- Predecessor licences, reversed
+                               SELECT
+                                   "PREV_LIC_NO" as "LIC_NO",
+                                   "LIC_NO" as "FOLL_LIC_NO",
+                                   'PREV_LIC_NO' as "SOURCE"
+                               FROM nald."NALD_ABS_LICENCES"
+                               WHERE
+                                   "PREV_LIC_NO" IS NOT NULL
+                           
+                               UNION
+                           
+                               -- Look at notes to get successors
+                               SELECT
+                                   lic."LIC_NO",
+                                   REPLACE(SPLIT_PART(SUBSTRING(REPLACE(lic."NOTES", 'LIC ', ''), POSITION('REPLACED BY' IN lic."NOTES") + 12, 16), ' ', 1), '*', '') as "FOLL_LIC_NO",
+                                   'NOTES' as "SOURCE"
+                               FROM nald."NALD_ABS_LICENCES" as lic
+                               WHERE
+                                   lic."FOLL_LIC_NO" is null
+                                   and lic."NOTES" is not null
+                                   and lic."NOTES" LIKE '%REPLACED BY%'
+                                   and SPLIT_PART(SUBSTRING(REPLACE(lic."NOTES", 'LIC ', ''), POSITION('REPLACED BY' IN lic."NOTES") + 12, 16), ' ', 1) like '%/%'
+                           
+                               UNION
+                           
+                               -- Trial and error to get next one
+                               SELECT
+                                   "LIC_NO",
+                                   "SUB_LIC_NO" AS "FOLL_LIC_NO",
+                                   'CONVENTION' as "SOURCE"
+                               FROM (
+                                   -- Add R1
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", 'R1')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                                   UNION
+                           
+                                   -- Add /R1
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", '/R1')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                                   UNION
+                           
+                                   -- Add R01
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", 'R01')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                                   UNION
+                           
+                                   -- Add /R01
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", '/R01')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                                   UNION
+                           
+                                   -- Swap R01 to R02
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'R01', 'R02')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%R01'
+                           
+                                   UNION
+                           
+                                   -- Swap R02 to R03
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'R02', 'R03')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%R02'
+                           
+                                       UNION
+                           
+                                   -- Swap R03 to R04
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'R03', 'R04')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%R03'
+                           
+                                   UNION
+                           
+                                   -- Swap R04 to R05 (zero found)
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'R04', 'R05')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%R04'
+                           
+                                   UNION
+                           
+                                   -- Add A
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", 'A')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                                   UNION
+                           
+                                   -- Add /A
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", '/A')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                           
+                                   UNION
+                           
+                                   -- Swap A to B
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'A', 'B')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%Add'
+                           
+                                   UNION
+                           
+                                   -- Swap B to C
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'B', 'C')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%B'
+                           
+                                   UNION
+                           
+                                   -- Swap C to D
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'C', 'D')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%C'
+                           
+                                   UNION
+                           
+                                   -- Swap D to E
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'D', 'E')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%D'        
+                           
+                                   UNION
+                           
+                                   -- Swap E to F
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'E', 'F')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%E'     
+                           
+                                   UNION
+                           
+                                   -- Swap F to G
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", 'F', 'G')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%F'       
+                           
+                                   UNION
+                           
+                                   -- Add /1
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = CONCAT(lic."LIC_NO", '/1')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                           
+                               UNION
+                           
+                                   -- Swap /1 to /2
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", '/1', '/2')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%/1'
+                           
+                                   UNION
+                           
+                                   -- Swap /2 to /3
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", '/2', '/3')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%/2'
+                           
+                                   UNION
+                           
+                                   -- Swap /3 to /4
+                                   SELECT
+                                       lic."LIC_NO",
+                                       sublic."LIC_NO" as "SUB_LIC_NO"
+                                   FROM nald."NALD_ABS_LICENCES" as lic
+                                   JOIN nald."NALD_ABS_LICENCES" as sublic ON
+                                       sublic."LIC_NO" = REPLACE(lic."LIC_NO", '/3', '/4')
+                                   WHERE
+                                       lic."FOLL_LIC_NO" IS NULL
+                                       and (
+                                           lic."EXPIRY_DATE" IS NOT NULL
+                                           OR lic."REV_DATE" IS NOT NULL
+                                           OR lic."LAPSED_DATE" IS NOT NULL)
+                                       and lic."LIC_NO" like '%/3'
+                               )
+                           )
+                           WHERE
+                               LENGTH("LIC_NO") > 3
+                               AND "LIC_NO" <> "FOLL_LIC_NO"
+                           GROUP BY
+                               "LIC_NO",
+                               "FOLL_LIC_NO"
+                           """;
+
+        return (await QueryAsync<NaldLicenceNumberHistoryDb>(
+            connection,
+            sql,
+            0,
+            new {})
+            ).ToList();
+    }
+
+    public async Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = """
+                  SELECT 
+                        "ID" as Id,
+                        "LIC_NO" as LicenceNumber,
+                        "REV_DATE" as RevocationDate,
+                        "FGAC_REGION_CODE" as FgacRegionCode
+                  FROM nald."NALD_IMP_LICENCES"
+                  WHERE
+                      "LIC_NO" = @LicNo
+                  """;
+        
+        return await QueryFirstOrDefaultAsync<NaldImpoundmentData>(
+            connection,
+            sql,
+            0,
+            new { LicNo = licenceNumber });
+    }
+
     public async Task<List<Licence>> GetLicencesSearchAsync(
         int processRunId,
         ProcessRunQuery query)
@@ -942,6 +1379,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.ProcessRunId = processRunId;
         return data;
     }
     
@@ -978,7 +1416,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                        AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
                                        AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
                                        AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
-                                   )    
+                                   )
                            join nald."NALD_ABS_LIC_PURPOSES" pu
                                ON ver."ISSUE_NO" = pu."AABV_ISSUE_NO"
                                AND ver."INCR_NO" = pu."AABV_INCR_NO"
@@ -987,9 +1425,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            join nald."NALD_LIC_CONDITIONS" lc
                                ON pu."ID" = lc."AABP_ID"
                                AND pu."FGAC_REGION_CODE" = lc."FGAC_REGION_CODE"
-                               AND lc."ACIN_CODE" = 'AGG'
-                               AND (lc."PARAM1" IS NOT NULL 
-                                   OR lc."PARAM2" IS NOT NULL 
+                               AND (lc."PARAM1" IS NOT NULL
+                                   OR lc."PARAM2" IS NOT NULL
                                    OR lc."TEXT" IS NOT NULL)
                            WHERE
                                (lic."EXPIRY_DATE" IS NULL OR lic."EXPIRY_DATE" >= CURRENT_DATE)
@@ -1031,7 +1468,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    "LIC_NO" AS LicenceNumber,
                                    "FGAC_REGION_CODE" AS RegionCode,
                                    "ID" AS Id,
-                                   0 AS Type
+                                   3 AS Type
                                FROM nald."NALD_ABS_LICENCES"
                                
                                UNION ALL
@@ -1040,7 +1477,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                    "LIC_NO" AS LicenceNumber,
                                    "FGAC_REGION_CODE" AS RegionCode,
                                    "ID" AS Id,
-                                   1 AS Type
+                                   4 AS Type
                                FROM nald."NALD_IMP_LICENCES"
                             )
                            ORDER BY
@@ -1726,7 +2163,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
-                               created_date_time_utc AS CreatedDateTimeUtc
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
                            ORDER BY created_date_time_utc DESC
@@ -1754,12 +2192,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                verification_type AS VerificationType,
                                licence_section_item_id AS LicenceSectionItemId,
                                notes AS Notes,
-                               created_date_time_utc AS CreatedDateTimeUtc
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
                            FROM licence_section_verification
                            WHERE process_run_id <= @MaxProcessRunId
-                           ORDER BY 
-                               licence_file_id, 
-                               licence_section_name, 
+                             AND deleted_date_time_utc IS NULL
+                           ORDER BY
+                               licence_file_id,
+                               licence_section_name,
                                created_date_time_utc DESC,
                                licence_section_verification_id DESC
                            """;
@@ -1807,7 +2247,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                is_water_company,
                                folder_name_auto_correct,
                                seen_in_dms_extract,
-                               we_have_downloaded
+                               we_have_downloaded,
+                               live_licence_found
                            FROM public.licence_finder_result
                            ORDER BY
                                permit_number,
@@ -2594,6 +3035,9 @@ private static async Task<
 
             verification_item.verification_types
                 AS VerificationTypes,
+            
+            verification_item.current_verification_type
+        AS CurrentVerificationType,
 
             verification_item.scraped_data_is_different
                 AS ScrapedDataIsDifferent
@@ -2655,6 +3099,9 @@ private static async Task<
 
                                     VerificationTypes =
                                         row.VerificationTypes ?? [],
+                                    
+                                    CurrentVerificationType =  
+                                        row.CurrentVerificationType,
 
                                     ScrapedDataIsDifferent =
                                         row.ScrapedDataIsDifferent
@@ -2899,6 +3346,7 @@ private static async Task<
             licence_holder AS LicenceHolder,
             limits_count AS LimitsCount,
             aggregates_count AS AggregatesCount,
+            aggregate_ids AS AggregateIds,
             nald_aggregate as NaldAggregate,
             ocr AS Ocr,
             issue_date AS IssueDate,
@@ -2933,10 +3381,26 @@ private static async Task<
         parameters,
         query);
 
-    ReadSqlHelper.AddOrdering(
-        sql,
-        query.SortField,
-        query.SortAscending);
+    if (!string.IsNullOrEmpty(query.SearchTermClean) &&
+        string.IsNullOrWhiteSpace(query.SortField))
+    {
+        sql.AppendLine(
+            """
+            ORDER BY
+                array_position(
+                    string_to_array(lower(search_text), ' '),
+                    lower(@SearchTerm)
+                ) ASC NULLS LAST
+            """);
+    }
+    else
+    {
+        ReadSqlHelper.AddOrdering(
+            sql,
+            query.SortField,
+            query.SortAscending);  
+    }
+ 
 
     sql.AppendLine(
         """
@@ -3054,6 +3518,11 @@ private static void AddLicenceListItemFilters(
         sql,
         parameters,
         query.VerificationType);
+
+    ReadSqlHelper.AddLicenceNumbersFilter(
+        sql,
+        parameters,
+        query.LicenceNumbers);
 }
 
     // TODO move to a 'Core' layer

@@ -7,6 +7,7 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Strategies;
 
 namespace WRADI.Services.Output.AbstractionLicence;
 
@@ -163,14 +164,45 @@ public class DatabaseAbstractionLicenceOutputService(
         throw new NotImplementedException();
     }
 
-    public Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
-        return databaseReadService.GetLicenceAsync(fileId, processRunId);
+        var licence = await databaseReadService.GetLicenceAsync(fileId, processRunId);
+
+        return licence == null || !applyVerifications
+            ? licence
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId ?? fileId, processRunId);
     }
 
-    public Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId)
+    public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false)
     {
-        return databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+        var licence = await databaseReadService.GetLicenceAsync(licenceNumber, processRunId);
+
+        return licence == null || !applyVerifications || licence.DmsFileId is null
+            ? licence
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId.Value, processRunId);
+    }
+
+    private async Task<Licence> ApplyVerificationsAsync(Licence licence, Guid fileId, int processRunId)
+    {
+        var verificationLicenceMergeStrategies =
+            new List<IVerificationLicenceMergeStrategy>
+            {
+                new LinkedLicencesVerificationLicenceMergeStrategy(),
+                new AggregatesVerificationLicenceMergeStrategy()
+            }.ToDictionary(s => s.SectionName);
+
+        var verificationsBySection = await GetVerificationLookupsBySectionNameAsync(processRunId);
+        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
+
+        foreach (var (sectionName, strategy) in verificationLicenceMergeStrategies)
+        {
+            if (verificationsBySection.TryGetValue(sectionName, out var sectionVerificationLookups))
+            {
+                licence = strategy.ApplyVerifications(licence, sectionVerificationLookups, fileId, fileIdToLicenceNumberMapping);
+            }
+        }
+
+        return licence;
     }
 
     public async Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
@@ -211,7 +243,12 @@ public class DatabaseAbstractionLicenceOutputService(
     {
         return databaseWriteService.SaveLicenceSectionVerificationAsync(verification);
     }
-    
+
+    public Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
+    {
+        return databaseWriteService.DeleteLicenceSectionVerificationAsync(licenceSectionVerificationId);
+    }
+
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         return await databaseReadService.GetTotalLicenceCountAsync(processRunId, processRunQuery);

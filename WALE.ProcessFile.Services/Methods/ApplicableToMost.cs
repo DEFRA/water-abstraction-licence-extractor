@@ -25,6 +25,44 @@ public static class ApplicableToMost
         {
             return [];
         }
+
+        if (request.label.Position == LabelPosition.LabelIsActuallyResult
+            && request.label.Text == null
+            && request.label.Possibilities == null)
+        {
+            var labelGroupResult = request.labelGroupResult.Clone();
+            labelGroupResult.MatchedPosition = request.nextLines?.Count > 0
+                ? MatchedPosition.PartiallyOnSameLine
+                : MatchedPosition.FullyOnSameLine;
+
+            var lines = new List<DocumentLine> { request.line };
+
+            if (request.nextLines?.Count > 0)
+            {
+                lines.AddRange(request.nextLines);
+            }
+
+            labelGroupResult.LabelStartCharPosition = 0;
+            labelGroupResult.MatchedLabel = request.label;
+            
+            lines = DataHelper.RemoveExcludesAndNotContains(
+                request.label,
+                lines,
+                false,
+                false,
+                out _,
+                out _);
+
+            labelGroupResult.Text = lines;
+            labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        
+            if (labelGroupResult == null)
+            {
+                return [];
+            }
+            
+            return await ProcessSubLabelsAsync(request, labelGroupResult);
+        }
         
         if (request.textBeforeAtAndAfterLabel?.Any() != true
             && request.line?.Text.Equals(request.label.TextToMatch?.FirstOrDefault()?.Text, StringComparison.OrdinalIgnoreCase) == true)
@@ -104,15 +142,16 @@ public static class ApplicableToMost
                 .SelectMany(c => c.Words)
                 .Select((w, idx) =>
                 {
-                    w.Text = DataHelper.RemoveExcludes(
+                    var clonedWord = w.Clone();
+                    clonedWord.Text = DataHelper.RemoveExcludes(
                         matchedLabel,
-                        w.Text,
+                        clonedWord.Text,
                         idx == 0,
                         false,
                         idx,
                         out _);
 
-                    return w;
+                    return clonedWord;
                 })
                 .ToList();
 
@@ -246,7 +285,7 @@ public static class ApplicableToMost
                     licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
                     var returnList = new List<LabelGroupResult>();
                     
-                    // If its a floating number, its usually some weird internal refernece number
+                    // If its a floating number, its usually some weird internal reference number
                     if (licenceNumberLines.Count == 1
                         && licenceNumberLines[0].Text == request.line.Text
                         && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
@@ -255,7 +294,7 @@ public static class ApplicableToMost
                         licenceNumberLines = [];
                     }
                     
-                    // If its a number then 'M', its usually some weird internal refernece number
+                    // If its a number then 'M', its usually some weird internal reference number
                     if (licenceNumberLines.Count == 1
                         && request.line.Text == $"{licenceNumberLines[0].Text} M"
                         && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
@@ -306,7 +345,7 @@ public static class ApplicableToMost
                     
                 foreach (var licenceNumberLine in licenceNumberLinesF)
                 {
-                    var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+                    var dmsFileData = await request.dmsLookupService!.GetDmsFileDataAsync(
                         licenceNumberLine.Text,
                         request.cacheService!);
                     

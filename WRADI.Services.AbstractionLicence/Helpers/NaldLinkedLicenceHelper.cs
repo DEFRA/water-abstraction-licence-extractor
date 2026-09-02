@@ -87,17 +87,17 @@ public class NaldLinkedLicenceHelper
 
             foreach (var potentialNumberSource in potentialNumberSources)
             {
-                var text = potentialNumberSource.Value;
-                var linkCandidates = licenceNumberService.ExtractNaldLicences(text);
+                var linkedLicenceLinks = licenceNumberService.ExtractNaldLicences(
+                    potentialNumberSource.Value);
 
-                foreach (var linkCandidate in linkCandidates)
+                foreach (var linkedLicenceLink in linkedLicenceLinks)
                 {
-                    if (forwardLinkKey == linkCandidate.LicenceNumber)
+                    if (forwardLinkKey == linkedLicenceLink.LicenceNumber)
                     {
                         continue;
                     }
                     
-                    var backLinkKey = linkCandidate.LicenceNumber;
+                    var backLinkKey = linkedLicenceLink.LicenceNumber;
                     
                     // Ensure map keys are initialized in both directions
                     map.TryAdd(forwardLinkKey, []);
@@ -112,7 +112,7 @@ public class NaldLinkedLicenceHelper
                     forwardMap[backLinkKey].Add(
                         new NaldLinkedLicence
                         {
-                            NaldLicence = linkCandidate,
+                            NaldLicence = linkedLicenceLink,
                             LinkType = NaldLinkedLicenceType.Outgoing,
                             FromField = potentialNumberSource.Key,
                             SourceFields = potentialNumberSources,

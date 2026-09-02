@@ -14,7 +14,7 @@ function ProcessRunListItem({run}: ProcessRunListItemProps) {
             }}>
                 {run.processRunId} - {run.startDateTimeUtc?.toLocaleString()}
             </Link>
-             &nbsp;- {run.description} ({run.numberOfFiles} files)
+             &nbsp;- {run.description} ({run.successCount} files)
         </li>
     );
 }

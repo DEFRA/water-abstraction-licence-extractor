@@ -1211,9 +1211,10 @@ export class Client {
     /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    getByFileId(fileId: string | undefined, processRunId: number | undefined): Promise<void> {
+    getByFileId(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetByFileId?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -1223,6 +1224,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1254,9 +1259,10 @@ export class Client {
     /**
      * @param licenceNumber (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined): Promise<void> {
+    getByLicenceNumber(licenceNumber: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Licence/GetByLicenceNumber?";
         if (licenceNumber === null)
             throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
@@ -1266,6 +1272,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -2050,6 +2060,82 @@ export class Client {
     }
 
     protected processGet4(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @param regionCode (optional) 
+     * @return OK
+     */
+    getImpoundment2(licenceNumber: string | undefined, regionCode: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetImpoundment?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (regionCode === null)
+            throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
+        else if (regionCode !== undefined)
+            url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetImpoundment2(_response);
+        });
+    }
+
+    protected processGetImpoundment2(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getNaldLicenceNumberHistory(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NaldData/GetNaldLicenceNumberHistory";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetNaldLicenceNumberHistory(_response);
+        });
+    }
+
+    protected processGetNaldLicenceNumberHistory(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3143,11 +3229,63 @@ export class Client {
     }
 
     /**
-     * @param fileId (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
-    licence(fileId: string | undefined, processRunId: number | undefined): Promise<Licence> {
+    getLicenceFileIdMap(processRunId: number | undefined): Promise<{ [key: string]: string; }> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetLicenceFileIdMap?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceFileIdMap(_response);
+        });
+    }
+
+    protected processGetLicenceFileIdMap(response: Response): Promise<{ [key: string]: string; }> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (result200 as any)![key] = resultData200[key] !== undefined ? resultData200[key] : null as any;
+                }
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<{ [key: string]: string; }>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
+     * @return OK
+     */
+    licence(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<Licence> {
         let url_ = this.baseUrl + "/BFF/FileData/Licence?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -3157,6 +3295,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3192,9 +3334,10 @@ export class Client {
     /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
+     * @param applyVerifications (optional) 
      * @return OK
      */
-    licenceString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
+    licenceString(fileId: string | undefined, processRunId: number | undefined, applyVerifications: boolean | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceString?";
         if (fileId === null)
             throw new globalThis.Error("The parameter 'fileId' cannot be null.");
@@ -3204,6 +3347,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (applyVerifications === null)
+            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
+        else if (applyVerifications !== undefined)
+            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3430,6 +3577,54 @@ export class Client {
     /**
      * @return OK
      */
+    aggregateIds(body: Aggregate[]): Promise<string[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/AggregateIds";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAggregateIds(_response);
+        });
+    }
+
+    protected processAggregateIds(response: Response): Promise<string[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(item);
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     createLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
         let url_ = this.baseUrl + "/BFF/FileData/CreateLicenceSectionVerification";
         url_ = url_.replace(/[?&]$/, "");
@@ -3467,6 +3662,86 @@ export class Client {
             });
         }
         return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    deleteLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/DeleteLicenceSectionVerification";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLicenceSectionVerification(_response);
+        });
+    }
+
+    protected processDeleteLicenceSectionVerification(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @param filename (optional) 
+     * @return OK
+     */
+    get5(filename: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Files/Get?";
+        if (filename === null)
+            throw new globalThis.Error("The parameter 'filename' cannot be null.");
+        else if (filename !== undefined)
+            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGet5(_response);
+        });
+    }
+
+    protected processGet5(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -4549,6 +4824,7 @@ export class AbstractionLimit implements IAbstractionLimit {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4576,6 +4852,11 @@ export class AbstractionLimit implements IAbstractionLimit {
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
             this.valueAdditionalText = _data["valueAdditionalText"];
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4609,6 +4890,11 @@ export class AbstractionLimit implements IAbstractionLimit {
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
         data["valueAdditionalText"] = this.valueAdditionalText;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4631,6 +4917,7 @@ export interface IAbstractionLimit {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4645,6 +4932,7 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4672,6 +4960,11 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
             this.isAverage = _data["isAverage"];
             this.averagePeriod = _data["averagePeriod"];
             this.valueAdditionalText = _data["valueAdditionalText"];
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -4705,6 +4998,11 @@ export class AbstractionLimit2 implements IAbstractionLimit2 {
         data["isAverage"] = this.isAverage;
         data["averagePeriod"] = this.averagePeriod;
         data["valueAdditionalText"] = this.valueAdditionalText;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -4727,6 +5025,7 @@ export interface IAbstractionLimit2 {
     isAverage?: boolean;
     averagePeriod?: number | undefined;
     valueAdditionalText?: string | undefined;
+    containedIn?: any[] | undefined;
     points?: Point[] | undefined;
     purposes?: Purpose[] | undefined;
 
@@ -4910,7 +5209,7 @@ export class Aggregate implements IAggregate {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5037,7 +5336,7 @@ export interface IAggregate {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5118,7 +5417,7 @@ export class AggregateWithContext implements IAggregateWithContext {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5127,7 +5426,7 @@ export class AggregateWithContext implements IAggregateWithContext {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -5172,7 +5471,7 @@ export class AggregateWithContext implements IAggregateWithContext {
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
-                    this.containedIn!.push(ContainedInInformation.fromJS(item));
+                    this.containedIn!.push(item);
             }
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
@@ -5224,7 +5523,7 @@ export class AggregateWithContext implements IAggregateWithContext {
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
-                data["containedIn"].push(item ? item.toJSON() : undefined as any);
+                data["containedIn"].push(item);
         }
         if (Array.isArray(this.points)) {
             data["points"] = [];
@@ -5245,7 +5544,7 @@ export interface IAggregateWithContext {
     aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: number | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
     primaryType?: PrimaryType;
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
@@ -5254,9 +5553,65 @@ export interface IAggregateWithContext {
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
-    containedIn?: ContainedInInformation[] | undefined;
+    containedIn?: any[] | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
+
+    [key: string]: any;
+}
+
+export class CartesianReference implements ICartesianReference {
+    referenceIndex?: number;
+    east?: number | undefined;
+    north?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICartesianReference) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.referenceIndex = _data["referenceIndex"];
+            this.east = _data["east"];
+            this.north = _data["north"];
+        }
+    }
+
+    static fromJS(data: any): CartesianReference {
+        data = typeof data === 'object' ? data : {};
+        let result = new CartesianReference();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["referenceIndex"] = this.referenceIndex;
+        data["east"] = this.east;
+        data["north"] = this.north;
+        return data;
+    }
+}
+
+export interface ICartesianReference {
+    referenceIndex?: number;
+    east?: number | undefined;
+    north?: number | undefined;
 
     [key: string]: any;
 }
@@ -5319,6 +5674,7 @@ export class ContainedInInformation implements IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -5345,6 +5701,11 @@ export class ContainedInInformation implements IContainedInInformation {
             this.sectionName = _data["sectionName"];
             this.linkReason = _data["linkReason"];
             this.acinCode = _data["acinCode"];
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+            }
             if (_data["sourceFields"]) {
                 this.sourceFields = {} as any;
                 for (let key in _data["sourceFields"]) {
@@ -5375,6 +5736,11 @@ export class ContainedInInformation implements IContainedInInformation {
         data["sectionName"] = this.sectionName;
         data["linkReason"] = this.linkReason;
         data["acinCode"] = this.acinCode;
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item ? item.toJSON() : undefined as any);
+        }
         if (this.sourceFields) {
             data["sourceFields"] = {};
             for (let key in this.sourceFields) {
@@ -5394,6 +5760,7 @@ export interface IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -5990,6 +6357,7 @@ export enum InformationSource {
     Nald = "Nald",
     Document = "Document",
     OtherDocument = "OtherDocument",
+    MixedSourcesOrMixedReasons = "MixedSourcesOrMixedReasons",
 }
 
 export class LabelGroupResult implements ILabelGroupResult {
@@ -6542,6 +6910,7 @@ export interface ILicenceFinderResult {
 
 export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     licenceSectionItemId!: string;
+    currentVerificationType?: string | undefined;
     verificationTypes!: string[];
     scrapedDataIsDifferent?: boolean;
 
@@ -6566,6 +6935,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                     this[property] = _data[property];
             }
             this.licenceSectionItemId = _data["licenceSectionItemId"];
+            this.currentVerificationType = _data["currentVerificationType"];
             if (Array.isArray(_data["verificationTypes"])) {
                 this.verificationTypes = [] as any;
                 for (let item of _data["verificationTypes"])
@@ -6589,6 +6959,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 data[property] = this[property];
         }
         data["licenceSectionItemId"] = this.licenceSectionItemId;
+        data["currentVerificationType"] = this.currentVerificationType;
         if (Array.isArray(this.verificationTypes)) {
             data["verificationTypes"] = [];
             for (let item of this.verificationTypes)
@@ -6601,6 +6972,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
 
 export interface ILicenceSectionItemSummary {
     licenceSectionItemId: string;
+    currentVerificationType?: string | undefined;
     verificationTypes: string[];
     scrapedDataIsDifferent?: boolean;
 
@@ -6620,6 +6992,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+    deletedDateTimeUtc?: Date | undefined;
 
     [key: string]: any;
 
@@ -6650,6 +7023,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.notes = _data["notes"];
             this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
+            this.deletedDateTimeUtc = _data["deletedDateTimeUtc"] ? new Date(_data["deletedDateTimeUtc"].toString()) : undefined as any;
         }
     }
 
@@ -6678,6 +7052,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["notes"] = this.notes;
         data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
+        data["deletedDateTimeUtc"] = this.deletedDateTimeUtc ? this.deletedDateTimeUtc.toISOString() : undefined as any;
         return data;
     }
 }
@@ -6695,6 +7070,7 @@ export interface ILicenceSectionVerification {
     notes?: string | undefined;
     scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
+    deletedDateTimeUtc?: Date | undefined;
 
     [key: string]: any;
 }
@@ -7443,14 +7819,15 @@ export interface IMeanOfAbstraction {
     [key: string]: any;
 }
 
-export class NaldCartesianReference implements INaldCartesianReference {
-    referenceIndex?: number;
-    east?: number | undefined;
-    north?: number | undefined;
+export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistoryOutput {
+    status?: string | undefined;
+    licenceNumber?: string | undefined;
+    followOnLicenceNumbers?: string[];
+    source?: string | undefined;
 
     [key: string]: any;
 
-    constructor(data?: INaldCartesianReference) {
+    constructor(data?: INaldLicenceNumberHistoryOutput) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7465,15 +7842,20 @@ export class NaldCartesianReference implements INaldCartesianReference {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.referenceIndex = _data["referenceIndex"];
-            this.east = _data["east"];
-            this.north = _data["north"];
+            this.status = _data["status"];
+            this.licenceNumber = _data["licenceNumber"];
+            if (Array.isArray(_data["followOnLicenceNumbers"])) {
+                this.followOnLicenceNumbers = [] as any;
+                for (let item of _data["followOnLicenceNumbers"])
+                    this.followOnLicenceNumbers!.push(item);
+            }
+            this.source = _data["source"];
         }
     }
 
-    static fromJS(data: any): NaldCartesianReference {
+    static fromJS(data: any): NaldLicenceNumberHistoryOutput {
         data = typeof data === 'object' ? data : {};
-        let result = new NaldCartesianReference();
+        let result = new NaldLicenceNumberHistoryOutput();
         result.init(data);
         return result;
     }
@@ -7484,17 +7866,23 @@ export class NaldCartesianReference implements INaldCartesianReference {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["referenceIndex"] = this.referenceIndex;
-        data["east"] = this.east;
-        data["north"] = this.north;
+        data["status"] = this.status;
+        data["licenceNumber"] = this.licenceNumber;
+        if (Array.isArray(this.followOnLicenceNumbers)) {
+            data["followOnLicenceNumbers"] = [];
+            for (let item of this.followOnLicenceNumbers)
+                data["followOnLicenceNumbers"].push(item);
+        }
+        data["source"] = this.source;
         return data;
     }
 }
 
-export interface INaldCartesianReference {
-    referenceIndex?: number;
-    east?: number | undefined;
-    north?: number | undefined;
+export interface INaldLicenceNumberHistoryOutput {
+    status?: string | undefined;
+    licenceNumber?: string | undefined;
+    followOnLicenceNumbers?: string[];
+    source?: string | undefined;
 
     [key: string]: any;
 }
@@ -7508,7 +7896,7 @@ export enum NaldLicenceStatus {
     Curr = "Curr",
 }
 
-export class NaldNationalGridReference implements INaldNationalGridReference {
+export class NationalGridReference implements INationalGridReference {
     referenceIndex?: number;
     sheet?: string | undefined;
     east?: string | undefined;
@@ -7516,7 +7904,7 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
 
     [key: string]: any;
 
-    constructor(data?: INaldNationalGridReference) {
+    constructor(data?: INationalGridReference) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7538,9 +7926,9 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
         }
     }
 
-    static fromJS(data: any): NaldNationalGridReference {
+    static fromJS(data: any): NationalGridReference {
         data = typeof data === 'object' ? data : {};
-        let result = new NaldNationalGridReference();
+        let result = new NationalGridReference();
         result.init(data);
         return result;
     }
@@ -7559,159 +7947,11 @@ export class NaldNationalGridReference implements INaldNationalGridReference {
     }
 }
 
-export interface INaldNationalGridReference {
+export interface INationalGridReference {
     referenceIndex?: number;
     sheet?: string | undefined;
     east?: string | undefined;
     north?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class NaldPointData implements INaldPointData {
-    id?: string | undefined;
-    name?: string | undefined;
-    nationalGridReferences?: NaldNationalGridReference[];
-    cartesianReferences?: NaldCartesianReference[];
-    naldPurposeIds?: number[];
-
-    [key: string]: any;
-
-    constructor(data?: INaldPointData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.name = _data["name"];
-            if (Array.isArray(_data["nationalGridReferences"])) {
-                this.nationalGridReferences = [] as any;
-                for (let item of _data["nationalGridReferences"])
-                    this.nationalGridReferences!.push(NaldNationalGridReference.fromJS(item));
-            }
-            if (Array.isArray(_data["cartesianReferences"])) {
-                this.cartesianReferences = [] as any;
-                for (let item of _data["cartesianReferences"])
-                    this.cartesianReferences!.push(NaldCartesianReference.fromJS(item));
-            }
-            if (Array.isArray(_data["naldPurposeIds"])) {
-                this.naldPurposeIds = [] as any;
-                for (let item of _data["naldPurposeIds"])
-                    this.naldPurposeIds!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): NaldPointData {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldPointData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["name"] = this.name;
-        if (Array.isArray(this.nationalGridReferences)) {
-            data["nationalGridReferences"] = [];
-            for (let item of this.nationalGridReferences)
-                data["nationalGridReferences"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.cartesianReferences)) {
-            data["cartesianReferences"] = [];
-            for (let item of this.cartesianReferences)
-                data["cartesianReferences"].push(item ? item.toJSON() : undefined as any);
-        }
-        if (Array.isArray(this.naldPurposeIds)) {
-            data["naldPurposeIds"] = [];
-            for (let item of this.naldPurposeIds)
-                data["naldPurposeIds"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface INaldPointData {
-    id?: string | undefined;
-    name?: string | undefined;
-    nationalGridReferences?: NaldNationalGridReference[];
-    cartesianReferences?: NaldCartesianReference[];
-    naldPurposeIds?: number[];
-
-    [key: string]: any;
-}
-
-export class NaldPurposeData implements INaldPurposeData {
-    id?: string | undefined;
-    code?: string | undefined;
-    useCode?: string | undefined;
-    useDescription?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: INaldPurposeData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.code = _data["code"];
-            this.useCode = _data["useCode"];
-            this.useDescription = _data["useDescription"];
-        }
-    }
-
-    static fromJS(data: any): NaldPurposeData {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldPurposeData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["code"] = this.code;
-        data["useCode"] = this.useCode;
-        data["useDescription"] = this.useDescription;
-        return data;
-    }
-}
-
-export interface INaldPurposeData {
-    id?: string | undefined;
-    code?: string | undefined;
-    useCode?: string | undefined;
-    useDescription?: string | undefined;
 
     [key: string]: any;
 }
@@ -7758,6 +7998,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     purposes?: string[] | undefined;
     points?: string[] | undefined;
     limitsCount?: number;
+    aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
@@ -7802,6 +8043,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                     this.points!.push(item);
             }
             this.limitsCount = _data["limitsCount"];
+            if (Array.isArray(_data["aggregateIds"])) {
+                this.aggregateIds = [] as any;
+                for (let item of _data["aggregateIds"])
+                    this.aggregateIds!.push(item);
+            }
             this.aggregatesCount = _data["aggregatesCount"];
             this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
@@ -7856,6 +8102,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                 data["points"].push(item);
         }
         data["limitsCount"] = this.limitsCount;
+        if (Array.isArray(this.aggregateIds)) {
+            data["aggregateIds"] = [];
+            for (let item of this.aggregateIds)
+                data["aggregateIds"].push(item);
+        }
         data["aggregatesCount"] = this.aggregatesCount;
         data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
@@ -7891,6 +8142,7 @@ export interface IOutputListDataItem {
     purposes?: string[] | undefined;
     points?: string[] | undefined;
     limitsCount?: number;
+    aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
@@ -8288,7 +8540,9 @@ export interface IPeriodOfAbstraction {
 export class Point implements IPoint {
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8310,7 +8564,9 @@ export class Point implements IPoint {
             }
             this.id = _data["id"];
             this.altId = _data["altId"];
+            this.naldId = _data["naldId"];
             this.description = _data["description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8330,7 +8586,9 @@ export class Point implements IPoint {
         }
         data["id"] = this.id;
         data["altId"] = this.altId;
+        data["naldId"] = this.naldId;
         data["description"] = this.description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -8339,22 +8597,28 @@ export class Point implements IPoint {
 export interface IPoint {
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
 
 export class PointOfAbstraction implements IPointOfAbstraction {
-    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     name?: string | undefined;
-    gridRef?: string | undefined;
+    knownAs?: string | undefined;
+    near?: string | undefined;
+    nationalGridReferences?: NationalGridReference[] | undefined;
+    cartesianReferences?: CartesianReference[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8374,14 +8638,24 @@ export class PointOfAbstraction implements IPointOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldData = _data["naldData"] ? NaldPointData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["purposeIds"])) {
                 this.purposeIds = [] as any;
                 for (let item of _data["purposeIds"])
                     this.purposeIds!.push(item);
             }
             this.name = _data["name"];
-            this.gridRef = _data["gridRef"];
+            this.knownAs = _data["knownAs"];
+            this.near = _data["near"];
+            if (Array.isArray(_data["nationalGridReferences"])) {
+                this.nationalGridReferences = [] as any;
+                for (let item of _data["nationalGridReferences"])
+                    this.nationalGridReferences!.push(NationalGridReference.fromJS(item));
+            }
+            if (Array.isArray(_data["cartesianReferences"])) {
+                this.cartesianReferences = [] as any;
+                for (let item of _data["cartesianReferences"])
+                    this.cartesianReferences!.push(CartesianReference.fromJS(item));
+            }
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
@@ -8390,7 +8664,9 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             }
             this.id = _data["id"];
             this.altId = _data["altId"];
+            this.naldId = _data["naldId"];
             this.description = _data["description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8408,14 +8684,24 @@ export class PointOfAbstraction implements IPointOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.purposeIds)) {
             data["purposeIds"] = [];
             for (let item of this.purposeIds)
                 data["purposeIds"].push(item);
         }
         data["name"] = this.name;
-        data["gridRef"] = this.gridRef;
+        data["knownAs"] = this.knownAs;
+        data["near"] = this.near;
+        if (Array.isArray(this.nationalGridReferences)) {
+            data["nationalGridReferences"] = [];
+            for (let item of this.nationalGridReferences)
+                data["nationalGridReferences"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.cartesianReferences)) {
+            data["cartesianReferences"] = [];
+            for (let item of this.cartesianReferences)
+                data["cartesianReferences"].push(item ? item.toJSON() : undefined as any);
+        }
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
@@ -8424,22 +8710,28 @@ export class PointOfAbstraction implements IPointOfAbstraction {
         }
         data["id"] = this.id;
         data["altId"] = this.altId;
+        data["naldId"] = this.naldId;
         data["description"] = this.description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
 
 export interface IPointOfAbstraction {
-    naldData?: NaldPointData | undefined;
     purposeIds?: string[] | undefined;
     name?: string | undefined;
-    gridRef?: string | undefined;
+    knownAs?: string | undefined;
+    near?: string | undefined;
+    nationalGridReferences?: NationalGridReference[] | undefined;
+    cartesianReferences?: CartesianReference[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
     containedIn?: ContainedInInformation[] | undefined;
     id?: string | undefined;
     altId?: string | undefined;
+    naldId?: string | undefined;
     description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8789,6 +9081,8 @@ export interface IProcessRunResponse {
 export class Purpose implements IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8810,6 +9104,12 @@ export class Purpose implements IPurpose {
             }
             this.id = _data["id"];
             this.description = _data["description"];
+            if (Array.isArray(_data["naldIds"])) {
+                this.naldIds = [] as any;
+                for (let item of _data["naldIds"])
+                    this.naldIds!.push(item);
+            }
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8829,6 +9129,12 @@ export class Purpose implements IPurpose {
         }
         data["id"] = this.id;
         data["description"] = this.description;
+        if (Array.isArray(this.naldIds)) {
+            data["naldIds"] = [];
+            for (let item of this.naldIds)
+                data["naldIds"].push(item);
+        }
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -8837,17 +9143,21 @@ export class Purpose implements IPurpose {
 export interface IPurpose {
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
 }
 
 export class PurposeOfAbstraction implements IPurposeOfAbstraction {
-    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: any[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -8867,15 +9177,25 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.naldData = _data["naldData"] ? NaldPurposeData.fromJS(_data["naldData"]) : undefined as any;
             if (Array.isArray(_data["pointIds"])) {
                 this.pointIds = [] as any;
                 for (let item of _data["pointIds"])
                     this.pointIds!.push(item);
             }
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
             this.id = _data["id"];
             this.description = _data["description"];
+            if (Array.isArray(_data["naldIds"])) {
+                this.naldIds = [] as any;
+                for (let item of _data["naldIds"])
+                    this.naldIds!.push(item);
+            }
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -8893,26 +9213,38 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["naldData"] = this.naldData ? this.naldData.toJSON() : undefined as any;
         if (Array.isArray(this.pointIds)) {
             data["pointIds"] = [];
             for (let item of this.pointIds)
                 data["pointIds"].push(item);
         }
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
         data["id"] = this.id;
         data["description"] = this.description;
+        if (Array.isArray(this.naldIds)) {
+            data["naldIds"] = [];
+            for (let item of this.naldIds)
+                data["naldIds"].push(item);
+        }
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
 }
 
 export interface IPurposeOfAbstraction {
-    naldData?: NaldPurposeData | undefined;
     pointIds?: string[] | undefined;
     timeCutoff?: TimeCutoff | undefined;
+    containedIn?: any[] | undefined;
     id?: string | undefined;
     description?: string | undefined;
+    naldIds?: string[] | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;

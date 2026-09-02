@@ -115,7 +115,7 @@ public static class SharedHelper
         ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - UpdateAndSaveLicenceSetsAsync " +
             $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        var idx = 0;
+        var idx = 1;
         
         foreach (var licenceSetGroup in licenceSetGroups)
         {

@@ -112,7 +112,9 @@ public static class FindLabelGroupMatchesHelper
                     
                     if (lookingForSingleLine)
                     {
+                        previousLines ??= line.PreviousLines(lines, label);
                         nextLines ??= line.NextLines(lines, label);
+                        
                         var nextLine = nextLines.FirstOrDefault();
                         
                         var thisLineStartsWithCapital = char.IsUpper(partialLine.Text[0]);
@@ -123,15 +125,20 @@ public static class FindLabelGroupMatchesHelper
                             && char.IsUpper(nextLine.Text[0]);
 
                         const int maxNoneWrappedLineLength = 60;
+                        
                         var lineIsNotWrapping = partialLine.Text.Length <= maxNoneWrappedLineLength;
+                        var previousLineIsNotWrapping = previousLines.Count == 0 || previousLines[0].Text.Length <= maxNoneWrappedLineLength;
                         
                         var matchesRule = thisLineStartsWithCapital
                             && lineIsNotWrapping
+                            && previousLineIsNotWrapping
                             && (nextLineStartsWithCapital || thisIsLastLine);
 
                         if (matchesRule)
                         {
                             rulePassed = true;
+                            label.Text = [label.Text!.First(lt => lt.SingleLinePerItem)];
+                            matchedStartText = label.Text.Single();
                             
                             // Clear out the next lines, as we are doing it in isolation
                             nextLines = [];
@@ -275,6 +282,7 @@ public static class FindLabelGroupMatchesHelper
                         outputService = lookupConfiguration.OutputService,
                         cacheService = lookupConfiguration.CacheService,
                         licenceNumberService = lookupConfiguration.LicenceNumberService,
+                        dmsLookupService = lookupConfiguration.DmsLookupService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
                         line = partialLine,
@@ -457,7 +465,7 @@ public static class FindLabelGroupMatchesHelper
                 continue;
             }
             
-            var dmsFileData = await FormattingHelper.GetDmsFileDataAsync(licenceNumber.Text, lookupConfiguration.CacheService);
+            var dmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(licenceNumber.Text, lookupConfiguration.CacheService);
                     
             if (dmsFileData == null)
             {
@@ -485,7 +493,7 @@ public static class FindLabelGroupMatchesHelper
             var clonedConfig = lookupConfiguration.Clone();
             clonedConfig.RegionId = regionCode;
             
-            var linkedDmsFileData = await FormattingHelper.GetDmsFileDataAsync(
+            var linkedDmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
                 relatedLicenceNumber,
                 lookupConfiguration.CacheService);
 
@@ -520,7 +528,8 @@ public static class FindLabelGroupMatchesHelper
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         linkedDmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -531,7 +540,8 @@ public static class FindLabelGroupMatchesHelper
                     relatedFileName,
                     linkedDmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }

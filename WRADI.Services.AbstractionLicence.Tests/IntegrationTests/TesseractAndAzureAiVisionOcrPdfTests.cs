@@ -14,9 +14,12 @@ using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tesseract;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
+using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 
@@ -29,15 +32,45 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
 
+        var naldData = new Dictionary<string, List<NaldAbstractionData>>
+        {
+                { "3|2_27_22_395",
+                [
+                    new NaldAbstractionData
+                    {
+                        Points = [
+                            new()
+                            {
+                                PointName = "absdsd",
+                                RegionCode = 3,
+                                PointId = 54556,
+                                NationalGridReferences = [
+                                    new()
+                                    {
+                                        East = "2865",
+                                        North = "7639",
+                                        Sheet = "SE"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
         (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
-            [],
+            naldData,
             []);
+        
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     
@@ -50,8 +83,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         new PdfPigNoOcrDataExtractorService(),
         new List<IOcrDataExtractorService>
         {
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.SparseTextOsd, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
-            new TesseractOcrDataExtractorService(TestConfig.TesseractPath, PageSegMode.Auto, CacheService, OutputService, TestConfig.DotnetPath, TestConfig.TesseractExeName, TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(
+                TestConfig.TesseractPath,
+                PageSegMode.SparseTextOsd,
+                CacheService, OutputService,
+                TestConfig.DotnetPath,
+                TestConfig.TesseractExeName,
+                TestConfig.TesseractExeDirectory),
+            new TesseractOcrDataExtractorService(
+                TestConfig.TesseractPath,
+                PageSegMode.Auto,
+                CacheService,
+                OutputService,
+                TestConfig.DotnetPath,
+                TestConfig.TesseractExeName,
+                TestConfig.TesseractExeDirectory),
             new AzureAiVisionOcrDataExtractorService(
                 TestConfig.AiVisionEndpoint,
                 TestConfig.AiVisionKey,
@@ -64,22 +110,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         DocnetAlternativeDocumentService,
         MessageQueueService);
     
-    private async Task<MatchesResult> GetMatchesAsync(string fileName, int useFolder, int regionCode)
+    private async Task<MatchesResult> GetMatchesAsync(string fileName, int regionCode)
     {
-        var folder = useFolder switch
-        {
-            1 => TestConfig.PdfFolder,
-            2 => TestConfig.PdfFolder2,            
-            3 => TestConfig.PdfFolder3,
-            4 => TestConfig.PdfFolder4,
-            5 => TestConfig.PdfFolder5,
-            _ => throw new Exception("Number not known")
-        };
-
         return (await _pdfDataExtractor.GetMatchesAsync(
             fileName,
             new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(fileName) },
-            await LookupConfigurationAsync(regionCode, folder),
+            await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder),
             [fileName],
             0)).Item!;
     }
@@ -108,6 +144,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             CacheService,
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            new DmsLookupService(),
             regionCode,
             DateTime.Now,
             useLockExclusivity: false);
@@ -122,20 +159,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22723435__cc941f55-ce5d-dbbf-9126-a69b8382e3ea.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 5, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(7, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder5);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -145,9 +183,10 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
-        Assert.Equal("SE 3266 8147", licence.Points[0].GridRef);
+        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference SE 3266 8147", licence.Points[0].Description);
+        Assert.Equal("At National Grid Reference SE 3266 8147 marked \"A\" on the map", licence.Points[0].Description);
+        Assert.Equal("SE 3266 8147", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Id);
 
         Assert.NotNull(licence.Purposes);
@@ -180,6 +219,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.False(licence.AbstractionLimits.Individual[0].Purposes![0].IsImplicit);
         
         Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
+        Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Individual[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);  
         Assert.Equal("thousand cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
         Assert.Equal(1, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
@@ -194,6 +236,11 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(licence.AbstractionLimits.Aggregates);
         Assert.Single(licence.AbstractionLimits.Aggregates);
         
+        Assert.Equal(3, licence.AbstractionLimits.Aggregates[0].Limits.Count);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
+        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);  
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[0].Units);
         Assert.Equal(36.36, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
@@ -207,6 +254,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].ContainedIn);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[1].Units);
         Assert.Equal(618.20, licence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Aggregates[0].Limits[1].PeriodType);
@@ -220,6 +268,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(2)", licence.AbstractionLimits.Aggregates[0].Purposes![1].Id);
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
+        Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[2].ContainedIn);
         Assert.Equal("litres", licence.AbstractionLimits.Aggregates[0].Limits[2].Units);
         Assert.Equal(10.10, licence.AbstractionLimits.Aggregates[0].Limits[2].Value);
         Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Aggregates[0].Limits[2].PeriodType);
@@ -243,20 +292,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22722395A__Non-Application Licence Document (22.10.2001).pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 2, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(13, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder3);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
@@ -266,13 +316,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Equal(2, licence.Points.Length);
-        Assert.Equal("SE 2858 7577", licence.Points[0].GridRef);
+        Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference point SE 2858 7577", licence.Points[0].Description);
+        Assert.Equal("At National Grid Reference point SE 2858 7577 marked 'A' on the map", licence.Points[0].Description);
+        Assert.Equal("SE 2858 7577", licence.Points[0].NationalGridReferences[0].ToString());
         Assert.Equal("(1)", licence.Points[0].Id);
-        Assert.Equal("SE 2850 7629", licence.Points[1].GridRef);
+        Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("B", licence.Points[1].Name);
-        Assert.Equal("At National Grid Reference point SE 2850 7629", licence.Points[1].Description);
+        Assert.Equal("At National Grid Reference point SE 2850 7629 marked 'B' on the map", licence.Points[1].Description);
+        Assert.Equal("SE 2850 7629", licence.Points[1].NationalGridReferences[0].ToString());
         Assert.Equal("(2)", licence.Points[1].Id);
 
         Assert.NotNull(licence.Purposes);
@@ -288,12 +340,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         var agg = licence.AbstractionLimits.Aggregates[0];
         Assert.Equal(3, agg.Limits.Count);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("cubic metres", agg.Limits[0].Units);
         Assert.Equal(9.1, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, agg.Limits[0].PeriodType);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("cubic metres", agg.Limits[1].Units);
         Assert.Equal(218, agg.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, agg.Limits[1].PeriodType);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("litres", agg.Limits[2].Units);
         Assert.Equal(2.53, agg.Limits[2].Value);
         Assert.Equal(LimitPeriodType.PerSecond, agg.Limits[2].PeriodType);
@@ -310,12 +371,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         agg = licence.AbstractionLimits.Aggregates[1];
         Assert.Equal(3, agg.Limits.Count);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("cubic metres", agg.Limits[0].Units);
         Assert.Equal(22.7, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, agg.Limits[0].PeriodType);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("cubic metres", agg.Limits[1].Units);
         Assert.Equal(545, agg.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, agg.Limits[1].PeriodType);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("litres", agg.Limits[2].Units);
         Assert.Equal(6.31, agg.Limits[2].Value);
         Assert.Equal(LimitPeriodType.PerSecond, agg.Limits[2].PeriodType);        
@@ -331,6 +401,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         agg = licence.AbstractionLimits.Aggregates[2];
         Assert.Single(agg.Limits);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("thousand cubic metres", agg.Limits[0].Units);
         Assert.Equal(66, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, agg.Limits[0].PeriodType);
@@ -348,6 +421,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         agg = licence.AbstractionLimits.Aggregates[3];
         Assert.Single(agg.Limits);
+        Assert.NotNull(agg.ContainedIn);
+        Assert.Single(agg.ContainedIn!);
+        Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
         Assert.Equal("thousand cubic metres", agg.Limits[0].Units);
         Assert.Equal(10, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, agg.Limits[0].PeriodType);
@@ -372,20 +448,21 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         const string filename = "22722395__Licence (PDF) 24.08.2006 7556094.pdf";
 
         // Act
-        var resultFull = await GetMatchesAsync(filename, 4, regionCode: regionCode);
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
         Assert.Equal(21, resultList.Count);
         
-        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder4);
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
         var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             config,
-            AbsLicCacheService);
+            AbsLicCacheService,
+            NaldDataLookupService);
         
         Assert.Equal(2, abstractionLicence.Count);
         Assert.Single(abstractionLicence.First().Licences);
@@ -397,10 +474,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);
-        Assert.Equal("SE 2865 7639", licence.Points[0].GridRef);
+        Assert.Equal(2, licence.Points[0].ContainedIn!.Length);
+        Assert.Equal("absdsd", licence.Points[0].NaldDescription);
+        Assert.Equal("At National Grid Reference point SE 2865 7639 marked \"A\" on the map", licence.Points[0].Description);
         Assert.Equal("A", licence.Points[0].Name);
-        Assert.Equal("At National Grid Reference point SE 2865 7639", licence.Points[0].Description);
         Assert.Equal("A", licence.Points[0].Id);
+        Assert.Equal("54556", licence.Points[0].NaldId);
+        Assert.Equal(InformationSource.Document, licence.Points[0].ContainedIn![0].Source);
+        Assert.Equal(InformationSource.Nald, licence.Points[0].ContainedIn![1].Source);
+        Assert.Equal("SE 2865 7639", licence.Points[0].NationalGridReferences![0].ToString());
 
         Assert.NotNull(licence.Purposes);
         Assert.Single(licence.Purposes);
@@ -412,9 +494,12 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         var limitBlock = licence.AbstractionLimits.Individual[0];
         Assert.Equal(4, limitBlock.Limits.Count);
+        Assert.NotNull(limitBlock.ContainedIn);
+        Assert.Single(limitBlock.ContainedIn!);
+        Assert.Equal(InformationSource.Document, limitBlock.ContainedIn![0].Source);  
         Assert.Equal("cubic metres", limitBlock.Limits[0].Units);
         Assert.Equal(22.7, limitBlock.Limits[0].Value);
-        Assert.Equal(LimitPeriodType.PerHour, limitBlock.Limits[0].PeriodType); 
+        Assert.Equal(LimitPeriodType.PerHour, limitBlock.Limits[0].PeriodType);
         Assert.Single(limitBlock.Points!);
         Assert.Null(limitBlock.Limits[0].Points!);
         Assert.Equal("A", limitBlock.Points![0].Id);
@@ -428,6 +513,9 @@ public class TesseractAndAzureAiVisionOcrPdfTests
 
         limitBlock = licence.AbstractionLimits.Aggregates[0];
         Assert.Single(limitBlock.Limits);
+        Assert.NotNull(limitBlock.ContainedIn);
+        Assert.Single(limitBlock.ContainedIn!);
+        Assert.Equal(InformationSource.Document, limitBlock.ContainedIn![0].Source);  
         Assert.Equal("thousand cubic metres", limitBlock.Limits[0].Units);
         Assert.Equal(120, limitBlock.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, limitBlock.Limits[0].PeriodType); 

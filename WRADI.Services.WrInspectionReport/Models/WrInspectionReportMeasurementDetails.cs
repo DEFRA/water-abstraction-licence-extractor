@@ -3,11 +3,19 @@ namespace WRADI.DocumentType.WrInspectionReport.Models;
 public class WrInspectionReportMeasurementDetails
 {
     public string? MeterMake { get; set; }
-    
+
     public string? SerialNumber { get; set; }
-    
+
+    public string? MeterAssetNumber { get; set; }
+
     public string? Reading { get; set; }
-    
+
+    public string? FlowRate { get; set; }
+
+    public string? Verification { get; set; }
+
+    public string? SpotCheckResult { get; set; }
+
     public string? Units { get; set; }
     
     public string? Other { get; set; }

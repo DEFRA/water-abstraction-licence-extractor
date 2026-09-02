@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Globalization;
+using CsvHelper;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
@@ -11,6 +13,8 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Csv;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 using Xunit.Abstractions;
 
@@ -128,9 +132,28 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var formsList = forms.ToList();
         var total = files.Count;
 
+        var csvPath = Path.Combine(pdfFolder, "_extraction-results.csv");
+        var csvRows = formsList
+            .OrderBy(f => f.Metadata.Filename, StringComparer.OrdinalIgnoreCase)
+            .Select(WrInspectionReportCsvLine.FromForm)
+            .ToList();
+
+        await using (var writer = new StreamWriter(csvPath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(csvRows);
+        }
+
+        testOutputHelper.WriteLine($"CSV written to:           {csvPath}");
+
         var licenceNumberFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.LicenceNumber));
         var inspectionDateFound = formsList.Count(f => f.InspectionDate.DateTime != null);
         var inspectingOfficerFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.InspectingOfficer));
+
+        var sourceOfSupplyResolved = formsList.Count(f =>
+            f.LicenceProvisions.SourceOfSupply is InOrderStatus.InOrder or InOrderStatus.NotInOrder or InOrderStatus.NotApplicable);
+        var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
+        var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.MeterMake));
 
         testOutputHelper.WriteLine($"Total files:              {total}");
         testOutputHelper.WriteLine($"Processed without error:  {formsList.Count}");
@@ -138,6 +161,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"LicenceNumber found:      {licenceNumberFound} ({Percent(licenceNumberFound, total)})");
         testOutputHelper.WriteLine($"InspectionDate found:     {inspectionDateFound} ({Percent(inspectionDateFound, total)})");
         testOutputHelper.WriteLine($"InspectingOfficer found:  {inspectingOfficerFound} ({Percent(inspectingOfficerFound, total)})");
+        testOutputHelper.WriteLine($"SourceOfSupply resolved:  {sourceOfSupplyResolved} ({Percent(sourceOfSupplyResolved, total)})");
+        testOutputHelper.WriteLine($"SpotCheckResult found:    {spotCheckResultFound} ({Percent(spotCheckResultFound, total)})");
+        testOutputHelper.WriteLine($"MeterMake found:          {meterMakeFound} ({Percent(meterMakeFound, total)})");
 
         if (failures.Count > 0)
         {

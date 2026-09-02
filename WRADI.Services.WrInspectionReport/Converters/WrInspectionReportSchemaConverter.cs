@@ -302,7 +302,11 @@ public static class WrInspectionReportSchemaConverter
             {
                 MeterMake = GetMultilineText(matchesResult, "MeterMake"),
                 SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
+                MeterAssetNumber = GetMultilineText(matchesResult, "MeterAssetNumber"),
                 Reading = GetMultilineText(matchesResult, "Reading"),
+                FlowRate = GetMultilineText(matchesResult, "FlowRate"),
+                Verification = GetMultilineText(matchesResult, "Verification"),
+                SpotCheckResult = GetMultilineText(matchesResult, "SpotCheckResult"),
                 Units = GetMultilineText(matchesResult, "Units"),
                 Other = GetMultilineText(matchesResult, "Other"),
                 CertificatesOrRecordsAvailableFor = GetMultilineText(matchesResult, "CertificatesOfRecords"),
@@ -407,13 +411,15 @@ public static class WrInspectionReportSchemaConverter
         }
 
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
-            || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase))
+            || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("y", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.InOrder;
         }
-        
+
         if (text.Equals("not", StringComparison.InvariantCultureIgnoreCase)
-            || text.Equals("X", StringComparison.InvariantCultureIgnoreCase))
+            || text.Equals("X", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("n", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.NotInOrder;
         }

@@ -32,17 +32,31 @@ public class WrInspectionReportLabelConfiguration
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             ("NameAndAddress", TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 7, LimitTo.SameColumn)),
-            ("MeterMake", TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn)),
-            ("SerialNumber", TextAfterLabel("Serial number", "SerialNumber", 0)),
-            ("Reading", TextAfterLabel("Reading", "Reading", 0)),
+            ("MeterMake", [
+                ..TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn), // Existing template
+                ..TextToFindIsBetweenLabels("Meter Make", "Meter Serial Number", "MeterMakeT6", 1, LimitTo.SameColumn) // T6 template
+            ]),
+            ("SerialNumber", [
+                ..TextAfterLabel("Serial number", "SerialNumber", 0), // Existing template
+                ..TextToFindIsBetweenLabels("Meter Serial Number", "Meter Asset Number", "SerialNumberT6", 1, LimitTo.SameColumn) // T6 template
+            ]),
+            ("MeterAssetNumber", TextToFindIsBetweenLabels("Meter Asset Number", "Meter Reading", "MeterAssetNumber", 1, LimitTo.SameColumn)), // T6 template only
+            ("Reading", [
+                ..TextAfterLabel("Reading", "Reading", 0), // Existing template
+                ..TextToFindIsBetweenLabels("Meter Reading", "Flow Rate", "ReadingT6", 1, LimitTo.SameColumn) // T6 template
+            ]),
+            ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only
             ("Units", TextAfterLabel("Units", "Units", 0)),
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for", "CertificatesOfRecords", 0)),
             ("DateOfCertification", TextToFindIsBetweenLabels("Date of certificate or", "By whom", "DateOfCertification", 1, LimitTo.SameColumn, [new("record:"), new("Conformance:")])),
             ("Calibration", [
                 ..TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")]), // New template
-                ..TextToFindIsBetweenLabels("Calibration", "Conformance", "CalibrationYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
+                ..TextToFindIsBetweenLabels("Calibration", "Conformance", "CalibrationYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")]), // Existing template
+                ..TextToFindIsBetweenLabels("Calibration", "Verification", "CalibrationT6", 1, LimitTo.SameColumn) // T6 template
             ]),
+            ("Verification", TextToFindIsBetweenLabels("Verification", "Spot Check Result", "Verification", 1, LimitTo.SameColumn)), // T6 template only
+            ("SpotCheckResult", TextToFindIsBetweenLabels("Spot Check Result", "General comments", "SpotCheckResult", 1, LimitTo.SameColumn, [new("–")])), // T6 template only
             ("Conformance", [
                 ..TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")]), // New template
                 ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "ConformanceYN", 0, LimitTo.WholeLine, possibilities: [new("Y"), new("N")])// Existing template
@@ -228,7 +242,9 @@ public class WrInspectionReportLabelConfiguration
                     new TextToMatch("Not"),
                     new TextToMatch("In"),
                     new TextToMatch("✓"),
-                    new TextToMatch("X")
+                    new TextToMatch("X"),
+                    new TextToMatch("Y"), // T6 template uses Y/N instead of In/Not/tick/cross
+                    new TextToMatch("N")
                 ]
             }
         ];

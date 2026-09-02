@@ -15,9 +15,9 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Config;
-using WALE.Tools.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Csv;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WALE.Tools._2ndHalf;
@@ -278,79 +278,7 @@ public static class GenerateWrInspectionReportCsv
                 }
             }
 
-            var imagesSb = new StringBuilder();
-
-            foreach (var image in parsedForm.Images)
-            {
-                if (imagesSb.Length > 0)
-                {
-                    imagesSb.Append('\n');
-                }
-
-                imagesSb.Append(image);
-            }
-
-            return new WrInspectionReportCsvLine()
-            {
-                Metadata__Filename = parsedForm.Metadata.Filename,
-                Metadata__FormSentTo = parsedForm.Metadata.FormSentTo,
-                Metadata__DocumentTemplateVerison = parsedForm.Metadata.DocumentTemplateVerison,
-                Metadata__DocumentHeader = parsedForm.Metadata.DocumentHeader,
-                Metadata__IsScan = parsedForm.Metadata.IsScan,
-                Metadata__Date__Date = parsedForm.Metadata.Date.Date?.ToString("dd/MM/yyyy"),
-                Metadata__Date__RawDate = parsedForm.Metadata.Date.RawDate,
-                LicenceNumber = parsedForm.LicenceNumber,
-                InspectionClass = parsedForm.InspectionClass,
-                InspectingOfficer = parsedForm.InspectingOfficer,
-                GeneralComments = parsedForm.GeneralComments,
-                Images = imagesSb.Length > 0 ? imagesSb.ToString() : null,
-                Address__NameAndAddress = parsedForm.Address.NameAndAddress,
-                Address__SiteAddress = parsedForm.Address.SiteAddress,
-                Address__TelephoneNumber = parsedForm.Address.TelephoneNumber,
-                MetWith__Name = parsedForm.MetWith.Name,
-                MetWith__Position = parsedForm.MetWith.Position,
-                InspectionDate__DateTime = parsedForm.InspectionDate.DateTime?.ToString("dd/MM/yyyy HH:mm:ss"),
-                InspectionDate__Year = parsedForm.InspectionDate.DateTime?.Year.ToString(),
-                InspectionDate__RawDate = parsedForm.InspectionDate.RawDate,
-                InspectionDate__RawTime = parsedForm.InspectionDate.RawTime,
-                LicenceProvisions__SourceOfSupply = parsedForm.LicenceProvisions.SourceOfSupply.ToString(),
-                LicenceProvisions__Purposes = parsedForm.LicenceProvisions.Purposes.ToString(),
-                LicenceProvisions__PointOfAbstraction = parsedForm.LicenceProvisions.PointOfAbstraction.ToString(),
-                LicenceProvisions__SpecialConditions = parsedForm.LicenceProvisions.SpecialConditions.ToString(),
-                LicenceProvisions__MeansOfAbstraction = parsedForm.LicenceProvisions.MeansOfAbstraction.ToString(),
-                LicenceProvisions__Period = parsedForm.LicenceProvisions.Period.ToString(),
-                LicenceProvisions__Quantities = parsedForm.LicenceProvisions.Quantities.ToString(),
-                LicenceProvisions__MeansOfMeasurement = parsedForm.LicenceProvisions.MeansOfMeasurement.ToString(),
-                LicenceProvisions__Records = parsedForm.LicenceProvisions.Records.ToString(),
-                LicenceProvisions__ProvisionOfInformation =
-                    parsedForm.LicenceProvisions.ProvisionOfInformation.ToString(),
-                LicenceProvisions__Land = parsedForm.LicenceProvisions.Land.ToString(),
-                LicenceProvisions__ChargingFactors = parsedForm.LicenceProvisions.ChargingFactors.ToString(),
-                LicenceProvisions__OtherProvisions = parsedForm.LicenceProvisions.OtherProvisions.ToString(),
-                MeasurementDetails__MeterMake = parsedForm.MeasurementDetails.MeterMake,
-                MeasurementDetails__SerialNumber = parsedForm.MeasurementDetails.SerialNumber,
-                MeasurementDetails__Reading = parsedForm.MeasurementDetails.Reading,
-                MeasurementDetails__Units = parsedForm.MeasurementDetails.Units,
-                MeasurementDetails__Other = parsedForm.MeasurementDetails.Other,
-                MeasurementDetails__CertificatesOrRecordsAvailableFor =
-                    parsedForm.MeasurementDetails.CertificatesOrRecordsAvailableFor,
-                MeasurementDetails__DateOfCertificateOrRecord__Date =
-                    parsedForm.MeasurementDetails.DateOfCertificateOrRecord.Date?.ToString("dd/MM/yyyy"),
-                MeasurementDetails__DateOfCertificateOrRecord__RawDate =
-                    parsedForm.MeasurementDetails.DateOfCertificateOrRecord.RawDate,
-                MeasurementDetails__Calibration = parsedForm.MeasurementDetails.Calibration,
-                MeasurementDetails__Conformance = parsedForm.MeasurementDetails.Conformance,
-                MeasurementDetails__FlowVerification = parsedForm.MeasurementDetails.FlowVerification,
-                MeasurementDetails__MeterVerification = parsedForm.MeasurementDetails.MeterVerification,
-                MeasurementDetails__Maintenance__ByWhom = parsedForm.MeasurementDetails.Maintenance.ByWhom,
-                MeasurementDetails__Maintenance__Maintenance = parsedForm.MeasurementDetails.Maintenance.Maintenance,
-                MeasurementDetails__Maintenance__Frequency = parsedForm.MeasurementDetails.Maintenance.Frequency,
-                MeasurementDetails__ReadingsTaken__ByWhom = parsedForm.MeasurementDetails.ReadingsTaken.ByWhom,
-                MeasurementDetails__ReadingsTaken__ReadingsTaken =
-                    parsedForm.MeasurementDetails.ReadingsTaken.ReadingsTaken,
-                MeasurementDetails__ReadingsTaken__Frequency = parsedForm.MeasurementDetails.ReadingsTaken.Frequency,
-                MeasurementDetails__WhereKept = parsedForm.MeasurementDetails.WhereKept
-            };
+            return WrInspectionReportCsvLine.FromForm(parsedForm);
         }
         finally
         {

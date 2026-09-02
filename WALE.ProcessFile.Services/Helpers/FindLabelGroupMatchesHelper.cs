@@ -259,7 +259,80 @@ public static class FindLabelGroupMatchesHelper
                     
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
-                    
+
+                    var lineForPosition = fullLine;
+                    var lineForRequest = partialLine;
+
+                    if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
+                    {
+                        var clonedPartialLine = partialLine.Clone();
+                        var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
+                        var newColumns = new List<DocumentLineColumn>();
+                        var columnIndex = 0;
+
+                        foreach (var column in clonedPartialLine.Columns)
+                        {
+                            if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                            {
+                                columnIndex += 1;
+                                continue;
+                            }
+
+                            newColumns.Add(column);
+                            break;
+                        }
+
+                        clonedPartialLine.Columns = newColumns;
+                        lineForPosition = clonedPartialLine;
+                        lineForRequest = clonedPartialLine;
+
+                        textBeforeAtAndAfterLabel = clonedPartialLine.Columns.Count == 0
+                            ? []
+                            : [
+                                new TextAndLabelAndPosition
+                                {
+                                    ColumnsText = [clonedPartialLine.Columns[0].Text],
+                                    Label = matchedLabel
+                                }
+                            ];
+
+                        if (label.LimitTo == LimitTo.SpecifiedColumn)
+                        {
+                            columnIndex = label.LimitToColumnIndex;
+                        }
+
+                        var firstLineColumnLeftPosition = newColumns
+                            .FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates.Left;
+
+                        var newNextLines = new List<DocumentLine>();
+
+                        foreach (var nextLine in nextLines)
+                        {
+                            var newNextLine = nextLine.Clone();
+                            var columnToKeep = nextLine.Columns.Count > columnIndex
+                                ? nextLine.Columns[columnIndex]
+                                : null;
+
+                            if (columnToKeep == null)
+                            {
+                                continue;
+                            }
+
+                            var columnLeftPosition = columnToKeep.Words.FirstOrDefault()?.Coordinates.Left;
+
+                            if (columnLeftPosition > firstLineColumnLeftPosition + 100)
+                            {
+                                continue;
+                            }
+
+                            newNextLine.Columns.Clear();
+                            newNextLine.Columns.Add(columnToKeep);
+                            newNextLines.Add(newNextLine);
+                        }
+
+                        nextLines = newNextLines;
+                    }
+
                     var request = new FunctionInputModel
                     {
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
@@ -285,8 +358,8 @@ public static class FindLabelGroupMatchesHelper
                         dmsLookupService = lookupConfiguration.DmsLookupService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
-                        line = partialLine,
-                        lineForPosition = fullLine,
+                        line = lineForRequest,
+                        lineForPosition = lineForPosition,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
                         regionCode = regionCode,

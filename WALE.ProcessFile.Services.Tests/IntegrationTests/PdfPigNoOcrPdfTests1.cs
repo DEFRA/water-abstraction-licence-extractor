@@ -2840,7 +2840,19 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal(2, primaryLicence.LinkedLicences.Length);
-
+        Assert.Equal("2/27/05/011", primaryLicence.LinkedLicences[0].LicenceNumber);
+        Assert.NotNull(primaryLicence.LinkedLicences[0].ContainedIn);
+        Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
+        Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("6.2", primaryLicence.LinkedLicences[0].ContainedIn![0].DocumentIdentifier);
+        Assert.Equal("2/27/05/026", primaryLicence.LinkedLicences[1].LicenceNumber);
+        Assert.NotNull(primaryLicence.LinkedLicences[1].ContainedIn);
+        Assert.Single(primaryLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[1].ContainedIn![0].SectionName);
+        Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("9.4", primaryLicence.LinkedLicences[1].ContainedIn![0].DocumentIdentifier);
+        
         Assert.Equal(2, primaryLicence.AbstractionLimits?.Individual?.Length);
         Assert.Equal("6.1", primaryLicence.AbstractionLimits!.Individual![0].DocumentIdentifier);
         Assert.NotNull(primaryLicence.AbstractionLimits.Individual[0].ContainedIn);

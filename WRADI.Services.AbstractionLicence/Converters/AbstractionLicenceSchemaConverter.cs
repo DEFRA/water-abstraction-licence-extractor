@@ -3409,7 +3409,7 @@ public static class AbstractionLicenceSchemaConverter
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var (regionId, licenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            var (regionId, naldLicenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
                 scrapedLicenceNumber,
                 naldLicenceType,
@@ -3420,7 +3420,7 @@ public static class AbstractionLicenceSchemaConverter
             
             linkedLicenceNumbers.Add(new LinkedLicence
             {
-                LicenceNumber = licenceNumber2,
+                LicenceNumber = naldLicenceNumber2,
                 RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
@@ -3440,7 +3440,8 @@ public static class AbstractionLicenceSchemaConverter
                         LinkReason = GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LabelStartLineNumber,
-                        PageNumber = linkedLicenceNumber.LabelStartPageNumber
+                        PageNumber = linkedLicenceNumber.LabelStartPageNumber,
+                        DocumentIdentifier = documentIdentifier
                     }
                 ]
             });

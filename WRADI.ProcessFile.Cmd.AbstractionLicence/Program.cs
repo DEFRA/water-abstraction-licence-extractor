@@ -75,12 +75,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
+        .Where(x => x.Key.Contains("NE0270023036", StringComparison.OrdinalIgnoreCase))
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Key.Contains("c11fb8ba-7a2d-4141-b154-0fff1e7c7002", StringComparison.OrdinalIgnoreCase))
-        //.Where(x => x.Value.Item2.RegionCode == 3) // North east
+        //.Where(x => x.Key.Contains("ne0270024050r01", StringComparison.OrdinalIgnoreCase))
+        .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-       .Take(10)
+        //.Take(200)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -98,7 +98,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     var licenceNumberSuccessors = await licenceNumberSuccessorsTask;
-    
+
     var licenceNumberService = new AbstractionLicenceNumber(
         abstractionAndImpoundmentLicences,
         licenceNumberSuccessors);
@@ -295,7 +295,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             await pdfDataExtractor.SaveMatchResultAsync(
                 matchesResult!,
                 dmsDataForFile.FileId,
-                processRun.ProcessRunId);
+                processRun.ProcessRunId,
+                lookupConfig.UseLockExclusivity);
         }
 
         ConsoleHelper.WriteLine(

@@ -79,6 +79,17 @@ public static class WrInspectionReportSchemaConverter
             {
                 var parts = rawInspectionDateTweaked.Split("Time");
                 rawInspectionDateTweaked = parts[0].Trim();
+
+                // "Time" usually trails the date ("22/01/2026 Time: 0930"), but some template
+                // layouts capture it first ("Time:\n27/01/26") - keep the existing before-Time
+                // behaviour as the primary value, and add whatever follows "Time" as a fallback
+                // candidate so that layout isn't silently discarded.
+                var afterTime = parts.Length > 1 ? parts[^1].TrimStart(':').Trim() : string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(afterTime))
+                {
+                    potentialDates.Add(afterTime);
+                }
             }
 
             rawInspectionDateTweaked = rawInspectionDateTweaked

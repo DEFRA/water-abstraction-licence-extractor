@@ -113,6 +113,12 @@ public class LabelToMatch
 
     public int LimitToColumnIndex { get; set; }
 
+    // When a label group has multiple alternates (e.g. one per template phrasing) and this
+    // alternate returns no non-empty text, allow the engine to try the next alternate instead
+    // of locking the group as matched. Defaults to false to preserve existing behaviour for
+    // every rule that doesn't opt in.
+    public bool RequireTextToClaimGroup { get; init; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -157,7 +163,8 @@ public class LabelToMatch
             DeDuplicateResults = DeDuplicateResults,
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
-            LimitToColumnIndex = LimitToColumnIndex
+            LimitToColumnIndex = LimitToColumnIndex,
+            RequireTextToClaimGroup = RequireTextToClaimGroup
         };
     }    
 }

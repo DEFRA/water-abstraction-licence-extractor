@@ -1080,12 +1080,12 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
-                
+
                 if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
                 {
                     continue;
                 }
-                
+
                 var labelGroupMatch =
                     await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
                         wrappedLines,
@@ -1101,17 +1101,30 @@ public class PdfDataExtractorService(
                         this,
                         documentLineService,
                         additionalInformationStore);
-                
+
                 if (labelGroupMatch.Count == 0)
+                {
+                    continue;
+                }
+
+                // When a label group has multiple alternates (one per template phrasing), an
+                // alternate that matched the label text but captured no real value must not
+                // permanently claim the group - otherwise later, possibly-correct alternates
+                // never get tried. Opt-in via LabelToMatch.RequireTextToClaimGroup so every
+                // existing rule that doesn't set it keeps its exact current behaviour.
+                var hasNonEmptyText = labelGroupMatch.Any(lgm =>
+                    lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
+
+                if (label.RequireTextToClaimGroup && !hasNonEmptyText)
                 {
                     continue;
                 }
 
                 foreach (var labelGroup in labelGroupMatch)
                 {
-                    labelGroup.LabelGroupName = labelGroupName;    
+                    labelGroup.LabelGroupName = labelGroupName;
                 }
-                
+
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
             }

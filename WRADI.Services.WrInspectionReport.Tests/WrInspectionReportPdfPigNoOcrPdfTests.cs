@@ -42,7 +42,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             lineHeight: 6,
-            minimumRowsForDigital: 30);
+            minimumRowsForDigital: 30,
+            useAnchoredLineGrouping: true);
     }
 
     private static IPdfDataExtractorService BuildPdfDataExtractor()

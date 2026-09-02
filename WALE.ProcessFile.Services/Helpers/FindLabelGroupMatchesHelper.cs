@@ -163,7 +163,7 @@ public static class FindLabelGroupMatchesHelper
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-                        
+
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -272,14 +272,32 @@ public static class FindLabelGroupMatchesHelper
 
                         foreach (var column in clonedPartialLine.Columns)
                         {
-                            if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                            if (newColumns.Count == 0)
                             {
-                                columnIndex += 1;
+                                if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                                {
+                                    columnIndex += 1;
+                                    continue;
+                                }
+
+                                newColumns.Add(column);
                                 continue;
                             }
 
+                            // Found the label's own column - the value may sit in an adjacent
+                            // column on the same line rather than a subsequent line, so keep
+                            // including columns until we hit one that starts the next field
+                            // (matches one of this label's own end markers), or run out.
+                            var isNextFieldStart = matchedLabel.TextEnd?.Any(end =>
+                                !string.IsNullOrEmpty(end.Text)
+                                && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
+
+                            if (isNextFieldStart)
+                            {
+                                break;
+                            }
+
                             newColumns.Add(column);
-                            break;
                         }
 
                         clonedPartialLine.Columns = newColumns;
@@ -291,7 +309,7 @@ public static class FindLabelGroupMatchesHelper
                             : [
                                 new TextAndLabelAndPosition
                                 {
-                                    ColumnsText = [clonedPartialLine.Columns[0].Text],
+                                    ColumnsText = clonedPartialLine.Columns.Select(c => c.Text).ToList(),
                                     Label = matchedLabel
                                 }
                             ];
@@ -309,9 +327,29 @@ public static class FindLabelGroupMatchesHelper
                         foreach (var nextLine in nextLines)
                         {
                             var newNextLine = nextLine.Clone();
-                            var columnToKeep = nextLine.Columns.Count > columnIndex
-                                ? nextLine.Columns[columnIndex]
-                                : null;
+                            DocumentLineColumn? columnToKeep;
+
+                            if (label.LimitTo == LimitTo.SpecifiedColumn)
+                            {
+                                columnToKeep = nextLine.Columns.Count > columnIndex
+                                    ? nextLine.Columns[columnIndex]
+                                    : null;
+                            }
+                            else
+                            {
+                                // Match by X-position proximity to the label's own column
+                                // rather than by raw column index. A following line can
+                                // have fewer (or more) columns than the label's own line -
+                                // e.g. a value sitting alone on its own single-column row,
+                                // directly beneath a label that shares its row with other
+                                // fields - and indexing by ordinal position would silently
+                                // miss it whenever the column counts don't line up.
+                                columnToKeep = nextLine.Columns
+                                    .Where(c => c.Words.FirstOrDefault() != null)
+                                    .OrderBy(c => Math.Abs(
+                                        c.Words[0].Coordinates.Left - (firstLineColumnLeftPosition ?? 0)))
+                                    .FirstOrDefault();
+                            }
 
                             if (columnToKeep == null)
                             {
@@ -320,7 +358,8 @@ public static class FindLabelGroupMatchesHelper
 
                             var columnLeftPosition = columnToKeep.Words.FirstOrDefault()?.Coordinates.Left;
 
-                            if (columnLeftPosition > firstLineColumnLeftPosition + 100)
+                            if (columnLeftPosition > firstLineColumnLeftPosition + 100
+                                || columnLeftPosition < firstLineColumnLeftPosition - 100)
                             {
                                 continue;
                             }

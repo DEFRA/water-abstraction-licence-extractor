@@ -329,6 +329,7 @@ public static class GenerateWrInspectionReportCsv
             lineHeight: 6,
             skipFileIfMoreThenPages: 100,
             skipFileIfMoreThenImages: 1000,
-            minimumRowsForDigital: 30);
+            minimumRowsForDigital: 30,
+            useAnchoredLineGrouping: true);
     }
 }

@@ -246,33 +246,43 @@ public static class AbstractionLicenceSchemaConverter
                 var sourceFields = naldLinkedLicence.SourceFields?
                     .Where(sf => sf.Value != null)
                     .ToDictionary();
+
+                var linkReason = GetLinkReason(
+                    naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
+                    naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
+                        ? licenceNumber
+                        : naldLinkedLicence.NaldLicence.LicenceNumber);
                 
-                linkedLicences.Add(new LinkedLicence
-                {
-                    LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
-                    RegionId = naldLinkedLicence.NaldLicence.RegionCode,
-                    DmsPermitNumber = thisDmsFileData?.PermitNumber,
-                    DmsPath = thisDmsFileData?.DmsPath,
-                    LicenceType = outputLicenceType,
-                    ContainedIn =
-                    [
-                        new ContainedInInformation
-                        {
-                            Source = InformationSource.Nald,
-                            Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
-                                ? InformationDirection.Incoming
-                                : InformationDirection.Outgoing,
-                            LinkReason = GetLinkReason(
-                                naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
-                                naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
-                                    ? licenceNumber
-                                    : naldLinkedLicence.NaldLicence.LicenceNumber),
-                            SectionName = naldLinkedLicence.FromField,
-                            AcinCode = naldLinkedLicence.AcinCode,
-                            SourceFields = sourceFields
-                        }
-                    ]
-                });
+                const string aggCode = "AGG";
+                
+                var isBecauseOfAggregate =
+                    aggCode.Equals(naldLinkedLicence.AcinCode, StringComparison.OrdinalIgnoreCase)
+                    || linkReason is  LinkReason.AggregateCondition or LinkReason.AggregateConditions;
+                
+                linkedLicences.Add(
+                    new LinkedLicence
+                    {
+                        LicenceNumber = naldLinkedLicence.NaldLicence.LicenceNumber,
+                        RegionId = naldLinkedLicence.NaldLicence.RegionCode,
+                        DmsPermitNumber = thisDmsFileData?.PermitNumber,
+                        DmsPath = thisDmsFileData?.DmsPath,
+                        LicenceType = outputLicenceType,
+                        IsBecauseOfAggregate = isBecauseOfAggregate,
+                        ContainedIn =
+                        [
+                            new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald,
+                                Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
+                                    ? InformationDirection.Incoming
+                                    : InformationDirection.Outgoing,
+                                LinkReason = linkReason,
+                                SectionName = naldLinkedLicence.FromField,
+                                AcinCode = naldLinkedLicence.AcinCode,
+                                SourceFields = sourceFields
+                            }
+                        ]
+                    });
             }
         }
 

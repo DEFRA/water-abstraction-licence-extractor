@@ -18,9 +18,9 @@ public interface IDatabaseWriteService
 
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
     
-    Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error);
+    Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate);
     
-    public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId);
+    public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
     public Task SavePageScreenshotAsync(
         int pageNumber,

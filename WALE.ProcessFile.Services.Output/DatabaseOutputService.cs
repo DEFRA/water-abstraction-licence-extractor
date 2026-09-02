@@ -111,16 +111,21 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
     }
 
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
     {
-        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error);
+        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error, isUpdate);
     }
 
-    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         var matchesResultStr = JsonSerializer.Serialize(matchesResult, JsonHelper.GetSerializerOptions());
 
-        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId);
+        return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId, isUpdate);
+    }
+    
+    public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
+    {
+        return await databaseReadService.GetSimpleMatchResults(processRunId);
     }
     
     public async Task<int> SavePageScreenshotAsync(

@@ -667,6 +667,28 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0)).ToList();
     }
     
+    public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           select
+                               filename,
+                               status
+                           FROM public.matches_result
+                           where
+                               process_run_id = @ProcessRunId;
+                           """;
+
+        return (await QueryAsync<MatchResultSimple>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            })).ToList();
+    }
+    
     private async Task<T?> QuerySingleOrDefaultAsync<T>(
         NpgsqlConnection connection,
         string sql,

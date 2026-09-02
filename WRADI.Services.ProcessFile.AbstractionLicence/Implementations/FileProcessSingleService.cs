@@ -216,7 +216,8 @@ public class FileProcessSingleService(
                 await pdfDataExtractor.SaveMatchResultAsync(
                     matchesResult!,
                     dmsDataForFile.FileId,
-                    processRun.ProcessRunId);
+                    processRun.ProcessRunId,
+                    lookupConfig.UseLockExclusivity);
             }
 
             var duration = (DateTime.Now - dtStart).TotalMilliseconds;

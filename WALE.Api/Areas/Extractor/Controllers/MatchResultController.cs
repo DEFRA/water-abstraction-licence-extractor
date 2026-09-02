@@ -15,7 +15,8 @@ public class MatchResultController(IOutputService outputService) : Controller
         var matchResultId = await outputService.SaveMatchResultAsync(
             request.matches!,
             request.fileId,
-            request.processRunId);
+            request.processRunId,
+            request.isUpdate);
         
         return Ok(matchResultId);
     }
@@ -38,7 +39,8 @@ public class MatchResultController(IOutputService outputService) : Controller
             request.filename!,
             request.fileId,
             request.processRunId,
-            request.error);
+            request.error,
+            request.isUpdate);
         
         return Ok(matchResultId);
     }

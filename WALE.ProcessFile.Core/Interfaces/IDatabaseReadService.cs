@@ -49,4 +49,6 @@ public interface IDatabaseReadService
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
     
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
+    
+    Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
 }

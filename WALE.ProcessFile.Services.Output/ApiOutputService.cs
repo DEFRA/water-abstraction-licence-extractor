@@ -220,7 +220,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
     {
         var path = "/Extractor/MatchResult/SaveError";
 
@@ -229,7 +229,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             filename,
             fileId,
             processRunId,
-            error
+            error,
+            isUpdate
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -241,15 +242,16 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         var path = "/Extractor/MatchResult/Save";
 
         var json = JsonSerializer.Serialize(new
         {
             Matches = matchesResult,
-            fileId,
-            ProcessRunId = processRunId
+            FileId = fileId,
+            ProcessRunId = processRunId,
+            IsUpdate = isUpdate
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -260,6 +262,19 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
         
         return int.Parse(content);
+    }
+    
+    public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
+    {
+        var path = $"/BFF/FileData/GetSimpleMatchResults?processRunId={processRunId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<MatchResultSimple>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
     }
 
     public async Task<int> SavePageScreenshotAsync(

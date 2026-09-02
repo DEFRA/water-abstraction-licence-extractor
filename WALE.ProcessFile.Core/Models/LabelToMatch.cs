@@ -107,6 +107,11 @@ public class LabelToMatch
     public bool DeDuplicateResults { get; set; }
     
     public bool GoOutsideTextBlock { get; set; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
+
+    public int LimitToColumnIndex { get; set; }
 
     public LabelToMatch Clone()
     {
@@ -150,7 +155,9 @@ public class LabelToMatch
             NoOcrConfidence = NoOcrConfidence,
             RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple,
             DeDuplicateResults = DeDuplicateResults,
-            GoOutsideTextBlock = GoOutsideTextBlock
+            GoOutsideTextBlock = GoOutsideTextBlock,
+            LimitTo = LimitTo,
+            LimitToColumnIndex = LimitToColumnIndex
         };
     }    
 }

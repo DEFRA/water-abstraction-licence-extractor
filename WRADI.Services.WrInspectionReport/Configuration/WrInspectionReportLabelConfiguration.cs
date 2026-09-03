@@ -204,7 +204,19 @@ public class WrInspectionReportLabelConfiguration
                 // below, same as Units' own equivalent alternate.
                 ..TextToFindIsBetweenLabels("Serial number", "Units", "SerialNumber", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Baseline two-column table
             ]),
-            ("MeterAssetNumber", TextToFindIsBetweenLabels("Meter Asset Number", "Meter Reading", "MeterAssetNumber", 1, LimitTo.SameColumn)), // T6 template only
+            ("MeterAssetNumber", [
+                ..TextToFindIsBetweenLabels("Meter Asset Number", "Meter Reading", "MeterAssetNumber", 1, LimitTo.SameColumn), // T6 template
+                // Baseline template wording is "Asset no:" or "Asset number:" (never "Meter
+                // Asset Number") and glued same-line with its value. Two separate alternates
+                // rather than one "Asset no" prefix covering both: "Asset no" as a literal
+                // Remove target against "Asset number: 1080970" only strips the first two
+                // letters of "number" (not a whole-word boundary), leaving "mber: 1080970" as
+                // garbage - same shape of bug as the Reading/Records word-boundary issues
+                // elsewhere in this file. Previously had no baseline alternate at all, only the
+                // T6 one above.
+                ..TextAfterLabel("Asset no:", "MeterAssetNumber", 0), // Existing template
+                ..TextAfterLabel("Asset number:", "MeterAssetNumber", 0) // Existing template
+            ]),
             // "Reading" is a literal string prefix of the unrelated sibling label "Readings
             // taken:" (further down the same Measurement details table) - real corpus
             // evidence: 719 genuine "Reading:" occurrences vs. 7/12 golden-set documents where
@@ -219,7 +231,14 @@ public class WrInspectionReportLabelConfiguration
             // wrong-field text.
             ("Reading", [
                 ..TextAfterLabel("Reading:", "Reading", 0, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Meter Reading", "Flow Rate", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
+                ..TextToFindIsBetweenLabels("Meter Reading", "Flow Rate", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true), // T6 template
+                // Same fourth layout as SerialNumber's own equivalent alternate above: two-
+                // column vertically-stacked table with the value one row below the label
+                // rather than on it. "Reading:" (with the colon - same collision-avoidance
+                // reasoning as the Existing template alternate above) rather than bare
+                // "Reading", since this position is also same-column/next-line and would
+                // otherwise be just as exposed to the "Readings taken:" prefix collision.
+                ..TextToFindIsBetweenLabels("Reading:", "Units", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Baseline two-column table
             ]),
             ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only
             // T6 template: "Units" is a standalone label with its value one row below in a

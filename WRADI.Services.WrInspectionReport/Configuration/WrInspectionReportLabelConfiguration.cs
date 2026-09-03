@@ -32,7 +32,17 @@ public class WrInspectionReportLabelConfiguration
             // field on each row is left unbounded (defaults to end-of-block).
             ("SourceOfSupply", GetInOrderField("Source of supply", "SourceOfSupply", "Quantities")),
             ("PointOfAbstraction", GetInOrderField("Point of abstraction", "PointOfAbstraction", "Means of measurement")),
-            ("MeansOfAbstraction", GetInOrderField("Means of abstraction", "MeansOfAbstraction", "Records")),
+            // "Records" sometimes renders as "R ecords" (a space after the R - the same PDF
+            // kerning quirk the Records field's own TextStart already has to work around
+            // below). Without it as an alternate end marker here, the same-line column walk
+            // never recognises the boundary and sweeps all the way to "...N/A" at the end of
+            // the row - which then wins over the real "In Order" answer earlier in the swept
+            // text, since Possibilities checks "N/A" before "In".
+            ("MeansOfAbstraction", GetInOrderField(
+                "Means of abstraction",
+                "MeansOfAbstraction",
+                "Records",
+                additionalEndTexts: ["R ecords"])),
             ("Purposes", GetInOrderField("Purpose(s)", "Purposes", "Provision of information")),
             ("Period", GetInOrderField("Period", "Period", "Special conditions")),
             ("Quantities", GetInOrderField("Quantities", "Quantities", "Land")),
@@ -70,13 +80,20 @@ public class WrInspectionReportLabelConfiguration
             ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "Email", "TelephoneNumber", 2, LimitTo.SameColumn)),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
-            ("NameAndAddress", TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 7, LimitTo.SameColumn)),
+            // "Name and address: | Telephone No:" sits on one row (two columns) - without
+            // bounding the same-line walk there, it sweeps past "Telephone No:" and the
+            // phone number's own label ends up as a bogus extra first line of the address.
+            ("NameAndAddress", TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 7, LimitTo.SameColumn, additionalSameLineEndTexts: ["Telephone No"])),
             // Every alternate within a group keeps the group's own name (matching the
             // single-alternate fields below) - the converter looks results up by exact matched
             // label name, so an alternate named differently from its group (e.g. "MeterMakeT6")
             // is invisible to the converter even when it wins and captures a correct value.
             ("MeterMake", [
-                ..TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true), // Existing template
+                // "Meter make: X Serial number: Y Reading: Z" is one row - Reading: is the
+                // real (possibly multi-line) end marker, but Serial number: is the immediate
+                // same-line neighbour and needs to bound the same-line column walk too,
+                // otherwise it sweeps straight through into the serial number.
+                ..TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Serial number"]), // Existing template
                 ..TextToFindIsBetweenLabels("Meter Make", "Meter Serial Number", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
             ]),
             ("SerialNumber", [
@@ -93,27 +110,47 @@ public class WrInspectionReportLabelConfiguration
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for", "CertificatesOfRecords", 0)),
             ("DateOfCertification", TextToFindIsBetweenLabels("Date of certificate or", "By whom", "DateOfCertification", 1, LimitTo.SameColumn, [new("record:"), new("Conformance:")])),
+            // A fourth layout beyond New/Existing/T6: "Calibration: Conformance: Flow
+            // verification: Meter verification:" as one row of labels, with the four
+            // answers ("Yes No Yes Yes") on the row directly below, same columns. The
+            // anchor row-grouping keeps that value row separate from the label row (see
+            // PdfPigNoOcrDataExtractorService), so a SameColumn/NextLinesToFetch:1 alternate
+            // finds it correctly - it just also needs bounding on the label's own row so the
+            // same-line column walk doesn't sweep the next field's label in before it ever
+            // gets to the next line.
             ("Calibration", [
                 ..TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Conformance"), // New template
                 ..TextToFindIsBetweenLabels("Calibration", "Conformance", "Calibration", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Calibration", "Verification", "Calibration", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
+                ..TextToFindIsBetweenLabels("Calibration", "Verification", "Calibration", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Conformance"]) // T6 template
             ]),
             ("Verification", TextToFindIsBetweenLabels("Verification", "Spot Check Result", "Verification", 1, LimitTo.SameColumn)), // T6 template only
             ("SpotCheckResult", TextToFindIsBetweenLabels("Spot Check Result", "General comments", "SpotCheckResult", 1, LimitTo.SameColumn, [new("–")])), // T6 template only
             ("Conformance", [
                 ..TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Flow verification"), // New template
-                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true)// Existing template
+                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
+                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
             ]),
             ("FlowVerification", [
                 ..TextAfterLabel("Flow verification", "FlowVerification", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Meter verification"), // New template
-                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true)// Existing template
+                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
+                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
             ]),
             ("MeterVerification", [
                 ..TextAfterLabel("Meter verification", "MeterVerification", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Maintenance"), // New template
-                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true)// Existing template
+                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
+                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
             ]),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
-            ("FormSentTo", TextAfterLabel("Form sent to", "FormSentTo", 1)),
+            // "Form sent to: | Date:" on one row (two columns), with the actual recipient
+            // on the row below, same column as "Form sent to:".
+            // "Form sent to: | Date:" on one row (two columns), with the actual recipient
+            // on the row below, same column as "Form sent to:". Routed via
+            // TextToFindIsBetweenLabels rather than TextAfterLabel/LabelIsBeforeTextToFind -
+            // that position's handler doesn't correctly follow through to the next-line,
+            // same-column value here for reasons not fully root-caused; every other
+            // "value on the row below" fix this session went through
+            // TextToFindIsBetweenLabels instead, and that same swap fixes this too.
+            ("FormSentTo", TextToFindIsBetweenLabels("Form sent to", "Date", "FormSentTo", 1, LimitTo.SameColumn)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
             ("DocumentHeader", TextAfterLabel("Form WR - ", "DocumentHeader", 0)),
@@ -149,29 +186,45 @@ public class WrInspectionReportLabelConfiguration
                         LineMustStartWith = true
                     }
                 ],
-                TextEnd = 
+                TextEnd =
                 [
                     new(textEnd) { LineMustStartWith = true},
                     new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
+                // LimitTo.SameColumn (rather than the WholeLine default) matters beyond
+                // just this match: WholeLine's capture mechanism flattens the row's real,
+                // already-correctly-split columns ("Maintenance:" | "Yes" / "Frequency:" |
+                // "Daily" / "By" | "whom:" | "JP") into one synthetic single-column blob.
+                // SubLabels below rely on TextAfterLabel, which requires its own text to
+                // start a column - against a flattened blob only the very first sub-label
+                // can ever satisfy that, so the other four silently never match at all.
+                // SameColumn preserves the row's real column boundaries instead.
+                LimitTo = LimitTo.SameColumn,
                 Format = "Text",
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 1,
                 Name = name,
                 IncludeStartLabelText = true,
+                // Two layouts share this row: an older "Y: N:" tick-box style, and a plainer
+                // "Maintenance: Yes Frequency: Daily By whom: JP" style with the answer as a
+                // literal word. The plain-word sub-label (index 0) needs its own end bound
+                // (endText: "Frequency") or it swallows the rest of the line unbounded,
+                // leaving nothing for the Frequency/ByWhom sub-labels to match against -
+                // same shape as the same-line-column-walk fixes elsewhere in this file, just
+                // via TextAfterLabel's own endText rather than LimitTo.SameColumn.
                 SubLabels =
                 [
                     name == "MaintenanceLine"
-                        ? TextAfterLabel("Maintenance:", $"{name}Maintenance", 0)[0]
-                        : TextAfterLabel("Readings taken:", $"{name}ReadingsTaken", 0)[0],
+                        ? TextAfterLabel("Maintenance:", $"{name}Maintenance", 0, endText: "Frequency")[0]
+                        : TextAfterLabel("Readings taken:", $"{name}ReadingsTaken", 0, endText: "Frequency")[0],
                     name == "MaintenanceLine"
                         ? TextToFindIsBetweenLabels("Maintenance:", "N:", $"{name}MaintenanceYes", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0]
                         : TextToFindIsBetweenLabels("Readings taken:", "N:", $"{name}ReadingsTakenYes", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0],
                     name == "MaintenanceLine"
                         ? TextToFindIsBetweenLabels("N:", "Frequency:", $"{name}MaintenanceNo", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0]
                         : TextToFindIsBetweenLabels("N:", "Frequency:", $"{name}ReadingsTakenNo", 0, LimitTo.WholeLine, possibilities: [new("✓"), new("X")])[0],
-                    TextAfterLabel("Frequency:", $"{name}Frequency", 0)[0],
+                    TextAfterLabel("Frequency:", $"{name}Frequency", 0, endText: "By whom")[0],
                     TextAfterLabel("By whom:", $"{name}ByWhom", 0)[0]
                 ]
             }
@@ -286,7 +339,11 @@ public class WrInspectionReportLabelConfiguration
         ];
     }
     
-    private static List<LabelToMatch> GetInOrderField(string text, string labelName, string? endText = null)
+    private static List<LabelToMatch> GetInOrderField(
+        string text,
+        string labelName,
+        string? endText = null,
+        List<string>? additionalEndTexts = null)
     {
         return
         [
@@ -298,7 +355,11 @@ public class WrInspectionReportLabelConfiguration
                     new(text.Replace(" ", string.Empty)) { ColumnMustStartWith = true }
                 ],
                 TextEnd = endText != null
-                    ? [new(endText) { LineMustStartWith = true }, new("[END_OF_BLOCK]")]
+                    ? [
+                        new(endText) { LineMustStartWith = true },
+                        ..(additionalEndTexts ?? []).Select(t => new TextToMatch(t) { LineMustStartWith = true }),
+                        new("[END_OF_BLOCK]")
+                    ]
                     : [new("[END_OF_BLOCK]")],
                 // Routed via TextToFindIsBetweenLabels (not LabelIsBeforeTextToFind) - the
                 // generic-text path in ApplicableToMost.cs only ever reads the label's own

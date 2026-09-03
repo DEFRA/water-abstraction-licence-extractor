@@ -37,7 +37,7 @@ public static class FindLabelGroupMatchesHelper
         {
             var fullLine = line.Line;
             var breakLineLoop = false;
-            
+
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed)) // TODO we should change this to just accept one label
             {
                 var partialLine = fullLine;
@@ -561,26 +561,56 @@ public static class FindLabelGroupMatchesHelper
         int columnIndex,
         double? anchorLeftPosition)
     {
-        var columnToKeep = limitTo == LimitTo.SpecifiedColumn
-            ? (nextLine.Columns.Count > columnIndex ? nextLine.Columns[columnIndex] : null)
-            : nextLine.Columns
-                .Where(c => c.Words.FirstOrDefault() != null)
-                .OrderBy(c => Math.Abs(c.Words[0].Coordinates.Left - (anchorLeftPosition ?? 0)))
-                .FirstOrDefault();
+        if (limitTo == LimitTo.SpecifiedColumn)
+        {
+            return nextLine.Columns.Count > columnIndex ? nextLine.Columns[columnIndex] : null;
+        }
 
-        if (columnToKeep == null)
+        var columnToKeep = nextLine.Columns
+            .Where(c => c.Words.FirstOrDefault() != null)
+            .OrderBy(c => Math.Abs(c.Words[0].Coordinates.Left - (anchorLeftPosition ?? 0)))
+            .FirstOrDefault();
+
+        var columnLeftPosition = columnToKeep?.Words.FirstOrDefault()?.Coordinates.Left;
+
+        if (columnToKeep != null
+            && columnLeftPosition <= anchorLeftPosition + 100
+            && columnLeftPosition >= anchorLeftPosition - 100)
+        {
+            return columnToKeep;
+        }
+
+        if (anchorLeftPosition == null)
         {
             return null;
         }
 
-        var columnLeftPosition = columnToKeep.Words.FirstOrDefault()?.Coordinates.Left;
+        // The label's own column didn't line up with any whole column on this line - it may
+        // still be here, glued onto an unrelated field's text because the gap between them
+        // fell just under the column-splitting X-gap threshold (e.g. an address ending and a
+        // same-row value starting ~17pt later, just short of the ~18pt split point - see the
+        // xDiff >= 18 check in PdfPigNoOcrDataExtractorService's row builder). Only treat a
+        // word as a candidate split point if the gap immediately before it is itself close to
+        // that threshold (clearly wider than an ordinary inter-word space, roughly 2-5pt) -
+        // otherwise any word from an unrelated sentence that happens to drift within 100 units
+        // of the anchor would be picked up as if it were this field's value.
+        const double minimumNearMissGap = 10;
 
-        if (columnLeftPosition > anchorLeftPosition + 100 || columnLeftPosition < anchorLeftPosition - 100)
+        var nearestWord = nextLine.Columns
+            .SelectMany(column => column.Words
+                .Select((word, index) => (column, word, index)))
+            .Where(cw => cw.index > 0
+                && cw.word.Coordinates.Left - cw.column.Words[cw.index - 1].Coordinates.Right >= minimumNearMissGap
+                && Math.Abs(cw.word.Coordinates.Left - anchorLeftPosition.Value) <= 100)
+            .OrderBy(cw => Math.Abs(cw.word.Coordinates.Left - anchorLeftPosition.Value))
+            .FirstOrDefault();
+
+        if (nearestWord.column == null)
         {
             return null;
         }
 
-        return columnToKeep;
+        return new DocumentLineColumn(nearestWord.column.Words.Skip(nearestWord.index).ToList());
     }
 
     private static async Task<IReadOnlyList<LabelGroupResult>> ProcessLinkedLicenceAsync(

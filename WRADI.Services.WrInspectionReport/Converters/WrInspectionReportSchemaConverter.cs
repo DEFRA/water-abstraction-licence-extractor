@@ -292,8 +292,8 @@ public static class WrInspectionReportSchemaConverter
             Address = new WrInspectionReportAddress()
             {
                 NameAndAddress = nameAndAddress,
-                TelephoneNumber = GetMultilineText(matchesResult, "TelephoneNumber"),
-                SiteAddress = siteAddress      
+                TelephoneNumber = CollapseSpacedDigits(GetMultilineText(matchesResult, "TelephoneNumber")),
+                SiteAddress = siteAddress
             },
             MetWith = new WrInspectionReportMetWith()
             {
@@ -374,6 +374,17 @@ public static class WrInspectionReportSchemaConverter
             .Text;
     }
     
+    // Some documents render a phone number with a stray space between individual digits
+    // (a PDF font/kerning artefact, not a real word-space) - e.g. "0 7 7 9 4 2 1 8 2 97"
+    // instead of "07794218297". Collapsing only spaces that sit directly between two
+    // digits leaves genuine word-spacing (unlikely here, but harmless) untouched.
+    private static string? CollapseSpacedDigits(string? text)
+    {
+        return string.IsNullOrEmpty(text)
+            ? text
+            : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
+    }
+
     private static string? GetMultilineText(MatchesResult matchesResult, string name)
     {
         var matchedLabel = matchesResult.Matches?

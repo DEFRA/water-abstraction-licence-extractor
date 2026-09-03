@@ -72,13 +72,20 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     {
         var pdfFolder = TestConfig.PdfFolder;
 
+        // TestLicences is shared with the licence pipeline's own integration tests, so
+        // filter to just the WR51 corpus rather than picking up every licence PDF too.
+        // The handful of hand-verified "dummy" fixtures (WR51__<licence>__dummy.pdf, no
+        // real DMS GUID in the filename) belong to Wr51PdfPigNoOcrPdfTests instead, which
+        // derives a stable id via GuidHelper rather than relying on a real one.
         var files = Directory.GetFiles(pdfFolder, "*.pdf")
             .Select(Path.GetFileName)
             .Where(f => f != null)
             .Select(f => f!)
+            .Where(f => f.StartsWith("wr51", StringComparison.OrdinalIgnoreCase)
+                && !f.Contains("dummy", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        Assert.True(files.Count > 0, $"No PDFs found in {pdfFolder}");
+        Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
 

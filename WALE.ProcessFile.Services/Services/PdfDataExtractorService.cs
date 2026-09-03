@@ -1102,20 +1102,7 @@ public class PdfDataExtractorService(
                         documentLineService,
                         additionalInformationStore);
 
-                if (labelGroupMatch.Count == 0)
-                {
-                    continue;
-                }
-
-                // When a label group has multiple alternates (one per template phrasing), an
-                // alternate that matched the label text but captured no real value must not
-                // permanently claim the group - otherwise later, possibly-correct alternates
-                // never get tried. Opt-in via LabelToMatch.RequireTextToClaimGroup so every
-                // existing rule that doesn't set it keeps its exact current behaviour.
-                var hasNonEmptyText = labelGroupMatch.Any(lgm =>
-                    lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
-
-                if (label.RequireTextToClaimGroup && !hasNonEmptyText)
+                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToClaimGroup))
                 {
                     continue;
                 }
@@ -1138,6 +1125,34 @@ public class PdfDataExtractorService(
         string type)
     {
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
+    }
+
+    /// <summary>
+    /// Decides whether an alternate's match result is good enough to claim its label group
+    /// and stop trying further alternates. An empty result never claims. A non-empty result
+    /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
+    /// Text is blank - that combination exists so a label group with multiple alternates
+    /// (one per template phrasing) doesn't get permanently claimed by an alternate that
+    /// matched the label text but captured no real value, which would stop later,
+    /// possibly-correct alternates from ever being tried. RequireTextToClaimGroup is opt-in
+    /// so every existing rule that doesn't set it keeps its exact current behaviour.
+    /// </summary>
+    internal static bool ShouldClaimLabelGroup(
+        IReadOnlyList<LabelGroupResult> labelGroupMatch,
+        bool requireTextToClaimGroup)
+    {
+        if (labelGroupMatch.Count == 0)
+        {
+            return false;
+        }
+
+        if (!requireTextToClaimGroup)
+        {
+            return true;
+        }
+
+        return labelGroupMatch.Any(lgm =>
+            lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

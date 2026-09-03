@@ -205,7 +205,18 @@ public class WrInspectionReportLabelConfiguration
                 ..TextToFindIsBetweenLabels("Meter Reading", "Flow Rate", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
             ]),
             ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only
-            ("Units", TextAfterLabel("Units", "Units", 0)),
+            // T6 template: "Units" is a standalone label with its value one row below in a
+            // parallel column - the exact same shape as Reading/MeterName's T6 alternates
+            // above, and missing here for the same reason those needed one (Existing
+            // template's same-line TextAfterLabel finds nothing when there's no value on the
+            // label's own line). T6 has two "Units" rows (one for Reading, one for Flow Rate) -
+            // this targets the first, bounded by "Flow Rate" the same way Reading's own T6
+            // alternate is bounded by it; the model has no way to hold both units values
+            // anyway (see the golden set's own notes on this).
+            ("Units", [
+                ..TextAfterLabel("Units", "Units", 0), // Existing template
+                ..TextToFindIsBetweenLabels("Units", "Flow Rate", "Units", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
+            ]),
             ("Other", TextAfterLabel("Other:", "Other", 0)),
             ("CertificatesOfRecords", TextAfterLabel("Certificates or records available for", "CertificatesOfRecords", 0)),
             ("DateOfCertification", TextToFindIsBetweenLabels("Date of certificate or", "By whom", "DateOfCertification", 1, LimitTo.SameColumn, [new("record:"), new("Conformance:")])),

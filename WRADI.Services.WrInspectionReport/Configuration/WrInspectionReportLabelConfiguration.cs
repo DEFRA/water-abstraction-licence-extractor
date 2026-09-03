@@ -454,6 +454,22 @@ public class WrInspectionReportLabelConfiguration
                     new(text) // Gets rid of issue of finding 'in' in 'Points'
                 ],
                 Possibilities = [
+                    // Paired-checkbox template ("box one for in order, box two for
+                    // non-compliance"): two boxes side by side, e.g. "Source of supply: ☑ ☐"
+                    // or "Means of measurement: ☐ ☑" - which box is *marked* (☑ or ☒, either is
+                    // used as a generic "checked" mark in this template, not a tick-vs-cross
+                    // distinction) doesn'''t carry the meaning, its *position* does: box one
+                    // marked = InOrder, box two marked = NotInOrder, neither marked = Blank.
+                    // These must come before the single-glyph possibilities below - a bare "☒"
+                    // possibility would otherwise win the .First() match against e.g. "☒ ☐" and
+                    // produce a wrong single-glyph verdict (NotInOrder) instead of the correct
+                    // position-based one (InOrder, since ☒ is in the box-one slot here). Found
+                    // via the real corpus: (☑,☐) 81, (☒,☐) 43, (☐,☑) 10, (☐,☒) 7, (☐,☐) 46.
+                    new TextToMatch("☑ ☐") { ExceptWhenInsideWord = true },
+                    new TextToMatch("☒ ☐") { ExceptWhenInsideWord = true },
+                    new TextToMatch("☐ ☑") { ExceptWhenInsideWord = true },
+                    new TextToMatch("☐ ☒") { ExceptWhenInsideWord = true },
+                    new TextToMatch("☐ ☐") { ExceptWhenInsideWord = true },
                     // ExceptWhenInsideWord: these are short enough ("In", "N", "X"...) that
                     // they're common substrings of unrelated text - most often a neighbouring
                     // field's own label swept in by a separate next-line column-matching bug

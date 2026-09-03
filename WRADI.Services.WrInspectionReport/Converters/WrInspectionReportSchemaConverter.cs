@@ -466,6 +466,25 @@ public static class WrInspectionReportSchemaConverter
             return InOrderStatus.Blank;
         }
 
+        // Paired-checkbox template: box position carries the meaning, not the glyph used to
+        // mark it - see GetInOrderField's Possibilities list for the full evidence and reasoning.
+        if (text.Equals("☑ ☐", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("☒ ☐", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.InOrder;
+        }
+
+        if (text.Equals("☐ ☑", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("☐ ☒", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInOrder;
+        }
+
+        if (text.Equals("☐ ☐", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.Blank;
+        }
+
         // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
         // export toolchain happened to produce, not consistently ✓ - see
         // WrInspectionReportLabelConfiguration.GetInOrderField's Possibilities list for the

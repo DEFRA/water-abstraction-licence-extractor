@@ -189,10 +189,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             f.MeasurementDetails.MeterVerification != null
             && siblingLeakTerms.Any(t => f.MeasurementDetails.MeterVerification.Contains(t, StringComparison.OrdinalIgnoreCase)));
 
-        // Conformance/FlowVerification still have a separate, unresolved issue (the grid
-        // value row's own "Y: [mark] N: [mark]" pair gets narrowed to just "Y:"/"N:" rather
-        // than the whole pair - see analysis doc) - tracked here for visibility, not asserted
-        // on yet, since fixing it needs shared-engine changes beyond this pass's scope.
+        // Was Maintenance's own "Y:"/"N:" sub-fields leaking in as Calibration/Conformance/
+        // FlowVerification/MeterVerification's answer - the row immediately below their shared
+        // grid label row is consistently Maintenance's own row on several real templates, not a
+        // dedicated value row for these four fields. Fixed via
+        // LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith(["Maintenance"]) - see analysis doc.
         var conformanceBareYOrN = formsList.Count(f =>
             f.MeasurementDetails.Conformance is "Y:" or "N:");
         var flowVerificationBareYOrN = formsList.Count(f =>
@@ -211,8 +212,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"LicenceNumber 'Name and address' leak: {licenceNumberLeaksNameAndAddress} ({Percent(licenceNumberLeaksNameAndAddress, total)})");
         testOutputHelper.WriteLine($"Calibration sibling leak: {calibrationLeaksSiblingLabel} ({Percent(calibrationLeaksSiblingLabel, total)})");
         testOutputHelper.WriteLine($"MeterVerif. sibling leak: {meterVerificationLeaksSiblingLabel} ({Percent(meterVerificationLeaksSiblingLabel, total)})");
-        testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' (known gap, not asserted): {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
-        testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' (known gap, not asserted): {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
+        testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' leak: {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
+        testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' leak: {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
 
         if (failures.Count > 0)
         {
@@ -252,6 +253,16 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             licenceNumberLeaksNameAndAddress == 0,
             $"{licenceNumberLeaksNameAndAddress} LicenceNumber values contain a leaked 'Name and address' " +
             "row - the additionalSameLineEndTexts fix on LicenceNumber regressed");
+
+        Assert.True(
+            conformanceBareYOrN == 0,
+            $"{conformanceBareYOrN} Conformance values are Maintenance's own leaked 'Y:'/'N:' - the " +
+            "ExcludeNextLineIfFirstColumnStartsWith fix regressed");
+
+        Assert.True(
+            flowVerificationBareYOrN == 0,
+            $"{flowVerificationBareYOrN} FlowVerification values are Maintenance's own leaked 'Y:'/'N:' - the " +
+            "ExcludeNextLineIfFirstColumnStartsWith fix regressed");
     }
 
     private static string Percent(int count, int total) =>

@@ -197,6 +197,75 @@ public class FindLabelGroupMatchesHelperColumnTests
         }
     }
 
+    public class ShouldExcludeNextLineTests
+    {
+        [Fact]
+        public void WhenExcludeListIsNullOrEmpty_ThenNeverExcludes()
+        {
+            var nextLine = LineOf(Column("Maintenance:"), Column("Y:"));
+
+            Assert.False(FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, null));
+            Assert.False(FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, []));
+        }
+
+        [Fact]
+        public void WhenFirstColumnStartsWithAnExcludedText_ThenExcludes()
+        {
+            // The real case: "Maintenance: Y: N: Frequency: By whom:" is Maintenance's own
+            // row, immediately below Calibration/Conformance/FlowVerification/
+            // MeterVerification's shared label row on several real WR51 templates - its "Y:"/
+            // "N:" columns must not be picked up as if they were one of those four fields'
+            // own values, however close they sit in X to that field's own label.
+            var nextLine = LineOf(Column("Maintenance:"), Column("Y:"), Column("N:"));
+
+            var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void WhenFirstColumnDoesNotStartWithAnyExcludedText_ThenDoesNotExclude()
+        {
+            var nextLine = LineOf(Column("✓"));
+
+            var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void WhenExcludedTextAppearsButNotInTheFirstColumn_ThenDoesNotExclude()
+        {
+            // Only the row's OWN leading column counts - a genuine value row that happens to
+            // mention an excluded field name somewhere else must not be rejected.
+            var nextLine = LineOf(Column("✓"), Column("Maintenance:"));
+
+            var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void WhenLineHasNoColumns_ThenDoesNotExclude()
+        {
+            var nextLine = LineOf();
+
+            var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void MatchIsCaseInsensitive()
+        {
+            var nextLine = LineOf(Column("maintenance:"));
+
+            var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
+
+            Assert.True(result);
+        }
+    }
+
     public class FindNextLineColumnByPositionTests
     {
         [Fact]
@@ -307,19 +376,22 @@ public class FindLabelGroupMatchesHelperColumnTests
         }
 
         [Fact]
-        public void SameColumn_NullAnchorPosition_TreatsMissingAnchorAsNeverOutOfTolerance()
+        public void SameColumn_NullAnchorPosition_RejectsRatherThanAcceptingAnyDistance()
         {
-            // Documents existing behaviour precisely: when anchorLeftPosition is null, the
-            // "> anchor + 100" / "< anchor - 100" comparisons involve null arithmetic, and a
-            // comparison against null is always false in C# - so the tolerance check can
-            // never reject a match. Whichever column is nearest to 0 (the OrderBy fallback)
-            // is accepted no matter how far away it actually is.
-            var nextLine = LineOf(ColumnAt(5000, "VeryFarButAccepted"));
+            // Stale test corrected: an earlier version of this comparison used nullable
+            // arithmetic ("> anchor + 100" with anchor == null), which is always false in C#
+            // and so could never reject a match - whichever column was nearest to 0 got
+            // accepted no matter how far away it actually was. That was tightened up (this
+            // session, alongside the near-miss-gap fallback below) to explicitly return null
+            // when the anchor itself is unknown, rather than silently accepting an arbitrary
+            // column - a genuinely unknown anchor position must not pretend everything is in
+            // tolerance.
+            var nextLine = LineOf(ColumnAt(5000, "VeryFarAndNowCorrectlyRejected"));
 
             var result = FindLabelGroupMatchesHelper.FindNextLineColumnByPosition(
                 nextLine, LimitTo.SameColumn, columnIndex: 0, anchorLeftPosition: null);
 
-            Assert.Equal("VeryFarButAccepted", result?.Text);
+            Assert.Null(result);
         }
     }
 }

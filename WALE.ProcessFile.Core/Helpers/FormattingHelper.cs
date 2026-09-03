@@ -1040,11 +1040,22 @@ public static class FormattingHelper
     {
         var trimmed = text?.Trim();
 
+        // Tick/checkbox glyphs (✓☑☒☐) are char.IsSymbol, so without protecting them here the
+        // same way '(' '&' ')' ':' '/' already are, a standalone tick mark that happens to sit
+        // at the very start/end of a captured value gets silently trimmed away to nothing -
+        // e.g. DocumentLineColumn.FilterWordsFromText calls this per-word with
+        // trimPunctuationEnd=true for the last word, so "Source of supply: ✓" loses its own
+        // answer whenever the tick is that last word (which is exactly the normal shape for a
+        // standalone checkbox-style answer). See analysis/07-label-matching-and-debugging.md.
         if (trimPunctuationStart)
         {
             while (trimmed?.Length >= 1
                && trimmed[0] != '('
-               && trimmed[0] != '&'               
+               && trimmed[0] != '&'
+               && trimmed[0] != '✓'
+               && trimmed[0] != '☑'
+               && trimmed[0] != '☒'
+               && trimmed[0] != '☐'
                && (char.IsPunctuation(trimmed[0])
                    || char.IsSymbol(trimmed[0])
                    || char.IsWhiteSpace(trimmed[0])))
@@ -1058,8 +1069,12 @@ public static class FormattingHelper
             while (trimmed?.Length >= 1
                && trimmed[^1] != ')'
                && trimmed[^1] != ':'
-               && trimmed[^1] != '&'               
+               && trimmed[^1] != '&'
                && trimmed[^1] != '/'
+               && trimmed[^1] != '✓'
+               && trimmed[^1] != '☑'
+               && trimmed[^1] != '☒'
+               && trimmed[^1] != '☐'
                && (char.IsPunctuation(trimmed[^1])
                    || char.IsSymbol(trimmed[^1])
                    || char.IsWhiteSpace(trimmed[^1])))

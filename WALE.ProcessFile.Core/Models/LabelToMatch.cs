@@ -119,6 +119,17 @@ public class LabelToMatch
     // every rule that doesn't opt in.
     public bool RequireTextToClaimGroup { get; init; }
 
+    // LimitTo.SameColumn/SpecifiedColumn only: a next-line candidate is rejected outright
+    // (not narrowed to a column at all) when its own first/leftmost column starts with one of
+    // these texts - i.e. that whole row visibly belongs to a different, identifiable field
+    // (its own leading label), not a genuine continuation of this one. Distinct from
+    // IgnoreBlockIfContains, which rejects based on the already-narrowed picked column's own
+    // content and so can't tell "this field's genuine compound answer happens to contain the
+    // rejected text" apart from "this is really a different field's row" - checking the row's
+    // own leading label first avoids that ambiguity. Defaults to null/empty, so it's a no-op
+    // for every label that doesn't opt in.
+    public IReadOnlyList<string>? ExcludeNextLineIfFirstColumnStartsWith { get; init; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -164,7 +175,8 @@ public class LabelToMatch
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
-            RequireTextToClaimGroup = RequireTextToClaimGroup
+            RequireTextToClaimGroup = RequireTextToClaimGroup,
+            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList()
         };
     }    
 }

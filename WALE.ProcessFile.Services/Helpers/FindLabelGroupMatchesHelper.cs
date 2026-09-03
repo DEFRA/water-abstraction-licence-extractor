@@ -299,6 +299,11 @@ public static class FindLabelGroupMatchesHelper
 
                         foreach (var nextLine in nextLines)
                         {
+                            if (ShouldExcludeNextLine(nextLine, label.ExcludeNextLineIfFirstColumnStartsWith))
+                            {
+                                continue;
+                            }
+
                             var columnToKeep = FindNextLineColumnByPosition(
                                 nextLine,
                                 label.LimitTo,
@@ -542,6 +547,31 @@ public static class FindLabelGroupMatchesHelper
         }
 
         return (newColumns, columnIndex);
+    }
+
+    /// <summary>
+    /// Whether a next-line candidate should be rejected outright, before any column is even
+    /// picked from it, because its own leading column visibly belongs to a different,
+    /// identifiable field (that field's own label starting the row) rather than being a blank
+    /// or genuine continuation row for the label being matched. See
+    /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
+    /// WrInspectionReportLabelConfiguration's Calibration/Conformance/FlowVerification/
+    /// MeterVerification for the real case this exists for: on several real WR51 templates the
+    /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
+    /// row, with no dedicated value row for these fields in between at all.
+    /// </summary>
+    internal static bool ShouldExcludeNextLine(DocumentLine nextLine, IReadOnlyList<string>? excludeIfFirstColumnStartsWith)
+    {
+        if (excludeIfFirstColumnStartsWith?.Any() != true)
+        {
+            return false;
+        }
+
+        var firstColumnText = nextLine.Columns.FirstOrDefault()?.Text;
+
+        return firstColumnText != null
+            && excludeIfFirstColumnStartsWith.Any(excluded =>
+                firstColumnText.StartsWith(excluded, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>

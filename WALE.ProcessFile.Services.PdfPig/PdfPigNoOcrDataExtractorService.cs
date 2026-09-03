@@ -711,7 +711,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     /// broken by horizontal position, a dragged-in word can be sorted in between two
     /// words of an unrelated row rather than after them.
     /// </summary>
-    private static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByChain(
+    internal static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByChain(
         List<MinimalWord> words,
         int lineHeight)
     {
@@ -764,7 +764,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     /// DocumentLine boundaries and there is no local way to run the licence regression
     /// suite against this project to verify it's neutral there.
     /// </summary>
-    private static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByAnchor(
+    internal static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByAnchor(
         List<MinimalWord> words,
         int lineHeight)
     {

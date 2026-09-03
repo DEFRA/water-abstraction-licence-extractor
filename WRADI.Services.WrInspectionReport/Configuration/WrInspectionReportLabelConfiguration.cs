@@ -95,11 +95,27 @@ public class WrInspectionReportLabelConfiguration
                 "Records",
                 "Other provisions",
                 additionalTextStarts: ["R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s"])),
-            ("ProvisionOfInformation", GetInOrderField("Provision of information", "ProvisionOfInformation")),
-            ("SpecialConditions", GetInOrderField("Special conditions", "SpecialConditions")),
-            ("Land", GetInOrderField("Land (only if specified)", "Land")),
-            ("ChargingFactors", GetInOrderField("Charging factors", "ChargingFactors")),
-            ("OtherProvisions", GetInOrderField("Other provisions (specify below)", "OtherProvisions")),
+            // These five are each the last field in their row of the 3-column grid (the 3rd
+            // column only has 3 rows - Land/Charging factors/Other provisions - vs. the other
+            // two columns' 5, so ProvisionOfInformation/SpecialConditions have no field to their
+            // right on rows 4-5 either), so none of them had an endText to bound the same-
+            // column walk - unlike every other field in the grid, which stops at whatever's
+            // immediately to its right on the same row. Confirmed via paired tracing
+            // (wr51__940010035gr__... vs. a structurally-identical working document) that this
+            // isn't cosmetic: with no boundary, SpecialConditions' walk swept a genuinely
+            // different column's "Other provisions" bullet-point content ("...include in
+            // Returns") into its own captured value, and the standalone word "in" inside that
+            // swept text produced a fabricated InOrder verdict. Every other grid field is
+            // protected from the same underlying column-tolerance looseness only because it
+            // happens to have a nearby endText that terminates the walk first. "Measurement
+            // details" is the section header that always follows the whole Licence provisions
+            // grid, so it's a safe, distant bound for all five regardless of which one is last
+            // on the page.
+            ("ProvisionOfInformation", GetInOrderField("Provision of information", "ProvisionOfInformation", "Measurement details")),
+            ("SpecialConditions", GetInOrderField("Special conditions", "SpecialConditions", "Measurement details")),
+            ("Land", GetInOrderField("Land (only if specified)", "Land", "Measurement details")),
+            ("ChargingFactors", GetInOrderField("Charging factors", "ChargingFactors", "Measurement details")),
+            ("OtherProvisions", GetInOrderField("Other provisions (specify below)", "OtherProvisions", "Measurement details")),
             // Two distinct label wordings seen on real documents: the long parenthetical
             // form, and a plain "Licence No." (or "Licence No:") short form used on a
             // meaningful minority of documents. Both put the number in the same place

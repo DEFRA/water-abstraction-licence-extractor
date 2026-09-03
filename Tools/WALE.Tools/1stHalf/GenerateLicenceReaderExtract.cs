@@ -672,7 +672,8 @@ public static class GenerateLicenceReaderExtract
                 await pdfDataExtractor.SaveMatchResultAsync(
                     internalJson,
                     fileMetadata.FileId,
-                    0);
+                    0,
+                    configuration.UseLockExclusivity);
                 
                 ConsoleHelper.WriteLine(
                     $"INFO - Generate licence reader extract - PDF extraction completed successfully for {fileMetadata.FileName} at {DateTime.Now}");
@@ -693,7 +694,8 @@ public static class GenerateLicenceReaderExtract
                     fileMetadata.FileName!,
                     fileMetadata.FileId,
                     0,
-                    tex.ToString());
+                    tex.ToString(),
+                    configuration.UseLockExclusivity);
                 
                 await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
                 return null;
@@ -714,7 +716,8 @@ public static class GenerateLicenceReaderExtract
                     fileMetadata.FileName!,
                     fileMetadata.FileId,
                     0,
-                    tex.ToString());
+                    tex.ToString(),
+                    configuration.UseLockExclusivity);
                 
                 await cacheService.SaveDmsFileReaderResultAsync(tooManyPagesResult);
                 return null;
@@ -745,7 +748,8 @@ public static class GenerateLicenceReaderExtract
                     fileMetadata.FileName!,
                     fileMetadata.FileId,
                     0,
-                    ex.ToString());
+                    ex.ToString(),
+                    configuration.UseLockExclusivity);
                 
                 await cacheService.SaveDmsFileReaderResultAsync(failedResult);
                 return null;

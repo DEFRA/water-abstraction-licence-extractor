@@ -199,6 +199,11 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         response.EnsureSuccessStatusCode();
     }
 
+    public Task CopyAsync(string filename, string destinationBucketName)
+    {
+        throw new NotImplementedException();
+    }
+    
     public async Task<string> GetPresignedUrlAsync(string filename)
     {
         var path = $"/BFF/Files/Get?filename={filename}";

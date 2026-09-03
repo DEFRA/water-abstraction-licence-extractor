@@ -80,18 +80,20 @@ public class PdfDataExtractorService(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
-                ex.ToString());
+                ex.ToString(),
+                configuration.UseLockExclusivity);
 
             throw;
         }
     }
 
-    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId)
+    public async Task SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         var matchResultId = await outputService.SaveMatchResultAsync(
             matchesResult,
             fileId,
-            processRunId);
+            processRunId,
+            isUpdate);
 
         var dtStartSaveMatches = DateTime.Now;
 
@@ -208,6 +210,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(ScrapeStatus.Ok),
             ServicesUsed =

@@ -75,12 +75,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("22722027", StringComparison.OrdinalIgnoreCase)
+        .Where(x => x.Key.Contains("NE0270023036", StringComparison.OrdinalIgnoreCase))
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Key.Contains("c11fb8ba-7a2d-4141-b154-0fff1e7c7002", StringComparison.OrdinalIgnoreCase))
-        //.Where(x => x.Value.Item2.RegionCode == 3) // North east
+        //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
+        .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-       .Take(10)
+        //.Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -98,7 +98,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     var abstractionAndImpoundmentLicences = await abstractionAndImpoundmentLicencesTask;
     var licenceNumberSuccessors = await licenceNumberSuccessorsTask;
-    
+
     var licenceNumberService = new AbstractionLicenceNumber(
         abstractionAndImpoundmentLicences,
         licenceNumberSuccessors);
@@ -129,7 +129,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
         var scrapingTasks = new List<Task<List<LicenceSet>>>();
         var processCount = 1;
         
-        foreach (var (filePath, (dmsFileData, naldLicence)) in filesToProcess)
+        var shuffledFilesToProcess = filesToProcess.OrderBy(_ => Guid.NewGuid()).ToList();
+        
+        // Shuffling helps to get less locks, as files tend to be linked to other files with similar numbers
+        foreach (var (filePath, (dmsFileData, naldLicence)) in shuffledFilesToProcess)
         {
             if (services.DelayPerProcessMs > 0)
             {
@@ -209,6 +212,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - All scraped at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+    // TODO some logging during the below (as it takes > 1 min with 2000 files, with no output)
+    
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
@@ -218,6 +223,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
 
+    ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Calculated combined aggregates at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
         allLicenceSets,
@@ -295,7 +302,8 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
             await pdfDataExtractor.SaveMatchResultAsync(
                 matchesResult!,
                 dmsDataForFile.FileId,
-                processRun.ProcessRunId);
+                processRun.ProcessRunId,
+                lookupConfig.UseLockExclusivity);
         }
 
         ConsoleHelper.WriteLine(

@@ -672,7 +672,8 @@ public static class FindLabelGroupMatchesHelper
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         linkedDmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -683,7 +684,8 @@ public static class FindLabelGroupMatchesHelper
                     relatedFileName,
                     linkedDmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }

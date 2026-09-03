@@ -1682,9 +1682,17 @@ public static class AbstractionLicenceSchemaConverter
             .GroupBy(l => l.LicenceNumber?.Value)
             .Select(lg => lg.First())
             .ToList();
-        
+
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAsync)} " +
+            $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        var idx = 0;
+
         foreach (var licenceSetGroup in licenceSetGroups)
         {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAsync)} {idx++} " +
+                $"of {licenceSetGroups.Count} done");
+            
             foreach (var licenceSet in licenceSetGroup)
             {
                 foreach (var licence in licenceSet.Licences)
@@ -2061,7 +2069,8 @@ public static class AbstractionLicenceSchemaConverter
                     await pdfDataExtractorService.SaveMatchResultAsync(
                         relatedFileMatches.Item!,
                         dmsFileData.FileId,
-                        processRunId);
+                        processRunId,
+                        lookupConfiguration.UseLockExclusivity);
                 }
             }
             catch (Exception ex)
@@ -2072,7 +2081,8 @@ public static class AbstractionLicenceSchemaConverter
                     destinationFileName!,
                     dmsFileData.FileId,
                     processRunId,
-                    ex.ToString());
+                    ex.ToString(),
+                    lookupConfiguration.UseLockExclusivity);
                 
                 throw;
             }
@@ -3409,7 +3419,7 @@ public static class AbstractionLicenceSchemaConverter
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
             
-            var (regionId, licenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            var (regionId, naldLicenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
                 scrapedLicenceNumber,
                 naldLicenceType,
@@ -3420,7 +3430,7 @@ public static class AbstractionLicenceSchemaConverter
             
             linkedLicenceNumbers.Add(new LinkedLicence
             {
-                LicenceNumber = licenceNumber2,
+                LicenceNumber = naldLicenceNumber2,
                 RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
@@ -3440,7 +3450,8 @@ public static class AbstractionLicenceSchemaConverter
                         LinkReason = GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LabelStartLineNumber,
-                        PageNumber = linkedLicenceNumber.LabelStartPageNumber
+                        PageNumber = linkedLicenceNumber.LabelStartPageNumber,
+                        DocumentIdentifier = documentIdentifier
                     }
                 ]
             });
@@ -5507,8 +5518,16 @@ public static class AbstractionLicenceSchemaConverter
         List<IReadOnlyList<LicenceSet>> initialLicenceSetGroups,
         List<LicenceSet> distinctLicenceSets)
     {
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddImplicitExplicitAndEncompassingLicenceSets)} " +
+            $"started for {initialLicenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        
+        var idx = 0;
+        
         foreach (var licenceSetGroup in initialLicenceSetGroups)
         {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddImplicitExplicitAndEncompassingLicenceSets)} {idx++} " +
+                $"of {initialLicenceSetGroups.Count} done");
+            
             if (licenceSetGroup.Count == 0 || licenceSetGroup.First().Licences.Length == 0)
             {
                 continue;

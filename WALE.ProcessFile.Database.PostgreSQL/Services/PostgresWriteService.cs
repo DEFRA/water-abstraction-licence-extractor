@@ -294,27 +294,45 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error)
+    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE matches_result
-                           SET
-                                date_time_utc = @DateTimeUtc,
-                                data = @Data,
-                                status = @Status
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
-                           
-                           SELECT
-                               matches_result_id
-                           FROM
-                                matches_result
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
-                           """;
+        
+        string sql;
+
+        if (isUpdate)
+        {
+            const string updateSql = """
+               UPDATE matches_result
+               SET
+                    date_time_utc = @DateTimeUtc,
+                    data = @Data,
+                    status = @Status
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+
+               SELECT
+                   matches_result_id
+               FROM
+                    matches_result
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+               """;
+            
+            sql = updateSql;
+        }
+        else
+        {
+            const string insertSql = """
+               INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
+               VALUES (@FileId, @status, @Data, @ProcessRunId, @DateTimeUtc)
+               RETURNING matches_result_id
+               """;
+            
+            sql = insertSql;            
+        }
 
         const string status = nameof(ScrapeStatus.Error);
         var data = JsonSerializer.Serialize(new
@@ -338,27 +356,46 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId)
+    public async Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE matches_result
-                           SET
-                                date_time_utc = @DateTimeUtc,
-                                data = @Data,
-                                status = @Status
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
+        
+        string sql;
 
-                           SELECT
-                               matches_result_id
-                           FROM
-                                matches_result
-                           WHERE
-                                file_id = @FileId
-                                AND process_run_id = @ProcessRunId;
-                           """;
+        if (isUpdate)
+        {
+            const string updateSql = """
+                               UPDATE matches_result
+                               SET
+                                    date_time_utc = @DateTimeUtc,
+                                    data = @Data,
+                                    status = @Status
+                               WHERE
+                                    file_id = @FileId
+                                    AND process_run_id = @ProcessRunId;
+
+                               SELECT
+                                   matches_result_id
+                               FROM
+                                    matches_result
+                               WHERE
+                                    file_id = @FileId
+                                    AND process_run_id = @ProcessRunId;
+                               """;
+            
+            sql = updateSql;
+        }
+        else
+        {
+            const string insertSql = """
+                                     INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
+                                     VALUES (@FileId, @status, @Data, @ProcessRunId, @DateTimeUtc)
+                                     RETURNING matches_result_id
+                                     """;
+            
+            sql = insertSql;            
+        }
+
         
         return await ExecuteScalarAsync(
             connection,

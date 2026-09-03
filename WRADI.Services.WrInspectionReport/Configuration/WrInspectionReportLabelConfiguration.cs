@@ -195,7 +195,14 @@ public class WrInspectionReportLabelConfiguration
             ]),
             ("SerialNumber", [
                 ..TextAfterLabel("Serial number", "SerialNumber", 0, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Meter Serial Number", "Meter Asset Number", "SerialNumber", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
+                ..TextToFindIsBetweenLabels("Meter Serial Number", "Meter Asset Number", "SerialNumber", 1, LimitTo.SameColumn, requireTextToClaimGroup: true), // T6 template
+                // A fourth layout: two-column vertically-stacked table ("Meter make" |
+                // "Serial number" on one row, "Reading" | "Units" on the next), same shape as
+                // the T6 alternate above but with baseline (non-"Meter ...") label wording, so
+                // neither existing alternate matches - the Existing template alternate expects
+                // the value on the label's own line (nextLines: 0), but here it's one row
+                // below, same as Units' own equivalent alternate.
+                ..TextToFindIsBetweenLabels("Serial number", "Units", "SerialNumber", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Baseline two-column table
             ]),
             ("MeterAssetNumber", TextToFindIsBetweenLabels("Meter Asset Number", "Meter Reading", "MeterAssetNumber", 1, LimitTo.SameColumn)), // T6 template only
             // "Reading" is a literal string prefix of the unrelated sibling label "Readings

@@ -66,22 +66,35 @@ public class WrInspectionReportLabelConfiguration
             // field on each row is left unbounded (defaults to end-of-block).
             ("SourceOfSupply", GetInOrderField("Source of supply", "SourceOfSupply", "Quantities")),
             ("PointOfAbstraction", GetInOrderField("Point of abstraction", "PointOfAbstraction", "Means of measurement")),
-            // "Records" sometimes renders as "R ecords" (a space after the R - the same PDF
-            // kerning quirk the Records field's own TextStart already has to work around
-            // below). Without it as an alternate end marker here, the same-line column walk
-            // never recognises the boundary and sweeps all the way to "...N/A" at the end of
-            // the row - which then wins over the real "In Order" answer earlier in the swept
-            // text, since Possibilities checks "N/A" before "In".
+            // "Records" sometimes renders letter-kerned (see the Records field's own TextStart
+            // below for the full evidence - 7 distinct patterns across 340 real documents).
+            // Without these as alternate end markers here, the same-line column walk never
+            // recognises the boundary and sweeps all the way to "...N/A" at the end of the row -
+            // which then wins over the real "In Order" answer earlier in the swept text, since
+            // Possibilities checks "N/A" before "In".
             ("MeansOfAbstraction", GetInOrderField(
                 "Means of abstraction",
                 "MeansOfAbstraction",
                 "Records",
-                additionalEndTexts: ["R ecords"])),
+                additionalEndTexts: ["R ecords", "R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s"])),
             ("Purposes", GetInOrderField("Purpose(s)", "Purposes", "Provision of information")),
             ("Period", GetInOrderField("Period", "Period", "Special conditions")),
             ("Quantities", GetInOrderField("Quantities", "Quantities", "Land")),
             ("MeansOfMeasurement", GetInOrderField("Means of measurement", "MeansOfMeasurement", "Charging factors")),
-            ("Records", GetInOrderField("R ecords", "Records", "Other provisions")),
+            // "Records" specifically (no other LicenceProvisions label) renders with
+            // progressively wider letter-kerning on a large share of the real corpus - 340 of
+            // 789 documents (43%), likely from the originating Word template stretch-justifying
+            // this one short label to fill a column width the others don't need to. Confirmed
+            // via corpus-wide scan: only 7 distinct literal patterns cover all 340 occurrences,
+            // not an open-ended spectrum, so literal alternates are sufficient - no whitespace-
+            // tolerant matching engine change needed. Two of the 7 raw patterns ("R e c o r d s
+            // :" and "R e c o r d s:") collapse to the one alternate below once the trailing
+            // colon is dropped, since matching is prefix-based.
+            ("Records", GetInOrderField(
+                "R ecords",
+                "Records",
+                "Other provisions",
+                additionalTextStarts: ["R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s"])),
             ("ProvisionOfInformation", GetInOrderField("Provision of information", "ProvisionOfInformation")),
             ("SpecialConditions", GetInOrderField("Special conditions", "SpecialConditions")),
             ("Land", GetInOrderField("Land (only if specified)", "Land")),
@@ -421,7 +434,8 @@ public class WrInspectionReportLabelConfiguration
         string text,
         string labelName,
         string? endText = null,
-        List<string>? additionalEndTexts = null)
+        List<string>? additionalEndTexts = null,
+        List<string>? additionalTextStarts = null)
     {
         return
         [
@@ -430,7 +444,8 @@ public class WrInspectionReportLabelConfiguration
                 TextStart =
                 [
                     new(text) { ColumnMustStartWith = true },
-                    new(text.Replace(" ", string.Empty)) { ColumnMustStartWith = true }
+                    new(text.Replace(" ", string.Empty)) { ColumnMustStartWith = true },
+                    ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t) { ColumnMustStartWith = true })
                 ],
                 TextEnd = endText != null
                     ? [
@@ -451,14 +466,15 @@ public class WrInspectionReportLabelConfiguration
                 NextLinesToFetch = 1,
                 Name = labelName,
                 Remove = [
-                    new(text) // Gets rid of issue of finding 'in' in 'Points'
+                    new(text), // Gets rid of issue of finding 'in' in 'Points'
+                    ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t))
                 ],
                 Possibilities = [
                     // Paired-checkbox template ("box one for in order, box two for
                     // non-compliance"): two boxes side by side, e.g. "Source of supply: ☑ ☐"
                     // or "Means of measurement: ☐ ☑" - which box is *marked* (☑ or ☒, either is
                     // used as a generic "checked" mark in this template, not a tick-vs-cross
-                    // distinction) doesn'''t carry the meaning, its *position* does: box one
+                    // distinction) doesn't carry the meaning, its *position* does: box one
                     // marked = InOrder, box two marked = NotInOrder, neither marked = Blank.
                     // These must come before the single-glyph possibilities below - a bare "☒"
                     // possibility would otherwise win the .First() match against e.g. "☒ ☐" and

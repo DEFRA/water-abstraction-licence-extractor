@@ -466,8 +466,19 @@ public static class WrInspectionReportSchemaConverter
             return InOrderStatus.Blank;
         }
 
+        // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
+        // export toolchain happened to produce, not consistently ✓ - see
+        // WrInspectionReportLabelConfiguration.GetInOrderField's Possibilities list for the
+        // full evidence (corpus-wide symbol frequency behind each of these).
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("✔", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("√", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("🗸", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("y", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.InOrder;
@@ -475,6 +486,8 @@ public static class WrInspectionReportSchemaConverter
 
         if (text.Equals("not", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("X", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("☒", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("×", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("n", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.NotInOrder;

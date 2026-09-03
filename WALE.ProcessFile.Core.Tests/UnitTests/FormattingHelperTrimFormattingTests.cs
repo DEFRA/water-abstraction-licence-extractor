@@ -11,8 +11,7 @@ namespace WALE.ProcessFile.Core.Tests.UnitTests;
 /// trimPunctuationEnd=true for the last word, so a captured value like "Source of supply: ✓"
 /// silently lost its own answer. Measured impact on the real WR51 corpus: the whole 13-field
 /// LicenceProvisions grid's resolved rate was suppressed by this (masked until a separate fix
-/// stopped an unrelated false-positive match from winning first - see
-/// analysis/07-label-matching-and-debugging.md).
+/// stopped an unrelated false-positive match from winning first).
 /// </summary>
 public class FormattingHelperTrimFormattingTests
 {

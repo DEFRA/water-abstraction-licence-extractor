@@ -1046,7 +1046,7 @@ public static class FormattingHelper
         // e.g. DocumentLineColumn.FilterWordsFromText calls this per-word with
         // trimPunctuationEnd=true for the last word, so "Source of supply: ✓" loses its own
         // answer whenever the tick is that last word (which is exactly the normal shape for a
-        // standalone checkbox-style answer). See analysis/07-label-matching-and-debugging.md.
+        // standalone checkbox-style answer).
         if (trimPunctuationStart)
         {
             while (trimmed?.Length >= 1

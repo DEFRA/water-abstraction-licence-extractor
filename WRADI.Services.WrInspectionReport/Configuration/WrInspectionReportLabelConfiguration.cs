@@ -131,7 +131,29 @@ public class WrInspectionReportLabelConfiguration
             // "Name and address: | Telephone No:" sits on one row (two columns) - without
             // bounding the same-line walk there, it sweeps past "Telephone No:" and the
             // phone number's own label ends up as a bogus extra first line of the address.
-            ("NameAndAddress", TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 7, LimitTo.SameColumn, additionalSameLineEndTexts: ["Telephone No"])),
+            // Same issue for "Email:", which sits on the header row for some templates and
+            // otherwise bleeds into the address block's last captured line (mirrors the same
+            // sibling-label leak already fixed for SiteAddress). NextLinesToFetch bumped from
+            // 7 to 10: real addresses regularly wrap to 8 lines (business name + 5-6 address
+            // lines + postcode on its own line) and 7 was silently dropping the final line -
+            // usually the postcode.
+            ("NameAndAddress", [
+                ..TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 10, LimitTo.SameColumn, additionalSameLineEndTexts: ["Telephone No", "Email"]), // Existing template
+                // "Water Company" template: label and value are one line, e.g. "Name / address:
+                // Sutton and East Surrey Water PLC, London Road, Redhill, RH1 1LJ" - no separate
+                // value block on subsequent lines, so the between-labels walk above never finds
+                // anything (it only looks at lines after the label's own line). Seen with both
+                // "/" and "&" between "Name" and "address".
+                ..TextAfterLabel("Name / address", "NameAndAddress", 0), // Water Company template
+                ..TextAfterLabel("Name & address", "NameAndAddress", 0), // Water Company template
+                // Another distinct template: labelled "Permit holder name and address:" instead
+                // of "Name and address:", value starts on the label's own line and wraps onto
+                // exactly one continuation line, with "Telephone No:" appended straight after the
+                // value on the label's own line (same-line sibling, no line break) rather than
+                // sitting in its own column - stripped via Remove since TextAfterLabel's endText
+                // bound only matches text that starts a line, which "Telephone No:" here doesn't.
+                ..TextAfterLabel("Permit holder name and address", "NameAndAddress", 1, additionalRemoves: [new TextToMatch("Telephone No:")]) // Permit holder template
+            ]),
             // Every alternate within a group keeps the group's own name (matching the
             // single-alternate fields below) - the converter looks results up by exact matched
             // label name, so an alternate named differently from its group (e.g. "MeterMakeT6")
@@ -437,12 +459,35 @@ public class WrInspectionReportLabelConfiguration
                     // field's own label swept in by a separate next-line column-matching bug
                     // (e.g. "Point of abstraction:" coincidentally contains "in"). Without this,
                     // that produces a fabricated InOrder/NotInOrder verdict instead of an honest
-                    // gap. See analysis/07-label-matching-and-debugging.md.
+                    // gap.
                     new TextToMatch("N/A") { ExceptWhenInsideWord = true },
                     new TextToMatch("Not") { ExceptWhenInsideWord = true },
                     new TextToMatch("In") { ExceptWhenInsideWord = true },
                     new TextToMatch("✓") { ExceptWhenInsideWord = true },
+                    // Same tick, different glyph: real WR51 PDFs render the "in order" mark
+                    // with whichever tick character the originating Word/export toolchain
+                    // happened to use, not consistently ✓. Confirmed by scanning the full real
+                    // corpus for every symbol appearing directly after a LicenceProvisions
+                    // label - each of these appears exclusively in that tick position, never
+                    // near "X"/negative language: ✔ (206 occurrences), √ (286), 🗸 (30), plus
+                    // four embedded Wingdings-style Private Use Area glyphs (U+F0FC/391,
+                    // U+F061/76, U+F050/61, U+F072/4) - the same font family behind Wingdings'
+                    // very well-known "tick mark" mapping. Before this fix, any document
+                    // using one of these instead of ✓ returned a completely empty
+                    // LicenceProvisions grid (all 8 fields DidntMatch/Blank), not just a wrong
+                    // mark on one field - across ~1,100 real occurrences corpus-wide.
+                    new TextToMatch("✔") { ExceptWhenInsideWord = true },
+                    new TextToMatch("√") { ExceptWhenInsideWord = true },
+                    new TextToMatch("🗸") { ExceptWhenInsideWord = true },
+                    new TextToMatch("") { ExceptWhenInsideWord = true },
+                    new TextToMatch("") { ExceptWhenInsideWord = true },
+                    new TextToMatch("") { ExceptWhenInsideWord = true },
+                    new TextToMatch("") { ExceptWhenInsideWord = true },
                     new TextToMatch("X") { ExceptWhenInsideWord = true },
+                    // Same "not in order" cross, different glyph - same evidence-gathering
+                    // approach as the tick variants above (☒ 52 occurrences, × 6).
+                    new TextToMatch("☒") { ExceptWhenInsideWord = true },
+                    new TextToMatch("×") { ExceptWhenInsideWord = true },
                     new TextToMatch("Y") { ExceptWhenInsideWord = true }, // T6 template uses Y/N instead of In/Not/tick/cross
                     new TextToMatch("N") { ExceptWhenInsideWord = true },
                     // Catch-all, tried last: a genuinely blank tick field (very common - not every

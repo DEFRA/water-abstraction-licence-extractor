@@ -10,9 +10,9 @@ namespace WALE.ProcessFile.Services.Tests.UnitTests;
 /// list. Covers the "" catch-all fix: a field with genuinely no answer on the page produces
 /// zero captured lines, not one line with empty text, so the existing Contains("") check
 /// (FirstOrDefault() on an empty list is null) never got a chance to recognise a deliberately
-/// blank field as a match - it silently vanished instead of surviving as Blank. See
-/// analysis/07-label-matching-and-debugging.md for how this was found on the real WR51 corpus
-/// (77% of OtherProvisions, 53% of SpecialConditions reporting DidntMatch instead of Blank).
+/// blank field as a match - it silently vanished instead of surviving as Blank. Found via the
+/// real WR51 corpus reporting DidntMatch instead of Blank for 77% of OtherProvisions and 53%
+/// of SpecialConditions.
 /// </summary>
 public class BaseMethodPossibilityTests
 {

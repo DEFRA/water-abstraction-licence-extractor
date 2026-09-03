@@ -164,8 +164,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
         var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.MeterMake));
 
-        // Regression guards for the data-quality fixes in analysis/07-label-matching-and-debugging.md
-        // (a neighbouring field's own label leaking into these values, rather than a real answer).
+        // Regression guards for data-quality fixes: a neighbouring field's own label leaking
+        // into these values, rather than a real answer.
         var siteAddressLeaksEmailLabel = formsList.Count(f =>
             f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
 

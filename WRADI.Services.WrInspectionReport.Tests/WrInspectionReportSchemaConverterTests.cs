@@ -6,8 +6,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// <summary>
 /// Direct unit tests for WrInspectionReportSchemaConverter.ToForm's date parsing, isolated
 /// from PDF extraction - a MatchesResult with a single "Date" match is enough to exercise the
-/// NormaliseOrdinalDateSuffixes fix (see analysis/07-label-matching-and-debugging.md) without
-/// needing a real or dummy PDF fixture.
+/// NormaliseOrdinalDateSuffixes fix without needing a real or dummy PDF fixture.
 /// </summary>
 public class WrInspectionReportSchemaConverterTests
 {

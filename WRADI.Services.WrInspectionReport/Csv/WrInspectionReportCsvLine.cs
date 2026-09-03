@@ -34,6 +34,7 @@ public class WrInspectionReportCsvLine
     public string? LicenceProvisions__Land { get; set; }
     public string? LicenceProvisions__ChargingFactors { get; set; }
     public string? LicenceProvisions__OtherProvisions { get; set; }
+    public string? MeasurementDetails__MeterName { get; set; }
     public string? MeasurementDetails__MeterMake { get; set; }
     public string? MeasurementDetails__SerialNumber { get; set; }
     public string? MeasurementDetails__MeterAssetNumber { get; set; }
@@ -96,6 +97,7 @@ public class WrInspectionReportCsvLine
             LicenceProvisions__Land = form.LicenceProvisions.Land.ToString(),
             LicenceProvisions__ChargingFactors = form.LicenceProvisions.ChargingFactors.ToString(),
             LicenceProvisions__OtherProvisions = form.LicenceProvisions.OtherProvisions.ToString(),
+            MeasurementDetails__MeterName = form.MeasurementDetails.MeterName,
             MeasurementDetails__MeterMake = form.MeasurementDetails.MeterMake,
             MeasurementDetails__SerialNumber = form.MeasurementDetails.SerialNumber,
             MeasurementDetails__MeterAssetNumber = form.MeasurementDetails.MeterAssetNumber,

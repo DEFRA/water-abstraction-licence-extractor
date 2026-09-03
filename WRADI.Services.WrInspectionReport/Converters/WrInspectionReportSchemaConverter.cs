@@ -325,6 +325,7 @@ public static class WrInspectionReportSchemaConverter
             },
             MeasurementDetails = new WrInspectionReportMeasurementDetails()
             {
+                MeterName = GetMultilineText(matchesResult, "MeterName"),
                 MeterMake = GetMultilineText(matchesResult, "MeterMake"),
                 SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
                 MeterAssetNumber = GetMultilineText(matchesResult, "MeterAssetNumber"),

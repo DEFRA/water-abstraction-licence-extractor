@@ -140,7 +140,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var formsList = forms.ToList();
         var total = files.Count;
 
-        var csvPath = Path.Combine(pdfFolder, "_extraction-results.csv");
+        Directory.CreateDirectory(OutputService.OutputFolder!);
+        var csvPath = Path.Combine(OutputService.OutputFolder!, "_extraction-results.csv");
         var csvRows = formsList
             .OrderBy(f => f.Metadata.Filename, StringComparer.OrdinalIgnoreCase)
             .Select(WrInspectionReportCsvLine.FromForm)

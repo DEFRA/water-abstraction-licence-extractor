@@ -2,6 +2,8 @@ namespace WRADI.DocumentType.WrInspectionReport.Models;
 
 public class WrInspectionReportMeasurementDetails
 {
+    public string? MeterName { get; set; }
+
     public string? MeterMake { get; set; }
 
     public string? SerialNumber { get; set; }

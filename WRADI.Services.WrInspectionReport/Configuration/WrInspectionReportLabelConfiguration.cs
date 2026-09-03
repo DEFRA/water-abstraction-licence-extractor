@@ -88,6 +88,10 @@ public class WrInspectionReportLabelConfiguration
             // single-alternate fields below) - the converter looks results up by exact matched
             // label name, so an alternate named differently from its group (e.g. "MeterMakeT6")
             // is invisible to the converter even when it wins and captures a correct value.
+            // T6 only - a "Meter Name" row (own line, value on the same row) sits directly
+            // above "Meter Make" in this template's vertical field grid. Present on ~4-5% of
+            // the real corpus (34/789 pages) and not captured by any existing label group.
+            ("MeterName", TextToFindIsBetweenLabels("Meter Name", "Meter Make", "MeterName", 1, LimitTo.SameColumn)), // T6 template only
             ("MeterMake", [
                 // "Meter make: X Serial number: Y Reading: Z" is one row - Reading: is the
                 // real (possibly multi-line) end marker, but Serial number: is the immediate

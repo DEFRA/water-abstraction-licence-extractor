@@ -169,6 +169,13 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var siteAddressLeaksEmailLabel = formsList.Count(f =>
             f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
 
+        // The next-line same-column fetch swept the "Name and address:" row in as a second
+        // line of the licence number on 197/789 real corpus files - additionalSameLineEndTexts
+        // fix. A handful of newline-separated values remain (wrapped labels, genuine
+        // multi-licence inspections) - this only guards against the dominant leak returning.
+        var licenceNumberLeaksNameAndAddress = formsList.Count(f =>
+            f.LicenceNumber?.Contains("name and address", StringComparison.OrdinalIgnoreCase) == true);
+
         string[] siblingLeakTerms =
         [
             "Calibration:", "Conformance:", "Flow verification:", "Meter verification:",
@@ -201,6 +208,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"SpotCheckResult found:    {spotCheckResultFound} ({Percent(spotCheckResultFound, total)})");
         testOutputHelper.WriteLine($"MeterMake found:          {meterMakeFound} ({Percent(meterMakeFound, total)})");
         testOutputHelper.WriteLine($"SiteAddress 'Email:' leak: {siteAddressLeaksEmailLabel} ({Percent(siteAddressLeaksEmailLabel, total)})");
+        testOutputHelper.WriteLine($"LicenceNumber 'Name and address' leak: {licenceNumberLeaksNameAndAddress} ({Percent(licenceNumberLeaksNameAndAddress, total)})");
         testOutputHelper.WriteLine($"Calibration sibling leak: {calibrationLeaksSiblingLabel} ({Percent(calibrationLeaksSiblingLabel, total)})");
         testOutputHelper.WriteLine($"MeterVerif. sibling leak: {meterVerificationLeaksSiblingLabel} ({Percent(meterVerificationLeaksSiblingLabel, total)})");
         testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' (known gap, not asserted): {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
@@ -239,6 +247,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             meterVerificationLeaksSiblingLabel == 0,
             $"{meterVerificationLeaksSiblingLabel} MeterVerification values contain a leaked sibling-field " +
             "label - the IgnoreBlockIfContains fix regressed");
+
+        Assert.True(
+            licenceNumberLeaksNameAndAddress == 0,
+            $"{licenceNumberLeaksNameAndAddress} LicenceNumber values contain a leaked 'Name and address' " +
+            "row - the additionalSameLineEndTexts fix on LicenceNumber regressed");
     }
 
     private static string Percent(int count, int total) =>

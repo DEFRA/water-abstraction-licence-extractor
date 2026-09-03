@@ -74,6 +74,13 @@ public class WrInspectionReportLabelConfiguration
             // form, and a plain "Licence No." (or "Licence No:") short form used on a
             // meaningful minority of documents. Both put the number in the same place
             // relative to the label, so only the label text itself differs.
+            // "Inspection Class:" is the real (bounded) end marker, but on 197/789 real
+            // corpus files the next-line same-column fetch also swept in the row below -
+            // "Name and address: <holder>" - because that row happens to share the licence
+            // number's own column X position. additionalSameLineEndTexts feeds into
+            // GetTextBetween's cross-line end-tag check too (not just same-row bounding), so
+            // listing the variant wordings here (seen across templates, per TemplateSpec)
+            // stops that row's content from being swept in as part of the licence number.
             ("LicenceNumber", [
                 ..TextToFindIsBetweenLabels(
                     "Licence No. (or Application No. or GIC No. etc.)",
@@ -81,14 +88,16 @@ public class WrInspectionReportLabelConfiguration
                     "LicenceNumber",
                     1,
                     LimitTo.SameColumn,
-                    requireTextToClaimGroup: true), // Long form
+                    requireTextToClaimGroup: true,
+                    additionalSameLineEndTexts: ["Name and address", "Name / address"]), // Long form
                 ..TextToFindIsBetweenLabels(
                     "Licence No",
                     "Inspection Class",
                     "LicenceNumber",
                     1,
                     LimitTo.SameColumn,
-                    requireTextToClaimGroup: true) // Short form ("Licence No." / "Licence No:")
+                    requireTextToClaimGroup: true,
+                    additionalSameLineEndTexts: ["Name and address", "Name / address"]) // Short form ("Licence No." / "Licence No:")
             ]),
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),

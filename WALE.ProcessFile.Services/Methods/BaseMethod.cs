@@ -272,7 +272,7 @@ public static class BaseMethod
         return results;
     }
     
-    private static LabelGroupResult? RestrictToPossibility(
+    internal static LabelGroupResult? RestrictToPossibility(
         FunctionInputModel request,
         LabelGroupResult result)
     {
@@ -281,27 +281,45 @@ public static class BaseMethod
             return result;
         }
 
+        var firstLineText = result.Text?.FirstOrDefault()?.Text;
+
         var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true);
+            firstLineText?.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true);
 
         if (possiblityFound)
         {
             var possibility = request.label.Possibilities
                 .First(possibility => result.Text!.First().Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
-            
+
             var possibilityWords = result.Text!.First().Columns
                 .SelectMany(c => c.Words)
                 .ToList();
-            
+
             possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
-            
+
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
             var clonedResult = result.Clone();
             clonedResult.Text = [clonedLine];
-            
+
+            return clonedResult;
+        }
+
+        // A field with no answer on the page produces zero captured lines, not one line with
+        // empty text - so the "" catch-all possibility (added so a genuinely blank tick field
+        // still survives as a match, e.g. WrInspectionReportLabelConfiguration.GetInOrderField)
+        // never gets a chance to match via the Contains check above, since FirstOrDefault() on
+        // an empty list is null. Without this, the whole match silently vanishes and looks
+        // identical to "the label was never found at all" downstream, rather than "found, but
+        // genuinely blank".
+        if (string.IsNullOrEmpty(firstLineText)
+            && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
+        {
+            var clonedResult = result.Clone();
+            clonedResult.Text = [];
+
             return clonedResult;
         }
 

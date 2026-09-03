@@ -267,38 +267,11 @@ public static class FindLabelGroupMatchesHelper
                     {
                         var clonedPartialLine = partialLine.Clone();
                         var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
-                        var newColumns = new List<DocumentLineColumn>();
-                        var columnIndex = 0;
 
-                        foreach (var column in clonedPartialLine.Columns)
-                        {
-                            if (newColumns.Count == 0)
-                            {
-                                if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
-                                {
-                                    columnIndex += 1;
-                                    continue;
-                                }
-
-                                newColumns.Add(column);
-                                continue;
-                            }
-
-                            // Found the label's own column - the value may sit in an adjacent
-                            // column on the same line rather than a subsequent line, so keep
-                            // including columns until we hit one that starts the next field
-                            // (matches one of this label's own end markers), or run out.
-                            var isNextFieldStart = matchedLabel.TextEnd?.Any(end =>
-                                !string.IsNullOrEmpty(end.Text)
-                                && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
-
-                            if (isNextFieldStart)
-                            {
-                                break;
-                            }
-
-                            newColumns.Add(column);
-                        }
+                        var (newColumns, columnIndex) = WalkSameLineColumns(
+                            clonedPartialLine.Columns,
+                            matchedText,
+                            matchedLabel.TextEnd);
 
                         clonedPartialLine.Columns = newColumns;
                         lineForPosition = clonedPartialLine;
@@ -326,44 +299,18 @@ public static class FindLabelGroupMatchesHelper
 
                         foreach (var nextLine in nextLines)
                         {
-                            var newNextLine = nextLine.Clone();
-                            DocumentLineColumn? columnToKeep;
-
-                            if (label.LimitTo == LimitTo.SpecifiedColumn)
-                            {
-                                columnToKeep = nextLine.Columns.Count > columnIndex
-                                    ? nextLine.Columns[columnIndex]
-                                    : null;
-                            }
-                            else
-                            {
-                                // Match by X-position proximity to the label's own column
-                                // rather than by raw column index. A following line can
-                                // have fewer (or more) columns than the label's own line -
-                                // e.g. a value sitting alone on its own single-column row,
-                                // directly beneath a label that shares its row with other
-                                // fields - and indexing by ordinal position would silently
-                                // miss it whenever the column counts don't line up.
-                                columnToKeep = nextLine.Columns
-                                    .Where(c => c.Words.FirstOrDefault() != null)
-                                    .OrderBy(c => Math.Abs(
-                                        c.Words[0].Coordinates.Left - (firstLineColumnLeftPosition ?? 0)))
-                                    .FirstOrDefault();
-                            }
+                            var columnToKeep = FindNextLineColumnByPosition(
+                                nextLine,
+                                label.LimitTo,
+                                columnIndex,
+                                firstLineColumnLeftPosition);
 
                             if (columnToKeep == null)
                             {
                                 continue;
                             }
 
-                            var columnLeftPosition = columnToKeep.Words.FirstOrDefault()?.Coordinates.Left;
-
-                            if (columnLeftPosition > firstLineColumnLeftPosition + 100
-                                || columnLeftPosition < firstLineColumnLeftPosition - 100)
-                            {
-                                continue;
-                            }
-
+                            var newNextLine = nextLine.Clone();
                             newNextLine.Columns.Clear();
                             newNextLine.Columns.Add(columnToKeep);
                             newNextLines.Add(newNextLine);
@@ -549,8 +496,93 @@ public static class FindLabelGroupMatchesHelper
         
         return returnList;
     }
-    
-    
+
+    /// <summary>
+    /// For a LimitTo.SameColumn/SpecifiedColumn label, finds the column on this line whose
+    /// text contains the label's own matched text, then keeps walking forward through
+    /// subsequent columns on the SAME line - the value may sit in an adjacent column
+    /// rather than on a following line (e.g. a grid row like "Source of supply: [tick]
+    /// Quantities: [tick]"). The walk stops at the first column that starts with one of the
+    /// label's own end markers (the next field), or runs out of columns.
+    /// Returns the columns to keep, and the 0-based index of the label's own column (used by
+    /// <see cref="FindNextLineColumnByPosition"/> for LimitTo.SpecifiedColumn).
+    /// </summary>
+    internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
+        IReadOnlyList<DocumentLineColumn> columns,
+        string? matchedText,
+        IReadOnlyList<TextToMatch>? textEnd)
+    {
+        var newColumns = new List<DocumentLineColumn>();
+        var columnIndex = 0;
+
+        foreach (var column in columns)
+        {
+            if (newColumns.Count == 0)
+            {
+                if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                {
+                    columnIndex += 1;
+                    continue;
+                }
+
+                newColumns.Add(column);
+                continue;
+            }
+
+            var isNextFieldStart = textEnd?.Any(end =>
+                !string.IsNullOrEmpty(end.Text)
+                && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
+
+            if (isNextFieldStart)
+            {
+                break;
+            }
+
+            newColumns.Add(column);
+        }
+
+        return (newColumns, columnIndex);
+    }
+
+    /// <summary>
+    /// Finds the column on a following line that corresponds to the label's own column.
+    /// LimitTo.SpecifiedColumn uses a fixed ordinal index (the caller asked for column N
+    /// specifically, regardless of position). LimitTo.SameColumn matches by X-position
+    /// proximity instead - a following line can have fewer or more columns than the
+    /// label's own line (e.g. a value sitting alone on its own single-column row, directly
+    /// beneath a label that shares its row with other fields), so indexing by ordinal
+    /// position would silently miss it. Either way, the match is rejected if it's more
+    /// than 100 units away from the label's own column - a same-column value that's
+    /// genuinely absent from this line must not fall back to an unrelated column.
+    /// </summary>
+    internal static DocumentLineColumn? FindNextLineColumnByPosition(
+        DocumentLine nextLine,
+        LimitTo limitTo,
+        int columnIndex,
+        double? anchorLeftPosition)
+    {
+        var columnToKeep = limitTo == LimitTo.SpecifiedColumn
+            ? (nextLine.Columns.Count > columnIndex ? nextLine.Columns[columnIndex] : null)
+            : nextLine.Columns
+                .Where(c => c.Words.FirstOrDefault() != null)
+                .OrderBy(c => Math.Abs(c.Words[0].Coordinates.Left - (anchorLeftPosition ?? 0)))
+                .FirstOrDefault();
+
+        if (columnToKeep == null)
+        {
+            return null;
+        }
+
+        var columnLeftPosition = columnToKeep.Words.FirstOrDefault()?.Coordinates.Left;
+
+        if (columnLeftPosition > anchorLeftPosition + 100 || columnLeftPosition < anchorLeftPosition - 100)
+        {
+            return null;
+        }
+
+        return columnToKeep;
+    }
+
     private static async Task<IReadOnlyList<LabelGroupResult>> ProcessLinkedLicenceAsync(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,

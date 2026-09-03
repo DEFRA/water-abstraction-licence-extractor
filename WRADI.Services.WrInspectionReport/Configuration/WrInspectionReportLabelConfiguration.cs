@@ -188,8 +188,20 @@ public class WrInspectionReportLabelConfiguration
                 ..TextToFindIsBetweenLabels("Meter Serial Number", "Meter Asset Number", "SerialNumber", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
             ]),
             ("MeterAssetNumber", TextToFindIsBetweenLabels("Meter Asset Number", "Meter Reading", "MeterAssetNumber", 1, LimitTo.SameColumn)), // T6 template only
+            // "Reading" is a literal string prefix of the unrelated sibling label "Readings
+            // taken:" (further down the same Measurement details table) - real corpus
+            // evidence: 719 genuine "Reading:" occurrences vs. 7/12 golden-set documents where
+            // this field's value came back as "s taken:" (the tail of "Reading[s taken:]"
+            // after the shared word-boundary-unaware Remove/match logic stripped "Reading"
+            // from "Readings taken:" instead of leaving it alone). Also independently guards
+            // against the label matching "Reading, RG8 7BB" - a town name in an address, not
+            // this field at all - found in the same corpus scan. Requiring the colon
+            // disambiguates both without touching the shared matching engine: real "Reading:"
+            // labels always carry it (719/795 occurrences), and turning the remaining no-colon
+            // variants into an honest blank is strictly safer than either garbled or
+            // wrong-field text.
             ("Reading", [
-                ..TextAfterLabel("Reading", "Reading", 0, requireTextToClaimGroup: true), // Existing template
+                ..TextAfterLabel("Reading:", "Reading", 0, requireTextToClaimGroup: true), // Existing template
                 ..TextToFindIsBetweenLabels("Meter Reading", "Flow Rate", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
             ]),
             ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only

@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Core.Models;
+namespace WALE.ProcessFile.Core.Models.OcrService;
 
 public class OcrServiceImageTextCacheRequest
 {

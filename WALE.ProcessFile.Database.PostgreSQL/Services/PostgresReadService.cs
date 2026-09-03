@@ -6,6 +6,9 @@ using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Core.Models.NoOcrService;
+using WALE.ProcessFile.Core.Models.OcrService;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;

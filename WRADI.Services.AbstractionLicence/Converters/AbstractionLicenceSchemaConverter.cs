@@ -4,6 +4,8 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -4969,10 +4971,11 @@ public static class AbstractionLicenceSchemaConverter
             .Select(purpose => new NaldPurposeData
             {
                 Id = purpose.Id.ToString(),
+                PrimaryCategoryDescription = purpose.CategoryUse.PrimaryCategoryDescription,
                 SecondaryCategoryDescription = purpose.CategoryUse.SecondaryCategoryDescription,
+                UseDescription = purpose.CategoryUse.UseDescription,
                 Code = purpose.CategoryUse.Code,
                 UseCode = purpose.CategoryUse.UseCode.ToString(),
-                UseDescription = purpose.CategoryUse.UseDescription,
                 QuantityIdentifier = $"{purpose.Quantity.AnnualQty}_{purpose.Quantity.DailyQty}" +
                     $"_{purpose.Quantity.HourlyQty}_{purpose.Quantity.InstQty}"
             })
@@ -5097,9 +5100,9 @@ public static class AbstractionLicenceSchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
@@ -5140,9 +5143,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5182,9 +5185,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5224,9 +5227,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5266,9 +5269,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5302,9 +5305,9 @@ public static class AbstractionLicenceSchemaConverter
                     Id = number,
                     Description = description,
                     NaldIds = naldData1.Select(nd => nd.Id!).ToArray(),
-                    NaldDescription = naldData1.FirstOrDefault()?.UseDescription != null
-                        ? $"{naldData1.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData1.FirstOrDefault()?.UseDescription}"
-                        : null,
+                    NaldLevel1Description = naldData1.FirstOrDefault()?.PrimaryCategoryDescription,
+                    NaldLevel2Description = naldData1.FirstOrDefault()?.SecondaryCategoryDescription,
+                    NaldLevel3Description = naldData1.FirstOrDefault()?.UseDescription,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
                     ContainedIn = containedInList.ToArray()
@@ -5335,7 +5338,7 @@ public static class AbstractionLicenceSchemaConverter
                     Source = InformationSource.Nald
                 });
                 
-                purposesWithoutNaldData[0].NaldDescription = naldPurpose.UseDescription;
+                purposesWithoutNaldData[0].NaldLevel3Description = naldPurpose.UseDescription;
                 purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
                 purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
                 
@@ -5354,7 +5357,7 @@ public static class AbstractionLicenceSchemaConverter
                 new PurposeOfAbstraction
                 {
                     Id = naldPurpose.Id,
-                    NaldDescription = naldPurpose.UseDescription,
+                    NaldLevel3Description = naldPurpose.UseDescription,
                     ContainedIn = naldContainedInList.ToArray()
                 });
         }

@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 

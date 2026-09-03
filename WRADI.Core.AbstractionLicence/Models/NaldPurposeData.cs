@@ -9,8 +9,10 @@ public class NaldPurposeData
     public string? UseCode { get; init; }
     
     public string? UseDescription { get; init; }
+
+    public string? PrimaryCategoryDescription { get; set; }
     
     public string? SecondaryCategoryDescription { get; set; }
     
-    public string QuantityIdentifier { get; set; }
+    public string? QuantityIdentifier { get; set; }
 }

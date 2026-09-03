@@ -15,6 +15,7 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using FakeItEasy;
+using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 

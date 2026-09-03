@@ -1,4 +1,4 @@
-namespace WALE.ProcessFile.Core.Models;
+namespace WALE.ProcessFile.Core.Models.Dms;
 
 /// <summary>
 /// Represents DMS (Document Management System) extract data that can be extracted from Excel or CSV files.

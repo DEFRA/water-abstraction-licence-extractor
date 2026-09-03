@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
@@ -148,7 +149,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Private Water Supply", licence.Purposes[0].Description);
         Assert.Equal("10081510", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Private Water Supply | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Household", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Private Water Supply | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Household", licence.Purposes[0].NaldLevel3Description);
 
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[1].ContainedIn![0].Source);
@@ -157,7 +158,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("Agriculture (other than Spray Irrigation)", licence.Purposes[1].Description);
         Assert.Equal("10080708", licence.Purposes[1].NaldIds![0]);
         Assert.Equal("Private Water Undertaking | " +
-            "General Farming & Domestic", licence.Purposes[1].NaldDescription); 
+            "General Farming & Domestic", licence.Purposes[1].NaldLevel3Description); 
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual);
@@ -222,7 +223,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for\npublic water supply", licence.Purposes[0].Description);
         Assert.Equal("10082040", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Water Supply Related | Transfer Between Sources (Post Water Act 2003)", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Water Supply Related | Transfer Between Sources (Post Water Act 2003)", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual);
@@ -303,7 +304,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Public water supply", licence.Purposes[0].Description);
         Assert.Equal("10083975", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Public Water Supply | Potable Water Supply - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Public Water Supply | Potable Water Supply - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(3, licence.AbstractionLimits.Individual.Length);
@@ -404,7 +405,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Transfer for the purpose of dewatering", licence.Purposes[0].Description);
         Assert.Equal("10097553", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Extractive | Dewatering", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Extractive | Dewatering", licence.Purposes[0].NaldLevel3Description);
         
         Assert.Null(licence.AbstractionLimits.Individual);
         Assert.Null(licence.AbstractionLimits.Aggregates);
@@ -460,7 +461,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
         Assert.Equal("10053626", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Sports Grounds/Facilities | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Sports Grounds/Facilities | Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual);
@@ -535,7 +536,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.1", licence.Purposes[0].Id);
         Assert.Equal("Lake compentation", licence.Purposes[0].Description);
         Assert.Equal("10081442", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Make-Up Or Top Up Water", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Make-Up Or Top Up Water", licence.Purposes[0].NaldLevel3Description);
         Assert.NotNull(licence.Purposes[1].ContainedIn);
         Assert.Equal(2, licence.Purposes[1].ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, licence.Purposes[1].ContainedIn![0].Source);
@@ -543,7 +544,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("4.2", licence.Purposes[1].Id);
         Assert.Equal("Domestic & Sanitation", licence.Purposes[1].Description);
         Assert.Equal("10081441", licence.Purposes[1].NaldIds![0]);
-        Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldDescription);
+        Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services", licence.Purposes[1].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
@@ -647,7 +648,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
         Assert.Single(licence.Purposes[0].NaldIds!);
         Assert.Equal("10094217", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual);
@@ -758,7 +759,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(2, licence.Purposes[0].NaldIds!.Length);
         Assert.Equal("10089062", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("10089063", licence.Purposes[0].NaldIds![1]);
-        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);

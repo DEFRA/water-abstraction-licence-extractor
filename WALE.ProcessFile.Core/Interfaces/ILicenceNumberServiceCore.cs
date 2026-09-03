@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Nald;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 

@@ -7,6 +7,7 @@ using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.NoOcrService;
 using WALE.ProcessFile.Services.PdfPig.Helpers;
 using WALE.ProcessFile.Services.PdfPig.Models;
 using TextBlock = UglyToad.PdfPig.DocumentLayoutAnalysis.TextBlock;

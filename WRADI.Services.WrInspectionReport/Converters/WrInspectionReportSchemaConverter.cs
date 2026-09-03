@@ -120,7 +120,15 @@ public static class WrInspectionReportSchemaConverter
                 rawInspectionDateTweaked = rawInspectionDateTweaked[..^2];
             }
             
-            if (rawInspectionTime?.Length == 4 && !rawInspectionDateTweaked.Contains(':'))
+            // Meant for bare 4-digit military time with no separator ("0930" -> "09:30"), but
+            // the length-only check also matched any other 4-character raw time - e.g. "9 am"
+            // and "11am" (4 chars each) got a colon spliced into the middle of the letters
+            // ("9 :am", "11:am"), and an already-colon-separated "8:15" got a second colon
+            // inserted ("8::15"). Requiring all 4 characters to be digits restricts this to the
+            // bare-digits case it was actually written for.
+            if (rawInspectionTime?.Length == 4
+                && rawInspectionTime.All(char.IsDigit)
+                && !rawInspectionDateTweaked.Contains(':'))
             {
                 rawInspectionTime = $"{rawInspectionTime[..2]}:{rawInspectionTime[2..]}";
             }

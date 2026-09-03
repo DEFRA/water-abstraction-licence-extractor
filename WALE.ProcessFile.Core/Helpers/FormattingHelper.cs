@@ -1046,7 +1046,15 @@ public static class FormattingHelper
         // e.g. DocumentLineColumn.FilterWordsFromText calls this per-word with
         // trimPunctuationEnd=true for the last word, so "Source of supply: ✓" loses its own
         // answer whenever the tick is that last word (which is exactly the normal shape for a
-        // standalone checkbox-style answer).
+        // standalone checkbox-style answer). Same fix extended to the other tick/cross glyph
+        // variants added later to WrInspectionReportLabelConfiguration.GetInOrderField's
+        // Possibilities list (✔ √ and 4 embedded Wingdings-style PUA glyphs, plus × for the
+        // cross) - missing this was traced (via GetTextBetween tracing on a real corpus pair of
+        // otherwise-identical documents differing only in ✓ vs ✔) to a real accuracy bug: the
+        // tick was silently stripped here before ever reaching the possibility-matching that
+        // was supposed to recognise it. 🗸 (U+1F5F8) is deliberately not listed - as a
+        // surrogate-pair character it isn't classified as IsSymbol/IsPunctuation per UTF-16
+        // code unit, so it was never actually at risk from this trim loop.
         if (trimPunctuationStart)
         {
             while (trimmed?.Length >= 1
@@ -1056,6 +1064,13 @@ public static class FormattingHelper
                && trimmed[0] != '☑'
                && trimmed[0] != '☒'
                && trimmed[0] != '☐'
+               && trimmed[0] != '✔'
+               && trimmed[0] != '√'
+               && trimmed[0] != '×'
+               && trimmed[0] != ''
+               && trimmed[0] != ''
+               && trimmed[0] != ''
+               && trimmed[0] != ''
                && (char.IsPunctuation(trimmed[0])
                    || char.IsSymbol(trimmed[0])
                    || char.IsWhiteSpace(trimmed[0])))
@@ -1075,6 +1090,13 @@ public static class FormattingHelper
                && trimmed[^1] != '☑'
                && trimmed[^1] != '☒'
                && trimmed[^1] != '☐'
+               && trimmed[^1] != '✔'
+               && trimmed[^1] != '√'
+               && trimmed[^1] != '×'
+               && trimmed[^1] != ''
+               && trimmed[^1] != ''
+               && trimmed[^1] != ''
+               && trimmed[^1] != ''
                && (char.IsPunctuation(trimmed[^1])
                    || char.IsSymbol(trimmed[^1])
                    || char.IsWhiteSpace(trimmed[^1])))

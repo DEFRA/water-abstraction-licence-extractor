@@ -138,7 +138,17 @@ public class WrInspectionReportLabelConfiguration
             // NameAndAddress/Telephone No fix above.
             ("SiteAddress", TextToFindIsBetweenLabels("Site address (if different)", "Met with", "SiteAddress", 1, LimitTo.SameColumn, additionalSameLineEndTexts: ["Email"])),
             ("InspectionClass", TextToFindIsBetweenLabels("Inspection Class", "Telephone No", "InspectionClass", 1, LimitTo.SameColumn)),
-            ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "Email", "TelephoneNumber", 2, LimitTo.SameColumn)),
+            // "Telephone No:" renders letter-kerned on 30 real corpus documents - the same
+            // phenomenon as the Records field's kerning (see that field's own comment for the
+            // likely cause: short labels getting stretch-justified to fill a column width).
+            // 7 distinct literal patterns cover all 30 occurrences.
+            ("TelephoneNumber", TextToFindIsBetweenLabels(
+                "Telephone No",
+                "Email",
+                "TelephoneNumber",
+                2,
+                LimitTo.SameColumn,
+                additionalTextStarts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No"])),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             // "Name and address: | Telephone No:" sits on one row (two columns) - without
@@ -352,7 +362,8 @@ public class WrInspectionReportLabelConfiguration
         bool requireTextToClaimGroup = false,
         List<string>? additionalSameLineEndTexts = null,
         List<string>? ignoreBlockIfContains = null,
-        List<string>? excludeNextLineIfFirstColumnStartsWith = null)
+        List<string>? excludeNextLineIfFirstColumnStartsWith = null,
+        List<string>? additionalTextStarts = null)
     {
         return
         [
@@ -363,7 +374,8 @@ public class WrInspectionReportLabelConfiguration
                     new(startText)
                     {
                         ColumnMustStartWith = true
-                    }
+                    },
+                    ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t) { ColumnMustStartWith = true })
                 ],
                 TextEnd =
                 [
@@ -386,6 +398,7 @@ public class WrInspectionReportLabelConfiguration
                 Name = name,
                 Remove = [
                     new(startText), // TODO not sure why we have to add this, we dont always have to with betweens - probably because of the column limiting
+                    ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t)),
                     ..additionalRemoves ?? []
                 ],
                 Possibilities = possibilities,

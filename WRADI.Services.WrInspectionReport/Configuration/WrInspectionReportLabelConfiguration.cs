@@ -477,6 +477,10 @@ public class WrInspectionReportLabelConfiguration
                     // that produces a fabricated InOrder/NotInOrder verdict instead of an honest
                     // gap.
                     new TextToMatch("N/A") { ExceptWhenInsideWord = true },
+                    // "NI" - "not inspected", a genuine distinct answer (85 real corpus
+                    // occurrences across 25 documents, both "NI" and lowercase "ni") - not a
+                    // typo or a Not/InOrder variant. See InOrderStatus.NotInspected.
+                    new TextToMatch("NI") { ExceptWhenInsideWord = true },
                     new TextToMatch("Not") { ExceptWhenInsideWord = true },
                     new TextToMatch("In") { ExceptWhenInsideWord = true },
                     new TextToMatch("✓") { ExceptWhenInsideWord = true },

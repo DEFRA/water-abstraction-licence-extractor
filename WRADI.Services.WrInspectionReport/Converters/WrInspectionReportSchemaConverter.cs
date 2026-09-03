@@ -516,7 +516,12 @@ public static class WrInspectionReportSchemaConverter
         {
             return InOrderStatus.NotApplicable;
         }
-        
+
+        if (text.Equals("ni", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInspected;
+        }
+
         return InOrderStatus.Unknown;
     }
 }

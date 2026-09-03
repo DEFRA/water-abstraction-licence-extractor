@@ -89,6 +89,20 @@ public static class WrInspectionReportSchemaConverter
                 if (!string.IsNullOrWhiteSpace(afterTime))
                 {
                     potentialDates.Add(afterTime);
+
+                    // Some layouts glue a time value directly after "Time" with no colon,
+                    // and the actual date sits on the following line - e.g.
+                    // "Time 12.20\n20/01/2026". The whole afterTime blob won't parse as one
+                    // date, but its last line usually will.
+                    if (afterTime.Contains('\n'))
+                    {
+                        var lastLineAfterTime = afterTime.Split('\n').Last().Trim();
+
+                        if (!string.IsNullOrWhiteSpace(lastLineAfterTime))
+                        {
+                            potentialDates.Add(lastLineAfterTime);
+                        }
+                    }
                 }
             }
 

@@ -17,6 +17,23 @@ public class WrInspectionReportLabelConfiguration
         new("X"), new("x")
     ];
 
+    // The "grid template" layout prints "Calibration: Conformance: Flow verification: Meter
+    // verification:" as one label row, with the four answers on the row directly below (see
+    // Calibration/Conformance/FlowVerification/MeterVerification below). On a meaningful
+    // fraction of real documents the same-column/next-line match for one of these four lands
+    // on a NEIGHBOURING field's row instead of its own - e.g. Calibration's grid alternate
+    // capturing "Maintenance:" or "Frequency:" as if it were the answer. Adding these as
+    // IgnoreBlockIfContains rejects the whole match outright when that happens, so the field
+    // ends up genuinely unmatched (blank) instead of silently showing another field's label
+    // text as if it were real data - a strictly better outcome even though it doesn't recover
+    // the actual answer. Measured against the 789-file real corpus: without this, 43-47% of
+    // these four fields showed a leaked label instead of a real value.
+    private static readonly List<string> VerificationGridSiblingLeakTerms =
+    [
+        "Calibration:", "Conformance:", "Flow verification:", "Meter verification:",
+        "Maintenance:", "Frequency:", "Spot Check Result", "General comments"
+    ];
+
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         return
@@ -75,7 +92,12 @@ public class WrInspectionReportLabelConfiguration
             ]),
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
-            ("SiteAddress", TextToFindIsBetweenLabels("Site address (if different)", "Met with", "SiteAddress", 1, LimitTo.SameColumn)),
+            // "Site address (if different): X | Email:" sits on one row (two columns) on a
+            // meaningful fraction of real documents - without bounding the same-line walk
+            // there, it sweeps past "Email:" and that label ends up glued onto the end of the
+            // captured address (206/789 real corpus files affected). Same shape as the
+            // NameAndAddress/Telephone No fix above.
+            ("SiteAddress", TextToFindIsBetweenLabels("Site address (if different)", "Met with", "SiteAddress", 1, LimitTo.SameColumn, additionalSameLineEndTexts: ["Email"])),
             ("InspectionClass", TextToFindIsBetweenLabels("Inspection Class", "Telephone No", "InspectionClass", 1, LimitTo.SameColumn)),
             ("TelephoneNumber", TextToFindIsBetweenLabels("Telephone No", "Email", "TelephoneNumber", 2, LimitTo.SameColumn)),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
@@ -125,24 +147,24 @@ public class WrInspectionReportLabelConfiguration
             ("Calibration", [
                 ..TextAfterLabel("Calibration", "Calibration", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Conformance"), // New template
                 ..TextToFindIsBetweenLabels("Calibration", "Conformance", "Calibration", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Calibration", "Verification", "Calibration", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Conformance"]) // T6 template
+                ..TextToFindIsBetweenLabels("Calibration", "Verification", "Calibration", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Conformance"], ignoreBlockIfContains: [..VerificationGridSiblingLeakTerms, "Certificate"]) // T6 template
             ]),
             ("Verification", TextToFindIsBetweenLabels("Verification", "Spot Check Result", "Verification", 1, LimitTo.SameColumn)), // T6 template only
             ("SpotCheckResult", TextToFindIsBetweenLabels("Spot Check Result", "General comments", "SpotCheckResult", 1, LimitTo.SameColumn, [new("–")])), // T6 template only
             ("Conformance", [
                 ..TextAfterLabel("Conformance", "Conformance", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Flow verification"), // New template
                 ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
+                ..TextToFindIsBetweenLabels("Conformance", "Flow verification", "Conformance", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, ignoreBlockIfContains: VerificationGridSiblingLeakTerms) // Grid template (label row + value row below)
             ]),
             ("FlowVerification", [
                 ..TextAfterLabel("Flow verification", "FlowVerification", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Meter verification"), // New template
                 ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
+                ..TextToFindIsBetweenLabels("Flow verification", "Meter verification", "FlowVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, ignoreBlockIfContains: VerificationGridSiblingLeakTerms) // Grid template (label row + value row below)
             ]),
             ("MeterVerification", [
                 ..TextAfterLabel("Meter verification", "MeterVerification", 1, possibilities: [new("Yes"), new("No")], requireTextToClaimGroup: true, endText: "Maintenance"), // New template
                 ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 0, LimitTo.WholeLine, possibilities: CheckboxMarkPossibilities, requireTextToClaimGroup: true), // Existing template
-                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Grid template (label row + value row below)
+                ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, ignoreBlockIfContains: VerificationGridSiblingLeakTerms) // Grid template (label row + value row below)
             ]),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
             // "Form sent to: | Date:" on one row (two columns), with the actual recipient
@@ -244,7 +266,8 @@ public class WrInspectionReportLabelConfiguration
         List<TextToMatch>? additionalRemoves = null,
         List<TextToMatch>? possibilities = null,
         bool requireTextToClaimGroup = false,
-        List<string>? additionalSameLineEndTexts = null)
+        List<string>? additionalSameLineEndTexts = null,
+        List<string>? ignoreBlockIfContains = null)
     {
         return
         [
@@ -281,11 +304,12 @@ public class WrInspectionReportLabelConfiguration
                     ..additionalRemoves ?? []
                 ],
                 Possibilities = possibilities,
-                RequireTextToClaimGroup = requireTextToClaimGroup
+                RequireTextToClaimGroup = requireTextToClaimGroup,
+                IgnoreBlockIfContains = ignoreBlockIfContains
             }
         ];
     }
-    
+
     /*private static List<LabelToMatch> TextAfterLabelWithSpecifiedColumn(
         string text,
         string labelName,

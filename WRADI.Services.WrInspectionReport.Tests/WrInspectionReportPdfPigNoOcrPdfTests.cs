@@ -164,6 +164,33 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
         var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.MeterMake));
 
+        // Regression guards for the data-quality fixes in analysis/07-label-matching-and-debugging.md
+        // (a neighbouring field's own label leaking into these values, rather than a real answer).
+        var siteAddressLeaksEmailLabel = formsList.Count(f =>
+            f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
+
+        string[] siblingLeakTerms =
+        [
+            "Calibration:", "Conformance:", "Flow verification:", "Meter verification:",
+            "Maintenance:", "Frequency:", "Spot Check Result", "General comments"
+        ];
+        var calibrationLeaksSiblingLabel = formsList.Count(f =>
+            f.MeasurementDetails.Calibration != null
+            && (siblingLeakTerms.Any(t => f.MeasurementDetails.Calibration.Contains(t, StringComparison.OrdinalIgnoreCase))
+                || f.MeasurementDetails.Calibration.Contains("Certificate", StringComparison.OrdinalIgnoreCase)));
+        var meterVerificationLeaksSiblingLabel = formsList.Count(f =>
+            f.MeasurementDetails.MeterVerification != null
+            && siblingLeakTerms.Any(t => f.MeasurementDetails.MeterVerification.Contains(t, StringComparison.OrdinalIgnoreCase)));
+
+        // Conformance/FlowVerification still have a separate, unresolved issue (the grid
+        // value row's own "Y: [mark] N: [mark]" pair gets narrowed to just "Y:"/"N:" rather
+        // than the whole pair - see analysis doc) - tracked here for visibility, not asserted
+        // on yet, since fixing it needs shared-engine changes beyond this pass's scope.
+        var conformanceBareYOrN = formsList.Count(f =>
+            f.MeasurementDetails.Conformance is "Y:" or "N:");
+        var flowVerificationBareYOrN = formsList.Count(f =>
+            f.MeasurementDetails.FlowVerification is "Y:" or "N:");
+
         testOutputHelper.WriteLine($"Total files:              {total}");
         testOutputHelper.WriteLine($"Processed without error:  {formsList.Count}");
         testOutputHelper.WriteLine($"Failures:                 {failures.Count}");
@@ -173,6 +200,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"SourceOfSupply resolved:  {sourceOfSupplyResolved} ({Percent(sourceOfSupplyResolved, total)})");
         testOutputHelper.WriteLine($"SpotCheckResult found:    {spotCheckResultFound} ({Percent(spotCheckResultFound, total)})");
         testOutputHelper.WriteLine($"MeterMake found:          {meterMakeFound} ({Percent(meterMakeFound, total)})");
+        testOutputHelper.WriteLine($"SiteAddress 'Email:' leak: {siteAddressLeaksEmailLabel} ({Percent(siteAddressLeaksEmailLabel, total)})");
+        testOutputHelper.WriteLine($"Calibration sibling leak: {calibrationLeaksSiblingLabel} ({Percent(calibrationLeaksSiblingLabel, total)})");
+        testOutputHelper.WriteLine($"MeterVerif. sibling leak: {meterVerificationLeaksSiblingLabel} ({Percent(meterVerificationLeaksSiblingLabel, total)})");
+        testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' (known gap, not asserted): {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
+        testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' (known gap, not asserted): {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
 
         if (failures.Count > 0)
         {
@@ -192,6 +224,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         Assert.True(
             licenceNumberFound / (double)total >= 0.8,
             $"LicenceNumber was only found on {Percent(licenceNumberFound, total)} of files, expected >= 80%");
+
+        Assert.True(
+            siteAddressLeaksEmailLabel == 0,
+            $"{siteAddressLeaksEmailLabel} SiteAddress values end with a leaked 'Email:' label - " +
+            "the additionalSameLineEndTexts fix on SiteAddress regressed");
+
+        Assert.True(
+            calibrationLeaksSiblingLabel == 0,
+            $"{calibrationLeaksSiblingLabel} Calibration values contain a leaked sibling-field label " +
+            "or the 'Calibration Certificate' collision - the IgnoreBlockIfContains fix regressed");
+
+        Assert.True(
+            meterVerificationLeaksSiblingLabel == 0,
+            $"{meterVerificationLeaksSiblingLabel} MeterVerification values contain a leaked sibling-field " +
+            "label - the IgnoreBlockIfContains fix regressed");
     }
 
     private static string Percent(int count, int total) =>

@@ -10,9 +10,9 @@ public static class WrInspectionReportSchemaConverter
     public static Models.WrInspectionReport ToForm(MatchesResult matchesResult, DmsFileData? dmsFileData)
     {
         var rawFormDate = GetMultilineText(matchesResult, "Date");
-        
+
         DateOnly? formDate = null;
-        if (DateOnly.TryParse(rawFormDate, out var tFormDate))
+        if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), out var tFormDate))
         {
             formDate = tFormDate;
         }
@@ -384,6 +384,25 @@ public static class WrInspectionReportSchemaConverter
         return string.IsNullOrEmpty(text)
             ? text
             : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
+    }
+
+    // Some documents render an ordinal date suffix with a stray space before it - e.g.
+    // "10 th February 2026" instead of "10th February 2026" - the same PDF font/kerning
+    // artefact class as CollapseSpacedDigits above, just for letters instead of digits.
+    // Neither form parses via DateOnly.TryParse - .NET doesn't accept an ordinal suffix at
+    // all, glued or not (confirmed: "10th February 2026" fails to parse, "10 February 2026"
+    // succeeds) - so the whole suffix needs stripping, not just the gap before it. Mirrors
+    // the ordinal handling already applied to InspectionDate further up this file.
+    private static string? NormaliseOrdinalDateSuffixes(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        return System.Text.RegularExpressions.Regex
+            .Replace(text, @"(?<=\d)\s*(?:th|st|nd|rd)\b", string.Empty, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            .Trim();
     }
 
     private static string? GetMultilineText(MatchesResult matchesResult, string name)

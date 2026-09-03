@@ -29,12 +29,10 @@ public class PdfPigNoOcrPdfTests
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
 
-        var naldData = new Dictionary<string, List<NaldAbstractionData>>();
-
         (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
-            naldData,
+            [],
             []);
         
         NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);

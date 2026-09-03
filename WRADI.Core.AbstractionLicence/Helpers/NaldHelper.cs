@@ -98,7 +98,7 @@ public static class NaldHelper
                 SecondaryCategoryCode = purposeDataLine.ApurApseCode!,
                 SecondaryCategoryDescription = purposeDataLine.PurpSecDescr!,
                 UseCode = purposeDataLine.ApurApusCode,
-                UseDescription = purposeDataLine.PurpUseDescr!,
+                UseDescription = purposeDataLine.PurpUseDescr!
             },
             Quantity = new NaldDataQuantity
             {

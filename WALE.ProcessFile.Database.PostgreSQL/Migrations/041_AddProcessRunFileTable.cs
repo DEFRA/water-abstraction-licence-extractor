@@ -14,7 +14,6 @@ public class AddProcessRunFileTable : Migration
             .WithColumn("end_date_time_utc").AsDateTime().Nullable()
             .WithColumn("error_message").AsString().Nullable()
             .WithColumn("start_date_time_utc").AsDateTime().Nullable();
-        
     }
 
     public override void Down()

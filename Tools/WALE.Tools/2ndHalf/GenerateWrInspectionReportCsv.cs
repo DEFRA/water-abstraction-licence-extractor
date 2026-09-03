@@ -241,7 +241,8 @@ public static class GenerateWrInspectionReportCsv
                 await pdfDataExtractor.SaveMatchResultAsync(
                     internalResults,
                     fileId.Value,
-                    processRunId);
+                    processRunId,
+                    lookupConfiguration.UseLockExclusivity);
             }
             var dmsFileData = new DmsFileData { FileId = fileId.Value };
             var parsedForm = WrInspectionReportSchemaConverter.ToForm(internalResults, dmsFileData);

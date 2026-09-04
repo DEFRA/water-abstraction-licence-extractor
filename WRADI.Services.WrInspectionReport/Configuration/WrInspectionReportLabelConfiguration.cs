@@ -316,12 +316,8 @@ public class WrInspectionReportLabelConfiguration
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
             ("DocumentHeader", TextAfterLabel("Form WR - ", "DocumentHeader", 0)),
-            ("GeneralComments", TextToFindIsBetweenLabels(
-                "General comments, details / dates of occupation changes, actions required etc.",
-                "Form sent to",
-                "GeneralComments",
-                100,
-                LimitTo.WholeLine)),
+            // See GeneralComments() below for the corpus-wide heading catalogue behind this.
+            ("GeneralComments", GeneralComments()),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
             ("ReadingsTakenLine", MaintenanceLine("Readings taken:", "Where Kept", "ReadingsTakenLine")),
             ("InspectionDate", TextToFindIsBetweenLabels(
@@ -335,6 +331,81 @@ public class WrInspectionReportLabelConfiguration
         ];
     }
     
+    // The baseline heading alone only covers 480/788 real corpus documents (61%) - catalogued
+    // the full corpus (not just the 36-doc golden set) via the cached PdfPig text to find the
+    // rest, rather than guessing from the golden set alone. Matching is case-insensitive
+    // prefix-of-line (see LabelMatchingHelper), so each entry below only needs its shortest
+    // distinguishing prefix - "Introduction" alone also matches "Introduction:", no separate
+    // colon variant needed.
+    // Confirmed via sampled raw context (not just line-frequency counts) that each of these is
+    // a genuine section heading immediately followed by real narrative, not a substring of
+    // unrelated prose or a boilerplate section: "Notes and Actions" (33 docs), "Further
+    // Conditions" (29), "General comments, background" - comma variant of the already-known "/"
+    // form (16), "Actions/Recommendations:" (15), plus the smaller known set "Re-inspection"
+    // (3), "General comments / relevant background" (6), "General / relevant background" (6),
+    // "General comments / background" (3), "Introduction" (5). Deliberately NOT added: "General
+    // Information" (25 docs) - a data-protection legal boilerplate section, not comments,
+    // confirmed via sampled context.
+    // "Actions" (157 docs) and "Summary" (25 docs) alone are a different, longer-form report
+    // template (LIT-numbered, "Page X of Y", multi-section) where Summary and Actions are two
+    // separate sections in the same document, not synonyms for one heading - the model only has
+    // one GeneralComments field. Added both anyway: since this field matches whichever
+    // TextStart alternate occurs earliest in the document and captures everything through "Form
+    // sent to", adding both alternates means whichever section heading appears first becomes
+    // the anchor and the walk naturally sweeps up any later section (Summary, Actions,
+    // Non-compliances, etc.) as one concatenated block - no extra concatenation logic needed.
+    // "Actions/Recommendations" listed before bare "Actions" so the more specific text is
+    // available first.
+    //
+    // Remove override below is required: TextToFindIsBetweenLabels auto-adds every
+    // additionalTextStarts entry to Remove too, and Remove strips up to 10 occurrences of its
+    // text ANYWHERE in the captured value, not just at the anchor (confirmed in
+    // DataHelper.RemoveText). "Actions" and "Summary" are common enough to legitimately recur as
+    // a secondary sub-heading later in the same captured block (e.g. "...small amount of
+    // rainwater collected.\n\nActions\n- Southern Water to ensure..." in the real corpus) - left
+    // in Remove, that silently deleted the word and corrupted real narrative content, confirmed
+    // via the ground-truth harness (GeneralComments Wrong count jumped 9->25 when first tried).
+    // Excluding them from Remove leaves them as harmless leading noise on the (rarer) documents
+    // where one of them genuinely is the field's own anchor - preferable to silently dropping
+    // real content from every document where it recurs mid-block.
+    private static List<LabelToMatch> GeneralComments()
+    {
+        var labels = TextToFindIsBetweenLabels(
+            "General comments, details / dates of occupation changes, actions required etc.",
+            "Form sent to",
+            "GeneralComments",
+            100,
+            LimitTo.WholeLine,
+            // "Form sent to" doesn't appear at all in some real documents - a longer-form report
+            // variant that instead ends with fixed appeal-process boilerplate ("Customer
+            // charter" / "What can I do if I disagree with this inspection report?"). Without a
+            // second bound, NextLinesToFetch:100 ran straight through that boilerplate on those
+            // documents (confirmed on wr51__1343023g212__...: captured 5420 chars vs a 354-char
+            // truth value, ending mid-Ombudsman-complaints-process-text). That boilerplate is
+            // never genuine comments content under any reading of the field, unlike
+            // Summary/Actions above.
+            additionalSameLineEndTexts: ["Customer charter"],
+            additionalTextStarts: [
+                "Introduction",
+                "Re-inspection",
+                "Notes and Actions",
+                "Further Conditions",
+                "Actions/Recommendations",
+                "General comments / background",
+                "General comments / relevant background",
+                "General / relevant background",
+                "General comments, background",
+                "Actions",
+                "Summary"
+            ]);
+
+        labels[0].Remove = labels[0].Remove!
+            .Where(r => r.Text is not ("Actions" or "Summary"))
+            .ToList();
+
+        return labels;
+    }
+
     private static List<LabelToMatch> MaintenanceLine(string textStart, string textEnd, string name)
     {
         return

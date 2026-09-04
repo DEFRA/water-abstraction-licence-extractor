@@ -200,6 +200,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var flowVerificationBareYOrN = formsList.Count(f =>
             f.MeasurementDetails.FlowVerification is "Y:" or "N:");
 
+        // Found via a proactive sweep of _extraction-results.csv for sibling field-label text
+        // leaking into other fields' values - the same class of bug as the guards above, just
+        // discovered by scanning every text field against every known page label rather than
+        // waiting for a specific field to be reported. InspectionClass's own "Email" leak is
+        // fixed (additionalSameLineEndTexts); MetWith/InspectingOfficer are NOT yet fixed (the
+        // same endText fix had zero effect for TextAfterLabel's LabelIsBeforeTextToFind position
+        // - needs gated tracing, not asserted here since there's nothing to regress against yet)
+        // - tracked as informational counts so a future run surfaces them without re-scanning.
+        var inspectionClassLeaksEmailLabel = formsList.Count(f =>
+            f.InspectionClass?.Contains("Email", StringComparison.OrdinalIgnoreCase) == true);
+        var metWithLeaksPositionLabel = formsList.Count(f =>
+            f.MetWith.Name?.Contains("Position:", StringComparison.OrdinalIgnoreCase) == true);
+        var inspectingOfficerLeaksInspectionDateLabel = formsList.Count(f =>
+            f.InspectingOfficer?.Contains("Inspection Date:", StringComparison.OrdinalIgnoreCase) == true);
+
         var templateCounts = formsList
             .GroupBy(f => f.Metadata.Template)
             .OrderByDescending(g => g.Count())
@@ -316,6 +331,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"MeterVerif. sibling leak: {meterVerificationLeaksSiblingLabel} ({Percent(meterVerificationLeaksSiblingLabel, total)})");
         testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' leak: {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
         testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' leak: {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
+        testOutputHelper.WriteLine($"InspectionClass 'Email' leak: {inspectionClassLeaksEmailLabel} ({Percent(inspectionClassLeaksEmailLabel, total)})");
+        testOutputHelper.WriteLine($"MetWith 'Position:' leak (not yet fixed): {metWithLeaksPositionLabel} ({Percent(metWithLeaksPositionLabel, total)})");
+        testOutputHelper.WriteLine($"InspectingOfficer 'Inspection Date:' leak (not yet fixed): {inspectingOfficerLeaksInspectionDateLabel} ({Percent(inspectingOfficerLeaksInspectionDateLabel, total)})");
         testOutputHelper.WriteLine("");
         testOutputHelper.WriteLine("Metadata.Template distribution:");
         foreach (var group in templateCounts)
@@ -378,6 +396,15 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             flowVerificationBareYOrN == 0,
             $"{flowVerificationBareYOrN} FlowVerification values are Maintenance's own leaked 'Y:'/'N:' - the " +
             "ExcludeNextLineIfFirstColumnStartsWith fix regressed");
+
+        Assert.True(
+            inspectionClassLeaksEmailLabel == 0,
+            $"{inspectionClassLeaksEmailLabel} InspectionClass values contain a leaked 'Email' label - " +
+            "the additionalSameLineEndTexts fix regressed");
+
+        // MetWith/InspectingOfficer are deliberately NOT asserted - not yet fixed (see the field
+        // comments in WrInspectionReportLabelConfiguration.cs), so there is nothing to regress
+        // against yet. Counts are logged above so they stay visible without re-scanning the CSV.
     }
 
     private static string Percent(int count, int total) =>

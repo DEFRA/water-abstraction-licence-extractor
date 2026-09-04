@@ -273,6 +273,24 @@ public class WrInspectionReportLabelConfiguration
                         new("(or Application No. or GIC No.")
                     ]) // Short form ("Licence No." / "Licence No:")
             ]),
+            // KNOWN BUG, NOT YET FIXED: "Met with: X | Position:" and "Inspecting Officer: X |
+            // Inspection Date:" leak the sibling column's label into this field's value on real
+            // documents (e.g. MetWith capturing "...Guyzance Hall Estate Position: Director...",
+            // 1 doc; InspectingOfficer capturing "Caz Lane and Mark Thorne Inspection Date:
+            // 19/02/2026", 13 docs) - found via a proactive sweep of _extraction-results.csv for
+            // sibling field-label text leaking into other fields' values.
+            // Tried passing endText (the same fix that worked for InspectionClass/SiteAddress's
+            // "Telephone"/"Inspecting Officer" markers) - had ZERO effect, confirmed by rerunning
+            // the corpus test with it in place. TextAfterLabel's LabelPosition.
+            // LabelIsBeforeTextToFind evidently does not route the same-line value through
+            // WalkSameLineColumns' TextEnd bound the way TextToFindIsBetweenLabels does - traced
+            // as far as LabelIsBeforeTextToFind.cs -> BaseMethod.FilterIntoFormatAsync's
+            // Text.Constant case -> RestrictToPossibility without finding where the actual
+            // same-line Text value gets assigned (it isn't set in the LabelGroupResult
+            // initializer in FindLabelGroupMatchesHelper.cs, and no assignment was found by
+            // static reading alone). Needs gated ConsoleHelper.WriteLine tracing through the
+            // real call path on one of the two documents above, not another guess - reverted the
+            // ineffective endText rather than ship a fix with an unconfirmed story.
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
             // "Site address (if different): X | Email:" sits on one row (two columns) on a
@@ -332,13 +350,18 @@ public class WrInspectionReportLabelConfiguration
             // own value (e.g. "Critical\nT e l e p h o n e N o:"). InspectionClass's value is
             // always a short single token (NextLinesToFetch:1), so unlike NameAndAddress there's
             // no multi-line-continuation risk from GetTextBetween's cross-line end-tag scan.
+            // "Email" also added as an end marker: on some templates there's no "Telephone No:"
+            // row at all between Inspection Class and Email, so the un-kerned endText never
+            // fires either and the walk sweeps "Email:" straight in (e.g. "LC\nEmail:",
+            // confirmed via wr51__73401s0018's raw page - "Email:" sits directly below
+            // "Inspection Class: LC" in the same column, one line down).
             ("InspectionClass", TextToFindIsBetweenLabels(
                 "Inspection Class",
                 "Telephone No",
                 "InspectionClass",
                 1,
                 LimitTo.SameColumn,
-                additionalSameLineEndTexts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No"])),
+                additionalSameLineEndTexts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No", "Email"])),
             // "Telephone No:" renders letter-kerned on 30 real corpus documents - the same
             // phenomenon as the Records field's kerning (see that field's own comment for the
             // likely cause: short labels getting stretch-justified to fill a column width).

@@ -24,6 +24,7 @@ using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -59,6 +60,13 @@ public class NoOcrDatabaseTests
             AbsLicReadService,
             AbsLicWriteService);
     
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService =
+        new DatabaseAbstractionLicenceOutputService(
+            null!,
+            AbsLicReadService,
+            AbsLicWriteService,
+            null!);
+    
     private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -82,7 +90,7 @@ public class NoOcrDatabaseTests
 
     static NoOcrDatabaseTests()
     {
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)

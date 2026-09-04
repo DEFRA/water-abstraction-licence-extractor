@@ -23,16 +23,21 @@ public static class GeneralTestsHelper
             .ToList();
         }
 
-    public static (ICacheService CacheService, IAbstractionLicenceCacheService AbsLicCacheService)
+    public static (
+        ICacheService CacheService,
+        IAbstractionLicenceCacheService AbsLicCacheService,
+        IAbstractionLicenceOutputService AbsLicOutputService)
         GetFakeCacheService(
             ICacheService realCacheService,
             IAbstractionLicenceCacheService realAbsLiceCacheService,
+            IAbstractionLicenceOutputService realAbsLicenceOutputService,
             Dictionary<string, List<NaldAbstractionData>> naldAbstractionData,
             Dictionary<string, List<NaldImpoundmentData>> naldImpoundmentData,
             Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
         var fakeCacheAbsLic = A.Fake<IAbstractionLicenceCacheService>(x => x.Wrapping(realAbsLiceCacheService));
+        var fakeOutputAbsLic = A.Fake<IAbstractionLicenceOutputService>(x => x.Wrapping(realAbsLicenceOutputService));
         
         A
             .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._))
@@ -112,6 +117,6 @@ public static class GeneralTestsHelper
                 return Task.FromResult((NaldImpoundmentData?)null);
             });
 
-        return (fakeCache, fakeCacheAbsLic);
+        return (fakeCache, fakeCacheAbsLic, fakeOutputAbsLic);
     }
 }

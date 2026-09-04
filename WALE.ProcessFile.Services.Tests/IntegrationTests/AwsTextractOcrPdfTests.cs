@@ -19,6 +19,7 @@ using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -28,20 +29,23 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
-
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
+    
     static AwsTextractOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+        var realAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
 
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             [],
             [],
             _fileLicenceMapping);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

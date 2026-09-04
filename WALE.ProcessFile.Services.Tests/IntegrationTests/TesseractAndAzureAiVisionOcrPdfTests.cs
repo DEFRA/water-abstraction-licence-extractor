@@ -24,6 +24,7 @@ using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -33,20 +34,23 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
 
     static TesseractAndAzureAiVisionOcrPdfTests()
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
-
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        var realAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
+        
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             _naldData,
             [],
             _fileLicenceMapping);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

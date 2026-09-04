@@ -23,6 +23,7 @@ using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -32,15 +33,17 @@ public class CompareOcrPdfTests
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+        var realAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
 
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,            
             [],
             [],
             _fileLicenceMapping);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -66,6 +69,7 @@ public class CompareOcrPdfTests
     private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();

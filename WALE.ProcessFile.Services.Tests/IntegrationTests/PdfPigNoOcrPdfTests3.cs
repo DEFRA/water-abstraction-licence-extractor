@@ -21,6 +21,7 @@ using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -30,23 +31,27 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
 {
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     
     private static readonly FileSystemCacheService? RealCacheService;
     private static readonly FileSystemAbstractionLicenceCacheService? RealAbsLicCacheService;
+    private static readonly FileSystemAbstractionLicenceOutputService? RealAbsLicOutputService;
     
     static PdfPigNoOcrPdfTests3()
     {
         RealCacheService = new FileSystemCacheService("Cache/");
         RealAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+        RealAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
 
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             RealCacheService,
             RealAbsLicCacheService,
+            RealAbsLicOutputService,            
             NaldData,
             [],
             FileLicenceMappingWithout52);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =
@@ -206,6 +211,7 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             GeneralTestsHelper.GetFakeCacheService(
                 RealCacheService!,
                 RealAbsLicCacheService!,
+                RealAbsLicOutputService!,
                 NaldData,
                 [],
                 FileLicenceMappingWithout52);

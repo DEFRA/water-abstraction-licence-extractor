@@ -147,6 +147,20 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync()
+    {
+        var path = $"/Extractor/NaldData/GetDocumentNaldPurposeMap";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DocumentNaldPurposeMap>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";

@@ -20,6 +20,36 @@ namespace WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dataSourceProvider)
     : IAbstractionLicenceDatabaseReadService
 {
+    public async Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT
+                m.document_purpose as DocumentPurpose,
+                m.nald_purpose_primary_category_code as NaldPurposePrimaryCategoryCode,
+                m.nald_purpose_secondary_category_code as NaldPurposeSecondaryCategoryCode,
+                m.nald_purpose_use_code as NaldPurposeUseCode,
+                p."DESCR" as NaldPurposePrimaryCategoryDescription,
+                s."DESCR" as NaldPurposeSecondaryCategoryDescription,    
+                u."DESCR" as NaldPurposeUseDescription,
+                m.match_type as MatchType
+            FROM public.document_nald_purpose_map m
+            JOIN nald."NALD_PURP_PRIMS" p on m.nald_purpose_primary_category_code = p."CODE"
+            JOIN nald."NALD_PURP_SECS" s on m.nald_purpose_secondary_category_code = s."CODE"
+            JOIN nald."NALD_PURP_USES" u on m.nald_purpose_use_code = u."CODE";
+            """;
+
+        var purposeMapping = await QueryAsync<DocumentNaldPurposeMap>(
+            connection,
+            sql,
+            0,
+            new {});
+
+        return purposeMapping.ToList();
+    }
+    
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();

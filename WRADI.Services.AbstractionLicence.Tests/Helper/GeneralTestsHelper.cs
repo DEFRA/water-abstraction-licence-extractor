@@ -11,15 +11,20 @@ namespace WRADI.Services.AbstractionLicence.Tests.Helper;
 
 public static class GeneralTestsHelper
 {
-    public static (ICacheService CacheService, IAbstractionLicenceCacheService AbsLicCacheService)
+    public static (
+        ICacheService CacheService,
+        IAbstractionLicenceCacheService AbsLicCacheService,
+        IAbstractionLicenceOutputService AbsLicOutputService)
         GetFakeCacheService(
             ICacheService realCacheService,
-            IAbstractionLicenceCacheService realAbsLiceCacheService,
+            IAbstractionLicenceCacheService realAbsLicenceCacheService,
+            IAbstractionLicenceOutputService realAbsLicenceOutputService,
             Dictionary<string, List<NaldAbstractionData>> naldData,
             Dictionary<string, DmsFileData> dmsData)
     {
         var fakeCache = A.Fake<ICacheService>(x => x.Wrapping(realCacheService));
-        var fakeCacheAbsLic = A.Fake<IAbstractionLicenceCacheService>(x => x.Wrapping(realAbsLiceCacheService));
+        var fakeCacheAbsLic = A.Fake<IAbstractionLicenceCacheService>(x => x.Wrapping(realAbsLicenceCacheService));
+        var fakeOutputAbsLic = A.Fake<IAbstractionLicenceOutputService>(x => x.Wrapping(realAbsLicenceOutputService));
         
         A
             .CallTo(() => fakeCache.GetDmsFileDataAsync(A<string>._))
@@ -72,6 +77,6 @@ public static class GeneralTestsHelper
                 return Task.FromResult((NaldAbstractionData?)null);
             });
 
-        return (fakeCache, fakeCacheAbsLic);
+        return (fakeCache, fakeCacheAbsLic, fakeOutputAbsLic);
     }
 }

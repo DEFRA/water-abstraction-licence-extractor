@@ -97,4 +97,6 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync();
     
     Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber);
+    
+    Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
 }

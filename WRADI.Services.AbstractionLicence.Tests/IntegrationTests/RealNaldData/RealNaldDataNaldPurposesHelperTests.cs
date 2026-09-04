@@ -1,10 +1,10 @@
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
-using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests.RealNaldData;
 
@@ -28,7 +28,8 @@ public class RealNaldDataNaldPurposesHelperTests
             ReadService,
             null!);
         
-        NaldDataLookupService = new NaldDataLookupService(realAbsLicCacheService);
+        var realAbsLicOutputService = new DatabaseAbstractionLicenceOutputService(null!, ReadService, null!, null!);
+        NaldDataLookupService = new NaldDataLookupService(realAbsLicCacheService, realAbsLicOutputService);
     }
     
     [Fact]
@@ -40,20 +41,21 @@ public class RealNaldDataNaldPurposesHelperTests
             "SW/047/0051/003",
             5);
         
-        var naldPurposesForLicence = NaldPurposesHelper.ToNaldPurposeData(
-            naldAbstractionDataLine?.Purposes);
+        var naldPurposesForLicence =
+            WRADI.DocumentType.AbstractionLicence.Services.NaldDataLookupService.ToNaldPurposeData(
+                naldAbstractionDataLine?.Purposes);
         
         Assert.Single(naldPurposesForLicence);
         
         var documentDescription =
             "Transfer for the purpose of filling a reservoir for subsequent abstraction for public water supply.";
         
-        var (relevantNaldPurposes, matchType) = NaldPurposesHelper.GetRelevantNaldPurposes(
+        var (relevantNaldPurposes, matchType) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription,
             []);
 
-        Assert.Equal("DescriptionSuggestsTransfer", matchType);
+        Assert.Equal("OnlyOne", matchType);
         Assert.Single(relevantNaldPurposes);
         Assert.Equal("W", relevantNaldPurposes[0].PrimaryCategoryCode);
         Assert.Equal("WAT", relevantNaldPurposes[0].SecondaryCategoryCode);
@@ -75,14 +77,15 @@ public class RealNaldDataNaldPurposesHelperTests
             "1/21/00/073/R01",
             5);
         
-        var naldPurposesForLicence = NaldPurposesHelper.ToNaldPurposeData(
-            naldAbstractionDataLine?.Purposes);
+        var naldPurposesForLicence =
+            WRADI.DocumentType.AbstractionLicence.Services.NaldDataLookupService.ToNaldPurposeData(
+                naldAbstractionDataLine?.Purposes);
         
         Assert.Equal(2, naldPurposesForLicence.Count);
         
         var documentDescription1 = "Mineral washing.";
         
-        var (relevantNaldPurposes1, matchType1) = NaldPurposesHelper.GetRelevantNaldPurposes(
+        var (relevantNaldPurposes1, matchType1) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription1,
             []);
@@ -101,7 +104,7 @@ public class RealNaldDataNaldPurposesHelperTests
         
         var documentDescription2 = "Industrial (Groundwater augmentation).";
         
-        var (relevantNaldPurposes2, matchType2) = NaldPurposesHelper.GetRelevantNaldPurposes(
+        var (relevantNaldPurposes2, matchType2) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription2,
             [relevantNaldPurposes1[0].Id!]);

@@ -14,6 +14,7 @@ using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
@@ -114,10 +115,11 @@ public static class AbstractionLicenceSchemaConverter
             points = sourceOfSupply;
         }
         
-        var purposes = GetPurposes(
+        var purposes = await GetPurposesAsync(
             matches,
             naldAbstractionDataLine,
-            ref noneSchemaData);
+            naldDataLookupService,
+            noneSchemaData);
 
         var periods = GetPeriods(
             matches,
@@ -4843,10 +4845,11 @@ public static class AbstractionLicenceSchemaConverter
         return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
     }
 
-    private static PurposeOfAbstraction[] GetPurposes(
+    private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
-        ref Dictionary<string, object?> noneSchemaData)
+        INaldDataLookupService naldDataLookupService,
+        Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
         
@@ -4858,7 +4861,7 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
-        var naldPurposes = NaldPurposesHelper.ToNaldPurposeData(naldDataLine?.Purposes);
+        var naldPurposes = NaldDataLookupService.ToNaldPurposeData(naldDataLine?.Purposes);
         
         var usedNaldPurposeIds = new List<string>();
         var pointPurposeGroupCount = -1;
@@ -4957,7 +4960,7 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var (naldPurposeData, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                            var (naldPurposeData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
                                 usedNaldPurposeIds);
@@ -4999,7 +5002,7 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var (naldData, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
                                 usedNaldPurposeIds);
@@ -5041,7 +5044,7 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var (naldData, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
                                 usedNaldPurposeIds);
@@ -5083,7 +5086,7 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var (naldData, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
                                 usedNaldPurposeIds);
@@ -5125,7 +5128,7 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var (naldData, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
                                 usedNaldPurposeIds);
@@ -5161,7 +5164,7 @@ public static class AbstractionLicenceSchemaConverter
                     }
                 }
                 
-                var (naldData1, _) = NaldPurposesHelper.GetRelevantNaldPurposes(
+                var (naldData1, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                     naldPurposes,
                     description,
                     usedNaldPurposeIds);

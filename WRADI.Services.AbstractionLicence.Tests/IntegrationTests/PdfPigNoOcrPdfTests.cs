@@ -19,6 +19,7 @@ using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests;
 
@@ -28,18 +29,21 @@ public class PdfPigNoOcrPdfTests
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+        var realAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
 
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             [],
             []);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");

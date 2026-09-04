@@ -11,7 +11,7 @@ public class AddDocumentNaldPurposeMapTable : Migration
             .WithColumn("document_purpose").AsString().NotNullable()
             .WithColumn("nald_purpose_primary_category_code").AsString().Nullable()
             .WithColumn("nald_purpose_secondary_category_code").AsString().Nullable()
-            .WithColumn("nald_purpose_use_code").AsString().Nullable()
+            .WithColumn("nald_purpose_use_code").AsInt32().Nullable()
             .WithColumn("match_type").AsString().Nullable();
     }
 

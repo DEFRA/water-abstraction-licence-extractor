@@ -19,6 +19,7 @@ using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests.RealNaldData;
 
@@ -28,19 +29,22 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new DatabaseAbstractionLicenceCacheService(ReadService, null!);
+        var realAbsLicOutputService = new DatabaseAbstractionLicenceOutputService(null!, ReadService, null!, null!);
         
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             [],
             []);
 
         AbsLicCacheService = realAbsLicCacheService;
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");

@@ -11,4 +11,9 @@ public interface INaldDataLookupService
     public Task<NaldImpoundmentData?> GetNaldImpoundmentDataLineAsync(
         string? licenceNumber,
         int regionCode);
+    
+    public Task<(NaldPurposeData[] Purposes, string? MatchType)> GetRelevantNaldPurposesAsync(
+        List<NaldPurposeData> naldPurposes,
+        string? documentDescription,
+        List<string> excludeNaldPurposeIds);
 }

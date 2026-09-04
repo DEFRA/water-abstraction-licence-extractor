@@ -580,15 +580,17 @@ ConfiguredServices ConfigureServices(
         pdfDataExtractors.Add(pdfDataExtractor);
     }
 
+    var naldDataLookupService = new NaldDataLookupService(
+        abstractionLicenceCacheService,
+        abstractionLicenceOutputService);
+    
     return new ConfiguredServices
     {
         CacheService = cacheService,
-        AbstractionLicenceCacheService =
-            abstractionLicenceCacheService,
         OutputService = outputService,
-        AbstractionLicenceOutputService =
-            abstractionLicenceOutputService,
-        NaldDataLookupService = new NaldDataLookupService(abstractionLicenceCacheService),
+        AbstractionLicenceCacheService = abstractionLicenceCacheService,
+        AbstractionLicenceOutputService = abstractionLicenceOutputService,
+        NaldDataLookupService = naldDataLookupService,
         LicenceNumberService = null,
         DmsLookupService = new DmsLookupService(),
         PdfDataExtractorServices = pdfDataExtractors,
@@ -603,8 +605,7 @@ ConfiguredServices ConfigureServices(
         InternalDataPath = internalDataPath,
         LicenceDataPath = licenceDataPath,
         LicenceSetsDataPath = licenceSetsDataPath,
-        ThumbnailImageDataPath =
-            thumbnailImageDataPath,
+        ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
         DmsReportPath = fileMappingPath,

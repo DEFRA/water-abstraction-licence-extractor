@@ -16,9 +16,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Agriculture (other than spray irrigation)',
-                        'Agriculture',
-                        'General Agriculture',
-                        'General Farming & Domestic',
+                        'A',
+                        'AGR',
+                        140,
                         'ExplicitMapping'
                     );
                     
@@ -30,9 +30,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Reservoir storage for subsequent stream compensation',
-                        'Water Supply',
-                        'Water Supply Related',
-                        'Transfer Between Sources (Pre Water Act 2003)',
+                        'W',
+                        'WAT',
+                        450,
                         'ExplicitMapping'
                     );
                     
@@ -44,9 +44,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Private water supply',
-                        'Water Supply',
-                        'Private Water Supply',
-                        'General Use Relating To Secondary Category (Very Low Loss)',
+                        'W',
+                        'PWS',
+                        180,
                         'ExplicitMapping'
                     );
                     
@@ -58,9 +58,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Private water supply',
-                        'Water Supply',
-                        'Public Water Supply',
-                        'General Use Relating To Secondary Category (Low Loss)',
+                        'W',
+                        'PWS',
+                        170,
                         'ExplicitMapping'
                     );
                     
@@ -72,9 +72,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                        'Private water supply',
-                        'Water Supply',
-                        'Public Water Supply',
-                        'General Use Relating To Secondary Category (Medium Loss)',
+                        'W',
+                        'PWS',
+                        160,
                         'ExplicitMapping'
                     );
                     
@@ -86,9 +86,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Private water supply',
-                        'Water Supply',
-                        'Public Water Supply',
-                        'General Use Relating To Secondary Category (High Loss)',
+                        'W',
+                        'PWS',
+                        150,
                         'ExplicitMapping'
                     );
                     
@@ -100,9 +100,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Domestic & sanitation',
-                        'Industrial, Commercial And Public Services',
-                        'Retail',
-                        'Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services',
+                        'I',
+                        'RET',
+                        40,
                         'ExplicitMapping'
                     );
                     
@@ -114,9 +114,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Ground source heating and cooling pump',
-                        'Agriculture',
-                        'General Agriculture',
-                        'Heat Pump',
+                        'A',
+                        'AGR',
+                        200,
                         'ExplicitMapping'
                     );
                     
@@ -128,9 +128,9 @@ public class SeedInitialDocumentNaldPurposeMapTableData : Migration
                         match_type)
                     VALUES (
                         'Domestic',
-                        'Industrial, Commercial And Public Services',
-                        'Retail',
-                        'Drinking, Cooking, Sanitary, Washing, (Small Garden) - Commercial/Industrial/Public Services',
+                        'I',
+                        'RET',
+                        40,
                         'ExplicitMapping'
                     );
                     """);

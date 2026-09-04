@@ -89,7 +89,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
     private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         var baseFixture = new BaseFixture();
-        
+
         return new LookupConfiguration(
             AbstractionLicenceLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),

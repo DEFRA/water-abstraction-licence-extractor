@@ -117,6 +117,7 @@ public static class AbstractionLicenceSchemaConverter
         
         var purposes = await GetPurposesAsync(
             licenceNumber,
+            lookupConfiguration,
             matches,
             naldAbstractionDataLine,
             naldDataLookupService,
@@ -4848,6 +4849,7 @@ public static class AbstractionLicenceSchemaConverter
 
     private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
         string licenceNumber,
+        LookupConfiguration config,
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         INaldDataLookupService naldDataLookupService,
@@ -4967,7 +4969,7 @@ public static class AbstractionLicenceSchemaConverter
                                 point.Trim(),
                                 usedNaldPurposeIds,
                                 licenceNumber,
-                                true);
+                                config.SavePurposeMapping);
 
                             if (naldPurposeData.Length >= 1)
                             {
@@ -5011,7 +5013,7 @@ public static class AbstractionLicenceSchemaConverter
                                 point.Trim(),
                                 usedNaldPurposeIds,
                                 licenceNumber,
-                                true);
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5055,7 +5057,7 @@ public static class AbstractionLicenceSchemaConverter
                                 point.Trim(),
                                 usedNaldPurposeIds,
                                 licenceNumber,
-                                true);
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5099,7 +5101,7 @@ public static class AbstractionLicenceSchemaConverter
                                 point.Trim(),
                                 usedNaldPurposeIds,
                                 licenceNumber,
-                                true);
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5143,7 +5145,7 @@ public static class AbstractionLicenceSchemaConverter
                                 point.Trim(),
                                 usedNaldPurposeIds,
                                 licenceNumber,
-                                true);
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5181,7 +5183,7 @@ public static class AbstractionLicenceSchemaConverter
                     description,
                     usedNaldPurposeIds,
                     licenceNumber,
-                    true);
+                    config.SavePurposeMapping);
 
                 if (naldData1.Length >= 1)
                 {

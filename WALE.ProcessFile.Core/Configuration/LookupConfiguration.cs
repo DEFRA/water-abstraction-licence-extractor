@@ -18,7 +18,8 @@ public class LookupConfiguration(
     int skipFileIfMoreThenPages = 30,
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
-    bool lockInProcess = false)
+    bool lockInProcess = false,
+    bool savePurposeMapping = false)
 {
     public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
     
@@ -49,6 +50,8 @@ public class LookupConfiguration(
     public bool UseLockExclusivity { get; set; } = useLockExclusivity;
     
     public bool LockInProcess { get; set; } = lockInProcess;
+    
+    public bool SavePurposeMapping { get; set; } = savePurposeMapping;
 
     public LookupConfiguration Clone()
     {
@@ -67,6 +70,7 @@ public class LookupConfiguration(
             SkipFileWhenMoreThenPages,
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
-            LockInProcess);
+            LockInProcess,
+            SavePurposeMapping);
     }
 }

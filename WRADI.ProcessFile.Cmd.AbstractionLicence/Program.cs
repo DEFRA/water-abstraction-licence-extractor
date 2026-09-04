@@ -123,7 +123,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,
-        lockInProcess: true);
+        lockInProcess: true,
+        savePurposeMapping: true);
     
     try
     {

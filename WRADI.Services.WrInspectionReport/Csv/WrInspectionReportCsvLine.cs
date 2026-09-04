@@ -11,6 +11,7 @@ public class WrInspectionReportCsvLine
     public string? Metadata__Date__Date { get; set; }
     public string? Metadata__Date__RawDate { get; set; }
     public string? LicenceNumber { get; set; }
+    public string? LicenceNumberCleaned { get; set; }
     public string? InspectionClass { get; set; }
     public string? Address__NameAndAddress { get; set; }
     public string? Address__TelephoneNumber { get; set; }
@@ -75,6 +76,7 @@ public class WrInspectionReportCsvLine
             Metadata__Date__Date = form.Metadata.Date.Date?.ToString("dd/MM/yyyy"),
             Metadata__Date__RawDate = form.Metadata.Date.RawDate,
             LicenceNumber = form.LicenceNumber,
+            LicenceNumberCleaned = form.LicenceNumberCleaned.Count > 0 ? string.Join("\n", form.LicenceNumberCleaned) : null,
             InspectionClass = form.InspectionClass,
             Address__NameAndAddress = form.Address.NameAndAddress,
             Address__TelephoneNumber = form.Address.TelephoneNumber,

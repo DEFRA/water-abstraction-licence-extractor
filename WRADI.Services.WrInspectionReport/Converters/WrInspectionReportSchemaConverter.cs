@@ -304,6 +304,7 @@ public static class WrInspectionReportSchemaConverter
                 }
             },
             LicenceNumber = GetMultilineText(matchesResult, "LicenceNumber"),
+            LicenceNumberCleaned = CleanLicenceNumbers(GetMultilineText(matchesResult, "LicenceNumber")),
             InspectionClass = GetMultilineText(matchesResult, "InspectionClass"),
             Address = new WrInspectionReportAddress()
             {
@@ -400,6 +401,35 @@ public static class WrInspectionReportSchemaConverter
         return string.IsNullOrEmpty(text)
             ? text
             : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
+    }
+
+    // Splits a verbatim LicenceNumber cell on the delimiters seen across the real corpus
+    // ("X and Y", "X & Y", "X, Y, Z" - all three occur) and canonicalises each piece to
+    // alphanumeric-only/uppercase. A cleaned piece with no digits at all is dropped - real
+    // licence numbers always contain digits, but "and"/"," can occasionally split a site-name
+    // pair rather than two licence numbers (e.g. "...004 Brennand and Whitendale", where
+    // "Brennand"/"Whitendale" are reservoir names, not licences) - this heuristic keeps the
+    // genuine licence-shaped piece and drops the site-name fragment rather than mis-cleaning
+    // it into a false match key. Not perfect (a licence number's own site-name suffix stays
+    // glued to it if the split lands there instead), but no false-negative case has been seen
+    // in the corpus - see the LicenceNumberCleaned property comment for why this exists.
+    internal static List<string> CleanLicenceNumbers(string? rawLicenceNumber)
+    {
+        if (string.IsNullOrWhiteSpace(rawLicenceNumber))
+        {
+            return [];
+        }
+
+        var pieces = System.Text.RegularExpressions.Regex.Split(
+            rawLicenceNumber,
+            @"\s*(?:,|&|\band\b)\s*",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        return pieces
+            .Select(piece => System.Text.RegularExpressions.Regex.Replace(piece, @"[^a-zA-Z0-9]", string.Empty).ToUpperInvariant())
+            .Where(cleaned => cleaned.Any(char.IsDigit))
+            .Distinct()
+            .ToList();
     }
 
     // Some documents render an ordinal date suffix with a stray space before it - e.g.

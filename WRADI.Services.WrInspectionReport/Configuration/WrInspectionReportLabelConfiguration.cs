@@ -251,7 +251,27 @@ public class WrInspectionReportLabelConfiguration
                     1,
                     LimitTo.SameColumn,
                     requireTextToClaimGroup: true,
-                    additionalSameLineEndTexts: ["Name and address", "Name / address"]) // Short form ("Licence No." / "Licence No:")
+                    additionalSameLineEndTexts: ["Name and address", "Name / address"],
+                    // The long form's alternate above needs the full "Licence No. (or
+                    // Application No. or GIC No. etc.)" as one literal, but real documents never
+                    // print that as one contiguous same-line string - the parenthetical wording
+                    // varies ("Etc)", "etc)", "GIC No)" with no "etc" at all, sometimes wrapping
+                    // onto its own line) - so the long form essentially never matches and this
+                    // short form wins by default. Its own Remove list only strips "Licence No"
+                    // itself, so on 26 real corpus documents the parenthetical annotation (with
+                    // nothing else, on the worst-affected docs) was becoming the captured value.
+                    // Longest/most-specific literal first: "(or Application No. or GIC No."
+                    // (no "etc") is a literal prefix of the "etc.)" variants, so it must be tried
+                    // last or it would strip the shared prefix and leave " etc.)" dangling.
+                    additionalRemoves:
+                    [
+                        new("(or Application No. or GIC No. etc.)"),
+                        new("(or Application No. or GIC No. Etc)"),
+                        new("(or Application No. or GIC No. etc)"),
+                        new("(or Application No. or GIC No. etc."),
+                        new("(or Application No. or GIC No)"),
+                        new("(or Application No. or GIC No.")
+                    ]) // Short form ("Licence No." / "Licence No:")
             ]),
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
@@ -274,19 +294,69 @@ public class WrInspectionReportLabelConfiguration
             // wording - the closing parenthesis lands in a different place ("...different)" vs
             // "...different from above)"), so the literal prefix match never fired at all on
             // documents using this variant.
+            //
+            // "Inspecting Officer" added as a second end marker: on desktop-review documents
+            // (no physical site visit) the "Met with:" row is replaced entirely - and with
+            // several different wordings across real documents ("Desktop Review:", "Liaised
+            // with;", "Site Visit: Desktop", "Desktop:") rather than one. Enumerating each
+            // wording (the approach used elsewhere in this file) would be the same open-ended
+            // heading-variant problem GeneralComments has - "Inspecting Officer:" is a much
+            // safer single marker since it appears immediately after all of these variants
+            // uniformly, on every real document regardless of visit type. Without it, the walk
+            // ran past all 10 fetched lines and into the Licence provisions grid - 14 real
+            // corpus documents affected, e.g. SiteAddress capturing "Desktop Review: Mike
+            // Doggrell & John Elliott\nInspecting Officer: Richard Smith\nLicence provisions
+            // (mark as appropriate...)\nSource of supply: n/a\n...".
+            // excludeNextLineIfFirstColumnStartsWith: on the same desktop-review documents, the
+            // "who did the desktop review" row itself (4 known wordings, corpus-confirmed - see
+            // the "Inspecting Officer" comment above) sits between the SiteAddress label and
+            // "Inspecting Officer:", where there is usually no real site address written at all
+            // - without this it was captured as if it were the address (e.g. "Desktop Review:
+            // Mike Doggrell"). Excluding just this candidate row (not adding it as another end
+            // marker) is the safer mechanism - it skips only this line rather than risking the
+            // same cross-line early-termination class of bug the "Telephone" end-marker attempt
+            // hit on NameAndAddress (see that field's own comment).
             ("SiteAddress", TextToFindIsBetweenLabels(
                 "Site address (if different)",
                 "Met with",
                 "SiteAddress",
                 10,
                 LimitTo.SameColumn,
-                additionalSameLineEndTexts: ["Email"],
-                additionalTextStarts: ["Site address (if different from above)"])),
-            ("InspectionClass", TextToFindIsBetweenLabels("Inspection Class", "Telephone No", "InspectionClass", 1, LimitTo.SameColumn)),
+                additionalSameLineEndTexts: ["Email", "Inspecting Officer"],
+                additionalTextStarts: ["Site address (if different from above)"],
+                excludeNextLineIfFirstColumnStartsWith: ["Desktop Review", "Desktop:", "Site Visit: Desktop", "Liaised with"])),
+            // additionalSameLineEndTexts covers the same letter-kerned "T e l e p h o n e N o:"
+            // rendering as the TelephoneNumber field's own additionalTextStarts below - without
+            // it, the un-kerned "Telephone No" endText doesn't match as a StartsWith prefix, so
+            // the same-line column walk sweeps the kerned label straight into InspectionClass's
+            // own value (e.g. "Critical\nT e l e p h o n e N o:"). InspectionClass's value is
+            // always a short single token (NextLinesToFetch:1), so unlike NameAndAddress there's
+            // no multi-line-continuation risk from GetTextBetween's cross-line end-tag scan.
+            ("InspectionClass", TextToFindIsBetweenLabels(
+                "Inspection Class",
+                "Telephone No",
+                "InspectionClass",
+                1,
+                LimitTo.SameColumn,
+                additionalSameLineEndTexts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No"])),
             // "Telephone No:" renders letter-kerned on 30 real corpus documents - the same
             // phenomenon as the Records field's kerning (see that field's own comment for the
             // likely cause: short labels getting stretch-justified to fill a column width).
             // 7 distinct literal patterns cover all 30 occurrences.
+            //
+            // Tried bumping NextLinesToFetch 2->4 to capture genuine 3-line contact blocks (e.g.
+            // "Tel: 01480 499 154" / "DDI: 01480 369 096" / "Mob: 07500 708 219", real content,
+            // not a leak - same class as Records' "X see below") - reverted, measured as a net
+            // regression on the golden set (11 outcomes changed, ALL in the wrong direction:
+            // TrueNegative->Hallucination, Hit->Wrong, Miss->Wrong, zero improvements). Root
+            // cause: on documents where the real value is short or blank and "Email" never
+            // appears nearby to bound the walk, the extra reach swept in unrelated same-column
+            // content several rows further down the page - e.g. "Position: n/a\nInspection
+            // Date:9 th June", which belongs to the "Met with" section entirely, not this field.
+            // Same column-walk-goes-too-far class as the deferred bug documented in
+            // OtherProvisions/the wr51_column_walk_bug memory. A real fix needs to bound the
+            // walk more precisely (e.g. an explicit end-of-block marker for wherever this
+            // column's content genuinely stops), not just fetch further.
             ("TelephoneNumber", TextToFindIsBetweenLabels(
                 "Telephone No",
                 "Email",
@@ -305,8 +375,43 @@ public class WrInspectionReportLabelConfiguration
             // 7 to 10: real addresses regularly wrap to 8 lines (business name + 5-6 address
             // lines + postcode on its own line) and 7 was silently dropping the final line -
             // usually the postcode.
+            // Tried adding a bare "Telephone" end marker too (some documents read "Telephone:
+            // 07759306311" rather than "Telephone No:", e.g. wr51__1343025g037) - reverted: it
+            // fixed that leak but broke something worse. additionalSameLineEndTexts feeds both
+            // WalkSameLineColumns (bounds the same-row column walk, fine) AND GetTextBetween's
+            // cross-line end-tag scan, which checks each row's full untrimmed text (both
+            // columns concatenated), not just the matched column. On wr51__1343025g037 the
+            // phone number sits in the second column of the address's own FIRST row, so
+            // "Telephone" as a marker terminated the whole between-labels block right there,
+            // silently dropping the genuine second address line ("Estate, Greystone,
+            // Bowerchalke, Salisbury, Wiltshire, SP5 5PE") - a worse regression (lost real
+            // content) than the leak it fixed (one extra trailing fragment). Affects a single
+            // real document in the full 789-doc corpus - not worth chasing with a
+            // Remove-based workaround given DataHelper.RemoveExcludes' own Regex branch has a
+            // separate latent bug (Regex.Replace(match.Value, "") wipes the whole string, not
+            // just the match) that would need fixing first to do this safely.
+            //
+            // The letter-kerned "T e l e p h o n e N o:" rendering (same phenomenon as
+            // TelephoneNumber's own additionalTextStarts below, and Records' kerning) is a
+            // separate, much more common leak than the bare "Telephone" case above - 36 real
+            // corpus occurrences, confirmed via direct corpus search. Added as literal markers
+            // (not the bare "Telephone" that was reverted) because each kerned pattern is long
+            // and distinctive enough that a same-line-only false positive is very unlikely -
+            // still measured against the full protocol before keeping, given
+            // additionalSameLineEndTexts' proven cross-line-termination risk above.
             ("NameAndAddress", [
-                ..TextToFindIsBetweenLabels("Name and address", "Site address", "NameAndAddress", 10, LimitTo.SameColumn, additionalSameLineEndTexts: ["Telephone No", "Email"]), // Existing template
+                ..TextToFindIsBetweenLabels(
+                    "Name and address",
+                    "Site address",
+                    "NameAndAddress",
+                    10,
+                    LimitTo.SameColumn,
+                    additionalSameLineEndTexts:
+                    [
+                        "Telephone No", "Email",
+                        "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
+                        "Telepho n e N o", "T e lephone No", "T e l e phone No"
+                    ]), // Existing template
                 // "Water Company" template: label and value are one line, e.g. "Name / address:
                 // Sutton and East Surrey Water PLC, London Road, Redhill, RH1 1LJ" - no separate
                 // value block on subsequent lines, so the between-labels walk above never finds

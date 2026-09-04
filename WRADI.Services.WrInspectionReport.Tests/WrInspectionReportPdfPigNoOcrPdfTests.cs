@@ -239,6 +239,68 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             await csv.WriteRecordsAsync(templateFieldCoverageRows);
         }
 
+        // QA-review export: one row per document for a human spot-check pass, not the raw
+        // 51-column dump. Reuses the per-template coverage just computed above to flag only the
+        // fields that are usually populated for THIS document's template but came back blank
+        // here - a targeted "look at this" list rather than 51 columns to eyeball per row.
+        var coverageByTemplateField = templateFieldCoverageRows
+            .ToDictionary(r => (r.Template, r.Field), r => r.Documents == 0 ? 0.0 : r.NonBlank / (double)r.Documents);
+
+        var licenceProvisionsFields = Wr51GroundTruthAccuracyTests.FieldExtractors.Keys
+            .Where(k => k.StartsWith("LicenceProvisions.", StringComparison.Ordinal))
+            .ToList();
+        var measurementDetailsFields = Wr51GroundTruthAccuracyTests.FieldExtractors.Keys
+            .Where(k => k.StartsWith("MeasurementDetails.", StringComparison.Ordinal))
+            .ToList();
+
+        // A field blank on this doc is only worth flagging if most other documents of the same
+        // template DO have it - otherwise a genuinely sparse field would flag on every document.
+        const double usuallyPopulatedThreshold = 0.6;
+
+        var qaReviewRows = formsList
+            .Select(f =>
+            {
+                var templateName = f.Metadata.Template.ToString();
+
+                var flaggedFields = Wr51GroundTruthAccuracyTests.FieldExtractors
+                    .Where(kv =>
+                        string.IsNullOrWhiteSpace(kv.Value(f))
+                        && coverageByTemplateField.TryGetValue((templateName, kv.Key), out var coverage)
+                        && coverage >= usuallyPopulatedThreshold)
+                    .Select(kv => kv.Key)
+                    .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                return new QaReviewRow(
+                    f.Metadata.Filename ?? "",
+                    templateName,
+                    ReviewPriority(f.Metadata.Template),
+                    f.LicenceNumber,
+                    Wr51GroundTruthAccuracyTests.FieldExtractors["InspectionDate"](f),
+                    f.Address.NameAndAddress,
+                    f.InspectingOfficer,
+                    licenceProvisionsFields.Count(k => !string.IsNullOrWhiteSpace(Wr51GroundTruthAccuracyTests.FieldExtractors[k](f))),
+                    licenceProvisionsFields.Count,
+                    measurementDetailsFields.Count(k => !string.IsNullOrWhiteSpace(Wr51GroundTruthAccuracyTests.FieldExtractors[k](f))),
+                    measurementDetailsFields.Count,
+                    flaggedFields.Count,
+                    string.Join("; ", flaggedFields),
+                    ReviewedBy: "",
+                    ReviewOutcome: "",
+                    ReviewNotes: "");
+            })
+            .OrderBy(r => PriorityRank(r.ReviewPriority))
+            .ThenByDescending(r => r.FlaggedFieldCount)
+            .ThenBy(r => r.Filename, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var qaReviewPath = Path.Combine(OutputService.OutputFolder!, "_qa-review.csv");
+        await using (var writer = new StreamWriter(qaReviewPath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(qaReviewRows);
+        }
+
         testOutputHelper.WriteLine($"Total files:              {total}");
         testOutputHelper.WriteLine($"Processed without error:  {formsList.Count}");
         testOutputHelper.WriteLine($"Failures:                 {failures.Count}");
@@ -262,6 +324,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         }
         testOutputHelper.WriteLine($"Template distribution CSV: {templateDistributionPath}");
         testOutputHelper.WriteLine($"Template coverage CSV:    {templateCoveragePath}");
+        testOutputHelper.WriteLine($"QA review CSV:            {qaReviewPath}");
+        testOutputHelper.WriteLine($"  High priority:          {qaReviewRows.Count(r => r.ReviewPriority == "High")}");
+        testOutputHelper.WriteLine($"  Medium priority:        {qaReviewRows.Count(r => r.ReviewPriority == "Medium")}");
+        testOutputHelper.WriteLine($"  Normal priority:        {qaReviewRows.Count(r => r.ReviewPriority == "Normal")}");
+        testOutputHelper.WriteLine($"  Docs with flagged fields: {qaReviewRows.Count(r => r.FlaggedFieldCount > 0)}");
 
         if (failures.Count > 0)
         {
@@ -316,7 +383,45 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     private static string Percent(int count, int total) =>
         total == 0 ? "n/a" : $"{count * 100.0 / total:F1}%";
 
+    // Categorical, not a pinned accuracy number that would go stale the next time the harness
+    // runs - High covers templates the classifier itself is least sure about (Unknown) or where
+    // the golden set so far is thin (T4/T7/Impounding all have single-digit sample counts - see
+    // analysis/08-wr51-field-report.md section 3), Medium is the heterogeneous narrative bucket,
+    // Normal is the two best-covered templates (T1, T6).
+    private static string ReviewPriority(WrTemplateType template) => template switch
+    {
+        WrTemplateType.Unknown => "High",
+        WrTemplateType.T4 or WrTemplateType.T7 or WrTemplateType.Impounding => "High",
+        WrTemplateType.NonStandardNarrative => "Medium",
+        _ => "Normal"
+    };
+
+    private static int PriorityRank(string reviewPriority) => reviewPriority switch
+    {
+        "High" => 0,
+        "Medium" => 1,
+        _ => 2
+    };
+
     private record TemplateDistributionRow(string Template, int Documents, string PercentOfCorpus);
+
+    private record QaReviewRow(
+        string Filename,
+        string Template,
+        string ReviewPriority,
+        string? LicenceNumber,
+        string? InspectionDate,
+        string? NameAndAddress,
+        string? InspectingOfficer,
+        int LicenceProvisionsAnswered,
+        int LicenceProvisionsTotal,
+        int MeasurementDetailsAnswered,
+        int MeasurementDetailsTotal,
+        int FlaggedFieldCount,
+        string FlaggedFields,
+        string ReviewedBy,
+        string ReviewOutcome,
+        string ReviewNotes);
 
     // No ground truth exists for the full real corpus (only the 46-doc golden set has that), so
     // this is coverage - "did the field produce anything" - not accuracy - "was it right". Still

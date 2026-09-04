@@ -260,7 +260,28 @@ public class WrInspectionReportLabelConfiguration
             // there, it sweeps past "Email:" and that label ends up glued onto the end of the
             // captured address (206/789 real corpus files affected). Same shape as the
             // NameAndAddress/Telephone No fix above.
-            ("SiteAddress", TextToFindIsBetweenLabels("Site address (if different)", "Met with", "SiteAddress", 1, LimitTo.SameColumn, additionalSameLineEndTexts: ["Email"])),
+            //
+            // NextLinesToFetch bumped 1->10 (same reasoning and value as NameAndAddress's own
+            // fix above): traced via T1's per-field harness breakdown that a real multi-line
+            // site address (e.g. "Woodnesborough Water Supply Works" / "Beacon Lane" /
+            // "Woodnesborough" / "Sandwich CT13 0PD", 4 lines) was being missed entirely,
+            // because the row immediately after the label is often the sibling "Email:" field's
+            // own continuation line (rejected correctly by X-position, but that used up the
+            // only next-line fetch available) - the real address sits two or more rows further
+            // down, never reached with NextLinesToFetch:1. "Met with" still bounds the walk
+            // regardless of how generous this is.
+            // additionalTextStarts: "Site address (if different from above)" is a distinct real
+            // wording - the closing parenthesis lands in a different place ("...different)" vs
+            // "...different from above)"), so the literal prefix match never fired at all on
+            // documents using this variant.
+            ("SiteAddress", TextToFindIsBetweenLabels(
+                "Site address (if different)",
+                "Met with",
+                "SiteAddress",
+                10,
+                LimitTo.SameColumn,
+                additionalSameLineEndTexts: ["Email"],
+                additionalTextStarts: ["Site address (if different from above)"])),
             ("InspectionClass", TextToFindIsBetweenLabels("Inspection Class", "Telephone No", "InspectionClass", 1, LimitTo.SameColumn)),
             // "Telephone No:" renders letter-kerned on 30 real corpus documents - the same
             // phenomenon as the Records field's kerning (see that field's own comment for the

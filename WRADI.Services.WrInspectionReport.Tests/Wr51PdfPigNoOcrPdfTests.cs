@@ -366,7 +366,11 @@ public class Wr51PdfPigNoOcrPdfTests
         Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches[41];
+        // Was a hardcoded Matches[41] positional index - broke as soon as the new
+        // TemplateMarker* label groups were added (they matched too, shifting every later
+        // group's index), same as every other assertion in this test that already looks the
+        // match up by name instead of position.
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
         Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);

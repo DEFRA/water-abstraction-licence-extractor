@@ -24,7 +24,11 @@ public class LookupConfiguration(
     bool lockInProcess = false,
     bool useAnchoredLineGrouping = false)
 {
-    public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; } = labels;
+    // Settable (not just init) so a caller can run a cheap classification pass with one label
+    // set, then re-run extraction with a different one chosen from the result - see
+    // WRADI.Services.WrInspectionReport's extraction orchestrator for the first consumer of
+    // this. Every existing caller that never reassigns it keeps its original behaviour exactly.
+    public List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels { get; set; } = labels;
     
     public readonly HashSet<string> ValidLowercaseFirstNames = validLowercaseFirstNames;
     

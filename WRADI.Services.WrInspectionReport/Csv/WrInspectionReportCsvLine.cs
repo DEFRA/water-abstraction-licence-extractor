@@ -3,6 +3,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Csv;
 public class WrInspectionReportCsvLine
 {
     public string? Metadata__Filename { get; set; }
+    public string? Metadata__Template { get; set; }
     public string? Metadata__DocumentTemplateVerison { get; set; }
     public string? Metadata__DocumentHeader { get; set; }
     public bool? Metadata__IsScan { get; set; }
@@ -66,6 +67,7 @@ public class WrInspectionReportCsvLine
         return new WrInspectionReportCsvLine
         {
             Metadata__Filename = form.Metadata.Filename,
+            Metadata__Template = form.Metadata.Template.ToString(),
             Metadata__DocumentTemplateVerison = form.Metadata.DocumentTemplateVerison,
             Metadata__DocumentHeader = form.Metadata.DocumentHeader,
             Metadata__IsScan = form.Metadata.IsScan,

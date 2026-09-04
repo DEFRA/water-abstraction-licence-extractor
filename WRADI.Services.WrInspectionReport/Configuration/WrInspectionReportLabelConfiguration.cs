@@ -10,11 +10,29 @@ public class WrInspectionReportLabelConfiguration
     // asks for. Tried in this order; a genuinely-unticked box (☐) is itself a real answer
     // ("not confirmed"), not a missing one, so it's listed alongside the others rather
     // than treated as blank.
+    //
+    // ExceptWhenInsideWord on every entry - found missing via the T1-specific harness
+    // breakdown: Calibration/Conformance/FlowVerification/MeterVerification's "Existing
+    // template" alternate uses LimitTo.WholeLine, which on documents where row-grouping merges
+    // a lot of unrelated boilerplate text into the same logical "line" (appendix-heavy
+    // templates especially) scans that whole blob for the first-listed possibility anywhere in
+    // it. "N" is checked second, right after "Y", with no word-boundary guard - a stray
+    // lowercase "n" inside any ordinary English word ("condition", "manufacturer",
+    // "accordance", "necessary" - all confirmed present in the swept text on two independently
+    // traced documents) wins the match before the algorithm ever reaches a real tick/cross that
+    // may also be present in the same text. Mirrors the same guard GetInOrderField's own
+    // Possibilities list already uses for its own short/generic entries ("N/A", "NI", "In",
+    // "Not") for exactly this reason.
     private static readonly List<TextToMatch> CheckboxMarkPossibilities =
     [
-        new("Y"), new("N"),
-        new("✓"), new("☑"), new("☒"), new("☐"),
-        new("X"), new("x")
+        new("Y") { ExceptWhenInsideWord = true },
+        new("N") { ExceptWhenInsideWord = true },
+        new("✓") { ExceptWhenInsideWord = true },
+        new("☑") { ExceptWhenInsideWord = true },
+        new("☒") { ExceptWhenInsideWord = true },
+        new("☐") { ExceptWhenInsideWord = true },
+        new("X") { ExceptWhenInsideWord = true },
+        new("x") { ExceptWhenInsideWord = true }
     ];
 
     // The "grid template" layout prints "Calibration: Conformance: Flow verification: Meter
@@ -50,6 +68,96 @@ public class WrInspectionReportLabelConfiguration
         "Calibration:", "Conformance:", "Flow verification:", "Meter verification:",
         "Maintenance:", "Frequency:", "Spot Check Result", "General comments"
     ];
+
+    // The label groups WrInspectionReportSchemaConverter.ClassifyTemplate actually needs -
+    // filtered out of GetLabels() by name rather than redefined, so the classification markers
+    // can never drift out of sync with the real ones. Used for the cheap first pass in
+    // WrInspectionReportExtractionOrchestrator: classify from this small set (7 groups) before
+    // deciding whether to run GetT1Labels() or GetLabels() for the real extraction.
+    private static readonly string[] ClassificationLabelGroupNames =
+    [
+        "DocumentHeader",
+        "TemplateMarkerT4",
+        "TemplateMarkerT6",
+        "TemplateMarkerT7",
+        "TemplateMarkerImpounding",
+        "TemplateMarkerBaselineComments",
+        "TemplateMarkerAlternateComments"
+    ];
+
+    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetClassificationLabels() =>
+        GetLabels()
+            .Where(l => ClassificationLabelGroupNames.Contains(l.LabelGroupName))
+            .ToList();
+
+    // Hook point for T1-specific rule tuning. Built additively (2026-09): started from
+    // GetLabels() unchanged, tried removing every alternate/field whose own comment attributes
+    // it to a different template (T4/T6), then diffed the FULL 51-field corpus-wide coverage
+    // report (all 480 real T1-classified documents, not just the 18-doc golden-set sample)
+    // between the pruned and unpruned versions to see exactly what each removal actually cost -
+    // rather than trusting the attribution comments or a partial/golden-set-only check either
+    // one, both of which had already been tried and found insufficient (see git history/prior
+    // attempts on this method for the two narrower checks that missed this).
+    //
+    // The result was decisive, not marginal: EVERY MeasurementDetails alternate tried (the
+    // "T6 template" alternates on MeterMake/SerialNumber/Reading/Units/Calibration/Conformance/
+    // FlowVerification/MeterVerification, and the standalone "T6 template only" fields
+    // MeterName/FlowRate/Verification/SpotCheckResult/MeterAssetNumber's T6 alternate) showed
+    // real, substantial usage among T1-classified documents - not edge-case noise:
+    // Calibration lost 51/480 T1 docs (11%), Units 47/480 (10%), Conformance 25/480 (93% of its
+    // own matches), FlowVerification 23/480, MeterVerification 18/480, MeterMake 8/480,
+    // SerialNumber 5/480, Reading 7/480, plus FlowRate/MeterAssetNumber/SpotCheckResult/
+    // Verification losing ALL their matches outright. The "T6 template" label on these
+    // alternates describes where the phrasing was FIRST found, not a template-exclusivity
+    // boundary - MeasurementDetails label phrasing apparently varies somewhat independently of
+    // which grid/comments-heading template a document otherwise uses. There is no safe smaller
+    // T1-only subset of these alternates to converge on; they all stay, unchanged from
+    // GetLabels().
+    //
+    // Two removals DID show zero corpus-wide impact across all 480 T1 documents, confirmed safe
+    // and kept below: NameAndAddress's "Permit holder name and address" alternate (T4 only,
+    // never matches a T1-classified document) and GeneralComments's non-baseline heading
+    // alternates (Introduction/Notes and Actions/Actions/Summary/etc., all NonStandardNarrative-
+    // family per that field's own catalogue - also independently confirmed at the golden-set
+    // level: 8 Hit/10 Wrong either way, same shape).
+    //
+    // The wr51_column_walk_bug memory's other candidate (a MaxColumnsToConsume bound on the
+    // LicenceProvisions grid's "last field in row" group) still doesn't have confirmed
+    // T1-specific evidence backing it - every visible T1 hallucination in that field family
+    // traced to a different mechanism - so it's not applied here either.
+    //
+    // MeasurementDetails.Reading's "Other:" leak (see the ground-truth harness detail CSV) was
+    // also investigated here and is NOT a same-line sweep fixable by an endText addition -
+    // traced to the cross-row FindNextLineColumnByPosition mechanism instead (same class as the
+    // already-deferred LicenceProvisions.OtherProvisions bug), which needs proper gated tracing
+    // before any fix is attempted, not a quick tweak.
+    //
+    // Any future change to this method MUST re-verify via the FULL corpus-wide per-field
+    // coverage report (not just the golden-set harness, and not just the attribution comment)
+    // before trusting a removal is safe - this is exactly the check that caught how wrong the
+    // first, narrower attempt at this was.
+    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetT1Labels()
+    {
+        var labels = GetLabels()
+            .Where(l => l.LabelGroupName is not (
+                "TemplateMarkerT4" or "TemplateMarkerT6" or "TemplateMarkerT7" or "TemplateMarkerImpounding" or
+                "TemplateMarkerBaselineComments" or "TemplateMarkerAlternateComments"))
+            .Select(l => (l.LabelGroupName, Labels: l.Labels.ToList()))
+            .ToList();
+
+        var nameAndAddress = labels.First(l => l.LabelGroupName == "NameAndAddress");
+        nameAndAddress.Labels.RemoveAt(3); // "Permit holder name and address" - T4 only, confirmed zero T1 usage
+
+        var generalCommentsIndex = labels.FindIndex(l => l.LabelGroupName == "GeneralComments");
+        labels[generalCommentsIndex] = ("GeneralComments", TextToFindIsBetweenLabels(
+            "General comments, details / dates of occupation changes, actions required etc.",
+            "Form sent to",
+            "GeneralComments",
+            100,
+            LimitTo.WholeLine));
+
+        return labels;
+    }
 
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -254,7 +362,28 @@ public class WrInspectionReportLabelConfiguration
                 // reasoning as the Existing template alternate above) rather than bare
                 // "Reading", since this position is also same-column/next-line and would
                 // otherwise be just as exposed to the "Readings taken:" prefix collision.
-                ..TextToFindIsBetweenLabels("Reading:", "Units", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // Baseline two-column table
+                //
+                // excludeNextLineIfFirstColumnStartsWith("Other") - properly traced (gated
+                // ConsoleHelper instrumentation on wr51__83617s0016__..., not assumed): when
+                // Reading is genuinely blank, this alternate's next-line fetch is meant to find
+                // nothing, but on documents where a narrative paragraph immediately follows the
+                // grid (dense boilerplate text, common on desktop-review/appendix-heavy
+                // documents), that paragraph's first line sits closer to Reading's own row than
+                // WR51's anchored line-grouping's lineHeight tolerance (6 units - see
+                // PdfPigNoOcrDataExtractorService.GroupWordsIntoRowsByAnchor) - it silently
+                // merges into Reading's own row-group instead of counting as a distinct line, so
+                // the literal next DISTINCT line the algorithm sees skips straight past the
+                // whole paragraph to "Other:"'s own row, which then gets captured as if it were
+                // Reading's answer. This is a deeper bug than a field-level fix actually solves -
+                // the same merge would just as easily land on some other sibling label depending
+                // on document layout - but a global fix to the row-grouping tolerance carries the
+                // same "one constant can't serve two conflicting real shapes" risk already proven
+                // unsafe for WalkSameLineColumns (this exact anchored-grouping algorithm was
+                // already tuned once for a different case - see its own docstring). Rejecting the
+                // one confirmed sibling-label candidate at the field level is the narrow, safe
+                // slice of the real fix; if this recurs on a different sibling label for Reading
+                // or another field, add it here/there rather than attempting the row-grouping fix.
+                ..TextToFindIsBetweenLabels("Reading:", "Units", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, excludeNextLineIfFirstColumnStartsWith: ["Other"]) // Baseline two-column table
             ]),
             ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only
             // T6 template: "Units" is a standalone label with its value one row below in a
@@ -316,6 +445,56 @@ public class WrInspectionReportLabelConfiguration
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
             ("DocumentHeader", TextAfterLabel("Form WR - ", "DocumentHeader", 0)),
+            // Template-family markers - see TemplateMarker() below and WrTemplateType. Each is a
+            // presence check (does this literal marker text appear anywhere in the document),
+            // not a value extraction - WrInspectionReportSchemaConverter.ClassifyTemplate reads
+            // whichever of these matched to set Metadata.Template. Literal text taken directly
+            // from the client's TemplateSpec_v5.0.xlsx (T4/T6/T7 sheets) except
+            // TemplateMarkerImpounding, found while hand-labelling the golden set (an impounding
+            // licence report uses a completely different 3-row grid, not in the spec at all).
+            ("TemplateMarkerT4", TemplateMarker("Permit holder name and address", "TemplateMarkerT4")),
+            // "Meter Name" is T6's own opening field (always present); "Calibration
+            // Certificate"/"Verification Certificate" are further down and sometimes blank on
+            // real documents, so checking "Meter Name" alone catches more real T6 docs.
+            ("TemplateMarkerT6", TemplateMarker(
+                "Meter Name",
+                "TemplateMarkerT6",
+                additionalTextStarts: ["Calibration Certificate", "Verification Certificate"])),
+            // The full "Inspection report – Water Company" header text wraps across lines on
+            // real documents often enough that requiring it as one literal column-start match
+            // undercounted T7 by roughly a third (6 vs an expected ~19 on the real corpus) -
+            // "Water Company" alone is still T7-specific (not used by any other template's
+            // labels) and isn't split across a line wrap.
+            ("TemplateMarkerT7", TemplateMarker("Water Company", "TemplateMarkerT7")),
+            ("TemplateMarkerImpounding", TemplateMarker("Point of Impoundment", "TemplateMarkerImpounding")),
+            // T1's own comments heading, literal from the spec - presence/absence of this
+            // specific text (not just "some heading or other") is what
+            // WrInspectionReportSchemaConverter.ClassifyTemplate uses to decide whether a
+            // document's GeneralComments section is genuinely T1-shaped.
+            ("TemplateMarkerBaselineComments", TemplateMarker(
+                "General comments, details / dates of occupation changes, actions required etc.",
+                "TemplateMarkerBaselineComments")),
+            // The known non-baseline heading family (see GeneralComments() below for the full
+            // corpus catalogue this was built from) - deliberately excludes the bare "Actions"/
+            // "Summary" alternates from that field's own alternation, since those two are common
+            // enough words that requiring the exact GeneralComments() field's own no-earlier-
+            // alternate-matched gating (not available to a standalone presence check like this)
+            // would be needed to use them safely here - a document merely containing the word
+            // "Actions" somewhere isn't a reliable signal on its own the way a specific
+            // multi-word heading is.
+            ("TemplateMarkerAlternateComments", TemplateMarker(
+                "Introduction",
+                "TemplateMarkerAlternateComments",
+                additionalTextStarts: [
+                    "Re-inspection",
+                    "Notes and Actions",
+                    "Further Conditions",
+                    "Actions/Recommendations",
+                    "General comments / background",
+                    "General comments / relevant background",
+                    "General / relevant background",
+                    "General comments, background"
+                ])),
             // See GeneralComments() below for the corpus-wide heading catalogue behind this.
             ("GeneralComments", GeneralComments()),
             ("MaintenanceLine", MaintenanceLine("Maintenance:", "Readings taken", "MaintenanceLine")),
@@ -404,6 +583,35 @@ public class WrInspectionReportLabelConfiguration
             .ToList();
 
         return labels;
+    }
+
+    // A pure presence check, not a value extraction - used for the WrTemplateType marker
+    // fields. IncludeStartLabelText + Position.TextToFindIsBetweenLabels (same combination
+    // GetInOrderField uses, for the same reason - see its own comment) guarantees a non-empty
+    // captured value whenever the marker text is found, even when nothing meaningful follows it
+    // on the page, so a genuinely-present-but-followed-by-blank marker isn't mistaken for "not
+    // found" downstream in WrInspectionReportSchemaConverter.ClassifyTemplate.
+    private static List<LabelToMatch> TemplateMarker(string text, string labelName, List<string>? additionalTextStarts = null)
+    {
+        return
+        [
+            new LabelToMatch
+            {
+                TextStart =
+                [
+                    new(text) { ColumnMustStartWith = true },
+                    ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t) { ColumnMustStartWith = true })
+                ],
+                TextEnd = [new("[END_OF_BLOCK]")],
+                Position = LabelPosition.TextToFindIsBetweenLabels,
+                LimitTo = LimitTo.WholeLine,
+                IncludeStartLabelText = true,
+                Format = "Text",
+                PreviousLinesToFetch = 0,
+                NextLinesToFetch = 0,
+                Name = labelName
+            }
+        ];
     }
 
     private static List<LabelToMatch> MaintenanceLine(string textStart, string textEnd, string name)

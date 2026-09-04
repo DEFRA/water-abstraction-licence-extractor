@@ -112,7 +112,20 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         Hallucination
     }
 
-    private record DetailRow(string SourceFile, string Field, string Outcome, string? TruthValue, string? ExtractedValue);
+    private record DetailRow(string SourceFile, string Template, string Field, string Outcome, string? TruthValue, string? ExtractedValue);
+
+    private record TemplateSummaryRow(
+        string Template,
+        int Documents,
+        int TruthPresent,
+        int Hit,
+        int PartialHit,
+        int Miss,
+        int Wrong,
+        int TruthAbsent,
+        int Hallucination,
+        string Recall,
+        string HallucinationRate);
 
     private record SummaryRow(
         string Field,
@@ -133,7 +146,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// look like a confidently extracted (and wrong/hallucinated) value. Collapsed to null so
     /// they're scored as "no extraction", same as a genuinely empty string field.
     /// </summary>
-    private static string? FormatInOrderStatus(InOrderStatus status) =>
+    // internal, not private: WrInspectionReportPdfPigNoOcrPdfTests reuses these two for its
+    // full-corpus per-template coverage report, rather than duplicating the 50-field mapping.
+    internal static string? FormatInOrderStatus(InOrderStatus status) =>
         status is InOrderStatus.Blank or InOrderStatus.Unknown or InOrderStatus.DidntMatch
             ? null
             : status.ToString();
@@ -146,7 +161,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// this will correctly score as a miss/wrong, which is real signal: the current model has
     /// no way to represent a narrative provisions answer, only InOrderStatus.
     /// </summary>
-    private static readonly Dictionary<string, Func<Form, string?>> FieldExtractors = new()
+    internal static readonly Dictionary<string, Func<Form, string?>> FieldExtractors = new()
     {
         ["LicenceNumber"] = f => f.LicenceNumber,
         ["InspectionClass"] = f => f.InspectionClass,
@@ -317,12 +332,13 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
                 var dmsFileData = new DmsFileData { FileId = fileId.Value };
 
-                var (stopExecution, _, matchesResult) = await pdfDataExtractor.GetMatchesAsync(
+                var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     truth.SourceFile,
                     dmsFileData,
                     lookupConfiguration,
                     [truth.SourceFile],
-                    processRunId: -99);
+                    processRunId: -99,
+                    pdfDataExtractor);
 
                 if (stopExecution || matchesResult == null)
                 {
@@ -330,7 +346,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
                     continue;
                 }
 
-                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData);
+                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData, template);
+                var templateName = template.ToString();
 
                 foreach (var (fieldName, truthField) in truth.Fields)
                 {
@@ -351,7 +368,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
                     var outcome = Classify(fieldName, truthField, extractedRaw);
 
-                    detailRows.Add(new DetailRow(truth.SourceFile, fieldName, outcome.ToString(), truthField.TruthValue, extractedRaw));
+                    detailRows.Add(new DetailRow(truth.SourceFile, templateName, fieldName, outcome.ToString(), truthField.TruthValue, extractedRaw));
                 }
             }
             catch (Exception ex)
@@ -402,10 +419,52 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             await csv.WriteRecordsAsync(summaryRows);
         }
 
+        // Aggregate across ALL fields per document's classified template, not per-field-per-
+        // template - the golden set only has a handful of documents in most non-T1 buckets
+        // (T7=1, Impounding=2 at last count), so a per-field breakdown there would mostly be
+        // single data points dressed up as a percentage. This is still directly useful for the
+        // one thing that's actually been asked about it: does accuracy differ by template.
+        var templateSummaryRows = detailRows
+            .GroupBy(r => r.Template)
+            .Select(g =>
+            {
+                var documents = g.Select(r => r.SourceFile).Distinct().Count();
+                var truthPresent = g.Count(r => r.Outcome is "Hit" or "PartialHit" or "Miss" or "Wrong");
+                var hit = g.Count(r => r.Outcome == "Hit");
+                var partial = g.Count(r => r.Outcome == "PartialHit");
+                var miss = g.Count(r => r.Outcome == "Miss");
+                var wrong = g.Count(r => r.Outcome == "Wrong");
+                var truthAbsent = g.Count(r => r.Outcome is "TrueNegative" or "Hallucination");
+                var hallucination = g.Count(r => r.Outcome == "Hallucination");
+
+                var recall = truthPresent == 0 ? "n/a" : ((double)(hit + partial) / truthPresent).ToString("P0");
+                var hallucinationRate = truthAbsent == 0 ? "n/a" : ((double)hallucination / truthAbsent).ToString("P0");
+
+                return new TemplateSummaryRow(g.Key, documents, truthPresent, hit, partial, miss, wrong, truthAbsent, hallucination, recall, hallucinationRate);
+            })
+            .OrderByDescending(r => r.Documents)
+            .ToList();
+
+        var templateSummaryPath = Path.Combine(OutputService.OutputFolder!, "_wr51-groundtruth-accuracy-by-template.csv");
+        await using (var writer = new StreamWriter(templateSummaryPath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(templateSummaryRows);
+        }
+
         var scoredDocumentCount = detailRows.Select(r => r.SourceFile).Distinct().Count();
         testOutputHelper.WriteLine($"Golden-set documents scored: {scoredDocumentCount}/{truthPaths.Length}");
         testOutputHelper.WriteLine($"Detail CSV:  {detailPath}");
         testOutputHelper.WriteLine($"Summary CSV: {summaryPath}");
+        testOutputHelper.WriteLine($"By-template summary CSV: {templateSummaryPath}");
+        testOutputHelper.WriteLine("");
+        testOutputHelper.WriteLine("Accuracy by template (all fields combined - small n outside T1, read accordingly):");
+        foreach (var row in templateSummaryRows)
+        {
+            testOutputHelper.WriteLine(
+                $"  {row.Template,-20} docs={row.Documents,2} recall={row.Recall,5} hallucination={row.HallucinationRate,5} " +
+                $"(Hit={row.Hit} Partial={row.PartialHit} Miss={row.Miss} Wrong={row.Wrong} Hallucination={row.Hallucination})");
+        }
 
         if (missingPdfs.Count > 0)
         {

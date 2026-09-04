@@ -111,12 +111,13 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
                     var dmsFileData = new DmsFileData { FileId = fileId.Value };
 
-                    var (stopExecution, _, matchesResult) = await pdfDataExtractor.GetMatchesAsync(
+                    var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                         fileName,
                         dmsFileData,
                         lookupConfiguration,
                         [fileName],
-                        processRunId: -99);
+                        processRunId: -99,
+                        pdfDataExtractor);
 
                     if (stopExecution || matchesResult == null)
                     {
@@ -124,7 +125,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                         return;
                     }
 
-                    var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData);
+                    var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData, template);
                     forms.Add(form);
                 }
                 catch (Exception ex)
@@ -199,6 +200,45 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var flowVerificationBareYOrN = formsList.Count(f =>
             f.MeasurementDetails.FlowVerification is "Y:" or "N:");
 
+        var templateCounts = formsList
+            .GroupBy(f => f.Metadata.Template)
+            .OrderByDescending(g => g.Count())
+            .ToList();
+
+        var templateDistributionRows = templateCounts
+            .Select(g => new TemplateDistributionRow(g.Key.ToString(), g.Count(), Percent(g.Count(), total)))
+            .ToList();
+
+        var templateDistributionPath = Path.Combine(OutputService.OutputFolder!, "_template-distribution.csv");
+        await using (var writer = new StreamWriter(templateDistributionPath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(templateDistributionRows);
+        }
+
+        var templateFieldCoverageRows = templateCounts
+            .SelectMany(g =>
+            {
+                var groupList = g.ToList();
+                var groupTotal = groupList.Count;
+
+                return Wr51GroundTruthAccuracyTests.FieldExtractors.Select(kv =>
+                {
+                    var nonBlank = groupList.Count(f => !string.IsNullOrWhiteSpace(kv.Value(f)));
+                    return new TemplateFieldCoverageRow(g.Key.ToString(), kv.Key, groupTotal, nonBlank, Percent(nonBlank, groupTotal));
+                });
+            })
+            .OrderBy(r => r.Template, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(r => r.Field, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var templateCoveragePath = Path.Combine(OutputService.OutputFolder!, "_template-coverage.csv");
+        await using (var writer = new StreamWriter(templateCoveragePath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(templateFieldCoverageRows);
+        }
+
         testOutputHelper.WriteLine($"Total files:              {total}");
         testOutputHelper.WriteLine($"Processed without error:  {formsList.Count}");
         testOutputHelper.WriteLine($"Failures:                 {failures.Count}");
@@ -214,6 +254,14 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"MeterVerif. sibling leak: {meterVerificationLeaksSiblingLabel} ({Percent(meterVerificationLeaksSiblingLabel, total)})");
         testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' leak: {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
         testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' leak: {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
+        testOutputHelper.WriteLine("");
+        testOutputHelper.WriteLine("Metadata.Template distribution:");
+        foreach (var group in templateCounts)
+        {
+            testOutputHelper.WriteLine($"  {group.Key,-12} {group.Count()} ({Percent(group.Count(), total)})");
+        }
+        testOutputHelper.WriteLine($"Template distribution CSV: {templateDistributionPath}");
+        testOutputHelper.WriteLine($"Template coverage CSV:    {templateCoveragePath}");
 
         if (failures.Count > 0)
         {
@@ -267,4 +315,15 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
     private static string Percent(int count, int total) =>
         total == 0 ? "n/a" : $"{count * 100.0 / total:F1}%";
+
+    private record TemplateDistributionRow(string Template, int Documents, string PercentOfCorpus);
+
+    // No ground truth exists for the full real corpus (only the 46-doc golden set has that), so
+    // this is coverage - "did the field produce anything" - not accuracy - "was it right". Still
+    // useful at full corpus scale precisely where the golden set's per-template samples are too
+    // small to trust (T4=3, T7=1, Impounding=1 documents there vs the real counts here). One row
+    // per (template, field) rather than one column per field, since it covers every field
+    // Wr51GroundTruthAccuracyTests.FieldExtractors knows about (reused from there directly, not
+    // duplicated) - a fixed-column shape doesn't scale to ~50 fields across 7 templates.
+    private record TemplateFieldCoverageRow(string Template, string Field, int Documents, int NonBlank, string Coverage);
 }

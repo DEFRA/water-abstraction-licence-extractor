@@ -7,7 +7,14 @@ namespace WRADI.DocumentType.WrInspectionReport.Converters;
 
 public static class WrInspectionReportSchemaConverter
 {
-    public static Models.WrInspectionReport ToForm(MatchesResult matchesResult, DmsFileData? dmsFileData)
+    // knownTemplate: pass this when the caller already classified the document (e.g.
+    // WrInspectionReportExtractionOrchestrator's own pre-pass) - lets ClassifyTemplate's
+    // TemplateMarker* fields be left out of whichever ruleset actually ran without losing
+    // Metadata.Template, so GetT1Labels() can genuinely drop the T4/T6/T7/NonStandardNarrative-
+    // only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
+    // back to the old self-contained behaviour - re-deriving Template from matchesResult itself
+    // - for any caller that runs a single pass with no separate classification step.
+    public static Models.WrInspectionReport ToForm(MatchesResult matchesResult, DmsFileData? dmsFileData, WrTemplateType? knownTemplate = null)
     {
         var rawFormDate = GetMultilineText(matchesResult, "Date");
 
@@ -278,11 +285,12 @@ public static class WrInspectionReportSchemaConverter
 
             pageIndex += 1;
         }
-        
+
         return new Models.WrInspectionReport()
         {
             Metadata = new WrInspectionReportMetadata()
             {
+                Template = knownTemplate ?? ClassifyTemplate(matchesResult, documentHeader),
                 DocumentTemplateVerison = documentTemplateVerison,
                 DocumentHeader = documentHeader,
                 Filename = matchesResult.Filename,
@@ -413,7 +421,86 @@ public static class WrInspectionReportSchemaConverter
             .Trim();
     }
 
-    private static string? GetMultilineText(MatchesResult matchesResult, string name)
+    // v2 classifier - see WrTemplateType and the TemplateMarker* label groups in
+    // WrInspectionReportLabelConfiguration for the literal markers, sourced from the client's
+    // TemplateSpec_v5.0.xlsx (T4/T6/T7 sheets) plus the GeneralComments heading catalogue for
+    // the T1-vs-NonStandardNarrative check. Checked in order most-specific-first (Impounding and
+    // T4/T6/T7 are all positive, distinguishing markers).
+    //
+    // v1 made T1 the plain default/fallback for anything not T4/T6/T7/Impounding, which measured
+    // at 86% of the real corpus against the client's own ~60% expectation - cross-checking
+    // against the golden set's documentShape tags showed the gap was largely documents whose
+    // GeneralComments section uses one of the known alternate headings, or none at all
+    // (desktop-review/headingless narratives, multi-section long-form reports, appendix-
+    // terminated reports - see that field's own catalogue). v2 (current) excludes on EITHER
+    // signal: a positive alternate-heading match, or the baseline heading being absent
+    // entirely. That's a deliberate choice, not the only option - tried excluding on the
+    // alternate-heading match alone (v3, not kept): that avoided two false positives found by
+    // cross-checking against documentShape (wr51__1041433013__... and
+    // wr51__nw0690016005__..., both tagged plain "baseline" but with nothing written in that
+    // section at all, baseline heading or otherwise) but cost six true positives elsewhere -
+    // wr51__1955120809__... (defer_to_body_report), wr51__1753001s427__... and
+    // wr51__sw0430023015__... (narrative_comments_with_appendix), wr51__53114s0109__... and
+    // wr51__nw0760002001__... (headingless_narrative), wr51__25092__... (desktop_review) - all
+    // genuinely non-standard documents that "missing baseline heading" alone correctly caught
+    // and "alternate heading present" alone missed, because they have no heading at all, not a
+    // different one. Chose the 2-false-positive version over the 6-false-negative version;
+    // resolving the 2 remaining false positives would need a genuinely new signal (e.g.
+    // comparing how much text actually sits between the last measurement field and "Form sent
+    // to", to distinguish "nothing written" from "narrative written with no heading") - not
+    // attempted here, scope it separately if it matters.
+    // Separately confirmed NOT a bug: wr51__83617s0016__... is tagged "desktop_review" but
+    // correctly stays T1 - that tag describes the inspection method (no site visit), not the
+    // comments-section shape, and the document genuinely has the standard heading.
+    // Deliberately NOT treated as anomalies (stay T1): all_blank_provisions,
+    // remote_meeting, no_telephone_field, compliance_only, temporal_meter_change,
+    // struck_through_measurement_section - these are content variation within a genuinely
+    // T1-shaped document, not a different comments-section structure. Not yet resolved: a
+    // handful of other documentShape tags found while labelling (Y_N_provisions_grid,
+    // narrative_provisions, checkbox_pair_grid, NI_provisions) describe how the LicenceProvisions
+    // grid itself is marked, not the comments section - no literal text marker distinguishes
+    // these the way a heading does, so they're not addressed by this pass.
+    // Unknown is reserved for documents where extraction didn't even recognise the WR51 header
+    // at all (DocumentHeader empty) - a parse failure, not a shape ambiguity.
+    // internal, not private: WrInspectionReportExtractionOrchestrator's classification pre-pass
+    // calls this directly against its own (smaller) MatchesResult, before deciding which full
+    // ruleset to extract with.
+    internal static WrTemplateType ClassifyTemplate(MatchesResult matchesResult, string? documentHeader)
+    {
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerImpounding")))
+        {
+            return WrTemplateType.Impounding;
+        }
+
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT4")))
+        {
+            return WrTemplateType.T4;
+        }
+
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT6")))
+        {
+            return WrTemplateType.T6;
+        }
+
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT7")))
+        {
+            return WrTemplateType.T7;
+        }
+
+        if (string.IsNullOrWhiteSpace(documentHeader))
+        {
+            return WrTemplateType.Unknown;
+        }
+
+        var hasBaselineComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerBaselineComments"));
+        var hasAlternateComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerAlternateComments"));
+
+        return hasBaselineComments && !hasAlternateComments
+            ? WrTemplateType.T1
+            : WrTemplateType.NonStandardNarrative;
+    }
+
+    internal static string? GetMultilineText(MatchesResult matchesResult, string name)
     {
         var matchedLabel = matchesResult.Matches?
             .FirstOrDefault(m => m.MatchedLabelName == name);

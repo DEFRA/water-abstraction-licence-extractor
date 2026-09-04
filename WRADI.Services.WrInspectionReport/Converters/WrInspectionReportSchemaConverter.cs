@@ -314,10 +314,10 @@ public static class WrInspectionReportSchemaConverter
             },
             MetWith = new WrInspectionReportMetWith()
             {
-                Name = GetMultilineText(matchesResult, "MetWith"),
-                Position = GetMultilineText(matchesResult, "Position"),                
+                Name = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, "MetWith"), "Position:"),
+                Position = GetMultilineText(matchesResult, "Position"),
             },
-            InspectingOfficer = GetMultilineText(matchesResult, "InspectingOfficer"),
+            InspectingOfficer = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, "InspectingOfficer"), "Inspection Date:"),
             InspectionDate = new WrInspectionReportInspectionDateTime()
             {
                 DateTime = inspectionDateTime,
@@ -449,6 +449,30 @@ public static class WrInspectionReportSchemaConverter
         return System.Text.RegularExpressions.Regex
             .Replace(text, @"(?<=\d)\s*(?:th|st|nd|rd)\b", string.Empty, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
             .Trim();
+    }
+
+    // MetWith/InspectingOfficer share a row with a sibling field ("Position:"/"Inspection
+    // Date:" respectively) on some real documents. The usual fix for this shape
+    // (additionalSameLineEndTexts, bounding WalkSameLineColumns to exclude the sibling's own
+    // column) doesn't work here - traced via gated instrumentation on wr51__ne0220003014: the
+    // upstream row/column-grouping had already merged both fields' text into a SINGLE
+    // DocumentLineColumn before label-matching even runs, so there is no second column for
+    // WalkSameLineColumns' TextEnd bound to exclude - confirmed empirically (adding the same
+    // endText fix that worked for InspectionClass/SiteAddress had zero effect here). A plain
+    // string truncation at the known sibling-label marker works regardless of the upstream
+    // column structure, since it operates on the final joined text rather than columns.
+    private static string? TruncateAtKnownSiblingLabel(string? text, string siblingLabel)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        var index = text.IndexOf(siblingLabel, StringComparison.OrdinalIgnoreCase);
+
+        return index < 0
+            ? text
+            : text[..index].TrimEnd().TrimEnd(',');
     }
 
     // v2 classifier - see WrTemplateType and the TemplateMarker* label groups in

@@ -203,11 +203,14 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         // Found via a proactive sweep of _extraction-results.csv for sibling field-label text
         // leaking into other fields' values - the same class of bug as the guards above, just
         // discovered by scanning every text field against every known page label rather than
-        // waiting for a specific field to be reported. InspectionClass's own "Email" leak is
-        // fixed (additionalSameLineEndTexts); MetWith/InspectingOfficer are NOT yet fixed (the
-        // same endText fix had zero effect for TextAfterLabel's LabelIsBeforeTextToFind position
-        // - needs gated tracing, not asserted here since there's nothing to regress against yet)
-        // - tracked as informational counts so a future run surfaces them without re-scanning.
+        // waiting for a specific field to be reported. InspectionClass's "Email" leak is fixed
+        // via additionalSameLineEndTexts (WalkSameLineColumns' TextEnd bound). MetWith/
+        // InspectingOfficer needed a different fix - the same endText approach had zero effect,
+        // traced via gated instrumentation to the upstream row/column-grouping having already
+        // merged the sibling field's text into the SAME DocumentLineColumn on some documents, so
+        // there was no second column for TextEnd to exclude. Fixed instead via
+        // TruncateAtKnownSiblingLabel in WrInspectionReportSchemaConverter.cs - a plain string
+        // truncation that works regardless of the upstream column structure.
         var inspectionClassLeaksEmailLabel = formsList.Count(f =>
             f.InspectionClass?.Contains("Email", StringComparison.OrdinalIgnoreCase) == true);
         var metWithLeaksPositionLabel = formsList.Count(f =>
@@ -332,8 +335,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"Conformance bare 'Y:'/'N:' leak: {conformanceBareYOrN} ({Percent(conformanceBareYOrN, total)})");
         testOutputHelper.WriteLine($"FlowVerification bare 'Y:'/'N:' leak: {flowVerificationBareYOrN} ({Percent(flowVerificationBareYOrN, total)})");
         testOutputHelper.WriteLine($"InspectionClass 'Email' leak: {inspectionClassLeaksEmailLabel} ({Percent(inspectionClassLeaksEmailLabel, total)})");
-        testOutputHelper.WriteLine($"MetWith 'Position:' leak (not yet fixed): {metWithLeaksPositionLabel} ({Percent(metWithLeaksPositionLabel, total)})");
-        testOutputHelper.WriteLine($"InspectingOfficer 'Inspection Date:' leak (not yet fixed): {inspectingOfficerLeaksInspectionDateLabel} ({Percent(inspectingOfficerLeaksInspectionDateLabel, total)})");
+        testOutputHelper.WriteLine($"MetWith 'Position:' leak: {metWithLeaksPositionLabel} ({Percent(metWithLeaksPositionLabel, total)})");
+        testOutputHelper.WriteLine($"InspectingOfficer 'Inspection Date:' leak: {inspectingOfficerLeaksInspectionDateLabel} ({Percent(inspectingOfficerLeaksInspectionDateLabel, total)})");
         testOutputHelper.WriteLine("");
         testOutputHelper.WriteLine("Metadata.Template distribution:");
         foreach (var group in templateCounts)
@@ -402,9 +405,15 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             $"{inspectionClassLeaksEmailLabel} InspectionClass values contain a leaked 'Email' label - " +
             "the additionalSameLineEndTexts fix regressed");
 
-        // MetWith/InspectingOfficer are deliberately NOT asserted - not yet fixed (see the field
-        // comments in WrInspectionReportLabelConfiguration.cs), so there is nothing to regress
-        // against yet. Counts are logged above so they stay visible without re-scanning the CSV.
+        Assert.True(
+            metWithLeaksPositionLabel == 0,
+            $"{metWithLeaksPositionLabel} MetWith values contain a leaked 'Position:' label - " +
+            "the TruncateAtKnownSiblingLabel fix regressed");
+
+        Assert.True(
+            inspectingOfficerLeaksInspectionDateLabel == 0,
+            $"{inspectingOfficerLeaksInspectionDateLabel} InspectingOfficer values contain a leaked " +
+            "'Inspection Date:' label - the TruncateAtKnownSiblingLabel fix regressed");
     }
 
     private static string Percent(int count, int total) =>

@@ -380,13 +380,19 @@ public class WrInspectionReportLabelConfiguration
             // OtherProvisions/the wr51_column_walk_bug memory. A real fix needs to bound the
             // walk more precisely (e.g. an explicit end-of-block marker for wherever this
             // column's content genuinely stops), not just fetch further.
+            // "T e l N o" (kerned "Tel No", shorter than "Telephone No") is a distinct real
+            // wording - confirmed on the "Water Company" template's own layout
+            // (wr51__2839320028 etc., "Inspection report – Water Company" header), where the
+            // whole "Name and address: ... | Tel No: <number>" row is a single-line pair. Adding
+            // it here lets TelephoneNumber actually recognise and capture the number, rather
+            // than just excluding it from NameAndAddress (see that field's own comment below).
             ("TelephoneNumber", TextToFindIsBetweenLabels(
                 "Telephone No",
                 "Email",
                 "TelephoneNumber",
                 2,
                 LimitTo.SameColumn,
-                additionalTextStarts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No"])),
+                additionalTextStarts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o"])),
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             // "Name and address: | Telephone No:" sits on one row (two columns) - without
@@ -433,7 +439,14 @@ public class WrInspectionReportLabelConfiguration
                     [
                         "Telephone No", "Email",
                         "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
-                        "Telepho n e N o", "T e lephone No", "T e l e phone No"
+                        "Telepho n e N o", "T e lephone No", "T e l e phone No",
+                        // "T e l N o" (kerned "Tel No") - the "Water Company" template's own
+                        // shorter wording, e.g. "Name and address: Sutton & East Surrey (SES)
+                        // Water, London Road, Redhill, RH1 1LJ | T e l N o : 0 1 7 37 772000" all
+                        // on one row - confirmed via wr51__2839320028's raw page. Single-line
+                        // address on every affected document, so no risk of the cross-line
+                        // early-termination class of bug the bare "Telephone" attempt hit.
+                        "T e l N o"
                     ]), // Existing template
                 // "Water Company" template: label and value are one line, e.g. "Name / address:
                 // Sutton and East Surrey Water PLC, London Road, Redhill, RH1 1LJ" - no separate
@@ -463,8 +476,33 @@ public class WrInspectionReportLabelConfiguration
                 // real (possibly multi-line) end marker, but Serial number: is the immediate
                 // same-line neighbour and needs to bound the same-line column walk too,
                 // otherwise it sweeps straight through into the serial number.
-                ..TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Serial number"]), // Existing template
-                ..TextToFindIsBetweenLabels("Meter Make", "Meter Serial Number", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true) // T6 template
+                //
+                // Two more real wordings added, found via a proactive sweep of
+                // _extraction-results.csv for sibling field-label text leaking into other
+                // fields' values:
+                //  - "Meter Serial No." (with "Meter" prefix) - a distinct "no meter present"
+                //    layout where Make/Serial/Reading are three separate stacked label rows
+                //    rather than one inline row, confirmed via wr51__1142183121 and
+                //    wr51__34245's raw pages. Without this, MeterMake swept in "Meter Serial
+                //    No." itself (the next label down, same column) as if it were the answer.
+                //  - "Serial no" (abbreviated, no "Meter" prefix) - confirmed via
+                //    wr51__2839250051 ("Krohne Full Bore Serial no Unknown"), same inline-row
+                //    shape as the original "Serial number" case but a shorter wording.
+                // Two further cases traced but NOT fixed here - a genuinely different problem,
+                // not a wording variant: wr51__940050071gr has "Meter Make" and "Serial No."
+                // merged into one combined table-header cell with no delimiter in the value row
+                // either ("ABB 3K220000217048"); wr51__2839320028/940030386s1 describe multiple
+                // meters in free narrative prose ("Meter make ABB / SES asset no 17258 / Serial
+                // no ..."), not a label:value pair at all. Both are the table/multi-value
+                // representation gap already flagged as out of scope for the current model.
+                //
+                // wr51__1142183121/34245 (the "Meter Serial No." cases) turned out to match the
+                // T6 alternate below, not this one - its own literal "Meter Make" (capital M) is
+                // the exact page text, not "Meter make". Its own endText ("Meter Serial Number")
+                // has the identical wording mismatch, so it needs the same additionalSameLineEndTexts
+                // fix independently.
+                ..TextToFindIsBetweenLabels("Meter make", "Reading:", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Serial number", "Meter Serial No", "Serial no"]), // Existing template
+                ..TextToFindIsBetweenLabels("Meter Make", "Meter Serial Number", "MeterMake", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, additionalSameLineEndTexts: ["Meter Serial No"]) // T6 template
             ]),
             ("SerialNumber", [
                 ..TextAfterLabel("Serial number", "SerialNumber", 0, requireTextToClaimGroup: true), // Existing template

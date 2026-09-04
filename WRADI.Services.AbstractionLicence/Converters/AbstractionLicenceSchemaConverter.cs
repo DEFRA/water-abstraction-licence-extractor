@@ -116,6 +116,7 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         var purposes = await GetPurposesAsync(
+            licenceNumber,
             matches,
             naldAbstractionDataLine,
             naldDataLookupService,
@@ -4846,6 +4847,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
     private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
+        string licenceNumber,
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         INaldDataLookupService naldDataLookupService,
@@ -4963,7 +4965,9 @@ public static class AbstractionLicenceSchemaConverter
                             var (naldPurposeData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                true);
 
                             if (naldPurposeData.Length >= 1)
                             {
@@ -5005,7 +5009,9 @@ public static class AbstractionLicenceSchemaConverter
                             var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                true);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5047,7 +5053,9 @@ public static class AbstractionLicenceSchemaConverter
                             var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                true);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5089,7 +5097,9 @@ public static class AbstractionLicenceSchemaConverter
                             var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                true);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5131,7 +5141,9 @@ public static class AbstractionLicenceSchemaConverter
                             var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                true);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5167,7 +5179,9 @@ public static class AbstractionLicenceSchemaConverter
                 var (naldData1, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                     naldPurposes,
                     description,
-                    usedNaldPurposeIds);
+                    usedNaldPurposeIds,
+                    licenceNumber,
+                    true);
 
                 if (naldData1.Length >= 1)
                 {

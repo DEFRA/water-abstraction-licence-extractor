@@ -53,7 +53,9 @@ public class RealNaldDataNaldPurposesHelperTests
         var (relevantNaldPurposes, matchType) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription,
-            []);
+            [],
+            "[DOENSNT_MATTER]",
+            false);
 
         Assert.Equal("OnlyOne", matchType);
         Assert.Single(relevantNaldPurposes);
@@ -88,7 +90,9 @@ public class RealNaldDataNaldPurposesHelperTests
         var (relevantNaldPurposes1, matchType1) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription1,
-            []);
+            [],
+            "[DOENSNT_MATTER]",
+            false);
         
         Assert.Equal("DescriptionMatchesDescription", matchType1);
         Assert.Single(relevantNaldPurposes1);
@@ -107,7 +111,9 @@ public class RealNaldDataNaldPurposesHelperTests
         var (relevantNaldPurposes2, matchType2) = await NaldDataLookupService.GetRelevantNaldPurposesAsync(
             naldPurposesForLicence,
             documentDescription2,
-            [relevantNaldPurposes1[0].Id!]);
+            [relevantNaldPurposes1[0].Id!],
+            "[DOENSNT_MATTER]",
+            false);
         
         Assert.Equal("OnlyOne", matchType2);
         Assert.Single(relevantNaldPurposes2);

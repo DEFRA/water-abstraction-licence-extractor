@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -10,7 +11,8 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
 public class NaldDataController(
-    IAbstractionLicenceCacheService abstractionLicenceCacheService) : Controller
+    IAbstractionLicenceCacheService abstractionLicenceCacheService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -110,5 +112,23 @@ public class NaldDataController(
             await abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
         
         return Ok(history);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetDocumentNaldPurposeMap()
+    {
+        var data = await abstractionLicenceOutputService.GetDocumentNaldPurposeMapAsync();
+        return Ok(data);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> AddDocumentNaldPurposeMap(AddDocumentNaldPurposeMapRequest request)
+    {
+        await abstractionLicenceOutputService.AddDocumentNaldPurposeMapAsync(
+            request.documentDescription!,
+            request.naldPurpose!,
+            request.matchType!);
+        
+        return Ok();
     }
 }

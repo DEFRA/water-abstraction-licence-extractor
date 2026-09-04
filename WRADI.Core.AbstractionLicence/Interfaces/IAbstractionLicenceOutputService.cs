@@ -61,4 +61,8 @@ public interface IAbstractionLicenceOutputService
         int processRunId);
     
     Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
+    
+    Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string onlyOne);
 }

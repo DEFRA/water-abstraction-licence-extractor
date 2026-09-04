@@ -2,7 +2,6 @@ using System.Text.Json;
 using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -518,7 +517,91 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             throw;
         }
     }
-    
+
+    public async Task AddDocumentNaldPurposeMapAsync(
+        string documentDescription,
+        NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO public.document_nald_purpose_map(
+                                document_purpose,
+                                nald_purpose_primary_category_code,
+                                nald_purpose_secondary_category_code,
+                                nald_purpose_use_code,
+                                match_type)
+                           VALUES (
+                                   @DocumentPurpose,
+                                   @NaldPurposePrimaryCategoryCode,
+                                   @NaldPurposeSecondaryCategoryCode,
+                                   @NaldPurposeUseCode,
+                                   @MatchType);
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                DocumentPurpose = documentDescription,
+                NaldPurposePrimaryCategoryCode = naldPurpose.PrimaryCategoryCode,
+                NaldPurposeSecondaryCategoryCode = naldPurpose.SecondaryCategoryCode,
+                NaldPurposeUseCode = naldPurpose.UseCode,
+                MatchType = matchType
+            });
+    }
+
+    public async Task AddDocumentNaldPurposeMatchAsync(
+        string licNo,
+        string documentDescription,
+        NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           INSERT INTO public.document_nald_purpose_match(
+                                lic_no,
+                                document_purpose,
+                                nald_purpose_primary_category_code,
+                                nald_purpose_secondary_category_code,
+                                nald_purpose_use_code,
+                                match_type,
+                                date_time_utc)
+                           SELECT
+                               @LicNo,
+                               @DocumentPurpose,
+                               @NaldPurposePrimaryCategoryCode,
+                               @NaldPurposeSecondaryCategoryCode,
+                               @NaldPurposeUseCode,
+                               @MatchType);
+                           WHERE
+                           NOT EXISTS (
+                                SELECT 1
+                                FROM public.document_nald_purpose_match
+                                WHERE
+                                    lic_no = @LicNo
+                                    AND document_purpose = @DocumentPurpose
+                           ); 
+                           """;
+
+        await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicNo = licNo,
+                DocumentPurpose = documentDescription,
+                NaldPurposePrimaryCategoryCode = naldPurpose.PrimaryCategoryCode,
+                NaldPurposeSecondaryCategoryCode = naldPurpose.SecondaryCategoryCode,
+                NaldPurposeUseCode = naldPurpose.UseCode,
+                MatchType = matchType,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     private static async Task<long>
         UpsertLicenceListItemInternalAsync(
             NpgsqlConnection connection,

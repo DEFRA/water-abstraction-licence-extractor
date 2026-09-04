@@ -272,7 +272,64 @@ public static class BaseMethod
         return results;
     }
     
-    private static LabelGroupResult? RestrictToPossibility(
+    // Whether `possibility.Text` genuinely appears in `text` - a plain Contains check, unless
+    // the possibility opted into ExceptWhenInsideWord (an existing flag - DataHelper.
+    // RemoveExcludes already uses it for a related idea, but with whitespace-adjacency rather
+    // than the letter/digit-adjacency here; the two turned out not to be interchangeable, see
+    // below), in which case a match embedded inside a longer word doesn't count. Without this,
+    // a short possibility like "In" or "N" matches as a coincidental substring of unrelated
+    // text - e.g. "Point of abstraction:" (wrongly captured due to a separate next-line
+    // column-matching bug) contains "in" inside "Point", which was silently accepted as a
+    // genuine "In Order" answer.
+    //
+    // Boundary is letter/digit adjacency, not whitespace adjacency: several real WR51 fixtures
+    // render a field's own label and value glued with no space at all - e.g. "Source of
+    // supply:In Order" is one PDF word token "supply:In" - so treating any non-whitespace
+    // character (a label's own trailing colon included) as "inside a word" rejected genuine
+    // answers. Punctuation like ":" counts as a valid boundary; only being glued to another
+    // letter or digit (e.g. "in" inside "Point") counts as embedded.
+    //
+    // Checks every occurrence, not just the first, since a possibility can appear both
+    // embedded (invalid) and standalone (valid) in the same text.
+    private static bool MatchesPossibility(string? text, TextToMatch possibility)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        if (!possibility.ExceptWhenInsideWord || possibility.Text.Length == 0)
+        {
+            return text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var searchStart = 0;
+
+        while (searchStart <= text.Length)
+        {
+            var indexOf = text.IndexOf(possibility.Text, searchStart, StringComparison.OrdinalIgnoreCase);
+
+            if (indexOf == -1)
+            {
+                return false;
+            }
+
+            var charBeforeIsLetterOrDigit = indexOf >= 1 && char.IsLetterOrDigit(text[indexOf - 1]);
+            var charAfterIsLetterOrDigit = text.Length > indexOf + possibility.Text.Length
+                && char.IsLetterOrDigit(text[indexOf + possibility.Text.Length]);
+
+            if (!charBeforeIsLetterOrDigit && !charAfterIsLetterOrDigit)
+            {
+                return true;
+            }
+
+            searchStart = indexOf + 1;
+        }
+
+        return false;
+    }
+
+    internal static LabelGroupResult? RestrictToPossibility(
         FunctionInputModel request,
         LabelGroupResult result)
     {
@@ -281,27 +338,45 @@ public static class BaseMethod
             return result;
         }
 
+        var firstLineText = result.Text?.FirstOrDefault()?.Text;
+
         var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true);
+            MatchesPossibility(firstLineText, possibility));
 
         if (possiblityFound)
         {
             var possibility = request.label.Possibilities
-                .First(possibility => result.Text!.First().Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
-            
+                .First(possibility => MatchesPossibility(result.Text!.First().Text, possibility));
+
             var possibilityWords = result.Text!.First().Columns
                 .SelectMany(c => c.Words)
                 .ToList();
-            
+
             possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
-            
+
             var clonedLine = result.Text!.First().Clone();
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
             var clonedResult = result.Clone();
             clonedResult.Text = [clonedLine];
-            
+
+            return clonedResult;
+        }
+
+        // A field with no answer on the page produces zero captured lines, not one line with
+        // empty text - so the "" catch-all possibility (added so a genuinely blank tick field
+        // still survives as a match, e.g. WrInspectionReportLabelConfiguration.GetInOrderField)
+        // never gets a chance to match via the Contains check above, since FirstOrDefault() on
+        // an empty list is null. Without this, the whole match silently vanishes and looks
+        // identical to "the label was never found at all" downstream, rather than "found, but
+        // genuinely blank".
+        if (string.IsNullOrEmpty(firstLineText)
+            && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
+        {
+            var clonedResult = result.Clone();
+            clonedResult.Text = [];
+
             return clonedResult;
         }
 

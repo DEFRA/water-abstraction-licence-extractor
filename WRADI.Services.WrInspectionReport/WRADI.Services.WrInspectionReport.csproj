@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>WRADI.DocumentType.WrInspectionReport</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+    </ItemGroup>
+
+    <!-- Lets test code call internal helpers directly (e.g. CleanLicenceNumbers) without
+         needing the full label-matching pipeline - same pattern as WALE.ProcessFile.Services. -->
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WRADI.Services.WrInspectionReport.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+</Project>

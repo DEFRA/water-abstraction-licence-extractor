@@ -43,8 +43,18 @@ public static class TextToFindIsBetweenLabels
         
         var labelLineAlreadyIncluded = false;
         var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.TextToMatch?.FirstOrDefault()?.Text;
-        
-        if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
+
+        // When LimitTo restricts matching to a column, the label's own line has already been
+        // narrowed down to just the columns relevant to this match (the label's column plus
+        // any same-line value columns up to the next field). If that narrowed line holds more
+        // than the label text alone, the value is sitting right there and must be included -
+        // otherwise only nextLines gets used and a same-line value is silently dropped.
+        var sameLineValuePresent = request.label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn
+            && lineContainsSomethingOtherThenJustLabel;
+
+        if (lineContainsLabel != true
+            || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel)
+            || sameLineValuePresent)
         {
             labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);
@@ -98,7 +108,7 @@ public static class TextToFindIsBetweenLabels
             request.label.DoNotTrimLines,
             out var foundEndTag,
             out var matchedEndText);
-        
+
         if (betweenText == null)
         {
             return [];
@@ -166,7 +176,7 @@ public static class TextToFindIsBetweenLabels
         {
             return [];
         }
-        
+
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchedPosition = MatchedPosition.BetweenLabels;
         labelGroupResult.MatchedLabel = request.label.Clone();

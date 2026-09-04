@@ -322,7 +322,7 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= configuration.MinimumRowsForDigital;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -1083,12 +1083,12 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
-                
+
                 if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
                 {
                     continue;
                 }
-                
+
                 var labelGroupMatch =
                     await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
                         wrappedLines,
@@ -1104,17 +1104,17 @@ public class PdfDataExtractorService(
                         this,
                         documentLineService,
                         additionalInformationStore);
-                
-                if (labelGroupMatch.Count == 0)
+
+                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToClaimGroup))
                 {
                     continue;
                 }
 
                 foreach (var labelGroup in labelGroupMatch)
                 {
-                    labelGroup.LabelGroupName = labelGroupName;    
+                    labelGroup.LabelGroupName = labelGroupName;
                 }
-                
+
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
             }
@@ -1128,6 +1128,34 @@ public class PdfDataExtractorService(
         string type)
     {
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
+    }
+
+    /// <summary>
+    /// Decides whether an alternate's match result is good enough to claim its label group
+    /// and stop trying further alternates. An empty result never claims. A non-empty result
+    /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
+    /// Text is blank - that combination exists so a label group with multiple alternates
+    /// (one per template phrasing) doesn't get permanently claimed by an alternate that
+    /// matched the label text but captured no real value, which would stop later,
+    /// possibly-correct alternates from ever being tried. RequireTextToClaimGroup is opt-in
+    /// so every existing rule that doesn't set it keeps its exact current behaviour.
+    /// </summary>
+    internal static bool ShouldClaimLabelGroup(
+        IReadOnlyList<LabelGroupResult> labelGroupMatch,
+        bool requireTextToClaimGroup)
+    {
+        if (labelGroupMatch.Count == 0)
+        {
+            return false;
+        }
+
+        if (!requireTextToClaimGroup)
+        {
+            return true;
+        }
+
+        return labelGroupMatch.Any(lgm =>
+            lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

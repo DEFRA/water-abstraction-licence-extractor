@@ -17,4 +17,12 @@
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services.Tesseract\WALE.ProcessFile.Services.Tesseract.csproj" />
     </ItemGroup>
+
+    <!-- Lets unit tests exercise internal pure-logic methods (e.g. row-grouping) directly,
+         without needing a real PDF or going through the full extraction pipeline. -->
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+        <_Parameter1>WALE.ProcessFile.Services.Tests</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
 </Project>

@@ -107,6 +107,28 @@ public class LabelToMatch
     public bool DeDuplicateResults { get; set; }
     
     public bool GoOutsideTextBlock { get; set; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
+
+    public int LimitToColumnIndex { get; set; }
+
+    // When a label group has multiple alternates (e.g. one per template phrasing) and this
+    // alternate returns no non-empty text, allow the engine to try the next alternate instead
+    // of locking the group as matched. Defaults to false to preserve existing behaviour for
+    // every rule that doesn't opt in.
+    public bool RequireTextToClaimGroup { get; init; }
+
+    // LimitTo.SameColumn/SpecifiedColumn only: a next-line candidate is rejected outright
+    // (not narrowed to a column at all) when its own first/leftmost column starts with one of
+    // these texts - i.e. that whole row visibly belongs to a different, identifiable field
+    // (its own leading label), not a genuine continuation of this one. Distinct from
+    // IgnoreBlockIfContains, which rejects based on the already-narrowed picked column's own
+    // content and so can't tell "this field's genuine compound answer happens to contain the
+    // rejected text" apart from "this is really a different field's row" - checking the row's
+    // own leading label first avoids that ambiguity. Defaults to null/empty, so it's a no-op
+    // for every label that doesn't opt in.
+    public IReadOnlyList<string>? ExcludeNextLineIfFirstColumnStartsWith { get; init; }
 
     public LabelToMatch Clone()
     {
@@ -150,7 +172,11 @@ public class LabelToMatch
             NoOcrConfidence = NoOcrConfidence,
             RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple,
             DeDuplicateResults = DeDuplicateResults,
-            GoOutsideTextBlock = GoOutsideTextBlock
+            GoOutsideTextBlock = GoOutsideTextBlock,
+            LimitTo = LimitTo,
+            LimitToColumnIndex = LimitToColumnIndex,
+            RequireTextToClaimGroup = RequireTextToClaimGroup,
+            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList()
         };
     }    
 }

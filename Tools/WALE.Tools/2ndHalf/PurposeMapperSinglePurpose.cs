@@ -24,13 +24,20 @@ public static class PurposeMapperSinglePurpose
 
         const string tKey = "Up to and Including ";
         
+        Console.WriteLine($"{licenceList.Count} licences found to look at\n");
+        var idx = 0;
+
+        var onlyOneCount = 0;
+        var explicitCount = 0;
+        
         foreach (var licence in licenceList)
         {
+            idx += 1;
             var matchesResult = await outputService.GetMatchesResultAsync(licence.FileId, processRunId);
 
             if (matchesResult == null)
             {
-                // TODO log
+                Console.WriteLine($"{idx} - Skipping - Matches result is null");
                 continue;
             }
             
@@ -42,7 +49,7 @@ public static class PurposeMapperSinglePurpose
 
             if (string.IsNullOrWhiteSpace(licenceNumber))
             {
-                // TODO log
+                Console.WriteLine($"{idx} - Skipping - Licence number is null");
                 continue;
             }
             
@@ -54,6 +61,7 @@ public static class PurposeMapperSinglePurpose
 
             if (purposesSection == null)
             {
+                Console.WriteLine($"{idx} - Skipping - Purposes section is null");
                 continue;
             }
             
@@ -89,15 +97,40 @@ public static class PurposeMapperSinglePurpose
                         continue;
                     }
                     
-                    var (naldPurposeData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
-                        naldPurposes,
-                        documentPurpose,
-                        usedNaldPurposeIds,
-                        licenceNumber,
-                        true);
-                    //...
+                    var (naldPurposeData, matchType) =
+                        await naldDataLookupService.GetRelevantNaldPurposesAsync(
+                            naldPurposes,
+                            documentPurpose,
+                            usedNaldPurposeIds,
+                            licenceNumber,
+                            true);
+                    
+                    if (naldPurposeData.Length == 0)
+                    {
+                        Console.WriteLine($"{idx} - 0 nald purposes found for '{documentPurpose}'");
+
+                        continue;
+                    }
+
+                    Console.WriteLine($"{idx} - {naldPurposeData.Length} nald purposes found " +
+                        $"for '{documentPurpose}' - match type '{matchType}'");                    
+                    
+                    switch (matchType)
+                    {
+                        case "OnlyOne":
+                            onlyOneCount++;
+                            break;
+                        case "ExplicitMapping":
+                            explicitCount++;
+                            break;
+                        default:
+                            Console.WriteLine($"{idx} - ERROR {matchType} - Not supported");
+                            break;
+                    }
                 }
             }
         }
+        
+        Console.WriteLine($"\n**Summary** Only one {onlyOneCount}, Explicit {explicitCount}");
     }
 }

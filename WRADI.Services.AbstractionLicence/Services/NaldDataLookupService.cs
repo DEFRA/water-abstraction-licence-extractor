@@ -55,12 +55,13 @@ public class NaldDataLookupService(
         return naldData;
     }
 
-    public async Task<(NaldPurposeData[] Purposes, string? MatchType)> GetRelevantNaldPurposesAsync(
-        List<NaldPurposeData> naldPurposes,
-        string? documentDescription,
-        List<string> excludeNaldPurposeIds,
-        string licenceNumber,
-        bool saveMatches)
+    public async Task<(NaldPurposeData[] Purposes, string? MatchType)>
+        GetRelevantNaldPurposesAsync(
+            List<NaldPurposeData> naldPurposes,
+            string? documentDescription,
+            List<string> excludeNaldPurposeIds,
+            string licenceNumber,
+            bool saveMatches)
     {
         var filterPurposes = naldPurposes
             .Where(p => !excludeNaldPurposeIds.Contains(p.Id!))

@@ -16,7 +16,7 @@ workflow = "ImportNaldData";
 //workflow = "GenerateLinkedLicencesCsv";
 workflow = "PurposeMapper";
 
-const int processRunId = 3296;//112;//1707;
+const int processRunId = 3266;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 var folderPathUsername = "xxx";

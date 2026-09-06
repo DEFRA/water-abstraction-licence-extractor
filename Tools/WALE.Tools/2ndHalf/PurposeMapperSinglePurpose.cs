@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
+using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
@@ -29,6 +30,7 @@ public static class PurposeMapperSinglePurpose
 
         var onlyOneCount = 0;
         var explicitCount = 0;
+        var notMatchedCount = 0;
         
         foreach (var licence in licenceList)
         {
@@ -40,24 +42,59 @@ public static class PurposeMapperSinglePurpose
                 Console.WriteLine($"{idx} - Skipping - Matches result is null");
                 continue;
             }
+
+            var licenceNumbers = new Dictionary<string, bool>();
             
-            var licenceNumber = matchesResult.Matches?
+            var scrapedLicenceNumber = matchesResult.Matches?
                 .FirstOrDefault(m => m.LabelGroupName == "LicenceNumber")?
                 .Text?
                 .FirstOrDefault()?
                 .Text;
 
-            if (string.IsNullOrWhiteSpace(licenceNumber))
+            if (!string.IsNullOrWhiteSpace(scrapedLicenceNumber))
             {
-                Console.WriteLine($"{idx} - Skipping - Licence number is null");
+                licenceNumbers.Add(scrapedLicenceNumber, false);
+            }
+
+            var filenameLicenceNumber = matchesResult.Filename?.Split("__")[0];
+            
+            if (!string.IsNullOrWhiteSpace(filenameLicenceNumber))
+            {
+                licenceNumbers.Add(filenameLicenceNumber, true);
+            }
+            
+            if (licenceNumbers.Count == 0)
+            {
+                Console.WriteLine($"{idx} - Skipping - Licence number can't be found");
                 continue;
             }
             
-            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
-                licenceNumber,
-                matchesResult.RegionCode);
-            
-            var purposesSection = matchesResult.Matches?.FirstOrDefault(result => result.LabelGroupName == "Purposes");
+            NaldAbstractionData? naldDataLine = null;
+            string? licenceNumberToUse = null;
+
+            foreach (var licenceNumber in licenceNumbers)
+            {
+                licenceNumberToUse = licenceNumber.Key;
+                
+                naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
+                    licenceNumber.Key,
+                    matchesResult.RegionCode,
+                    licenceNumber.Value);
+
+                if (naldDataLine != null)
+                {
+                    break;
+                }
+            }
+
+            if (naldDataLine == null)
+            {
+                Console.WriteLine($"{idx} - Skipping - Cannot find in NALD for {licenceNumberToUse}");
+                continue;
+            }
+
+            var purposesSection = matchesResult.Matches?
+                .FirstOrDefault(result => result.LabelGroupName == "Purposes");
 
             if (purposesSection == null)
             {
@@ -102,13 +139,14 @@ public static class PurposeMapperSinglePurpose
                             naldPurposes,
                             documentPurpose,
                             usedNaldPurposeIds,
-                            licenceNumber,
+                            licenceNumberToUse!,
                             true);
                     
                     if (naldPurposeData.Length == 0)
                     {
                         Console.WriteLine($"{idx} - 0 nald purposes found for '{documentPurpose}'");
-
+                        notMatchedCount++;
+                        
                         continue;
                     }
 

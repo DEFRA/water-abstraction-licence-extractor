@@ -80,7 +80,9 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
-    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber)
+    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
+        string licenceNumber,
+        bool slashesRemoved)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -155,8 +157,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             {
                 sql += " OR ";
             }
-            
-            sql += $"\"LIC_NO\" = @LicNo{idx++}\n";
+
+            if (slashesRemoved)
+            {
+                sql += $"LOWER(REPLACE(\"LIC_NO\", '/', '')) = @LicNo{idx++}\n";
+            }
+            else
+            {
+                sql += $"\"LIC_NO\" = @LicNo{idx++}\n";                
+            }
         }
 
         sql += """

@@ -90,9 +90,14 @@ public class NaldDataController(
     [HttpGet]
     public async Task<IActionResult> GetAsync(
         [FromQuery] string licenceNumber,
-        [FromQuery] int regionCode)
+        [FromQuery] int regionCode,
+        [FromQuery] bool slashesRemoved)
     {
-        var naldData = await abstractionLicenceCacheService.GetNaldAbstractionLicenceAsync(licenceNumber, regionCode);
+        var naldData = await abstractionLicenceCacheService.GetNaldAbstractionLicenceAsync(
+            licenceNumber,
+            regionCode,
+            slashesRemoved);
+        
         return Ok(naldData);
     }
     

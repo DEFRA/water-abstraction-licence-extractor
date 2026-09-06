@@ -116,9 +116,12 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
     }
 
-    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
+        string licenceNumber,
+        int regionCode,
+        bool slashesRemoved = false)
     {
-        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber);
+        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber, slashesRemoved);
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)

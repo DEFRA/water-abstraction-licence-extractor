@@ -29,7 +29,10 @@ public interface IAbstractionLicenceCacheService
     
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync();
     
-    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode);
+    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
+        string licenceNumber,
+        int regionCode,
+        bool slashesRemoved = false);
     
     Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber, int regionCode);
     

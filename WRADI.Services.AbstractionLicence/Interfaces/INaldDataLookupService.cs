@@ -6,7 +6,8 @@ public interface INaldDataLookupService
 {
     public Task<NaldAbstractionData?> GetNaldAbstractionDataLineAsync(
         string? licenceNumber,
-        int regionCode);
+        int regionCode,
+        bool slashesRemoved = false);
 
     public Task<NaldImpoundmentData?> GetNaldImpoundmentDataLineAsync(
         string? licenceNumber,

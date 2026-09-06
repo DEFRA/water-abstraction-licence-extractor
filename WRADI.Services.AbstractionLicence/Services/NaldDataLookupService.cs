@@ -15,7 +15,8 @@ public class NaldDataLookupService(
     
     public async Task<NaldAbstractionData?> GetNaldAbstractionDataLineAsync(
         string? licenceNumber,
-        int regionCode)
+        int regionCode,
+        bool slashesRemoved = false)
     {
         if (string.IsNullOrEmpty(licenceNumber))
         {
@@ -29,7 +30,7 @@ public class NaldDataLookupService(
             return cachedData;
         }
 
-        var naldData = await cacheService.GetNaldAbstractionLicenceAsync(licenceNumber, regionCode);
+        var naldData = await cacheService.GetNaldAbstractionLicenceAsync(licenceNumber, regionCode, slashesRemoved);
         _naldAbstractionDataCache.TryAdd(key, naldData);
         
         return naldData;
@@ -69,6 +70,7 @@ public class NaldDataLookupService(
 
         if (filterPurposes.Count == 0)
         {
+            Console.WriteLine($"ERROR no nald purposes found for {licenceNumber} ");
             return ([], null);
         }
         
@@ -91,7 +93,7 @@ public class NaldDataLookupService(
         }
         
         var documentToNaldPurposeMapping = ToDict(
-            await outputService.GetDocumentNaldPurposeMapAsync());
+            await outputService.GetDocumentNaldPurposeMapAsync()); // TODO dont do this everytime
         
         // There is only one, so must be that
         if (groupedPurposes.Count == 1)
@@ -128,7 +130,18 @@ public class NaldDataLookupService(
             
             if (MappingContainsPurpose(firstNaldPurpose, documentDescription, documentToNaldPurposeMapping))
             {
-                return (loopNaldPurposes.ToArray(), "ExplicitMapping");
+                const string explicitMapping = "ExplicitMapping";
+
+                if (saveMatches)
+                {
+                    await outputService.AddDocumentNaldPurposeMatchAsync(
+                        licenceNumber,
+                        documentDescription,
+                        firstNaldPurpose,
+                        explicitMapping);
+                }
+
+                return (loopNaldPurposes.ToArray(), explicitMapping);
             }
             
             continue;

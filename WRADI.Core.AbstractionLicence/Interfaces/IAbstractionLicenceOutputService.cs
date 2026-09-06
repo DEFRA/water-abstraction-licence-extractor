@@ -64,5 +64,5 @@ public interface IAbstractionLicenceOutputService
     
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
-    Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string onlyOne);
+    Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
 }

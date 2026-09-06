@@ -116,7 +116,7 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         var purposes = await GetPurposesAsync(
-            licenceNumber,
+            licenceNumber!,
             lookupConfiguration,
             matches,
             naldAbstractionDataLine,

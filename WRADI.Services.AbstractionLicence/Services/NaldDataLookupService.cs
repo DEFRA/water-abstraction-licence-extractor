@@ -72,7 +72,7 @@ public class NaldDataLookupService(
         }
         
         var groupedPurposes = filterPurposes
-            .GroupBy(pu => $"{pu.CombinedCode}_{pu.QuantityIdentifier}")
+            .GroupBy(pu => pu.CombinedCode)
             .ToList();
      
         var descriptionSuggestsTransfer =
@@ -106,7 +106,11 @@ public class NaldDataLookupService(
                         onlyOne);
                 }
 
-                await outputService.AddDocumentNaldPurposeMatchAsync(licenceNumber, documentDescription, singlePurposeArray[0], onlyOne); // TODO this should save in some more circumstances
+                await outputService.AddDocumentNaldPurposeMatchAsync(
+                    licenceNumber,
+                    documentDescription,
+                    singlePurposeArray[0],
+                    onlyOne);
             }
 
             return (singlePurposeArray, onlyOne);
@@ -173,7 +177,7 @@ public class NaldDataLookupService(
                 UseDescription = purpose.CategoryUse.UseDescription,
                 PrimaryCategoryCode = purpose.CategoryUse.PrimaryCategoryCode.ToString(),
                 SecondaryCategoryCode = purpose.CategoryUse.SecondaryCategoryCode.ToString(),
-                UseCode = purpose.CategoryUse.UseCode.ToString(),
+                UseCode = purpose.CategoryUse.UseCode,
                 CombinedCode = purpose.CategoryUse.Code,
                 QuantityIdentifier = $"{purpose.Quantity.AnnualQty}_{purpose.Quantity.DailyQty}" +
                     $"_{purpose.Quantity.HourlyQty}_{purpose.Quantity.InstQty}"

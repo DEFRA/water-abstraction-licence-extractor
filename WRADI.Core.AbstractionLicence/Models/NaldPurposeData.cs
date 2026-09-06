@@ -8,7 +8,7 @@ public class NaldPurposeData
     
     public string? SecondaryCategoryCode { get; init; }
     
-    public string? UseCode { get; init; }
+    public int UseCode { get; init; }
     
     public string? PrimaryCategoryDescription { get; set; }
     

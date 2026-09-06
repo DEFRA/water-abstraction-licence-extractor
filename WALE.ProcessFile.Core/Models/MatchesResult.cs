@@ -2,8 +2,6 @@ namespace WALE.ProcessFile.Core.Models;
 
 public class MatchesResult : MatchResultSimple
 {
-    public Guid? FileId { get; set; }
-    
     public int RegionCode { get; set; }
     
     public List<LabelGroupResult>? Matches { get; set; }

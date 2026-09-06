@@ -91,7 +91,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
     }
 
     public Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose,
-        string onlyOne)
+        string matchType)
     {
         throw new NotImplementedException();
     }

@@ -3,7 +3,7 @@ using WALE.Tools._2ndHalf.Models;
 
 namespace WALE.Tools._2ndHalf;
 
-public static partial class PurposeMapper
+public static class PurposeMapperLlm
 {
     private const string SpaceString = " ";
     

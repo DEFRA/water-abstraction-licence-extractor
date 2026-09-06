@@ -131,4 +131,16 @@ public class NaldDataController(
         
         return Ok();
     }
+    
+    [HttpPost]
+    public async Task<IActionResult> AddDocumentNaldPurposeMatch(AddDocumentNaldPurposeMatchRequest request)
+    {
+        await abstractionLicenceOutputService.AddDocumentNaldPurposeMatchAsync(
+            request.licNo!,
+            request.documentDescription!,
+            request.naldPurpose!,
+            request.matchType!);
+        
+        return Ok();
+    }
 }

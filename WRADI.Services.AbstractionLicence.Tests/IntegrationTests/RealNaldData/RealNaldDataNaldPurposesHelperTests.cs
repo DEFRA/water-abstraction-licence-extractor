@@ -61,7 +61,7 @@ public class RealNaldDataNaldPurposesHelperTests
         Assert.Single(relevantNaldPurposes);
         Assert.Equal("W", relevantNaldPurposes[0].PrimaryCategoryCode);
         Assert.Equal("WAT", relevantNaldPurposes[0].SecondaryCategoryCode);
-        Assert.Equal("650", relevantNaldPurposes[0].UseCode);
+        Assert.Equal(650, relevantNaldPurposes[0].UseCode);
         Assert.Equal("W-WAT-650", relevantNaldPurposes[0].CombinedCode);
         Assert.Equal("Water Supply", relevantNaldPurposes[0].PrimaryCategoryDescription);
         Assert.Equal("Water Supply Related", relevantNaldPurposes[0].SecondaryCategoryDescription);
@@ -98,7 +98,7 @@ public class RealNaldDataNaldPurposesHelperTests
         Assert.Single(relevantNaldPurposes1);
         Assert.Equal("I", relevantNaldPurposes1[0].PrimaryCategoryCode);
         Assert.Equal("EXT", relevantNaldPurposes1[0].SecondaryCategoryCode);
-        Assert.Equal("300", relevantNaldPurposes1[0].UseCode);
+        Assert.Equal(300, relevantNaldPurposes1[0].UseCode);
         Assert.Equal("I-EXT-300", relevantNaldPurposes1[0].CombinedCode);
         Assert.Equal("Industrial, Commercial And Public Services", relevantNaldPurposes1[0].PrimaryCategoryDescription);
         Assert.Equal("Extractive", relevantNaldPurposes1[0].SecondaryCategoryDescription);
@@ -119,7 +119,7 @@ public class RealNaldDataNaldPurposesHelperTests
         Assert.Single(relevantNaldPurposes2);
         Assert.Equal("I", relevantNaldPurposes2[0].PrimaryCategoryCode);
         Assert.Equal("EXT", relevantNaldPurposes2[0].SecondaryCategoryCode);
-        Assert.Equal("650", relevantNaldPurposes2[0].UseCode);
+        Assert.Equal(650, relevantNaldPurposes2[0].UseCode);
         Assert.Equal("I-EXT-650", relevantNaldPurposes2[0].CombinedCode);
         Assert.Equal("Industrial, Commercial And Public Services", relevantNaldPurposes2[0].PrimaryCategoryDescription);
         Assert.Equal("Extractive", relevantNaldPurposes2[0].SecondaryCategoryDescription);

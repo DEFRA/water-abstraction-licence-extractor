@@ -575,7 +575,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                @NaldPurposePrimaryCategoryCode,
                                @NaldPurposeSecondaryCategoryCode,
                                @NaldPurposeUseCode,
-                               @MatchType);
+                               @MatchType,
+                               @DateTimeUtc
                            WHERE
                            NOT EXISTS (
                                 SELECT 1
@@ -583,7 +584,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                 WHERE
                                     lic_no = @LicNo
                                     AND document_purpose = @DocumentPurpose
-                           ); 
+                           );
                            """;
 
         await ExecuteScalarAsync(

@@ -84,9 +84,6 @@ export default function Paging({
             <button
                 type="button"
                 onClick={clearSearch}
-                disabled={
-                    searchText.trim().length <= 3
-                }
                 style={{ marginLeft: '8px' }}
             >
                 Clear Search

@@ -5214,7 +5214,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         // TODO! should be grouped purposes probably
-        
         foreach (var naldPurpose in naldPurposes)
         {
             if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
@@ -5226,38 +5225,23 @@ public static class AbstractionLicenceSchemaConverter
                 .Where(p => p.ContainedIn!.All(ci => ci.Source != InformationSource.Nald))
                 .ToList();
 
-            if (purposesWithoutNaldData.Count == 1)
+            // Not sure if this is still useful
+            if (purposesWithoutNaldData.Count != 1)
             {
-                usedNaldPurposeIds.Add(naldPurpose.Id!);
-
-                var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
-                containedInClone.Add(new ContainedInInformation
-                {
-                    Source = InformationSource.Nald
-                });
-                
-                purposesWithoutNaldData[0].NaldLevel3Description = naldPurpose.UseDescription;
-                purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
-                purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
-                
                 continue;
             }
             
-            var naldContainedInList = new List<ContainedInInformation>
-            {
-                new()
-                {
-                    Source = InformationSource.Nald
-                }
-            };
+            usedNaldPurposeIds.Add(naldPurpose.Id!);
 
-            returnList.Add(
-                new PurposeOfAbstraction
-                {
-                    Id = naldPurpose.Id,
-                    NaldLevel3Description = naldPurpose.UseDescription,
-                    ContainedIn = naldContainedInList.ToArray()
-                });
+            var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
+            containedInClone.Add(new ContainedInInformation
+            {
+                Source = InformationSource.Nald
+            });
+                
+            purposesWithoutNaldData[0].NaldLevel3Description = naldPurpose.UseDescription;
+            purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
+            purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
         }
 
         return returnList.ToArray();

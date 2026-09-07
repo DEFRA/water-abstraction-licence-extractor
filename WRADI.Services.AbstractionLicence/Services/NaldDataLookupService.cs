@@ -78,10 +78,6 @@ public class NaldDataLookupService(
             .GroupBy(pu => pu.CombinedCode)
             .ToList();
      
-        var descriptionSuggestsTransfer =
-            documentDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-            || documentDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
-
         documentDescription = FormattingHelper.TrimFormatting(
             documentDescription,
             true,
@@ -146,54 +142,24 @@ public class NaldDataLookupService(
                 firstNaldPurpose,
                 documentDescription,
                 documentToNaldPurposeMapping);
-            
-            if (contains != MatchExplicitness.NotMatched)
+
+            if (contains == MatchExplicitness.NotMatched)
             {
-                const string explicitMapping = "ExplicitMapping";
-
-                if (saveMatches)
-                {
-                    await outputService.AddDocumentNaldPurposeMatchAsync(
-                        licenceNumber,
-                        documentDescription,
-                        firstNaldPurpose,
-                        explicitMapping);
-                }
-
-                return (loopNaldPurposes.ToArray(), explicitMapping);
+                continue;
             }
             
-            continue;
-            
-            if (documentDescription.Equals(firstNaldPurpose.PrimaryCategoryDescription, StringComparison.OrdinalIgnoreCase)
-                || documentDescription.Equals(firstNaldPurpose.SecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase)
-                || documentDescription.Equals(firstNaldPurpose.UseDescription, StringComparison.OrdinalIgnoreCase))
-            {
-                return (loopNaldPurposes.ToArray(), "DescriptionMatchesDescription");
-            }
-            
-            if (descriptionSuggestsTransfer)
-            {
-                var naldSuggestsTransfer =
-                    firstNaldPurpose.UseDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.PrimaryCategoryDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.PrimaryCategoryDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
+            const string explicitMapping = "ExplicitMapping";
 
-                if (naldSuggestsTransfer)
-                {
-                    return (loopNaldPurposes.ToArray(), "DescriptionSuggestsTransfer");
-                }
+            if (saveMatches)
+            {
+                await outputService.AddDocumentNaldPurposeMatchAsync(
+                    licenceNumber,
+                    documentDescription,
+                    firstNaldPurpose,
+                    explicitMapping);
             }
 
-            if (firstNaldPurpose.UseDescription?.Contains(documentDescription, StringComparison.OrdinalIgnoreCase) == true
-                || firstNaldPurpose.PrimaryCategoryDescription?.Contains(documentDescription, StringComparison.OrdinalIgnoreCase) == true
-                || firstNaldPurpose.SecondaryCategoryDescription?.Contains(documentDescription, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                return (loopNaldPurposes.ToArray(), "DescriptionContainsDescription");
-            }
+            return (loopNaldPurposes.ToArray(), explicitMapping);
         }
 
         return ([], null);

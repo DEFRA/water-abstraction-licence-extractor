@@ -93,30 +93,44 @@ public class NaldDataLookupService(
         }
         
         var documentToNaldPurposeMapping = ToDict(
-            await outputService.GetDocumentNaldPurposeMapAsync()); // TODO dont do this everytime
+            await outputService.GetDocumentNaldPurposeMapAsync()); // TODO dont do this everytime - cache it
         
         // There is only one, so must be that
         if (groupedPurposes.Count == 1)
         {
+            var unfilteredGroupedPurposesCount = naldPurposes
+                .GroupBy(pu => pu.CombinedCode)
+                .Count();
+            
             const string onlyOne = "OnlyOne";
+            const string onlyOneLeft = "OnlyOneLeft";
+            var matchType = unfilteredGroupedPurposesCount > 1 ? onlyOneLeft : onlyOne;
+            
             var singlePurposeArray = groupedPurposes[0].ToArray();
             
             if (saveMatches)
             {
-                if (!MappingContainsPurpose(singlePurposeArray[0], documentDescription, documentToNaldPurposeMapping))
+                var contains = MappingContainsPurpose(
+                    singlePurposeArray[0],
+                    documentDescription,
+                    documentToNaldPurposeMapping);
+                
+                if (contains != MatchExplicitness.ExactMatch)
                 {
-                    await outputService.AddDocumentNaldPurposeMapAsync(documentDescription, singlePurposeArray[0],
-                        onlyOne);
+                    await outputService.AddDocumentNaldPurposeMapAsync(
+                        documentDescription,
+                        singlePurposeArray[0],
+                        matchType);
                 }
 
                 await outputService.AddDocumentNaldPurposeMatchAsync(
                     licenceNumber,
                     documentDescription,
                     singlePurposeArray[0],
-                    onlyOne);
+                    matchType);
             }
 
-            return (singlePurposeArray, onlyOne);
+            return (singlePurposeArray, matchType);
         }
         
         foreach (var loopNaldPurposes in groupedPurposes)
@@ -128,7 +142,12 @@ public class NaldDataLookupService(
 
             var firstNaldPurpose = loopNaldPurposes.First();
             
-            if (MappingContainsPurpose(firstNaldPurpose, documentDescription, documentToNaldPurposeMapping))
+            var contains = MappingContainsPurpose(
+                firstNaldPurpose,
+                documentDescription,
+                documentToNaldPurposeMapping);
+            
+            if (contains != MatchExplicitness.NotMatched)
             {
                 const string explicitMapping = "ExplicitMapping";
 
@@ -199,14 +218,14 @@ public class NaldDataLookupService(
             .ToList() ?? [];
     }
     
-    private static bool MappingContainsPurpose(
+    private static MatchExplicitness MappingContainsPurpose(
         NaldPurposeData naldPurposeData,
         string? documentDescription,
         Dictionary<string, List<NaldPurposeMap>> documentToNaldPurposeMapping)
     {
         if (string.IsNullOrEmpty(documentDescription))
         {
-            return false;
+            return MatchExplicitness.NotMatched;
         }
         
         var documentDescriptionLower = documentDescription.ToLower();
@@ -214,14 +233,43 @@ public class NaldDataLookupService(
 
         if (!documentPurposeIsMapped)
         {
-            return false;
+            return MatchExplicitness.NotMatched;
         }
 
         var mappedNaldValues = documentToNaldPurposeMapping[documentDescriptionLower];
 
-        return mappedNaldValues.Any(v => v.NaldPurposePrimaryCategoryDescription?.Equals(naldPurposeData.PrimaryCategoryDescription, StringComparison.OrdinalIgnoreCase) == true)
-            && mappedNaldValues.Any(v => v.NaldPurposeSecondaryCategoryDescription?.Equals(naldPurposeData.SecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase) == true)
-            && mappedNaldValues.Any(v => v.NaldPurposeUseDescription?.Equals(naldPurposeData.UseDescription, StringComparison.OrdinalIgnoreCase) == true);
+        var exactMatch = mappedNaldValues
+            .Any(v => v.NaldPurposePrimaryCategoryDescription?
+                .Equals(naldPurposeData.PrimaryCategoryDescription, StringComparison.OrdinalIgnoreCase) == true)
+                && mappedNaldValues
+            .Any(v => v.NaldPurposeSecondaryCategoryDescription?
+                .Equals(naldPurposeData.SecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase) == true)
+                && mappedNaldValues
+            .Any(v => v.NaldPurposeUseDescription?
+                .Equals(naldPurposeData.UseDescription, StringComparison.OrdinalIgnoreCase) == true);
+
+        if (exactMatch)
+        {
+            return MatchExplicitness.ExactMatch;
+        }
+        
+        var partialMatch = mappedNaldValues
+            .Any(mnv => mnv.NaldPurposeUseDescription?
+                .Equals(naldPurposeData.UseDescription, StringComparison.OrdinalIgnoreCase) == true);
+
+        if (partialMatch)
+        {
+            return MatchExplicitness.PartialMatch;
+        }
+        
+        return MatchExplicitness.NotMatched;
+    }
+
+    public enum MatchExplicitness
+    {
+        NotMatched = 0,
+        PartialMatch = 1,
+        ExactMatch = 2,
     }
 
     private static Dictionary<string, List<NaldPurposeMap>> ToDict(
@@ -236,6 +284,11 @@ public class NaldDataLookupService(
                 continue;
             }
 
+            if (entry.DocumentPurpose.Equals("process of manufacture", StringComparison.OrdinalIgnoreCase))
+            {
+                
+            }
+            
             var key = entry.DocumentPurpose.ToLower();
             var value = (NaldPurposeMap)entry;
             

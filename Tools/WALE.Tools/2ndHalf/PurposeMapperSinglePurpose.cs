@@ -29,8 +29,13 @@ public static class PurposeMapperSinglePurpose
         var idx = 0;
 
         var onlyOneCount = 0;
+        var onlyOneLeftCount = 0;
         var explicitCount = 0;
         var notMatchedCount = 0;
+
+        /*licenceList = licenceList
+            .Where(l => l.Filename == "22630009__ee0f2743-9d28-9a16-10c5-57868af55602.pdf")
+            .ToList();*/
         
         foreach (var licence in licenceList)
         {
@@ -39,7 +44,7 @@ public static class PurposeMapperSinglePurpose
 
             if (matchesResult == null)
             {
-                Console.WriteLine($"{idx} - Skipping - Matches result is null");
+                Console.WriteLine($"{idx} - UNKNOWN - Skipping - Matches result is null");
                 continue;
             }
 
@@ -65,7 +70,7 @@ public static class PurposeMapperSinglePurpose
             
             if (licenceNumbers.Count == 0)
             {
-                Console.WriteLine($"{idx} - Skipping - Licence number can't be found");
+                Console.WriteLine($"{idx} {matchesResult.Filename} - Skipping - Licence number can't be found");
                 continue;
             }
             
@@ -89,7 +94,7 @@ public static class PurposeMapperSinglePurpose
 
             if (naldDataLine == null)
             {
-                Console.WriteLine($"{idx} - Skipping - Cannot find in NALD for {licenceNumberToUse}");
+                Console.WriteLine($"{idx} {matchesResult.Filename} - Skipping - Cannot find in NALD for {licenceNumberToUse}");
                 continue;
             }
 
@@ -98,11 +103,11 @@ public static class PurposeMapperSinglePurpose
 
             if (purposesSection == null)
             {
-                Console.WriteLine($"{idx} - Skipping - Purposes section is null");
+                Console.WriteLine($"{idx} {matchesResult.Filename} - Skipping - Purposes section is null");
                 continue;
             }
             
-            var naldPurposes = NaldDataLookupService.ToNaldPurposeData(naldDataLine?.Purposes);
+            var naldPurposes = NaldDataLookupService.ToNaldPurposeData(naldDataLine.Purposes);
 
             foreach (var purposePointGroup in purposesSection.SubResults)
             {
@@ -130,7 +135,7 @@ public static class PurposeMapperSinglePurpose
 
                     if (string.IsNullOrWhiteSpace(documentPurpose))
                     {
-                        // TODO log
+                        Console.WriteLine($"{idx} {licenceNumberToUse} - Document purpose is empty");
                         continue;
                     }
                     
@@ -144,13 +149,13 @@ public static class PurposeMapperSinglePurpose
                     
                     if (naldPurposeData.Length == 0)
                     {
-                        Console.WriteLine($"{idx} - 0 nald purposes found for '{documentPurpose}'");
+                        Console.WriteLine($"{idx} {matchesResult.Filename} - 0 nald purposes found for '{documentPurpose}'");
                         notMatchedCount++;
                         
                         continue;
                     }
 
-                    Console.WriteLine($"{idx} - {naldPurposeData.Length} nald purposes found " +
+                    Console.WriteLine($"{idx} {matchesResult.Filename} - {naldPurposeData.Length} nald purposes found " +
                         $"for '{documentPurpose}' - match type '{matchType}'");                    
                     
                     switch (matchType)
@@ -158,17 +163,21 @@ public static class PurposeMapperSinglePurpose
                         case "OnlyOne":
                             onlyOneCount++;
                             break;
+                        case "OnlyOneLeft":
+                            onlyOneLeftCount++;
+                            break;                        
                         case "ExplicitMapping":
                             explicitCount++;
                             break;
                         default:
-                            Console.WriteLine($"{idx} - ERROR {matchType} - Not supported");
+                            Console.WriteLine($"{idx} {matchesResult.Filename} - ERROR {matchType} - Not supported");
                             break;
                     }
                 }
             }
         }
         
-        Console.WriteLine($"\n**Summary** Only one {onlyOneCount}, Explicit {explicitCount}");
+        Console.WriteLine($"\n**Summary**\n\nOnly one: {onlyOneCount}\nOnly one left: {onlyOneLeftCount}" +
+            $"\nExplicit: {explicitCount}\nNot matched: {notMatchedCount}");
     }
 }

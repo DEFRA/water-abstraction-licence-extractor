@@ -482,27 +482,19 @@ public static class WrInspectionReportSchemaConverter
     // T4/T6/T7 are all positive, distinguishing markers).
     //
     // v1 made T1 the plain default/fallback for anything not T4/T6/T7/Impounding, which measured
-    // at 86% of the real corpus against the client's own ~60% expectation - cross-checking
-    // against the golden set's documentShape tags showed the gap was largely documents whose
-    // GeneralComments section uses one of the known alternate headings, or none at all
-    // (desktop-review/headingless narratives, multi-section long-form reports, appendix-
-    // terminated reports - see that field's own catalogue). v2 (current) excludes on EITHER
-    // signal: a positive alternate-heading match, or the baseline heading being absent
-    // entirely. That's a deliberate choice, not the only option - tried excluding on the
-    // alternate-heading match alone (v3, not kept): that avoided two false positives found by
-    // cross-checking against documentShape (wr51__1041433013__... and
-    // wr51__nw0690016005__..., both tagged plain "baseline" but with nothing written in that
-    // section at all, baseline heading or otherwise) but cost six true positives elsewhere -
-    // wr51__1955120809__... (defer_to_body_report), wr51__1753001s427__... and
-    // wr51__sw0430023015__... (narrative_comments_with_appendix), wr51__53114s0109__... and
-    // wr51__nw0760002001__... (headingless_narrative), wr51__25092__... (desktop_review) - all
-    // genuinely non-standard documents that "missing baseline heading" alone correctly caught
-    // and "alternate heading present" alone missed, because they have no heading at all, not a
-    // different one. Chose the 2-false-positive version over the 6-false-negative version;
-    // resolving the 2 remaining false positives would need a genuinely new signal (e.g.
-    // comparing how much text actually sits between the last measurement field and "Form sent
-    // to", to distinguish "nothing written" from "narrative written with no heading") - not
-    // attempted here, scope it separately if it matters.
+    // at 86% of the real corpus against the client's own ~60% expectation - the gap was largely
+    // documents whose GeneralComments section uses an alternate heading, or none at all. v2
+    // (current) excludes on EITHER signal: a positive alternate-heading match, or the baseline
+    // heading being absent entirely.
+    //
+    // Deliberate choice over the narrower alternative (exclude on alternate-heading match
+    // alone): that avoided 2 false positives (`wr51__1041433013`, `wr51__nw0690016005` - tagged
+    // "baseline" but with nothing written in that section at all) but cost 6 true positives on
+    // genuinely non-standard, headingless documents that only "missing baseline heading" alone
+    // catches (`wr51__1955120809`, `wr51__1753001s427`, `wr51__sw0430023015`,
+    // `wr51__53114s0109`, `wr51__nw0760002001`, `wr51__25092`). Resolving the 2 remaining false
+    // positives would need a genuinely new signal (e.g. how much text sits between the last
+    // measurement field and "Form sent to") - not attempted, scope separately if it matters.
     // Separately confirmed NOT a bug: wr51__83617s0016__... is tagged "desktop_review" but
     // correctly stays T1 - that tag describes the inspection method (no site visit), not the
     // comments-section shape, and the document genuinely has the standard heading.

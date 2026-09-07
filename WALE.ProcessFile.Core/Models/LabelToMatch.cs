@@ -130,6 +130,17 @@ public class LabelToMatch
     // for every label that doesn't opt in.
     public IReadOnlyList<string>? ExcludeNextLineIfFirstColumnStartsWith { get; init; }
 
+    // POSITION-based same-row bound: bounds WalkSameLineColumns' same-line walk by the
+    // X-position of the nearest OTHER known field's own column, built once per document from
+    // where every field's label is actually found (see PdfDataExtractorService.
+    // BuildLabelPositionIndex). Root cause and design: see the wr51_column_walk_bug analysis -
+    // a same-line walk with no positional awareness can wander into a sibling field's own
+    // column purely because nothing bounded how far to look, including a sibling field's own
+    // ANSWER value, not just its label, bleeding in via a row-grouping merge. Opt-in (defaults
+    // to false/no-op) because it depends on the caller actually supplying that per-document
+    // position index; a label that doesn't set this behaves exactly as before.
+    public bool BoundSameLineWalkByOtherLabelPositions { get; init; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -176,7 +187,8 @@ public class LabelToMatch
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
             RequireTextToClaimGroup = RequireTextToClaimGroup,
-            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList()
+            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList(),
+            BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions
         };
     }    
 }

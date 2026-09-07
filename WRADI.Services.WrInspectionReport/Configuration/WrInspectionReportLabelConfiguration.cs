@@ -90,52 +90,20 @@ public class WrInspectionReportLabelConfiguration
             .Where(l => ClassificationLabelGroupNames.Contains(l.LabelGroupName))
             .ToList();
 
-    // Hook point for T1-specific rule tuning. Built additively (2026-09): started from
-    // GetLabels() unchanged, tried removing every alternate/field whose own comment attributes
-    // it to a different template (T4/T6), then diffed the FULL 51-field corpus-wide coverage
-    // report (all 480 real T1-classified documents, not just the 18-doc golden-set sample)
-    // between the pruned and unpruned versions to see exactly what each removal actually cost -
-    // rather than trusting the attribution comments or a partial/golden-set-only check either
-    // one, both of which had already been tried and found insufficient (see git history/prior
-    // attempts on this method for the two narrower checks that missed this).
+    // Hook point for T1-specific rule tuning. Starts from GetLabels() unchanged: every
+    // MeasurementDetails "T6 template" alternate (MeterMake/SerialNumber/Reading/Units/
+    // Calibration/Conformance/FlowVerification/MeterVerification, plus the T6-only fields
+    // MeterName/FlowRate/Verification/SpotCheckResult/MeterAssetNumber) was checked for removal
+    // and kept, because a corpus-wide coverage diff (all 480 real T1-classified documents, not
+    // just the golden set) showed real, substantial usage under T1 despite the "T6" name -
+    // Calibration alone loses 51/480 T1 docs (11%) without it. The "T6 template" label describes
+    // where a phrasing was FIRST found, not a template-exclusivity boundary; don't trust it as
+    // one. Two alternates DID show zero T1 impact and are removed below: NameAndAddress's
+    // "Permit holder name and address" (T4 only) and GeneralComments's non-baseline headings.
     //
-    // The result was decisive, not marginal: EVERY MeasurementDetails alternate tried (the
-    // "T6 template" alternates on MeterMake/SerialNumber/Reading/Units/Calibration/Conformance/
-    // FlowVerification/MeterVerification, and the standalone "T6 template only" fields
-    // MeterName/FlowRate/Verification/SpotCheckResult/MeterAssetNumber's T6 alternate) showed
-    // real, substantial usage among T1-classified documents - not edge-case noise:
-    // Calibration lost 51/480 T1 docs (11%), Units 47/480 (10%), Conformance 25/480 (93% of its
-    // own matches), FlowVerification 23/480, MeterVerification 18/480, MeterMake 8/480,
-    // SerialNumber 5/480, Reading 7/480, plus FlowRate/MeterAssetNumber/SpotCheckResult/
-    // Verification losing ALL their matches outright. The "T6 template" label on these
-    // alternates describes where the phrasing was FIRST found, not a template-exclusivity
-    // boundary - MeasurementDetails label phrasing apparently varies somewhat independently of
-    // which grid/comments-heading template a document otherwise uses. There is no safe smaller
-    // T1-only subset of these alternates to converge on; they all stay, unchanged from
-    // GetLabels().
-    //
-    // Two removals DID show zero corpus-wide impact across all 480 T1 documents, confirmed safe
-    // and kept below: NameAndAddress's "Permit holder name and address" alternate (T4 only,
-    // never matches a T1-classified document) and GeneralComments's non-baseline heading
-    // alternates (Introduction/Notes and Actions/Actions/Summary/etc., all NonStandardNarrative-
-    // family per that field's own catalogue - also independently confirmed at the golden-set
-    // level: 8 Hit/10 Wrong either way, same shape).
-    //
-    // The wr51_column_walk_bug memory's other candidate (a MaxColumnsToConsume bound on the
-    // LicenceProvisions grid's "last field in row" group) still doesn't have confirmed
-    // T1-specific evidence backing it - every visible T1 hallucination in that field family
-    // traced to a different mechanism - so it's not applied here either.
-    //
-    // MeasurementDetails.Reading's "Other:" leak (see the ground-truth harness detail CSV) was
-    // also investigated here and is NOT a same-line sweep fixable by an endText addition -
-    // traced to the cross-row FindNextLineColumnByPosition mechanism instead (same class as the
-    // already-deferred LicenceProvisions.OtherProvisions bug), which needs proper gated tracing
-    // before any fix is attempted, not a quick tweak.
-    //
-    // Any future change to this method MUST re-verify via the FULL corpus-wide per-field
-    // coverage report (not just the golden-set harness, and not just the attribution comment)
-    // before trusting a removal is safe - this is exactly the check that caught how wrong the
-    // first, narrower attempt at this was.
+    // Any future change here MUST re-verify via the full corpus-wide per-field coverage report,
+    // not just the golden-set harness or the alternate's own attribution comment - a narrower
+    // check already missed this once.
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetT1Labels()
     {
         var labels = GetLabels()
@@ -220,7 +188,13 @@ public class WrInspectionReportLabelConfiguration
             // grid, so it's a safe, distant bound for all five regardless of which one is last
             // on the page.
             ("ProvisionOfInformation", GetInOrderField("Provision of information", "ProvisionOfInformation", "Measurement details")),
-            ("SpecialConditions", GetInOrderField("Special conditions", "SpecialConditions", "Measurement details")),
+            // boundSameLineWalkByOtherLabelPositions: true - fixes a fabricated "InOrder" value
+            // caused by WalkSameLineColumns sweeping in an unrelated field with no positional
+            // bound. Must stay section-aware (see FindSectionEndTop): an unbounded document-wide
+            // version was tried first and reverted - an unrelated field in a different section
+            // coincidentally sat within X range and clipped the real answer. Full trace in
+            // wr51_column_walk_bug memory.
+            ("SpecialConditions", GetInOrderField("Special conditions", "SpecialConditions", "Measurement details", boundSameLineWalkByOtherLabelPositions: true)),
             ("Land", GetInOrderField("Land (only if specified)", "Land", "Measurement details")),
             ("ChargingFactors", GetInOrderField("Charging factors", "ChargingFactors", "Measurement details")),
             ("OtherProvisions", GetInOrderField("Other provisions (specify below)", "OtherProvisions", "Measurement details")),
@@ -273,24 +247,12 @@ public class WrInspectionReportLabelConfiguration
                         new("(or Application No. or GIC No.")
                     ]) // Short form ("Licence No." / "Licence No:")
             ]),
-            // KNOWN BUG, NOT YET FIXED: "Met with: X | Position:" and "Inspecting Officer: X |
-            // Inspection Date:" leak the sibling column's label into this field's value on real
-            // documents (e.g. MetWith capturing "...Guyzance Hall Estate Position: Director...",
-            // 1 doc; InspectingOfficer capturing "Caz Lane and Mark Thorne Inspection Date:
-            // 19/02/2026", 13 docs) - found via a proactive sweep of _extraction-results.csv for
-            // sibling field-label text leaking into other fields' values.
-            // Tried passing endText (the same fix that worked for InspectionClass/SiteAddress's
-            // "Telephone"/"Inspecting Officer" markers) - had ZERO effect, confirmed by rerunning
-            // the corpus test with it in place. TextAfterLabel's LabelPosition.
-            // LabelIsBeforeTextToFind evidently does not route the same-line value through
-            // WalkSameLineColumns' TextEnd bound the way TextToFindIsBetweenLabels does - traced
-            // as far as LabelIsBeforeTextToFind.cs -> BaseMethod.FilterIntoFormatAsync's
-            // Text.Constant case -> RestrictToPossibility without finding where the actual
-            // same-line Text value gets assigned (it isn't set in the LabelGroupResult
-            // initializer in FindLabelGroupMatchesHelper.cs, and no assignment was found by
-            // static reading alone). Needs gated ConsoleHelper.WriteLine tracing through the
-            // real call path on one of the two documents above, not another guess - reverted the
-            // ineffective endText rather than ship a fix with an unconfirmed story.
+            // "Met with: X | Position:" and "Inspecting Officer: X | Inspection Date:" leak the
+            // sibling column's label into this field's value on real documents. An endText bound
+            // here had zero effect - TextAfterLabel's LabelPosition.LabelIsBeforeTextToFind
+            // doesn't route the same-line value through WalkSameLineColumns' TextEnd check the
+            // way TextToFindIsBetweenLabels does. Fixed instead at the converter level: see
+            // WrInspectionReportSchemaConverter.TruncateAtKnownSiblingLabel.
             ("MetWith", TextAfterLabel("Met with", "MetWith", 0)),
             ("InspectingOfficer", TextAfterLabel("Inspecting Officer", "InspectingOfficer", 0)),
             // "Site address (if different): X | Email:" sits on one row (two columns) on a
@@ -362,30 +324,15 @@ public class WrInspectionReportLabelConfiguration
                 1,
                 LimitTo.SameColumn,
                 additionalSameLineEndTexts: ["T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No", "Telepho n e N o", "T e lephone No", "T e l e phone No", "Email"])),
-            // "Telephone No:" renders letter-kerned on 30 real corpus documents - the same
-            // phenomenon as the Records field's kerning (see that field's own comment for the
-            // likely cause: short labels getting stretch-justified to fill a column width).
-            // 7 distinct literal patterns cover all 30 occurrences.
+            // "Telephone No:" renders letter-kerned on 30 real corpus documents - same
+            // phenomenon as Records' kerning (stretch-justified short labels). "T e l N o" is a
+            // separate, shorter real wording from the "Water Company" template.
             //
-            // Tried bumping NextLinesToFetch 2->4 to capture genuine 3-line contact blocks (e.g.
-            // "Tel: 01480 499 154" / "DDI: 01480 369 096" / "Mob: 07500 708 219", real content,
-            // not a leak - same class as Records' "X see below") - reverted, measured as a net
-            // regression on the golden set (11 outcomes changed, ALL in the wrong direction:
-            // TrueNegative->Hallucination, Hit->Wrong, Miss->Wrong, zero improvements). Root
-            // cause: on documents where the real value is short or blank and "Email" never
-            // appears nearby to bound the walk, the extra reach swept in unrelated same-column
-            // content several rows further down the page - e.g. "Position: n/a\nInspection
-            // Date:9 th June", which belongs to the "Met with" section entirely, not this field.
-            // Same column-walk-goes-too-far class as the deferred bug documented in
-            // OtherProvisions/the wr51_column_walk_bug memory. A real fix needs to bound the
-            // walk more precisely (e.g. an explicit end-of-block marker for wherever this
-            // column's content genuinely stops), not just fetch further.
-            // "T e l N o" (kerned "Tel No", shorter than "Telephone No") is a distinct real
-            // wording - confirmed on the "Water Company" template's own layout
-            // (wr51__2839320028 etc., "Inspection report – Water Company" header), where the
-            // whole "Name and address: ... | Tel No: <number>" row is a single-line pair. Adding
-            // it here lets TelephoneNumber actually recognise and capture the number, rather
-            // than just excluding it from NameAndAddress (see that field's own comment below).
+            // NextLinesToFetch is deliberately still 2, not 4: widening it to reach genuine
+            // multi-line contact blocks also sweeps in unrelated content several rows down (the
+            // "Met with" section's own fields, or Email's own answer value) with no reliable way
+            // to bound it - two different fixes were tried and both regressed the golden set.
+            // See wr51_column_walk_bug memory for the full trace before attempting this again.
             ("TelephoneNumber", TextToFindIsBetweenLabels(
                 "Telephone No",
                 "Email",
@@ -396,38 +343,20 @@ public class WrInspectionReportLabelConfiguration
             ("Position", TextToFindIsBetweenLabels("Position", "Inspection Date", "Position", 1, LimitTo.SameColumn)),
             ("Time", TextAfterLabel("Time", "Time", 0)),
             // "Name and address: | Telephone No:" sits on one row (two columns) - without
-            // bounding the same-line walk there, it sweeps past "Telephone No:" and the
-            // phone number's own label ends up as a bogus extra first line of the address.
-            // Same issue for "Email:", which sits on the header row for some templates and
-            // otherwise bleeds into the address block's last captured line (mirrors the same
-            // sibling-label leak already fixed for SiteAddress). NextLinesToFetch bumped from
-            // 7 to 10: real addresses regularly wrap to 8 lines (business name + 5-6 address
-            // lines + postcode on its own line) and 7 was silently dropping the final line -
-            // usually the postcode.
-            // Tried adding a bare "Telephone" end marker too (some documents read "Telephone:
-            // 07759306311" rather than "Telephone No:", e.g. wr51__1343025g037) - reverted: it
-            // fixed that leak but broke something worse. additionalSameLineEndTexts feeds both
-            // WalkSameLineColumns (bounds the same-row column walk, fine) AND GetTextBetween's
-            // cross-line end-tag scan, which checks each row's full untrimmed text (both
-            // columns concatenated), not just the matched column. On wr51__1343025g037 the
-            // phone number sits in the second column of the address's own FIRST row, so
-            // "Telephone" as a marker terminated the whole between-labels block right there,
-            // silently dropping the genuine second address line ("Estate, Greystone,
-            // Bowerchalke, Salisbury, Wiltshire, SP5 5PE") - a worse regression (lost real
-            // content) than the leak it fixed (one extra trailing fragment). Affects a single
-            // real document in the full 789-doc corpus - not worth chasing with a
-            // Remove-based workaround given DataHelper.RemoveExcludes' own Regex branch has a
-            // separate latent bug (Regex.Replace(match.Value, "") wipes the whole string, not
-            // just the match) that would need fixing first to do this safely.
+            // bounding the same-line walk there, it sweeps the phone label in as a bogus extra
+            // address line; same for "Email:". NextLinesToFetch bumped 7->10: real addresses
+            // regularly wrap to 8 lines and 7 was dropping the final line (usually the postcode).
             //
-            // The letter-kerned "T e l e p h o n e N o:" rendering (same phenomenon as
-            // TelephoneNumber's own additionalTextStarts below, and Records' kerning) is a
-            // separate, much more common leak than the bare "Telephone" case above - 36 real
-            // corpus occurrences, confirmed via direct corpus search. Added as literal markers
-            // (not the bare "Telephone" that was reverted) because each kerned pattern is long
-            // and distinctive enough that a same-line-only false positive is very unlikely -
-            // still measured against the full protocol before keeping, given
-            // additionalSameLineEndTexts' proven cross-line-termination risk above.
+            // Trap: don't add a bare "Telephone" end marker here (some documents read
+            // "Telephone: 07759306311" rather than "Telephone No:") without checking
+            // GetTextBetween's cross-line end-tag scan first - additionalSameLineEndTexts feeds
+            // BOTH WalkSameLineColumns' same-row bound AND that cross-line scan, which checks
+            // each row's full untrimmed text, not just the matched column. On a document where
+            // the phone number sits in the address's own first row, a bare "Telephone" marker
+            // terminates the whole between-labels block right there, dropping real address
+            // content - worse than the one-document leak it was meant to fix. The kerned
+            // "T e l e p h o n e N o:" markers below are safe from this because each pattern is
+            // long/distinctive enough that a same-line-only false positive is very unlikely.
             ("NameAndAddress", [
                 ..TextToFindIsBetweenLabels(
                     "Name and address",
@@ -550,26 +479,17 @@ public class WrInspectionReportLabelConfiguration
                 // "Reading", since this position is also same-column/next-line and would
                 // otherwise be just as exposed to the "Readings taken:" prefix collision.
                 //
-                // excludeNextLineIfFirstColumnStartsWith("Other") - properly traced (gated
-                // ConsoleHelper instrumentation on wr51__83617s0016__..., not assumed): when
-                // Reading is genuinely blank, this alternate's next-line fetch is meant to find
-                // nothing, but on documents where a narrative paragraph immediately follows the
-                // grid (dense boilerplate text, common on desktop-review/appendix-heavy
-                // documents), that paragraph's first line sits closer to Reading's own row than
-                // WR51's anchored line-grouping's lineHeight tolerance (6 units - see
-                // PdfPigNoOcrDataExtractorService.GroupWordsIntoRowsByAnchor) - it silently
-                // merges into Reading's own row-group instead of counting as a distinct line, so
-                // the literal next DISTINCT line the algorithm sees skips straight past the
-                // whole paragraph to "Other:"'s own row, which then gets captured as if it were
-                // Reading's answer. This is a deeper bug than a field-level fix actually solves -
-                // the same merge would just as easily land on some other sibling label depending
-                // on document layout - but a global fix to the row-grouping tolerance carries the
-                // same "one constant can't serve two conflicting real shapes" risk already proven
-                // unsafe for WalkSameLineColumns (this exact anchored-grouping algorithm was
-                // already tuned once for a different case - see its own docstring). Rejecting the
-                // one confirmed sibling-label candidate at the field level is the narrow, safe
-                // slice of the real fix; if this recurs on a different sibling label for Reading
-                // or another field, add it here/there rather than attempting the row-grouping fix.
+                // excludeNextLineIfFirstColumnStartsWith("Other") - when Reading is genuinely
+                // blank on documents where a narrative paragraph immediately follows the grid,
+                // that paragraph's first line merges into Reading's own row-group under WR51's
+                // anchored line-grouping tolerance (see PdfPigNoOcrDataExtractorService.
+                // GroupWordsIntoRowsByAnchor), so the next DISTINCT line skips past it straight
+                // to "Other:"'s row, which then gets captured as Reading's answer. The real bug
+                // is in that row-grouping tolerance - a single constant can't serve every real
+                // layout, the same class of problem already proven unsafe to patch generically
+                // in WalkSameLineColumns - so this rejects only the one confirmed sibling label
+                // at the field level rather than touching the shared grouping logic. If this
+                // recurs for a different sibling/field, add it the same narrow way.
                 ..TextToFindIsBetweenLabels("Reading:", "Units", "Reading", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, excludeNextLineIfFirstColumnStartsWith: ["Other"]) // Baseline two-column table
             ]),
             ("FlowRate", TextToFindIsBetweenLabels("Flow Rate", "Calibration", "FlowRate", 1, LimitTo.SameColumn)), // T6 template only
@@ -619,15 +539,10 @@ public class WrInspectionReportLabelConfiguration
                 ..TextToFindIsBetweenLabels("Meter verification", "record", "MeterVerification", 1, LimitTo.SameColumn, requireTextToClaimGroup: true, ignoreBlockIfContains: VerificationGridSiblingLeakTerms, excludeNextLineIfFirstColumnStartsWith: ["Maintenance"]) // Grid template (label row + value row below)
             ]),
             ("WhereKept", TextAfterLabel("Where kept", "WhereKept", 0)),
-            // "Form sent to: | Date:" on one row (two columns), with the actual recipient
-            // on the row below, same column as "Form sent to:".
-            // "Form sent to: | Date:" on one row (two columns), with the actual recipient
-            // on the row below, same column as "Form sent to:". Routed via
-            // TextToFindIsBetweenLabels rather than TextAfterLabel/LabelIsBeforeTextToFind -
-            // that position's handler doesn't correctly follow through to the next-line,
-            // same-column value here for reasons not fully root-caused; every other
-            // "value on the row below" fix this session went through
-            // TextToFindIsBetweenLabels instead, and that same swap fixes this too.
+            // "Form sent to: | Date:" on one row (two columns), with the actual recipient on the
+            // row below, same column as "Form sent to:". Routed via TextToFindIsBetweenLabels
+            // rather than TextAfterLabel/LabelIsBeforeTextToFind - that position's handler
+            // doesn't correctly follow through to the next-line, same-column value here.
             ("FormSentTo", TextToFindIsBetweenLabels("Form sent to", "Date", "FormSentTo", 1, LimitTo.SameColumn)),
             ("Date", TextAfterLabel("Date:", "Date", 0)),
             ("DocumentTemplateVersion", TextAfterLabel("Document Template Version:", "DocumentTemplateVersion", 0)),
@@ -979,7 +894,8 @@ public class WrInspectionReportLabelConfiguration
         string labelName,
         string? endText = null,
         List<string>? additionalEndTexts = null,
-        List<string>? additionalTextStarts = null)
+        List<string>? additionalTextStarts = null,
+        bool boundSameLineWalkByOtherLabelPositions = false)
     {
         return
         [
@@ -1078,7 +994,8 @@ public class WrInspectionReportLabelConfiguration
                     // and it's already handled separately (see RestrictToPossibility's zero-lines
                     // fallback).
                     new TextToMatch("")
-                ]
+                ],
+                BoundSameLineWalkByOtherLabelPositions = boundSameLineWalkByOtherLabelPositions
             }
         ];
     }

@@ -1072,7 +1072,9 @@ public class PdfDataExtractorService(
         var wrappedLines = DocumentLineWrapped.WrapLines(lines, false);
         var joinedLines = string.Join(',', lines.Select(line => line.Text));
         var documentLineService = new DocumentLineService(lines);
-        
+
+        var labelPositionIndex = BuildLabelPositionIndex(wrappedLines, labelLookups);
+
         foreach (var (labelGroupName, labels) in labelLookups)
         {
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
@@ -1103,7 +1105,8 @@ public class PdfDataExtractorService(
                         lookupConfiguration,
                         this,
                         documentLineService,
-                        additionalInformationStore);
+                        additionalInformationStore,
+                        labelPositionIndex);
 
                 if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToClaimGroup))
                 {
@@ -1121,6 +1124,61 @@ public class PdfDataExtractorService(
         }
 
         return labelGroupMatches;
+    }
+
+    /// <summary>
+    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - each label group's own (X, Y)
+    /// position at its first occurrence in the document. First occurrence wins: grid fields
+    /// render at a consistent X down a section, so it's a reasonable proxy without a more
+    /// expensive median calculation. Y is recorded so callers can restrict to the same section
+    /// (see FindSectionEndTop) rather than any coincidentally similar X.
+    /// </summary>
+    private static Dictionary<string, (double Left, double Top)> BuildLabelPositionIndex(
+        IReadOnlyList<DocumentLineWrapped> lines,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups)
+    {
+        var index = new Dictionary<string, (double Left, double Top)>();
+
+        foreach (var wrappedLine in lines)
+        {
+            var line = wrappedLine.Line;
+
+            if (line == null)
+            {
+                continue;
+            }
+
+            foreach (var column in line.Columns)
+            {
+                var firstWord = column.Words.FirstOrDefault();
+
+                if (firstWord == null || string.IsNullOrEmpty(column.Text))
+                {
+                    continue;
+                }
+
+                foreach (var (labelGroupName, labelAlternates) in labelLookups)
+                {
+                    if (index.ContainsKey(labelGroupName))
+                    {
+                        continue;
+                    }
+
+                    var matchesThisGroup = labelAlternates
+                        .SelectMany(label => label.TextStart ?? [])
+                        .Any(textStart =>
+                            !string.IsNullOrWhiteSpace(textStart.Text)
+                            && column.Text.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchesThisGroup)
+                    {
+                        index[labelGroupName] = (firstWord.Coordinates.Left, line.Top);
+                    }
+                }
+            }
+        }
+
+        return index;
     }
 
     private static bool AlreadyMatchedLabelGroup(

@@ -26,7 +26,8 @@ public static class FindLabelGroupMatchesHelper
         LookupConfiguration lookupConfiguration,
         PdfDataExtractorService pdfDataExtractorService,
         IDocumentLineService documentLineService,
-        Dictionary<string, object?> additionalInformationStore)
+        Dictionary<string, object?> additionalInformationStore,
+        IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -268,10 +269,36 @@ public static class FindLabelGroupMatchesHelper
                         var clonedPartialLine = partialLine.Clone();
                         var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
 
+                        // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of
+                        // the nearest other known field's column, restricted to this field's own
+                        // section (via FindSectionEndTop) so an unrelated field in a different
+                        // section can't coincidentally bound it. Skipped if the section end can't
+                        // be found, rather than falling back to an unbounded document-wide search.
+                        double? nextFieldBoundaryX = null;
+
+                        if (label.BoundSameLineWalkByOtherLabelPositions
+                            && labelPositionIndex != null
+                            && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
+                        {
+                            var sectionEndTop = FindSectionEndTop(lines, matchedLabel.TextEnd);
+
+                            if (sectionEndTop.HasValue)
+                            {
+                                nextFieldBoundaryX = labelPositionIndex
+                                    .Where(kv => kv.Key != labelGroupName
+                                        && kv.Value.Left > ownFieldPosition.Left
+                                        && kv.Value.Top > sectionEndTop.Value)
+                                    .Select(kv => (double?)kv.Value.Left)
+                                    .DefaultIfEmpty(null)
+                                    .Min();
+                            }
+                        }
+
                         var (newColumns, columnIndex) = WalkSameLineColumns(
                             clonedPartialLine.Columns,
                             matchedText,
-                            matchedLabel.TextEnd);
+                            matchedLabel.TextEnd,
+                            nextFieldBoundaryX);
 
                         clonedPartialLine.Columns = newColumns;
                         lineForPosition = clonedPartialLine;
@@ -503,6 +530,46 @@ public static class FindLabelGroupMatchesHelper
     }
 
     /// <summary>
+    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - the Y (top) of the first line
+    /// starting with one of the field's own real TextEnd markers (skips the "[END_OF_BLOCK]"
+    /// sentinel). Reuses the field's own already-correct section boundary rather than an
+    /// arbitrary Y-distance tolerance, which can't reliably separate "the real next field in
+    /// this grid" from "an unrelated field in the next section down" - on real documents these
+    /// have sat as little as ~20 units apart.
+    /// </summary>
+    internal static double? FindSectionEndTop(
+        IReadOnlyList<DocumentLineWrapped> lines,
+        IReadOnlyList<TextToMatch>? textEnd)
+    {
+        var realEndMarkers = (textEnd ?? [])
+            .Where(end => !string.IsNullOrEmpty(end.Text) && end.Text != "[END_OF_BLOCK]")
+            .Select(end => end.Text)
+            .ToList();
+
+        if (realEndMarkers.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var wrappedLine in lines)
+        {
+            var line = wrappedLine.Line;
+
+            if (line == null)
+            {
+                continue;
+            }
+
+            if (realEndMarkers.Any(marker => line.Text.StartsWith(marker, StringComparison.OrdinalIgnoreCase)))
+            {
+                return line.Top;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// For a LimitTo.SameColumn/SpecifiedColumn label, finds the column on this line whose
     /// text contains the label's own matched text, then keeps walking forward through
     /// subsequent columns on the SAME line - the value may sit in an adjacent column
@@ -511,11 +578,16 @@ public static class FindLabelGroupMatchesHelper
     /// label's own end markers (the next field), or runs out of columns.
     /// Returns the columns to keep, and the 0-based index of the label's own column (used by
     /// <see cref="FindNextLineColumnByPosition"/> for LimitTo.SpecifiedColumn).
+    ///
+    /// nextFieldBoundaryX (LabelToMatch.BoundSameLineWalkByOtherLabelPositions) also stops the
+    /// walk once a candidate column reaches or passes it - a position-based bound alongside the
+    /// textEnd check, for intruding content that isn't itself another field's label text.
     /// </summary>
     internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
         IReadOnlyList<DocumentLineColumn> columns,
         string? matchedText,
-        IReadOnlyList<TextToMatch>? textEnd)
+        IReadOnlyList<TextToMatch>? textEnd,
+        double? nextFieldBoundaryX = null)
     {
         var newColumns = new List<DocumentLineColumn>();
         var columnIndex = 0;
@@ -538,7 +610,12 @@ public static class FindLabelGroupMatchesHelper
                 !string.IsNullOrEmpty(end.Text)
                 && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
 
-            if (isNextFieldStart)
+            var candidateLeft = column.Words.FirstOrDefault()?.Coordinates.Left;
+            var isPastKnownFieldBoundary = nextFieldBoundaryX.HasValue
+                && candidateLeft.HasValue
+                && candidateLeft.Value >= nextFieldBoundaryX.Value;
+
+            if (isNextFieldStart || isPastKnownFieldBoundary)
             {
                 break;
             }
@@ -559,6 +636,11 @@ public static class FindLabelGroupMatchesHelper
     /// MeterVerification for the real case this exists for: on several real WR51 templates the
     /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
     /// row, with no dedicated value row for these fields in between at all.
+    ///
+    /// Deliberately only checks the row's first column, not the specific column that will end
+    /// up selected for this field - rejecting the whole row on a multi-column line risks
+    /// discarding a legitimate answer sitting in a later column just because the row's own
+    /// first column happens to resemble something else.
     /// </summary>
     internal static bool ShouldExcludeNextLine(DocumentLine nextLine, IReadOnlyList<string>? excludeIfFirstColumnStartsWith)
     {

@@ -15,4 +15,6 @@ public class ProcessRun
     public int SuccessCount { get; set; }
 
     public string? Status { get; set; }
+
+    public int NumberOfFilesNotFound =>  NumberOfFiles - SuccessCount;
 }

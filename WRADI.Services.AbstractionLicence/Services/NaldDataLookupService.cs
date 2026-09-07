@@ -228,7 +228,11 @@ public class NaldDataLookupService(
             return MatchExplicitness.NotMatched;
         }
         
-        var documentDescriptionLower = documentDescription.ToLower();
+        var documentDescriptionLower = documentDescription
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty)
+            .ToLower();
+        
         var documentPurposeIsMapped = documentToNaldPurposeMapping.ContainsKey(documentDescriptionLower);
 
         if (!documentPurposeIsMapped)

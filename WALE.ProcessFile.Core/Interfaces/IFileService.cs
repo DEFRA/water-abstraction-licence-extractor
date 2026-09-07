@@ -24,5 +24,7 @@ public interface IFileService
     
     public Task RenameAsync(string originalFilename, string newFilename);
     
+    public Task CopyAsync(string filename, string destinationBucketName);
+    
     public Task<string> GetPresignedUrlAsync(string filename);
 }

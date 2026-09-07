@@ -11,7 +11,7 @@ workflow = "ImportNaldData";
 //workflow = "ClearCacheMultiple";
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-//workflow = "CopyS3Files";
+workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
 //workflow = "GenerateLinkedLicencesCsv";
 workflow = "PurposeMapper";
@@ -41,6 +41,10 @@ switch (workflow)
 
         var includeVersionMatch = false;
         return await GenerateLicenceReaderExtract.GenerateLicenceReaderExtractAsync(includeVersionMatch);
+    
+    case "CopyS3Files": // FREQUENT - Promotion of S3 files between environments (e.g. DEV to TST)
+        await CopyS3Files.RunAsync();
+        break;
     
     case "DuplicateLicenceIdentificationExtractBySize": // INFREQUENT - Identify duplicates by file size
         return await DuplicateLicenceIdentificationExtract.GenerateDuplicateLicenceIdentificationExtractAsync(
@@ -101,10 +105,6 @@ switch (workflow)
     
     case "TestsForAiPrompts": // POC - An old POC in AI prompts to read files
         await TestsForAiPrompts.TestsForAiPromptsAsync();
-        break;
-    
-    case "CopyS3Files": // UNCOMMONLY USED - Promotion of S3 files between environments
-        await CopyS3Files.RunAsync();
         break;
     
     case "ForceLowercaseS3Files": // UNCOMMONLY USED - Fix casing of S3 files

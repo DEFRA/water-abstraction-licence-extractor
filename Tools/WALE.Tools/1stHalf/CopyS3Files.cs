@@ -50,7 +50,7 @@ public static class CopyS3Files
             .ToList();
         
         var copyingTasks = new List<Task>();
-        const int maxConcurrent = 20; // Might be a touch to high
+        const int maxConcurrent = 12; // Might be a touch to high
         var loopIdx = 1;
         
         Console.WriteLine($"{missingFiles.Count} missing files");

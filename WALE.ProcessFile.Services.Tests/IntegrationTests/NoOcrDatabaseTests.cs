@@ -1,10 +1,12 @@
 using FakeItEasy;
 using Meziantou.Xunit;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
@@ -23,6 +25,7 @@ using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
@@ -58,6 +61,13 @@ public class NoOcrDatabaseTests
             AbsLicReadService,
             AbsLicWriteService);
     
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService =
+        new DatabaseAbstractionLicenceOutputService(
+            null!,
+            AbsLicReadService,
+            AbsLicWriteService,
+            null!);
+    
     private static readonly INaldDataLookupService NaldDataLookupService;
     private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -81,7 +91,8 @@ public class NoOcrDatabaseTests
 
     static NoOcrDatabaseTests()
     {
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService, memoryCache);
     }
     
     private static async Task<ILicenceNumberService> GetLicenceNumbersAsync(short regionCode)

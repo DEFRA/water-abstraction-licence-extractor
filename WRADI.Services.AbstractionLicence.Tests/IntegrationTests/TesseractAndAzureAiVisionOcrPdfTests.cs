@@ -1,9 +1,11 @@
 using FakeItEasy;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -22,6 +24,7 @@ using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests;
 
@@ -31,6 +34,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new FileSystemAbstractionLicenceCacheService("Cache/");
+        var realAbsLicOutputService = new FileSystemAbstractionLicenceOutputService("Cache/");
 
         var naldData = new Dictionary<string, List<NaldAbstractionData>>
         {
@@ -59,17 +63,20 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             }
         };
 
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             naldData,
             []);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService, memoryCache);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");

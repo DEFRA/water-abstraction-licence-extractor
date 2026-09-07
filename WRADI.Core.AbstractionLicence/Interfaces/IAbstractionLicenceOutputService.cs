@@ -52,12 +52,17 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun);
-    
-        
+
     Task UpdateProcessRunByLicenceNumbersAsync(
         int processRunId,
         string[] licenceNumbers);
 
     Task UpdateLicenceListProcessRunAsync(
         int processRunId);
+    
+    Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
+    
+    Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
 }

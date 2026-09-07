@@ -6,6 +6,9 @@ using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Core.Models.NoOcrService;
+using WALE.ProcessFile.Core.Models.OcrService;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
@@ -673,6 +676,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            select
                                filename,
+                               file_id,
                                status
                            FROM public.matches_result
                            where

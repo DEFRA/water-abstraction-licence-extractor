@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Models;
 using FormattingHelper = WALE.ProcessFile.Core.Helpers.FormattingHelper;

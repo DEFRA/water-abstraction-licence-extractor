@@ -27,6 +27,7 @@
       <ProjectReference Include="..\WRADI.Database.PostgreSQL.AbstractionLicence\WRADI.Database.PostgreSQL.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.AbstractionLicence\WRADI.Services.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.Cache.AbstractionLicence\WRADI.Services.Cache.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\WRADI.Services.Output.AbstractionLicence\WRADI.Services.Output.AbstractionLicence.csproj" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">

@@ -4,10 +4,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>WRADI.DocumentType.AbstractionLicence</RootNamespace>
+        <UserSecretsId>ccca1b12-abf3-44c7-8310-f79944f929f7</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
       <ProjectReference Include="..\WRADI.Core.AbstractionLicence\WRADI.Core.AbstractionLicence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
     </ItemGroup>
 </Project>

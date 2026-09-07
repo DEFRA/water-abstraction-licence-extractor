@@ -7,8 +7,12 @@ public class Purpose
     public string? Description { get; set; }
     
     public string[]? NaldIds { get; set; }
+
+    public string? NaldLevel1Description { get; set; }
     
-    public string? NaldDescription { get; set; }
+    public string? NaldLevel2Description { get; set; }
+    
+    public string? NaldLevel3Description { get; set; }
     
     public bool? IsImplicit { get; set; }
 }

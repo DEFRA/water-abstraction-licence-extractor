@@ -4,7 +4,10 @@ public class ProcessRunQuery
 {
     public string? SearchTerm { get; init; } = string.Empty;
 
-    public string SearchTermClean => (SearchTerm?.Equals("N/A", StringComparison.OrdinalIgnoreCase) == true ? string.Empty : SearchTerm) ?? string.Empty;
+    public string SearchTermClean =>
+        (SearchTerm?.Equals("N/A", StringComparison.OrdinalIgnoreCase) == true
+            ? string.Empty : SearchTerm)
+            ?? string.Empty;
 
     public int Skip { get; set; } = 0;
 

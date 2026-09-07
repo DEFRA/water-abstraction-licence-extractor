@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -122,7 +124,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
         naldLinkedLicenceHelper: naldLinkedLicenceHelper,
-        lockInProcess: true);
+        lockInProcess: true,
+        savePurposeMapping: true);
     
     try
     {
@@ -586,15 +589,18 @@ ConfiguredServices ConfigureServices(
         pdfDataExtractors.Add(pdfDataExtractor);
     }
 
+    var naldDataLookupService = new NaldDataLookupService(
+        abstractionLicenceCacheService,
+        abstractionLicenceOutputService,
+        new MemoryCache(new MemoryCacheOptions()));
+    
     return new ConfiguredServices
     {
         CacheService = cacheService,
-        AbstractionLicenceCacheService =
-            abstractionLicenceCacheService,
         OutputService = outputService,
-        AbstractionLicenceOutputService =
-            abstractionLicenceOutputService,
-        NaldDataLookupService = new NaldDataLookupService(abstractionLicenceCacheService),
+        AbstractionLicenceCacheService = abstractionLicenceCacheService,
+        AbstractionLicenceOutputService = abstractionLicenceOutputService,
+        NaldDataLookupService = naldDataLookupService,
         LicenceNumberService = null,
         DmsLookupService = new DmsLookupService(),
         PdfDataExtractorServices = pdfDataExtractors,
@@ -609,8 +615,7 @@ ConfiguredServices ConfigureServices(
         InternalDataPath = internalDataPath,
         LicenceDataPath = licenceDataPath,
         LicenceSetsDataPath = licenceSetsDataPath,
-        ThumbnailImageDataPath =
-            thumbnailImageDataPath,
+        ThumbnailImageDataPath = thumbnailImageDataPath,
         FullImageDataPath = fullImageDataPath,
         RefreshCache = refreshCache,
         DmsReportPath = fileMappingPath,

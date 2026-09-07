@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
@@ -29,7 +30,9 @@ public class RealNaldDataNaldPurposesHelperTests
             null!);
         
         var realAbsLicOutputService = new DatabaseAbstractionLicenceOutputService(null!, ReadService, null!, null!);
-        NaldDataLookupService = new NaldDataLookupService(realAbsLicCacheService, realAbsLicOutputService);
+        
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(realAbsLicCacheService, realAbsLicOutputService, memoryCache);
     }
     
     [Fact]

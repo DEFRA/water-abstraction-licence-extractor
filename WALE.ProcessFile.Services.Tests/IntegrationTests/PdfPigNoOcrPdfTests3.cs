@@ -15,6 +15,7 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using FakeItEasy;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
@@ -51,7 +52,8 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
             [],
             FileLicenceMappingWithout52);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService, memoryCache);
     }
     
     private static readonly NpgsqlDataSourceProvider NpgsqlDataSourceProvider =

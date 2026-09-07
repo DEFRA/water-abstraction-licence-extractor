@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WRADI.Core.AbstractionLicence.Models;
@@ -12,6 +13,7 @@ public static class PurposeMapperSinglePurpose
 {
     public static async Task RunAsync(int processRunId)
     {
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(KeyConfig.ApiBaseUrl);
 
@@ -19,7 +21,7 @@ public static class PurposeMapperSinglePurpose
         var outputService = new ApiOutputService(httpClient);
         var absOutputService = new ApiAbstractionLicenceOutputService(httpClient);
         
-        var naldDataLookupService = new NaldDataLookupService(cacheService, absOutputService);
+        var naldDataLookupService = new NaldDataLookupService(cacheService, absOutputService, memoryCache);
         var licenceList = await outputService.GetSimpleMatchResults(processRunId);
         var usedNaldPurposeIds = new List<string>();
 

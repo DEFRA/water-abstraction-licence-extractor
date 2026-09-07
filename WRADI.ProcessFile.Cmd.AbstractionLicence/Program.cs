@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Exceptions;
@@ -583,7 +584,8 @@ ConfiguredServices ConfigureServices(
 
     var naldDataLookupService = new NaldDataLookupService(
         abstractionLicenceCacheService,
-        abstractionLicenceOutputService);
+        abstractionLicenceOutputService,
+        new MemoryCache(new MemoryCacheOptions()));
     
     return new ConfiguredServices
     {

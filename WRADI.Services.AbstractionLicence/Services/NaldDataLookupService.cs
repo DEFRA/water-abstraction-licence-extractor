@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -8,7 +9,8 @@ namespace WRADI.DocumentType.AbstractionLicence.Services;
 
 public class NaldDataLookupService(
     IAbstractionLicenceCacheService cacheService,
-    IAbstractionLicenceOutputService outputService) : INaldDataLookupService
+    IAbstractionLicenceOutputService outputService,
+    IMemoryCache memoryCache) : INaldDataLookupService
 {
     private readonly ConcurrentDictionary<string, NaldAbstractionData?> _naldAbstractionDataCache = new();
     private readonly ConcurrentDictionary<string, NaldImpoundmentData?> _naldImpoundmentDataCache = new();
@@ -87,10 +89,18 @@ public class NaldDataLookupService(
         {
             throw new Exception("Document description is empty");
         }
+
+        const string cacheKey = "DocumentToNaldPurposeMapping";
         
-        var documentToNaldPurposeMapping = ToDict(
-            await outputService.GetDocumentNaldPurposeMapAsync()); // TODO dont do this everytime - cache it
-        
+        if (!memoryCache.TryGetValue(cacheKey, out Dictionary<string, List<NaldPurposeMap>>? documentToNaldPurposeMapping))
+        {
+            var documentNaldPurposeMap = await outputService.GetDocumentNaldPurposeMapAsync();
+            documentToNaldPurposeMapping = ToDict(documentNaldPurposeMap);
+
+            var fiveMinutes = new TimeSpan(0, 0, 5, 0);
+            memoryCache.Set(cacheKey, documentToNaldPurposeMapping, fiveMinutes);
+        }
+
         // There is only one, so must be that
         if (groupedPurposes.Count == 1)
         {
@@ -109,7 +119,7 @@ public class NaldDataLookupService(
                 var contains = MappingContainsPurpose(
                     singlePurposeArray[0],
                     documentDescription,
-                    documentToNaldPurposeMapping);
+                    documentToNaldPurposeMapping!);
                 
                 if (contains != MatchExplicitness.ExactMatch)
                 {
@@ -141,7 +151,7 @@ public class NaldDataLookupService(
             var contains = MappingContainsPurpose(
                 firstNaldPurpose,
                 documentDescription,
-                documentToNaldPurposeMapping);
+                documentToNaldPurposeMapping!);
 
             if (contains == MatchExplicitness.NotMatched)
             {

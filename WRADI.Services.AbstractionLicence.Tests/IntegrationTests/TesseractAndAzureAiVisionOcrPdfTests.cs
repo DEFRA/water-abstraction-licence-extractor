@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -69,7 +70,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             naldData,
             []);
         
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService, memoryCache);
     }
     
     private static readonly ICacheService CacheService;

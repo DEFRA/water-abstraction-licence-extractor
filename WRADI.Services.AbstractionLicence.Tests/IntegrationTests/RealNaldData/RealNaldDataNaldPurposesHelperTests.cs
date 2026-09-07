@@ -94,7 +94,7 @@ public class RealNaldDataNaldPurposesHelperTests
             "[DOENSNT_MATTER]",
             false);
         
-        Assert.Equal("DescriptionMatchesDescription", matchType1);
+        Assert.Equal("ExplicitMapping", matchType1);
         Assert.Single(relevantNaldPurposes1);
         Assert.Equal("I", relevantNaldPurposes1[0].PrimaryCategoryCode);
         Assert.Equal("EXT", relevantNaldPurposes1[0].SecondaryCategoryCode);
@@ -115,7 +115,7 @@ public class RealNaldDataNaldPurposesHelperTests
             "[DOENSNT_MATTER]",
             false);
         
-        Assert.Equal("OnlyOne", matchType2);
+        Assert.Equal("OnlyOneLeft", matchType2);
         Assert.Single(relevantNaldPurposes2);
         Assert.Equal("I", relevantNaldPurposes2[0].PrimaryCategoryCode);
         Assert.Equal("EXT", relevantNaldPurposes2[0].SecondaryCategoryCode);

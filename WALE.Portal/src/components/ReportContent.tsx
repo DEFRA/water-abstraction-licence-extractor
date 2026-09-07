@@ -19,7 +19,7 @@ interface ReportContentProps {
     onOpenReport?: (fileId: string) => void;
 }
 
-type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
+type TabType = 'verification' | 'json-new' | 'json-new-verify' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
 export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
@@ -32,6 +32,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [currentLicence, setCurrentLicence] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
     const [licenceString, setLicenceString] = useState<string | null>(null);
+    const [licenceVerificationStringResult, setLicenceVerificationStringResult] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
     // const [textData, setTextData] = useState<string>('');
 
@@ -46,13 +47,14 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             setLoading(true);
             
             // Load data using API client
-            const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+            const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult, licenceVerificationStringResult] = await Promise.allSettled([
                 waleApiClient.matchesResult(fileId),
                 waleApiClient.matchesResultString(fileId),
                 waleApiClient.licence(fileId, processRunId, false),
                 waleApiClient.licence(fileId, processRunId, true),
                 waleApiClient.licenceSets(fileId),
                 waleApiClient.licenceString(fileId, processRunId, false),
+                waleApiClient.licenceString(fileId, processRunId, true),
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
@@ -61,6 +63,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
             if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
             if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
+            if (licenceVerificationStringResult.status === 'fulfilled') setLicenceVerificationStringResult(JSON.parse(licenceVerificationStringResult.value));
 
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load report');
@@ -170,6 +173,18 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                             <li>
                                 <a
                                     href="#"
+                                    className={activeTab === 'json-new-verify' ? 'selectedTab' : ''}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setActiveTab('json-new-verify');
+                                    }}
+                                >
+                                    Licence data with Verifications
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
                                     className={activeTab === 'json-set' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -233,6 +248,13 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                         {activeTab === 'json-new' && licenceString && (
                             <div id="jsonNewPath">
                                 <JsonView src={licenceString} collapsed={1} theme="default"/>
+                            </div>
+                        )}
+                        
+                        {/* Tab Content */}
+                        {activeTab === 'json-new-verify' && licenceString && (
+                            <div id="jsonNewPathVerify">
+                                <JsonView src={licenceVerificationStringResult} collapsed={1} theme="default"/>
                             </div>
                         )}
 

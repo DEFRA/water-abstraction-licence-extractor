@@ -2,7 +2,6 @@ using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -34,10 +33,6 @@ public static class PurposeMapperSinglePurpose
         var onlyOneLeftCount = 0;
         var explicitCount = 0;
         var notMatchedCount = 0;
-
-        /*licenceList = licenceList
-            .Where(l => l.Filename == "22630009__ee0f2743-9d28-9a16-10c5-57868af55602.pdf")
-            .ToList();*/
         
         foreach (var licence in licenceList)
         {

@@ -110,12 +110,9 @@ switch (workflow)
     case "ForceLowercaseS3Files": // UNCOMMONLY USED - Fix casing of S3 files
         await ForceLowercaseS3Files.RunAsync();
         break;
+    
     case "PurposeMapper":
         await PurposeMapperSinglePurpose.RunAsync(processRunId);
-        
-        //PurposeMapperLlm.MapPurposes(
-         //   "/Users/ryanbarlow/Documents/NaldPurposes.csv",
-         //   "/Users/ryanbarlow/Documents/DocumentPurposes.txt");
         break;
 }
 

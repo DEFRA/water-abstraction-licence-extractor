@@ -27,6 +27,8 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
     
     Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
+
+    Task<Licence?> GetLicenceAsync(int licenceId);
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     

@@ -98,7 +98,7 @@ public class ProcessRunsController(
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
+    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunListAsync(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {

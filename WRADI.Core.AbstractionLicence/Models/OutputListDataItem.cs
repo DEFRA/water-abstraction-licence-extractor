@@ -5,6 +5,8 @@ public class OutputListDataItem
     public int? processRunId { get; set; }
     
     public Guid fileId { get; set; }
+    
+    public int licenceId { get; set; }// TODO check its set
 
     public string? filename { get; set; }
     

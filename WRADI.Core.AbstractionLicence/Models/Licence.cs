@@ -10,6 +10,8 @@ public class Licence
 {
     public int? ProcessRunId { get; set; }
     
+    public int LicenceId { get; set; }
+    
     public string Id
     {
         get
@@ -67,6 +69,7 @@ public class Licence
         return new Licence
         {
             ProcessRunId = ProcessRunId,
+            LicenceId = LicenceId,
             Status = Status,
             LicenceNumber = LicenceNumber,
             RegionId = RegionId,

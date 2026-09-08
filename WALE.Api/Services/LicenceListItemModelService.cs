@@ -48,6 +48,7 @@ public class LicenceListItemModelService
         {
             ProcessRunId = source.processRunId!.Value,
             FileId = source.fileId,
+            LicenceId = source.licenceId,
             Filename = source.filename ?? string.Empty,
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,

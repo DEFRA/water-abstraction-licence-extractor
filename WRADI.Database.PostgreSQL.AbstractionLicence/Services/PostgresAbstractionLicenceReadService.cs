@@ -1356,6 +1356,40 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return [];
     }
 
+    public async Task<Licence?> GetLicenceAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               data,
+                               process_run_id 
+                           FROM licence
+                           WHERE
+                               id = @LicenceId;
+                           """;
+
+        var result = await QueryFirstOrDefaultAsync<(string Data, int ProcessRunId)?>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
+            });
+        
+        if (result == null)
+        {
+            return null;
+        }
+
+        var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        data.NoneSchemaData.TryAdd("licenceId", licenceId);
+        data.LicenceId = licenceId;
+        data.ProcessRunId = result.Value.ProcessRunId;
+        
+        return data;
+    }
+
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -1364,8 +1398,9 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                data,
                                licence_id 
                            FROM licence
-                           WHERE file_id = @FileId
-                           AND process_run_id = @ProcessRunId;
+                           WHERE
+                               file_id = @FileId
+                               AND process_run_id = @ProcessRunId;
                            """;
 
         var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId)?>(
@@ -1377,6 +1412,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                 FileId = fileId,
                 ProcessRunId = processRunId
             });
+        
         if (result == null)
         {
             return null;
@@ -1384,6 +1420,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
         data.ProcessRunId = processRunId;
         
         return data;
@@ -1418,7 +1455,9 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
         data.ProcessRunId = processRunId;
+        
         return data;
     }
     
@@ -2924,29 +2963,31 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .Select(x => x.LicenceListItemId)
             .ToArray();
 
-        var linkedLicences = await GetLinkedLicencesAsync(
+        var linkedLicencesTask = GetLinkedLicencesAsync(
             connection,
             itemIds,
             cancellationToken);
 
-        var licenceSets = await GetLicenceSetsAsync(
+        var licenceSetsTask = GetLicenceSetsAsync(
             connection,
             processRunId,
             itemIds,
             cancellationToken);
         
         var verificationSections =
-            await GetLicenceVerificationSectionsAsync(
+             await GetLicenceVerificationSectionsAsync(
                 connection,
                 processRunId,
                 itemIds,
                 cancellationToken);
+
+        var linkedLicences = await linkedLicencesTask;
+        var licenceSets = await licenceSetsTask;
         
         return parents
             .Select(parent => new LicenceListItemAggregate
             {
                 Licence = parent,
-                
                 LinkedLicences = linkedLicences.TryGetValue(
                     parent.LicenceListItemId,
                     out var itemLinkedLicences)
@@ -3378,6 +3419,7 @@ private static async Task<
         """
         SELECT
             licence_list_item_id AS LicenceListItemId,
+            licence_id AS LicenceId,
             process_run_id AS ProcessRunId,
             file_id AS FileId,
             filename AS Filename,

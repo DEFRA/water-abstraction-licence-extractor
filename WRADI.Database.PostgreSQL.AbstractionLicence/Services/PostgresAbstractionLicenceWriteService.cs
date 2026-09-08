@@ -660,6 +660,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 process_run_id,
                 file_id,
+                licence_id,
                 filename,
                 licence_number,
                 licence_holder,
@@ -691,6 +692,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 @ProcessRunId,
                 @FileId,
+                @LicenceId,
                 @Filename,
                 @LicenceNumber,
                 @LicenceHolder,
@@ -722,7 +724,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 process_run_id,
                 file_id,
-                licence_number
+                licence_number,
+                licence_id
             )
             DO UPDATE SET
                 filename = EXCLUDED.filename,
@@ -761,6 +764,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         {
             item.ProcessRunId,
             item.FileId,
+            item.LicenceId,
             item.Filename,
             item.LicenceNumber,
             item.LicenceHolder,

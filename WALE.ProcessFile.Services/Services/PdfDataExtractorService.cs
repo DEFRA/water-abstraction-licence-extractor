@@ -97,6 +97,7 @@ public class PdfDataExtractorService(
             processRunId,
             isUpdate);
 
+        matchesResult.MatchesResultId = matchResultId;
         var dtStartSaveMatches = DateTime.Now;
 
         if (matchesResult.Matches == null)
@@ -212,6 +213,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            MatchesResultId = -1,
             FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(ScrapeStatus.Ok),

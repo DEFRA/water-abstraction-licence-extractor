@@ -274,6 +274,24 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
+    {
+        var path = $"/Extractor/Licence/GetByLicenceId?licenceId={licenceId}&applyVerifications={applyVerifications}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
         var path = $"/Extractor/Licence/GetByFileId?fileId={fileId}&processRunId={processRunId}&applyVerifications={applyVerifications}";

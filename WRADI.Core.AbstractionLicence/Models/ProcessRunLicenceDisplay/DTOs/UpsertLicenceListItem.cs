@@ -5,6 +5,8 @@ public sealed class UpsertLicenceListItem
     public int ProcessRunId { get; init; }
 
     public Guid FileId { get; init; }
+    
+    public int LicenceId { get; init; }
 
     public string Filename { get; init; } = string.Empty;
 

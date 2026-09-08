@@ -5,6 +5,8 @@ public sealed class LicenceListItem
     public long LicenceListItemId { get; set; }
 
     public int ProcessRunId { get; set; }
+    
+    public int LicenceId { get; set; }
 
     public Guid FileId { get; set; }
 

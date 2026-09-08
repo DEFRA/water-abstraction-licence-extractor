@@ -183,6 +183,15 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseWriteService.AddDocumentNaldPurposeMatchAsync(licNo, documentDescription, naldPurpose, matchType);
     }
 
+    public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
+    {
+        var licence = await databaseReadService.GetLicenceAsync(licenceId);
+
+        return licence == null || !applyVerifications
+            ? licence
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId!.Value, licence.ProcessRunId!.Value);
+    }
+
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
         var licence = await databaseReadService.GetLicenceAsync(fileId, processRunId);

@@ -183,10 +183,10 @@ public class DatabaseOutputService(
     {
         return databaseReadService.GetAllProcessRunsAsync();
     }
-    
-    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+
+    public Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId)
     {
-        return databaseReadService.GetMatchesResult(fileId);
+        return databaseReadService.GetMatchesResult(matchesResultId);
     }
 
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)

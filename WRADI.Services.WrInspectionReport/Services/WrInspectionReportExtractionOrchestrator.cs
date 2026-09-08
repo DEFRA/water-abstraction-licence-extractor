@@ -51,7 +51,24 @@ public static class WrInspectionReportExtractionOrchestrator
         // confidently resolve keeps its existing heuristic result unchanged. Not yet wired into
         // any production caller.
         ITableExtractorService? tableExtractorService = null,
-        byte[]? pdfBytesForTableExtraction = null)
+        byte[]? pdfBytesForTableExtraction = null,
+        // Cost-optimised two-tier design: pass a free/local extractor (e.g. TabulaTableExtractorService)
+        // as tableExtractorService and a paid/cloud one (e.g. AzureAiServicesDocumentIntelligenceTableExtractorService)
+        // here - the fallback is only ever tried, and only ever billed, when the primary resolved
+        // fewer than minimumFieldsToSkipFallback of the 13 grid fields confidently (see
+        // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
+        // behaviour unchanged.
+        ITableExtractorService? fallbackTableExtractorService = null,
+        // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08, see
+        // wr51_textract_tables_design memory for the full curve) - it's a step function, not
+        // smooth: 1/4/7 are flat at the same recall as Tabula alone (fallback usage climbs from
+        // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
+        // DI's own accuracy (154 Hit vs Azure-DI-alone's 151, on the same 187-field T1 grid
+        // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the
+        // measured sweet spot and the default here - raise towards GridFieldNames.Length for more
+        // accuracy at more cost, lower towards 1 to spend as little as possible, but neither
+        // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
+        int minimumFieldsToSkipFallback = 10)
     {
         var classificationConfiguration = configuration.Clone();
         classificationConfiguration.Labels = WrInspectionReportLabelConfiguration.GetClassificationLabels();
@@ -98,13 +115,27 @@ public static class WrInspectionReportExtractionOrchestrator
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {
-            await ApplyTableBasedGridMatchesAsync(
-                item,
-                realLabels,
-                tableExtractorService,
-                pdfBytesForTableExtraction,
-                dmsDataForFile.FileId,
-                processRunId);
+            try
+            {
+                await ApplyTableBasedGridMatchesAsync(
+                    item,
+                    realLabels,
+                    tableExtractorService,
+                    pdfBytesForTableExtraction,
+                    dmsDataForFile.FileId,
+                    processRunId,
+                    fallbackTableExtractorService,
+                    minimumFieldsToSkipFallback);
+            }
+            catch (Exception)
+            {
+                // Final safety net, on top of TryGetTableMatchesAsync's own per-attempt catch -
+                // this overlay is opt-in and best-effort by design, the heuristic result above is
+                // already a complete, real extraction. Nothing here (a bug in the merge logic
+                // itself, say) must ever discard that already-good result; it should just mean
+                // this document gets the heuristic answer for the grid fields, same as any
+                // document where the table lookup legitimately finds nothing.
+            }
         }
 
         return (stopExecution, alreadySaved, item, template);
@@ -120,15 +151,22 @@ public static class WrInspectionReportExtractionOrchestrator
         ITableExtractorService tableExtractorService,
         byte[] pdfBytes,
         Guid fileId,
-        int processRunId)
+        int processRunId,
+        ITableExtractorService? fallbackTableExtractorService = null,
+        int minimumFieldsToSkipFallback = 10)
     {
-        var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
+        var tableMatches = await TryGetTableMatchesAsync(tableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
 
-        var tableMatches = WrInspectionReportTableMatcher.MatchGridFields(
-            tables,
-            labelLookups,
-            GridFieldNames,
-            tableExtractorService.Name);
+        // Only reached - and only billed, for a paid fallback - when the primary extractor
+        // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
+        // the grid confidently. At the default (1), a primary that resolved even one field never
+        // triggers this, however much of the rest of the grid it missed - that's the cheapest,
+        // most conservative setting. A caller wanting more of a paid fallback's accuracy back, at
+        // the cost of more paid calls, raises this towards GridFieldNames.Length.
+        if (tableMatches.Count < minimumFieldsToSkipFallback && fallbackTableExtractorService != null)
+        {
+            tableMatches = await TryGetTableMatchesAsync(fallbackTableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+        }
 
         if (tableMatches.Count == 0)
         {
@@ -139,5 +177,32 @@ public static class WrInspectionReportExtractionOrchestrator
             .Where(m => m.LabelGroupName == null || !tableMatches.ContainsKey(m.LabelGroupName))
             .Concat(tableMatches.Values)
             .ToList();
+    }
+
+    // Failure here is treated identically to "found nothing confident" (empty dictionary), not
+    // propagated - so a primary extractor that throws (a local parser tripping on a malformed
+    // PDF, say) still gives a fallback extractor its own chance, rather than the whole overlay
+    // being abandoned on the primary's failure alone.
+    private static async Task<Dictionary<string, LabelGroupResult>> TryGetTableMatchesAsync(
+        ITableExtractorService tableExtractorService,
+        List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+        byte[] pdfBytes,
+        Guid fileId,
+        int processRunId)
+    {
+        try
+        {
+            var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
+
+            return WrInspectionReportTableMatcher.MatchGridFields(
+                tables,
+                labelLookups,
+                GridFieldNames,
+                tableExtractorService.Name);
+        }
+        catch (Exception)
+        {
+            return [];
+        }
     }
 }

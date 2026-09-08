@@ -156,6 +156,155 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         testOutputHelper.WriteLine($"CSV written to:           {csvPath}");
 
+        await ReportCoverage(formsList, testOutputHelper, failures, total);
+    }
+
+    /// <summary>
+    /// Same full real corpus, with the cost-optimised table extraction overlay enabled (Tabula
+    /// primary, free; Azure DI fallback, paid, only on documents where Tabula resolves fewer than
+    /// WrInspectionReportExtractionOrchestrator's default minimumFieldsToSkipFallback (10) of the
+    /// 13 grid fields - see that class and the wr51_textract_tables_design memory for how that
+    /// default was tuned against the golden set). No ground truth exists at corpus scale, so this
+    /// reports coverage (field presence), not accuracy - compare against
+    /// WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
+    /// hand for the LicenceProvisions.*/meter fields the overlay targets. Real Azure DI cost is
+    /// incurred here (once per T1 document where the fallback fires) - this is NOT a free test to
+    /// re-run casually; each first run against a given document is billed, further runs hit that
+    /// document's cache.
+    /// </summary>
+    [Fact]
+    public async Task WhenExtractingRealWr51CorpusWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
+    {
+        if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
+        {
+            testOutputHelper.WriteLine(
+                "AiServicesEndpoint/AiServicesKey user secrets not set for " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the full-corpus table-extraction run. " +
+                "Set both via dotnet user-secrets to enable it.");
+            return;
+        }
+
+        var pdfFolder = TestConfig.PdfFolder;
+
+        var files = Directory.GetFiles(pdfFolder, "*.pdf")
+            .Select(Path.GetFileName)
+            .Where(f => f != null)
+            .Select(f => f!)
+            .Where(f => f.StartsWith("wr51", StringComparison.OrdinalIgnoreCase)
+                && !f.Contains("dummy", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
+
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
+
+        var failures = new ConcurrentBag<(string FileName, string Error)>();
+        var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
+        var t1FileNames = new ConcurrentBag<string>();
+        var fallbackUsedFileNames = new ConcurrentBag<string>();
+
+        await Parallel.ForEachAsync(
+            files,
+            new ParallelOptions { MaxDegreeOfParallelism = 8 },
+            async (fileName, _) =>
+            {
+                var pdfDataExtractor = BuildPdfDataExtractor();
+                // TabulaTableExtractorService is free/local; AzureAiServicesDocumentIntelligenceTableExtractorService
+                // is the paid fallback, invoked by the orchestrator only when Tabula resolves too
+                // little - a fresh instance per document mirrors how a real per-message Lambda
+                // invocation would construct these, and both are stateless.
+                var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService();
+                var fallbackTableExtractorService = new WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.AzureAiServicesDocumentIntelligenceTableExtractorService(
+                    TestConfig.AiServicesEndpoint!,
+                    TestConfig.AiServicesKey!,
+                    CacheService);
+
+                try
+                {
+                    var fileId = FileHelper.ExtractFileId(fileName);
+
+                    if (fileId == null)
+                    {
+                        failures.Add((fileName, "Could not extract file id from filename"));
+                        return;
+                    }
+
+                    var dmsFileData = new DmsFileData { FileId = fileId.Value };
+                    var pdfBytes = await File.ReadAllBytesAsync(Path.Combine(pdfFolder, fileName));
+
+                    var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
+                        fileName,
+                        dmsFileData,
+                        lookupConfiguration,
+                        [fileName],
+                        processRunId: -99,
+                        pdfDataExtractor,
+                        primaryTableExtractorService,
+                        pdfBytes,
+                        fallbackTableExtractorService);
+
+                    if (stopExecution || matchesResult == null)
+                    {
+                        failures.Add((fileName, "Extraction reported StopExecution or returned no result"));
+                        return;
+                    }
+
+                    if (template == WrTemplateType.T1)
+                    {
+                        t1FileNames.Add(fileName);
+
+                        if (matchesResult.Matches!.Any(m => m.ServiceName == fallbackTableExtractorService.Name))
+                        {
+                            fallbackUsedFileNames.Add(fileName);
+                        }
+                    }
+
+                    var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData, template);
+                    forms.Add(form);
+                }
+                catch (Exception ex)
+                {
+                    failures.Add((fileName, ex.Message));
+                }
+                finally
+                {
+                    pdfDataExtractor.Dispose();
+                }
+            });
+
+        var formsList = forms.ToList();
+
+        testOutputHelper.WriteLine($"T1 documents:             {t1FileNames.Count}");
+        testOutputHelper.WriteLine(
+            $"Paid Azure DI fallback used on {fallbackUsedFileNames.Count}/{t1FileNames.Count} T1 documents " +
+            $"({(t1FileNames.Count == 0 ? 0 : (double)fallbackUsedFileNames.Count / t1FileNames.Count):P1}) - " +
+            $"the rest resolved via Tabula alone, at no API cost.");
+        testOutputHelper.WriteLine("");
+
+        Directory.CreateDirectory(OutputService.OutputFolder!);
+        var csvPath = Path.Combine(OutputService.OutputFolder!, "_extraction-results-cost-optimized.csv");
+        var csvRows = formsList
+            .OrderBy(f => f.Metadata.Filename, StringComparer.OrdinalIgnoreCase)
+            .Select(WrInspectionReportCsvLine.FromForm)
+            .ToList();
+
+        await using (var writer = new StreamWriter(csvPath))
+        await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(csvRows);
+        }
+
+        testOutputHelper.WriteLine($"CSV written to:           {csvPath}");
+
+        await ReportCoverage(formsList, testOutputHelper, failures, files.Count);
+    }
+
+    private static async Task ReportCoverage(
+        List<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport> formsList,
+        ITestOutputHelper testOutputHelper,
+        IReadOnlyCollection<(string FileName, string Error)> failures,
+        int total)
+    {
         var licenceNumberFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.LicenceNumber));
         var inspectionDateFound = formsList.Count(f => f.InspectionDate.DateTime != null);
         var inspectingOfficerFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.InspectingOfficer));

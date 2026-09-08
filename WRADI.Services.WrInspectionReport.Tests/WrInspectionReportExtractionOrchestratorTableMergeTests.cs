@@ -21,10 +21,44 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
     private class FakeTableExtractorService(IReadOnlyList<OcrTable> tables) : ITableExtractorService
     {
         public string Name => "FakeTableExtractorService";
+        public int CallCount { get; private set; }
+
+        public Task<IReadOnlyList<OcrTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId)
+        {
+            CallCount++;
+            return Task.FromResult(tables);
+        }
+    }
+
+    private class ThrowingTableExtractorService : ITableExtractorService
+    {
+        public string Name => "ThrowingTableExtractorService";
 
         public Task<IReadOnlyList<OcrTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId) =>
-            Task.FromResult(tables);
+            throw new InvalidOperationException("Simulated local-parser failure on a malformed PDF");
     }
+
+    private static readonly OcrTable FullGridTable = new()
+    {
+        RowCount = 5,
+        ColumnCount = 3,
+        Cells =
+        [
+            new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Source of supply: ✓" },
+            new OcrTableCell { RowIndex = 0, ColumnIndex = 1, Content = "Quantities: ✓" },
+            new OcrTableCell { RowIndex = 0, ColumnIndex = 2, Content = "Land (only if specified): N/A" },
+            new OcrTableCell { RowIndex = 1, ColumnIndex = 0, Content = "Point of abstraction: ✓" },
+            new OcrTableCell { RowIndex = 1, ColumnIndex = 1, Content = "Means of measurement: ✓" },
+            new OcrTableCell { RowIndex = 1, ColumnIndex = 2, Content = "Charging factors: N/A" },
+            new OcrTableCell { RowIndex = 2, ColumnIndex = 0, Content = "Means of abstraction: ✓" },
+            new OcrTableCell { RowIndex = 2, ColumnIndex = 1, Content = "Records: ✓" },
+            new OcrTableCell { RowIndex = 2, ColumnIndex = 2, Content = "Other provisions (specify below): N/A" },
+            new OcrTableCell { RowIndex = 3, ColumnIndex = 0, Content = "Purpose(s): ✓" },
+            new OcrTableCell { RowIndex = 3, ColumnIndex = 1, Content = "Provision of information: ✓" },
+            new OcrTableCell { RowIndex = 4, ColumnIndex = 0, Content = "Period: ✓" },
+            new OcrTableCell { RowIndex = 4, ColumnIndex = 1, Content = "Special conditions: N/A" }
+        ]
+    };
 
     private static LabelGroupResult HeuristicResult(string labelGroupName, string text) => new()
     {
@@ -111,6 +145,114 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
 
         await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
             item, Labels, tableExtractorService, [1, 2, 3], Guid.NewGuid(), processRunId: 1);
+
+        var sourceOfSupply = Assert.Single(item.Matches!);
+        Assert.Equal("In", sourceOfSupply.Text!.Single().Text);
+        Assert.Equal("PdfPigNoOcr", sourceOfSupply.ServiceName);
+    }
+
+    // Cost-optimised two-tier design: a free/local primary extractor is tried first, and a
+    // paid/cloud fallback is only ever invoked - so only ever billed - when the primary resolved
+    // NOTHING confidently. The three tests below lock in both halves of that contract: the
+    // fallback firing when it's genuinely needed, and NOT firing (the actual cost saving) when
+    // the primary already found something.
+
+    [Fact]
+    public async Task WhenPrimaryFindsNothingConfident_ThenFallbackResultsAreUsed()
+    {
+        var item = new MatchesResult
+        {
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
+        };
+
+        var unrelatedTable = new OcrTable
+        {
+            RowCount = 1,
+            ColumnCount = 1,
+            Cells = [new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+        };
+
+        var primary = new FakeTableExtractorService([unrelatedTable]);
+        var fallback = new FakeTableExtractorService([FullGridTable]);
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, primary, [1, 2, 3], Guid.NewGuid(), processRunId: 1, fallback);
+
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(1, fallback.CallCount);
+
+        var sourceOfSupply = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
+        Assert.Equal("✓", sourceOfSupply.Text!.Single().Text);
+        Assert.Equal("FakeTableExtractorService", sourceOfSupply.ServiceName);
+    }
+
+    [Fact]
+    public async Task WhenPrimaryResolvesAtLeastOneField_ThenFallbackIsNeverCalled()
+    {
+        var item = new MatchesResult
+        {
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "Not")]
+        };
+
+        var primary = new FakeTableExtractorService([FullGridTable]);
+        var fallback = new FakeTableExtractorService([FullGridTable]);
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, primary, [1, 2, 3], Guid.NewGuid(), processRunId: 1, fallback);
+
+        Assert.Equal(1, primary.CallCount);
+        // The actual cost-saving property: a confident primary result must never trigger the
+        // paid fallback, even though one was supplied.
+        Assert.Equal(0, fallback.CallCount);
+
+        var sourceOfSupply = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
+        Assert.Equal("✓", sourceOfSupply.Text!.Single().Text);
+    }
+
+    [Fact]
+    public async Task WhenPrimaryThrows_ThenFallbackIsStillTried()
+    {
+        var item = new MatchesResult
+        {
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
+        };
+
+        var primary = new ThrowingTableExtractorService();
+        var fallback = new FakeTableExtractorService([FullGridTable]);
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, primary, [1, 2, 3], Guid.NewGuid(), processRunId: 1, fallback);
+
+        Assert.Equal(1, fallback.CallCount);
+
+        var sourceOfSupply = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
+        Assert.Equal("✓", sourceOfSupply.Text!.Single().Text);
+        Assert.Equal("FakeTableExtractorService", sourceOfSupply.ServiceName);
+    }
+
+    [Fact]
+    public async Task WhenBothPrimaryAndFallbackFindNothingConfident_ThenHeuristicResultSurvivesUnchanged()
+    {
+        var item = new MatchesResult
+        {
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
+        };
+
+        var unrelatedTable = new OcrTable
+        {
+            RowCount = 1,
+            ColumnCount = 1,
+            Cells = [new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+        };
+
+        var primary = new FakeTableExtractorService([unrelatedTable]);
+        var fallback = new FakeTableExtractorService([unrelatedTable]);
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, primary, [1, 2, 3], Guid.NewGuid(), processRunId: 1, fallback);
+
+        Assert.Equal(1, primary.CallCount);
+        Assert.Equal(1, fallback.CallCount);
 
         var sourceOfSupply = Assert.Single(item.Matches!);
         Assert.Equal("In", sourceOfSupply.Text!.Single().Text);

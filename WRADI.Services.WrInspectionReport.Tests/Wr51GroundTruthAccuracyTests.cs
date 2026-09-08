@@ -14,6 +14,7 @@ using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tabula;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
@@ -315,7 +316,95 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         await RunHarnessAsync(tableExtractorService, outputSuffix: "-table-based");
     }
 
-    private async Task RunHarnessAsync(ITableExtractorService? tableExtractorService, string outputSuffix)
+    /// <summary>
+    /// Same harness, table-based LicenceProvisions grid extraction via TabulaTableExtractorService
+    /// instead - reads the PDF's own drawn ruling lines through PdfPig, no cloud call, no cost,
+    /// no secrets needed, so this always runs (no skip guard). See the wr51_textract_tables_design
+    /// memory for the 4-document spot-check that motivated building this. Separate CSVs (suffix
+    /// "-tabula-table-based") so this never clobbers either the baseline or the Azure DI run.
+    /// </summary>
+    [Fact]
+    public async Task WhenScoringWithTabulaTableExtractionEnabled_ThenReportsPerFieldAccuracy()
+    {
+        var tableExtractorService = new TabulaTableExtractorService();
+
+        await RunHarnessAsync(tableExtractorService, outputSuffix: "-tabula-table-based");
+    }
+
+    /// <summary>
+    /// The cost-optimised two-tier design actually wired into WrInspectionReportExtractionOrchestrator,
+    /// at its default minimumFieldsToSkipFallback (10, tuned via
+    /// WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve - see that
+    /// test and the wr51_textract_tables_design memory for the full curve behind this choice):
+    /// Tabula (free, local) tried first, Azure DI (paid, ~$0.01/page) only tried - and only billed -
+    /// when Tabula resolved fewer than 10 of the 13 grid fields confidently. Reports the same
+    /// per-field accuracy as the other runs PLUS how many T1 documents actually needed the paid
+    /// fallback, which is the real cost-saving evidence for this design (suffix "-cost-optimized").
+    /// </summary>
+    [Fact]
+    public async Task WhenScoringWithCostOptimizedTableExtractionEnabled_ThenReportsPerFieldAccuracy()
+    {
+        if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
+        {
+            testOutputHelper.WriteLine(
+                "AiServicesEndpoint/AiServicesKey user secrets not set for " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the cost-optimized comparison run. " +
+                "Set both via dotnet user-secrets to enable it.");
+            return;
+        }
+
+        var primaryTableExtractorService = new TabulaTableExtractorService();
+        var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
+            TestConfig.AiServicesEndpoint,
+            TestConfig.AiServicesKey,
+            CacheService);
+
+        await RunHarnessAsync(primaryTableExtractorService, outputSuffix: "-cost-optimized", fallbackTableExtractorService);
+    }
+
+    /// <summary>
+    /// Sweeps WrInspectionReportExtractionOrchestrator's minimumFieldsToSkipFallback dial to find
+    /// where the cost/accuracy curve actually bends, rather than guessing. 1 is the shipped
+    /// default (cheapest - fallback only when the primary found nothing at all); 13 means "fall
+    /// back unless Tabula resolved literally every grid field" (most accuracy, least saving). Uses
+    /// the cached Azure DI results from the other runs in this file - no new API cost from running
+    /// this sweep itself, since the golden set's Azure DI table lookups are already cached per
+    /// document regardless of which threshold is being evaluated in-process.
+    /// </summary>
+    [Fact]
+    public async Task WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve()
+    {
+        if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
+        {
+            testOutputHelper.WriteLine(
+                "AiServicesEndpoint/AiServicesKey user secrets not set for " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the fallback-threshold sweep. " +
+                "Set both via dotnet user-secrets to enable it.");
+            return;
+        }
+
+        foreach (var threshold in new[] { 1, 4, 7, 10, 13 })
+        {
+            var primaryTableExtractorService = new TabulaTableExtractorService();
+            var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
+                TestConfig.AiServicesEndpoint,
+                TestConfig.AiServicesKey,
+                CacheService);
+
+            testOutputHelper.WriteLine($"\n=== minimumFieldsToSkipFallback = {threshold} ===");
+            await RunHarnessAsync(
+                primaryTableExtractorService,
+                outputSuffix: $"-cost-optimized-t{threshold}",
+                fallbackTableExtractorService,
+                threshold);
+        }
+    }
+
+    private async Task RunHarnessAsync(
+        ITableExtractorService? tableExtractorService,
+        string outputSuffix,
+        ITableExtractorService? fallbackTableExtractorService = null,
+        int minimumFieldsToSkipFallback = 10)
     {
         if (!Directory.Exists(GroundTruthFolder))
         {
@@ -335,6 +424,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
         var extractionFailures = new List<(string SourceFile, string Error)>();
+        var fallbackUsedDocuments = new List<string>();
+        var t1DocumentCount = 0;
 
         foreach (var truthPath in truthPaths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
         {
@@ -378,12 +469,25 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
                     processRunId: -99,
                     pdfDataExtractor,
                     tableExtractorService,
-                    pdfBytesForTableExtraction);
+                    pdfBytesForTableExtraction,
+                    fallbackTableExtractorService,
+                    minimumFieldsToSkipFallback);
 
                 if (stopExecution || matchesResult == null)
                 {
                     extractionFailures.Add((truth.SourceFile, "Extraction reported StopExecution or returned no result"));
                     continue;
+                }
+
+                if (template == WrTemplateType.T1)
+                {
+                    t1DocumentCount++;
+
+                    if (fallbackTableExtractorService != null
+                        && matchesResult.Matches!.Any(m => m.ServiceName == fallbackTableExtractorService.Name))
+                    {
+                        fallbackUsedDocuments.Add(truth.SourceFile);
+                    }
                 }
 
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData, template);
@@ -497,6 +601,15 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         testOutputHelper.WriteLine($"Detail CSV:  {detailPath}");
         testOutputHelper.WriteLine($"Summary CSV: {summaryPath}");
         testOutputHelper.WriteLine($"By-template summary CSV: {templateSummaryPath}");
+
+        if (fallbackTableExtractorService != null)
+        {
+            var fallbackRate = t1DocumentCount == 0 ? 0 : (double)fallbackUsedDocuments.Count / t1DocumentCount;
+            testOutputHelper.WriteLine(
+                $"Paid fallback ({fallbackTableExtractorService.Name}) used on {fallbackUsedDocuments.Count}/{t1DocumentCount} " +
+                $"T1 documents ({fallbackRate:P0}) - the rest resolved via {tableExtractorService!.Name} alone, at no API cost.");
+        }
+
         testOutputHelper.WriteLine("");
         testOutputHelper.WriteLine("Accuracy by template (all fields combined - small n outside T1, read accordingly):");
         foreach (var row in templateSummaryRows)

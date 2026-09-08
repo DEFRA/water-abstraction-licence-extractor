@@ -51,8 +51,15 @@ public class WrInspectionReportLabelConfiguration
     // checkbox alternates ("☑ ☐" etc.) must precede the single-glyph ones below them, or a bare
     // "☒" possibility would win a .First() match against "☒ ☐" before the position-based
     // paired check gets a chance. The four Private Use Area entries are Wingdings-style tick
-    // glyphs (U+F0FC/391, U+F061/76, U+F050/61, U+F072/4 occurrences in the real corpus) -
-    // written as escapes rather than literal glyphs so they survive editing/rendering intact.
+    // glyphs, written as \u escapes rather than literal glyphs so they survive editing/rendering
+    // intact - confirmed present in the real corpus by scanning all 789 real PDFs' extracted text
+    // directly (2026-09-08): U+F0FC (638 occurrences/81 docs), U+F061 (87/11), U+F050 (192/36),
+    // U+F072 (4/1). These four were previously present as `new("")` (a genuinely empty string,
+    // not the intended glyph - lost at some point before this comment's own claim about them was
+    // ever verified) - an empty TextToMatch.Text always matches (MatchesPossibility's
+    // text.Contains("") is trivially true), so every one of these four real answers, plus every
+    // plain "Y"/"N" answer sitting after them in this list, was silently resolving to Blank
+    // instead of a real InOrder/NotInOrder verdict. Fixed by restoring the actual codepoints.
     private static readonly List<TextToMatch> InOrderPossibilities =
     [
         new("☑ ☐") { ExceptWhenInsideWord = true },
@@ -68,10 +75,10 @@ public class WrInspectionReportLabelConfiguration
         new("✔") { ExceptWhenInsideWord = true },
         new("√") { ExceptWhenInsideWord = true },
         new("🗸") { ExceptWhenInsideWord = true },
-        new("") { ExceptWhenInsideWord = true },
-        new("") { ExceptWhenInsideWord = true },
-        new("") { ExceptWhenInsideWord = true },
-        new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true },
         new("X") { ExceptWhenInsideWord = true },
         new("☒") { ExceptWhenInsideWord = true },
         new("×") { ExceptWhenInsideWord = true },

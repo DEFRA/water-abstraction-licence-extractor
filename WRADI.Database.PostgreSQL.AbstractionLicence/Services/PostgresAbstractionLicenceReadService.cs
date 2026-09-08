@@ -1365,7 +1365,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                process_run_id 
                            FROM licence
                            WHERE
-                               id = @LicenceId;
+                               licence_id = @LicenceId;
                            """;
 
         var result = await QueryFirstOrDefaultAsync<(string Data, int ProcessRunId)?>(

@@ -43,6 +43,15 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(result);
     }
+    
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdStringAsync(
+        [FromQuery] int matchesResultId)
+    {
+        var result = await outputService.GetMatchesResultAsync(matchesResultId);
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
 
     [HttpGet]
     public async Task<ActionResult<Dictionary<Guid, string>>> GetLicenceFileIdMapAsync([FromQuery] int processRunId)

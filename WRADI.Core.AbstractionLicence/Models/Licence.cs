@@ -72,6 +72,7 @@ public class Licence
         {
             ProcessRunId = ProcessRunId,
             LicenceId = LicenceId,
+            MatchesResultId = MatchesResultId,
             Status = Status,
             LicenceNumber = LicenceNumber,
             RegionId = RegionId,

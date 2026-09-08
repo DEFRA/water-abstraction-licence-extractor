@@ -103,6 +103,7 @@ public class DatabaseAbstractionLicenceOutputService(
 
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.MatchesResultId,
             licence.Filename,
             licence.Status.ToString(),
             licenceStr,

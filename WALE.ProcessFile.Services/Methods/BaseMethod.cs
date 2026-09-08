@@ -369,7 +369,7 @@ public static class BaseMethod
 
         // A field with no answer on the page produces zero captured lines, not one line with
         // empty text - so the "" catch-all possibility (added so a genuinely blank tick field
-        // still survives as a match, e.g. WrInspectionReportLabelConfiguration.GetInOrderField)
+        // still survives as a match, e.g. WrInspectionReportLabelConfiguration.Rule.InOrder)
         // never gets a chance to match via the Contains check above, since FirstOrDefault() on
         // an empty list is null. Without this, the whole match silently vanishes and looks
         // identical to "the label was never found at all" downstream, rather than "found, but

@@ -114,266 +114,266 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("Not", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("N/A", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("12/101/4/G/8", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ja", metWith.Text[0].Text);
         Assert.EndsWith("or", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Ar", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("an", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Ly", siteAddress.Text[0].Text);
         Assert.EndsWith("JQ", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Less Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.Single(telephoneNumber.Text!);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("86", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Flow Measurement Coordinator", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("11:20", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.StartsWith("Sout", nameAndAddress.Text[0].Text);
         Assert.EndsWith("ing,", nameAndAddress.Text[0].Text);
         Assert.Equal("BN13 3NX", nameAndAddress.Text[1].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Abstraction Flowmeter", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("V/", serialNumber.Text[0].Text);
         Assert.EndsWith("2", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("4,714,612", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("m3", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("30/06/2021", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("Yes", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("Yes", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Ja", formSentTo.Text[0].Text);
         Assert.EndsWith("or", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("12/04/2024", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(5, generalComments.Text.Count);
         Assert.StartsWith("Licence 12/", generalComments.Text[0].Text);
         Assert.EndsWith("single borehole.", generalComments.Text[0].Text);
         Assert.StartsWith("No RTW", generalComments.Text[4].Text);
         Assert.EndsWith("inspection.", generalComments.Text[4].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Fortnightly By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Fortnightly", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
         // Was a hardcoded Matches[41] positional index - broke as soon as the new
         // TemplateMarker* label groups were added (they matched too, shifting every later
         // group's index), same as every other assertion in this test that already looks the
         // match up by name instead of position.
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
 
         var converted = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData);
@@ -412,11 +412,11 @@ public class Wr51PdfPigNoOcrPdfTests
         Assert.EndsWith("or", converted.Metadata.FormSentTo);
         Assert.Equal(new DateOnly(2024, 4, 12), converted.Metadata.Date.Date); 
         Assert.Equal("12/04/2024", converted.Metadata.Date.RawDate);
-        Assert.Equal("Abstraction Flowmeter", converted.MeasurementDetails.MeterMake);
-        Assert.StartsWith("V", converted.MeasurementDetails.SerialNumber);
-        Assert.EndsWith("2", converted.MeasurementDetails.SerialNumber);
-        Assert.Equal("4,714,612", converted.MeasurementDetails.Reading);
-        Assert.Equal("m3", converted.MeasurementDetails.Units);
+        Assert.Equal("Abstraction Flowmeter", converted.MeasurementDetails.Meters![0].MeterMake);
+        Assert.StartsWith("V", converted.MeasurementDetails.Meters![0].SerialNumber);
+        Assert.EndsWith("2", converted.MeasurementDetails.Meters![0].SerialNumber);
+        Assert.Equal("4,714,612", converted.MeasurementDetails.Meters![0].Reading);
+        Assert.Equal("m3", converted.MeasurementDetails.Meters![0].Units);
         Assert.Equal("N/A", converted.MeasurementDetails.Other);
         Assert.Equal("N/A", converted.MeasurementDetails.CertificatesOrRecordsAvailableFor);
         Assert.Equal(new DateOnly(2021, 6, 30), converted.MeasurementDetails.DateOfCertificateOrRecord.Date);
@@ -460,259 +460,259 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("Not", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("13/43/025/G/107", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Mr", metWith.Text[0].Text);
         Assert.EndsWith("ey", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Be", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("re", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.Equal("Same as avove", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("72", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Owner and Farm Manager", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(5, nameAndAddress.Text.Count);
         Assert.StartsWith("Co", nameAndAddress.Text[0].Text);
         Assert.StartsWith("Wi", nameAndAddress.Text[4].Text);
         Assert.EndsWith("e", nameAndAddress.Text[4].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Farmer", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("34", serialNumber.Text[0].Text);
         Assert.EndsWith("3", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("77668", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("cubic meters", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("14/04/2022", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("Yes", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("No", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Mr", formSentTo.Text[0].Text);
         Assert.EndsWith("on", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("01/02/2017", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(15, generalComments.Text.Count);
         Assert.StartsWith("The bore", generalComments.Text[0].Text);
         Assert.EndsWith("to", generalComments.Text[0].Text);
         Assert.StartsWith("weeks", generalComments.Text[14].Text);
         Assert.EndsWith("invoice.", generalComments.Text[14].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Fortnightly By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Fortnightly", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("31/01/2017", inspectionDate.Text[0].Text);
     }
     
@@ -726,259 +726,259 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("13/43/026/G/118", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Mr", metWith.Text[0].Text);
         Assert.EndsWith("gs", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Be", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("re", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Wi", siteAddress.Text[0].Text);
         Assert.EndsWith("on", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("CR", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("01", telephoneNumber.Text[0].Text);
         Assert.EndsWith("62", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Farm Owner", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(1, nameAndAddress.Text.Count);
         Assert.StartsWith("Wi", nameAndAddress.Text[0].Text);
         Assert.EndsWith("on", nameAndAddress.Text[0].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Kent", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("13", serialNumber.Text[0].Text);
         Assert.EndsWith("7", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("1154546", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("cubic meter", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("21/08/2019", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Mr", formSentTo.Text[0].Text);
         Assert.EndsWith("on", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("12/09/2016", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(12, generalComments.Text.Count);
         Assert.StartsWith("There are", generalComments.Text[0].Text);
         Assert.EndsWith("away", generalComments.Text[0].Text);
         Assert.StartsWith("purpose", generalComments.Text[11].Text);
         Assert.EndsWith("chickens.", generalComments.Text[11].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: No Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("No", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2024", inspectionDate.Text[0].Text);
     }
     
@@ -992,258 +992,258 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("13/43/026/S/047", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Mr", metWith.Text[0].Text);
         Assert.EndsWith("gs", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Be", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("re", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.Equal("Same as above", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Highly Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("97", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Farm Owner", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(6, nameAndAddress.Text.Count);
         Assert.StartsWith("San", nameAndAddress.Text[0].Text);
         Assert.EndsWith("JZ", nameAndAddress.Text[5].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Zenner", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("34", serialNumber.Text[0].Text);
         Assert.EndsWith("6", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("45545", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("cubic meter", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("21/08/2019", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("To", formSentTo.Text[0].Text);
         Assert.EndsWith("gs", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("07/02/2017", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(16, generalComments.Text.Count);
         Assert.StartsWith("Abstraction", generalComments.Text[0].Text);
         Assert.EndsWith("sources", generalComments.Text[0].Text);
         Assert.StartsWith("them", generalComments.Text[15].Text);
         Assert.EndsWith("payment.", generalComments.Text[15].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: No Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("No", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);
     }
     
@@ -1257,258 +1257,258 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("11/42/22.2/46", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ti", metWith.Text[0].Text);
         Assert.EndsWith("am", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("St", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("rt", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.Equal("Same as above", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Highly Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("97", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Farm Owner", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("12:10", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(1, nameAndAddress.Text.Count);
         Assert.StartsWith("J G", nameAndAddress.Text[0].Text);
         Assert.EndsWith("DF", nameAndAddress.Text[0].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Zenner", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("34", serialNumber.Text[0].Text);
         Assert.EndsWith("6", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("45545", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("cubic meter", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("21/08/2019", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Ti", formSentTo.Text[0].Text);
         Assert.EndsWith("am", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("26/06/2023", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(4, generalComments.Text.Count);
         Assert.StartsWith("This", generalComments.Text[0].Text);
         Assert.EndsWith("taken.", generalComments.Text[0].Text);
         Assert.StartsWith("the", generalComments.Text[3].Text);
         Assert.EndsWith("volume.", generalComments.Text[3].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: No Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("No", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("26/06/2023", inspectionDate.Text[0].Text);
     }
     
@@ -1522,101 +1522,101 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("10/41/521202", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ed", metWith.Text[0].Text);
         Assert.EndsWith("es", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Ja", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("ll", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Spri", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Highly Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         // This document's raw PDF text has a real kerning artefact - a stray space
         // between every digit ("0 7 7 9 4 2 1 8 2 97"), collapsed at the schema level
         // by WrInspectionReportSchemaConverter. This checks the raw match, so it needs
@@ -1625,162 +1625,162 @@ public class Wr51PdfPigNoOcrPdfTests
         Assert.StartsWith("07", rawTelephoneNumberDigitsOnly);
         Assert.EndsWith("97", rawTelephoneNumberDigitsOnly);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal(2, position.Text.Count);
         Assert.Equal("Head of Irrigation and Senior Farm", position.Text[0].Text);
         Assert.Equal("Manager respectively", position.Text[1].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00am", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(1, nameAndAddress.Text.Count);
         Assert.StartsWith("Ha", nameAndAddress.Text[0].Text);
         Assert.EndsWith("UJ", nameAndAddress.Text[0].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("No meter on site", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.Equal("N/A", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("N/A", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("N/A", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("10/06/2020", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Ri", formSentTo.Text[0].Text);
         Assert.EndsWith("es", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("11/12/2024", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(19, generalComments.Text.Count);
         Assert.StartsWith("Licence", generalComments.Text[0].Text);
         Assert.EndsWith("per", generalComments.Text[0].Text);
         Assert.StartsWith("There", generalComments.Text[18].Text);
         Assert.EndsWith("time.", generalComments.Text[18].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: No Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("No", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("06/12/2024", inspectionDate.Text[0].Text);
     }
     
@@ -1794,262 +1794,262 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("10/41/531327", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ke", metWith.Text[0].Text);
         Assert.EndsWith("rr", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Ar", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("ll", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Pa", siteAddress.Text[0].Text);
         Assert.EndsWith("am", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.Equal(2, telephoneNumber.Text.Count);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("ma", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal(2, position.Text.Count);
         Assert.Equal("Head of Irrigation and Senior Farm", position.Text[0].Text);
         Assert.Equal("Manager respectively", position.Text[1].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("09:45", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.StartsWith("La", nameAndAddress.Text[0].Text);
         Assert.EndsWith("EH", nameAndAddress.Text[1].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Technidro", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("R", serialNumber.Text[0].Text);
         Assert.EndsWith("8", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("51516", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("m3", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("10/06/2020", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("Yes", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Ge", formSentTo.Text[0].Text);
         Assert.EndsWith("nd", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("27/12/2023", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(2, generalComments.Text.Count);
         Assert.StartsWith("Summer", generalComments.Text[0].Text);
         Assert.EndsWith("licence.", generalComments.Text[0].Text);
         Assert.StartsWith("Same", generalComments.Text[1].Text);
         Assert.EndsWith("licence).", generalComments.Text[1].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: Yes Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("18/12/2023", inspectionDate.Text[0].Text);
     }
     
@@ -2063,260 +2063,260 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("Not", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("N/A", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("10/41/531329", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ke", metWith.Text[0].Text);
         Assert.EndsWith("rr", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Ja", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("on", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Ru", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("86", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal(2, position.Text.Count);
         Assert.Equal("Head of Irrigation and Senior Farm", position.Text[0].Text);
         Assert.Equal("Manager respectively", position.Text[1].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.StartsWith("La", nameAndAddress.Text[0].Text);
         Assert.EndsWith("NW", nameAndAddress.Text[1].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("Technidro", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("R", serialNumber.Text[0].Text);
         Assert.EndsWith("1", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("4,714,456", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("m3", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("10/06/2020", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("Yes", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Ge", formSentTo.Text[0].Text);
         Assert.EndsWith("nd", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("27/12/2023", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(3, generalComments.Text.Count);
         Assert.StartsWith("New", generalComments.Text[0].Text);
         Assert.EndsWith("currently.", generalComments.Text[0].Text);
         Assert.StartsWith("All", generalComments.Text[2].Text);
         Assert.EndsWith("limit.", generalComments.Text[2].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("18/12/2023", inspectionDate.Text[0].Text);
     }
 
@@ -2330,258 +2330,258 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("Not", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("N/A", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("2569020001", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Ni", metWith.Text[0].Text);
         Assert.EndsWith("ey", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("Ma", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("on", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.Equal("Same as above", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Less Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("86", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Course Manager", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:30", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.StartsWith("St", nameAndAddress.Text[0].Text);
         Assert.EndsWith("AY", nameAndAddress.Text[1].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal("mega", meterMake.Text[0].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.StartsWith("LX", serialNumber.Text[0].Text);
         Assert.EndsWith("5A", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("1876", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("m3", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("14/04/2022", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("Yes", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("No", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Co", formSentTo.Text[0].Text);
         Assert.EndsWith("uk", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("14/04/2022", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
         
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(10, generalComments.Text.Count);
         Assert.StartsWith("Water", generalComments.Text[0].Text);
         Assert.EndsWith("in", generalComments.Text[0].Text);
         Assert.StartsWith("practicably", generalComments.Text[9].Text);
         Assert.EndsWith("possible.", generalComments.Text[9].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: Yes Frequency: Daily By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("Yes", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Fortnightly By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Fortnightly", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("13/04/2022", inspectionDate.Text[0].Text);
     }
     
@@ -2605,259 +2605,259 @@ public class Wr51PdfPigNoOcrPdfTests
         var (matchesResult, dmsFileData) = await GetMatchesAsync(filename);
         var resultFull = matchesResult;
         
-        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.LabelGroupName);
         Assert.Equal("In", sourceOfSupply.Text[0].Text);
         
-        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "PointOfAbstraction");
+        var pointOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.PointOfAbstraction);
         Assert.NotNull(pointOfAbstraction);
-        Assert.Equal("PointOfAbstraction", pointOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.PointOfAbstraction, pointOfAbstraction.LabelGroupName);
         Assert.Equal("In", pointOfAbstraction.Text[0].Text);
         
-        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfAbstraction");
+        var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
-        Assert.Equal("MeansOfAbstraction", meansOfAbstraction.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
-        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == "Purposes");
+        var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
-        Assert.Equal("Purposes", purposes.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Purposes, purposes.LabelGroupName);
         Assert.Equal("Not", purposes.Text[0].Text);
         
-        var period = resultFull.Matches!.First(m => m.LabelGroupName == "Period");
+        var period = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Period);
         Assert.NotNull(period);
-        Assert.Equal("Period", period.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Period, period.LabelGroupName);
         Assert.Equal("In", period.Text[0].Text);
         
-        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == "Quantities");
+        var quantities = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Quantities);
         Assert.NotNull(quantities);
-        Assert.Equal("Quantities", quantities.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Quantities, quantities.LabelGroupName);
         Assert.Equal("In", quantities.Text[0].Text);
         
-        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == "MeansOfMeasurement");
+        var meansOfMeasurement = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfMeasurement);
         Assert.NotNull(meansOfMeasurement);
-        Assert.Equal("MeansOfMeasurement", meansOfMeasurement.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeansOfMeasurement, meansOfMeasurement.LabelGroupName);
         Assert.Equal("In", meansOfMeasurement.Text[0].Text);
         
-        var records = resultFull.Matches!.First(m => m.LabelGroupName == "Records");
+        var records = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Records);
         Assert.NotNull(records);
-        Assert.Equal("Records", records.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Records, records.LabelGroupName);
         Assert.Equal("Not", records.Text[0].Text);
         
-        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == "ProvisionOfInformation");
+        var provisionOfInformation = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ProvisionOfInformation);
         Assert.NotNull(provisionOfInformation);
-        Assert.Equal("ProvisionOfInformation", provisionOfInformation.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ProvisionOfInformation, provisionOfInformation.LabelGroupName);
         Assert.Equal("In", provisionOfInformation.Text[0].Text);
         
-        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.NotNull(specialConditions);
-        Assert.Equal("SpecialConditions", specialConditions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SpecialConditions, specialConditions.LabelGroupName);
         Assert.Equal("Not", specialConditions.Text[0].Text);
         
-        var land = resultFull.Matches!.First(m => m.LabelGroupName == "Land");
+        var land = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Land);
         Assert.NotNull(land);
-        Assert.Equal("Land", land.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Land, land.LabelGroupName);
         Assert.Equal("In", land.Text[0].Text);
         
-        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == "ChargingFactors");
+        var chargingFactors = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ChargingFactors);
         Assert.NotNull(chargingFactors);
-        Assert.Equal("ChargingFactors", chargingFactors.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ChargingFactors, chargingFactors.LabelGroupName);
         Assert.Equal("Not", chargingFactors.Text[0].Text);
         
-        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == "OtherProvisions");
+        var otherProvisions = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.OtherProvisions);
         Assert.NotNull(otherProvisions);
-        Assert.Equal("OtherProvisions", otherProvisions.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.OtherProvisions, otherProvisions.LabelGroupName);
         Assert.Equal("N/A", otherProvisions.Text[0].Text);
         
-        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.NotNull(licenceNumber);
-        Assert.Equal("LicenceNumber", licenceNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.LicenceNumber, licenceNumber.LabelGroupName);
         Assert.Equal("SO/042/0031/002", licenceNumber.Text[0].Text);
         
-        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == "MetWith");
+        var metWith = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MetWith);
         Assert.NotNull(metWith);
-        Assert.Equal("MetWith", metWith.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MetWith, metWith.LabelGroupName);
         Assert.StartsWith("Pe", metWith.Text[0].Text);
         Assert.EndsWith("ie", metWith.Text[0].Text);
         
-        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == "InspectingOfficer");
+        var inspectingOfficer = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectingOfficer);
         Assert.NotNull(inspectingOfficer);
-        Assert.Equal("InspectingOfficer", inspectingOfficer.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectingOfficer, inspectingOfficer.LabelGroupName);
         Assert.StartsWith("St", inspectingOfficer.Text[0].Text);
         Assert.EndsWith("rt", inspectingOfficer.Text[0].Text);
         
-        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == "SiteAddress");
+        var siteAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SiteAddress);
         Assert.NotNull(siteAddress);
-        Assert.Equal("SiteAddress", siteAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SiteAddress, siteAddress.LabelGroupName);
         Assert.StartsWith("Avi", siteAddress.Text[0].Text);
         
-        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionClass");
+        var inspectionClass = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionClass);
         Assert.NotNull(inspectionClass);
-        Assert.Equal("InspectionClass", inspectionClass.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionClass, inspectionClass.LabelGroupName);
         Assert.Equal("Highly Critical", inspectionClass.Text[0].Text);
         
-        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == "TelephoneNumber");
+        var telephoneNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.TelephoneNumber);
         Assert.NotNull(telephoneNumber);
-        Assert.Equal("TelephoneNumber", telephoneNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.TelephoneNumber, telephoneNumber.LabelGroupName);
         Assert.StartsWith("07", telephoneNumber.Text[0].Text);
         Assert.EndsWith("97", telephoneNumber.Text[0].Text);
         
-        var position = resultFull.Matches!.First(m => m.LabelGroupName == "Position");
+        var position = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Position);
         Assert.NotNull(position);
-        Assert.Equal("Position", position.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Position, position.LabelGroupName);
         Assert.Equal("Estates and Fisheries Managers", position.Text[0].Text);
         
-        var time = resultFull.Matches!.First(m => m.LabelGroupName == "Time");
+        var time = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Time);
         Assert.NotNull(time);
-        Assert.Equal("Time", time.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Time, time.LabelGroupName);
         Assert.Equal("10:00am", time.Text[0].Text);
         
-        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == "NameAndAddress");
+        var nameAndAddress = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         Assert.NotNull(nameAndAddress);
-        Assert.Equal("NameAndAddress", nameAndAddress.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.NameAndAddress, nameAndAddress.LabelGroupName);
         Assert.Equal(2, nameAndAddress.Text.Count);
         Assert.StartsWith("St", nameAndAddress.Text[0].Text);
         Assert.EndsWith("AQ", nameAndAddress.Text[1].Text);
         
-        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == "MeterMake");
+        var meterMake = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterMake);
         Assert.NotNull(meterMake);
-        Assert.Equal("MeterMake", meterMake.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterMake, meterMake.LabelGroupName);
         Assert.Equal(2, meterMake.Text.Count);
         Assert.Equal("No meter – means of measurement", meterMake.Text[0].Text);
         Assert.Equal("under Fish Farm RPS", meterMake.Text[1].Text);
         
-        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == "SerialNumber");
+        var serialNumber = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SerialNumber);
         Assert.NotNull(serialNumber);
-        Assert.Equal("SerialNumber", serialNumber.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.SerialNumber, serialNumber.LabelGroupName);
         Assert.Equal("N/A", serialNumber.Text[0].Text);
         
-        var reading = resultFull.Matches!.First(m => m.LabelGroupName == "Reading");
+        var reading = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Reading);
         Assert.NotNull(reading);
-        Assert.Equal("Reading", reading.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Reading, reading.LabelGroupName);
         Assert.Equal("N/A", reading.Text[0].Text);
         
-        var units = resultFull.Matches!.First(m => m.LabelGroupName == "Units");
+        var units = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Units);
         Assert.NotNull(units);
-        Assert.Equal("Units", units.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Units, units.LabelGroupName);
         Assert.Equal("N/A", units.Text[0].Text);
         
-        var other = resultFull.Matches!.First(m => m.LabelGroupName == "Other");
+        var other = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Other);
         Assert.NotNull(other);
-        Assert.Equal("Other", other.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Other, other.LabelGroupName);
         Assert.Equal("N/A", other.Text[0].Text);
         
-        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == "CertificatesOfRecords");
+        var certificatesOfRecord = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.CertificatesOfRecords);
         Assert.NotNull(certificatesOfRecord);
-        Assert.Equal("CertificatesOfRecords", certificatesOfRecord.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.CertificatesOfRecords, certificatesOfRecord.LabelGroupName);
         Assert.Equal("N/A", certificatesOfRecord.Text[0].Text);
         
-        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == "DateOfCertification");
+        var dateOfCertificate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DateOfCertification);
         Assert.NotNull(dateOfCertificate);
-        Assert.Equal("DateOfCertification", dateOfCertificate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DateOfCertification, dateOfCertificate.LabelGroupName);
         Assert.Equal("10/06/2020", dateOfCertificate.Text[0].Text);
         
-        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == "Calibration");
+        var calibration = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Calibration);
         Assert.NotNull(calibration);
-        Assert.Equal("Calibration", calibration.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Calibration, calibration.LabelGroupName);
         Assert.Equal("No", calibration.Text[0].Text);
         
-        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == "Conformance");
+        var conformance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Conformance);
         Assert.NotNull(conformance);
-        Assert.Equal("Conformance", conformance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Conformance, conformance.LabelGroupName);
         Assert.Equal("No", conformance.Text[0].Text);
         
-        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == "FlowVerification");
+        var flowVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FlowVerification);
         Assert.NotNull(flowVerification);
-        Assert.Equal("FlowVerification", flowVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FlowVerification, flowVerification.LabelGroupName);
         Assert.Equal("Yes", flowVerification.Text[0].Text);
         
-        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == "MeterVerification");
+        var meterVerification = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeterVerification);
         Assert.NotNull(meterVerification);
-        Assert.Equal("MeterVerification", meterVerification.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MeterVerification, meterVerification.LabelGroupName);
         Assert.Equal("No", meterVerification.Text[0].Text);
         
-        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == "WhereKept");
+        var whereKept = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.WhereKept);
         Assert.NotNull(whereKept);
-        Assert.Equal("WhereKept", whereKept.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.WhereKept, whereKept.LabelGroupName);
         Assert.Equal("On Site", whereKept.Text[0].Text);
         
-        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == "FormSentTo");
+        var formSentTo = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.FormSentTo);
         Assert.NotNull(formSentTo);
-        Assert.Equal("FormSentTo", formSentTo.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.FormSentTo, formSentTo.LabelGroupName);
         Assert.StartsWith("Av", formSentTo.Text[0].Text);
         Assert.EndsWith("ry", formSentTo.Text[0].Text);
         
-        var date = resultFull.Matches!.First(m => m.LabelGroupName == "Date");
+        var date = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Date);
         Assert.NotNull(date);
-        Assert.Equal("Date", date.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.Date, date.LabelGroupName);
         Assert.Equal("09/04/2025", date.Text[0].Text);
         
-        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentTemplateVersion");
+        var documentTemplateVersion = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentTemplateVersion);
         Assert.NotNull(documentTemplateVersion);
-        Assert.Equal("DocumentTemplateVersion", documentTemplateVersion.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentTemplateVersion, documentTemplateVersion.LabelGroupName);
         Assert.Equal("2026_07_10_v1", documentTemplateVersion.Text[0].Text);
 
-        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == "DocumentHeader");
+        var documentHeader = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.DocumentHeader);
         Assert.NotNull(documentHeader);
-        Assert.Equal("DocumentHeader", documentHeader.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.DocumentHeader, documentHeader.LabelGroupName);
         Assert.Single(documentHeader.Text);
         Assert.Equal("51", documentHeader.Text[0].Text);
         
-        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == "GeneralComments");
+        var generalComments = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         Assert.NotNull(generalComments);
-        Assert.Equal("GeneralComments", generalComments.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.GeneralComments, generalComments.LabelGroupName);
         Assert.Equal(10, generalComments.Text.Count);
         Assert.StartsWith("Licence", generalComments.Text[0].Text);
         Assert.EndsWith("license", generalComments.Text[0].Text);
         Assert.StartsWith("Action", generalComments.Text[9].Text);
         Assert.EndsWith("returns.", generalComments.Text[9].Text);
         
-        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == "MaintenanceLine");
+        var maintenance = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MaintenanceLine);
         Assert.NotNull(maintenance);
-        Assert.Equal("MaintenanceLine", maintenance.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLine, maintenance.LabelGroupName);
         Assert.Equal("Maintenance: No Frequency: Monthly By whom: JP", maintenance.Text[0].Text);
         Assert.Equal(3, maintenance.SubResults.Count);
 
         var maintenanceSubLabel = maintenance.SubResults[0];
         Assert.NotNull(maintenanceSubLabel);
-        Assert.Equal("MaintenanceLineMaintenance", maintenanceSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineMaintenance, maintenanceSubLabel.MatchedLabelName);
         Assert.Equal("No", maintenanceSubLabel.Text[0].Text);
         
         var frequencySubLabel = maintenance.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("MaintenanceLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Monthly", frequencySubLabel.Text[0].Text);
         
         var byWhomSubLabel = maintenance.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("MaintenanceLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.MaintenanceLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("JP", byWhomSubLabel.Text[0].Text);
         
-        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == "ReadingsTakenLine");
+        var readingsTaken = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.ReadingsTakenLine);
         Assert.NotNull(readingsTaken);
-        Assert.Equal("ReadingsTakenLine", readingsTaken.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLine, readingsTaken.LabelGroupName);
         Assert.Equal("Readings taken: Yes Frequency: Daily By whom: MP", readingsTaken.Text[0].Text);
         Assert.Equal(3, readingsTaken.SubResults.Count);
 
         var readingsTakenSubLabel = readingsTaken.SubResults[0];
         Assert.NotNull(readingsTakenSubLabel);
-        Assert.Equal("ReadingsTakenLineReadingsTaken", readingsTakenSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken, readingsTakenSubLabel.MatchedLabelName);
         Assert.Equal("Yes", readingsTakenSubLabel.Text[0].Text);
         
         frequencySubLabel = readingsTaken.SubResults[1];
         Assert.NotNull(frequencySubLabel);
-        Assert.Equal("ReadingsTakenLineFrequency", frequencySubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineFrequency, frequencySubLabel.MatchedLabelName);
         Assert.Equal("Daily", frequencySubLabel.Text[0].Text);
         
         byWhomSubLabel = readingsTaken.SubResults[2];
         Assert.NotNull(byWhomSubLabel);
-        Assert.Equal("ReadingsTakenLineByWhom", byWhomSubLabel.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == "InspectionDate");
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
-        Assert.Equal("InspectionDate", inspectionDate.LabelGroupName);
+        Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
         Assert.Equal("06/12/2024", inspectionDate.Text[0].Text);
     }
     

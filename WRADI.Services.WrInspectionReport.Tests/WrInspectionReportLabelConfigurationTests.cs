@@ -1,4 +1,5 @@
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
@@ -30,8 +31,9 @@ public class WrInspectionReportLabelConfigurationTests
 
         var expectedRemoved = new[]
         {
-            "TemplateMarkerT4", "TemplateMarkerT6", "TemplateMarkerT7", "TemplateMarkerImpounding",
-            "TemplateMarkerBaselineComments", "TemplateMarkerAlternateComments"
+            WrInspectionReportFieldNames.TemplateMarkerT4, WrInspectionReportFieldNames.TemplateMarkerT6,
+            WrInspectionReportFieldNames.TemplateMarkerT7, WrInspectionReportFieldNames.TemplateMarkerImpounding,
+            WrInspectionReportFieldNames.TemplateMarkerBaselineComments, WrInspectionReportFieldNames.TemplateMarkerAlternateComments
         };
 
         Assert.Equal(expectedRemoved.OrderBy(n => n), removed.OrderBy(n => n));
@@ -41,9 +43,9 @@ public class WrInspectionReportLabelConfigurationTests
     public void WhenBuildingT1Labels_ThenNameAndAddressDropsOnlyThePermitHolderAlternate()
     {
         var generalAlternateCount = WrInspectionReportLabelConfiguration.GetLabels()
-            .First(l => l.LabelGroupName == "NameAndAddress").Labels.Count;
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
         var t1AlternateCount = WrInspectionReportLabelConfiguration.GetT1Labels()
-            .First(l => l.LabelGroupName == "NameAndAddress").Labels.Count;
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
 
         Assert.Equal(generalAlternateCount - 1, t1AlternateCount);
     }
@@ -56,9 +58,9 @@ public class WrInspectionReportLabelConfigurationTests
         // (Introduction/Notes and Actions/Actions/Summary/background variants/etc.) apply to a
         // document already confirmed T1.
         var t1GeneralComments = WrInspectionReportLabelConfiguration.GetT1Labels()
-            .First(l => l.LabelGroupName == "GeneralComments").Labels.Single();
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
         var generalGeneralComments = WrInspectionReportLabelConfiguration.GetLabels()
-            .First(l => l.LabelGroupName == "GeneralComments").Labels.Single();
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
 
         Assert.Single(t1GeneralComments.TextStart!);
         Assert.True(generalGeneralComments.TextStart!.Count > 1);
@@ -75,9 +77,13 @@ public class WrInspectionReportLabelConfigurationTests
         // state so a future edit has to deliberately touch it.
         string[] fieldsThatMustStayIdentical =
         [
-            "MeterName", "MeterMake", "SerialNumber", "MeterAssetNumber", "Reading", "Units",
-            "FlowRate", "Calibration", "Conformance", "FlowVerification", "MeterVerification",
-            "Verification", "SpotCheckResult"
+            WrInspectionReportFieldNames.MeterName, WrInspectionReportFieldNames.MeterMake,
+            WrInspectionReportFieldNames.SerialNumber, WrInspectionReportFieldNames.MeterAssetNumber,
+            WrInspectionReportFieldNames.Reading, WrInspectionReportFieldNames.Units,
+            WrInspectionReportFieldNames.FlowRate, WrInspectionReportFieldNames.Calibration,
+            WrInspectionReportFieldNames.Conformance, WrInspectionReportFieldNames.FlowVerification,
+            WrInspectionReportFieldNames.MeterVerification, WrInspectionReportFieldNames.Verification,
+            WrInspectionReportFieldNames.SpotCheckResult
         ];
 
         var general = WrInspectionReportLabelConfiguration.GetLabels().ToDictionary(l => l.LabelGroupName);
@@ -99,7 +105,7 @@ public class WrInspectionReportLabelConfigurationTests
         // sees can be "Other:"'s own row - traced with gated instrumentation on a real document
         // (wr51__83617s0016__...) before this guard was added, not assumed.
         var readingBaselineTwoColumnAlternate = WrInspectionReportLabelConfiguration.GetLabels()
-            .First(l => l.LabelGroupName == "Reading").Labels
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
             .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true && l.NextLinesToFetch == 1);
 
         Assert.Contains("Other", readingBaselineTwoColumnAlternate.ExcludeNextLineIfFirstColumnStartsWith ?? []);
@@ -115,7 +121,7 @@ public class WrInspectionReportLabelConfigurationTests
         // session. Calibration's "Existing template" alternate is the one that actually uses
         // this shared list with LimitTo.WholeLine, the shape that exposed the bug.
         var calibration = WrInspectionReportLabelConfiguration.GetLabels()
-            .First(l => l.LabelGroupName == "Calibration").Labels
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Calibration).Labels
             .Single(l => l.Possibilities?.Any() == true && l.LimitTo == WALE.ProcessFile.Core.Enums.LimitTo.WholeLine);
 
         Assert.NotEmpty(calibration.Possibilities!);

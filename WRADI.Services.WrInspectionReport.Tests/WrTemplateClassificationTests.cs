@@ -11,8 +11,8 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// label groups populated is enough to exercise ClassifyTemplate's priority order without a
 /// real or dummy PDF fixture. Added because none of the 11 WR51 dummy fixtures assert
 /// Metadata.Template at all, and the priority order/blank-comments nuance here were both hard
-/// to get right the first time (see wr51_column_walk_bug memory and this session's history) -
-/// exactly the kind of logic a silent regression could slip through undetected.
+/// to get right the first time - exactly the kind of logic a silent regression could slip
+/// through undetected.
 /// </summary>
 public class WrTemplateClassificationTests
 {

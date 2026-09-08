@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
@@ -19,9 +20,13 @@ public class WrInspectionReportTableMatcherTests
 
     private static readonly IReadOnlyList<string> GridFieldNames =
     [
-        "SourceOfSupply", "PointOfAbstraction", "MeansOfAbstraction", "Purposes", "Period",
-        "Quantities", "MeansOfMeasurement", "Records", "ProvisionOfInformation",
-        "SpecialConditions", "Land", "ChargingFactors", "OtherProvisions"
+        WrInspectionReportFieldNames.SourceOfSupply, WrInspectionReportFieldNames.PointOfAbstraction,
+        WrInspectionReportFieldNames.MeansOfAbstraction, WrInspectionReportFieldNames.Purposes,
+        WrInspectionReportFieldNames.Period, WrInspectionReportFieldNames.Quantities,
+        WrInspectionReportFieldNames.MeansOfMeasurement, WrInspectionReportFieldNames.Records,
+        WrInspectionReportFieldNames.ProvisionOfInformation, WrInspectionReportFieldNames.SpecialConditions,
+        WrInspectionReportFieldNames.Land, WrInspectionReportFieldNames.ChargingFactors,
+        WrInspectionReportFieldNames.OtherProvisions
     ];
 
     private static OcrTableCell Cell(int row, int col, string content) => new()
@@ -43,23 +48,19 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        var sourceOfSupply = Assert.Single(results, r => r.Key == "SourceOfSupply").Value;
+        var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
         Assert.Equal("✓", sourceOfSupply.Text!.Single().Text);
-        Assert.Equal("SourceOfSupply", sourceOfSupply.MatchedLabelName);
+        Assert.Equal(WrInspectionReportFieldNames.SourceOfSupply, sourceOfSupply.MatchedLabelName);
         Assert.Equal("TestTableService", sourceOfSupply.ServiceName);
     }
 
     [Fact]
     public void WhenCellContentIsAzuresOwnSelectionMarkAnnotation_ThenItIsNormalisedToARealTick()
     {
-        // Real shape confirmed via an actual golden-set harness run (not just the earlier
-        // single-document prototype): Azure Document Intelligence's own ":selected:"/
-        // ":unselected:" selection-mark annotation appears directly in Content for checkbox-
-        // style cells, and does so WITHOUT a redundant rendered tick glyph on a meaningful
-        // share of cells - not merely alongside one, as a smaller sample first suggested. Left
-        // unhandled, this fell through to the "" catch-all Possibility and was scored Blank
-        // instead of the real tick, regressing recall hard across the whole grid in that
-        // harness run - this test locks in the fix (NormaliseSelectionMarks).
+        // Azure's own ":selected:"/":unselected:" selection-mark annotation appears directly in
+        // Content for checkbox-style cells, often WITHOUT a redundant rendered tick glyph. Left
+        // unhandled, this falls through to the "" catch-all Possibility and scores Blank instead
+        // of the real tick - locks in the fix (NormaliseSelectionMarks).
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Where(c => c.RowIndex != 0 || c.ColumnIndex is not (0 or 1))
             .Append(Cell(0, 0, "Source of supply:"))
@@ -71,7 +72,7 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        var sourceOfSupply = Assert.Single(results, r => r.Key == "SourceOfSupply").Value;
+        var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
         Assert.Equal("✓", sourceOfSupply.Text!.Single().Text);
     }
 
@@ -82,7 +83,7 @@ public class WrInspectionReportTableMatcherTests
         // ALL, or when its content is too long to plausibly be a tick answer (see
         // WhenCellContentIsNarrativeLength... below) - see WhenFieldLabelIsNotFoundInAnyTable
         // too. Content that IS found, IS short enough to be a tick, but matches no real
-        // Possibility still resolves as Blank via GetInOrderField's "" catch-all - same design
+        // Possibility still resolves as Blank via InOrderPossibilities' "" catch-all - same design
         // the heuristic column-walk path already relies on (see that Possibility's own comment -
         // "a genuinely blank tick field must still survive as a match").
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
@@ -96,21 +97,19 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        var sourceOfSupply = Assert.Single(results, r => r.Key == "SourceOfSupply").Value;
+        var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
         Assert.Equal(string.Empty, sourceOfSupply.Text!.Single().Text);
     }
 
     [Fact]
     public void WhenCellContentIsNarrativeLength_ThenFieldFallsBackRatherThanFabricatingAStatus()
     {
-        // Real shape found via a full golden-set harness run: "water_company_template"/
-        // "narrative_provisions" documents put a genuine prose answer in the SAME cell as the
-        // label, e.g. "Source of supply: Lower Greensand at Warwick Wold / Brewer St
-        // :selected:" (wr51__2839320028). Before this guard, normalising ":selected:" to "✓"
-        // made this match the InOrder Possibility via Contains("✓") on the whole sentence -
-        // fabricating "InOrder" for a field the current model has no way to represent at all.
-        // Falling back to the heuristic here is strictly safer, even though the heuristic can't
-        // represent narrative answers either - it at least won't confidently guess wrong.
+        // Narrative-answer documents put a genuine prose answer in the SAME cell as the label,
+        // e.g. "Source of supply: Lower Greensand at Warwick Wold / Brewer St :selected:".
+        // Without this guard, normalising ":selected:" to "✓" matches the InOrder Possibility
+        // via Contains("✓") on the whole sentence - fabricating "InOrder" for a field the model
+        // has no way to represent at all. Falling back to the heuristic is strictly safer, even
+        // though it can't represent narrative answers either - it won't confidently guess wrong.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Where(c => c.RowIndex != 0 || c.ColumnIndex is not (0 or 1))
             .Append(Cell(0, 0, "Source of supply: Lower Greensand at Warwick Wold / Brewer St :selected:"))
@@ -122,10 +121,10 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        Assert.False(results.ContainsKey("SourceOfSupply"));
+        Assert.False(results.ContainsKey(WrInspectionReportFieldNames.SourceOfSupply));
         // Confirms this is a targeted, per-field guard, not an overreaction that also rejects
         // the table for genuinely short, legitimate answers on other fields in the same row.
-        Assert.True(results.ContainsKey("Quantities"));
+        Assert.True(results.ContainsKey(WrInspectionReportFieldNames.Quantities));
     }
 
     [Fact]
@@ -142,7 +141,7 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        var specialConditions = Assert.Single(results, r => r.Key == "SpecialConditions").Value;
+        var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
         Assert.Equal("N/A", specialConditions.Text!.Single().Text);
     }
 
@@ -154,8 +153,8 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
 
-        var specialConditions = Assert.Single(results, r => r.Key == "SpecialConditions").Value;
-        // Matches the "" catch-all Possibility (see GetInOrderField) - resolves to a real,
+        var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
+        // Matches the "" catch-all Possibility (see InOrderPossibilities) - resolves to a real,
         // confident Blank verdict downstream (WrInspectionReportSchemaConverter.
         // GetInOrderStatus treats an empty/whitespace-only joined Text as InOrderStatus.Blank),
         // not a miss.
@@ -201,8 +200,8 @@ public class WrInspectionReportTableMatcherTests
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [headerTable, gridTable], Labels, GridFieldNames, "TestTableService");
 
-        Assert.True(results.ContainsKey("SpecialConditions"));
-        Assert.Equal("✓", results["SpecialConditions"].Text!.Single().Text);
+        Assert.True(results.ContainsKey(WrInspectionReportFieldNames.SpecialConditions));
+        Assert.Equal("✓", results[WrInspectionReportFieldNames.SpecialConditions].Text!.Single().Text);
     }
 
     [Fact]

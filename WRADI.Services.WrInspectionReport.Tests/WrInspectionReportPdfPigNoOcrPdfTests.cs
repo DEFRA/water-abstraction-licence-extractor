@@ -163,7 +163,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var sourceOfSupplyResolved = formsList.Count(f =>
             f.LicenceProvisions.SourceOfSupply is InOrderStatus.InOrder or InOrderStatus.NotInOrder or InOrderStatus.NotApplicable);
         var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
-        var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.MeterMake));
+        var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.Meters?.FirstOrDefault()?.MeterMake));
 
         // Regression guards for data-quality fixes: a neighbouring field's own label leaking
         // into these values, rather than a real answer.

@@ -1044,7 +1044,7 @@ public static class FormattingHelper
         // without protecting them here the same way '(' '&' ')' ':' '/' already are, a
         // standalone tick sitting at the very start/end of a captured value - the normal shape
         // for a checkbox-style answer, e.g. "Source of supply: ✓" - gets silently trimmed away
-        // before WrInspectionReportLabelConfiguration.GetInOrderField's possibility-matching
+        // before WrInspectionReportLabelConfiguration.Rule.InOrder's possibility-matching
         // ever sees it. 🗸 (U+1F5F8) is deliberately not listed - as a surrogate-pair character
         // it isn't classified as IsSymbol/IsPunctuation per UTF-16 code unit, so it was never at
         // risk from this trim loop.

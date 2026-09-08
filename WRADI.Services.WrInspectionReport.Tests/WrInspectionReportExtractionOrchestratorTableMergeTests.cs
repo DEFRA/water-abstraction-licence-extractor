@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
@@ -40,9 +41,9 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         {
             Matches =
             [
-                HeuristicResult("SpecialConditions", "X"), // Heuristic got this wrong (real trace: fabricated verdict)
-                HeuristicResult("LicenceNumber", "1/2/3/S/45"), // Unrelated field - must survive untouched
-                HeuristicResult("SourceOfSupply", "In") // Grid field the table WON'T resolve - must also survive untouched
+                HeuristicResult(WrInspectionReportFieldNames.SpecialConditions, "X"), // Heuristic got this wrong (real trace: fabricated verdict)
+                HeuristicResult(WrInspectionReportFieldNames.LicenceNumber, "1/2/3/S/45"), // Unrelated field - must survive untouched
+                HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In") // Grid field the table WON'T resolve - must also survive untouched
             ]
         };
 
@@ -72,23 +73,23 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
             item, Labels, tableExtractorService, [1, 2, 3], Guid.NewGuid(), processRunId: 1);
 
-        var specialConditions = item.Matches!.Single(m => m.LabelGroupName == "SpecialConditions");
+        var specialConditions = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
         Assert.Equal("N/A", specialConditions.Text!.Single().Text);
         Assert.Equal("FakeTableExtractorService", specialConditions.ServiceName);
 
-        var licenceNumber = item.Matches!.Single(m => m.LabelGroupName == "LicenceNumber");
+        var licenceNumber = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
         Assert.Equal("1/2/3/S/45", licenceNumber.Text!.Single().Text);
         Assert.Equal("PdfPigNoOcr", licenceNumber.ServiceName);
 
-        var sourceOfSupply = item.Matches!.Single(m => m.LabelGroupName == "SourceOfSupply");
+        var sourceOfSupply = item.Matches!.Single(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.Equal("In", sourceOfSupply.Text!.Single().Text);
         Assert.Equal("PdfPigNoOcr", sourceOfSupply.ServiceName);
 
         // Every field originally present that the table DIDN'T touch is still present exactly
         // once - the merge never drops an existing heuristic result it isn't replacing.
-        Assert.Single(item.Matches!, m => m.LabelGroupName == "LicenceNumber");
-        Assert.Single(item.Matches!, m => m.LabelGroupName == "SourceOfSupply");
-        Assert.Single(item.Matches!, m => m.LabelGroupName == "SpecialConditions");
+        Assert.Single(item.Matches!, m => m.LabelGroupName == WrInspectionReportFieldNames.LicenceNumber);
+        Assert.Single(item.Matches!, m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
+        Assert.Single(item.Matches!, m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
     }
 
     [Fact]
@@ -96,7 +97,7 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
     {
         var item = new MatchesResult
         {
-            Matches = [HeuristicResult("SourceOfSupply", "In")]
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
         };
 
         var unrelatedTable = new OcrTable

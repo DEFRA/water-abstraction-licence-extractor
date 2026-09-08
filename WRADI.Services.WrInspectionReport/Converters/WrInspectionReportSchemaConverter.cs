@@ -16,7 +16,7 @@ public static class WrInspectionReportSchemaConverter
     // - for any caller that runs a single pass with no separate classification step.
     public static Models.WrInspectionReport ToForm(MatchesResult matchesResult, DmsFileData? dmsFileData, WrTemplateType? knownTemplate = null)
     {
-        var rawFormDate = GetMultilineText(matchesResult, "Date");
+        var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
 
         DateOnly? formDate = null;
         if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), out var tFormDate))
@@ -24,8 +24,8 @@ public static class WrInspectionReportSchemaConverter
             formDate = tFormDate;
         }
 
-        var rawInspectionDate = GetMultilineText(matchesResult, "InspectionDate");
-        var rawInspectionTime = GetMultilineText(matchesResult, "Time");
+        var rawInspectionDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionDate);
+        var rawInspectionTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Time);
 
         var currentDay = DateTime.Today;
         var currentYear = currentDay.Year;
@@ -197,15 +197,15 @@ public static class WrInspectionReportSchemaConverter
             }
         }
 
-        var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, "DateOfCertification");
+        var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);
         DateOnly? dateOfCertificateOrRecord = null;
         if (DateOnly.TryParse(rawDateOfCertificateOrRecord, out var tDateOfCertificateOrRecord))
         {
             dateOfCertificateOrRecord = tDateOfCertificateOrRecord;
         }
 
-        var nameAndAddress = GetMultilineText(matchesResult, "NameAndAddress");
-        var siteAddress = GetMultilineText(matchesResult, "SiteAddress");
+        var nameAndAddress = GetMultilineText(matchesResult, WrInspectionReportFieldNames.NameAndAddress);
+        var siteAddress = GetMultilineText(matchesResult, WrInspectionReportFieldNames.SiteAddress);
 
         if (siteAddress?.Equals("Same as above", StringComparison.InvariantCultureIgnoreCase) == true
             || siteAddress?.Equals("As above", StringComparison.InvariantCultureIgnoreCase) == true)
@@ -213,25 +213,25 @@ public static class WrInspectionReportSchemaConverter
             siteAddress = nameAndAddress;
         }
 
-        var whereKept = GetMultilineText(matchesResult, "WhereKept");
+        var whereKept = GetMultilineText(matchesResult, WrInspectionReportFieldNames.WhereKept);
         if (string.IsNullOrWhiteSpace(whereKept)) whereKept = null;
 
-        var documentTemplateVerison = GetMultilineText(matchesResult, "DocumentTemplateVersion");
+        var documentTemplateVerison = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DocumentTemplateVersion);
         var isNewTemplate = documentTemplateVerison == "2026_07_10_v1";
 
-        var documentHeader = GetMultilineText(matchesResult, "DocumentHeader");
+        var documentHeader = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DocumentHeader);
         if (!string.IsNullOrWhiteSpace(documentHeader)) documentHeader = $"Form WR - {documentHeader}";
         
         string? maintenanceYesNo = null;
 
         if (isNewTemplate)
         {
-            maintenanceYesNo = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenance");
+            maintenanceYesNo = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.MaintenanceLine, WrInspectionReportFieldNames.MaintenanceLineMaintenance);
         }
         else
         {
-            var maintenanceYes = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceYes");
-            var maintenanceNo = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineMaintenanceNo");
+            var maintenanceYes = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.MaintenanceLine, WrInspectionReportFieldNames.MaintenanceLineMaintenanceYes);
+            var maintenanceNo = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.MaintenanceLine, WrInspectionReportFieldNames.MaintenanceLineMaintenanceNo);
 
             if (maintenanceYes?.Equals("✓") == true)
             {
@@ -247,12 +247,12 @@ public static class WrInspectionReportSchemaConverter
         
         if (isNewTemplate)
         {
-            readingsTakenYesNo = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTaken");
+            readingsTakenYesNo = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.ReadingsTakenLine, WrInspectionReportFieldNames.ReadingsTakenLineReadingsTaken);
         }
         else
         {
-            var readingsTakenYes = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenYes");
-            var readingsTakenNo = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineReadingsTakenNo");
+            var readingsTakenYes = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.ReadingsTakenLine, WrInspectionReportFieldNames.ReadingsTakenLineReadingsTakenYes);
+            var readingsTakenNo = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.ReadingsTakenLine, WrInspectionReportFieldNames.ReadingsTakenLineReadingsTakenNo);
 
             if (readingsTakenYes?.Equals("✓") == true)
             {
@@ -296,28 +296,28 @@ public static class WrInspectionReportSchemaConverter
                 Filename = matchesResult.Filename,
                 FileId = dmsFileData?.FileId,
                 IsScan = matchesResult.ScannedFile,
-                FormSentTo = GetMultilineText(matchesResult, "FormSentTo"),
+                FormSentTo = GetMultilineText(matchesResult, WrInspectionReportFieldNames.FormSentTo),
                 Date = new WrInspectionReportInspectionDate()
                 {
                     RawDate = rawFormDate,
                     Date = formDate   
                 }
             },
-            LicenceNumber = GetMultilineText(matchesResult, "LicenceNumber"),
-            LicenceNumberCleaned = CleanLicenceNumbers(GetMultilineText(matchesResult, "LicenceNumber")),
-            InspectionClass = GetMultilineText(matchesResult, "InspectionClass"),
+            LicenceNumber = GetMultilineText(matchesResult, WrInspectionReportFieldNames.LicenceNumber),
+            LicenceNumberCleaned = CleanLicenceNumbers(GetMultilineText(matchesResult, WrInspectionReportFieldNames.LicenceNumber)),
+            InspectionClass = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionClass),
             Address = new WrInspectionReportAddress()
             {
                 NameAndAddress = nameAndAddress,
-                TelephoneNumber = CollapseSpacedDigits(GetMultilineText(matchesResult, "TelephoneNumber")),
+                TelephoneNumber = CollapseSpacedDigits(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TelephoneNumber)),
                 SiteAddress = siteAddress
             },
             MetWith = new WrInspectionReportMetWith()
             {
-                Name = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, "MetWith"), "Position:"),
-                Position = GetMultilineText(matchesResult, "Position"),
+                Name = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, WrInspectionReportFieldNames.MetWith), "Position:"),
+                Position = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Position),
             },
-            InspectingOfficer = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, "InspectingOfficer"), "Inspection Date:"),
+            InspectingOfficer = TruncateAtKnownSiblingLabel(GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer), "Inspection Date:"),
             InspectionDate = new WrInspectionReportInspectionDateTime()
             {
                 DateTime = inspectionDateTime,
@@ -326,57 +326,63 @@ public static class WrInspectionReportSchemaConverter
             },
             LicenceProvisions = new WrInspectionReportLicenceProvisions()
             {
-                SourceOfSupply = GetInOrderStatus(matchesResult, "SourceOfSupply"),
-                Purposes = GetInOrderStatus(matchesResult, "Purposes"),
-                PointOfAbstraction = GetInOrderStatus(matchesResult, "PointOfAbstraction"),
-                SpecialConditions = GetInOrderStatus(matchesResult, "SpecialConditions"),
-                ChargingFactors = GetInOrderStatus(matchesResult, "ChargingFactors"),
-                Land = GetInOrderStatus(matchesResult, "Land"),
-                MeansOfAbstraction = GetInOrderStatus(matchesResult, "MeansOfAbstraction"),
-                MeansOfMeasurement = GetInOrderStatus(matchesResult, "MeansOfMeasurement"),
-                ProvisionOfInformation = GetInOrderStatus(matchesResult, "ProvisionOfInformation"),
-                Quantities = GetInOrderStatus(matchesResult, "Quantities"),
-                Records = GetInOrderStatus(matchesResult, "Records"),
-                OtherProvisions = GetInOrderStatus(matchesResult, "OtherProvisions"),
-                Period = GetInOrderStatus(matchesResult, "Period")
+                SourceOfSupply = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.SourceOfSupply),
+                Purposes = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Purposes),
+                PointOfAbstraction = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.PointOfAbstraction),
+                SpecialConditions = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.SpecialConditions),
+                ChargingFactors = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.ChargingFactors),
+                Land = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Land),
+                MeansOfAbstraction = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.MeansOfAbstraction),
+                MeansOfMeasurement = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.MeansOfMeasurement),
+                ProvisionOfInformation = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.ProvisionOfInformation),
+                Quantities = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Quantities),
+                Records = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Records),
+                OtherProvisions = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.OtherProvisions),
+                Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period)
             },
             MeasurementDetails = new WrInspectionReportMeasurementDetails()
             {
-                MeterName = GetMultilineText(matchesResult, "MeterName"),
-                MeterMake = GetMultilineText(matchesResult, "MeterMake"),
-                SerialNumber = GetMultilineText(matchesResult, "SerialNumber"),
-                MeterAssetNumber = GetMultilineText(matchesResult, "MeterAssetNumber"),
-                Reading = GetMultilineText(matchesResult, "Reading"),
-                FlowRate = GetMultilineText(matchesResult, "FlowRate"),
-                Verification = GetMultilineText(matchesResult, "Verification"),
-                SpotCheckResult = GetMultilineText(matchesResult, "SpotCheckResult"),
-                Units = GetMultilineText(matchesResult, "Units"),
-                Other = GetMultilineText(matchesResult, "Other"),
-                CertificatesOrRecordsAvailableFor = GetMultilineText(matchesResult, "CertificatesOfRecords"),
+                Meters =
+                [
+                    new WrInspectionReportMeter
+                    {
+                        MeterName = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterName),
+                        MeterMake = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterMake),
+                        SerialNumber = GetMultilineText(matchesResult, WrInspectionReportFieldNames.SerialNumber),
+                        MeterAssetNumber = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber),
+                        Reading = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Reading),
+                        FlowRate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.FlowRate),
+                        Units = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Units)
+                    }
+                ],
+                Verification = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Verification),
+                SpotCheckResult = GetMultilineText(matchesResult, WrInspectionReportFieldNames.SpotCheckResult),
+                Other = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Other),
+                CertificatesOrRecordsAvailableFor = GetMultilineText(matchesResult, WrInspectionReportFieldNames.CertificatesOfRecords),
                 DateOfCertificateOrRecord = new WrInspectionReportInspectionDate()
                 {
                     Date = dateOfCertificateOrRecord,
                     RawDate = rawDateOfCertificateOrRecord
                 },
-                Calibration = GetMultilineText(matchesResult, "Calibration"),
-                Conformance = GetMultilineText(matchesResult, "Conformance"),
-                FlowVerification = GetMultilineText(matchesResult, "FlowVerification"),
-                MeterVerification = GetMultilineText(matchesResult, "MeterVerification"),
+                Calibration = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Calibration),
+                Conformance = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Conformance),
+                FlowVerification = GetMultilineText(matchesResult, WrInspectionReportFieldNames.FlowVerification),
+                MeterVerification = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterVerification),
                 Maintenance = new WrInspectionReportMaintenance()
                 {
                     Maintenance = maintenanceYesNo,
-                    Frequency = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineFrequency"),
-                    ByWhom = GetSingleLineSubFieldText(matchesResult, "MaintenanceLine", "MaintenanceLineByWhom")
+                    Frequency = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.MaintenanceLine, WrInspectionReportFieldNames.MaintenanceLineFrequency),
+                    ByWhom = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.MaintenanceLine, WrInspectionReportFieldNames.MaintenanceLineByWhom)
                 },
                 ReadingsTaken = new WrInspectionReportReadingsTaken()
                 {
                     ReadingsTaken = readingsTakenYesNo,
-                    Frequency = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineFrequency"),
-                    ByWhom = GetSingleLineSubFieldText(matchesResult, "ReadingsTakenLine", "ReadingsTakenLineByWhom")
+                    Frequency = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.ReadingsTakenLine, WrInspectionReportFieldNames.ReadingsTakenLineFrequency),
+                    ByWhom = GetSingleLineSubFieldText(matchesResult, WrInspectionReportFieldNames.ReadingsTakenLine, WrInspectionReportFieldNames.ReadingsTakenLineByWhom)
                 },
                 WhereKept = whereKept
             },
-            GeneralComments = GetMultilineText(matchesResult, "GeneralComments"),
+            GeneralComments = GetMultilineText(matchesResult, WrInspectionReportFieldNames.GeneralComments),
             Images = images
         };
     }
@@ -513,22 +519,22 @@ public static class WrInspectionReportSchemaConverter
     // ruleset to extract with.
     internal static WrTemplateType ClassifyTemplate(MatchesResult matchesResult, string? documentHeader)
     {
-        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerImpounding")))
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerImpounding)))
         {
             return WrTemplateType.Impounding;
         }
 
-        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT4")))
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerT4)))
         {
             return WrTemplateType.T4;
         }
 
-        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT6")))
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerT6)))
         {
             return WrTemplateType.T6;
         }
 
-        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerT7")))
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerT7)))
         {
             return WrTemplateType.T7;
         }
@@ -538,8 +544,8 @@ public static class WrInspectionReportSchemaConverter
             return WrTemplateType.Unknown;
         }
 
-        var hasBaselineComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerBaselineComments"));
-        var hasAlternateComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, "TemplateMarkerAlternateComments"));
+        var hasBaselineComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerBaselineComments));
+        var hasAlternateComments = !string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerAlternateComments));
 
         return hasBaselineComments && !hasAlternateComments
             ? WrTemplateType.T1
@@ -628,7 +634,7 @@ public static class WrInspectionReportSchemaConverter
 
         // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
         // export toolchain happened to produce, not consistently ✓ - see
-        // WrInspectionReportLabelConfiguration.GetInOrderField's Possibilities list for the
+        // WrInspectionReportLabelConfiguration's InOrderPossibilities list for the
         // full evidence (corpus-wide symbol frequency behind each of these).
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)

@@ -3,15 +3,13 @@ using WALE.ProcessFile.Services.Methods;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
-// Additive, fallback-safe overlay on top of the heuristic column-walk matching
-// (WALE.ProcessFile.Services/Helpers/FindLabelGroupMatchesHelper.cs) for the LicenceProvisions
-// grid fields. Given real table cells from Azure AI Document Intelligence's "prebuilt-layout"
-// model (see AzureAiServicesDocumentIntelligenceTableExtractorService), looks up each grid
-// field's answer by real RowIndex/ColumnIndex adjacency instead of position-heuristic guessing.
-// Only returns a result for fields it can confidently resolve - the caller (
-// WrInspectionReportExtractionOrchestrator) keeps the existing heuristic result for anything
-// not present in the returned dictionary, so this can never make an already-correct field
-// worse, only replace an already-wrong one.
+// Overlay on top of the heuristic column-walk matching (WALE.ProcessFile.Services/Helpers/
+// FindLabelGroupMatchesHelper.cs) for the LicenceProvisions grid fields. Given real table cells
+// from Azure AI Document Intelligence's "prebuilt-layout" model, looks up each grid field's
+// answer by RowIndex/ColumnIndex adjacency instead of position-heuristic guessing. Only returns
+// a result for fields it can confidently resolve - the caller (
+// WrInspectionReportExtractionOrchestrator) keeps the existing heuristic result for anything not
+// present in the returned dictionary.
 public static class WrInspectionReportTableMatcher
 {
     public static Dictionary<string, LabelGroupResult> MatchGridFields(
@@ -75,10 +73,9 @@ public static class WrInspectionReportTableMatcher
         return results;
     }
 
-    // The table whose cells collectively match the most grid field labels - mirrors the
-    // scoring approach validated during prototyping (best_ti/best_count) against 17 real
-    // documents. A document can have several tables (header block, meter block, etc.); this
-    // picks out the LicenceProvisions grid specifically rather than assuming table order.
+    // The table whose cells collectively match the most grid field labels. A document can have
+    // several tables (header block, meter block, etc.); this picks out the LicenceProvisions
+    // grid specifically rather than assuming table order.
     private static OcrTable? FindBestGridTable(
         IReadOnlyList<OcrTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
@@ -119,18 +116,16 @@ public static class WrInspectionReportTableMatcher
 
     // A real tick/status answer ("✓", "N/A", "NI", "☑ ☐", etc. - see GetInOrderField's
     // Possibilities list) is always a handful of characters once Azure's own ":selected:"/
-    // ":unselected:" annotation is stripped back out. Real narrative-answer documents (the
-    // "water_company_template"/"narrative_provisions" family - see wr51_groundtruth_labelling
-    // memory) put a full sentence in the same cell instead, e.g. "Source of supply: Lower
-    // Greensand at Warwick Wold / Brewer St :selected:" - confirmed via a real golden-set
-    // harness run this genuinely happens, not a theoretical edge case. Generous headroom above
-    // the longest real Possibility ("☑ ☐", 3 chars) while still excluding any real sentence.
+    // ":unselected:" annotation is stripped back out. Some templates put a full narrative
+    // sentence in the same cell instead (e.g. "Source of supply: Lower Greensand at Warwick
+    // Wold / Brewer St :selected:") - generous headroom above the longest real Possibility
+    // ("☑ ☐", 3 chars) while still excluding any real sentence.
     private const int MaxTickAnswerLength = 8;
 
-    // Handles both cell shapes found during prototyping: (a) label and value merged into one
-    // cell (majority of documents - strip the label prefix, remainder is the answer), and
-    // (b) label and value split into adjacent cells (e.g. wr51__nw0690016005 - when the label
-    // cell's own remainder is empty, the answer is the next cell in the same row).
+    // Handles both cell shapes seen in practice: (a) label and value merged into one cell (the
+    // majority - strip the label prefix, remainder is the answer), and (b) label and value split
+    // into adjacent cells (label cell's own remainder is empty, answer is the next cell in the
+    // same row).
     private static string? FindFieldValueInTable(OcrTable table, IReadOnlyList<TextToMatch> textStarts)
     {
         foreach (var cell in table.Cells)
@@ -160,13 +155,10 @@ public static class WrInspectionReportTableMatcher
 
             if (rawRemainder.Length > 0)
             {
-                // Found the field's own label, but its content isn't tick-shaped - a genuine
-                // narrative answer, which the current model has no way to represent anyway (see
-                // WrInspectionReportSchemaConverter.GetInOrderStatus). Don't fabricate a status
-                // by matching a stray "in"/"n"/"✓"-after-normalising substring somewhere inside
-                // real prose - fall back to the heuristic (which has the exact same
-                // representational limit, but at least won't confidently guess) rather than
-                // returning something here at all.
+                // Found the field's own label, but its content isn't tick-shaped - a narrative
+                // answer, which WrInspectionReportSchemaConverter.GetInOrderStatus has no way to
+                // represent anyway. Don't fabricate a status by matching a stray "in"/"n"/"✓"
+                // substring inside real prose - fall back to the heuristic instead.
                 return LooksLikeATickAnswer(rawRemainder) ? NormaliseSelectionMarks(rawRemainder) : null;
             }
 

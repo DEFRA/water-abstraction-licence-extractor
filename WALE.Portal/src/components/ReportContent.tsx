@@ -21,7 +21,7 @@ interface ReportContentProps {
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
+export function ReportContent({fileId, hideBackLink = true, processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -32,8 +32,6 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [currentLicence, setCurrentLicence] = useState<Licence | null>(null);
     const [licenceSetsData, setLicenceSetsData] = useState<LicenceSet[] | null>(null);
     const [licenceString, setLicenceString] = useState<string | null>(null);
-    // const [aiData, setAiData] = useState<AiData | null>(null);
-    // const [textData, setTextData] = useState<string>('');
 
     // UI states
     const [activeTab, setActiveTab] = useState<TabType>('verification');
@@ -47,8 +45,8 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
-                waleApiClient.getMatchesResult(fileId, processRunId),
-                waleApiClient.getMatchesResult(fileId, processRunId),
+                waleApiClient.getMatchesResultByMatchesResultId(processRunId),
+                waleApiClient.getMatchesResultByMatchesResultIdString(processRunId),
                 waleApiClient.licence(fileId, processRunId, false),
                 waleApiClient.licence(fileId, processRunId, true),
                 waleApiClient.licenceSets(fileId),

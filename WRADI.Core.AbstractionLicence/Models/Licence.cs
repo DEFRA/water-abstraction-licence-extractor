@@ -12,6 +12,8 @@ public class Licence
     
     public int LicenceId { get; set; }
     
+    public int MatchesResultId { get; set; }
+    
     public string Id
     {
         get

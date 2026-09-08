@@ -242,6 +242,66 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     private static string? StripSeparators(string? normalizedValue) =>
         normalizedValue == null ? null : Regex.Replace(normalizedValue, @"[\s,]+", "");
 
+    // Minimum truth length (post-normalization) before near-identical scoring kicks in. Guards
+    // against short structured values (phone numbers, serial numbers, dates) where a single
+    // wrong character already produces a deceptively high similarity ratio - e.g. one wrong
+    // digit in an 11-digit phone number is already ~91% similar, which would misreport a
+    // genuinely wrong value as a near-hit. Every real narrative field (GeneralComments) in the
+    // golden set is reliably well over this; every real single-value field in FieldExtractors
+    // is reliably well under it.
+    private const int MinLengthForSimilarityScoring = 200;
+
+    // Chosen from the 2026-09-08 golden-set GeneralComments analysis: real near-misses
+    // (superscript/whitespace encoding artifacts, e.g. "m3" vs "³", "13th" vs "13 th")
+    // clustered at >=0.90 similarity; sub-0.90 cases were confirmed by manual inspection to be
+    // genuine content differences (extraction running past the field's true end and picking up
+    // trailing boilerplate, or anchoring on the wrong section entirely), not scoring artifacts.
+    private const double NearIdenticalSimilarityThreshold = 0.90;
+
+    /// <summary>
+    /// Normalized Levenshtein similarity (1 - editDistance / max(len)). Two-row DP, not a full
+    /// n*m matrix - GeneralComments values run several thousand characters long in real
+    /// documents, and a full matrix would be tens of megabytes for the longest of them.
+    /// </summary>
+    private static double LevenshteinSimilarity(string a, string b)
+    {
+        if (a.Length == 0 && b.Length == 0)
+        {
+            return 1.0;
+        }
+
+        if (a.Length == 0 || b.Length == 0)
+        {
+            return 0.0;
+        }
+
+        var previousRow = new int[b.Length + 1];
+        var currentRow = new int[b.Length + 1];
+
+        for (var j = 0; j <= b.Length; j++)
+        {
+            previousRow[j] = j;
+        }
+
+        for (var i = 1; i <= a.Length; i++)
+        {
+            currentRow[0] = i;
+
+            for (var j = 1; j <= b.Length; j++)
+            {
+                var cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                currentRow[j] = Math.Min(
+                    Math.Min(currentRow[j - 1] + 1, previousRow[j] + 1),
+                    previousRow[j - 1] + cost);
+            }
+
+            (previousRow, currentRow) = (currentRow, previousRow);
+        }
+
+        var distance = previousRow[b.Length];
+        return 1.0 - (double)distance / Math.Max(a.Length, b.Length);
+    }
+
     private static Outcome Classify(string fieldName, TruthField truth, string? extractedRaw)
     {
         if (UnmodeledFields.Contains(fieldName))
@@ -275,6 +335,18 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         if (truthNorm != null && (extractedNorm.Contains(truthNorm) || truthNorm.Contains(extractedNorm)))
+        {
+            return Outcome.PartialHit;
+        }
+
+        // Substring containment above only catches truncation-shaped near-misses (one string is
+        // a prefix/suffix of the other). Narrative fields more often differ by a handful of
+        // characters scattered throughout - neither containing the other - which this catches
+        // instead. See MinLengthForSimilarityScoring/NearIdenticalSimilarityThreshold for why
+        // this is gated to long values only.
+        if (truthNorm != null
+            && truthNorm.Length >= MinLengthForSimilarityScoring
+            && LevenshteinSimilarity(extractedNorm, truthNorm) >= NearIdenticalSimilarityThreshold)
         {
             return Outcome.PartialHit;
         }

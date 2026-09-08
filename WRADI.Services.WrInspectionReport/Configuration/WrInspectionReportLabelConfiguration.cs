@@ -198,6 +198,20 @@ public class WrInspectionReportLabelConfiguration
             return this;
         }
 
+        // Additive fallback alongside AlsoStartsWith (which still requires a column start): a
+        // start text matched anywhere on the line, for cases where the value genuinely doesn't
+        // land at a column boundary - e.g. "Time" sharing a row with "Inspection Date" as
+        // "...Inspection Date: 26/1/2026 Time: 3pm" all in one column. Use specific-enough text
+        // (a trailing colon, say) to avoid matching an ordinary word inside narrative prose.
+        // Purely additive - existing column-start matches are untouched, so this can only add
+        // new matches, never remove one.
+        public Rule AlsoStartsWithLoose(params string[] texts)
+        {
+            _textStart = [.._textStart!, ..texts.Select(t => new TextToMatch(t))];
+            _remove.AddRange(texts.Select(t => new TextToMatch(t)));
+            return this;
+        }
+
         public Rule Remove(IEnumerable<TextToMatch> items) { _remove.AddRange(items); return this; }
 
         // GeneralComments' own special case: "Actions"/"Summary" are valid additionalTextStarts
@@ -271,6 +285,15 @@ public class WrInspectionReportLabelConfiguration
 
         var generalCommentsIndex = labels.FindIndex(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         labels[generalCommentsIndex] = (WrInspectionReportFieldNames.GeneralComments, [
+            // Tried (2026-09-08) and reverted: an "Actions" end-anchor and a "Page N of M"
+            // footer end-anchor, meant to stop the field short of a trailing checklist/footer
+            // section seen on some T1 documents. Measured against the golden set: fixed 1 case
+            // but broke 2 others - "Actions" isn't reliably a section boundary (wr51__1142109's
+            // truth genuinely includes "Actions:\n<content>" as narrative, indistinguishable via
+            // StartsWith from the standalone "Actions" heading that IS a real boundary elsewhere)
+            // and the footer marker cut a different document short of its true end. Net regression
+            // (Hit+PartialHit 36->35), not an improvement - genuine per-document diversity here,
+            // not a bounded fix. See wr51_general_comments_gap memory before trying this again.
             Rule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
                 .Named(WrInspectionReportFieldNames.GeneralComments).WholeLine().NextLines(100).Build()
         ]);
@@ -426,7 +449,10 @@ public class WrInspectionReportLabelConfiguration
         (WrInspectionReportFieldNames.Position, [Rule.Between("Position", "Inspection Date").Named(WrInspectionReportFieldNames.Position).NextLines(1).Build()]);
 
     private static (string, List<LabelToMatch>) RuleTime() =>
-        (WrInspectionReportFieldNames.Time, [Rule.After("Time").Named(WrInspectionReportFieldNames.Time).Build()]);
+        (WrInspectionReportFieldNames.Time, [
+            Rule.After("Time").Named(WrInspectionReportFieldNames.Time)
+                .AlsoStartsWithLoose("Time:").Build()
+        ]);
 
     private static (string, List<LabelToMatch>) RuleNameAndAddress() =>
         (WrInspectionReportFieldNames.NameAndAddress, [

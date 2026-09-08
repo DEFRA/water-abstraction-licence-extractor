@@ -1362,13 +1362,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               process_run_id 
+                               process_run_id,
+                               matches_result_id
                            FROM licence
                            WHERE
                                licence_id = @LicenceId;
                            """;
 
-        var result = await QueryFirstOrDefaultAsync<(string Data, int ProcessRunId)?>(
+        var result = await QueryFirstOrDefaultAsync<(string Data, int ProcessRunId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -1386,6 +1387,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         data.NoneSchemaData.TryAdd("licenceId", licenceId);
         data.LicenceId = licenceId;
         data.ProcessRunId = result.Value.ProcessRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
         
         return data;
     }
@@ -1396,14 +1398,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
                            WHERE
                                file_id = @FileId
                                AND process_run_id = @ProcessRunId;
                            """;
 
-        var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -1422,6 +1425,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         data.LicenceId = result.Value.LicenceId;
         data.ProcessRunId = processRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
         
         return data;
     }
@@ -1432,13 +1436,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
                            WHERE licence_number = @LicenceNumber 
                              AND process_run_id = @ProcessRunId;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -1457,6 +1462,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         data.LicenceId = result.Value.LicenceId;
         data.ProcessRunId = processRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
         
         return data;
     }

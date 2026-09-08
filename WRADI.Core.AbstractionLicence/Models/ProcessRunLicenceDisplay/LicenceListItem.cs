@@ -7,6 +7,8 @@ public sealed class LicenceListItem
     public int ProcessRunId { get; set; }
     
     public int LicenceId { get; set; }
+    
+    public int MatchesResultId { get; set; }
 
     public Guid FileId { get; set; }
 

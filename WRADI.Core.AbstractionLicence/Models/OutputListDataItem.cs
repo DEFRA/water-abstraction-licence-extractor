@@ -6,7 +6,9 @@ public class OutputListDataItem
     
     public Guid fileId { get; set; }
     
-    public int licenceId { get; set; }// TODO check its set
+    public int licenceId { get; set; }
+    
+    public int matchesResultId { get; set; }
 
     public string? filename { get; set; }
     

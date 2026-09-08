@@ -7,6 +7,8 @@ public sealed class UpsertLicenceListItem
     public Guid FileId { get; init; }
     
     public int LicenceId { get; init; }
+    
+    public int MatchesResultId { get; set; }
 
     public string Filename { get; init; } = string.Empty;
 

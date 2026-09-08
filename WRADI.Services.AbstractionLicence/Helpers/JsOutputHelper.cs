@@ -62,6 +62,7 @@ public static class JsOutputHelper
         {
             Filename = licence.Filename,
             LicenceId = licence.LicenceId,
+            MatchesResultId = licence.MatchesResultId,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
@@ -139,6 +140,7 @@ public static class JsOutputHelper
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
                 licenceId = outputLine.LicenceId,
+                matchesResultId = outputLine.MatchesResultId,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =

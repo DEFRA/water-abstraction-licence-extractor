@@ -8,6 +8,8 @@ public class IntermediateOutputLicence
 
     public int LicenceId;
     
+    public int MatchesResultId { get; set; }
+    
     public string? LicenceHolder;
     
     public double? LicenceHolderOcrConfidence;

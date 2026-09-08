@@ -47,8 +47,8 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
-                waleApiClient.matchesResult(fileId),
-                waleApiClient.matchesResultString(fileId),
+                waleApiClient.getMatchesResult(fileId, processRunId),
+                waleApiClient.getMatchesResult(fileId, processRunId),
                 waleApiClient.licence(fileId, processRunId, false),
                 waleApiClient.licence(fileId, processRunId, true),
                 waleApiClient.licenceSets(fileId),
@@ -56,7 +56,7 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
-            if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
+            if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(JSON.stringify(matchesResultString.value)));
             if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
             if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
             if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);

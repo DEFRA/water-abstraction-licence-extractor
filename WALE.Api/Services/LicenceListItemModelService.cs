@@ -98,6 +98,7 @@ public class LicenceListItemModelService
         {
             processRunId = licence.ProcessRunId,
             fileId = licence.FileId,
+            licenceId = licence.LicenceId,
             filename = licence.Filename,
             licenceNumber = licence.LicenceNumber,
             licenceHolder = licence.LicenceHolder,

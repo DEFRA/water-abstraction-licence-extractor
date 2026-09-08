@@ -2946,10 +2946,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             ProcessRunQuery query,
             CancellationToken cancellationToken = default)
     {
-        await using var connection = GetPostgresConnection();
-
         var parents = await GetLicenceListItemParentsAsync(
-            connection,
             processRunId,
             query,
             cancellationToken);
@@ -2964,19 +2961,16 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .ToArray();
 
         var linkedLicencesTask = GetLinkedLicencesAsync(
-            connection,
             itemIds,
             cancellationToken);
 
         var licenceSetsTask = GetLicenceSetsAsync(
-            connection,
             processRunId,
             itemIds,
             cancellationToken);
         
         var verificationSections =
              await GetLicenceVerificationSectionsAsync(
-                connection,
                 processRunId,
                 itemIds,
                 cancellationToken);
@@ -3082,14 +3076,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.ToList();
     }
 
-private static async Task<
+private async Task<
         Dictionary<long, List<LicenceSectionVerificationSummary>>>
     GetLicenceVerificationSectionsAsync(
-        NpgsqlConnection connection,
         int processRunId,
         IReadOnlyCollection<long> licenceListItemIds,
         CancellationToken cancellationToken)
 {
+    await using var connection = GetPostgresConnection();
+    
     if (licenceListItemIds.Count == 0)
     {
         return [];
@@ -3192,14 +3187,15 @@ private static async Task<
 }
 
 
-    private static async Task<
+    private async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLicenceSet>>>
         GetLicenceSetsAsync(
-            NpgsqlConnection connection,
             int processRunId,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
+        await using var connection = GetPostgresConnection();
+        
         const string sql =
             """
             SELECT
@@ -3266,13 +3262,14 @@ private static async Task<
                     group.ToArray());
     }
 
-    private static async Task<
+    private async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLinkedLicence>>>
         GetLinkedLicencesAsync(
-            NpgsqlConnection connection,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
+        await using var connection = GetPostgresConnection();
+        
         const string linkedSql =
             """
             SELECT
@@ -3408,13 +3405,14 @@ private static async Task<
     }
     
     
-    private static async Task<List<LicenceListItem>>
-    GetLicenceListItemParentsAsync(
-        NpgsqlConnection connection,
-        int processRunId,
-        ProcessRunQuery query,
-        CancellationToken cancellationToken)
+    private async Task<List<LicenceListItem>>
+        GetLicenceListItemParentsAsync(
+            int processRunId,
+            ProcessRunQuery query,
+            CancellationToken cancellationToken)
 {
+    await using var connection = GetPostgresConnection();
+    
     var sql = new StringBuilder(
         """
         SELECT

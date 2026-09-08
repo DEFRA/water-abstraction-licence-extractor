@@ -724,8 +724,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 process_run_id,
                 file_id,
-                licence_number,
-                licence_id
+                licence_number
             )
             DO UPDATE SET
                 filename = EXCLUDED.filename,

@@ -30,7 +30,8 @@ public class LicenceListItemModelService
             .ToArray();
     }
 
-    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(IEnumerable<LicenceListItemAggregate> source)
+    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(
+        IEnumerable<LicenceListItemAggregate> source)
     {
         ArgumentNullException.ThrowIfNull(source);
 

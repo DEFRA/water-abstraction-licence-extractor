@@ -515,6 +515,7 @@ public static class AbstractionLicenceSchemaConverter
         return new Licence
         {
             Filename = matchesResult.Filename,
+            MatchesResultId = matchesResult.MatchesResultId,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumberWithConfidence,
             DmsPermitNumber = dmsFileData?.PermitNumber,

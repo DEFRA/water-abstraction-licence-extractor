@@ -149,6 +149,7 @@ public class DatabaseAbstractionLicenceOutputService(
             }
 
             missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
+            
             await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
         }
 

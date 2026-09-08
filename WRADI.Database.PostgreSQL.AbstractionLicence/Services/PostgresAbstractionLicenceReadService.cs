@@ -1143,6 +1143,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                     result.Data,
                     GetSerializerOptions())!;
 
+                licence.LicenceId = result.LicenceId;
                 licence.NoneSchemaData.TryAdd(
                     "licenceId",
                     result.LicenceId);
@@ -1156,7 +1157,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data, licence_id 
+                           SELECT data, licence_id, matches_result_id 
                            FROM licence 
                            WHERE process_run_id = @ProcessRunId
                            ORDER BY licence_id
@@ -1164,7 +1165,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            OFFSET @skip;
                            """;
 
-        var results = await QueryAsync<(string Data, int LicenceId)>(
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId)>(
             connection,
             sql,
             0,
@@ -1178,7 +1179,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.Select(r =>
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+            
             licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+            licence.LicenceId = r.LicenceId;
+            licence.MatchesResultId = r.MatchesResultId;
 
             return licence;
         }).ToList();
@@ -1384,8 +1388,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", licenceId);
         data.LicenceId = licenceId;
+        
         data.ProcessRunId = result.Value.ProcessRunId;
         data.MatchesResultId = result.Value.MatchesResultId;
         
@@ -1422,8 +1428,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         data.LicenceId = result.Value.LicenceId;
+        
         data.ProcessRunId = processRunId;
         data.MatchesResultId = result.Value.MatchesResultId;
         
@@ -1459,8 +1467,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
         data.LicenceId = result.Value.LicenceId;
+        
         data.ProcessRunId = processRunId;
         data.MatchesResultId = result.Value.MatchesResultId;
         
@@ -2168,14 +2178,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
                            WHERE permit_number = @PermitNumber
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -2187,7 +2198,12 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
+        
+        data.MatchesResultId = result.Value.MatchesResultId;
+        
         return data;
     }
 
@@ -3424,6 +3440,7 @@ private async Task<
         SELECT
             licence_list_item_id AS LicenceListItemId,
             licence_id AS LicenceId,
+            matches_result_id AS MatchesResultId,
             process_run_id AS ProcessRunId,
             file_id AS FileId,
             filename AS Filename,

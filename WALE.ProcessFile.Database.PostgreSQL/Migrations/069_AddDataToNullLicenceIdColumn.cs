@@ -10,7 +10,7 @@ public class AddDataToNullLicenceIdColumn : Migration
         Execute.Sql("""
                     update public.licence_list_item
                     set licence_id = (select licence_id from public.licence where public.licence_list_item.process_run_id = public.licence.process_run_id and public.licence_list_item.file_id = public.licence.file_id LIMIT 1)
-                    WHERE licence_id is null
+                    WHERE licence_id is null and file_id is not null
                     """);
     }
 

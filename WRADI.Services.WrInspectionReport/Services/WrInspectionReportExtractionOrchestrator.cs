@@ -25,13 +25,32 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 /// </summary>
 public static class WrInspectionReportExtractionOrchestrator
 {
+    // The 13 LicenceProvisions grid fields WrInspectionReportTableMatcher can resolve via real
+    // table cells (Azure AI Document Intelligence "prebuilt-layout") instead of the heuristic
+    // column-walk. Every field this whole grid's known bugs (SpecialConditions,
+    // OtherProvisions, etc. - see wr51_column_walk_bug memory) live in.
+    private static readonly string[] GridFieldNames =
+    [
+        "SourceOfSupply", "PointOfAbstraction", "MeansOfAbstraction", "Purposes", "Period",
+        "Quantities", "MeansOfMeasurement", "Records", "ProvisionOfInformation",
+        "SpecialConditions", "Land", "ChargingFactors", "OtherProvisions"
+    ];
+
     public static async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item, WrTemplateType Template)> ExtractAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
         LookupConfiguration configuration,
         List<string> previouslyParsedFiles,
         int processRunId,
-        IPdfDataExtractorService pdfDataExtractor)
+        IPdfDataExtractorService pdfDataExtractor,
+        // Opt-in overlay, off by default (both null) - see WrInspectionReportTableMatcher and
+        // the "wr51_textract_tables_design" investigation this implements. Passing a non-null
+        // tableExtractorService AND pdfBytesForTableExtraction attempts the table-based lookup
+        // for the LicenceProvisions grid fields; any field it can't confidently resolve keeps
+        // its existing heuristic result unchanged. Not yet wired into production - see this
+        // feature's own build plan for why.
+        ITableExtractorService? tableExtractorService = null,
+        byte[]? pdfBytesForTableExtraction = null)
     {
         var classificationConfiguration = configuration.Clone();
         classificationConfiguration.Labels = WrInspectionReportLabelConfiguration.GetClassificationLabels();
@@ -52,10 +71,12 @@ public static class WrInspectionReportExtractionOrchestrator
         var documentHeader = WrInspectionReportSchemaConverter.GetMultilineText(classificationResult, "DocumentHeader");
         var template = WrInspectionReportSchemaConverter.ClassifyTemplate(classificationResult, documentHeader);
 
-        var realConfiguration = configuration.Clone();
-        realConfiguration.Labels = template == WrTemplateType.T1
+        var realLabels = template == WrTemplateType.T1
             ? WrInspectionReportLabelConfiguration.GetT1Labels()
             : WrInspectionReportLabelConfiguration.GetLabels();
+
+        var realConfiguration = configuration.Clone();
+        realConfiguration.Labels = realLabels;
 
         var (stopExecution, alreadySaved, item) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
@@ -64,6 +85,61 @@ public static class WrInspectionReportExtractionOrchestrator
             previouslyParsedFiles,
             processRunId);
 
+        // template is already known at this point (classified above) - gating on T1 here, not
+        // just relying on WrInspectionReportTableMatcher's own content-based guards, avoids
+        // spending a real Document Intelligence call/cost on every other template's documents,
+        // which the design was never expected to help anyway (see the "Scope reality check" in
+        // the wr51_textract_tables_design memory - non-grid templates have no tick/cross grid
+        // for this mechanism to find at all). This is a pure efficiency gate, not a correctness
+        // one: WrInspectionReportTableMatcher's own guards (majority-of-grid table selection,
+        // LooksLikeATickAnswer's narrative-length check) already make running this safe on any
+        // template - confirmed via a real golden-set harness run before this gate was added.
+        if (!stopExecution
+            && item?.Matches != null
+            && template == WrTemplateType.T1
+            && tableExtractorService != null
+            && pdfBytesForTableExtraction != null)
+        {
+            await ApplyTableBasedGridMatchesAsync(
+                item,
+                realLabels,
+                tableExtractorService,
+                pdfBytesForTableExtraction,
+                dmsDataForFile.FileId,
+                processRunId);
+        }
+
         return (stopExecution, alreadySaved, item, template);
+    }
+
+    // Internal (not private): lets WRADI.Services.WrInspectionReport.Tests exercise the merge
+    // logic directly with a faked ITableExtractorService, without needing a real PDF and the
+    // full two-pass GetMatchesAsync pipeline - same pattern this project already uses for
+    // other internal helpers (see the csproj's InternalsVisibleTo).
+    internal static async Task ApplyTableBasedGridMatchesAsync(
+        MatchesResult item,
+        List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+        ITableExtractorService tableExtractorService,
+        byte[] pdfBytes,
+        Guid fileId,
+        int processRunId)
+    {
+        var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
+
+        var tableMatches = WrInspectionReportTableMatcher.MatchGridFields(
+            tables,
+            labelLookups,
+            GridFieldNames,
+            tableExtractorService.Name);
+
+        if (tableMatches.Count == 0)
+        {
+            return;
+        }
+
+        item.Matches = item.Matches!
+            .Where(m => m.LabelGroupName == null || !tableMatches.ContainsKey(m.LabelGroupName))
+            .Concat(tableMatches.Values)
+            .ToList();
     }
 }

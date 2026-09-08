@@ -291,7 +291,10 @@ public static class BaseMethod
     //
     // Checks every occurrence, not just the first, since a possibility can appear both
     // embedded (invalid) and standalone (valid) in the same text.
-    private static bool MatchesPossibility(string? text, TextToMatch possibility)
+    // Public: reused by WrInspectionReportTableMatcher (WRADI.DocumentType.WrInspectionReport)
+    // to interpret raw table-cell text against the same tick/glyph Possibilities lists the
+    // heuristic column-walk path already uses, rather than reimplementing this matching logic.
+    public static bool MatchesPossibility(string? text, TextToMatch possibility)
     {
         if (text == null)
         {

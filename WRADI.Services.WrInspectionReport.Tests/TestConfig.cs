@@ -41,4 +41,13 @@ public static class TestConfig
             return field;
         }
     }
+
+    // Only needed for the opt-in table-based grid extraction golden-set run
+    // (Wr51GroundTruthAccuracyTests) - null (not thrown) when unset, so every other test in
+    // this project is unaffected by whether these are configured.
+    [field: AllowNull, MaybeNull]
+    public static string? AiServicesEndpoint => field ??= Config["AiServicesEndpoint"];
+
+    [field: AllowNull, MaybeNull]
+    public static string? AiServicesKey => field ??= Config["AiServicesKey"];
 }

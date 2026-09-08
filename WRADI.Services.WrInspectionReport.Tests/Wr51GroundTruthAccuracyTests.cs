@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
@@ -283,6 +284,39 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task WhenScoringAgainstHandLabelledGoldenSet_ThenReportsPerFieldAccuracy()
     {
+        await RunHarnessAsync(tableExtractorService: null, outputSuffix: string.Empty);
+    }
+
+    /// <summary>
+    /// Same harness, with the opt-in table-based LicenceProvisions grid extraction enabled
+    /// (WrInspectionReportTableMatcher, via a real Azure AI Document Intelligence
+    /// "prebuilt-layout" call per document - real cost, ~$0.01/page, cached afterward via
+    /// AzureAiServicesDocumentIntelligenceTableExtractorService's own cache namespace).
+    /// Separate CSVs (suffix "-table-based") so this never clobbers the baseline run above -
+    /// diff the two by hand for the LicenceProvisions.* rows.
+    /// </summary>
+    [Fact]
+    public async Task WhenScoringWithTableBasedGridExtractionEnabled_ThenReportsPerFieldAccuracy()
+    {
+        if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
+        {
+            testOutputHelper.WriteLine(
+                "AiServicesEndpoint/AiServicesKey user secrets not set for " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the table-based comparison run. " +
+                "Set both via dotnet user-secrets to enable it.");
+            return;
+        }
+
+        var tableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
+            TestConfig.AiServicesEndpoint,
+            TestConfig.AiServicesKey,
+            CacheService);
+
+        await RunHarnessAsync(tableExtractorService, outputSuffix: "-table-based");
+    }
+
+    private async Task RunHarnessAsync(ITableExtractorService? tableExtractorService, string outputSuffix)
+    {
         if (!Directory.Exists(GroundTruthFolder))
         {
             testOutputHelper.WriteLine(
@@ -332,13 +366,19 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
                 var dmsFileData = new DmsFileData { FileId = fileId.Value };
 
+                var pdfBytesForTableExtraction = tableExtractorService != null
+                    ? await File.ReadAllBytesAsync(Path.Combine(pdfFolder, truth.SourceFile))
+                    : null;
+
                 var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     truth.SourceFile,
                     dmsFileData,
                     lookupConfiguration,
                     [truth.SourceFile],
                     processRunId: -99,
-                    pdfDataExtractor);
+                    pdfDataExtractor,
+                    tableExtractorService,
+                    pdfBytesForTableExtraction);
 
                 if (stopExecution || matchesResult == null)
                 {
@@ -383,7 +423,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         Directory.CreateDirectory(OutputService.OutputFolder!);
 
-        var detailPath = Path.Combine(OutputService.OutputFolder!, "_wr51-groundtruth-accuracy-detail.csv");
+        var detailPath = Path.Combine(OutputService.OutputFolder!, $"_wr51-groundtruth-accuracy-detail{outputSuffix}.csv");
         await using (var writer = new StreamWriter(detailPath))
         await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
         {
@@ -412,7 +452,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             .ThenBy(r => r.Field, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var summaryPath = Path.Combine(OutputService.OutputFolder!, "_wr51-groundtruth-accuracy-summary.csv");
+        var summaryPath = Path.Combine(OutputService.OutputFolder!, $"_wr51-groundtruth-accuracy-summary{outputSuffix}.csv");
         await using (var writer = new StreamWriter(summaryPath))
         await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
         {
@@ -445,7 +485,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             .OrderByDescending(r => r.Documents)
             .ToList();
 
-        var templateSummaryPath = Path.Combine(OutputService.OutputFolder!, "_wr51-groundtruth-accuracy-by-template.csv");
+        var templateSummaryPath = Path.Combine(OutputService.OutputFolder!, $"_wr51-groundtruth-accuracy-by-template{outputSuffix}.csv");
         await using (var writer = new StreamWriter(templateSummaryPath))
         await using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
         {

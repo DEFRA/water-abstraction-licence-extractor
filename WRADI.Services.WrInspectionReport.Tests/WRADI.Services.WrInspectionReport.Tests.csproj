@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+        <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
         <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
     </ItemGroup>
 

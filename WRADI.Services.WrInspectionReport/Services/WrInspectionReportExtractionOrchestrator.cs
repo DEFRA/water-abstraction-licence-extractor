@@ -38,6 +38,17 @@ public static class WrInspectionReportExtractionOrchestrator
         WrInspectionReportFieldNames.OtherProvisions
     ];
 
+    // Free-text (not tick/cross) fields also confirmed sitting in the same table as the grid on
+    // real T1 documents (2026-09-08 spot check) - the same 3 fields identified as affected by the
+    // column-walk engine's own known leak bugs (see wr51_column_walk_bug memory). Resolved via
+    // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
+    // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
+    private static readonly string[] FreeTextFieldNames =
+    [
+        WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,
+        WrInspectionReportFieldNames.TelephoneNumber
+    ];
+
     public static async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item, WrTemplateType Template)> ExtractAsync(
         string pdfFileName,
         DmsFileData dmsDataForFile,
@@ -155,7 +166,8 @@ public static class WrInspectionReportExtractionOrchestrator
         ITableExtractorService? fallbackTableExtractorService = null,
         int minimumFieldsToSkipFallback = 10)
     {
-        var tableMatches = await TryGetTableMatchesAsync(tableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+        var (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
+            tableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
 
         // Only reached - and only billed, for a paid fallback - when the primary extractor
         // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
@@ -165,7 +177,26 @@ public static class WrInspectionReportExtractionOrchestrator
         // the cost of more paid calls, raises this towards GridFieldNames.Length.
         if (tableMatches.Count < minimumFieldsToSkipFallback && fallbackTableExtractorService != null)
         {
-            tableMatches = await TryGetTableMatchesAsync(fallbackTableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+            (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
+                fallbackTableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+        }
+
+        // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
+        // table/service the grid-field logic above ended up using - deliberately AFTER the
+        // fallback-escalation decision, and never folded into tableMatches.Count before that
+        // decision is made. minimumFieldsToSkipFallback was tuned against the golden set purely
+        // against the 13 tick/cross grid fields; letting free-text hits count towards it would
+        // silently change what "confident enough, skip the paid fallback" means without
+        // re-measuring it.
+        if (tables != null && usedServiceName != null)
+        {
+            var freeTextMatches = WrInspectionReportTableMatcher.MatchFreeTextFields(
+                tables, labelLookups, GridFieldNames, FreeTextFieldNames, usedServiceName);
+
+            foreach (var (key, value) in freeTextMatches)
+            {
+                tableMatches.TryAdd(key, value);
+            }
         }
 
         if (tableMatches.Count == 0)
@@ -179,11 +210,14 @@ public static class WrInspectionReportExtractionOrchestrator
             .ToList();
     }
 
-    // Failure here is treated identically to "found nothing confident" (empty dictionary), not
-    // propagated - so a primary extractor that throws (a local parser tripping on a malformed
-    // PDF, say) still gives a fallback extractor its own chance, rather than the whole overlay
-    // being abandoned on the primary's failure alone.
-    private static async Task<Dictionary<string, LabelGroupResult>> TryGetTableMatchesAsync(
+    // Failure here is treated identically to "found nothing confident" (empty dictionary, null
+    // tables), not propagated - so a primary extractor that throws (a local parser tripping on a
+    // malformed PDF, say) still gives a fallback extractor its own chance, rather than the whole
+    // overlay being abandoned on the primary's failure alone. Tables/serviceName are returned
+    // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
+    // tables afterward, without a second (and for a paid fallback, separately billed)
+    // GetTablesAsync call.
+    private static async Task<(Dictionary<string, LabelGroupResult> Matches, IReadOnlyList<OcrTable>? Tables, string? ServiceName)> TryGetTableMatchesAsync(
         ITableExtractorService tableExtractorService,
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         byte[] pdfBytes,
@@ -194,15 +228,17 @@ public static class WrInspectionReportExtractionOrchestrator
         {
             var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
 
-            return WrInspectionReportTableMatcher.MatchGridFields(
+            var matches = WrInspectionReportTableMatcher.MatchGridFields(
                 tables,
                 labelLookups,
                 GridFieldNames,
                 tableExtractorService.Name);
+
+            return (matches, tables, tableExtractorService.Name);
         }
         catch (Exception)
         {
-            return [];
+            return ([], null, null);
         }
     }
 }

@@ -247,4 +247,99 @@ public class WrInspectionReportTableMatcherTests
             ]
         };
     }
+
+    // MatchFreeTextFields - the sibling to MatchGridFields for Time/SerialNumber/TelephoneNumber:
+    // no Possibilities matching, the raw cell remainder (or split-cell next cell) IS the value.
+
+    private static readonly IReadOnlyList<string> FreeTextFieldNames =
+    [
+        WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,
+        WrInspectionReportFieldNames.TelephoneNumber
+    ];
+
+    [Fact]
+    public void WhenFreeTextFieldsSitInTheSameTableAsTheGrid_ThenTheyAreExtracted()
+    {
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Append(Cell(5, 0, "Telephone No:   02380891203"))
+            .Append(Cell(5, 1, "Time: 10:00"))
+            .Append(Cell(6, 0, "Serial number: R2116126"))
+            .ToList();
+
+        var table = new OcrTable { RowCount = 7, ColumnCount = 3, Cells = cells };
+
+        var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
+
+        Assert.Equal("02380891203", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
+        Assert.Equal("10:00", results[WrInspectionReportFieldNames.Time].Text!.Single().Text);
+        Assert.Equal("R2116126", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
+        Assert.All(results.Values, r => Assert.Equal("TestTableService", r.ServiceName));
+    }
+
+    [Fact]
+    public void WhenAFreeTextFieldIsGenuinelyAbsent_ThenItIsNotInTheResults()
+    {
+        // Grid present (passes the table-selection gate) but no Telephone No/Time/Serial number
+        // cells at all - a real, if less common, real-world shape (e.g. a document where the
+        // header block itself isn't part of the same table Lattice detected for the grid).
+        var table = BuildFullGridTable(specialConditionsValue: "✓");
+
+        var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
+
+        Assert.Empty(results);
+    }
+
+    [Fact]
+    public void WhenNoTableResemblesTheGrid_ThenFreeTextFieldsAreNotResolvedEitherEvenIfPresentElsewhere()
+    {
+        // FindBestGridTable's own majority-of-grid gate applies here too - a table with real
+        // Telephone No/Time/Serial number cells but nothing resembling the LicenceProvisions grid
+        // itself must not be trusted, same reasoning as MatchGridFields's own equivalent guard.
+        var unrelatedTable = new OcrTable
+        {
+            RowCount = 1,
+            ColumnCount = 2,
+            Cells = [Cell(0, 0, "Telephone No: 07794218297"), Cell(0, 1, "Time: 09:00")]
+        };
+
+        var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            [unrelatedTable], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
+
+        Assert.Empty(results);
+    }
+
+    [Fact]
+    public void WhenSerialNumberUsesATemplateAlternateWordingRatherThanTheFirst_ThenItIsStillFound()
+    {
+        // SerialNumber has 3 real alternates (Existing/T6/Baseline) - MatchFreeTextFields must
+        // try each alternate's own TextStart, not just the first ("Serial number").
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Append(Cell(5, 0, "Meter Serial Number: 3K220000854902"))
+            .ToList();
+
+        var table = new OcrTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+
+        var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
+
+        Assert.Equal("3K220000854902", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
+    }
+
+    [Fact]
+    public void WhenAFreeTextLabelAndValueAreSplitAcrossAdjacentCells_ThenTheNextCellIsUsed()
+    {
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Append(Cell(5, 0, "Telephone No:"))
+            .Append(Cell(5, 1, "07794218297"))
+            .ToList();
+
+        var table = new OcrTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+
+        var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
+
+        Assert.Equal("07794218297", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
+    }
 }

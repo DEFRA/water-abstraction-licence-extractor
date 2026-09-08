@@ -73,6 +73,111 @@ public static class WrInspectionReportTableMatcher
         return results;
     }
 
+    // Resolves free-text fields (Time/SerialNumber/TelephoneNumber - not tick/cross answers)
+    // from the SAME table MatchGridFields would select, using the same majority-vote gate
+    // (gridFieldNames/FindBestGridTable) to decide whether a table is trustworthy at all. A
+    // genuine sibling to MatchGridFields, not a variant of it: no Possibilities matching - the
+    // raw cell remainder (or split-cell next cell) IS the value, whatever its length, since
+    // there's no fixed tick/cross vocabulary to check a phone number or serial number against.
+    // Tries every alternate's own TextStart (not just the first), since these fields commonly
+    // have several real-world label wordings across templates.
+    public static Dictionary<string, LabelGroupResult> MatchFreeTextFields(
+        IReadOnlyList<OcrTable> tables,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+        IReadOnlyList<string> gridFieldNames,
+        IReadOnlyList<string> freeTextFieldNames,
+        string serviceName)
+    {
+        var results = new Dictionary<string, LabelGroupResult>();
+        var bestTable = FindBestGridTable(tables, labelLookups, gridFieldNames);
+
+        if (bestTable == null)
+        {
+            return results;
+        }
+
+        foreach (var fieldName in freeTextFieldNames)
+        {
+            var labels = labelLookups.FirstOrDefault(l => l.LabelGroupName == fieldName).Labels;
+
+            if (labels == null)
+            {
+                continue;
+            }
+
+            string? rawValue = null;
+
+            foreach (var label in labels)
+            {
+                if (label.TextStart == null)
+                {
+                    continue;
+                }
+
+                rawValue = FindFreeTextValueInTable(bestTable, label.TextStart);
+
+                if (!string.IsNullOrEmpty(rawValue))
+                {
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(rawValue))
+            {
+                continue; // Not found, or genuinely blank - fall back to the heuristic either way.
+            }
+
+            var words = DocumentLineColumn.TextToWords(rawValue, null);
+            var syntheticLine = new DocumentLine { Columns = [new DocumentLineColumn(words)] };
+
+            results[fieldName] = new LabelGroupResult
+            {
+                LabelGroupName = fieldName,
+                MatchedLabelName = fieldName,
+                ServiceName = serviceName,
+                Text = [syntheticLine]
+            };
+        }
+
+        return results;
+    }
+
+    // Same shape as FindFieldValueInTable, but for free text: no LooksLikeATickAnswer length
+    // gate and no selection-mark normalisation - a phone number, time, or serial number IS the
+    // value wanted, whatever its length, not something to be screened for "looks tick-shaped".
+    private static string? FindFreeTextValueInTable(OcrTable table, IReadOnlyList<TextToMatch> textStarts)
+    {
+        foreach (var cell in table.Cells)
+        {
+            if (cell.Content == null)
+            {
+                continue;
+            }
+
+            var matchedTextStart = textStarts.FirstOrDefault(textStart =>
+                cell.Content.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedTextStart == null)
+            {
+                continue;
+            }
+
+            var rawRemainder = cell.Content[matchedTextStart.Text.Length..].Trim().TrimStart(':').Trim();
+
+            if (rawRemainder.Length > 0)
+            {
+                return rawRemainder;
+            }
+
+            var nextCell = table.Cells.FirstOrDefault(c =>
+                c.RowIndex == cell.RowIndex && c.ColumnIndex == cell.ColumnIndex + 1);
+
+            return nextCell?.Content?.Trim();
+        }
+
+        return null;
+    }
+
     // The table whose cells collectively match the most grid field labels. A document can have
     // several tables (header block, meter block, etc.); this picks out the LicenceProvisions
     // grid specifically rather than assuming table order.

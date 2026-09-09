@@ -470,14 +470,24 @@ public class WrInspectionReportLabelConfiguration
 
     // ---- Meter / measurement details ----
 
+    // Widened from 1 (single line) to fit a multi-meter table's full column of "Point N, <site>:
+    // <value>" lines - see WrInspectionReportSchemaConverter's Meters-splitting logic. Safe to
+    // widen: TextToFindIsBetweenLabels' same-line walk stops as soon as it hits its own end
+    // boundary regardless of how many lines are available, so a single-meter document (which
+    // already hits that boundary within 1 line) behaves identically; this only gives a
+    // multi-meter document's walk enough room to reach its real end boundary instead of running
+    // out of fetched lines first. Left at 1 on rules with no TextEnd bound at all (plain After()
+    // alternates) - widening those wouldn't be meaningful without a real boundary to stop at.
+    private const int MeterTableNextLines = 10;
+
     private static (string, List<LabelToMatch>) RuleMeterName() =>
-        (WrInspectionReportFieldNames.MeterName, [Rule.Between("Meter Name", "Meter Make").Named(WrInspectionReportFieldNames.MeterName).NextLines(1).Build()]); // T6 template only
+        (WrInspectionReportFieldNames.MeterName, [Rule.Between("Meter Name", "Meter Make").Named(WrInspectionReportFieldNames.MeterName).NextLines(MeterTableNextLines).Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleMeterMake() =>
         (WrInspectionReportFieldNames.MeterMake, [
-            Rule.Between("Meter make", "Reading:").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
+            Rule.Between("Meter make", "Reading:").Named(WrInspectionReportFieldNames.MeterMake).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
                 .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no").Build(), // Existing template
-            Rule.Between("Meter Make", "Meter Serial Number").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
+            Rule.Between("Meter Make", "Meter Serial Number").Named(WrInspectionReportFieldNames.MeterMake).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
                 .AlsoEndsAt("Meter Serial No").Build() // T6 template
         ]);
 
@@ -485,14 +495,14 @@ public class WrInspectionReportLabelConfiguration
         (WrInspectionReportFieldNames.SerialNumber, [
             Rule.After("Serial number").Named(WrInspectionReportFieldNames.SerialNumber).RequireTextToClaimGroup().Build(), // Existing template
             Rule.Between("Meter Serial Number", "Meter Asset Number").Named(WrInspectionReportFieldNames.SerialNumber)
-                .NextLines(1).RequireTextToClaimGroup().Build(), // T6 template
+                .NextLines(MeterTableNextLines).RequireTextToClaimGroup().Build(), // T6 template
             Rule.Between("Serial number", "Units").Named(WrInspectionReportFieldNames.SerialNumber)
-                .NextLines(1).RequireTextToClaimGroup().Build() // Baseline two-column table
+                .NextLines(MeterTableNextLines).RequireTextToClaimGroup().Build() // Baseline two-column table
         ]);
 
     private static (string, List<LabelToMatch>) RuleMeterAssetNumber() =>
         (WrInspectionReportFieldNames.MeterAssetNumber, [
-            Rule.Between("Meter Asset Number", "Meter Reading").Named(WrInspectionReportFieldNames.MeterAssetNumber).NextLines(1).Build(), // T6 template
+            Rule.Between("Meter Asset Number", "Meter Reading").Named(WrInspectionReportFieldNames.MeterAssetNumber).NextLines(MeterTableNextLines).Build(), // T6 template
             Rule.After("Asset no:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build(), // Existing template
             Rule.After("Asset number:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build() // Existing template
         ]);
@@ -502,18 +512,28 @@ public class WrInspectionReportLabelConfiguration
     private static (string, List<LabelToMatch>) RuleReading() =>
         (WrInspectionReportFieldNames.Reading, [
             Rule.After("Reading:").Named(WrInspectionReportFieldNames.Reading).RequireTextToClaimGroup().Build(), // Existing template
-            Rule.Between("Meter Reading", "Flow Rate").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup().Build(), // T6 template
-            Rule.Between("Reading:", "Units").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup()
-                .SkipNextLineWhenStartsWith("Other").Build() // Baseline two-column table
+            Rule.Between("Meter Reading", "Flow Rate").Named(WrInspectionReportFieldNames.Reading).NextLines(MeterTableNextLines).RequireTextToClaimGroup().Build(), // T6 template
+            // AlsoEndsAt markers added alongside the MeterTableNextLines widening - when the
+            // meter table's own "Units" header genuinely never reappears (a blank/N-A table),
+            // the wider window otherwise bled straight into the next form section instead of
+            // stopping (measured: HallucinationRate 11%->39% before these were added).
+            Rule.Between("Reading:", "Units").Named(WrInspectionReportFieldNames.Reading).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
+                .SkipNextLineWhenStartsWith("Other")
+                .AlsoEndsAt("Other:-", "Certificates or records available for", "Date of certificate", "Meter verification").Build() // Baseline two-column table
         ]);
 
     private static (string, List<LabelToMatch>) RuleFlowRate() =>
-        (WrInspectionReportFieldNames.FlowRate, [Rule.Between("Flow Rate", "Calibration").Named(WrInspectionReportFieldNames.FlowRate).NextLines(1).Build()]); // T6 template only
+        (WrInspectionReportFieldNames.FlowRate, [Rule.Between("Flow Rate", "Calibration").Named(WrInspectionReportFieldNames.FlowRate).NextLines(MeterTableNextLines).Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleUnits() =>
         (WrInspectionReportFieldNames.Units, [
             Rule.After("Units").Named(WrInspectionReportFieldNames.Units).Build(), // Existing template
-            Rule.Between("Units", "Flow Rate").Named(WrInspectionReportFieldNames.Units).NextLines(1).RequireTextToClaimGroup().Build() // T6 template
+            // "Flow Rate" is T6-only and never appears on a T1 form at all, so on T1 documents
+            // this alternate's real end boundary never fires and the widened window otherwise
+            // bled into the next form section - same fix and same measured cause as Reading's
+            // AlsoEndsAt above.
+            Rule.Between("Units", "Flow Rate").Named(WrInspectionReportFieldNames.Units).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
+                .AlsoEndsAt("Other:-", "Certificates or records available for", "Date of certificate", "Meter verification").Build() // T6 template
         ]);
 
     private static (string, List<LabelToMatch>) RuleOther() =>
@@ -654,6 +674,16 @@ public class WrInspectionReportLabelConfiguration
     private static (string, List<LabelToMatch>) RuleReadingsTakenLine() =>
         (WrInspectionReportFieldNames.ReadingsTakenLine, MaintenanceLine("Readings taken:", "Where Kept", WrInspectionReportFieldNames.ReadingsTakenLine));
 
+    // Tried and reverted (2026-09-09): adding a loose "Date:" alternate to catch the case where
+    // "Inspection Date:" wraps onto two lines ("Inspection" / "Date: ...") - confirmed on
+    // wr51__73417g0068__... and wr51__an0340003001r01__... (the golden set's own only
+    // InspectionDate Miss). Measured net regression against the golden set: recall 98%->40%
+    // (54 Hit->22 Hit, 32 newly Wrong) - bare "Date:" is too ambiguous against this document's
+    // other "Date:" occurrences (e.g. "Date of certificate or record:") and started winning over
+    // the correct match on documents where the primary rule already worked fine. Needs a
+    // genuinely two-line-aware match (the wrapped "Inspection" line immediately preceding the
+    // "Date:" line), not a same-line loose text search - AlsoStartsWithLoose only relaxes the
+    // column requirement, it doesn't span line boundaries. Not attempted further this session.
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
             Rule.Between("Inspection Date:", "Quantities").Named(WrInspectionReportFieldNames.InspectionDate).NextLines(2)

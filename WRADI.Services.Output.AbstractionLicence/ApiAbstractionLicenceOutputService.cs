@@ -147,6 +147,80 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             httpClient.GetAsync(path));
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync()
+    {
+        var path = "/Extractor/NaldData/GetDocumentNaldPurposeMap";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DocumentNaldPurposeMap>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task AddDocumentNaldPurposeMapAsync(
+        string documentDescription,
+        NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        var path = "/Extractor/NaldData/AddDocumentNaldPurposeMap";
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                DocumentDescription = documentDescription,
+                NaldPurpose = naldPurpose,
+                MatchType = matchType
+            },
+            JsonHelper.GetSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task AddDocumentNaldPurposeMatchAsync(
+        string licNo,
+        string documentDescription,
+        NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        var path = "/Extractor/NaldData/AddDocumentNaldPurposeMatch";
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                LicNo = licNo,
+                DocumentDescription = documentDescription,
+                NaldPurpose = naldPurpose,
+                MatchType = matchType
+            },
+            JsonHelper.GetSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";

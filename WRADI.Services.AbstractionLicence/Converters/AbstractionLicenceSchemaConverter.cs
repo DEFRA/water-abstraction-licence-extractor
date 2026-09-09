@@ -4,6 +4,8 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -12,6 +14,7 @@ using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Formats;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
+using WRADI.DocumentType.AbstractionLicence.Services;
 using Date = WALE.ProcessFile.Services.Formats.Date;
 using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 using LicenceType = WRADI.Core.AbstractionLicence.Enums.LicenceType;
@@ -112,10 +115,13 @@ public static class AbstractionLicenceSchemaConverter
             points = sourceOfSupply;
         }
         
-        var purposes = GetPurposes(
+        var purposes = await GetPurposesAsync(
+            licenceNumber!,
+            lookupConfiguration,
             matches,
             naldAbstractionDataLine,
-            ref noneSchemaData);
+            naldDataLookupService,
+            noneSchemaData);
 
         var periods = GetPeriods(
             matches,
@@ -4813,116 +4819,7 @@ public static class AbstractionLicenceSchemaConverter
         return null;
     }
 
-    private static NaldPurposeData[] GetNaldPurposeData(
-        List<NaldPurposeData> naldPurposes,
-        string? description,
-        List<string> usedNaldPurposeIds)
-    {
-        var filterPurposes = naldPurposes
-            .Where(p => !usedNaldPurposeIds.Contains(p.Id!))
-            .ToList();
-
-        if (filterPurposes.Count == 0)
-        {
-            return [];
-        }
-        
-        var groupedPurposes = filterPurposes
-            .GroupBy(pu => $"{pu.Code}_{pu.QuantityIdentifier}")
-            .ToList();
-     
-        // There is only one, so must be that
-        if (groupedPurposes.Count == 1)
-        {
-            return groupedPurposes[0].ToArray();
-        }
-
-        var descriptionSuggestsTransfer =
-            description?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-            || description?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
-        
-        foreach (var loopNaldPurposes in groupedPurposes)
-        {
-            if (usedNaldPurposeIds.Contains(loopNaldPurposes.First().Id!))
-            {
-                continue;
-            }
-
-            var firstNaldPurpose = loopNaldPurposes.First();
-            
-            if (CheckPurposeMapping(firstNaldPurpose.SecondaryCategoryDescription, firstNaldPurpose.UseDescription, description))
-            {
-                return loopNaldPurposes.ToArray();
-            }
-            
-            if (description == firstNaldPurpose.SecondaryCategoryDescription || description == firstNaldPurpose.UseDescription)
-            {
-                return loopNaldPurposes.ToArray();
-            }
-            
-            if (descriptionSuggestsTransfer)
-            {
-                var naldSuggestsTransfer =
-                    firstNaldPurpose.UseDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("transfer", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.UseDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true
-                    || firstNaldPurpose.SecondaryCategoryDescription?.Contains("subsequent", StringComparison.OrdinalIgnoreCase) == true;
-
-                if (naldSuggestsTransfer)
-                {
-                    return loopNaldPurposes.ToArray();
-                }
-            }
-
-            if (firstNaldPurpose.UseDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true
-                || firstNaldPurpose.SecondaryCategoryDescription?.Contains(description!, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                return loopNaldPurposes.ToArray();
-            }
-        }
-
-        return [];
-    }
-
-    private static bool CheckPurposeMapping(
-        string? naldSecondaryCategoryDescription,
-        string? naldUseDescription,
-        string? documentDescription)
-    {
-        if (string.IsNullOrEmpty(documentDescription))
-        {
-            return false;
-        }
-        
-        // Key is document purpose description, Value is Nald purpose name
-        var documentToNaldPurposeMapping = new Dictionary<string, string[]>
-        {
-            { "agriculture (other than spray irrigation)", ["general farming & domestic"] },
-            { "reservoir storage for subsequent stream compensation", ["transfer between sources (pre water act 2003)"] },
-            { "private water supply", [
-                "general use relating to secondary category (very low loss)",
-                "general use relating to secondary category (low loss)",
-                "general use relating to secondary category (medium loss)",
-                "general use relating to secondary category (high loss)"
-            ]},
-            { "domestic & sanitation", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public services"]},
-            { "ground source heating and cooling pump", ["heat pump"]},
-            { "domestic", ["drinking, cooking, sanitary, washing, (small garden) - commercial/industrial/public Services"]},
-        };
-
-        var documentDescriptionLower = documentDescription.ToLower();//
-        var documentPurposeIsMapped = documentToNaldPurposeMapping.ContainsKey(documentDescriptionLower);
-
-        if (!documentPurposeIsMapped)
-        {
-            return false;
-        }
-
-        var mappedNaldValues = documentToNaldPurposeMapping[documentDescriptionLower];
-
-        return mappedNaldValues.Any(v => v.Equals(naldSecondaryCategoryDescription, StringComparison.OrdinalIgnoreCase))
-               || mappedNaldValues.Any(v => v.Equals(naldUseDescription, StringComparison.OrdinalIgnoreCase));
-    }
+    
 
     private static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
     {
@@ -4958,10 +4855,13 @@ public static class AbstractionLicenceSchemaConverter
         return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
     }
 
-    private static PurposeOfAbstraction[] GetPurposes(
+    private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
+        string licenceNumber,
+        LookupConfiguration config,
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
-        ref Dictionary<string, object?> noneSchemaData)
+        INaldDataLookupService naldDataLookupService,
+        Dictionary<string, object?> noneSchemaData)
     {
         noneSchemaData.Add("NaldPurposesData", naldDataLine?.Purposes ?? []);
         
@@ -4973,18 +4873,7 @@ public static class AbstractionLicenceSchemaConverter
             return returnList.ToArray();
         }
 
-        var naldPurposes = naldDataLine?.Purposes
-            .Select(purpose => new NaldPurposeData
-            {
-                Id = purpose.Id.ToString(),
-                SecondaryCategoryDescription = purpose.CategoryUse.SecondaryCategoryDescription,
-                Code = purpose.CategoryUse.Code,
-                UseCode = purpose.CategoryUse.UseCode.ToString(),
-                UseDescription = purpose.CategoryUse.UseDescription,
-                QuantityIdentifier = $"{purpose.Quantity.AnnualQty}_{purpose.Quantity.DailyQty}" +
-                    $"_{purpose.Quantity.HourlyQty}_{purpose.Quantity.InstQty}"
-            })
-            .ToList() ?? [];
+        var naldPurposes = NaldDataLookupService.ToNaldPurposeData(naldDataLine?.Purposes);
         
         var usedNaldPurposeIds = new List<string>();
         var pointPurposeGroupCount = -1;
@@ -5083,14 +4972,16 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var naldData = GetNaldPurposeData(
+                            var (naldPurposeData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                config.SavePurposeMapping);
 
-                            if (naldData.Length >= 1)
+                            if (naldPurposeData.Length >= 1)
                             {
-                                foreach (var naldPurpose in naldData)
+                                foreach (var naldPurpose in naldPurposeData)
                                 {
                                     usedNaldPurposeIds.Add(naldPurpose.Id!);
                                 }
@@ -5105,10 +4996,10 @@ public static class AbstractionLicenceSchemaConverter
                             {
                                 Id = number,
                                 Description = point.Trim(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
-                                NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
+                                NaldLevel1Description = naldPurposeData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldPurposeData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldPurposeData.FirstOrDefault()?.UseDescription,
+                                NaldIds = naldPurposeData.Select(nd => nd.Id!).ToArray(),
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5125,10 +5016,12 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var naldData = GetNaldPurposeData(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5148,9 +5041,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5167,10 +5060,12 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var naldData = GetNaldPurposeData(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5190,9 +5085,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5209,10 +5104,12 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var naldData = GetNaldPurposeData(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5232,9 +5129,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5251,10 +5148,12 @@ public static class AbstractionLicenceSchemaConverter
 
                         foreach (var point in points)
                         {
-                            var naldData = GetNaldPurposeData(
+                            var (naldData, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                                 naldPurposes,
                                 point.Trim(),
-                                usedNaldPurposeIds);
+                                usedNaldPurposeIds,
+                                licenceNumber,
+                                config.SavePurposeMapping);
                             
                             if (naldData.Length >= 1)
                             {
@@ -5274,9 +5173,9 @@ public static class AbstractionLicenceSchemaConverter
                                 Id = number,
                                 Description = point.Trim(),
                                 NaldIds = naldData.Select(nd => nd.Id!).ToArray(),
-                                NaldDescription = naldData.FirstOrDefault()?.UseDescription != null
-                                    ? $"{naldData.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData.FirstOrDefault()?.UseDescription}"
-                                    : null,
+                                NaldLevel1Description = naldData.FirstOrDefault()?.PrimaryCategoryDescription,
+                                NaldLevel2Description = naldData.FirstOrDefault()?.SecondaryCategoryDescription,
+                                NaldLevel3Description = naldData.FirstOrDefault()?.UseDescription,
                                 PointIds = pointIds,
                                 TimeCutoff = timeCutoff,
                                 ContainedIn = containedInList.ToArray()
@@ -5287,10 +5186,12 @@ public static class AbstractionLicenceSchemaConverter
                     }
                 }
                 
-                var naldData1 = GetNaldPurposeData(
+                var (naldData1, _) = await naldDataLookupService.GetRelevantNaldPurposesAsync(
                     naldPurposes,
                     description,
-                    usedNaldPurposeIds);
+                    usedNaldPurposeIds,
+                    licenceNumber,
+                    config.SavePurposeMapping);
 
                 if (naldData1.Length >= 1)
                 {
@@ -5310,9 +5211,9 @@ public static class AbstractionLicenceSchemaConverter
                     Id = number,
                     Description = description,
                     NaldIds = naldData1.Select(nd => nd.Id!).ToArray(),
-                    NaldDescription = naldData1.FirstOrDefault()?.UseDescription != null
-                        ? $"{naldData1.FirstOrDefault()?.SecondaryCategoryDescription} | {naldData1.FirstOrDefault()?.UseDescription}"
-                        : null,
+                    NaldLevel1Description = naldData1.FirstOrDefault()?.PrimaryCategoryDescription,
+                    NaldLevel2Description = naldData1.FirstOrDefault()?.SecondaryCategoryDescription,
+                    NaldLevel3Description = naldData1.FirstOrDefault()?.UseDescription,
                     PointIds = pointIds,
                     TimeCutoff = timeCutoff,
                     ContainedIn = containedInList.ToArray()
@@ -5321,7 +5222,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         // TODO! should be grouped purposes probably
-        
         foreach (var naldPurpose in naldPurposes)
         {
             if (usedNaldPurposeIds.Contains(naldPurpose.Id!))
@@ -5333,38 +5233,23 @@ public static class AbstractionLicenceSchemaConverter
                 .Where(p => p.ContainedIn!.All(ci => ci.Source != InformationSource.Nald))
                 .ToList();
 
-            if (purposesWithoutNaldData.Count == 1)
+            // Not sure if this is still useful
+            if (purposesWithoutNaldData.Count != 1)
             {
-                usedNaldPurposeIds.Add(naldPurpose.Id!);
-
-                var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
-                containedInClone.Add(new ContainedInInformation
-                {
-                    Source = InformationSource.Nald
-                });
-                
-                purposesWithoutNaldData[0].NaldDescription = naldPurpose.UseDescription;
-                purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
-                purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
-                
                 continue;
             }
             
-            var naldContainedInList = new List<ContainedInInformation>
-            {
-                new()
-                {
-                    Source = InformationSource.Nald
-                }
-            };
+            usedNaldPurposeIds.Add(naldPurpose.Id!);
 
-            returnList.Add(
-                new PurposeOfAbstraction
-                {
-                    Id = naldPurpose.Id,
-                    NaldDescription = naldPurpose.UseDescription,
-                    ContainedIn = naldContainedInList.ToArray()
-                });
+            var containedInClone = purposesWithoutNaldData[0].ContainedIn!.ToList();
+            containedInClone.Add(new ContainedInInformation
+            {
+                Source = InformationSource.Nald
+            });
+                
+            purposesWithoutNaldData[0].NaldLevel3Description = naldPurpose.UseDescription;
+            purposesWithoutNaldData[0].NaldIds = [naldPurpose.Id!];
+            purposesWithoutNaldData[0].ContainedIn = containedInClone.ToArray();
         }
 
         return returnList.ToArray();

@@ -3097,6 +3097,55 @@ export class Client {
     }
 
     /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getSimpleMatchResults(processRunId: number | undefined): Promise<ValueTupleOfstringAndstring[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetSimpleMatchResults?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetSimpleMatchResults(_response);
+        });
+    }
+
+    protected processGetSimpleMatchResults(response: Response): Promise<ValueTupleOfstringAndstring[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ValueTupleOfstringAndstring.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ValueTupleOfstringAndstring[]>(null as any);
+    }
+
+    /**
      * @param fileId (optional) 
      * @return OK
      */
@@ -5675,6 +5724,7 @@ export class ContainedInInformation implements IContainedInInformation {
     linkReason?: string | undefined;
     acinCode?: string | undefined;
     history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -5706,6 +5756,7 @@ export class ContainedInInformation implements IContainedInInformation {
                 for (let item of _data["history"])
                     this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
             }
+            this.documentIdentifier = _data["documentIdentifier"];
             if (_data["sourceFields"]) {
                 this.sourceFields = {} as any;
                 for (let key in _data["sourceFields"]) {
@@ -5741,6 +5792,7 @@ export class ContainedInInformation implements IContainedInInformation {
             for (let item of this.history)
                 data["history"].push(item ? item.toJSON() : undefined as any);
         }
+        data["documentIdentifier"] = this.documentIdentifier;
         if (this.sourceFields) {
             data["sourceFields"] = {};
             for (let key in this.sourceFields) {
@@ -5761,6 +5813,7 @@ export interface IContainedInInformation {
     linkReason?: string | undefined;
     acinCode?: string | undefined;
     history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
@@ -6769,6 +6822,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
     folderNameAutoCorrect?: boolean | undefined;
     seenInDmsExtract?: boolean;
     weHaveDownloaded?: boolean | undefined;
+    liveLicenceFound?: boolean | undefined;
 
     [key: string]: any;
 
@@ -6819,6 +6873,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
             this.folderNameAutoCorrect = _data["folderNameAutoCorrect"];
             this.seenInDmsExtract = _data["seenInDmsExtract"];
             this.weHaveDownloaded = _data["weHaveDownloaded"];
+            this.liveLicenceFound = _data["liveLicenceFound"];
         }
     }
 
@@ -6867,6 +6922,7 @@ export class LicenceFinderResult implements ILicenceFinderResult {
         data["folderNameAutoCorrect"] = this.folderNameAutoCorrect;
         data["seenInDmsExtract"] = this.seenInDmsExtract;
         data["weHaveDownloaded"] = this.weHaveDownloaded;
+        data["liveLicenceFound"] = this.liveLicenceFound;
         return data;
     }
 }
@@ -6904,6 +6960,7 @@ export interface ILicenceFinderResult {
     folderNameAutoCorrect?: boolean | undefined;
     seenInDmsExtract?: boolean;
     weHaveDownloaded?: boolean | undefined;
+    liveLicenceFound?: boolean | undefined;
 
     [key: string]: any;
 }
@@ -7549,6 +7606,7 @@ export enum MatchedPosition {
 
 export class MatchesResult implements IMatchesResult {
     filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
     status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
@@ -7577,6 +7635,7 @@ export class MatchesResult implements IMatchesResult {
                     this[property] = _data[property];
             }
             this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.regionCode = _data["regionCode"];
             this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
@@ -7615,6 +7674,7 @@ export class MatchesResult implements IMatchesResult {
                 data[property] = this[property];
         }
         data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["regionCode"] = this.regionCode;
         data["status"] = this.status;
         if (Array.isArray(this.matches)) {
@@ -7642,6 +7702,7 @@ export class MatchesResult implements IMatchesResult {
 
 export interface IMatchesResult {
     filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
     status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
@@ -7657,6 +7718,7 @@ export interface IMatchesResult {
 
 export class MatchesResult2 implements IMatchesResult2 {
     filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
     status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
@@ -7685,6 +7747,7 @@ export class MatchesResult2 implements IMatchesResult2 {
                     this[property] = _data[property];
             }
             this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.regionCode = _data["regionCode"];
             this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
@@ -7723,6 +7786,7 @@ export class MatchesResult2 implements IMatchesResult2 {
                 data[property] = this[property];
         }
         data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["regionCode"] = this.regionCode;
         data["status"] = this.status;
         if (Array.isArray(this.matches)) {
@@ -7750,6 +7814,7 @@ export class MatchesResult2 implements IMatchesResult2 {
 
 export interface IMatchesResult2 {
     filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
     status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
@@ -8751,6 +8816,7 @@ export class ProcessRun implements IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
+    numberOfFilesNotFound?: number;
 
     [key: string]: any;
 
@@ -8776,6 +8842,7 @@ export class ProcessRun implements IProcessRun {
             this.numberOfFiles = _data["numberOfFiles"];
             this.successCount = _data["successCount"];
             this.status = _data["status"];
+            this.numberOfFilesNotFound = _data["numberOfFilesNotFound"];
         }
     }
 
@@ -8799,6 +8866,7 @@ export class ProcessRun implements IProcessRun {
         data["numberOfFiles"] = this.numberOfFiles;
         data["successCount"] = this.successCount;
         data["status"] = this.status;
+        data["numberOfFilesNotFound"] = this.numberOfFilesNotFound;
         return data;
     }
 }
@@ -8811,6 +8879,7 @@ export interface IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
+    numberOfFilesNotFound?: number;
 
     [key: string]: any;
 }
@@ -9415,6 +9484,7 @@ export class SaveErrorMatchResultRequest implements ISaveErrorMatchResultRequest
     fileId?: string;
     processRunId?: number;
     error?: string | undefined;
+    isUpdate?: boolean;
 
     [key: string]: any;
 
@@ -9437,6 +9507,7 @@ export class SaveErrorMatchResultRequest implements ISaveErrorMatchResultRequest
             this.fileId = _data["fileId"];
             this.processRunId = _data["processRunId"];
             this.error = _data["error"];
+            this.isUpdate = _data["isUpdate"];
         }
     }
 
@@ -9457,6 +9528,7 @@ export class SaveErrorMatchResultRequest implements ISaveErrorMatchResultRequest
         data["fileId"] = this.fileId;
         data["processRunId"] = this.processRunId;
         data["error"] = this.error;
+        data["isUpdate"] = this.isUpdate;
         return data;
     }
 }
@@ -9466,6 +9538,7 @@ export interface ISaveErrorMatchResultRequest {
     fileId?: string;
     processRunId?: number;
     error?: string | undefined;
+    isUpdate?: boolean;
 
     [key: string]: any;
 }
@@ -9754,6 +9827,7 @@ export class SaveMatchResultRequest implements ISaveMatchResultRequest {
     fileId?: string;
     matches?: MatchesResult | undefined;
     processRunId?: number;
+    isUpdate?: boolean;
 
     [key: string]: any;
 
@@ -9775,6 +9849,7 @@ export class SaveMatchResultRequest implements ISaveMatchResultRequest {
             this.fileId = _data["fileId"];
             this.matches = _data["matches"] ? MatchesResult.fromJS(_data["matches"]) : undefined as any;
             this.processRunId = _data["processRunId"];
+            this.isUpdate = _data["isUpdate"];
         }
     }
 
@@ -9794,6 +9869,7 @@ export class SaveMatchResultRequest implements ISaveMatchResultRequest {
         data["fileId"] = this.fileId;
         data["matches"] = this.matches ? this.matches.toJSON() : undefined as any;
         data["processRunId"] = this.processRunId;
+        data["isUpdate"] = this.isUpdate;
         return data;
     }
 }
@@ -9802,6 +9878,7 @@ export interface ISaveMatchResultRequest {
     fileId?: string;
     matches?: MatchesResult | undefined;
     processRunId?: number;
+    isUpdate?: boolean;
 
     [key: string]: any;
 }
@@ -10339,6 +10416,50 @@ export class ValueTupleOfintAndstringAndstringAndLabelGroupResult implements IVa
 }
 
 export interface IValueTupleOfintAndstringAndstringAndLabelGroupResult {
+
+    [key: string]: any;
+}
+
+export class ValueTupleOfstringAndstring implements IValueTupleOfstringAndstring {
+
+    [key: string]: any;
+
+    constructor(data?: IValueTupleOfstringAndstring) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfstringAndstring {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfstringAndstring();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        return data;
+    }
+}
+
+export interface IValueTupleOfstringAndstring {
 
     [key: string]: any;
 }

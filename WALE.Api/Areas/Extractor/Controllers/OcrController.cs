@@ -4,6 +4,7 @@ using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
 

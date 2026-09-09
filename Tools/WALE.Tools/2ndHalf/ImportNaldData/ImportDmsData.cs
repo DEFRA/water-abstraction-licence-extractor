@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;

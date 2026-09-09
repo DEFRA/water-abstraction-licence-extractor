@@ -22,7 +22,8 @@ public class LookupConfiguration(
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
     bool lockInProcess = false,
-    bool useAnchoredLineGrouping = false)
+    bool useAnchoredLineGrouping = false,
+    bool savePurposeMapping = false)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
     // set, then re-run extraction with a different one chosen from the result - see
@@ -61,6 +62,7 @@ public class LookupConfiguration(
     public bool LockInProcess { get; set; } = lockInProcess;
     
     public int LineHeight { get; set; } = lineHeight;
+
     public int MinimumRowsForDigital { get; set; } = minimumRowsForDigital;
 
     // Opt-in only - default false preserves the existing PdfPig row-grouping algorithm
@@ -72,6 +74,8 @@ public class LookupConfiguration(
     // it's gated behind this flag rather than applied universally without a regression
     // suite to verify it against the licence corpus.
     public bool UseAnchoredLineGrouping { get; set; } = useAnchoredLineGrouping;
+    
+    public bool SavePurposeMapping { get; set; } = savePurposeMapping;
 
     public LookupConfiguration Clone()
     {
@@ -94,6 +98,7 @@ public class LookupConfiguration(
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
             LockInProcess,
-            UseAnchoredLineGrouping);
+            UseAnchoredLineGrouping,
+            SavePurposeMapping);
     }
 }

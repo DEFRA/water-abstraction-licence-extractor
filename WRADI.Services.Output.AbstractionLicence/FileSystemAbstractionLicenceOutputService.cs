@@ -80,6 +80,22 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
+    public Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();

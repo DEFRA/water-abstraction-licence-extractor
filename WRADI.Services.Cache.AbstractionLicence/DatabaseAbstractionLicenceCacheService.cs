@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -115,9 +116,12 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetNaldImpoundmentAndAbstractionLicencesAsync(0, int.MaxValue);
     }
 
-    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
+    public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
+        string licenceNumber,
+        int regionCode,
+        bool slashesRemoved = false)
     {
-        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber);
+        return databaseReadService.GetNaldAbstractionLicenceAsync(licenceNumber, slashesRemoved);
     }
 
     public Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId)

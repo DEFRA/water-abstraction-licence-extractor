@@ -29,7 +29,7 @@ interface AggregatesProps extends LicenceSectionBodyProps {
 }
 
 export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
-    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history}, ref) => {
         const [aggregates, setAggregates] = useState<Aggregate[]>([]);
         const [scrapedData, setScrapedData] = useState<Aggregate[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<Aggregate[] | null>(null);
@@ -289,6 +289,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                         }
                                     }}
                                     onOpenReport={onOpenReport}
+                                    outputListDataItem={outputListDataItem}
                                     scrapedView={scrapedView}
                                     history={history}
                                 />

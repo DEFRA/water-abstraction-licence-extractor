@@ -41,7 +41,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 {
     private static readonly string GroundTruthFolder =
         Environment.GetEnvironmentVariable("WR51_GROUND_TRUTH_FOLDER")
-        ?? "/Users/edwardbutler/Documents/TestLicences/GroundTruth";
+        ?? $"{TestConfig.PdfFolder}/truth";
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");

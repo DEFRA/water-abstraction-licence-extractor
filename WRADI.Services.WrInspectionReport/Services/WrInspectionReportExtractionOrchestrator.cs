@@ -134,6 +134,18 @@ public static class WrInspectionReportExtractionOrchestrator
             }
         }
 
+        // Persist this pass's own classification alongside whatever the caller saves item as -
+        // GetT1Labels() deliberately drops the TemplateMarker* labels ClassifyTemplate needs once
+        // a document is already confirmed T1, so re-deriving Template later from the saved
+        // matches alone (e.g. re-rendering the form for display) would silently misclassify every
+        // T1 document as NonStandardNarrative. See WrInspectionReportSchemaConverter.ToForm's
+        // knownTemplate parameter, which this key round-trips into.
+        if (item != null)
+        {
+            item.AdditionalInformation ??= [];
+            item.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey] = template.ToString();
+        }
+
         return (stopExecution, alreadySaved, item, template);
     }
 

@@ -444,7 +444,11 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                description, 
                                start_date_time_utc, 
                                end_date_time_utc, 
-                               number_of_files,
+                               (
+                               SELECT COUNT(*)
+                                   FROM licence
+                                   WHERE process_run_id = process_run.process_run_id
+                           ) AS number_of_files,
                                (
                                    SELECT COUNT(*)
                                        FROM licence_list_item

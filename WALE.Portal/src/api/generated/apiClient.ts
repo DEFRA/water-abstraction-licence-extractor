@@ -1209,49 +1209,6 @@ export class Client {
     }
 
     /**
-     * @param licenceId (optional) 
-     * @param applyVerifications (optional) 
-     * @return OK
-     */
-    getByLicenceId(licenceId: number | undefined, applyVerifications: boolean | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/Licence/GetByLicenceId?";
-        if (licenceId === null)
-            throw new globalThis.Error("The parameter 'licenceId' cannot be null.");
-        else if (licenceId !== undefined)
-            url_ += "licenceId=" + encodeURIComponent("" + licenceId) + "&";
-        if (applyVerifications === null)
-            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
-        else if (applyVerifications !== undefined)
-            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetByLicenceId(_response);
-        });
-    }
-
-    protected processGetByLicenceId(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
      * @param fileId (optional) 
      * @param processRunId (optional) 
      * @param applyVerifications (optional) 
@@ -2077,10 +2034,9 @@ export class Client {
     /**
      * @param licenceNumber (optional) 
      * @param regionCode (optional) 
-     * @param slashesRemoved (optional) 
      * @return OK
      */
-    get4(licenceNumber: string | undefined, regionCode: number | undefined, slashesRemoved: boolean | undefined): Promise<void> {
+    get4(licenceNumber: string | undefined, regionCode: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/Get?";
         if (licenceNumber === null)
             throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
@@ -2090,10 +2046,6 @@ export class Client {
             throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
         else if (regionCode !== undefined)
             url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
-        if (slashesRemoved === null)
-            throw new globalThis.Error("The parameter 'slashesRemoved' cannot be null.");
-        else if (slashesRemoved !== undefined)
-            url_ += "slashesRemoved=" + encodeURIComponent("" + slashesRemoved) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -2184,113 +2136,6 @@ export class Client {
     }
 
     protected processGetNaldLicenceNumberHistory(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    getDocumentNaldPurposeMap(): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/NaldData/GetDocumentNaldPurposeMap";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetDocumentNaldPurposeMap(_response);
-        });
-    }
-
-    protected processGetDocumentNaldPurposeMap(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    addDocumentNaldPurposeMap(body: AddDocumentNaldPurposeMapRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/NaldData/AddDocumentNaldPurposeMap";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddDocumentNaldPurposeMap(_response);
-        });
-    }
-
-    protected processAddDocumentNaldPurposeMap(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
-    }
-
-    /**
-     * @return OK
-     */
-    addDocumentNaldPurposeMatch(body: AddDocumentNaldPurposeMatchRequest): Promise<void> {
-        let url_ = this.baseUrl + "/Extractor/NaldData/AddDocumentNaldPurposeMatch";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processAddDocumentNaldPurposeMatch(_response);
-        });
-    }
-
-    protected processAddDocumentNaldPurposeMatch(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3302,6 +3147,48 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @return OK
+     */
+    matchesResult(fileId: string | undefined): Promise<MatchesResult2> {
+        let url_ = this.baseUrl + "/BFF/FileData/MatchesResult?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMatchesResult(_response);
+        });
+    }
+
+    protected processMatchesResult(response: Response): Promise<MatchesResult2> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MatchesResult2.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MatchesResult2>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @param processRunId (optional) 
      * @return OK
      */
@@ -3348,15 +3235,15 @@ export class Client {
     }
 
     /**
-     * @param matchesResultId (optional) 
+     * @param fileId (optional) 
      * @return OK
      */
-    getMatchesResultByMatchesResultId(matchesResultId: number | undefined): Promise<MatchesResult2> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetMatchesResultByMatchesResultId?";
-        if (matchesResultId === null)
-            throw new globalThis.Error("The parameter 'matchesResultId' cannot be null.");
-        else if (matchesResultId !== undefined)
-            url_ += "matchesResultId=" + encodeURIComponent("" + matchesResultId) + "&";
+    matchesResultString(fileId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/MatchesResultString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3367,53 +3254,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMatchesResultByMatchesResultId(_response);
+            return this.processMatchesResultString(_response);
         });
     }
 
-    protected processGetMatchesResultByMatchesResultId(response: Response): Promise<MatchesResult2> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = MatchesResult2.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<MatchesResult2>(null as any);
-    }
-
-    /**
-     * @param matchesResultId (optional) 
-     * @return OK
-     */
-    getMatchesResultByMatchesResultIdString(matchesResultId: number | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/GetMatchesResultByMatchesResultIdString?";
-        if (matchesResultId === null)
-            throw new globalThis.Error("The parameter 'matchesResultId' cannot be null.");
-        else if (matchesResultId !== undefined)
-            url_ += "matchesResultId=" + encodeURIComponent("" + matchesResultId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMatchesResultByMatchesResultIdString(_response);
-        });
-    }
-
-    protected processGetMatchesResultByMatchesResultIdString(response: Response): Promise<string> {
+    protected processMatchesResultString(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3533,101 +3378,6 @@ export class Client {
             });
         }
         return Promise.resolve<Licence>(null as any);
-    }
-
-    /**
-     * @param licenceId (optional) 
-     * @param applyVerifications (optional) 
-     * @return OK
-     */
-    licenceByLicenceId(licenceId: number | undefined, applyVerifications: boolean | undefined): Promise<Licence> {
-        let url_ = this.baseUrl + "/BFF/FileData/LicenceByLicenceId?";
-        if (licenceId === null)
-            throw new globalThis.Error("The parameter 'licenceId' cannot be null.");
-        else if (licenceId !== undefined)
-            url_ += "licenceId=" + encodeURIComponent("" + licenceId) + "&";
-        if (applyVerifications === null)
-            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
-        else if (applyVerifications !== undefined)
-            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLicenceByLicenceId(_response);
-        });
-    }
-
-    protected processLicenceByLicenceId(response: Response): Promise<Licence> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = Licence.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<Licence>(null as any);
-    }
-
-    /**
-     * @param licenceId (optional) 
-     * @param applyVerifications (optional) 
-     * @return OK
-     */
-    licenceByLicenceIdString(licenceId: number | undefined, applyVerifications: boolean | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/LicenceByLicenceIdString?";
-        if (licenceId === null)
-            throw new globalThis.Error("The parameter 'licenceId' cannot be null.");
-        else if (licenceId !== undefined)
-            url_ += "licenceId=" + encodeURIComponent("" + licenceId) + "&";
-        if (applyVerifications === null)
-            throw new globalThis.Error("The parameter 'applyVerifications' cannot be null.");
-        else if (applyVerifications !== undefined)
-            url_ += "applyVerifications=" + encodeURIComponent("" + applyVerifications) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processLicenceByLicenceIdString(_response);
-        });
-    }
-
-    protected processLicenceByLicenceIdString(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-    
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
     }
 
     /**
@@ -5503,122 +5253,6 @@ export interface IAbstractionLimits {
     [key: string]: any;
 }
 
-export class AddDocumentNaldPurposeMapRequest implements IAddDocumentNaldPurposeMapRequest {
-    documentDescription?: string | undefined;
-    naldPurpose?: NaldPurposeData | undefined;
-    matchType?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IAddDocumentNaldPurposeMapRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.documentDescription = _data["documentDescription"];
-            this.naldPurpose = _data["naldPurpose"] ? NaldPurposeData.fromJS(_data["naldPurpose"]) : undefined as any;
-            this.matchType = _data["matchType"];
-        }
-    }
-
-    static fromJS(data: any): AddDocumentNaldPurposeMapRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddDocumentNaldPurposeMapRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["documentDescription"] = this.documentDescription;
-        data["naldPurpose"] = this.naldPurpose ? this.naldPurpose.toJSON() : undefined as any;
-        data["matchType"] = this.matchType;
-        return data;
-    }
-}
-
-export interface IAddDocumentNaldPurposeMapRequest {
-    documentDescription?: string | undefined;
-    naldPurpose?: NaldPurposeData | undefined;
-    matchType?: string | undefined;
-
-    [key: string]: any;
-}
-
-export class AddDocumentNaldPurposeMatchRequest implements IAddDocumentNaldPurposeMatchRequest {
-    licNo?: string | undefined;
-    documentDescription?: string | undefined;
-    naldPurpose?: NaldPurposeData | undefined;
-    matchType?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IAddDocumentNaldPurposeMatchRequest) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.licNo = _data["licNo"];
-            this.documentDescription = _data["documentDescription"];
-            this.naldPurpose = _data["naldPurpose"] ? NaldPurposeData.fromJS(_data["naldPurpose"]) : undefined as any;
-            this.matchType = _data["matchType"];
-        }
-    }
-
-    static fromJS(data: any): AddDocumentNaldPurposeMatchRequest {
-        data = typeof data === 'object' ? data : {};
-        let result = new AddDocumentNaldPurposeMatchRequest();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["licNo"] = this.licNo;
-        data["documentDescription"] = this.documentDescription;
-        data["naldPurpose"] = this.naldPurpose ? this.naldPurpose.toJSON() : undefined as any;
-        data["matchType"] = this.matchType;
-        return data;
-    }
-}
-
-export interface IAddDocumentNaldPurposeMatchRequest {
-    licNo?: string | undefined;
-    documentDescription?: string | undefined;
-    naldPurpose?: NaldPurposeData | undefined;
-    matchType?: string | undefined;
-
-    [key: string]: any;
-}
-
 export class Aggregate implements IAggregate {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
@@ -6921,8 +6555,6 @@ export interface ILabelGroupResult {
 
 export class Licence implements ILicence {
     processRunId?: number | undefined;
-    licenceId?: number;
-    matchesResultId?: number;
     id?: string | undefined;
     status?: ScrapeStatus;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -6963,8 +6595,6 @@ export class Licence implements ILicence {
                     this[property] = _data[property];
             }
             this.processRunId = _data["processRunId"];
-            this.licenceId = _data["licenceId"];
-            this.matchesResultId = _data["matchesResultId"];
             this.id = _data["id"];
             this.status = _data["status"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
@@ -7027,8 +6657,6 @@ export class Licence implements ILicence {
                 data[property] = this[property];
         }
         data["processRunId"] = this.processRunId;
-        data["licenceId"] = this.licenceId;
-        data["matchesResultId"] = this.matchesResultId;
         data["id"] = this.id;
         data["status"] = this.status;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
@@ -7080,8 +6708,6 @@ export class Licence implements ILicence {
 
 export interface ILicence {
     processRunId?: number | undefined;
-    licenceId?: number;
-    matchesResultId?: number;
     id?: string | undefined;
     status?: ScrapeStatus;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -7979,7 +7605,10 @@ export enum MatchedPosition {
 }
 
 export class MatchesResult implements IMatchesResult {
+    filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -7987,10 +7616,6 @@ export class MatchesResult implements IMatchesResult {
     pages?: PdfPage[];
     errorMessage?: string | undefined;
     additionalInformation?: any | undefined;
-    filename?: string | undefined;
-    matchesResultId?: number;
-    fileId?: string;
-    status?: string | undefined;
 
     [key: string]: any;
 
@@ -8009,7 +7634,10 @@ export class MatchesResult implements IMatchesResult {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.regionCode = _data["regionCode"];
+            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -8029,10 +7657,6 @@ export class MatchesResult implements IMatchesResult {
             }
             this.errorMessage = _data["errorMessage"];
             this.additionalInformation = _data["additionalInformation"];
-            this.filename = _data["filename"];
-            this.matchesResultId = _data["matchesResultId"];
-            this.fileId = _data["fileId"];
-            this.status = _data["status"];
         }
     }
 
@@ -8049,7 +7673,10 @@ export class MatchesResult implements IMatchesResult {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["regionCode"] = this.regionCode;
+        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -8069,16 +7696,15 @@ export class MatchesResult implements IMatchesResult {
         }
         data["errorMessage"] = this.errorMessage;
         data["additionalInformation"] = this.additionalInformation;
-        data["filename"] = this.filename;
-        data["matchesResultId"] = this.matchesResultId;
-        data["fileId"] = this.fileId;
-        data["status"] = this.status;
         return data;
     }
 }
 
 export interface IMatchesResult {
+    filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -8086,16 +7712,15 @@ export interface IMatchesResult {
     pages?: PdfPage[];
     errorMessage?: string | undefined;
     additionalInformation?: any | undefined;
-    filename?: string | undefined;
-    matchesResultId?: number;
-    fileId?: string;
-    status?: string | undefined;
 
     [key: string]: any;
 }
 
 export class MatchesResult2 implements IMatchesResult2 {
+    filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -8103,10 +7728,6 @@ export class MatchesResult2 implements IMatchesResult2 {
     pages?: PdfPage[];
     errorMessage?: string | undefined;
     additionalInformation?: any | undefined;
-    filename?: string | undefined;
-    matchesResultId?: number;
-    fileId?: string;
-    status?: string | undefined;
 
     [key: string]: any;
 
@@ -8125,7 +7746,10 @@ export class MatchesResult2 implements IMatchesResult2 {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.filename = _data["filename"];
+            this.fileId = _data["fileId"];
             this.regionCode = _data["regionCode"];
+            this.status = _data["status"];
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
@@ -8145,10 +7769,6 @@ export class MatchesResult2 implements IMatchesResult2 {
             }
             this.errorMessage = _data["errorMessage"];
             this.additionalInformation = _data["additionalInformation"];
-            this.filename = _data["filename"];
-            this.matchesResultId = _data["matchesResultId"];
-            this.fileId = _data["fileId"];
-            this.status = _data["status"];
         }
     }
 
@@ -8165,7 +7785,10 @@ export class MatchesResult2 implements IMatchesResult2 {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["filename"] = this.filename;
+        data["fileId"] = this.fileId;
         data["regionCode"] = this.regionCode;
+        data["status"] = this.status;
         if (Array.isArray(this.matches)) {
             data["matches"] = [];
             for (let item of this.matches)
@@ -8185,16 +7808,15 @@ export class MatchesResult2 implements IMatchesResult2 {
         }
         data["errorMessage"] = this.errorMessage;
         data["additionalInformation"] = this.additionalInformation;
-        data["filename"] = this.filename;
-        data["matchesResultId"] = this.matchesResultId;
-        data["fileId"] = this.fileId;
-        data["status"] = this.status;
         return data;
     }
 }
 
 export interface IMatchesResult2 {
+    filename?: string | undefined;
+    fileId?: string | undefined;
     regionCode?: number;
+    status?: string | undefined;
     matches?: LabelGroupResult[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
@@ -8202,10 +7824,6 @@ export interface IMatchesResult2 {
     pages?: PdfPage[];
     errorMessage?: string | undefined;
     additionalInformation?: any | undefined;
-    filename?: string | undefined;
-    matchesResultId?: number;
-    fileId?: string;
-    status?: string | undefined;
 
     [key: string]: any;
 }
@@ -8343,86 +7961,6 @@ export enum NaldLicenceStatus {
     Curr = "Curr",
 }
 
-export class NaldPurposeData implements INaldPurposeData {
-    id?: string | undefined;
-    primaryCategoryCode?: string | undefined;
-    secondaryCategoryCode?: string | undefined;
-    useCode?: number;
-    primaryCategoryDescription?: string | undefined;
-    secondaryCategoryDescription?: string | undefined;
-    useDescription?: string | undefined;
-    quantityIdentifier?: string | undefined;
-    combinedCode?: string | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: INaldPurposeData) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.primaryCategoryCode = _data["primaryCategoryCode"];
-            this.secondaryCategoryCode = _data["secondaryCategoryCode"];
-            this.useCode = _data["useCode"];
-            this.primaryCategoryDescription = _data["primaryCategoryDescription"];
-            this.secondaryCategoryDescription = _data["secondaryCategoryDescription"];
-            this.useDescription = _data["useDescription"];
-            this.quantityIdentifier = _data["quantityIdentifier"];
-            this.combinedCode = _data["combinedCode"];
-        }
-    }
-
-    static fromJS(data: any): NaldPurposeData {
-        data = typeof data === 'object' ? data : {};
-        let result = new NaldPurposeData();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["primaryCategoryCode"] = this.primaryCategoryCode;
-        data["secondaryCategoryCode"] = this.secondaryCategoryCode;
-        data["useCode"] = this.useCode;
-        data["primaryCategoryDescription"] = this.primaryCategoryDescription;
-        data["secondaryCategoryDescription"] = this.secondaryCategoryDescription;
-        data["useDescription"] = this.useDescription;
-        data["quantityIdentifier"] = this.quantityIdentifier;
-        data["combinedCode"] = this.combinedCode;
-        return data;
-    }
-}
-
-export interface INaldPurposeData {
-    id?: string | undefined;
-    primaryCategoryCode?: string | undefined;
-    secondaryCategoryCode?: string | undefined;
-    useCode?: number;
-    primaryCategoryDescription?: string | undefined;
-    secondaryCategoryDescription?: string | undefined;
-    useDescription?: string | undefined;
-    quantityIdentifier?: string | undefined;
-    combinedCode?: string | undefined;
-
-    [key: string]: any;
-}
-
 export class NationalGridReference implements INationalGridReference {
     referenceIndex?: number;
     sheet?: string | undefined;
@@ -8519,8 +8057,6 @@ export enum NullableOfSubType {
 export class OutputListDataItem implements IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
-    licenceId?: number;
-    matchesResultId?: number;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;
@@ -8558,8 +8094,6 @@ export class OutputListDataItem implements IOutputListDataItem {
             }
             this.processRunId = _data["processRunId"];
             this.fileId = _data["fileId"];
-            this.licenceId = _data["licenceId"];
-            this.matchesResultId = _data["matchesResultId"];
             this.filename = _data["filename"];
             this.licenceNumber = _data["licenceNumber"];
             this.licenceHolder = _data["licenceHolder"];
@@ -8619,8 +8153,6 @@ export class OutputListDataItem implements IOutputListDataItem {
         }
         data["processRunId"] = this.processRunId;
         data["fileId"] = this.fileId;
-        data["licenceId"] = this.licenceId;
-        data["matchesResultId"] = this.matchesResultId;
         data["filename"] = this.filename;
         data["licenceNumber"] = this.licenceNumber;
         data["licenceHolder"] = this.licenceHolder;
@@ -8669,8 +8201,6 @@ export class OutputListDataItem implements IOutputListDataItem {
 export interface IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
-    licenceId?: number;
-    matchesResultId?: number;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;
@@ -9286,6 +8816,7 @@ export class ProcessRun implements IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
+    numberOfFilesNotFound?: number;
 
     [key: string]: any;
 
@@ -9311,6 +8842,7 @@ export class ProcessRun implements IProcessRun {
             this.numberOfFiles = _data["numberOfFiles"];
             this.successCount = _data["successCount"];
             this.status = _data["status"];
+            this.numberOfFilesNotFound = _data["numberOfFilesNotFound"];
         }
     }
 
@@ -9334,6 +8866,7 @@ export class ProcessRun implements IProcessRun {
         data["numberOfFiles"] = this.numberOfFiles;
         data["successCount"] = this.successCount;
         data["status"] = this.status;
+        data["numberOfFilesNotFound"] = this.numberOfFilesNotFound;
         return data;
     }
 }
@@ -9346,6 +8879,7 @@ export interface IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
+    numberOfFilesNotFound?: number;
 
     [key: string]: any;
 }
@@ -9617,9 +9151,7 @@ export class Purpose implements IPurpose {
     id?: string | undefined;
     description?: string | undefined;
     naldIds?: string[] | undefined;
-    naldLevel1Description?: string | undefined;
-    naldLevel2Description?: string | undefined;
-    naldLevel3Description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9646,9 +9178,7 @@ export class Purpose implements IPurpose {
                 for (let item of _data["naldIds"])
                     this.naldIds!.push(item);
             }
-            this.naldLevel1Description = _data["naldLevel1Description"];
-            this.naldLevel2Description = _data["naldLevel2Description"];
-            this.naldLevel3Description = _data["naldLevel3Description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -9673,9 +9203,7 @@ export class Purpose implements IPurpose {
             for (let item of this.naldIds)
                 data["naldIds"].push(item);
         }
-        data["naldLevel1Description"] = this.naldLevel1Description;
-        data["naldLevel2Description"] = this.naldLevel2Description;
-        data["naldLevel3Description"] = this.naldLevel3Description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -9685,9 +9213,7 @@ export interface IPurpose {
     id?: string | undefined;
     description?: string | undefined;
     naldIds?: string[] | undefined;
-    naldLevel1Description?: string | undefined;
-    naldLevel2Description?: string | undefined;
-    naldLevel3Description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9700,9 +9226,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
     id?: string | undefined;
     description?: string | undefined;
     naldIds?: string[] | undefined;
-    naldLevel1Description?: string | undefined;
-    naldLevel2Description?: string | undefined;
-    naldLevel3Description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;
@@ -9740,9 +9264,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
                 for (let item of _data["naldIds"])
                     this.naldIds!.push(item);
             }
-            this.naldLevel1Description = _data["naldLevel1Description"];
-            this.naldLevel2Description = _data["naldLevel2Description"];
-            this.naldLevel3Description = _data["naldLevel3Description"];
+            this.naldDescription = _data["naldDescription"];
             this.isImplicit = _data["isImplicit"];
         }
     }
@@ -9778,9 +9300,7 @@ export class PurposeOfAbstraction implements IPurposeOfAbstraction {
             for (let item of this.naldIds)
                 data["naldIds"].push(item);
         }
-        data["naldLevel1Description"] = this.naldLevel1Description;
-        data["naldLevel2Description"] = this.naldLevel2Description;
-        data["naldLevel3Description"] = this.naldLevel3Description;
+        data["naldDescription"] = this.naldDescription;
         data["isImplicit"] = this.isImplicit;
         return data;
     }
@@ -9793,9 +9313,7 @@ export interface IPurposeOfAbstraction {
     id?: string | undefined;
     description?: string | undefined;
     naldIds?: string[] | undefined;
-    naldLevel1Description?: string | undefined;
-    naldLevel2Description?: string | undefined;
-    naldLevel3Description?: string | undefined;
+    naldDescription?: string | undefined;
     isImplicit?: boolean | undefined;
 
     [key: string]: any;

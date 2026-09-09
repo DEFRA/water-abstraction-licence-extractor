@@ -164,6 +164,25 @@ public class DatabaseAbstractionLicenceOutputService(
         throw new NotImplementedException();
     }
 
+    public Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync()
+    {
+        return databaseReadService.GetDocumentNaldPurposeMapAsync();
+    }
+
+    public Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType)
+    {
+        return databaseWriteService.AddDocumentNaldPurposeMapAsync(documentDescription, naldPurpose, matchType);
+    }
+
+    public Task AddDocumentNaldPurposeMatchAsync(
+        string licNo,
+        string documentDescription,
+        NaldPurposeData naldPurpose,
+        string matchType)
+    {
+        return databaseWriteService.AddDocumentNaldPurposeMatchAsync(licNo, documentDescription, naldPurpose, matchType);
+    }
+
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
     {
         var licence = await databaseReadService.GetLicenceAsync(fileId, processRunId);

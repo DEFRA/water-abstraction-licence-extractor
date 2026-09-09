@@ -1,4 +1,5 @@
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
@@ -23,7 +24,7 @@ public class WrInspectionReportLabelConfigurationTests
         var generalGroupNames = WrInspectionReportLabelConfiguration.GetLabels()
             .Select(l => l.LabelGroupName)
             .ToHashSet();
-        var t1GroupNames = WrInspectionReportLabelConfiguration.GetT1Labels()
+        var t1GroupNames = WrInspectionT1LabelConfiguration.GetLabels()
             .Select(l => l.LabelGroupName)
             .ToHashSet();
 
@@ -44,7 +45,7 @@ public class WrInspectionReportLabelConfigurationTests
     {
         var generalAlternateCount = WrInspectionReportLabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
-        var t1AlternateCount = WrInspectionReportLabelConfiguration.GetT1Labels()
+        var t1AlternateCount = WrInspectionT1LabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
 
         Assert.Equal(generalAlternateCount - 1, t1AlternateCount);
@@ -57,7 +58,7 @@ public class WrInspectionReportLabelConfigurationTests
         // baseline heading) - none of the NonStandardNarrative-family alternates
         // (Introduction/Notes and Actions/Actions/Summary/background variants/etc.) apply to a
         // document already confirmed T1.
-        var t1GeneralComments = WrInspectionReportLabelConfiguration.GetT1Labels()
+        var t1GeneralComments = WrInspectionT1LabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
         var generalGeneralComments = WrInspectionReportLabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
@@ -87,7 +88,7 @@ public class WrInspectionReportLabelConfigurationTests
         ];
 
         var general = WrInspectionReportLabelConfiguration.GetLabels().ToDictionary(l => l.LabelGroupName);
-        var t1 = WrInspectionReportLabelConfiguration.GetT1Labels().ToDictionary(l => l.LabelGroupName);
+        var t1 = WrInspectionT1LabelConfiguration.GetLabels().ToDictionary(l => l.LabelGroupName);
 
         foreach (var fieldName in fieldsThatMustStayIdentical)
         {

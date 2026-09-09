@@ -46,4 +46,8 @@ public interface IAbstractionLicenceDatabaseWriteService
 
     Task<IReadOnlyCollection<long>> UpsertLicenceListItemManyAsync(IReadOnlyCollection<UpsertLicenceListItem> items,
         CancellationToken cancellationToken = default);
+
+    Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
 }

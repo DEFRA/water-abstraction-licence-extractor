@@ -14,5 +14,6 @@ public class LineAndWords
             return string.Join(" ", Words.Select(w => w!.Text));
         }
     }
+    
     public List<DocumentLineWord?>? Words { get; set; }        
 }

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 
 namespace WALE.ProcessFile.Services.Services;
 

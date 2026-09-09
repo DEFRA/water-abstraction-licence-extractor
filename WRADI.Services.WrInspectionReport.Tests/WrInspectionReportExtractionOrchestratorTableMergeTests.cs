@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -18,12 +19,12 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
     private static readonly List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
         WrInspectionReportLabelConfiguration.GetLabels();
 
-    private class FakeTableExtractorService(IReadOnlyList<OcrTable> tables) : ITableExtractorService
+    private class FakeTableExtractorService(IReadOnlyList<DocumentTable> tables) : ITableExtractorService
     {
         public string Name => "FakeTableExtractorService";
         public int CallCount { get; private set; }
 
-        public Task<IReadOnlyList<OcrTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId)
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId)
         {
             CallCount++;
             return Task.FromResult(tables);
@@ -34,29 +35,29 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
     {
         public string Name => "ThrowingTableExtractorService";
 
-        public Task<IReadOnlyList<OcrTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId) =>
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId) =>
             throw new InvalidOperationException("Simulated local-parser failure on a malformed PDF");
     }
 
-    private static readonly OcrTable FullGridTable = new()
+    private static readonly DocumentTable FullGridTable = new()
     {
         RowCount = 5,
         ColumnCount = 3,
         Cells =
         [
-            new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Source of supply: ✓" },
-            new OcrTableCell { RowIndex = 0, ColumnIndex = 1, Content = "Quantities: ✓" },
-            new OcrTableCell { RowIndex = 0, ColumnIndex = 2, Content = "Land (only if specified): N/A" },
-            new OcrTableCell { RowIndex = 1, ColumnIndex = 0, Content = "Point of abstraction: ✓" },
-            new OcrTableCell { RowIndex = 1, ColumnIndex = 1, Content = "Means of measurement: ✓" },
-            new OcrTableCell { RowIndex = 1, ColumnIndex = 2, Content = "Charging factors: N/A" },
-            new OcrTableCell { RowIndex = 2, ColumnIndex = 0, Content = "Means of abstraction: ✓" },
-            new OcrTableCell { RowIndex = 2, ColumnIndex = 1, Content = "Records: ✓" },
-            new OcrTableCell { RowIndex = 2, ColumnIndex = 2, Content = "Other provisions (specify below): N/A" },
-            new OcrTableCell { RowIndex = 3, ColumnIndex = 0, Content = "Purpose(s): ✓" },
-            new OcrTableCell { RowIndex = 3, ColumnIndex = 1, Content = "Provision of information: ✓" },
-            new OcrTableCell { RowIndex = 4, ColumnIndex = 0, Content = "Period: ✓" },
-            new OcrTableCell { RowIndex = 4, ColumnIndex = 1, Content = "Special conditions: N/A" }
+            new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Source of supply: ✓" },
+            new DocumentTableCell { RowIndex = 0, ColumnIndex = 1, Content = "Quantities: ✓" },
+            new DocumentTableCell { RowIndex = 0, ColumnIndex = 2, Content = "Land (only if specified): N/A" },
+            new DocumentTableCell { RowIndex = 1, ColumnIndex = 0, Content = "Point of abstraction: ✓" },
+            new DocumentTableCell { RowIndex = 1, ColumnIndex = 1, Content = "Means of measurement: ✓" },
+            new DocumentTableCell { RowIndex = 1, ColumnIndex = 2, Content = "Charging factors: N/A" },
+            new DocumentTableCell { RowIndex = 2, ColumnIndex = 0, Content = "Means of abstraction: ✓" },
+            new DocumentTableCell { RowIndex = 2, ColumnIndex = 1, Content = "Records: ✓" },
+            new DocumentTableCell { RowIndex = 2, ColumnIndex = 2, Content = "Other provisions (specify below): N/A" },
+            new DocumentTableCell { RowIndex = 3, ColumnIndex = 0, Content = "Purpose(s): ✓" },
+            new DocumentTableCell { RowIndex = 3, ColumnIndex = 1, Content = "Provision of information: ✓" },
+            new DocumentTableCell { RowIndex = 4, ColumnIndex = 0, Content = "Period: ✓" },
+            new DocumentTableCell { RowIndex = 4, ColumnIndex = 1, Content = "Special conditions: N/A" }
         ]
     };
 
@@ -81,23 +82,23 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
             ]
         };
 
-        var gridTable = new OcrTable
+        var gridTable = new DocumentTable
         {
             RowCount = 5,
             ColumnCount = 2,
             Cells =
             [
-                new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Point of abstraction: ✓" },
-                new OcrTableCell { RowIndex = 0, ColumnIndex = 1, Content = "Means of measurement: ✓" },
-                new OcrTableCell { RowIndex = 1, ColumnIndex = 0, Content = "Means of abstraction: ✓" },
-                new OcrTableCell { RowIndex = 1, ColumnIndex = 1, Content = "Records: ✓" },
-                new OcrTableCell { RowIndex = 2, ColumnIndex = 0, Content = "Purpose(s): ✓" },
-                new OcrTableCell { RowIndex = 2, ColumnIndex = 1, Content = "Provision of information: ✓" },
-                new OcrTableCell { RowIndex = 3, ColumnIndex = 0, Content = "Period: ✓" },
+                new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Point of abstraction: ✓" },
+                new DocumentTableCell { RowIndex = 0, ColumnIndex = 1, Content = "Means of measurement: ✓" },
+                new DocumentTableCell { RowIndex = 1, ColumnIndex = 0, Content = "Means of abstraction: ✓" },
+                new DocumentTableCell { RowIndex = 1, ColumnIndex = 1, Content = "Records: ✓" },
+                new DocumentTableCell { RowIndex = 2, ColumnIndex = 0, Content = "Purpose(s): ✓" },
+                new DocumentTableCell { RowIndex = 2, ColumnIndex = 1, Content = "Provision of information: ✓" },
+                new DocumentTableCell { RowIndex = 3, ColumnIndex = 0, Content = "Period: ✓" },
                 // The field the table correctly resolves, overriding a wrong heuristic verdict.
-                new OcrTableCell { RowIndex = 3, ColumnIndex = 1, Content = "Special conditions: N/A" },
-                new OcrTableCell { RowIndex = 4, ColumnIndex = 0, Content = "Quantities: ✓" },
-                new OcrTableCell { RowIndex = 4, ColumnIndex = 1, Content = "Charging factors: N/A" }
+                new DocumentTableCell { RowIndex = 3, ColumnIndex = 1, Content = "Special conditions: N/A" },
+                new DocumentTableCell { RowIndex = 4, ColumnIndex = 0, Content = "Quantities: ✓" },
+                new DocumentTableCell { RowIndex = 4, ColumnIndex = 1, Content = "Charging factors: N/A" }
                 // Deliberately no "Source of supply" cell at all - table can't resolve it.
             ]
         };
@@ -134,11 +135,11 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
             Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
         };
 
-        var unrelatedTable = new OcrTable
+        var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 1,
-            Cells = [new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
         };
 
         var tableExtractorService = new FakeTableExtractorService([unrelatedTable]);
@@ -165,11 +166,11 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
             Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
         };
 
-        var unrelatedTable = new OcrTable
+        var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 1,
-            Cells = [new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
         };
 
         var primary = new FakeTableExtractorService([unrelatedTable]);
@@ -238,11 +239,11 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
             Matches = [HeuristicResult(WrInspectionReportFieldNames.SourceOfSupply, "In")]
         };
 
-        var unrelatedTable = new OcrTable
+        var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 1,
-            Cells = [new OcrTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
         };
 
         var primary = new FakeTableExtractorService([unrelatedTable]);

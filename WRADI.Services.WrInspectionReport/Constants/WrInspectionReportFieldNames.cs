@@ -1,4 +1,4 @@
-namespace WRADI.DocumentType.WrInspectionReport.Enums;
+namespace WRADI.DocumentType.WrInspectionReport.Constants;
 
 // The machine name of every label group WrInspectionReportLabelConfiguration.GetLabels()/
 // GetT1Labels() defines - previously a bare string literal retyped by hand in every consumer

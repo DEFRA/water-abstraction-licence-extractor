@@ -6,6 +6,7 @@ import {NaldStatusTag} from "./NaldStatusTag.tsx";
 import {useFileIdMap} from "../utils/useFileIdMap.tsx";
 import {AggregateTag} from "./AggregateTag.tsx";
 import NaldOnlyTag from "./NaldOnlyTag.tsx";
+import ImpoundmentTag from "./ImpoundmentTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -47,6 +48,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );
     } else {
@@ -56,6 +58,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );
     }

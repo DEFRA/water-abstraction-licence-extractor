@@ -1,6 +1,7 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Nald;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -273,9 +274,12 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         return list;
     }
 
-    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, int regionCode)
+    public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
+        string licenceNumber,
+        int regionCode,
+        bool slashesRemoved = false)
     {
-        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}";
+        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}&slashesRemoved={slashesRemoved}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

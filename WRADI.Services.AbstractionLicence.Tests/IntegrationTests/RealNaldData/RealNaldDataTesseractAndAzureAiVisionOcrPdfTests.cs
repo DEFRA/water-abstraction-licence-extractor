@@ -1,9 +1,11 @@
 using FakeItEasy;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
@@ -21,6 +23,7 @@ using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Output.AbstractionLicence;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests.RealNaldData;
 
@@ -30,19 +33,24 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
     {
         var realCacheService = new FileSystemCacheService("Cache/");
         var realAbsLicCacheService = new DatabaseAbstractionLicenceCacheService(ReadService, null!);
+        var realAbsLicOutputService = new DatabaseAbstractionLicenceOutputService(null!, ReadService, null!, null!);
         
-        (CacheService, AbsLicCacheService) = GeneralTestsHelper.GetFakeCacheService(
+        (CacheService, AbsLicCacheService, AbsLicOutputService) = GeneralTestsHelper.GetFakeCacheService(
             realCacheService,
             realAbsLicCacheService,
+            realAbsLicOutputService,
             [],
             []);
 
         AbsLicCacheService = realAbsLicCacheService;
-        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService);
+        
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        NaldDataLookupService = new NaldDataLookupService(AbsLicCacheService, AbsLicOutputService, memoryCache);
     }
     
     private static readonly ICacheService CacheService;
     private static readonly IAbstractionLicenceCacheService AbsLicCacheService;
+    private static readonly IAbstractionLicenceOutputService AbsLicOutputService;
     private static readonly INaldDataLookupService NaldDataLookupService;
     
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -160,11 +168,15 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(1)", licence.Purposes[0].Id);
         Assert.Equal("Spray Irrigation", licence.Purposes[0].Description);
         Assert.Equal("10029939", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Agriculture", licence.Purposes[0].NaldLevel1Description);
+        Assert.Equal("General Agriculture", licence.Purposes[0].NaldLevel2Description);
+        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);        
         Assert.Equal("(2)", licence.Purposes[1].Id);
         Assert.Equal("Agriculture (other than spray Irrigation)", licence.Purposes[1].Description);
         Assert.Equal("10029938", licence.Purposes[1].NaldIds![0]);
-        Assert.Equal("General Agriculture | General Farming & Domestic", licence.Purposes[1].NaldDescription);
+        Assert.Equal("Agriculture", licence.Purposes[1].NaldLevel1Description);
+        Assert.Equal("General Agriculture", licence.Purposes[1].NaldLevel2Description);
+        Assert.Equal("General Farming & Domestic", licence.Purposes[1].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
@@ -272,11 +284,15 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(a)", licence.Purposes[0].Id);
         Assert.Equal("Private Water Supply", licence.Purposes[0].Description);
         Assert.Equal("10019820", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions | General Use Relating To Secondary Category (Medium Loss)", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Industrial, Commercial And Public Services", licence.Purposes[0].NaldLevel1Description);
+        Assert.Equal("Holiday Sites, Camp Sites & Tourist Attractions", licence.Purposes[0].NaldLevel2Description);
+        Assert.Equal("General Use Relating To Secondary Category (Medium Loss)", licence.Purposes[0].NaldLevel3Description);
         Assert.Equal("(b)", licence.Purposes[1].Id);
         Assert.Equal("Reservoir Storage for subsequent stream compensation", licence.Purposes[1].Description);
         Assert.Equal("10021258", licence.Purposes[1].NaldIds![0]);
-        Assert.Equal("Non-Remedial River/Wetland Support | Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldDescription);  
+        Assert.Equal("Environmental", licence.Purposes[1].NaldLevel1Description);
+        Assert.Equal("Non-Remedial River/Wetland Support", licence.Purposes[1].NaldLevel2Description);
+        Assert.Equal("Transfer Between Sources (Pre Water Act 2003)", licence.Purposes[1].NaldLevel3Description);
         
         Assert.Null(licence.AbstractionLimits.Individual);
         
@@ -390,7 +406,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Null(licence.Purposes[0].Id);
         Assert.Equal("Spray irrigation", licence.Purposes[0].Description);
         Assert.Equal("10030785", licence.Purposes[0].NaldIds![0]);
-        Assert.Equal("General Agriculture | Spray Irrigation - Direct", licence.Purposes[0].NaldDescription);
+        Assert.Equal("Agriculture", licence.Purposes[0].NaldLevel1Description);
+        Assert.Equal("General Agriculture", licence.Purposes[0].NaldLevel2Description);
+        Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
         Assert.Single(licence.AbstractionLimits.Individual!);

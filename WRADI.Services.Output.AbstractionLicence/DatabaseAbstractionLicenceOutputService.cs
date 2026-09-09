@@ -103,6 +103,7 @@ public class DatabaseAbstractionLicenceOutputService(
 
         return databaseWriteService.SaveLicenceAsync(
             licence.LicenceNumber?.Value,
+            licence.MatchesResultId,
             licence.Filename,
             licence.Status.ToString(),
             licenceStr,
@@ -148,6 +149,7 @@ public class DatabaseAbstractionLicenceOutputService(
             }
 
             missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
+            
             await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
         }
 
@@ -181,6 +183,15 @@ public class DatabaseAbstractionLicenceOutputService(
         string matchType)
     {
         return databaseWriteService.AddDocumentNaldPurposeMatchAsync(licNo, documentDescription, naldPurpose, matchType);
+    }
+
+    public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
+    {
+        var licence = await databaseReadService.GetLicenceAsync(licenceId);
+
+        return licence == null || !applyVerifications
+            ? licence
+            : await ApplyVerificationsAsync(licence, licence.DmsFileId!.Value, licence.ProcessRunId!.Value);
     }
 
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
@@ -381,6 +392,51 @@ public class DatabaseAbstractionLicenceOutputService(
         return returnList;
     }
 
+    public async Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
+    {
+        var processRun = (await ogDatabaseReadService.GetMostRecentProcessRunAsync(licenceId))!;
+
+        var licenceSets = await databaseReadService.GetLicenceSetsSimpleByLicenceIdAsync(
+            licenceId);
+
+        var returnList = new List<LicenceSet>();
+
+        foreach (var licenceSetSimple in licenceSets)
+        {
+            var licenceSet = new LicenceSet();
+
+            var licenceSetLicenceIds =
+                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId,
+                    processRun.ProcessRunId);
+
+            var licences = new List<Licence>();
+
+            foreach (var licenceSetLicence in licenceSetLicenceIds)
+            {
+                var licence = new Licence
+                {
+                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber)
+                        ? new ValueWithConfidence<string>(
+                            licenceSetLicence.LicenceNumber,
+                            -1, // TODO
+                            -1) // TODO
+                        : null
+                };
+
+                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                licences.Add(licence);
+            }
+
+            licenceSet.Licences = licences.ToArray();
+            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId);
+            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
+
+            returnList.Add(licenceSet);
+        }
+
+        return returnList;
+    }
+    
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         var processRun = (await ogDatabaseReadService.GetMostRecentProcessRunAsync(fileId))!;

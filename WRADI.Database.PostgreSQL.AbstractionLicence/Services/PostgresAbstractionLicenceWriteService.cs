@@ -64,6 +64,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
 
     public async Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        int matchesResultId,
         string? filename,
         string status,
         string licenceData,
@@ -73,8 +74,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (file_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
+                           INSERT INTO licence (file_id, matches_result_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
+                           VALUES (@FileId, @MatchesResultId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -84,6 +85,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             0,
             new {
                 FileId = fileId,
+                MatchesResultId = matchesResultId,
                 LicenceNumber = licenceNumber,
                 Filename = filename,
                 Status = status,
@@ -660,6 +662,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 process_run_id,
                 file_id,
+                licence_id,
+                matches_result_id,
                 filename,
                 licence_number,
                 licence_holder,
@@ -691,6 +695,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 @ProcessRunId,
                 @FileId,
+                @LicenceId,
+                @MatchesResultId,
                 @Filename,
                 @LicenceNumber,
                 @LicenceHolder,
@@ -725,6 +731,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_number
             )
             DO UPDATE SET
+                licence_id = EXCLUDED.licence_id,
+                matches_result_id = EXCLUDED.matches_result_id,
                 filename = EXCLUDED.filename,
                 licence_holder = EXCLUDED.licence_holder,
                 limits_count = EXCLUDED.limits_count,
@@ -761,6 +769,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         {
             item.ProcessRunId,
             item.FileId,
+            item.LicenceId,
+            item.MatchesResultId,
             item.Filename,
             item.LicenceNumber,
             item.LicenceHolder,

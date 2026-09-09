@@ -30,7 +30,8 @@ public class LicenceListItemModelService
             .ToArray();
     }
 
-    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(IEnumerable<LicenceListItemAggregate> source)
+    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(
+        IEnumerable<LicenceListItemAggregate> source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
@@ -48,6 +49,8 @@ public class LicenceListItemModelService
         {
             ProcessRunId = source.processRunId!.Value,
             FileId = source.fileId,
+            LicenceId = source.licenceId,
+            MatchesResultId = source.matchesResultId,
             Filename = source.filename ?? string.Empty,
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,
@@ -97,6 +100,8 @@ public class LicenceListItemModelService
         {
             processRunId = licence.ProcessRunId,
             fileId = licence.FileId,
+            licenceId = licence.LicenceId,
+            matchesResultId = licence.MatchesResultId,
             filename = licence.Filename,
             licenceNumber = licence.LicenceNumber,
             licenceHolder = licence.LicenceHolder,

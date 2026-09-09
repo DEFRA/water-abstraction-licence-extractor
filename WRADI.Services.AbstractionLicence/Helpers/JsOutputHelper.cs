@@ -61,6 +61,8 @@ public static class JsOutputHelper
         return new IntermediateOutputLicence
         {
             Filename = licence.Filename,
+            LicenceId = licence.LicenceId,
+            MatchesResultId = licence.MatchesResultId,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
@@ -137,6 +139,8 @@ public static class JsOutputHelper
                 processRunId = processRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
+                licenceId = outputLine.LicenceId,
+                matchesResultId = outputLine.MatchesResultId,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =

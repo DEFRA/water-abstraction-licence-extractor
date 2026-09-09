@@ -5,6 +5,10 @@ public class OutputListDataItem
     public int? processRunId { get; set; }
     
     public Guid fileId { get; set; }
+    
+    public int licenceId { get; set; }
+    
+    public int matchesResultId { get; set; }
 
     public string? filename { get; set; }
     

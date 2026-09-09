@@ -98,41 +98,24 @@ public class ProcessRunsController(
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
+    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunListAsync(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
-        var countTask =
-            licenceListRepository.GetLicencesListSearchCountAsync(
-                processRunId,
-                query);
+        var countTask = licenceListRepository.GetLicencesListSearchCountAsync(
+            processRunId,
+            query);
 
-        var licenceListItemsTask =
-            licenceListRepository.GetLicencesListSearchAsync(
-                processRunId,
-                query);
+        var licenceListItemsTask = licenceListRepository.GetLicencesListSearchAsync(
+            processRunId,
+            query);
 
-        var issuersTask =
-            GetDistinctListIssuers(processRunId);
+        var issuersTask = GetDistinctListIssuers(processRunId);
+        var licenceSetIdsTask = GetDistinctListLicenceSetIds(processRunId);
+        var issueDatesTask = GetDistinctListDates(processRunId);
 
-        var licenceSetIdsTask =
-            GetDistinctListLicenceSetIds(processRunId);
-
-        var issueDatesTask =
-            GetDistinctListDates(processRunId);
-
-        await Task.WhenAll(
-            countTask,
-            licenceListItemsTask,
-            issuersTask,
-            licenceSetIdsTask,
-            issueDatesTask);
-
-        var licenceListItems = await licenceListItemsTask;
-
-        var outputList =
-            licenceListItemModelService
-                .ConvertToOutputListDataItems(licenceListItems);
+        var outputList = licenceListItemModelService.ConvertToOutputListDataItems(
+            await licenceListItemsTask);
 
         var processRun = new ProcessRunResponse
         {
@@ -151,7 +134,10 @@ public class ProcessRunsController(
         [FromRoute] int processRunId,
         [FromBody] string[] licenceNumbers)
     {
-        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId, licenceNumbers);  
+        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
+            processRunId,
+            licenceNumbers);
+        
         return Ok(result);
     }
 

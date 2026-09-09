@@ -34,7 +34,7 @@ interface AggregateItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }

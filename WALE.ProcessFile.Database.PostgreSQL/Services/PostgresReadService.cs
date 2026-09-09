@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
@@ -479,8 +478,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM licence l
                            JOIN process_run pr
                                ON l.process_run_id = pr.process_run_id 
-                           WHERE file_id = @FileId 
-                           ORDER BY l.process_run_id DESC
+                           WHERE
+                               file_id = @FileId 
+                           ORDER BY
+                               l.process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -493,39 +494,48 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId
             });
     }
-    
-    public async Task<MatchesResult?> GetMatchesResult(Guid fileId)
+
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
-                           FROM matches_result 
-                           WHERE file_id = @FileId
-                           ORDER BY process_run_id DESC
+                           SELECT 
+                               l.process_run_id, 
+                               pr.description, 
+                               pr.start_date_time_utc, 
+                               pr.end_date_time_utc, 
+                               pr.number_of_files 
+                           FROM licence l
+                           JOIN process_run pr
+                               ON l.process_run_id = pr.process_run_id 
+                           WHERE
+                               licence_id = @LicenceId 
+                           ORDER BY
+                               l.process_run_id DESC
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<string>(
+        return await QuerySingleOrDefaultAsync<ProcessRun>(
             connection,
             sql,
             0,
-            new { FileId = fileId });
-
-        return result == null
-            ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+            new
+            {
+                LicenceId = licenceId
+            });
     }
 
-    public async Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId)
+    public async Task<MatchesResult?> GetMatchesResult(int matchesResultId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
+                           SELECT
+                               data 
                            FROM matches_result 
                            WHERE
-                               file_id = @FileId
-                                and process_run_id = @ProcessRunId
-                           ORDER BY process_run_id DESC
+                               matches_result_id = @MatchesResultId
+                           ORDER BY
+                               process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -535,13 +545,56 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             0,
             new
             {
+                MatchesResultId = matchesResultId
+            });
+
+        var matchesResult = result == null
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = matchesResultId;
+        }
+
+        return matchesResult;
+    }
+
+    public async Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               matches_result_id,
+                               data 
+                           FROM matches_result 
+                           WHERE
+                               file_id = @FileId
+                                and process_run_id = @ProcessRunId
+                           ORDER BY process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<(int MatchesResultId, string? Data)>(
+            connection,
+            sql,
+            0,
+            new
+            {
                 FileId = fileId,
                 ProcessRunId = processRunId
             });
 
-        return result == null
+        var matchesResult = result.Data == null
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+            : JsonSerializer.Deserialize<MatchesResult>(result.Data, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = result.MatchesResultId;
+        }
+
+        return matchesResult;
     }
     
     public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)

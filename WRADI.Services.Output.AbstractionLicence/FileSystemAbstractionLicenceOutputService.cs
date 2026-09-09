@@ -111,12 +111,17 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
     {
         throw new NotImplementedException();
     }
 
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
     {
         throw new NotImplementedException();
     }

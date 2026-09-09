@@ -28,13 +28,6 @@ public class FileDataController(
     }
     
     [HttpGet]
-    public async Task<ActionResult<MatchesResult?>> MatchesResult([FromQuery] Guid fileId)
-    {
-        var result = await outputService.GetMatchesResultAsync(fileId);
-        return Ok(result);
-    }
-
-    [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int processRunId)
@@ -42,12 +35,21 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(fileId, processRunId);
         return Ok(result);
     }
-
+    
+    [HttpGet]
+    public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdAsync(
+        [FromQuery] int matchesResultId)
+    {
+        var result = await outputService.GetMatchesResultAsync(matchesResultId);
+        return Ok(result);
+    }
+    
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
-    public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
+    public async Task<ActionResult<string?>> GetMatchesResultByMatchesResultIdStringAsync(
+        [FromQuery] int matchesResultId)
     {
-        var result = await outputService.GetMatchesResultAsync(fileId);
+        var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
 
@@ -59,15 +61,44 @@ public class FileDataController(
     }
 
     [HttpGet]
-    public async Task<ActionResult<Licence?>> Licence(
+    public async Task<ActionResult<Licence?>> LicenceAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int processRunId,
         [FromQuery] bool applyVerifications = false)
     {
-        var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(
+            fileId,
+            processRunId,
+            applyVerifications);
+        
+        return Ok(result);
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<Licence?>> LicenceByLicenceIdAsync(
+        [FromQuery] int licenceId,
+        [FromQuery] bool applyVerifications = false)
+    {
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(
+            licenceId,
+            applyVerifications);
+        
         return Ok(result);
     }
 
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> LicenceByLicenceIdStringAsync(
+        [FromQuery] int licenceId,
+        [FromQuery] bool applyVerifications = false)
+    {
+        var result = await abstractionLicenceOutputService.GetLicenceAsync(
+            licenceId,
+            applyVerifications);
+        
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+    
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
     public async Task<ActionResult<string?>> LicenceStringAsync(
@@ -80,7 +111,7 @@ public class FileDataController(
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSets([FromQuery] Guid fileId)
+    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSetsAsync([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
         return Ok(results);
@@ -91,6 +122,21 @@ public class FileDataController(
     public async Task<ActionResult<string?>> LicenceSetsStringAsync([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
+        return Ok(JsonSerializer.Serialize(results, JsonHelper.GetSerializerOptions()));
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSetsByLicenceIdAsync([FromQuery] int licenceId)
+    {
+        var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(licenceId);
+        return Ok(results);
+    }
+
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> LicenceSetsByLicenceIdStringAsync([FromQuery] int licenceId)
+    {
+        var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(licenceId);
         return Ok(JsonSerializer.Serialize(results, JsonHelper.GetSerializerOptions()));
     }
 

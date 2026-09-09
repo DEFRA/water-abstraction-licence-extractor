@@ -269,6 +269,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         return licenceSets;
     }
 
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
+    {
+        throw new NotImplementedException();
+    }
+    
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         throw new NotImplementedException();

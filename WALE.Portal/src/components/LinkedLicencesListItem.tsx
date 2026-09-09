@@ -9,7 +9,7 @@ import NaldOnlyTag from "./NaldOnlyTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
-    onOpenReport: (filename: string) => void;
+    onOpenReport: (filename: string, licenceId: number, matchesResultId: number) => void;
 }
 
 export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
@@ -32,16 +32,16 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
             ? "lightseagreen"
             : "black";
 
-    let linkedFilename = getFileId(licenceNumber);
+    let linkedFileId = getFileId(licenceNumber);
 
-    if (linkedFilename) {
+    if (linkedFileId) {
         return (
             <li title={text}>
                 <a style={{color}}
                    href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(linkedFilename);
+                       onOpenReport(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
                    }}>{styledLicenceNumber}
                 </a>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>

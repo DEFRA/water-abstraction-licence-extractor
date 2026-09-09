@@ -29,7 +29,7 @@ interface LinkedLicenceItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -58,7 +58,7 @@ export const LinkedLicenceItem = ({
         return null;
     }
 
-    const linkedFilename = getFileId(linkedLicence.licenceNumber);
+    const linkedFileId = getFileId(linkedLicence.licenceNumber);
 
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
@@ -286,11 +286,11 @@ export const LinkedLicenceItem = ({
 
     const summary = (
         <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.9rem'}}>
-            <strong>{linkedFilename ? (
+            <strong>{linkedFileId ? (
                 <a href="#" onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onOpenReport?.(linkedFilename);
+                    onOpenReport?.(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
                 }}>{linkedLicence.licenceNumber || 'N/A'}</a>
             ) : (
                 linkedLicence.licenceNumber || 'N/A'
@@ -304,10 +304,10 @@ export const LinkedLicenceItem = ({
         <CollapsibleItem summary={summary} defaultOpen={true}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
                 <p style={{margin: 0}}><strong>Linked Licence Number:</strong>
-                    {linkedFilename ? (
+                    {linkedFileId ? (
                         <a href="#" onClick={(e) => {
                             e.preventDefault();
-                            onOpenReport?.(linkedFilename);
+                            onOpenReport?.(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
                         }}>{linkedLicence.licenceNumber || 'N/A'}</a>
                     ) : (
                         linkedLicence.licenceNumber || 'N/A'

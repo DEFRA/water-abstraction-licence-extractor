@@ -1210,6 +1210,31 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             })).ToList();
     }
 
+    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleByLicenceIdAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT DISTINCT
+                               ls.licence_set_id,
+                               ls.short_licence_set_id, 
+                               ls.schema_licence_set_id 
+                           FROM licence_set ls
+                           JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
+                           JOIN licence l on l.licence_id = lsl.licence_id
+                           WHERE
+                               l.licence_id = @LicenceId
+                           """;
+
+        return (await QueryAsync<LicenceSetTable>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
+            })).ToList();
+    }
+
     public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();

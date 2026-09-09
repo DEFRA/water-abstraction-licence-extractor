@@ -3,11 +3,13 @@ import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListItemProps {
     fileId: string | undefined;
+    licenceId: number | undefined;
+    matchesResultId: number | undefined;
     licenceSet: LicenceSet;
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
 }
 
-export function LicenceSetsListItem({fileId, licenceSet, onOpenLicenceSetReport}: LicenceSetsListItemProps) {
+export function LicenceSetsListItem({fileId, licenceId, matchesResultId, licenceSet, onOpenLicenceSetReport}: LicenceSetsListItemProps) {
     let licenceSetId = licenceSet.licenceSetId;
     let shortLicenceSetId = licenceSet.shortLicenceSetId;
 
@@ -45,7 +47,7 @@ export function LicenceSetsListItem({fileId, licenceSet, onOpenLicenceSetReport}
                     href="#"
                     onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(fileId!, licenceSetId!);
+                        onOpenLicenceSetReport(fileId!, licenceId!, matchesResultId!, licenceSetId!);
                     }}>
                     {shortLicenceSetId}
                 </a>

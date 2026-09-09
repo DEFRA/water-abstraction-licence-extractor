@@ -1,5 +1,4 @@
 import {useState, useEffect, useRef} from 'react';
-//import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
@@ -11,17 +10,18 @@ import LicenceImages from "./LicenceImages";
 
 interface ReportContentProps {
     fileId: string;
+    licenceId: number,
+    matchesResultId: number,
     hideBackLink?: boolean;
-    //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
+export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink = true, processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -45,16 +45,16 @@ export function ReportContent({fileId, hideBackLink = true, processRunId, onRefr
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
-                waleApiClient.getMatchesResultByMatchesResultId(processRunId),
-                waleApiClient.getMatchesResultByMatchesResultIdString(processRunId),
-                waleApiClient.licence(fileId, processRunId, false),
-                waleApiClient.licence(fileId, processRunId, true),
+                waleApiClient.getMatchesResultByMatchesResultId(matchesResultId),
+                waleApiClient.getMatchesResultByMatchesResultIdString(matchesResultId),
+                waleApiClient.licenceByLicenceId(licenceId, false),
+                waleApiClient.licenceByLicenceId(licenceId, true),
                 waleApiClient.licenceSets(fileId),
-                waleApiClient.licenceString(fileId, processRunId, false),
+                waleApiClient.licenceByLicenceIdString(licenceId, false),
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
-            if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(JSON.stringify(matchesResultString.value)));
+            if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
             if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
             if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
             if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);

@@ -46,7 +46,7 @@ public class FileDataController(
     
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
-    public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdStringAsync(
+    public async Task<ActionResult<string?>> GetMatchesResultByMatchesResultIdStringAsync(
         [FromQuery] int matchesResultId)
     {
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
@@ -111,7 +111,7 @@ public class FileDataController(
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSets([FromQuery] Guid fileId)
+    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSetsAsync([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
         return Ok(results);
@@ -122,6 +122,21 @@ public class FileDataController(
     public async Task<ActionResult<string?>> LicenceSetsStringAsync([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
+        return Ok(JsonSerializer.Serialize(results, JsonHelper.GetSerializerOptions()));
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSetsByLicenceIdAsync([FromQuery] int licenceId)
+    {
+        var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(licenceId);
+        return Ok(results);
+    }
+
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> LicenceSetsByLicenceIdStringAsync([FromQuery] int licenceId)
+    {
+        var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(licenceId);
         return Ok(JsonSerializer.Serialize(results, JsonHelper.GetSerializerOptions()));
     }
 

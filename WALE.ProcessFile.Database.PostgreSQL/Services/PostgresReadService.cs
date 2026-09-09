@@ -474,8 +474,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM licence l
                            JOIN process_run pr
                                ON l.process_run_id = pr.process_run_id 
-                           WHERE file_id = @FileId 
-                           ORDER BY l.process_run_id DESC
+                           WHERE
+                               file_id = @FileId 
+                           ORDER BY
+                               l.process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -486,6 +488,36 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 FileId = fileId
+            });
+    }
+
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               l.process_run_id, 
+                               pr.description, 
+                               pr.start_date_time_utc, 
+                               pr.end_date_time_utc, 
+                               pr.number_of_files 
+                           FROM licence l
+                           JOIN process_run pr
+                               ON l.process_run_id = pr.process_run_id 
+                           WHERE
+                               licence_id = @LicenceId 
+                           ORDER BY
+                               l.process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<ProcessRun>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
             });
     }
 

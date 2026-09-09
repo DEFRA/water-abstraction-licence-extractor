@@ -3393,7 +3393,7 @@ export class Client {
      * @param matchesResultId (optional) 
      * @return OK
      */
-    getMatchesResultByMatchesResultIdString(matchesResultId: number | undefined): Promise<MatchesResult2> {
+    getMatchesResultByMatchesResultIdString(matchesResultId: number | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/FileData/GetMatchesResultByMatchesResultIdString?";
         if (matchesResultId === null)
             throw new globalThis.Error("The parameter 'matchesResultId' cannot be null.");
@@ -3413,14 +3413,15 @@ export class Client {
         });
     }
 
-    protected processGetMatchesResultByMatchesResultIdString(response: Response): Promise<MatchesResult2> {
+    protected processGetMatchesResultByMatchesResultIdString(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = MatchesResult2.fromJS(resultData200);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -3428,7 +3429,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<MatchesResult2>(null as any);
+        return Promise.resolve<string>(null as any);
     }
 
     /**
@@ -6921,6 +6922,7 @@ export interface ILabelGroupResult {
 export class Licence implements ILicence {
     processRunId?: number | undefined;
     licenceId?: number;
+    matchesResultId?: number;
     id?: string | undefined;
     status?: ScrapeStatus;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -6962,6 +6964,7 @@ export class Licence implements ILicence {
             }
             this.processRunId = _data["processRunId"];
             this.licenceId = _data["licenceId"];
+            this.matchesResultId = _data["matchesResultId"];
             this.id = _data["id"];
             this.status = _data["status"];
             this.licenceNumber = _data["licenceNumber"] ? ValueWithConfidenceOfstring.fromJS(_data["licenceNumber"]) : undefined as any;
@@ -7025,6 +7028,7 @@ export class Licence implements ILicence {
         }
         data["processRunId"] = this.processRunId;
         data["licenceId"] = this.licenceId;
+        data["matchesResultId"] = this.matchesResultId;
         data["id"] = this.id;
         data["status"] = this.status;
         data["licenceNumber"] = this.licenceNumber ? this.licenceNumber.toJSON() : undefined as any;
@@ -7077,6 +7081,7 @@ export class Licence implements ILicence {
 export interface ILicence {
     processRunId?: number | undefined;
     licenceId?: number;
+    matchesResultId?: number;
     id?: string | undefined;
     status?: ScrapeStatus;
     licenceNumber?: ValueWithConfidenceOfstring | undefined;
@@ -8515,6 +8520,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
     licenceId?: number;
+    matchesResultId?: number;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;
@@ -8553,6 +8559,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.processRunId = _data["processRunId"];
             this.fileId = _data["fileId"];
             this.licenceId = _data["licenceId"];
+            this.matchesResultId = _data["matchesResultId"];
             this.filename = _data["filename"];
             this.licenceNumber = _data["licenceNumber"];
             this.licenceHolder = _data["licenceHolder"];
@@ -8613,6 +8620,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["processRunId"] = this.processRunId;
         data["fileId"] = this.fileId;
         data["licenceId"] = this.licenceId;
+        data["matchesResultId"] = this.matchesResultId;
         data["filename"] = this.filename;
         data["licenceNumber"] = this.licenceNumber;
         data["licenceHolder"] = this.licenceHolder;
@@ -8662,6 +8670,7 @@ export interface IOutputListDataItem {
     processRunId?: number | undefined;
     fileId?: string;
     licenceId?: number;
+    matchesResultId?: number;
     filename?: string | undefined;
     licenceNumber?: string | undefined;
     licenceHolder?: string | undefined;

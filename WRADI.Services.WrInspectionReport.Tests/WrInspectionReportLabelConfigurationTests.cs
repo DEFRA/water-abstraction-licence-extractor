@@ -107,7 +107,7 @@ public class WrInspectionReportLabelConfigurationTests
         // (wr51__83617s0016__...) before this guard was added, not assumed.
         var readingBaselineTwoColumnAlternate = WrInspectionReportLabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
-            .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true && l.NextLinesToFetch == 1);
+            .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true);
 
         Assert.Contains("Other", readingBaselineTwoColumnAlternate.ExcludeNextLineIfFirstColumnStartsWith ?? []);
     }

@@ -347,19 +347,7 @@ public static class WrInspectionReportSchemaConverter
             },
             MeasurementDetails = new WrInspectionReportMeasurementDetails
             {
-                Meters =
-                [
-                    new WrInspectionReportMeter
-                    {
-                        MeterName = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterName),
-                        MeterMake = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterMake),
-                        SerialNumber = GetMultilineText(matchesResult, WrInspectionReportFieldNames.SerialNumber),
-                        MeterAssetNumber = GetMultilineText(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber),
-                        Reading = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Reading),
-                        FlowRate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.FlowRate),
-                        Units = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Units)
-                    }
-                ],
+                Meters = BuildMeters(matchesResult),
                 Verification = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Verification),
                 SpotCheckResult = GetMultilineText(matchesResult, WrInspectionReportFieldNames.SpotCheckResult),
                 Other = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Other),
@@ -569,7 +557,70 @@ public static class WrInspectionReportSchemaConverter
         
         return string.Join("\n", matchedLabel.Text.Select(t => t.Text)!);
     }
-    
+
+    // Same source as GetMultilineText, but as separate lines rather than one joined string -
+    // for a multi-meter table (WrInspectionReportLabelConfiguration.MeterTableNextLines) each
+    // line is one meter's value for this field, e.g. "Point 1, Yaxley: Honeywell" / "Point 2,
+    // Eye: Honeywell" / ... - see BuildMeters. Blank lines dropped (a table with fewer filled
+    // rows than the widened window fetched shouldn't produce empty meter entries).
+    private static List<string> GetMultilineTextLines(MatchesResult matchesResult, string name)
+    {
+        var matchedLabel = matchesResult.Matches?
+            .FirstOrDefault(m => m.MatchedLabelName == name);
+
+        if (matchedLabel?.Text == null)
+        {
+            return [];
+        }
+
+        return matchedLabel.Text
+            .Select(t => t.Text?.Trim())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => t!)
+            .ToList();
+    }
+
+    // One WrInspectionReportMeter per line, zipping corresponding lines across each field by
+    // index (line 1 of MeterMake pairs with line 1 of SerialNumber, etc.) - correct as long as a
+    // multi-meter table lists its points in the same order down every column, which is the only
+    // layout confirmed so far (wr51__1041260103__... spot-checked, see wr51_multi_meter memory).
+    // Always returns at least one entry, even when every field is empty, matching
+    // WrInspectionReportMeter's own single-meter-by-default contract. Doesn't attempt to parse
+    // the "Point N, <site>:" prefix some documents embed in each value out into MeterName - that
+    // format isn't confirmed universal, so the raw value ships as-is rather than guessing at a
+    // parse.
+    private static List<WrInspectionReportMeter> BuildMeters(MatchesResult matchesResult)
+    {
+        var meterName = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterName);
+        var meterMake = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterMake);
+        var serialNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.SerialNumber);
+        var meterAssetNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber);
+        var reading = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Reading);
+        var flowRate = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.FlowRate);
+        var units = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Units);
+
+        var meterCount = new[]
+        {
+            meterName.Count, meterMake.Count, serialNumber.Count, meterAssetNumber.Count,
+            reading.Count, flowRate.Count, units.Count
+        }.Max();
+
+        meterCount = Math.Max(meterCount, 1);
+
+        return Enumerable.Range(0, meterCount)
+            .Select(i => new WrInspectionReportMeter
+            {
+                MeterName = meterName.ElementAtOrDefault(i),
+                MeterMake = meterMake.ElementAtOrDefault(i),
+                SerialNumber = serialNumber.ElementAtOrDefault(i),
+                MeterAssetNumber = meterAssetNumber.ElementAtOrDefault(i),
+                Reading = reading.ElementAtOrDefault(i),
+                FlowRate = flowRate.ElementAtOrDefault(i),
+                Units = units.ElementAtOrDefault(i)
+            })
+            .ToList();
+    }
+
     private static string RemoveSpecialCharacters(this string str)
     {
         var sb = new StringBuilder();

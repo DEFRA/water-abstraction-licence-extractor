@@ -241,7 +241,7 @@ public static class DmsHelper
 
             if (licenceFinderResult.LiveLicenceFound != true)
             {
-                //continue;
+                continue;
             }
             
             var destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";

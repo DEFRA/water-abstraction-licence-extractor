@@ -77,17 +77,60 @@ public sealed class WrRule
         return rule;
     }
 
-    public WrRule Named(string name) { _name = name; return this; }
-    public WrRule WholeLine() { _limitTo = LimitTo.WholeLine; return this; }
-    public WrRule NextLines(int n) { _nextLinesToFetch = n; return this; }
-    public WrRule RequireTextToClaimGroup() { _requireTextToClaimGroup = true; return this; }
-    public WrRule BoundByOtherLabels() { _boundSameLineWalkByOtherLabelPositions = true; return this; }
-    public WrRule Possibilities(IEnumerable<TextToMatch> p) { _possibilities = p.ToList(); return this; }
-    public WrRule IgnoreIfContains(params string[] terms) { _ignoreBlockIfContains = terms.ToList(); return this; }
-    public WrRule SkipNextLineWhenStartsWith(params string[] terms) { _excludeNextLineIfFirstColumnStartsWith = terms.ToList(); return this; }
+    public WrRule Named(string name)
+    {
+        _name = name;
+        return this;
+    }
+
+    public WrRule WholeLine()
+    {
+        _limitTo = LimitTo.WholeLine;
+        return this;
+    }
+
+    public WrRule NextLines(int n)
+    {
+        _nextLinesToFetch = n;
+        return this;
+    }
+
+    public WrRule RequireTextToClaimGroup()
+    {
+        _requireTextToClaimGroup = true;
+        return this;
+    }
+
+    public WrRule BoundByOtherLabels()
+    {
+        _boundSameLineWalkByOtherLabelPositions = true;
+        return this;
+    }
+
+    public WrRule Possibilities(IEnumerable<TextToMatch> p)
+    {
+        _possibilities = p.ToList();
+        return this;
+    }
+
+    public WrRule IgnoreIfContains(params string[] terms)
+    {
+        _ignoreBlockIfContains = terms.ToList();
+        return this;
+    }
+
+    public WrRule SkipNextLineWhenStartsWith(params string[] terms)
+    {
+        _excludeNextLineIfFirstColumnStartsWith = terms.ToList();
+        return this;
+    }
 
     // For the After() shape only - a single same-line bound.
-    public WrRule EndsAt(string text) { _textEnd = [new(text) { LineMustStartWith = true }]; return this; }
+    public WrRule EndsAt(string text)
+    {
+        _textEnd = [new(text) { LineMustStartWith = true }];
+        return this;
+    }
 
     // For the Between()/InOrder() shapes - appends before the trailing [END_OF_BLOCK]
     // sentinel. Plain TextToMatch, no positional flag - use this when the extra end marker

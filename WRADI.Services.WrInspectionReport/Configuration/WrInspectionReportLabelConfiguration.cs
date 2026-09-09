@@ -481,7 +481,8 @@ public static class WrInspectionReportLabelConfiguration
     // real narrative content (confirmed via the ground-truth harness).
     private static (string, List<LabelToMatch>) RuleGeneralComments() =>
         (WrInspectionReportFieldNames.GeneralComments, [
-            WrRule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
+            WrRule
+                .Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
                 .Named(WrInspectionReportFieldNames.GeneralComments).WholeLine().NextLines(100)
                 .AlsoEndsAt("Customer charter") // fixed appeal-process boilerplate on longer-form documents - never genuine comments content
                 .AlsoStartsWith(

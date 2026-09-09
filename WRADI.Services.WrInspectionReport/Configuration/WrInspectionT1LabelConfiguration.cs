@@ -23,24 +23,26 @@ public static class WrInspectionT1LabelConfiguration
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
         var labels = WrInspectionReportLabelConfiguration.GetLabels()
-            .Where(l => l.LabelGroupName is not (
+            .Where(label => label.LabelGroupName is not (
                 "TemplateMarkerT4"
                 or "TemplateMarkerT6"
                 or "TemplateMarkerT7"
                 or "TemplateMarkerImpounding"
                 or "TemplateMarkerBaselineComments"
                 or "TemplateMarkerAlternateComments"))
-            .Select(l => (l.LabelGroupName, Labels: l.Labels.ToList()))
+            .Select(l => l with { Labels = l.Labels.ToList() })
             .ToList();
 
         var nameAndAddress = labels.First(
-            l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
+            label => label.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
         
+        // TODO - fragile, look up on text being the below instead
         nameAndAddress.Labels.RemoveAt(3); // "Permit holder name and address" - T4 only, confirmed zero T1 usage
 
         var generalCommentsIndex = labels.FindIndex(
-            l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
+            label => label.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
         
+        // Swap out how to find general comments
         labels[generalCommentsIndex] = (WrInspectionReportFieldNames.GeneralComments, [
             // Tried (2026-09-08) and reverted: an "Actions" end-anchor and a "Page N of M"
             // footer end-anchor, meant to stop the field short of a trailing checklist/footer
@@ -51,8 +53,12 @@ public static class WrInspectionT1LabelConfiguration
             // and the footer marker cut a different document short of its true end. Net regression
             // (Hit+PartialHit 36->35), not an improvement - genuine per-document diversity here,
             // not a bounded fix. See wr51_general_comments_gap memory before trying this again.
-            WrRule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
-                .Named(WrInspectionReportFieldNames.GeneralComments).WholeLine().NextLines(100).Build()
+            WrRule
+                .Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
+                .Named(WrInspectionReportFieldNames.GeneralComments)
+                .WholeLine()
+                .NextLines(100)
+                .Build()
         ]);
 
         return labels;

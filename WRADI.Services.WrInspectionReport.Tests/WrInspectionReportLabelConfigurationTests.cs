@@ -106,8 +106,11 @@ public class WrInspectionReportLabelConfigurationTests
         // sees can be "Other:"'s own row - traced with gated instrumentation on a real document
         // (wr51__83617s0016__...) before this guard was added, not assumed.
         var readingBaselineTwoColumnAlternate = WrInspectionReportLabelConfiguration.GetLabels()
-            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
-            .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true && l.NextLinesToFetch == 1);
+            .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading)
+            .Labels
+            .Single(l => 
+                l.TextEnd?.Any(t => t.Text == "Units") == true
+                    && l.NextLinesToFetch == 1);
 
         Assert.Contains("Other", readingBaselineTwoColumnAlternate.ExcludeNextLineIfFirstColumnStartsWith ?? []);
     }

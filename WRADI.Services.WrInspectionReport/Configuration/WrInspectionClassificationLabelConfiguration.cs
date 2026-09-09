@@ -7,7 +7,7 @@ public static class WrInspectionClassificationLabelConfiguration
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
         WrInspectionReportLabelConfiguration.GetLabels()
-            .Where(l => ClassificationLabelGroupNames.Contains(l.LabelGroupName))
+            .Where(label => ClassificationLabelGroupNames.Contains(label.LabelGroupName))
             .ToList();
     
     // Filtered out of GetLabels() by name rather than redefined for maintainability

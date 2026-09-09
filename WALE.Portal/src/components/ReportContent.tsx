@@ -47,13 +47,14 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
             setLoading(true);
             
             // Load data using API client
-            const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult] = await Promise.allSettled([
+            const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult, licenceVerificationStringResult] = await Promise.allSettled([
                 waleApiClient.getMatchesResultByMatchesResultId(matchesResultId),
                 waleApiClient.getMatchesResultByMatchesResultIdString(matchesResultId),
                 waleApiClient.licenceByLicenceId(licenceId, false),
                 waleApiClient.licenceByLicenceId(licenceId, true),
                 waleApiClient.licenceSets(fileId),
                 waleApiClient.licenceByLicenceIdString(licenceId, false),
+                waleApiClient.licenceByLicenceIdString(licenceId, true)
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);

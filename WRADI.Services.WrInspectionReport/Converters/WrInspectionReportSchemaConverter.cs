@@ -1,5 +1,7 @@
 using System.Text;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Dms;
+using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Models;
 
@@ -14,7 +16,10 @@ public static class WrInspectionReportSchemaConverter
     // only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
     // back to the old self-contained behaviour - re-deriving Template from matchesResult itself
     // - for any caller that runs a single pass with no separate classification step.
-    public static Models.WrInspectionReport ToForm(MatchesResult matchesResult, DmsFileData? dmsFileData, WrTemplateType? knownTemplate = null)
+    public static Models.WrInspectionReport ToForm(
+        MatchesResult matchesResult,
+        DmsFileData? dmsFileData,
+        WrTemplateType? knownTemplate = null)
     {
         var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
 
@@ -286,9 +291,9 @@ public static class WrInspectionReportSchemaConverter
             pageIndex += 1;
         }
 
-        return new Models.WrInspectionReport()
+        return new Models.WrInspectionReport
         {
-            Metadata = new WrInspectionReportMetadata()
+            Metadata = new WrInspectionReportMetadata
             {
                 Template = knownTemplate ?? ClassifyTemplate(matchesResult, documentHeader),
                 DocumentTemplateVerison = documentTemplateVerison,
@@ -324,7 +329,7 @@ public static class WrInspectionReportSchemaConverter
                 RawDate = rawInspectionDate,
                 RawTime = rawInspectionTime
             },
-            LicenceProvisions = new WrInspectionReportLicenceProvisions()
+            LicenceProvisions = new WrInspectionReportLicenceProvisions
             {
                 SourceOfSupply = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.SourceOfSupply),
                 Purposes = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Purposes),
@@ -340,7 +345,7 @@ public static class WrInspectionReportSchemaConverter
                 OtherProvisions = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.OtherProvisions),
                 Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period)
             },
-            MeasurementDetails = new WrInspectionReportMeasurementDetails()
+            MeasurementDetails = new WrInspectionReportMeasurementDetails
             {
                 Meters =
                 [

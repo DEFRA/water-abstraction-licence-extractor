@@ -1,16 +1,70 @@
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
-using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Constants;
+using WRADI.DocumentType.WrInspectionReport.Models.Configuration;
 
 namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
-// Rule-based rewrite of the original three-factory design (TextToFindIsBetweenLabels/
-// TextAfterLabel/GetInOrderField, each with its own inconsistent set of optional parameters) -
-// one shared fluent Rule type plus one named method per field group. Verified field-for-field
-// behaviourally identical to the design it replaced via a JSON-serialised diff of every
-// LabelToMatch produced by GetLabels()/GetT1Labels() before promoting it here.
-public class WrInspectionReportLabelConfiguration
+public static class WrInspectionReportLabelConfiguration
 {
+    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
+    [
+        RuleSourceOfSupply(),
+        RulePointOfAbstraction(),
+        RuleMeansOfAbstraction(),
+        RulePurposes(),
+        RulePeriod(),
+        RuleQuantities(),
+        RuleMeansOfMeasurement(),
+        RuleRecords(),
+        RuleProvisionOfInformation(),
+        RuleSpecialConditions(),
+        RuleLand(),
+        RuleChargingFactors(),
+        RuleOtherProvisions(),
+        RuleLicenceNumber(),
+        RuleMetWith(),
+        RuleInspectingOfficer(),
+        RuleSiteAddress(),
+        RuleInspectionClass(),
+        RuleTelephoneNumber(),
+        RulePosition(),
+        RuleTime(),
+        RuleNameAndAddress(),
+        RuleMeterName(),
+        RuleMeterMake(),
+        RuleSerialNumber(),
+        RuleMeterAssetNumber(),
+        RuleReading(),
+        RuleFlowRate(),
+        RuleUnits(),
+        RuleOther(),
+        RuleCertificatesOfRecords(),
+        RuleDateOfCertification(),
+        RuleCalibration(),
+        RuleVerification(),
+        RuleSpotCheckResult(),
+        RuleConformance(),
+        RuleFlowVerification(),
+        RuleMeterVerification(),
+        RuleWhereKept(),
+        RuleFormSentTo(),
+        RuleDate(),
+        RuleDocumentTemplateVersion(),
+        RuleDocumentHeader(),
+        RuleTemplateMarkerT4(),
+        RuleTemplateMarkerT6(),
+        RuleTemplateMarkerT7(),
+        RuleTemplateMarkerImpounding(),
+        RuleTemplateMarkerBaselineComments(),
+        RuleTemplateMarkerAlternateComments(),
+        RuleGeneralComments(),
+        RuleMaintenanceLine(),
+        RuleReadingsTakenLine(),
+        RuleInspectionDate(),
+        RuleEmail()
+    ];
+    
     // Real documents mark these checkbox-style fields with whatever the scanner/typist
     // used - tick, cross, or a Unicode box glyph - not just the Y/N the field nominally
     // asks for. Tried in this order; a genuinely-unticked box (☐) is itself a real answer
@@ -89,235 +143,6 @@ public class WrInspectionReportLabelConfiguration
         new("")
     ];
 
-    // Fluent construction of a single LabelToMatch. One shared vocabulary (an entry point per
-    // rule shape, then chained modifiers) instead of three factory functions each with their own
-    // inconsistent parameter surface.
-    //
-    // Accumulates into plain fields rather than mutating a LabelToMatch in place - several of
-    // its properties (Name, NextLinesToFetch, RequireTextToClaimGroup, IgnoreBlockIfContains,
-    // ExcludeNextLineIfFirstColumnStartsWith, BoundSameLineWalkByOtherLabelPositions) are
-    // init-only, so the real object can only be assembled once, in Build().
-    private sealed class Rule
-    {
-        private IReadOnlyList<TextToMatch>? _textStart;
-        // Null (not an empty list) when unset - a rule with no end bound serialises the same way
-        // regardless of which entry point built it, rather than differing null-vs-empty-list.
-        private List<TextToMatch>? _textEnd;
-        private LabelPosition _position;
-        private LimitTo _limitTo = LimitTo.SameColumn;
-        private int _nextLinesToFetch;
-        private string? _name;
-        private readonly List<TextToMatch> _remove = [];
-        private List<TextToMatch>? _possibilities;
-        private bool _requireTextToClaimGroup;
-        private List<string>? _ignoreBlockIfContains;
-        private List<string>? _excludeNextLineIfFirstColumnStartsWith;
-        private bool _boundSameLineWalkByOtherLabelPositions;
-
-        private Rule() { }
-
-        public static Rule Between(string startText, string endText)
-        {
-            var rule = new Rule
-            {
-                _textStart = [new(startText) { ColumnMustStartWith = true }],
-                _textEnd = [new(endText) { LineMustStartWith = true }, new("[END_OF_BLOCK]")],
-                _position = LabelPosition.TextToFindIsBetweenLabels
-            };
-            rule._remove.Add(new(startText));
-            return rule;
-        }
-
-        // "Text"/LabelIsBeforeTextToFind - the same TextStart property backs both (LabelToMatch's
-        // Text property is a plain alias for TextStart), so this needs no separate field.
-        public static Rule After(string text)
-        {
-            var rule = new Rule
-            {
-                _textStart = [new(text) { ColumnMustStartWith = true }],
-                _position = LabelPosition.LabelIsBeforeTextToFind
-            };
-            rule._remove.Add(new(text));
-            return rule;
-        }
-
-        // The LicenceProvisions grid's tick/cross/In/Not shape. Routed via
-        // TextToFindIsBetweenLabels (not LabelIsBeforeTextToFind) - the generic-text path used
-        // by After() discards the whole result if nothing is left after removing the label
-        // text, which would silently swallow every genuinely-blank tick field.
-        public static Rule InOrder(string text, string? endText = null)
-        {
-            var rule = new Rule
-            {
-                _textStart = [new(text) { ColumnMustStartWith = true }, new(text.Replace(" ", string.Empty)) { ColumnMustStartWith = true }],
-                _textEnd = endText != null ? [new(endText) { LineMustStartWith = true }, new("[END_OF_BLOCK]")] : [new("[END_OF_BLOCK]")],
-                _position = LabelPosition.TextToFindIsBetweenLabels,
-                _nextLinesToFetch = 1,
-                _possibilities = InOrderPossibilities
-            };
-            rule._remove.Add(new(text));
-            return rule;
-        }
-
-        public Rule Named(string name) { _name = name; return this; }
-        public Rule WholeLine() { _limitTo = LimitTo.WholeLine; return this; }
-        public Rule NextLines(int n) { _nextLinesToFetch = n; return this; }
-        public Rule RequireTextToClaimGroup() { _requireTextToClaimGroup = true; return this; }
-        public Rule BoundByOtherLabels() { _boundSameLineWalkByOtherLabelPositions = true; return this; }
-        public Rule Possibilities(IEnumerable<TextToMatch> p) { _possibilities = p.ToList(); return this; }
-        public Rule IgnoreIfContains(params string[] terms) { _ignoreBlockIfContains = terms.ToList(); return this; }
-        public Rule SkipNextLineWhenStartsWith(params string[] terms) { _excludeNextLineIfFirstColumnStartsWith = terms.ToList(); return this; }
-
-        // For the After() shape only - a single same-line bound.
-        public Rule EndsAt(string text) { _textEnd = [new(text) { LineMustStartWith = true }]; return this; }
-
-        // For the Between()/InOrder() shapes - appends before the trailing [END_OF_BLOCK]
-        // sentinel. Plain TextToMatch, no positional flag - use this when the extra end marker
-        // only needs to bound the same-line/same-row walk.
-        public Rule AlsoEndsAt(params string[] texts)
-        {
-            var sentinel = _textEnd![^1];
-            _textEnd = [.._textEnd.Take(_textEnd.Count - 1), ..texts.Select(t => new TextToMatch(t)), sentinel];
-            return this;
-        }
-
-        // Same idea as AlsoEndsAt but with LineMustStartWith: true - for an extra end marker that
-        // must anchor a whole line, not just bound a same-line walk. Only MeansOfAbstraction
-        // needs this one (its "Records" end marker requires the stricter check).
-        public Rule AlsoEndsAtLineStart(params string[] texts)
-        {
-            var sentinel = _textEnd![^1];
-            _textEnd = [.._textEnd.Take(_textEnd.Count - 1), ..texts.Select(t => new TextToMatch(t) { LineMustStartWith = true }), sentinel];
-            return this;
-        }
-
-        public Rule AlsoStartsWith(params string[] texts)
-        {
-            _textStart = [.._textStart!, ..texts.Select(t => new TextToMatch(t) { ColumnMustStartWith = true })];
-            _remove.AddRange(texts.Select(t => new TextToMatch(t)));
-            return this;
-        }
-
-        // Additive fallback alongside AlsoStartsWith (which still requires a column start): a
-        // start text matched anywhere on the line, for cases where the value genuinely doesn't
-        // land at a column boundary - e.g. "Time" sharing a row with "Inspection Date" as
-        // "...Inspection Date: 26/1/2026 Time: 3pm" all in one column. Use specific-enough text
-        // (a trailing colon, say) to avoid matching an ordinary word inside narrative prose.
-        // Purely additive - existing column-start matches are untouched, so this can only add
-        // new matches, never remove one.
-        public Rule AlsoStartsWithLoose(params string[] texts)
-        {
-            _textStart = [.._textStart!, ..texts.Select(t => new TextToMatch(t))];
-            _remove.AddRange(texts.Select(t => new TextToMatch(t)));
-            return this;
-        }
-
-        public Rule Remove(IEnumerable<TextToMatch> items) { _remove.AddRange(items); return this; }
-
-        // GeneralComments' own special case: "Actions"/"Summary" are valid additionalTextStarts
-        // (so they must stay in TextStart) but must NOT be stripped from the captured value
-        // when they recur mid-block as a genuine sub-heading - see RuleGeneralComments().
-        public Rule ExceptFromRemove(params string[] texts) { _remove.RemoveAll(r => texts.Contains(r.Text)); return this; }
-
-        public LabelToMatch Build() => new()
-        {
-            TextStart = _textStart,
-            TextEnd = _textEnd,
-            Position = _position,
-            LimitTo = _limitTo,
-            Format = "Text",
-            PreviousLinesToFetch = 0,
-            NextLinesToFetch = _nextLinesToFetch,
-            Name = _name,
-            Remove = _remove,
-            Possibilities = _possibilities,
-            RequireTextToClaimGroup = _requireTextToClaimGroup,
-            IgnoreBlockIfContains = _ignoreBlockIfContains,
-            ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-            BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions
-        };
-    }
-
-    // The label groups WrInspectionReportSchemaConverter.ClassifyTemplate actually needs -
-    // filtered out of GetLabels() by name rather than redefined, so the classification markers
-    // can never drift out of sync with the real ones.
-    private static readonly string[] ClassificationLabelGroupNames =
-    [
-        WrInspectionReportFieldNames.DocumentHeader,
-        WrInspectionReportFieldNames.TemplateMarkerT4,
-        WrInspectionReportFieldNames.TemplateMarkerT6,
-        WrInspectionReportFieldNames.TemplateMarkerT7,
-        WrInspectionReportFieldNames.TemplateMarkerImpounding,
-        WrInspectionReportFieldNames.TemplateMarkerBaselineComments,
-        WrInspectionReportFieldNames.TemplateMarkerAlternateComments
-    ];
-
-    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetClassificationLabels() =>
-        GetLabels()
-            .Where(l => ClassificationLabelGroupNames.Contains(l.LabelGroupName))
-            .ToList();
-
-    // Hook point for T1-specific rule tuning. Starts from GetLabels() unchanged: every
-    // MeasurementDetails "T6 template" alternate (MeterMake/SerialNumber/Reading/Units/
-    // Calibration/Conformance/FlowVerification/MeterVerification, plus the T6-only fields
-    // MeterName/FlowRate/Verification/SpotCheckResult/MeterAssetNumber) was checked for removal
-    // and kept, because a corpus-wide coverage diff (all 480 real T1-classified documents, not
-    // just the golden set) showed real, substantial usage under T1 despite the "T6" name -
-    // Calibration alone loses 51/480 T1 docs (11%) without it. The "T6 template" label describes
-    // where a phrasing was FIRST found, not a template-exclusivity boundary; don't trust it as
-    // one. Two alternates DID show zero T1 impact and are removed below: NameAndAddress's
-    // "Permit holder name and address" (T4 only) and GeneralComments's non-baseline headings.
-    //
-    // Any future change here MUST re-verify via the full corpus-wide per-field coverage report,
-    // not just the golden-set harness or the alternate's own attribution comment - a narrower
-    // check already missed this once.
-    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetT1Labels()
-    {
-        var labels = GetLabels()
-            .Where(l => l.LabelGroupName is not (
-                "TemplateMarkerT4" or "TemplateMarkerT6" or "TemplateMarkerT7" or "TemplateMarkerImpounding" or
-                "TemplateMarkerBaselineComments" or "TemplateMarkerAlternateComments"))
-            .Select(l => (l.LabelGroupName, Labels: l.Labels.ToList()))
-            .ToList();
-
-        var nameAndAddress = labels.First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress);
-        nameAndAddress.Labels.RemoveAt(3); // "Permit holder name and address" - T4 only, confirmed zero T1 usage
-
-        var generalCommentsIndex = labels.FindIndex(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments);
-        labels[generalCommentsIndex] = (WrInspectionReportFieldNames.GeneralComments, [
-            // Tried (2026-09-08) and reverted: an "Actions" end-anchor and a "Page N of M"
-            // footer end-anchor, meant to stop the field short of a trailing checklist/footer
-            // section seen on some T1 documents. Measured against the golden set: fixed 1 case
-            // but broke 2 others - "Actions" isn't reliably a section boundary (wr51__1142109's
-            // truth genuinely includes "Actions:\n<content>" as narrative, indistinguishable via
-            // StartsWith from the standalone "Actions" heading that IS a real boundary elsewhere)
-            // and the footer marker cut a different document short of its true end. Net regression
-            // (Hit+PartialHit 36->35), not an improvement - genuine per-document diversity here,
-            // not a bounded fix. See wr51_general_comments_gap memory before trying this again.
-            Rule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
-                .Named(WrInspectionReportFieldNames.GeneralComments).WholeLine().NextLines(100).Build()
-        ]);
-
-        return labels;
-    }
-
-    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
-    [
-        RuleSourceOfSupply(), RulePointOfAbstraction(), RuleMeansOfAbstraction(), RulePurposes(),
-        RulePeriod(), RuleQuantities(), RuleMeansOfMeasurement(), RuleRecords(),
-        RuleProvisionOfInformation(), RuleSpecialConditions(), RuleLand(), RuleChargingFactors(),
-        RuleOtherProvisions(), RuleLicenceNumber(), RuleMetWith(), RuleInspectingOfficer(),
-        RuleSiteAddress(), RuleInspectionClass(), RuleTelephoneNumber(), RulePosition(), RuleTime(),
-        RuleNameAndAddress(), RuleMeterName(), RuleMeterMake(), RuleSerialNumber(),
-        RuleMeterAssetNumber(), RuleReading(), RuleFlowRate(), RuleUnits(), RuleOther(),
-        RuleCertificatesOfRecords(), RuleDateOfCertification(), RuleCalibration(), RuleVerification(),
-        RuleSpotCheckResult(), RuleConformance(), RuleFlowVerification(), RuleMeterVerification(),
-        RuleWhereKept(), RuleFormSentTo(), RuleDate(), RuleDocumentTemplateVersion(), RuleDocumentHeader(),
-        RuleTemplateMarkerT4(), RuleTemplateMarkerT6(), RuleTemplateMarkerT7(), RuleTemplateMarkerImpounding(),
-        RuleTemplateMarkerBaselineComments(), RuleTemplateMarkerAlternateComments(), RuleGeneralComments(),
-        RuleMaintenanceLine(), RuleReadingsTakenLine(), RuleInspectionDate(), RuleEmail()
-    ];
-
     // ---- LicenceProvisions grid (InOrder-shaped fields) ----
     // Grid layout confirmed against real documents (row groupings, left-to-right):
     //   Row 1: Source of supply | Quantities | Land
@@ -329,39 +154,39 @@ public class WrInspectionReportLabelConfiguration
     // next field's label text into this field's captured value.
 
     private static (string, List<LabelToMatch>) RuleSourceOfSupply() =>
-        (WrInspectionReportFieldNames.SourceOfSupply, [Rule.InOrder("Source of supply", "Quantities").Named(WrInspectionReportFieldNames.SourceOfSupply).Build()]);
+        (WrInspectionReportFieldNames.SourceOfSupply, [WrRule.InOrder("Source of supply", InOrderPossibilities, "Quantities").Named(WrInspectionReportFieldNames.SourceOfSupply).Build()]);
 
     private static (string, List<LabelToMatch>) RulePointOfAbstraction() =>
-        (WrInspectionReportFieldNames.PointOfAbstraction, [Rule.InOrder("Point of abstraction", "Means of measurement").Named(WrInspectionReportFieldNames.PointOfAbstraction).Build()]);
+        (WrInspectionReportFieldNames.PointOfAbstraction, [WrRule.InOrder("Point of abstraction", InOrderPossibilities, "Means of measurement").Named(WrInspectionReportFieldNames.PointOfAbstraction).Build()]);
 
     // "Records" sometimes renders letter-kerned - without these as alternate end markers, the
     // same-line column walk never recognises the boundary and sweeps all the way to "...N/A" at
     // the end of the row, which then wins over the real "In Order" answer.
     private static (string, List<LabelToMatch>) RuleMeansOfAbstraction() =>
         (WrInspectionReportFieldNames.MeansOfAbstraction, [
-            Rule.InOrder("Means of abstraction", "Records").Named(WrInspectionReportFieldNames.MeansOfAbstraction)
+            WrRule.InOrder("Means of abstraction", InOrderPossibilities, "Records").Named(WrInspectionReportFieldNames.MeansOfAbstraction)
                 .AlsoEndsAtLineStart("R ecords", "R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s")
                 .Build()
         ]);
 
     private static (string, List<LabelToMatch>) RulePurposes() =>
-        (WrInspectionReportFieldNames.Purposes, [Rule.InOrder("Purpose(s)", "Provision of information").Named(WrInspectionReportFieldNames.Purposes).Build()]);
+        (WrInspectionReportFieldNames.Purposes, [WrRule.InOrder("Purpose(s)", InOrderPossibilities, "Provision of information").Named(WrInspectionReportFieldNames.Purposes).Build()]);
 
     private static (string, List<LabelToMatch>) RulePeriod() =>
-        (WrInspectionReportFieldNames.Period, [Rule.InOrder("Period", "Special conditions").Named(WrInspectionReportFieldNames.Period).Build()]);
+        (WrInspectionReportFieldNames.Period, [WrRule.InOrder("Period", InOrderPossibilities, "Special conditions").Named(WrInspectionReportFieldNames.Period).Build()]);
 
     private static (string, List<LabelToMatch>) RuleQuantities() =>
-        (WrInspectionReportFieldNames.Quantities, [Rule.InOrder("Quantities", "Land").Named(WrInspectionReportFieldNames.Quantities).Build()]);
+        (WrInspectionReportFieldNames.Quantities, [WrRule.InOrder("Quantities", InOrderPossibilities, "Land").Named(WrInspectionReportFieldNames.Quantities).Build()]);
 
     private static (string, List<LabelToMatch>) RuleMeansOfMeasurement() =>
-        (WrInspectionReportFieldNames.MeansOfMeasurement, [Rule.InOrder("Means of measurement", "Charging factors").Named(WrInspectionReportFieldNames.MeansOfMeasurement).Build()]);
+        (WrInspectionReportFieldNames.MeansOfMeasurement, [WrRule.InOrder("Means of measurement", InOrderPossibilities, "Charging factors").Named(WrInspectionReportFieldNames.MeansOfMeasurement).Build()]);
 
     // "Records" renders with progressively wider letter-kerning on 340/789 real corpus docs
     // (43%) - only 7 distinct literal patterns cover all occurrences, so literal alternates are
     // sufficient here rather than a whitespace-tolerant matching engine change.
     private static (string, List<LabelToMatch>) RuleRecords() =>
         (WrInspectionReportFieldNames.Records, [
-            Rule.InOrder("R ecords", "Other provisions").Named(WrInspectionReportFieldNames.Records)
+            WrRule.InOrder("R ecords", InOrderPossibilities, "Other provisions").Named(WrInspectionReportFieldNames.Records)
                 .AlsoStartsWith("R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s")
                 .Build()
         ]);
@@ -369,33 +194,33 @@ public class WrInspectionReportLabelConfiguration
     // "Measurement details" is the section header that always follows the whole grid - a safe,
     // distant bound for each of these five fields regardless of which one is last on its row.
     private static (string, List<LabelToMatch>) RuleProvisionOfInformation() =>
-        (WrInspectionReportFieldNames.ProvisionOfInformation, [Rule.InOrder("Provision of information", "Measurement details").Named(WrInspectionReportFieldNames.ProvisionOfInformation).Build()]);
+        (WrInspectionReportFieldNames.ProvisionOfInformation, [WrRule.InOrder("Provision of information", InOrderPossibilities, "Measurement details").Named(WrInspectionReportFieldNames.ProvisionOfInformation).Build()]);
 
     // BoundByOtherLabels fixes a fabricated "InOrder" value caused by the same-line column walk
     // sweeping in an unrelated field with no positional bound.
     private static (string, List<LabelToMatch>) RuleSpecialConditions() =>
         (WrInspectionReportFieldNames.SpecialConditions, [
-            Rule.InOrder("Special conditions", "Measurement details").Named(WrInspectionReportFieldNames.SpecialConditions).BoundByOtherLabels().Build()
+            WrRule.InOrder("Special conditions", InOrderPossibilities, "Measurement details").Named(WrInspectionReportFieldNames.SpecialConditions).BoundByOtherLabels().Build()
         ]);
 
     private static (string, List<LabelToMatch>) RuleLand() =>
-        (WrInspectionReportFieldNames.Land, [Rule.InOrder("Land (only if specified)", "Measurement details").Named(WrInspectionReportFieldNames.Land).Build()]);
+        (WrInspectionReportFieldNames.Land, [WrRule.InOrder("Land (only if specified)", InOrderPossibilities, "Measurement details").Named(WrInspectionReportFieldNames.Land).Build()]);
 
     private static (string, List<LabelToMatch>) RuleChargingFactors() =>
-        (WrInspectionReportFieldNames.ChargingFactors, [Rule.InOrder("Charging factors", "Measurement details").Named(WrInspectionReportFieldNames.ChargingFactors).Build()]);
+        (WrInspectionReportFieldNames.ChargingFactors, [WrRule.InOrder("Charging factors", InOrderPossibilities, "Measurement details").Named(WrInspectionReportFieldNames.ChargingFactors).Build()]);
 
     private static (string, List<LabelToMatch>) RuleOtherProvisions() =>
-        (WrInspectionReportFieldNames.OtherProvisions, [Rule.InOrder("Other provisions (specify below)", "Measurement details").Named(WrInspectionReportFieldNames.OtherProvisions).Build()]);
+        (WrInspectionReportFieldNames.OtherProvisions, [WrRule.InOrder("Other provisions (specify below)", InOrderPossibilities, "Measurement details").Named(WrInspectionReportFieldNames.OtherProvisions).Build()]);
 
     // ---- Header / address block ----
 
     private static (string, List<LabelToMatch>) RuleLicenceNumber() =>
         (WrInspectionReportFieldNames.LicenceNumber, [
-            Rule.Between("Licence No. (or Application No. or GIC No. etc.)", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
+            WrRule.Between("Licence No. (or Application No. or GIC No. etc.)", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
                 .NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Name and address", "Name / address")
                 .Build(), // Long form
-            Rule.Between("Licence No", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
+            WrRule.Between("Licence No", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
                 .NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Name and address", "Name / address")
                 // Longest/most-specific literal first: "(or Application No. or GIC No." (no
@@ -412,14 +237,14 @@ public class WrInspectionReportLabelConfiguration
         ]);
 
     private static (string, List<LabelToMatch>) RuleMetWith() =>
-        (WrInspectionReportFieldNames.MetWith, [Rule.After("Met with").Named(WrInspectionReportFieldNames.MetWith).Build()]);
+        (WrInspectionReportFieldNames.MetWith, [WrRule.After("Met with").Named(WrInspectionReportFieldNames.MetWith).Build()]);
 
     private static (string, List<LabelToMatch>) RuleInspectingOfficer() =>
-        (WrInspectionReportFieldNames.InspectingOfficer, [Rule.After("Inspecting Officer").Named(WrInspectionReportFieldNames.InspectingOfficer).Build()]);
+        (WrInspectionReportFieldNames.InspectingOfficer, [WrRule.After("Inspecting Officer").Named(WrInspectionReportFieldNames.InspectingOfficer).Build()]);
 
     private static (string, List<LabelToMatch>) RuleSiteAddress() =>
         (WrInspectionReportFieldNames.SiteAddress, [
-            Rule.Between("Site address (if different)", "Met with").Named(WrInspectionReportFieldNames.SiteAddress)
+            WrRule.Between("Site address (if different)", "Met with").Named(WrInspectionReportFieldNames.SiteAddress)
                 .NextLines(10)
                 .AlsoEndsAt("Email", "Inspecting Officer")
                 .AlsoStartsWith("Site address (if different from above)")
@@ -429,7 +254,7 @@ public class WrInspectionReportLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleInspectionClass() =>
         (WrInspectionReportFieldNames.InspectionClass, [
-            Rule.Between("Inspection Class", "Telephone No").Named(WrInspectionReportFieldNames.InspectionClass).NextLines(1)
+            WrRule.Between("Inspection Class", "Telephone No").Named(WrInspectionReportFieldNames.InspectionClass).NextLines(1)
                 .AlsoEndsAt(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "Email")
@@ -438,7 +263,7 @@ public class WrInspectionReportLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleTelephoneNumber() =>
         (WrInspectionReportFieldNames.TelephoneNumber, [
-            Rule.Between("Telephone No", "Email").Named(WrInspectionReportFieldNames.TelephoneNumber).NextLines(2)
+            WrRule.Between("Telephone No", "Email").Named(WrInspectionReportFieldNames.TelephoneNumber).NextLines(2)
                 .AlsoStartsWith(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
@@ -446,85 +271,85 @@ public class WrInspectionReportLabelConfiguration
         ]);
 
     private static (string, List<LabelToMatch>) RulePosition() =>
-        (WrInspectionReportFieldNames.Position, [Rule.Between("Position", "Inspection Date").Named(WrInspectionReportFieldNames.Position).NextLines(1).Build()]);
+        (WrInspectionReportFieldNames.Position, [WrRule.Between("Position", "Inspection Date").Named(WrInspectionReportFieldNames.Position).NextLines(1).Build()]);
 
     private static (string, List<LabelToMatch>) RuleTime() =>
         (WrInspectionReportFieldNames.Time, [
-            Rule.After("Time").Named(WrInspectionReportFieldNames.Time)
+            WrRule.After("Time").Named(WrInspectionReportFieldNames.Time)
                 .AlsoStartsWithLoose("Time:").Build()
         ]);
 
     private static (string, List<LabelToMatch>) RuleNameAndAddress() =>
         (WrInspectionReportFieldNames.NameAndAddress, [
-            Rule.Between("Name and address", "Site address").Named(WrInspectionReportFieldNames.NameAndAddress).NextLines(10)
+            WrRule.Between("Name and address", "Site address").Named(WrInspectionReportFieldNames.NameAndAddress).NextLines(10)
                 .AlsoEndsAt(
                     "Telephone No", "Email",
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
                 .Build(), // Existing template
-            Rule.After("Name / address").Named(WrInspectionReportFieldNames.NameAndAddress).Build(), // Water Company template
-            Rule.After("Name & address").Named(WrInspectionReportFieldNames.NameAndAddress).Build(), // Water Company template
-            Rule.After("Permit holder name and address").Named(WrInspectionReportFieldNames.NameAndAddress).NextLines(1)
+            WrRule.After("Name / address").Named(WrInspectionReportFieldNames.NameAndAddress).Build(), // Water Company template
+            WrRule.After("Name & address").Named(WrInspectionReportFieldNames.NameAndAddress).Build(), // Water Company template
+            WrRule.After("Permit holder name and address").Named(WrInspectionReportFieldNames.NameAndAddress).NextLines(1)
                 .Remove([new("Telephone No:")]).Build() // Permit holder template
         ]);
 
     // ---- Meter / measurement details ----
 
     private static (string, List<LabelToMatch>) RuleMeterName() =>
-        (WrInspectionReportFieldNames.MeterName, [Rule.Between("Meter Name", "Meter Make").Named(WrInspectionReportFieldNames.MeterName).NextLines(1).Build()]); // T6 template only
+        (WrInspectionReportFieldNames.MeterName, [WrRule.Between("Meter Name", "Meter Make").Named(WrInspectionReportFieldNames.MeterName).NextLines(1).Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleMeterMake() =>
         (WrInspectionReportFieldNames.MeterMake, [
-            Rule.Between("Meter make", "Reading:").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
+            WrRule.Between("Meter make", "Reading:").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no").Build(), // Existing template
-            Rule.Between("Meter Make", "Meter Serial Number").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
+            WrRule.Between("Meter Make", "Meter Serial Number").Named(WrInspectionReportFieldNames.MeterMake).NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Meter Serial No").Build() // T6 template
         ]);
 
     private static (string, List<LabelToMatch>) RuleSerialNumber() =>
         (WrInspectionReportFieldNames.SerialNumber, [
-            Rule.After("Serial number").Named(WrInspectionReportFieldNames.SerialNumber).RequireTextToClaimGroup().Build(), // Existing template
-            Rule.Between("Meter Serial Number", "Meter Asset Number").Named(WrInspectionReportFieldNames.SerialNumber)
+            WrRule.After("Serial number").Named(WrInspectionReportFieldNames.SerialNumber).RequireTextToClaimGroup().Build(), // Existing template
+            WrRule.Between("Meter Serial Number", "Meter Asset Number").Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(1).RequireTextToClaimGroup().Build(), // T6 template
-            Rule.Between("Serial number", "Units").Named(WrInspectionReportFieldNames.SerialNumber)
+            WrRule.Between("Serial number", "Units").Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(1).RequireTextToClaimGroup().Build() // Baseline two-column table
         ]);
 
     private static (string, List<LabelToMatch>) RuleMeterAssetNumber() =>
         (WrInspectionReportFieldNames.MeterAssetNumber, [
-            Rule.Between("Meter Asset Number", "Meter Reading").Named(WrInspectionReportFieldNames.MeterAssetNumber).NextLines(1).Build(), // T6 template
-            Rule.After("Asset no:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build(), // Existing template
-            Rule.After("Asset number:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build() // Existing template
+            WrRule.Between("Meter Asset Number", "Meter Reading").Named(WrInspectionReportFieldNames.MeterAssetNumber).NextLines(1).Build(), // T6 template
+            WrRule.After("Asset no:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build(), // Existing template
+            WrRule.After("Asset number:").Named(WrInspectionReportFieldNames.MeterAssetNumber).Build() // Existing template
         ]);
 
     // "Reading" is a literal string prefix of the unrelated sibling label "Readings taken:" -
     // requiring the colon disambiguates both that collision and "Reading, RG8 7BB" (a town name).
     private static (string, List<LabelToMatch>) RuleReading() =>
         (WrInspectionReportFieldNames.Reading, [
-            Rule.After("Reading:").Named(WrInspectionReportFieldNames.Reading).RequireTextToClaimGroup().Build(), // Existing template
-            Rule.Between("Meter Reading", "Flow Rate").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup().Build(), // T6 template
-            Rule.Between("Reading:", "Units").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup()
+            WrRule.After("Reading:").Named(WrInspectionReportFieldNames.Reading).RequireTextToClaimGroup().Build(), // Existing template
+            WrRule.Between("Meter Reading", "Flow Rate").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup().Build(), // T6 template
+            WrRule.Between("Reading:", "Units").Named(WrInspectionReportFieldNames.Reading).NextLines(1).RequireTextToClaimGroup()
                 .SkipNextLineWhenStartsWith("Other").Build() // Baseline two-column table
         ]);
 
     private static (string, List<LabelToMatch>) RuleFlowRate() =>
-        (WrInspectionReportFieldNames.FlowRate, [Rule.Between("Flow Rate", "Calibration").Named(WrInspectionReportFieldNames.FlowRate).NextLines(1).Build()]); // T6 template only
+        (WrInspectionReportFieldNames.FlowRate, [WrRule.Between("Flow Rate", "Calibration").Named(WrInspectionReportFieldNames.FlowRate).NextLines(1).Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleUnits() =>
         (WrInspectionReportFieldNames.Units, [
-            Rule.After("Units").Named(WrInspectionReportFieldNames.Units).Build(), // Existing template
-            Rule.Between("Units", "Flow Rate").Named(WrInspectionReportFieldNames.Units).NextLines(1).RequireTextToClaimGroup().Build() // T6 template
+            WrRule.After("Units").Named(WrInspectionReportFieldNames.Units).Build(), // Existing template
+            WrRule.Between("Units", "Flow Rate").Named(WrInspectionReportFieldNames.Units).NextLines(1).RequireTextToClaimGroup().Build() // T6 template
         ]);
 
     private static (string, List<LabelToMatch>) RuleOther() =>
-        (WrInspectionReportFieldNames.Other, [Rule.After("Other:").Named(WrInspectionReportFieldNames.Other).Build()]);
+        (WrInspectionReportFieldNames.Other, [WrRule.After("Other:").Named(WrInspectionReportFieldNames.Other).Build()]);
 
     private static (string, List<LabelToMatch>) RuleCertificatesOfRecords() =>
-        (WrInspectionReportFieldNames.CertificatesOfRecords, [Rule.After("Certificates or records available for").Named(WrInspectionReportFieldNames.CertificatesOfRecords).Build()]);
+        (WrInspectionReportFieldNames.CertificatesOfRecords, [WrRule.After("Certificates or records available for").Named(WrInspectionReportFieldNames.CertificatesOfRecords).Build()]);
 
     private static (string, List<LabelToMatch>) RuleDateOfCertification() =>
         (WrInspectionReportFieldNames.DateOfCertification, [
-            Rule.Between("Date of certificate or", "By whom").Named(WrInspectionReportFieldNames.DateOfCertification).NextLines(1)
+            WrRule.Between("Date of certificate or", "By whom").Named(WrInspectionReportFieldNames.DateOfCertification).NextLines(1)
                 .Remove([new("record:"), new("Conformance:")]).Build()
         ]);
 
@@ -532,72 +357,72 @@ public class WrInspectionReportLabelConfiguration
     // Meter verification:" as one label row, answers on the row below in the same columns.
     private static (string, List<LabelToMatch>) RuleCalibration() =>
         (WrInspectionReportFieldNames.Calibration, [
-            Rule.After("Calibration").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
+            WrRule.After("Calibration").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Conformance").Build(), // New template
-            Rule.Between("Calibration", "Conformance").Named(WrInspectionReportFieldNames.Calibration).WholeLine()
+            WrRule.Between("Calibration", "Conformance").Named(WrInspectionReportFieldNames.Calibration).WholeLine()
                 .RequireTextToClaimGroup().Possibilities(CheckboxMarkPossibilities).Build(), // Existing template
-            Rule.Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
+            WrRule.Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Conformance")
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms, "Certificate"])
                 .SkipNextLineWhenStartsWith("Maintenance").Build() // T6 / Grid template
         ]);
 
     private static (string, List<LabelToMatch>) RuleVerification() =>
-        (WrInspectionReportFieldNames.Verification, [Rule.Between("Verification", "Spot Check Result").Named(WrInspectionReportFieldNames.Verification).NextLines(1).Build()]); // T6 template only
+        (WrInspectionReportFieldNames.Verification, [WrRule.Between("Verification", "Spot Check Result").Named(WrInspectionReportFieldNames.Verification).NextLines(1).Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleSpotCheckResult() =>
         (WrInspectionReportFieldNames.SpotCheckResult, [
-            Rule.Between("Spot Check Result", "General comments").Named(WrInspectionReportFieldNames.SpotCheckResult).NextLines(1)
+            WrRule.Between("Spot Check Result", "General comments").Named(WrInspectionReportFieldNames.SpotCheckResult).NextLines(1)
                 .Remove([new("–")]).Build()
         ]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleConformance() =>
         (WrInspectionReportFieldNames.Conformance, [
-            Rule.After("Conformance").Named(WrInspectionReportFieldNames.Conformance).NextLines(1).RequireTextToClaimGroup()
+            WrRule.After("Conformance").Named(WrInspectionReportFieldNames.Conformance).NextLines(1).RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Flow verification").Build(), // New template
-            Rule.Between("Conformance", "Flow verification").Named(WrInspectionReportFieldNames.Conformance).WholeLine()
+            WrRule.Between("Conformance", "Flow verification").Named(WrInspectionReportFieldNames.Conformance).WholeLine()
                 .RequireTextToClaimGroup().Possibilities(CheckboxMarkPossibilities).Build(), // Existing template
-            Rule.Between("Conformance", "Flow verification").Named(WrInspectionReportFieldNames.Conformance).NextLines(1)
+            WrRule.Between("Conformance", "Flow verification").Named(WrInspectionReportFieldNames.Conformance).NextLines(1)
                 .RequireTextToClaimGroup().IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance").Build() // Grid template
         ]);
 
     private static (string, List<LabelToMatch>) RuleFlowVerification() =>
         (WrInspectionReportFieldNames.FlowVerification, [
-            Rule.After("Flow verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1).RequireTextToClaimGroup()
+            WrRule.After("Flow verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1).RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Meter verification").Build(), // New template
-            Rule.Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).WholeLine()
+            WrRule.Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).WholeLine()
                 .RequireTextToClaimGroup().Possibilities(CheckboxMarkPossibilities).Build(), // Existing template
-            Rule.Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1)
+            WrRule.Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1)
                 .RequireTextToClaimGroup().IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance").Build() // Grid template
         ]);
 
     private static (string, List<LabelToMatch>) RuleMeterVerification() =>
         (WrInspectionReportFieldNames.MeterVerification, [
-            Rule.After("Meter verification").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1).RequireTextToClaimGroup()
+            WrRule.After("Meter verification").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1).RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Maintenance").Build(), // New template
-            Rule.Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).WholeLine()
+            WrRule.Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).WholeLine()
                 .RequireTextToClaimGroup().Possibilities(CheckboxMarkPossibilities).Build(), // Existing template
-            Rule.Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1)
+            WrRule.Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1)
                 .RequireTextToClaimGroup().IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance").Build() // Grid template
         ]);
 
     private static (string, List<LabelToMatch>) RuleWhereKept() =>
-        (WrInspectionReportFieldNames.WhereKept, [Rule.After("Where kept").Named(WrInspectionReportFieldNames.WhereKept).Build()]);
+        (WrInspectionReportFieldNames.WhereKept, [WrRule.After("Where kept").Named(WrInspectionReportFieldNames.WhereKept).Build()]);
 
     private static (string, List<LabelToMatch>) RuleFormSentTo() =>
-        (WrInspectionReportFieldNames.FormSentTo, [Rule.Between("Form sent to", "Date").Named(WrInspectionReportFieldNames.FormSentTo).NextLines(1).Build()]);
+        (WrInspectionReportFieldNames.FormSentTo, [WrRule.Between("Form sent to", "Date").Named(WrInspectionReportFieldNames.FormSentTo).NextLines(1).Build()]);
 
     private static (string, List<LabelToMatch>) RuleDate() =>
-        (WrInspectionReportFieldNames.Date, [Rule.After("Date:").Named(WrInspectionReportFieldNames.Date).Build()]);
+        (WrInspectionReportFieldNames.Date, [WrRule.After("Date:").Named(WrInspectionReportFieldNames.Date).Build()]);
 
     private static (string, List<LabelToMatch>) RuleDocumentTemplateVersion() =>
-        (WrInspectionReportFieldNames.DocumentTemplateVersion, [Rule.After("Document Template Version:").Named(WrInspectionReportFieldNames.DocumentTemplateVersion).Build()]);
+        (WrInspectionReportFieldNames.DocumentTemplateVersion, [WrRule.After("Document Template Version:").Named(WrInspectionReportFieldNames.DocumentTemplateVersion).Build()]);
 
     private static (string, List<LabelToMatch>) RuleDocumentHeader() =>
-        (WrInspectionReportFieldNames.DocumentHeader, [Rule.After("Form WR - ").Named(WrInspectionReportFieldNames.DocumentHeader).Build()]);
+        (WrInspectionReportFieldNames.DocumentHeader, [WrRule.After("Form WR - ").Named(WrInspectionReportFieldNames.DocumentHeader).Build()]);
 
     // ---- Template-family markers (presence checks, not value extraction) ----
 
@@ -636,7 +461,7 @@ public class WrInspectionReportLabelConfiguration
     // real narrative content (confirmed via the ground-truth harness).
     private static (string, List<LabelToMatch>) RuleGeneralComments() =>
         (WrInspectionReportFieldNames.GeneralComments, [
-            Rule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
+            WrRule.Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
                 .Named(WrInspectionReportFieldNames.GeneralComments).WholeLine().NextLines(100)
                 .AlsoEndsAt("Customer charter") // fixed appeal-process boilerplate on longer-form documents - never genuine comments content
                 .AlsoStartsWith(
@@ -656,12 +481,12 @@ public class WrInspectionReportLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
-            Rule.Between("Inspection Date:", "Quantities").Named(WrInspectionReportFieldNames.InspectionDate).NextLines(2)
+            WrRule.Between("Inspection Date:", "Quantities").Named(WrInspectionReportFieldNames.InspectionDate).NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer").Build()
         ]);
 
     private static (string, List<LabelToMatch>) RuleEmail() =>
-        (WrInspectionReportFieldNames.Email, [Rule.Between("Email", "Position:").Named(WrInspectionReportFieldNames.Email).NextLines(1).Build()]);
+        (WrInspectionReportFieldNames.Email, [WrRule.Between("Email", "Position:").Named(WrInspectionReportFieldNames.Email).NextLines(1).Build()]);
 
     // A pure presence check, not a value extraction - used for the WrTemplateType marker
     // fields. Kept outside the Rule fluent surface deliberately: it's a genuinely different
@@ -717,16 +542,16 @@ public class WrInspectionReportLabelConfiguration
                 SubLabels =
                 [
                     (name == WrInspectionReportFieldNames.MaintenanceLine
-                        ? Rule.After("Maintenance:").Named($"{name}Maintenance").EndsAt("Frequency")
-                        : Rule.After("Readings taken:").Named($"{name}ReadingsTaken").EndsAt("Frequency")).Build(),
+                        ? WrRule.After("Maintenance:").Named($"{name}Maintenance").EndsAt("Frequency")
+                        : WrRule.After("Readings taken:").Named($"{name}ReadingsTaken").EndsAt("Frequency")).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
-                        ? Rule.Between("Maintenance:", "N:").Named($"{name}MaintenanceYes").WholeLine().Possibilities([new("✓"), new("X")])
-                        : Rule.Between("Readings taken:", "N:").Named($"{name}ReadingsTakenYes").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
+                        ? WrRule.Between("Maintenance:", "N:").Named($"{name}MaintenanceYes").WholeLine().Possibilities([new("✓"), new("X")])
+                        : WrRule.Between("Readings taken:", "N:").Named($"{name}ReadingsTakenYes").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
-                        ? Rule.Between("N:", "Frequency:").Named($"{name}MaintenanceNo").WholeLine().Possibilities([new("✓"), new("X")])
-                        : Rule.Between("N:", "Frequency:").Named($"{name}ReadingsTakenNo").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
-                    Rule.After("Frequency:").Named($"{name}Frequency").EndsAt("By whom").Build(),
-                    Rule.After("By whom:").Named($"{name}ByWhom").Build()
+                        ? WrRule.Between("N:", "Frequency:").Named($"{name}MaintenanceNo").WholeLine().Possibilities([new("✓"), new("X")])
+                        : WrRule.Between("N:", "Frequency:").Named($"{name}ReadingsTakenNo").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
+                    WrRule.After("Frequency:").Named($"{name}Frequency").EndsAt("By whom").Build(),
+                    WrRule.After("By whom:").Named($"{name}ByWhom").Build()
                 ]
             }
         ];

@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
+using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -29,7 +30,7 @@ public class WrInspectionReportTableMatcherTests
         WrInspectionReportFieldNames.OtherProvisions
     ];
 
-    private static OcrTableCell Cell(int row, int col, string content) => new()
+    private static DocumentTableCell Cell(int row, int col, string content) => new()
     {
         RowIndex = row,
         ColumnIndex = col,
@@ -67,7 +68,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(0, 1, ":selected:"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
@@ -92,7 +93,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(0, 1, "???")) // Short, but not a recognised glyph/word
             .ToList();
 
-        var table = new OcrTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
@@ -116,7 +117,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(0, 1, "Quantities: ✓"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
@@ -136,7 +137,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(4, 2, "N/A"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchGridFields(
             [table], Labels, GridFieldNames, "TestTableService");
@@ -164,7 +165,7 @@ public class WrInspectionReportTableMatcherTests
     [Fact]
     public void WhenFieldLabelIsNotFoundInAnyTable_ThenFieldIsAbsentFromResultsSoCallerFallsBack()
     {
-        var table = new OcrTable
+        var table = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 2,
@@ -184,7 +185,7 @@ public class WrInspectionReportTableMatcherTests
     [Fact]
     public void WhenMultipleTablesArePresent_ThenTheOneMatchingTheMostGridLabelsIsChosen()
     {
-        var headerTable = new OcrTable
+        var headerTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 2,
@@ -207,7 +208,7 @@ public class WrInspectionReportTableMatcherTests
     [Fact]
     public void WhenNoTableResemblesTheGridAtAll_ThenNoFieldsAreResolved()
     {
-        var unrelatedTable = new OcrTable
+        var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 1,
@@ -223,9 +224,9 @@ public class WrInspectionReportTableMatcherTests
     // Builds a table containing all 13 grid fields (merged label:value cells), matching the
     // real shape confirmed on 16/17 tested documents during prototyping - lets individual
     // tests override one field's value without repeating the whole grid each time.
-    private static OcrTable BuildFullGridTable(string specialConditionsValue)
+    private static DocumentTable BuildFullGridTable(string specialConditionsValue)
     {
-        return new OcrTable
+        return new DocumentTable
         {
             RowCount = 5,
             ColumnCount = 3,
@@ -266,7 +267,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(6, 0, "Serial number: R2116126"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 7, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 7, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
             [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
@@ -297,7 +298,7 @@ public class WrInspectionReportTableMatcherTests
         // FindBestGridTable's own majority-of-grid gate applies here too - a table with real
         // Telephone No/Time/Serial number cells but nothing resembling the LicenceProvisions grid
         // itself must not be trusted, same reasoning as MatchGridFields's own equivalent guard.
-        var unrelatedTable = new OcrTable
+        var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
             ColumnCount = 2,
@@ -319,7 +320,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(5, 0, "Meter Serial Number: 3K220000854902"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
             [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");
@@ -335,7 +336,7 @@ public class WrInspectionReportTableMatcherTests
             .Append(Cell(5, 1, "07794218297"))
             .ToList();
 
-        var table = new OcrTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+        var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
         var results = WrInspectionReportTableMatcher.MatchFreeTextFields(
             [table], Labels, GridFieldNames, FreeTextFieldNames, "TestTableService");

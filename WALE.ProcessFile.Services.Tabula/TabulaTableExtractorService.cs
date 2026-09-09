@@ -39,14 +39,16 @@ public class TabulaTableExtractorService : ITableExtractorService
 {
     public string Name => "TabulaSharp";
 
-    public Task<IReadOnlyList<OcrTable>> GetTablesAsync(
+    public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
         byte[] documentBytes,
         Guid fileId,
         int processRunId)
     {
-        using var document = UglyToad.PdfPig.PdfDocument.Open(documentBytes, new ParsingOptions { ClipPaths = true });
+        using var document = UglyToad.PdfPig.PdfDocument.Open(
+            documentBytes,
+            new ParsingOptions { ClipPaths = true });
 
-        var tables = new List<OcrTable>();
+        var tables = new List<DocumentTable>();
         var latticeAlgorithm = new SpreadsheetExtractionAlgorithm();
         var streamDetector = new SimpleNurminenDetectionAlgorithm();
         var streamAlgorithm = new BasicExtractionAlgorithm();
@@ -60,63 +62,58 @@ public class TabulaTableExtractorService : ITableExtractorService
             // lose the other's otherwise-good result for this page.
             try
             {
-                foreach (var table in latticeAlgorithm.Extract(page))
-                {
-                    tables.Add(ToOcrTable(table, pageNumber));
-                }
+                tables.AddRange(latticeAlgorithm
+                    .Extract(page)
+                    .Select(table => ToOcrTable(table, pageNumber)));
             }
             catch (Exception)
             {
                 // Falls through to Stream mode below for this page; the caller's own try/catch
                 // around the whole overlay covers the case where even that isn't enough.
+                
+                // TODO log
             }
 
             try
             {
                 foreach (var region in streamDetector.Detect(page))
                 {
-                    foreach (var table in streamAlgorithm.Extract(page.GetArea(region.BoundingBox)))
-                    {
-                        tables.Add(ToOcrTable(table, pageNumber));
-                    }
+                    tables.AddRange(streamAlgorithm
+                        .Extract(page.GetArea(region.BoundingBox))
+                        .Select(table => ToOcrTable(table, pageNumber)));
                 }
             }
             catch (Exception)
             {
                 // Lattice's results for this page (if any) are still returned.
+                
+                // TODO log
             }
         }
 
-        return Task.FromResult<IReadOnlyList<OcrTable>>(tables);
+        return Task.FromResult<IReadOnlyList<DocumentTable>>(tables);
     }
 
-    private static OcrTable ToOcrTable(Table table, int pageNumber)
+    private static DocumentTable ToOcrTable(Table table, int pageNumber)
     {
-        var cells = new List<OcrTableCell>();
+        var cells = new List<DocumentTableCell>();
 
-        // table.Rows is row-major (IReadOnlyList<IReadOnlyList<Cell>>) with no RowIndex/
-        // ColumnIndex on Cell itself - position in this nested structure IS the index, same
-        // rectangular-grid shape OcrTable/OcrTableCell already assumes.
         for (var rowIndex = 0; rowIndex < table.Rows.Count; rowIndex++)
         {
             var row = table.Rows[rowIndex];
 
-            for (var columnIndex = 0; columnIndex < row.Count; columnIndex++)
-            {
-                var cell = row[columnIndex];
-
-                cells.Add(new OcrTableCell
+            cells.AddRange(row.Select((cell, columnIndex) =>
+                new DocumentTableCell
                 {
                     RowIndex = rowIndex,
                     ColumnIndex = columnIndex,
                     Content = cell.GetText().Trim(),
                     Left = cell.Left,
                     Top = cell.Top
-                });
-            }
+                }));
         }
 
-        return new OcrTable
+        return new DocumentTable
         {
             PageNumber = pageNumber,
             RowCount = table.RowCount,

@@ -4,7 +4,10 @@ using Azure.AI.DocumentIntelligence;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OcrService;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.Models;
+using DocumentTable = WALE.ProcessFile.Core.Models.DocumentTable;
+using DocumentTableCell = WALE.ProcessFile.Core.Models.DocumentTableCell;
 
 namespace WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 
@@ -22,8 +25,9 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
     public string Name => "AzureAiServicesDocumentIntelligenceLayoutOcr";
 
     private readonly DocumentIntelligenceClient _client = CreateClient(endpoint, key);
-
-    public async Task<IReadOnlyList<OcrTable>> GetTablesAsync(
+    private const int SharedPageNumber = 1;
+    
+    public async Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
         byte[] documentBytes,
         Guid fileId,
         int processRunId)
@@ -34,7 +38,7 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
         // entry per file for this service.
         var request = new OcrServiceImageTextCacheRequest
         {
-            PageNumber = 1,
+            PageNumber = SharedPageNumber,
             ImageNumber = 0,
             FileId = fileId,
             OcrServiceName = Name,
@@ -63,7 +67,10 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
         var tables = documentResult.Value.Tables
             .Select(table =>
             {
-                var pageNumber = table.BoundingRegions.Count > 0 ? table.BoundingRegions[0].PageNumber : 1;
+                var pageNumber = table.BoundingRegions.Count > 0
+                    ? table.BoundingRegions[0].PageNumber
+                    : SharedPageNumber;
+                
                 return DeserialisableDocumentIntelligenceTable.FromDocumentTable(table, pageNumber);
             })
             .ToList();
@@ -74,14 +81,14 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
         return ToOcrTables(tables);
     }
 
-    private static IReadOnlyList<OcrTable> ToOcrTables(List<DeserialisableDocumentIntelligenceTable> tables)
+    private static IReadOnlyList<DocumentTable> ToOcrTables(List<DeserialisableDocumentIntelligenceTable> tables)
     {
-        return tables.Select(t => new OcrTable
+        return tables.Select(t => new DocumentTable
         {
             PageNumber = t.PageNumber,
             RowCount = t.RowCount,
             ColumnCount = t.ColumnCount,
-            Cells = (t.Cells ?? []).Select(c => new OcrTableCell
+            Cells = (t.Cells ?? []).Select(c => new DocumentTableCell
             {
                 RowIndex = c.RowIndex,
                 ColumnIndex = c.ColumnIndex,

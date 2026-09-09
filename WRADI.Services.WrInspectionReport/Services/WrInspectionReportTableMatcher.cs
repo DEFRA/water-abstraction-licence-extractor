@@ -13,7 +13,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 public static class WrInspectionReportTableMatcher
 {
     public static Dictionary<string, LabelGroupResult> MatchGridFields(
-        IReadOnlyList<OcrTable> tables,
+        IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         IReadOnlyList<string> gridFieldNames,
         string serviceName)
@@ -82,7 +82,7 @@ public static class WrInspectionReportTableMatcher
     // Tries every alternate's own TextStart (not just the first), since these fields commonly
     // have several real-world label wordings across templates.
     public static Dictionary<string, LabelGroupResult> MatchFreeTextFields(
-        IReadOnlyList<OcrTable> tables,
+        IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         IReadOnlyList<string> gridFieldNames,
         IReadOnlyList<string> freeTextFieldNames,
@@ -98,7 +98,8 @@ public static class WrInspectionReportTableMatcher
 
         foreach (var fieldName in freeTextFieldNames)
         {
-            var labels = labelLookups.FirstOrDefault(l => l.LabelGroupName == fieldName).Labels;
+            var labels = labelLookups
+                .FirstOrDefault(l => l.LabelGroupName == fieldName).Labels;
 
             if (labels == null)
             {
@@ -145,7 +146,7 @@ public static class WrInspectionReportTableMatcher
     // Same shape as FindFieldValueInTable, but for free text: no LooksLikeATickAnswer length
     // gate and no selection-mark normalisation - a phone number, time, or serial number IS the
     // value wanted, whatever its length, not something to be screened for "looks tick-shaped".
-    private static string? FindFreeTextValueInTable(OcrTable table, IReadOnlyList<TextToMatch> textStarts)
+    private static string? FindFreeTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textStarts)
     {
         foreach (var cell in table.Cells)
         {
@@ -181,12 +182,12 @@ public static class WrInspectionReportTableMatcher
     // The table whose cells collectively match the most grid field labels. A document can have
     // several tables (header block, meter block, etc.); this picks out the LicenceProvisions
     // grid specifically rather than assuming table order.
-    private static OcrTable? FindBestGridTable(
-        IReadOnlyList<OcrTable> tables,
+    private static DocumentTable? FindBestGridTable(
+        IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         IReadOnlyList<string> gridFieldNames)
     {
-        OcrTable? bestTable = null;
+        DocumentTable? bestTable = null;
         var bestCount = 0;
 
         foreach (var table in tables)
@@ -213,10 +214,11 @@ public static class WrInspectionReportTableMatcher
         return bestCount >= gridFieldNames.Count / 2 ? bestTable : null;
     }
 
-    private static bool CellStartsWithAnyLabel(OcrTableCell cell, IReadOnlyList<TextToMatch> textStarts)
+    private static bool CellStartsWithAnyLabel(DocumentTableCell cell, IReadOnlyList<TextToMatch> textStarts)
     {
         return cell.Content != null
-            && textStarts.Any(textStart => cell.Content.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
+            && textStarts.Any(textStart => cell.Content
+                .StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
     }
 
     // A real tick/status answer ("✓", "N/A", "NI", "☑ ☐", etc. - see GetInOrderField's
@@ -231,7 +233,7 @@ public static class WrInspectionReportTableMatcher
     // majority - strip the label prefix, remainder is the answer), and (b) label and value split
     // into adjacent cells (label cell's own remainder is empty, answer is the next cell in the
     // same row).
-    private static string? FindFieldValueInTable(OcrTable table, IReadOnlyList<TextToMatch> textStarts)
+    private static string? FindFieldValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textStarts)
     {
         foreach (var cell in table.Cells)
         {
@@ -264,7 +266,9 @@ public static class WrInspectionReportTableMatcher
                 // answer, which WrInspectionReportSchemaConverter.GetInOrderStatus has no way to
                 // represent anyway. Don't fabricate a status by matching a stray "in"/"n"/"✓"
                 // substring inside real prose - fall back to the heuristic instead.
-                return LooksLikeATickAnswer(rawRemainder) ? NormaliseSelectionMarks(rawRemainder) : null;
+                return LooksLikeATickAnswer(rawRemainder)
+                    ? NormaliseSelectionMarks(rawRemainder)
+                    : null;
             }
 
             var nextCell = table.Cells.FirstOrDefault(c =>

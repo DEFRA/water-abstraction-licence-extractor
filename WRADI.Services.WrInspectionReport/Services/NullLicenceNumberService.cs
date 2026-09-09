@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.Nald;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 

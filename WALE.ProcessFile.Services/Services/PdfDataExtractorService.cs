@@ -277,9 +277,29 @@ public class PdfDataExtractorService(
         returnResult.Pages = pdfDocument.Pages;
         
         var isOcr = false;
+
+        List<DocumentTable>? documentTables = null;
+        var needsToParseTables = configuration
+            .Labels
+            .SelectMany(label => label.Labels)
+            .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
+                or LayoutExtractor.LetterBasedAndTableBased);
+        
+        var needsToParseText = configuration
+            .Labels
+            .SelectMany(label => label.Labels)
+            .Any(label => label.LayoutExtractor is LayoutExtractor.Default
+                or LayoutExtractor.LetterBased
+                or LayoutExtractor.LetterBasedAndTableBased);
+
+        if (needsToParseTables)
+        {
+            documentTables = new List<DocumentTable>(); // TODO
+        }
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
-            pdfDocument.DocumentLines,
+            needsToParseText ? pdfDocument.DocumentLines : null,
+            documentTables,
             configuration.Labels,
             isOcr,
             noOcrDataExtractorService.Name,
@@ -312,6 +332,12 @@ public class PdfDataExtractorService(
 
         labelGroupMatches = newLabelGroupMatches;
         dtStart = DateTime.Now;
+
+        if (!needsToParseText)
+        {
+            returnResult.Matches = labelGroupMatches;
+            return returnResult;
+        }
         
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
@@ -538,6 +564,7 @@ public class PdfDataExtractorService(
                     
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
+                        documentTables,
                         unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
@@ -1053,7 +1080,8 @@ public class PdfDataExtractorService(
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
-        List<DocumentLine> documentLines,
+        List<DocumentLine>? documentLines,
+        List<DocumentTable>? documentTables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
@@ -1065,7 +1093,10 @@ public class PdfDataExtractorService(
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
-        if (documentLines.Count == 0)
+        var linesEmpty = documentLines == null || documentLines.Count == 0;
+        var tablesEmpty = documentTables == null || documentTables.Count == 0;
+        
+        if (linesEmpty && tablesEmpty)
         {
             return labelGroupMatches;
         }
@@ -1372,8 +1403,13 @@ public class PdfDataExtractorService(
         return subResultsToKeep;
     }
 
-    private static List<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLine>? StandardiseLines(IReadOnlyList<DocumentLine>? lines)
     {
+        if (lines == null)
+        {
+            return null;
+        }
+        
         var newLines = lines.ToList();
 
         foreach (var line in newLines)

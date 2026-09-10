@@ -59,9 +59,14 @@ public static class WrInspectionReportExtractionOrchestrator
             // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
+        configuration = configuration.Clone();
+        configuration.LineHeight = 6;
+        configuration.MinimumRowsForDigital = 30;
+        configuration.UseAnchoredLineGrouping = true;
+        
         var classificationConfiguration = configuration.Clone();
         classificationConfiguration.Labels = WrInspectionClassificationLabelConfiguration.GetLabels();
-        classificationConfiguration.UseLockExclusivity = false;
+        //classificationConfiguration.UseLockExclusivity = false;
 
         var (classificationStopExecution, _, classificationResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
@@ -83,37 +88,35 @@ public static class WrInspectionReportExtractionOrchestrator
             classificationResult,
             documentHeader);
 
-        var realLabels = template == WrTemplateType.T1
+        configuration = configuration.Clone();
+        configuration.Labels = template == WrTemplateType.T1
             ? WrInspectionT1LabelConfiguration.GetLabels()
-            : WrInspectionReportLabelConfiguration.GetLabels();
+            : WrInspectionReportLabelConfiguration.GetLabels();;
 
-        var realConfiguration = configuration.Clone();
-        realConfiguration.Labels = realLabels;
-
-        var (stopExecution, alreadySaved, item) = await pdfDataExtractor.GetMatchesAsync(
+        var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
             dmsDataForFile,
-            realConfiguration,
+            configuration,
             previouslyParsedFiles,
             processRunId);
 
+        if (scrapeResult == null || stopExecution)
+        {
+            return (stopExecution, alreadySaved, scrapeResult, template);
+        }
+        
         // Gating on T1 here (rather than relying solely on WrInspectionReportTableMatcher's own
         // content-based guards) avoids spending a real Document Intelligence call/cost on
-        // templates with no tick/cross grid for this mechanism to find at all. Pure efficiency
-        // gate, not a correctness one - the matcher's own guards (majority-of-grid table
-        // selection, LooksLikeATickAnswer's narrative-length check) already make running this
-        // safe on any template.
-        if (!stopExecution
-            && item?.Matches != null
-            && template == WrTemplateType.T1
+        // templates with no tick/cross grid for this mechanism to find
+        if (template == WrTemplateType.T1
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {
             try
             {
                 await ApplyTableBasedGridMatchesAsync(
-                    item,
-                    realLabels,
+                    scrapeResult,
+                    configuration.Labels,
                     tableExtractorService,
                     pdfBytesForTableExtraction,
                     dmsDataForFile.FileId,
@@ -121,32 +124,19 @@ public static class WrInspectionReportExtractionOrchestrator
                     fallbackTableExtractorService,
                     minimumFieldsToSkipFallback);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Final safety net, on top of TryGetTableMatchesAsync's own per-attempt catch -
-                // this overlay is opt-in and best-effort by design, the heuristic result above is
-                // already a complete, real extraction. Nothing here (a bug in the merge logic
-                // itself, say) must ever discard that already-good result; it should just mean
-                // this document gets the heuristic answer for the grid fields, same as any
-                // document where the table lookup legitimately finds nothing.
+                Console.WriteLine($"ERROR - {nameof(ApplyTableBasedGridMatchesAsync)} - {ex.Message}");
                 
-                // TODO log somewhere
+                // Never discard an already-good result, so carry on
             }
         }
 
-        // Persist this pass's own classification alongside whatever the caller saves item as -
-        // GetT1Labels() deliberately drops the TemplateMarker* labels ClassifyTemplate needs once
-        // a document is already confirmed T1, so re-deriving Template later from the saved
-        // matches alone (e.g. re-rendering the form for display) would silently misclassify every
-        // T1 document as NonStandardNarrative. See WrInspectionReportSchemaConverter.ToForm's
-        // knownTemplate parameter, which this key round-trips into.
-        if (item != null)
-        {
-            item.AdditionalInformation ??= [];
-            item.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey] = template.ToString();
-        }
+        scrapeResult.AdditionalInformation ??= [];
+        scrapeResult.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey]
+            = template.ToString();
 
-        return (stopExecution, alreadySaved, item, template);
+        return (stopExecution, alreadySaved, scrapeResult, template);
     }
 
     // Internal (not private): lets WRADI.Services.WrInspectionReport.Tests exercise the merge
@@ -163,8 +153,13 @@ public static class WrInspectionReportExtractionOrchestrator
         ITableExtractorService? fallbackTableExtractorService = null,
         int minimumFieldsToSkipFallback = 10)
     {
-        var (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
-            tableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+        var (tableMatches, tables, usedServiceName) =
+            await TryGetTableMatchesAsync(
+                tableExtractorService,
+                labelLookups,
+                pdfBytes,
+                fileId,
+                processRunId);
 
         // Only reached - and only billed, for a paid fallback - when the primary extractor
         // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
@@ -176,7 +171,11 @@ public static class WrInspectionReportExtractionOrchestrator
             && fallbackTableExtractorService != null)
         {
             (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
-                fallbackTableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+                fallbackTableExtractorService,
+                labelLookups,
+                pdfBytes,
+                fileId,
+                processRunId);
         }
 
         // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
@@ -219,17 +218,23 @@ public static class WrInspectionReportExtractionOrchestrator
     // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
     // tables afterward, without a second (and for a paid fallback, separately billed)
     // GetTablesAsync call.
-    private static async Task<(Dictionary<string, LabelGroupResult> Matches, IReadOnlyList<DocumentTable>? Tables, string? ServiceName)> 
-        TryGetTableMatchesAsync(
-            ITableExtractorService tableExtractorService,
-            List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-            byte[] pdfBytes,
-            Guid fileId,
-            int processRunId)
+    private static async Task<(
+        Dictionary<string, LabelGroupResult> Matches,
+        IReadOnlyList<DocumentTable>? Tables,
+        string? ServiceName)>
+            TryGetTableMatchesAsync(
+                ITableExtractorService tableExtractorService,
+                List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+                byte[] pdfBytes,
+                Guid fileId,
+                int processRunId)
     {
         try
         {
-            var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
+            var tables = await tableExtractorService.GetTablesAsync(
+                pdfBytes,
+                fileId,
+                processRunId);
 
             var matches = WrInspectionReportTableMatcher.MatchGridFields(
                 tables,
@@ -239,9 +244,9 @@ public static class WrInspectionReportExtractionOrchestrator
 
             return (matches, tables, tableExtractorService.Name);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // TODO log
+            Console.WriteLine($"ERROR - {nameof(TryGetTableMatchesAsync)} - {ex.Message}");
             return ([], null, null);
         }
     }

@@ -73,10 +73,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             new NullLicenceNumberService(),
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
-            DateTime.Now,
-            lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            DateTime.Now);
     }
 
     private static IPdfDataExtractorService BuildPdfDataExtractor()

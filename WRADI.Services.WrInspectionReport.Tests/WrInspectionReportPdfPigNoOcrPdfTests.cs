@@ -14,8 +14,8 @@ using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
-using WRADI.DocumentType.WrInspectionReport.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Services;
 using Xunit.Abstractions;
 
@@ -41,10 +41,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             new NullLicenceNumberService(),
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
-            DateTime.Now,
-            lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            DateTime.Now);
     }
 
     private static IPdfDataExtractorService BuildPdfDataExtractor()

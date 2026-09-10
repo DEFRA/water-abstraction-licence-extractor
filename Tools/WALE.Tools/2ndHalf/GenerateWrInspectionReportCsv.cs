@@ -18,7 +18,7 @@ using WALE.ProcessFile.Services.Services;
 using WALE.Tools.Config;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
-using WRADI.DocumentType.WrInspectionReport.Csv;
+using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WALE.Tools._2ndHalf;

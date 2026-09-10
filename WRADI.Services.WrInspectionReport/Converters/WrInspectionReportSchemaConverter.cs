@@ -9,23 +9,22 @@ namespace WRADI.DocumentType.WrInspectionReport.Converters;
 
 public static class WrInspectionReportSchemaConverter
 {
-    // MatchesResult.AdditionalInformation key a caller can use to persist ExtractAsync's own
-    // Template result alongside the saved matches, so a LATER re-run of ToForm (e.g. re-rendering
-    // the form for display, with no fresh classification pass available) can pass it back in as
-    // knownTemplate instead of re-deriving from matchesResult - which for a T1 document will
-    // silently misclassify as NonStandardNarrative, since GetT1Labels() drops the very
-    // TemplateMarkerBaselineComments/TemplateMarkerAlternateComments labels ClassifyTemplate
-    // needs (confirmed empirically 2026-09-09 on WrInspectionReportPage's template filter - see
-    // knownTemplate's own comment below for why GetT1Labels() drops them in the first place).
     public const string AdditionalInformationTemplateKey = "WrInspectionReportTemplate";
 
-    // knownTemplate: pass this when the caller already classified the document (e.g.
-    // WrInspectionReportExtractionOrchestrator's own pre-pass) - lets ClassifyTemplate's
-    // TemplateMarker* fields be left out of whichever ruleset actually ran without losing
-    // Metadata.Template, so GetT1Labels() can genuinely drop the T4/T6/T7/NonStandardNarrative-
-    // only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
-    // back to the old self-contained behaviour - re-deriving Template from matchesResult itself
-    // - for any caller that runs a single pass with no separate classification step.
+    // knownTemplate: 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="matchesResult"></param>
+    /// <param name="dmsFileData"></param>
+    /// <param name="knownTemplate">Pass this when the caller already classified the document (e.g.
+    /// WrInspectionReportExtractionOrchestrator's own pre-pass) - lets ClassifyTemplate's
+    /// TemplateMarker* fields be left out of whichever ruleset actually ran without losing
+    /// Metadata.Template, so GetT1Labels() can genuinely drop the T4/T6/T7/NonStandardNarrative-
+    /// only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
+    /// back to the old self-contained behaviour - re-deriving Template from matchesResult itself
+    /// - for any caller that runs a single pass with no separate classification step.</param>
+    /// <returns></returns>
     public static Models.WrInspectionReport ToForm(
         MatchesResult matchesResult,
         DmsFileData? dmsFileData,

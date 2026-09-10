@@ -324,7 +324,7 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= configuration.MinimumRowsForDigital;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -1074,7 +1074,9 @@ public class PdfDataExtractorService(
         var wrappedLines = DocumentLineWrapped.WrapLines(lines, false);
         var joinedLines = string.Join(',', lines.Select(line => line.Text));
         var documentLineService = new DocumentLineService(lines);
-        
+
+        var labelPositionIndex = BuildLabelPositionIndex(wrappedLines, labelLookups);
+
         foreach (var (labelGroupName, labels) in labelLookups)
         {
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
@@ -1085,12 +1087,12 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
-                
+
                 if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
                 {
                     continue;
                 }
-                
+
                 var labelGroupMatch =
                     await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
                         wrappedLines,
@@ -1105,18 +1107,19 @@ public class PdfDataExtractorService(
                         lookupConfiguration,
                         this,
                         documentLineService,
-                        additionalInformationStore);
-                
-                if (labelGroupMatch.Count == 0)
+                        additionalInformationStore,
+                        labelPositionIndex);
+
+                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToClaimGroup))
                 {
                     continue;
                 }
 
                 foreach (var labelGroup in labelGroupMatch)
                 {
-                    labelGroup.LabelGroupName = labelGroupName;    
+                    labelGroup.LabelGroupName = labelGroupName;
                 }
-                
+
                 labelGroupMatches.AddRange(labelGroupMatch);
                 break;
             }
@@ -1125,11 +1128,94 @@ public class PdfDataExtractorService(
         return labelGroupMatches;
     }
 
+    /// <summary>
+    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - each label group's own (X, Y)
+    /// position at its first occurrence in the document. First occurrence wins: grid fields
+    /// render at a consistent X down a section, so it's a reasonable proxy without a more
+    /// expensive median calculation. Y is recorded so callers can restrict to the same section
+    /// (see FindSectionEndTop) rather than any coincidentally similar X.
+    /// </summary>
+    private static Dictionary<string, (double Left, double Top)> BuildLabelPositionIndex(
+        IReadOnlyList<DocumentLineWrapped> lines,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups)
+    {
+        var index = new Dictionary<string, (double Left, double Top)>();
+
+        foreach (var wrappedLine in lines)
+        {
+            var line = wrappedLine.Line;
+
+            if (line == null)
+            {
+                continue;
+            }
+
+            foreach (var column in line.Columns)
+            {
+                var firstWord = column.Words.FirstOrDefault();
+
+                if (firstWord == null || string.IsNullOrEmpty(column.Text))
+                {
+                    continue;
+                }
+
+                foreach (var (labelGroupName, labelAlternates) in labelLookups)
+                {
+                    if (index.ContainsKey(labelGroupName))
+                    {
+                        continue;
+                    }
+
+                    var matchesThisGroup = labelAlternates
+                        .SelectMany(label => label.TextStart ?? [])
+                        .Any(textStart =>
+                            !string.IsNullOrWhiteSpace(textStart.Text)
+                            && column.Text.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchesThisGroup)
+                    {
+                        index[labelGroupName] = (firstWord.Coordinates.Left, line.Top);
+                    }
+                }
+            }
+        }
+
+        return index;
+    }
+
     private static bool AlreadyMatchedLabelGroup(
         IEnumerable<LabelGroupResult> returnList,
         string type)
     {
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
+    }
+
+    /// <summary>
+    /// Decides whether an alternate's match result is good enough to claim its label group
+    /// and stop trying further alternates. An empty result never claims. A non-empty result
+    /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
+    /// Text is blank - that combination exists so a label group with multiple alternates
+    /// (one per template phrasing) doesn't get permanently claimed by an alternate that
+    /// matched the label text but captured no real value, which would stop later,
+    /// possibly-correct alternates from ever being tried. RequireTextToClaimGroup is opt-in
+    /// so every existing rule that doesn't set it keeps its exact current behaviour.
+    /// </summary>
+    internal static bool ShouldClaimLabelGroup(
+        IReadOnlyList<LabelGroupResult> labelGroupMatch,
+        bool requireTextToClaimGroup)
+    {
+        if (labelGroupMatch.Count == 0)
+        {
+            return false;
+        }
+
+        if (!requireTextToClaimGroup)
+        {
+            return true;
+        }
+
+        return labelGroupMatch.Any(lgm =>
+            lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(

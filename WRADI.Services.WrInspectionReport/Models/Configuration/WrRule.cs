@@ -204,9 +204,9 @@ public sealed class WrRule
         Name = _name,
         Remove = _remove,
         Possibilities = _possibilities,
-        RequireTextToClaimGroup = _requireTextToClaimGroup,
+        RequireTextToBePresent = _requireTextToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
-        ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-        BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions
+        LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
+        LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions
     };
 }

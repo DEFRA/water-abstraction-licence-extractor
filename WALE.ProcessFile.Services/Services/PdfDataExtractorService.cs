@@ -1110,7 +1110,7 @@ public class PdfDataExtractorService(
                         additionalInformationStore,
                         labelPositionIndex);
 
-                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToClaimGroup))
+                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToBePresent))
                 {
                     continue;
                 }

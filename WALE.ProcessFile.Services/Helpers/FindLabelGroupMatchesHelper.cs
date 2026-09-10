@@ -276,7 +276,7 @@ public static class FindLabelGroupMatchesHelper
                         // be found, rather than falling back to an unbounded document-wide search.
                         double? nextFieldBoundaryX = null;
 
-                        if (label.BoundSameLineWalkByOtherLabelPositions
+                        if (label.LimitToBoundSameLineWalkByOtherLabelPositions
                             && labelPositionIndex != null
                             && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
                         {
@@ -326,7 +326,7 @@ public static class FindLabelGroupMatchesHelper
 
                         foreach (var nextLine in nextLines)
                         {
-                            if (ShouldExcludeNextLine(nextLine, label.ExcludeNextLineIfFirstColumnStartsWith))
+                            if (ShouldExcludeNextLine(nextLine, label.LimitToExcludeNextLineIfFirstColumnStartsWith))
                             {
                                 continue;
                             }

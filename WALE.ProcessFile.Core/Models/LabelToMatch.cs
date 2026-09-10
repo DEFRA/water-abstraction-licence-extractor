@@ -113,33 +113,23 @@ public class LabelToMatch
 
     public int LimitToColumnIndex { get; set; }
 
-    // When a label group has multiple alternates (e.g. one per template phrasing) and this
-    // alternate returns no non-empty text, allow the engine to try the next alternate instead
-    // of locking the group as matched. Defaults to false to preserve existing behaviour for
-    // every rule that doesn't opt in.
-    public bool RequireTextToClaimGroup { get; init; }
-
-    // LimitTo.SameColumn/SpecifiedColumn only: a next-line candidate is rejected outright
+    public bool LimitToBoundSameLineWalkByOtherLabelPositions { get; init; }
+    
+    // A next-line candidate is rejected outright
     // (not narrowed to a column at all) when its own first/leftmost column starts with one of
     // these texts - i.e. that whole row visibly belongs to a different, identifiable field
     // (its own leading label), not a genuine continuation of this one. Distinct from
     // IgnoreBlockIfContains, which rejects based on the already-narrowed picked column's own
     // content and so can't tell "this field's genuine compound answer happens to contain the
     // rejected text" apart from "this is really a different field's row" - checking the row's
-    // own leading label first avoids that ambiguity. Defaults to null/empty, so it's a no-op
-    // for every label that doesn't opt in.
-    public IReadOnlyList<string>? ExcludeNextLineIfFirstColumnStartsWith { get; init; }
+    // own leading label first avoids that ambiguity
+    public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
+    
+    // When a label group has multiple sibling labels and a match returns empty text, allow
+    // the engine to try the next alternate instead of settings the group as matched. 
+    public bool RequireTextToBePresent { get; init; }
 
-    // POSITION-based same-row bound: bounds WalkSameLineColumns' same-line walk by the
-    // X-position of the nearest OTHER known field's own column, built once per document from
-    // where every field's label is actually found (see PdfDataExtractorService.
-    // BuildLabelPositionIndex). Root cause and design: see the wr51_column_walk_bug analysis -
-    // a same-line walk with no positional awareness can wander into a sibling field's own
-    // column purely because nothing bounded how far to look, including a sibling field's own
-    // ANSWER value, not just its label, bleeding in via a row-grouping merge. Opt-in (defaults
-    // to false/no-op) because it depends on the caller actually supplying that per-document
-    // position index; a label that doesn't set this behaves exactly as before.
-    public bool BoundSameLineWalkByOtherLabelPositions { get; init; }
+    public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
 
     public LabelToMatch Clone()
     {
@@ -186,9 +176,10 @@ public class LabelToMatch
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
-            RequireTextToClaimGroup = RequireTextToClaimGroup,
-            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList(),
-            BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions
+            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
+            LimitToBoundSameLineWalkByOtherLabelPositions = LimitToBoundSameLineWalkByOtherLabelPositions,            
+            RequireTextToBePresent = RequireTextToBePresent,
+            LayoutExtractor = LayoutExtractor
         };
     }    
 }

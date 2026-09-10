@@ -109,7 +109,7 @@ public class WrInspectionReportLabelConfigurationTests
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
             .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true);
 
-        Assert.Contains("Other", readingBaselineTwoColumnAlternate.ExcludeNextLineIfFirstColumnStartsWith ?? []);
+        Assert.Contains("Other", readingBaselineTwoColumnAlternate.LimitToExcludeNextLineIfFirstColumnStartsWith ?? []);
     }
 
     [Fact]

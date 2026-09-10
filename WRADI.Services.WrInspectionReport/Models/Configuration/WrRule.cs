@@ -27,6 +27,7 @@ public sealed class WrRule
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private bool _boundSameLineWalkByOtherLabelPositions;
+    private bool _allowValueToWrapPastSameLineEndTag;
 
     public static WrRule Between(string startText, string endText)
     {
@@ -104,6 +105,15 @@ public sealed class WrRule
     public WrRule BoundByOtherLabels()
     {
         _boundSameLineWalkByOtherLabelPositions = true;
+        return this;
+    }
+
+    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag for the full explanation - opt-in
+    // only, use for a field whose real value is confirmed to wrap onto a further physical line
+    // with no reusable position/content signal distinguishing it from an unrelated field's row.
+    public WrRule AllowValueToWrapPastSameLineEndTag()
+    {
+        _allowValueToWrapPastSameLineEndTag = true;
         return this;
     }
 
@@ -207,6 +217,7 @@ public sealed class WrRule
         RequireTextToClaimGroup = _requireTextToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-        BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions
+        BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
+        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag
     };
 }

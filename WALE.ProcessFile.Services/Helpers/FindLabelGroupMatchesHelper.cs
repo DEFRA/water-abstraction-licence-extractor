@@ -602,7 +602,33 @@ public static class FindLabelGroupMatchesHelper
                     continue;
                 }
 
-                newColumns.Add(column);
+                // A loose (not column-start) match - e.g. LabelToMatch.AlsoStartsWithLoose, for a
+                // label sitting mid-column instead of at a real column boundary (confirmed on
+                // wr51__SO0420031002__..., "Meter make: <value> Serial number: N/A" as one
+                // undifferentiated column) - lands matchedText somewhere other than the start of
+                // column.Text. Without trimming, the whole column (including whatever precedes
+                // matchedText) would wrongly become the captured value. No-op when the column
+                // already starts with matchedText (every existing ColumnMustStartWith-only rule),
+                // so this can only fix a previously-broken case, never change a working one.
+                var columnToAdd = column;
+
+                if (!column.Text.StartsWith(matchedText))
+                {
+                    var indexOfMatch = column.Text.IndexOf(matchedText, StringComparison.Ordinal);
+
+                    if (indexOfMatch > 0)
+                    {
+                        var textFromMatch = column.Text[indexOfMatch..];
+                        var trimmedWords = DocumentLineColumn.FilterWordsFromText(column.Words, textFromMatch);
+
+                        if (trimmedWords.Count > 0)
+                        {
+                            columnToAdd = new DocumentLineColumn(trimmedWords);
+                        }
+                    }
+                }
+
+                newColumns.Add(columnToAdd);
                 continue;
             }
 

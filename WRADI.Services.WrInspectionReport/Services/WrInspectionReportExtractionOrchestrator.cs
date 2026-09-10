@@ -265,6 +265,14 @@ public static class WrInspectionReportExtractionOrchestrator
     // column-walk engine's own known leak bugs (see wr51_column_walk_bug memory). Resolved via
     // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
     // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
+    // Tried and reverted (2026-09-09): adding MeterMake/Reading/Units alongside Time/
+    // SerialNumber/TelephoneNumber. Measured against the golden-set harness with both table
+    // backends - Tabula: MeterMake/Reading unchanged, Units regressed (55%->52%); Azure DI: all
+    // three showed zero change at all. Not a wrong-table-extractor problem -
+    // FindFreeTextValueInTable's cell-matching (TextStart-prefix against cell.Content) isn't
+    // finding these fields' cells in either backend's output the way it does for SerialNumber. A
+    // real fix needs to understand why (e.g. inspect the actual cell contents returned for one of
+    // these documents), not just add more field names here - see wr51_metermake_wrap_gap memory.
     private static readonly string[] FreeTextFieldNames =
     [
         WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,

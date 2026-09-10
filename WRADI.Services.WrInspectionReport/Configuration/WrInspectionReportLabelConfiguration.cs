@@ -310,15 +310,34 @@ public static class WrInspectionReportLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleMeterMake() =>
         (WrInspectionReportFieldNames.MeterMake, [
+            // AllowValueToWrapPastSameLineEndTag: "Serial number" can sit on the same line as
+            // "Meter make:" (a real same-row layout), which would otherwise stop the scan before
+            // a genuine wrapped continuation line (confirmed on wr51__SO0420031002__..., "No
+            // meter - means of measurement" / "under Fish Farm RPS"). This label's own "Reading:"
+            // end-tag still stops the scan at the real boundary further down - see the
+            // wr51_metermake_wrap_gap memory for why this is opt-in.
             WrRule.Between("Meter make", "Reading:").Named(WrInspectionReportFieldNames.MeterMake).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
-                .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no").Build(), // Existing template
+                .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no")
+                // Same stop-markers as Reading/Units (see their comments) - without them, a
+                // document where "Reading:" never reappears lets the wider scan bleed into the
+                // next form section (measured: new Hallucination on wr51__so0400006029__...).
+                // "Certificates or records", not the longer "...available for" - a T4 document
+                // phrases it "Certificates or records: see notes", which the longer marker missed.
+                .AlsoEndsAt("Other:-", "Certificates or records", "Date of certificate", "Meter verification")
+                .AllowValueToWrapPastSameLineEndTag().Build(), // Existing template
             WrRule.Between("Meter Make", "Meter Serial Number").Named(WrInspectionReportFieldNames.MeterMake).NextLines(MeterTableNextLines).RequireTextToClaimGroup()
                 .AlsoEndsAt("Meter Serial No").Build() // T6 template
         ]);
 
     private static (string, List<LabelToMatch>) RuleSerialNumber() =>
         (WrInspectionReportFieldNames.SerialNumber, [
-            WrRule.After("Serial number").Named(WrInspectionReportFieldNames.SerialNumber).RequireTextToClaimGroup().Build(), // Existing template
+            // AlsoStartsWithLoose: "Meter make: <value> Serial number: N/A" is one
+            // undifferentiated column on wr51__SO0420031002__..., so the column-start-only start
+            // text never matches - same shape as Time sharing a row with Inspection Date. Paired
+            // with a WalkSameLineColumns trim fix (FindLabelGroupMatchesHelper.cs) - without it
+            // this alone would have captured "Meter make: ..." instead of "N/A".
+            WrRule.After("Serial number").Named(WrInspectionReportFieldNames.SerialNumber).RequireTextToClaimGroup()
+                .AlsoStartsWithLoose("Serial number").Build(), // Existing template
             WrRule.Between("Meter Serial Number", "Meter Asset Number").Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines).RequireTextToClaimGroup().Build(), // T6 template
             WrRule.Between("Serial number", "Units").Named(WrInspectionReportFieldNames.SerialNumber)

@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 // no doi_signature_date_match, no live_licence_found, etc. This table is purely the output of
 // LicenceFileFinder.FindInspectionReportFiles's filename/folder filter over dms_extract - the
 // entire discovery mechanism for this document type, not one signal among several.
-[Migration(64)]
+[Migration(68)]
 public class AddInspectionReportFinderResultTable : Migration
 {
     public override void Up()

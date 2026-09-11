@@ -10,7 +10,7 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 // ("this batch, this document type"). A caller discovering files for multiple document types
 // runs its dispatch cycle once per type, each with its own ProcessRun, rather than tagging
 // individual files within one shared run.
-[Migration(65)]
+[Migration(69)]
 public class AddDocumentTypeColumnToProcessRun : Migration
 {
     public override void Up()

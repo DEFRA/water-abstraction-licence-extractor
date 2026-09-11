@@ -367,7 +367,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
             {activeTab === 'actions' && (
                 <div id="actions">
-                    <ScrapeDocuments/>
+                    <ScrapeDocuments documentType="AbstractionLicence"/>
                 </div>
             )}
 

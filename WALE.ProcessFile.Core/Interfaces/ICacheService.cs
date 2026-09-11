@@ -28,8 +28,7 @@ public interface ICacheService
     
     public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request);
     
-    public Task<List<ImageDetails>>
-        GetImagesAsync(OcrServiceImageDataCacheRequest request);
+    public Task<List<ImageDetails>> GetImagesAsync(OcrServiceImageDataCacheRequest request);
     
     public Task<string> GetNoOcrPageReferenceAsync(NoOcrServicePageCacheRequest request);
     
@@ -102,11 +101,11 @@ public interface ICacheService
         int processRunId);
     
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync();
-    
+
     Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId);
-    
+
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
-    
+
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);

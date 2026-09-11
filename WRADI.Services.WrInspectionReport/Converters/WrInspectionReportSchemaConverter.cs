@@ -731,6 +731,7 @@ public static class WrInspectionReportSchemaConverter
             || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("y", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.InOrder;

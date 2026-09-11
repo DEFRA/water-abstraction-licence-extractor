@@ -1,5 +1,7 @@
 using WALE.ProcessFile.Core.Models;
+using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
@@ -100,5 +102,65 @@ public class WrInspectionReportSchemaConverterTests
 
         // Assert
         Assert.Null(form.Metadata.Date.Date);
+    }
+
+    private static MatchesResult BuildMatchesResultWithSourceOfSupply(string rawText)
+    {
+        var documentLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(rawText, null))],
+            0,
+            0,
+            0,
+            0);
+
+        return new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    Text = [documentLine],
+                    LabelGroupName = WrInspectionReportFieldNames.SourceOfSupply,
+                    MatchedLabelName = WrInspectionReportFieldNames.SourceOfSupply
+                }
+            ]
+        };
+    }
+
+    // Real WR51 documents mark LicenceProvisions/Maintenance/ReadingsTaken checkboxes with
+    // whatever tick/cross glyph the originating export toolchain produced - plain Unicode
+    // symbols, or one of several Wingdings-style Private Use Area codepoints that render
+    // visually as a tick but aren't the same character. GetInOrderStatus has to recognise each
+    // one explicitly; a codepoint missing from this list silently resolves to Blank/Unknown
+    // instead of a real verdict, with no build-time signal that anything is wrong (confirmed
+    // real for U+F0D6 on wr51__nw0680001028r01__332683fa-... - see InOrderPossibilities for the
+    // full glyph-frequency evidence behind this list).
+    [Theory]
+    [InlineData("✓", InOrderStatus.InOrder)]
+    [InlineData("✔", InOrderStatus.InOrder)]
+    [InlineData("√", InOrderStatus.InOrder)]
+    [InlineData("🗸", InOrderStatus.InOrder)]
+    [InlineData("", InOrderStatus.InOrder)]
+    [InlineData("", InOrderStatus.InOrder)]
+    [InlineData("", InOrderStatus.InOrder)]
+    [InlineData("", InOrderStatus.InOrder)]
+    [InlineData("", InOrderStatus.InOrder)]
+    [InlineData("X", InOrderStatus.NotInOrder)]
+    [InlineData("☒", InOrderStatus.NotInOrder)]
+    [InlineData("×", InOrderStatus.NotInOrder)]
+    public void WhenLicenceProvisionsFieldHasTickOrCrossGlyph_ThenResolvesToExpectedStatus(
+        string rawGlyph,
+        InOrderStatus expectedStatus)
+    {
+        // Arrange
+        var matchesResult = BuildMatchesResultWithSourceOfSupply(rawGlyph);
+
+        // Act
+        var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
+
+        // Assert
+        Assert.Equal(expectedStatus, form.LicenceProvisions.SourceOfSupply);
     }
 }

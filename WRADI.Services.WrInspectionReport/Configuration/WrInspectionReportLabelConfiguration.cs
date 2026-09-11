@@ -84,7 +84,8 @@ public static class WrInspectionReportLabelConfiguration
         new("☒") { ExceptWhenInsideWord = true },
         new("☐") { ExceptWhenInsideWord = true },
         new("X") { ExceptWhenInsideWord = true },
-        new("x") { ExceptWhenInsideWord = true }
+        new("x") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true } // Wingdings-style tick glyph - see InOrderPossibilities
     ];
 
     // The "grid template" layout prints "Calibration: Conformance: Flow verification: Meter
@@ -104,7 +105,7 @@ public static class WrInspectionReportLabelConfiguration
     // every InOrder-sourced field uses this identical list. Order is load-bearing: paired-
     // checkbox alternates ("☑ ☐" etc.) must precede the single-glyph ones below them, or a bare
     // "☒" possibility would win a .First() match against "☒ ☐" before the position-based
-    // paired check gets a chance. The four Private Use Area entries are Wingdings-style tick
+    // paired check gets a chance. The Private Use Area entries are Wingdings-style tick
     // glyphs, written as \u escapes rather than literal glyphs so they survive editing/rendering
     // intact - confirmed present in the real sample set by scanning all 789 real PDFs' extracted text
     // directly (2026-09-08): U+F0FC (638 occurrences/81 docs), U+F061 (87/11), U+F050 (192/36),
@@ -114,6 +115,11 @@ public static class WrInspectionReportLabelConfiguration
     // text.Contains("") is trivially true), so every one of these four real answers, plus every
     // plain "Y"/"N" answer sitting after them in this list, was silently resolving to Blank
     // instead of a real InOrder/NotInOrder verdict. Fixed by restoring the actual codepoints.
+    // U+F0D6 added 2026-09-11: a fifth Wingdings-style tick codepoint, found on
+    // wr51__nw0680001028r01__332683fa-... (missed by the original 789-doc scan, so presumably
+    // rare/newer) - PdfPig captures it fine, it just wasn't in this list, so every grid field on
+    // that document (bar the one "X") silently resolved to Blank instead of InOrder. Same root
+    // cause as the empty-string bug above, different codepoint.
     private static readonly List<TextToMatch> InOrderPossibilities =
     [
         new("☑ ☐") { ExceptWhenInsideWord = true },
@@ -133,6 +139,7 @@ public static class WrInspectionReportLabelConfiguration
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true },
         new("X") { ExceptWhenInsideWord = true },
         new("☒") { ExceptWhenInsideWord = true },
         new("×") { ExceptWhenInsideWord = true },
@@ -639,11 +646,11 @@ public static class WrInspectionReportLabelConfiguration
                         ? WrRule.After("Maintenance:").Named($"{name}Maintenance").EndsAt("Frequency")
                         : WrRule.After("Readings taken:").Named($"{name}ReadingsTaken").EndsAt("Frequency")).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
-                        ? WrRule.Between("Maintenance:", "N:").Named($"{name}MaintenanceYes").WholeLine().Possibilities([new("✓"), new("X")])
-                        : WrRule.Between("Readings taken:", "N:").Named($"{name}ReadingsTakenYes").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
+                        ? WrRule.Between("Maintenance:", "N:").Named($"{name}MaintenanceYes").WholeLine().Possibilities([new("✓"), new(""), new("X")])
+                        : WrRule.Between("Readings taken:", "N:").Named($"{name}ReadingsTakenYes").WholeLine().Possibilities([new("✓"), new(""), new("X")])).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
-                        ? WrRule.Between("N:", "Frequency:").Named($"{name}MaintenanceNo").WholeLine().Possibilities([new("✓"), new("X")])
-                        : WrRule.Between("N:", "Frequency:").Named($"{name}ReadingsTakenNo").WholeLine().Possibilities([new("✓"), new("X")])).Build(),
+                        ? WrRule.Between("N:", "Frequency:").Named($"{name}MaintenanceNo").WholeLine().Possibilities([new("✓"), new(""), new("X")])
+                        : WrRule.Between("N:", "Frequency:").Named($"{name}ReadingsTakenNo").WholeLine().Possibilities([new("✓"), new(""), new("X")])).Build(),
                     WrRule.After("Frequency:").Named($"{name}Frequency").EndsAt("By whom").Build(),
                     WrRule.After("By whom:").Named($"{name}ByWhom").Build()
                 ]

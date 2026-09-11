@@ -1,6 +1,6 @@
 namespace WRADI.DocumentType.WrInspectionReport.Helpers;
 
-public static class FormattingHelper
+public static class TickHelper
 {
     public static string? GetTickedOrAcceptedStatus(string? rawRemainder)
     {

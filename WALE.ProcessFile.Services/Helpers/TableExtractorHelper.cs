@@ -1,8 +1,8 @@
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Methods;
-using WRADI.DocumentType.WrInspectionReport.Helpers;
 
-namespace WRADI.DocumentType.WrInspectionReport.Services;
+namespace WALE.ProcessFile.Services.Helpers;
 
 // Overlay on top of the heuristic column-walk matching (WALE.ProcessFile.Services/Helpers/
 // FindLabelGroupMatchesHelper.cs) for the LicenceProvisions grid fields. Given real table cells
@@ -11,23 +11,20 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 // a result for fields it can confidently resolve - the caller (
 // WrInspectionReportExtractionOrchestrator) keeps the existing heuristic result for anything not
 // present in the returned dictionary.
-public static class WrInspectionReportTableMatcher
+public static class TableMatcherHelper
 {
     public static Dictionary<string, LabelGroupResult> MatchPossibility(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         IReadOnlyList<string> gridFieldNames,
-        string serviceName)
+        string serviceName,
+        Func<string?, string?>? transformContentFunction)
     {
         var results = new Dictionary<string, LabelGroupResult>();
         
-        foreach (var fieldName in gridFieldNames)
+        foreach (var labelGroup in labelLookups)
         {
-            var labels = labelLookups
-                .FirstOrDefault(l => l.LabelGroupName == fieldName)
-                .Labels;
-
-            foreach (var label in labels)
+            foreach (var label in labelGroup.Labels)
             {
                 if (label.TextStart == null || label.Possibilities == null)
                 {
@@ -36,17 +33,21 @@ public static class WrInspectionReportTableMatcher
 
                 foreach (var table in tables)
                 {
-                    var rawRemainder = FindFreeTextValueInTable(table, label.TextStart);
-                    var rawCellText = FormattingHelper.GetTickedOrAcceptedStatus(rawRemainder);
+                    var matchedContent = FindFreeTextValueInTable(table, label.TextStart);
 
-                    if (rawCellText == null)
+                    if (transformContentFunction != null)
+                    {
+                        matchedContent = transformContentFunction(matchedContent);
+                    }
+
+                    if (matchedContent == null)
                     {
                         continue;
                     }
 
                     var matchedPossibility = label.Possibilities
                         .FirstOrDefault(possibility =>
-                            BaseMethod.MatchesPossibility(rawCellText, possibility));
+                            BaseMethod.MatchesPossibility(matchedContent, possibility));
 
                     if (matchedPossibility == null)
                     {
@@ -62,10 +63,10 @@ public static class WrInspectionReportTableMatcher
                         Columns = [new DocumentLineColumn(words)]
                     };
 
-                    results[fieldName] = new LabelGroupResult
+                    results[labelGroup.LabelGroupName] = new LabelGroupResult
                     {
-                        LabelGroupName = fieldName,
-                        MatchedLabelName = fieldName,
+                        LabelGroupName = labelGroup.LabelGroupName,
+                        MatchedLabelName = label.Name,
                         ServiceName = serviceName,
                         Text = [syntheticLine]
                     };
@@ -87,7 +88,6 @@ public static class WrInspectionReportTableMatcher
     public static Dictionary<string, LabelGroupResult> MatchFreeTextFields(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        IReadOnlyList<string> gridFieldNames,
         IReadOnlyList<string> freeTextFieldNames,
         string serviceName)
     {

@@ -1,11 +1,14 @@
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Services.Helpers;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Helpers;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -154,7 +157,7 @@ public static class WrInspectionReportExtractionOrchestrator
         int minimumFieldsToSkipFallback = 10)
     {
         var (allMatches, tables, usedServiceName) =
-            await TryGetTableMatchesAsync(
+            await GetTableMatchesAsync(
                 tableExtractorService,
                 labelLookups,
                 pdfBytes,
@@ -170,7 +173,7 @@ public static class WrInspectionReportExtractionOrchestrator
         if (allMatches.Count < minimumFieldsToSkipFallback
             && fallbackTableExtractorService != null)
         {
-            (allMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
+            (allMatches, tables, usedServiceName) = await GetTableMatchesAsync(
                 fallbackTableExtractorService,
                 labelLookups,
                 pdfBytes,
@@ -187,15 +190,13 @@ public static class WrInspectionReportExtractionOrchestrator
         // re-measuring it.
         if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
-            var freeTextMatches = 
-                WrInspectionReportTableMatcher.MatchFreeTextFields(
-                    tables,
-                    labelLookups,
-                    GridFieldNames,
-                    FreeTextFieldNames,
-                    usedServiceName);
-
-            foreach (var (key, value) in freeTextMatches)
+            var matches = TableMatcherHelper.MatchFreeTextFields(
+                tables,
+                labelLookups,
+                FreeTextFieldNames,
+                usedServiceName);
+            
+            foreach (var (key, value) in matches)
             {
                 allMatches.TryAdd(key, value);
             }
@@ -223,7 +224,7 @@ public static class WrInspectionReportExtractionOrchestrator
         Dictionary<string, LabelGroupResult> Matches,
         IReadOnlyList<DocumentTable>? Tables,
         string? ServiceName)>
-            TryGetTableMatchesAsync(
+            GetTableMatchesAsync(
                 ITableExtractorService tableExtractorService,
                 List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
                 byte[] pdfBytes,
@@ -237,18 +238,18 @@ public static class WrInspectionReportExtractionOrchestrator
                 fileId,
                 processRunId);
 
-            var possibilityBasedMatches =
-                WrInspectionReportTableMatcher.MatchPossibility(
-                    tables,
-                    labelLookups,
-                    GridFieldNames,
-                    tableExtractorService.Name);
+            var matches = TableMatcherHelper.MatchPossibility(
+                tables,
+                labelLookups,
+                GridFieldNames,
+                tableExtractorService.Name,
+                TickHelper.GetTickedOrAcceptedStatus);
 
-            return (possibilityBasedMatches, tables, tableExtractorService.Name);
+            return (matches, tables, tableExtractorService.Name);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR - {nameof(TryGetTableMatchesAsync)} - {ex.Message}");
+            Console.WriteLine($"ERROR - {nameof(GetTableMatchesAsync)} - {ex.Message}");
             return ([], null, null);
         }
     }

@@ -440,23 +440,38 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
                                end_date_time_utc,
-                               (
-                               SELECT COUNT(*)
-                                   FROM licence
-                                   WHERE process_run_id = process_run.process_run_id
-                           ) AS number_of_files,
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                               END AS number_of_files,
                                document_type,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM licence_list_item
-                                       WHERE process_run_id = process_run.process_run_id
-                                         AND status = 'Live'
-                               ) AS SuccessCount
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence_list_item
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Live'
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Ok'
+                                   )
+                               END AS SuccessCount
                            FROM process_run
                            WHERE end_date_time_utc IS NOT NULL;
                            """;

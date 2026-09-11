@@ -12,14 +12,13 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 // present in the returned dictionary.
 public static class WrInspectionReportTableMatcher
 {
-    public static Dictionary<string, LabelGroupResult> MatchGridFields(
+    public static Dictionary<string, LabelGroupResult> MatchPossibility(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         IReadOnlyList<string> gridFieldNames,
         string serviceName)
     {
         var results = new Dictionary<string, LabelGroupResult>();
-
         var bestTable = FindBestGridTable(tables, labelLookups, gridFieldNames);
 
         if (bestTable == null)
@@ -29,45 +28,49 @@ public static class WrInspectionReportTableMatcher
 
         foreach (var fieldName in gridFieldNames)
         {
-            var label = labelLookups
-                .FirstOrDefault(l => l.LabelGroupName == fieldName).Labels?.FirstOrDefault();
+            var labels = labelLookups
+                .FirstOrDefault(l => l.LabelGroupName == fieldName)
+                .Labels;
 
-            if (label?.TextStart == null || label.Possibilities == null)
+            foreach (var label in labels)
             {
-                continue;
+                if (label.TextStart == null || label.Possibilities == null)
+                {
+                    continue;
+                }
+
+                var rawCellText = FindFieldValueInTable(bestTable, label.TextStart);
+
+                if (rawCellText == null)
+                {
+                    continue;
+                }
+
+                var matchedPossibility = label.Possibilities
+                    .FirstOrDefault(possibility => BaseMethod.MatchesPossibility(rawCellText, possibility));
+
+                if (matchedPossibility == null)
+                {
+                    continue;
+                }
+
+                var words = matchedPossibility.Text.Length == 0
+                    ? []
+                    : DocumentLineColumn.TextToWords(matchedPossibility.Text, null);
+
+                var syntheticLine = new DocumentLine
+                {
+                    Columns = [new DocumentLineColumn(words)]
+                };
+
+                results[fieldName] = new LabelGroupResult
+                {
+                    LabelGroupName = fieldName,
+                    MatchedLabelName = fieldName,
+                    ServiceName = serviceName,
+                    Text = [syntheticLine]
+                };
             }
-
-            var rawCellText = FindFieldValueInTable(bestTable, label.TextStart);
-
-            if (rawCellText == null)
-            {
-                continue; // Field's label wasn't found in this table at all - fall back to the heuristic.
-            }
-
-            var matchedPossibility = label.Possibilities
-                .FirstOrDefault(possibility => BaseMethod.MatchesPossibility(rawCellText, possibility));
-
-            if (matchedPossibility == null)
-            {
-                continue; // Cell content doesn't match any known answer shape - fall back rather than guess.
-            }
-
-            var words = matchedPossibility.Text.Length == 0
-                ? []
-                : DocumentLineColumn.TextToWords(matchedPossibility.Text, null);
-
-            var syntheticLine = new DocumentLine
-            {
-                Columns = [new DocumentLineColumn(words)]
-            };
-
-            results[fieldName] = new LabelGroupResult
-            {
-                LabelGroupName = fieldName,
-                MatchedLabelName = fieldName,
-                ServiceName = serviceName,
-                Text = [syntheticLine]
-            };
         }
 
         return results;
@@ -125,11 +128,14 @@ public static class WrInspectionReportTableMatcher
 
             if (string.IsNullOrEmpty(rawValue))
             {
-                continue; // Not found, or genuinely blank - fall back to the heuristic either way.
+                continue;
             }
 
             var words = DocumentLineColumn.TextToWords(rawValue, null);
-            var syntheticLine = new DocumentLine { Columns = [new DocumentLineColumn(words)] };
+            var syntheticLine = new DocumentLine
+            {
+                Columns = [new DocumentLineColumn(words)]
+            };
 
             results[fieldName] = new LabelGroupResult
             {
@@ -150,7 +156,7 @@ public static class WrInspectionReportTableMatcher
     {
         foreach (var cell in table.Cells)
         {
-            if (cell.Content == null)
+            if (string.IsNullOrWhiteSpace(cell.Content))
             {
                 continue;
             }

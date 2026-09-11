@@ -7,19 +7,9 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Tabula;
 
-// Reads tables directly off the PDF's own text/vector layer via PdfPig (the same library
-// already used elsewhere in this pipeline for native-text extraction) - no OCR, no cloud call,
-// no per-document cost, works entirely offline. The trade-off: it only sees anything at all on
+// Reads tables directly off the PDF's own text/vector layer via PdfPig. Only sees anything at all on
 // pages that have a real text layer. A genuinely scanned page (no text/vector content at all)
-// yields nothing here and still needs Azure DI/OCR.
-//
-// Spot-checked against 4 real WR51 documents (2 baseline/T1, 1 water_company_template/T4, 1
-// multi_meter_table/T6) before building this - Lattice mode (SpreadsheetExtractionAlgorithm)
-// cleanly extracted the LicenceProvisions grid, the Maintenance/Readings-taken sub-cells, and
-// the multi-meter table on all 4. See the wr51_textract_tables_design memory for the full
-// evidence; this class is the first real (not scratchpad) implementation, wired through the
-// existing ITableExtractorService/OcrTable abstraction with zero change needed to
-// WrInspectionReportTableMatcher.
+// yields nothing here and still needs OCR.
 //
 // Runs BOTH algorithms per page and returns every candidate table from either - not "try Lattice,
 // fall back to Stream only if Lattice found nothing". WrInspectionReportTableMatcher.

@@ -153,7 +153,7 @@ public static class WrInspectionReportExtractionOrchestrator
         ITableExtractorService? fallbackTableExtractorService = null,
         int minimumFieldsToSkipFallback = 10)
     {
-        var (tableMatches, tables, usedServiceName) =
+        var (allMatches, tables, usedServiceName) =
             await TryGetTableMatchesAsync(
                 tableExtractorService,
                 labelLookups,
@@ -167,10 +167,10 @@ public static class WrInspectionReportExtractionOrchestrator
         // triggers this, however much of the rest of the grid it missed - that's the cheapest,
         // most conservative setting. A caller wanting more of a paid fallback's accuracy back, at
         // the cost of more paid calls, raises this towards GridFieldNames.Length.
-        if (tableMatches.Count < minimumFieldsToSkipFallback
+        if (allMatches.Count < minimumFieldsToSkipFallback
             && fallbackTableExtractorService != null)
         {
-            (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
+            (allMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
                 fallbackTableExtractorService,
                 labelLookups,
                 pdfBytes,
@@ -185,29 +185,30 @@ public static class WrInspectionReportExtractionOrchestrator
         // against the 13 tick/cross grid fields; letting free-text hits count towards it would
         // silently change what "confident enough, skip the paid fallback" means without
         // re-measuring it.
-        if (tables != null && usedServiceName != null)
+        if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
-            var freeTextMatches = WrInspectionReportTableMatcher.MatchFreeTextFields(
-                tables,
-                labelLookups,
-                GridFieldNames,
-                FreeTextFieldNames,
-                usedServiceName);
+            var freeTextMatches = 
+                WrInspectionReportTableMatcher.MatchFreeTextFields(
+                    tables,
+                    labelLookups,
+                    GridFieldNames,
+                    FreeTextFieldNames,
+                    usedServiceName);
 
             foreach (var (key, value) in freeTextMatches)
             {
-                tableMatches.TryAdd(key, value);
+                allMatches.TryAdd(key, value);
             }
         }
 
-        if (tableMatches.Count == 0)
+        if (allMatches.Count == 0)
         {
             return;
         }
 
         item.Matches = item.Matches!
-            .Where(m => m.LabelGroupName == null || !tableMatches.ContainsKey(m.LabelGroupName))
-            .Concat(tableMatches.Values)
+            .Where(m => m.LabelGroupName == null || !allMatches.ContainsKey(m.LabelGroupName))
+            .Concat(allMatches.Values)
             .ToList();
     }
 
@@ -236,13 +237,14 @@ public static class WrInspectionReportExtractionOrchestrator
                 fileId,
                 processRunId);
 
-            var matches = WrInspectionReportTableMatcher.MatchGridFields(
-                tables,
-                labelLookups,
-                GridFieldNames,
-                tableExtractorService.Name);
+            var possibilityBasedMatches =
+                WrInspectionReportTableMatcher.MatchPossibility(
+                    tables,
+                    labelLookups,
+                    GridFieldNames,
+                    tableExtractorService.Name);
 
-            return (matches, tables, tableExtractorService.Name);
+            return (possibilityBasedMatches, tables, tableExtractorService.Name);
         }
         catch (Exception ex)
         {

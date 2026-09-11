@@ -44,7 +44,7 @@ public class WrInspectionReportTableMatcherTests
         // fixture would be rejected before ever reaching the per-field logic under test here.
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -68,7 +68,7 @@ public class WrInspectionReportTableMatcherTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -93,7 +93,7 @@ public class WrInspectionReportTableMatcherTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -117,7 +117,7 @@ public class WrInspectionReportTableMatcherTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         Assert.False(results.ContainsKey(WrInspectionReportFieldNames.SourceOfSupply));
@@ -137,7 +137,7 @@ public class WrInspectionReportTableMatcherTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
@@ -149,7 +149,7 @@ public class WrInspectionReportTableMatcherTests
     {
         var table = BuildFullGridTable(specialConditionsValue: string.Empty);
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
@@ -174,7 +174,7 @@ public class WrInspectionReportTableMatcherTests
             ]
         };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [table], Labels, GridFieldNames, "TestTableService");
 
         Assert.Empty(results);
@@ -196,7 +196,7 @@ public class WrInspectionReportTableMatcherTests
 
         var gridTable = BuildFullGridTable(specialConditionsValue: "✓");
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [headerTable, gridTable], Labels, GridFieldNames, "TestTableService");
 
         Assert.True(results.ContainsKey(WrInspectionReportFieldNames.SpecialConditions));
@@ -213,7 +213,7 @@ public class WrInspectionReportTableMatcherTests
             Cells = [Cell(0, 0, "Meter make: ABB")]
         };
 
-        var results = WrInspectionReportTableMatcher.MatchGridFields(
+        var results = WrInspectionReportTableMatcher.MatchPossibility(
             [unrelatedTable], Labels, GridFieldNames, "TestTableService");
 
         Assert.Empty(results);

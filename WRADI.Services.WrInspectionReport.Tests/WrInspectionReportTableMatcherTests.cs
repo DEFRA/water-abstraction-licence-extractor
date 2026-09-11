@@ -1,9 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
-using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
-
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>

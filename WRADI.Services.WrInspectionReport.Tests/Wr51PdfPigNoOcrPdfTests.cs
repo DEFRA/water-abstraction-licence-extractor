@@ -1,7 +1,5 @@
-using System.Text.Json;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
@@ -15,6 +13,7 @@ using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
+using WRADI.Services.WrInspectionReport.Tests.Config;
 using WRADI.Services.WrInspectionReport.Tests.Helper;
 
 namespace WRADI.Services.WrInspectionReport.Tests;

@@ -1,13 +1,11 @@
 using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using CsvHelper;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
@@ -20,8 +18,9 @@ using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
+using WRADI.Services.WrInspectionReport.Tests.Config;
 using Xunit.Abstractions;
-using Form = global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport;
+using Form = WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 

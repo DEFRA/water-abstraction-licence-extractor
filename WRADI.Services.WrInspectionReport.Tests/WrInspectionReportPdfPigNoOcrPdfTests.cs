@@ -5,7 +5,6 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
@@ -17,6 +16,7 @@ using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Services;
+using WRADI.Services.WrInspectionReport.Tests.Config;
 using Xunit.Abstractions;
 
 namespace WRADI.Services.WrInspectionReport.Tests;

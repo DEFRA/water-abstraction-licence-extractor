@@ -1,6 +1,5 @@
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
-using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 

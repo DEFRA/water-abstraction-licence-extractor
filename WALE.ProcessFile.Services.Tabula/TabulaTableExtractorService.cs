@@ -66,12 +66,12 @@ public class TabulaTableExtractorService : ITableExtractorService
                     .Extract(page)
                     .Select(table => ToOcrTable(table, pageNumber)));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Falls through to Stream mode below for this page; the caller's own try/catch
                 // around the whole overlay covers the case where even that isn't enough.
                 
-                // TODO log
+                Console.WriteLine($"INFO - {nameof(TabulaTableExtractorService)} - Lattice, exception {ex.Message}, continuing");
             }
 
             try
@@ -83,11 +83,11 @@ public class TabulaTableExtractorService : ITableExtractorService
                         .Select(table => ToOcrTable(table, pageNumber)));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Lattice's results for this page (if any) are still returned.
                 
-                // TODO log
+                Console.WriteLine($"INFO - {nameof(TabulaTableExtractorService)} - Stream, exception {ex.Message}, continuing");
             }
         }
 

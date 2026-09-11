@@ -59,6 +59,7 @@ public class Wr51PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,

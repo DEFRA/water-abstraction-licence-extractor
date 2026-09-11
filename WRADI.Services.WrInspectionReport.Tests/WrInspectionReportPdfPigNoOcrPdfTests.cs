@@ -39,6 +39,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);

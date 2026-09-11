@@ -86,6 +86,7 @@ public static class TestsForAiPrompts
                         cacheService,
                         outputService,
                         licenceNumberService,
+                        null,
                         dmsLookupService,
                         -1,
                         DateTime.Now));
@@ -570,7 +571,8 @@ public static class TestsForAiPrompts
             "[NOT_USED]",
             Guid.NewGuid(),
             true,
-            -1,
+            null,
+            null,
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,

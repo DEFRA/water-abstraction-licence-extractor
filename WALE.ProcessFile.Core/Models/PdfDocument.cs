@@ -11,14 +11,19 @@ public class PdfDocument(
     string pdfFilename,
     Guid fileId,
     bool fromCache,
-    long sizeBytes,
+    byte[]? bytes,
+    long? sizeBytes,
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     LookupConfiguration configuration)
 {
     public bool FromCache { get; } = fromCache;
-    public long SizeBytes { get; set; } = sizeBytes;
+    
+    public byte[]? Bytes { get; set; } = bytes;
+    
+    public long? SizeBytes { get; set; } = sizeBytes;
+
     public string PdfFilename { get; } = pdfFilename;
 
     public Guid FileId { get; set; } = fileId;
@@ -54,6 +59,7 @@ public class PdfDocument(
         }
         
         SizeBytes = InternalDocument.SizeBytes;
+        Bytes = StreamToByteArray(InternalDocument.FileStream);
         
         if (Pages.Count > SkipFileIfMoreThenPages)
         {
@@ -167,5 +173,30 @@ public class PdfDocument(
         }
         
         InternalDocument!.Dispose();
+    }
+    
+    private static byte[] StreamToByteArray(Stream stream)
+    {
+        if (stream is MemoryStream memoryStream)
+        {
+            return memoryStream.ToArray();                
+        }
+        
+        // Jon Skeet's accepted answer 
+        return ReadStreamFully(stream);
+    }
+    
+    private static byte[] ReadStreamFully(Stream input)
+    {
+        var buffer = new byte[16*1024];
+        using var ms = new MemoryStream();
+        int read;
+        
+        while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            ms.Write(buffer, 0, read);
+        }
+        
+        return ms.ToArray();
     }
 }

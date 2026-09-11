@@ -71,6 +71,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);

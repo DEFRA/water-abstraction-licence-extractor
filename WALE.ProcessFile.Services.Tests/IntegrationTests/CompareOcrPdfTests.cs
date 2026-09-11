@@ -175,6 +175,7 @@ public class CompareOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync((short)regionCode),
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);

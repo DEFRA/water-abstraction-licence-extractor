@@ -243,7 +243,7 @@ public class PdfDataExtractorService(
             return returnResult;
         }
         
-        var sizeKb = (pdfDocument.SizeBytes / 1024.0).ToString("0.0");
+        var sizeKb = ((pdfDocument.SizeBytes ?? -1) / 1024.0).ToString("0.0");
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
         
         if (pdfDocument.FromCache)
@@ -278,8 +278,9 @@ public class PdfDataExtractorService(
         
         var isOcr = false;
 
-        List<DocumentTable>? documentTables = null;
+        IReadOnlyList<DocumentTable>? documentTables = null;
         List<DocumentLine>? documentLines = null;
+
         var allLabels = configuration
             .Labels
             .SelectMany(label => label.Labels)
@@ -296,7 +297,10 @@ public class PdfDataExtractorService(
 
         if (needsToParseTables)
         {
-            documentTables = new List<DocumentTable>(); // TODO
+            documentTables = await configuration.TableExtractorService.GetTablesAsync(
+                pdfDocument.Bytes!,
+                fileId,
+                processRunId);
         }
 
         if (needsToParseText)
@@ -1088,7 +1092,7 @@ public class PdfDataExtractorService(
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
         List<DocumentLine>? documentLines,
-        List<DocumentTable>? documentTables,
+        IReadOnlyList<DocumentTable>? documentTables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
@@ -1124,22 +1128,33 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
-                var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
-                var labelIsInDocumentLines = LabelIsInDocumentLines(label, joinedLines);
-                var labelIsInDocumentTables = LabelIsInDocumentTables(label, documentTables);
+                var isTextLabel = label.LayoutExtractor is 
+                    LayoutExtractor.Default
+                    or LayoutExtractor.LetterBased
+                    or LayoutExtractor.LetterBasedAndTableBased;
                 
-                if (!isRegularExpression && !labelIsInDocumentLines && !labelIsInDocumentTables)
+                var isTableLabel = label.LayoutExtractor is 
+                    LayoutExtractor.TableBased
+                    or LayoutExtractor.LetterBasedAndTableBased;
+                
+                var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
+                var labelIsInDocumentLines = isTextLabel
+                    && (isRegularExpression || LabelIsInDocumentLines(label, joinedLines));
+                var labelIsInDocumentTables = isTableLabel
+                    && (isRegularExpression || LabelIsInDocumentTables(label, documentTables));
+                
+                if (!labelIsInDocumentLines && !labelIsInDocumentTables)
                 {
                     continue;
                 }
 
                 IReadOnlyList<LabelGroupResult> labelGroupMatch;
 
-                if (wrappedLines != null)
+                if (labelIsInDocumentLines)
                 {
                     labelGroupMatch =
                         await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                            wrappedLines,
+                            wrappedLines!,
                             [label],
                             isOcr,
                             serviceName,
@@ -1153,13 +1168,12 @@ public class PdfDataExtractorService(
                             documentLineService,
                             additionalInformationStore,
                             labelPositionIndex);
-                    ;
                 }
-                else if (documentTables != null)
+                else if (labelIsInDocumentTables)
                 {
                     labelGroupMatch =
                         await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInTablesAsync(
-                            documentTables,
+                            documentTables!,
                             [label],
                             isOcr,
                             serviceName,
@@ -1465,7 +1479,7 @@ public class PdfDataExtractorService(
     
     private static bool LabelIsInDocumentTables(
         LabelToMatch label,
-        List<DocumentTable>? tables)
+        IReadOnlyList<DocumentTable>? tables)
     {
         if (tables == null)
         {

@@ -133,6 +133,7 @@ public class NoOcrDatabaseTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(3),
+            null,
             new DmsLookupService(),
             3,
             DateTime.Now,

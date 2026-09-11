@@ -13,6 +13,25 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FindLabelGroupMatchesHelper
 {
+    public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInTablesAsync(
+        IReadOnlyList<DocumentTable> tables,
+        IReadOnlyList<LabelToMatch> labels,
+        bool isOcr,
+        string? serviceName,
+        string labelGroupName,
+        IReadOnlyList<LabelGroupResult> siblingMatches,
+        List<string> previouslyParsedPaths,
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        PdfDataExtractorService pdfDataExtractorService,
+        IDocumentLineService? documentLineService,
+        Dictionary<string, object?> additionalInformationStore,
+        IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
+    {
+        return [];
+    }
+    
     public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInLinesAsync(
         IReadOnlyList<DocumentLineWrapped> lines,
         IReadOnlyList<LabelToMatch> labels,
@@ -25,7 +44,7 @@ public static class FindLabelGroupMatchesHelper
         int processRunId,
         LookupConfiguration lookupConfiguration,
         PdfDataExtractorService pdfDataExtractorService,
-        IDocumentLineService documentLineService,
+        IDocumentLineService? documentLineService,
         Dictionary<string, object?> additionalInformationStore,
         IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {

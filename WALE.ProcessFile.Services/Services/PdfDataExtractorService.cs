@@ -279,15 +279,17 @@ public class PdfDataExtractorService(
         var isOcr = false;
 
         List<DocumentTable>? documentTables = null;
-        var needsToParseTables = configuration
+        List<DocumentLine>? documentLines = null;
+        var allLabels = configuration
             .Labels
             .SelectMany(label => label.Labels)
+            .ToList();
+        
+        var needsToParseTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
                 or LayoutExtractor.LetterBasedAndTableBased);
-        
-        var needsToParseText = configuration
-            .Labels
-            .SelectMany(label => label.Labels)
+
+        var needsToParseText = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.Default
                 or LayoutExtractor.LetterBased
                 or LayoutExtractor.LetterBasedAndTableBased);
@@ -296,9 +298,14 @@ public class PdfDataExtractorService(
         {
             documentTables = new List<DocumentTable>(); // TODO
         }
+
+        if (needsToParseText)
+        {
+            documentLines = pdfDocument.DocumentLines;
+        }
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
-            needsToParseText ? pdfDocument.DocumentLines : null,
+            documentLines,
             documentTables,
             configuration.Labels,
             isOcr,
@@ -350,7 +357,7 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= configuration.MinimumRowsForDigital;
+        var isLikelyTextFile = documentLines?.Count >= configuration.MinimumRowsForDigital;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -439,7 +446,7 @@ public class PdfDataExtractorService(
                 $" - {pdfDocument.PdfFilename}");
         }
 
-        var documentLines = new List<DocumentLine>();
+        var foundDocumentLines = new List<DocumentLine>();
         
         for (var pageNumber = 1; pageNumber <= totalPagesToProcess; pageNumber++)
         {
@@ -559,7 +566,7 @@ public class PdfDataExtractorService(
                         break;
                     }
                     
-                    var allLinesSoFar = documentLines.ToList();
+                    var allLinesSoFar = foundDocumentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
                     
                     var serviceMatches = await GetLabelGroupMatchesAsync(
@@ -631,7 +638,7 @@ public class PdfDataExtractorService(
                     servicesUsed[ocrService.Name] += serviceDurationMs1;
                 }
                 
-                documentLines.AddRange(serviceImageLines);
+                foundDocumentLines.AddRange(serviceImageLines);
 
                 var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
                 var uniqueServiceMatchesNotInLabelGroupMatches = new List<LabelGroupResult>();
@@ -1103,8 +1110,8 @@ public class PdfDataExtractorService(
 
         var lines = StandardiseLines(documentLines);
         var wrappedLines = DocumentLineWrapped.WrapLines(lines, false);
-        var joinedLines = string.Join(',', lines.Select(line => line.Text));
-        var documentLineService = new DocumentLineService(lines);
+        var joinedLines = lines != null ? string.Join(',', lines.Select(line => line.Text)) : null;
+        var documentLineService = lines != null ? new DocumentLineService(lines) : null;
 
         var labelPositionIndex = BuildLabelPositionIndex(wrappedLines, labelLookups);
 
@@ -1118,28 +1125,59 @@ public class PdfDataExtractorService(
             foreach (var label in labels)
             {
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
-
-                if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
+                var labelIsInDocumentLines = LabelIsInDocumentLines(label, joinedLines);
+                var labelIsInDocumentTables = LabelIsInDocumentTables(label, documentTables);
+                
+                if (!isRegularExpression && !labelIsInDocumentLines && !labelIsInDocumentTables)
                 {
                     continue;
                 }
 
-                var labelGroupMatch =
-                    await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                        wrappedLines,
-                        [label],
-                        isOcr,
-                        serviceName,
-                        labelGroupName,
-                        labelGroupMatches,
-                        previouslyParsedPaths,
-                        regionCode,
-                        processRunId,
-                        lookupConfiguration,
-                        this,
-                        documentLineService,
-                        additionalInformationStore,
-                        labelPositionIndex);
+                IReadOnlyList<LabelGroupResult> labelGroupMatch;
+
+                if (wrappedLines != null)
+                {
+                    labelGroupMatch =
+                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
+                            wrappedLines,
+                            [label],
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            labelGroupMatches,
+                            previouslyParsedPaths,
+                            regionCode,
+                            processRunId,
+                            lookupConfiguration,
+                            this,
+                            documentLineService,
+                            additionalInformationStore,
+                            labelPositionIndex);
+                    ;
+                }
+                else if (documentTables != null)
+                {
+                    labelGroupMatch =
+                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInTablesAsync(
+                            documentTables,
+                            [label],
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            labelGroupMatches,
+                            previouslyParsedPaths,
+                            regionCode,
+                            processRunId,
+                            lookupConfiguration,
+                            this,
+                            documentLineService,
+                            additionalInformationStore,
+                            labelPositionIndex);
+                }
+                else
+                {
+                    throw new Exception("Neither lines nor tables passed");
+                }
 
                 if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToBePresent))
                 {
@@ -1166,10 +1204,15 @@ public class PdfDataExtractorService(
     /// expensive median calculation. Y is recorded so callers can restrict to the same section
     /// (see FindSectionEndTop) rather than any coincidentally similar X.
     /// </summary>
-    private static Dictionary<string, (double Left, double Top)> BuildLabelPositionIndex(
-        IReadOnlyList<DocumentLineWrapped> lines,
+    private static Dictionary<string, (double Left, double Top)>? BuildLabelPositionIndex(
+        IReadOnlyList<DocumentLineWrapped>? lines,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups)
     {
+        if (lines == null)
+        {
+            return null;
+        }
+        
         var index = new Dictionary<string, (double Left, double Top)>();
 
         foreach (var wrappedLine in lines)
@@ -1420,10 +1463,42 @@ public class PdfDataExtractorService(
         return newLines;
     }
     
-    private static bool LabelIsInDocument(
+    private static bool LabelIsInDocumentTables(
         LabelToMatch label,
-        string joinedLines)
+        List<DocumentTable>? tables)
     {
+        if (tables == null)
+        {
+            return false;
+        }
+        
+        var labelText = label.TextToMatch!
+            .Select(labelTextMatch => labelTextMatch.Text
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty)
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
+            .ToList();
+        
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return
+            labelText.Any(text =>
+                tables.Any(table =>
+                    table.Cells.Any(cell =>
+                        cell.Content?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)));
+    }
+    
+    private static bool LabelIsInDocumentLines(
+        LabelToMatch label,
+        string? joinedLines)
+    {
+        if (joinedLines == null)
+        {
+            return false;
+        }
+        
         var labelText = label.TextToMatch!
             .Select(labelTextMatch => labelTextMatch.Text
                 .Replace(PositionConstants.EndOfLineMarker, string.Empty)

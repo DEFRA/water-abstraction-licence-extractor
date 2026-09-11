@@ -36,6 +36,17 @@ function InspectionReportPage() {
 
     const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
 
+    type SortField = 'filename' | 'status' | 'date' | 'template' | 'completeness';
+    const [sortField, setSortField] = useState<SortField | ''>('');
+    const [sortAscending, setSortAscending] = useState(true);
+
+    // Same toggle behaviour as ProcessRunLicenceFilters.handleSort on the licence list page:
+    // clicking a new column sorts ascending, clicking the same column again flips direction.
+    const handleSort = (field: SortField) => {
+        setSortAscending(previous => (sortField === field ? !previous : true));
+        setSortField(field);
+    };
+
     useEffect(() => {
         if (!processRunId) return;
 
@@ -103,13 +114,39 @@ function InspectionReportPage() {
     );
 
     const filteredFiles = useMemo(() => {
+        const getSortValue = (file: SimpleMatchResult, field: SortField): string | number | undefined => {
+            switch (field) {
+                case 'filename': return file.filename;
+                case 'status': return file.status;
+                case 'date': return detailsByFileId[file.fileId]?.date;
+                case 'template': return detailsByFileId[file.fileId]?.template;
+                case 'completeness': return detailsByFileId[file.fileId]?.completeness;
+            }
+        };
+
         const term = filterText.trim().toLowerCase();
-        return files.filter(f =>
+        const matching = files.filter(f =>
             (term === '' || f.filename.toLowerCase().includes(term)) &&
             (statusFilter === '' || f.status === statusFilter) &&
             (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
         );
-    }, [files, filterText, statusFilter, templateFilter, detailsByFileId]);
+
+        if (!sortField) return matching;
+
+        // Missing values (still loading, or genuinely absent) always sort to the end regardless
+        // of direction, rather than clumping at whichever end '' or -Infinity would land on.
+        return [...matching].sort((a, b) => {
+            const valueA = getSortValue(a, sortField);
+            const valueB = getSortValue(b, sortField);
+
+            if (valueA === undefined && valueB === undefined) return 0;
+            if (valueA === undefined) return 1;
+            if (valueB === undefined) return -1;
+
+            const comparison = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+            return sortAscending ? comparison : -comparison;
+        });
+    }, [files, filterText, statusFilter, templateFilter, detailsByFileId, sortField, sortAscending]);
 
     const toggleInline = (fileId: string) => {
         if (inlineFileId === fileId) {
@@ -200,10 +237,21 @@ function InspectionReportPage() {
                     </td>
                 </tr>
                 <tr>
-                    <th style={{textAlign: 'left'}}>Filename</th>
-                    <th style={{textAlign: 'left'}}>Status</th>
-                    <th style={{textAlign: 'left'}}>Date</th>
-                    <th style={{textAlign: 'left'}}>Template</th>
+                    <th style={{textAlign: 'left'}}>
+                        Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Status <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('date'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Template <a href="#" onClick={(e) => { e.preventDefault(); handleSort('template'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Completeness <a href="#" onClick={(e) => { e.preventDefault(); handleSort('completeness'); }}>&#8693;</a>
+                    </th>
                 </tr>
                 </thead>
                 <tbody>

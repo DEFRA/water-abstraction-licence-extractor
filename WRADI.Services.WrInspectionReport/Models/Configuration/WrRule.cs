@@ -100,6 +100,12 @@ public sealed class WrRule
         
         return this;
     }
+    
+    public WrRule FromText()
+    {
+        _layoutExtractor = LayoutExtractor.LetterBased;
+        return this;
+    }
 
     public WrRule WholeLine()
     {

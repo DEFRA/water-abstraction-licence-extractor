@@ -15,6 +15,45 @@ interface SimpleMatchResult {
 interface FileDetails {
     template?: string;
     date?: string;
+    completeness?: number;
+}
+
+// Unknown means classification failed outright; NonStandardNarrative means the document didn't
+// match the client's expected format and fell back to generic heuristics - both get essentially
+// none of the template-specific rule tuning T1/T4/T6/T7 have, so they're a genuine, honest
+// lower-confidence signal rather than an invented one. T4/T6/T7 have their own (thinner, but
+// real) rule paths, so they're not included here.
+const LOW_CONFIDENCE_TEMPLATES = new Set(['unknown', 'nonStandardNarrative']);
+
+function hasContent(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (Array.isArray(value)) return value.some(hasContent);
+    if (typeof value === 'object') return Object.values(value as Record<string, unknown>).some(hasContent);
+    return true;
+}
+
+// Rough completeness proxy: percentage of the report's top-level sections that have at least
+// some content, not a precise field-count - null/omitted leaf fields don't round-trip through
+// the JSON at all (JsonHelper serializes with WhenWritingNull), so there's no way to know the
+// true denominator of "fields that could have been extracted" from the JSON alone without
+// duplicating the whole schema client-side. Section-level is a stable, small, honest signal
+// instead.
+function computeCompleteness(report: Record<string, any>): number {
+    const sections = [
+        report.licenceNumber,
+        report.licenceNumberCleaned,
+        report.inspectionClass,
+        report.address,
+        report.metWith,
+        report.inspectingOfficer,
+        report.inspectionDate,
+        report.licenceProvisions,
+        report.measurementDetails,
+        report.generalComments
+    ];
+
+    return Math.round((sections.filter(hasContent).length / sections.length) * 100);
 }
 
 function InspectionReportPage() {
@@ -82,7 +121,8 @@ function InspectionReportPage() {
                             // wasn't captured for this document - confirmed real for
                             // wr51__73417g0068__... (inspectionDate has only rawTime, no date).
                             date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
-                                ?? wrInspectionReport?.metadata?.date?.date
+                                ?? wrInspectionReport?.metadata?.date?.date,
+                            completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined
                         }
                     }));
                 } catch (err) {
@@ -209,19 +249,25 @@ function InspectionReportPage() {
                         </select>
                     </td>
                     <td></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <th style={{textAlign: 'left'}}>Filename</th>
                     <th style={{textAlign: 'left'}}>Status</th>
                     <th style={{textAlign: 'left'}}>Date</th>
                     <th style={{textAlign: 'left'}}>Template</th>
+                    <th style={{textAlign: 'left'}}>Completeness</th>
                     <th style={{textAlign: 'left'}}>View</th>
                 </tr>
                 </thead>
                 <tbody>
-                {filteredFiles.map(file => (
+                {filteredFiles.map(file => {
+                    const details = detailsByFileId[file.fileId];
+                    const lowConfidence = !!details?.template && LOW_CONFIDENCE_TEMPLATES.has(details.template);
+
+                    return (
                     <Fragment key={file.fileId}>
-                        <tr>
+                        <tr style={lowConfidence ? {backgroundColor: '#fff8e1'} : undefined}>
                             <td>
                                 <a href="#" onClick={(e) => {
                                     e.preventDefault();
@@ -231,8 +277,19 @@ function InspectionReportPage() {
                                 </a>
                             </td>
                             <td>{file.status}</td>
-                            <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].date ?? '-') : '...'}</td>
-                            <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].template ?? '-') : '...'}</td>
+                            <td>{details ? (details.date ?? '-') : '...'}</td>
+                            <td>
+                                {details ? (details.template ?? '-') : '...'}
+                                {lowConfidence && (
+                                    <span
+                                        title="Classified as Unknown or NonStandardNarrative - little to no template-specific rule tuning applies, worth a manual check"
+                                        style={{marginLeft: '6px', cursor: 'help'}}
+                                    >
+                                        &#9888;
+                                    </span>
+                                )}
+                            </td>
+                            <td>{details ? (details.completeness !== undefined ? `${details.completeness}%` : '-') : '...'}</td>
                             <td>
                                 <a href="#" onClick={(e) => {
                                     e.preventDefault();
@@ -244,7 +301,7 @@ function InspectionReportPage() {
                         </tr>
                         {inlineFileId === file.fileId && (
                             <tr>
-                                <td colSpan={5} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
+                                <td colSpan={6} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
                                     {inlineLoading
                                         ? <p>Loading...</p>
                                         : <JsonView src={inlineJson} collapsed={1} theme="default"/>}
@@ -252,7 +309,8 @@ function InspectionReportPage() {
                             </tr>
                         )}
                     </Fragment>
-                ))}
+                    );
+                })}
                 </tbody>
             </table>
             </>

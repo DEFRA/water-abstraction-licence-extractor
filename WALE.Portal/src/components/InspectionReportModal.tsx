@@ -4,6 +4,7 @@ import 'react18-json-view/src/style.css';
 import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {getImageUrl, getPdfUrl} from '../utils/images.ts';
 import type {MatchesResult} from '../api/generated/apiClient.ts';
+import {DraggableModal} from './DraggableModal';
 
 interface InspectionReportModalProps {
     fileId: string;
@@ -89,6 +90,22 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
     const [loading, setLoading] = useState(true);
     const [highlightBoxes, setHighlightBoxes] = useState<FieldBox[]>([]);
     const [lastClickInfo, setLastClickInfo] = useState<string | null>(null);
+
+    // Same drag/minimize/maximize/close chrome as the licence report modal (DraggableModal) -
+    // this one's just a single always-present instance rather than an array of stacked modals,
+    // so the position/size state lives here instead of in useReportModals.
+    const [position, setPosition] = useState({top: 40, left: 40});
+    const [size, setSize] = useState({width: 'calc(100% - 80px)', height: 'calc(100% - 80px)'});
+
+    const handleMaximize = () => {
+        setPosition({top: 0, left: 0});
+        setSize({width: '100%', height: '100%'});
+    };
+
+    const handleMinimize = () => {
+        setPosition({top: 40, left: 40});
+        setSize({width: 'calc(100% - 80px)', height: 'calc(100% - 80px)'});
+    };
 
     const pdfScrollRef = useRef<HTMLDivElement>(null);
     const jsonContainerRef = useRef<HTMLDivElement>(null);
@@ -261,20 +278,15 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
     }, [percentHighlightsByPage]);
 
     return (
-        <div
-            style={{
-                position: 'fixed', top: 40, left: 40, right: 40, bottom: 40,
-                backgroundColor: 'white', zIndex: 1000, boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-                borderRadius: '4px', overflow: 'hidden'
-            }}
+        <DraggableModal
+            id={0}
+            position={position}
+            size={size}
+            onClose={onClose}
+            onMaximize={handleMaximize}
+            onMinimize={handleMinimize}
+            onPositionChange={setPosition}
         >
-            <button
-                onClick={onClose}
-                style={{position: 'absolute', top: 8, right: 12, zIndex: 1001}}
-            >
-                Close
-            </button>
-
             {loading && <div style={{padding: '20px'}}>Loading...</div>}
 
             {!loading && reportData && (
@@ -343,7 +355,7 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
                     </div>
                 </div>
             )}
-        </div>
+        </DraggableModal>
     );
 }
 

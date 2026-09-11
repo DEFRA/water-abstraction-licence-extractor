@@ -68,9 +68,10 @@ public class TabulaTableExtractorService : ITableExtractorService
             }
             catch (Exception)
             {
-                // Falls through to Stream mode below for this page; the caller's own try/catch
-                // around the whole overlay covers the case where even that isn't enough.
-                
+                // Stream mode below runs unconditionally either way, on a success or a failure
+                // here - this catch only stops a Lattice crash from also losing whatever Stream
+                // still finds for this page. It is not a fallback triggered by this failure.
+
                 // TODO log
             }
 

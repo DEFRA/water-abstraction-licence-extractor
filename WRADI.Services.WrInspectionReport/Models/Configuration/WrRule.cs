@@ -31,6 +31,7 @@ public sealed class WrRule
     private bool _allowValueToWrapPastSameLineEndTag;
     private int _previousLinesToFetch;
     private int _leewayBefore;
+    private bool _allowValueToWrapToNextLine;
 
     public static WrRule Between(string startText, string endText)
     {
@@ -137,6 +138,15 @@ public sealed class WrRule
         return this;
     }
 
+    // See LabelToMatch.AllowValueToWrapToNextLine - pair with NextLines(n) (this alone doesn't
+    // fetch anything further; it only tells ApplicableToMost's Text-format winner to append what
+    // NextLines already fetched and narrowed).
+    public WrRule AllowValueToWrapToNextLine()
+    {
+        _allowValueToWrapToNextLine = true;
+        return this;
+    }
+
     public WrRule Possibilities(IEnumerable<TextToMatch> p)
     {
         _possibilities = p.ToList();
@@ -240,6 +250,7 @@ public sealed class WrRule
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
-        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag
+        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag,
+        AllowValueToWrapToNextLine = _allowValueToWrapToNextLine
     };
 }

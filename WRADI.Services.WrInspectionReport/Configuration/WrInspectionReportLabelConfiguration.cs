@@ -236,8 +236,28 @@ public static class WrInspectionReportLabelConfiguration
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 
+    // NextLines(1) + AllowValueToWrapToNextLine: "Met with" has no bound at all by default
+    // (WrRule.After's NextLinesToFetch is 0), so a name list that wraps onto the very next
+    // physical line - confirmed on wr51__sw0480192006__..., "Genna Bray" sitting alone at the
+    // same left margin as "Met with:" itself, one line down - was structurally unreachable.
+    // NextLines(1) alone doesn't fix this: the actual winning matcher for this rule shape is
+    // ApplicableToMost's Format=="Text" branch (LabelIsBeforeTextToFind.FunctionAsync never
+    // runs once it's already matched), and that branch ignores nextLines entirely regardless of
+    // NextLinesToFetch - see LabelToMatch.AllowValueToWrapToNextLine, which makes it append what
+    // NextLines already fetched and narrowed to this label's own column (nothing else shares
+    // that next line here, so a plain lookahead is enough).
     private static (string, List<LabelToMatch>) RuleMetWith() =>
-        (WrInspectionReportFieldNames.MetWith, [WrRule.After("Met with").Named(WrInspectionReportFieldNames.MetWith).Build()]);
+        (WrInspectionReportFieldNames.MetWith, [
+            WrRule.After("Met with").Named(WrInspectionReportFieldNames.MetWith)
+                .NextLines(1)
+                .AllowValueToWrapToNextLine()
+                // Confirmed real on wr51__121014g8__...: "Met with" is already complete on its
+                // own line there ("Jane Batchelor"), but the next row's first column happens to
+                // be "Inspecting Officer: ..." at the exact same left margin - without this,
+                // AllowValueToWrapToNextLine blindly swallowed a whole different field's answer.
+                .SkipNextLineWhenStartsWith("Inspecting Officer")
+                .Build()
+        ]);
 
     private static (string, List<LabelToMatch>) RuleInspectingOfficer() =>
         (WrInspectionReportFieldNames.InspectingOfficer, [WrRule.After("Inspecting Officer").Named(WrInspectionReportFieldNames.InspectingOfficer).Build()]);

@@ -635,12 +635,19 @@ public static class ApplicableToMost
                         .Words
                         .First()
                         .Coordinates;
-                    
+
                     documentLine.Columns[0].Words.Clear();
                     documentLine.Columns[0].Words.AddRange(
                         DocumentLineColumn.TextToWords(outputText, null, coords));
-                    
-                    var lineMatch = labelGroupResult.Clone([documentLine]);
+
+                    // See LabelToMatch.AllowValueToWrapToNextLine - nextLines has already been
+                    // fetched and narrowed to this label's own column upstream (WalkSameLineColumns/
+                    // FindNextLineColumnByPosition), but this branch otherwise never looks at it.
+                    var resultLines = request.label.AllowValueToWrapToNextLine && request.nextLines?.Count > 0
+                        ? (List<DocumentLine>) [documentLine, ..request.nextLines]
+                        : [documentLine];
+
+                    var lineMatch = labelGroupResult.Clone(resultLines);
                     returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                 }
             }

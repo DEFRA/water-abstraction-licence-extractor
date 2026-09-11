@@ -163,6 +163,17 @@ public class LabelToMatch
     // correct-termination shape for most fields, not the rare case.
     public bool AllowValueToWrapPastSameLineEndTag { get; init; }
 
+    // ApplicableToMost's Format=="Text" branch (the LabelIsBeforeTextToFind/LabelIsAfterTextToFind
+    // shape's actual winning matcher - it out-ranks LabelIsBeforeTextToFind.FunctionAsync itself,
+    // which never runs once ApplicableToMost already returns a match) builds its result purely
+    // from the label's own line; NextLinesToFetch/nextLines are computed upstream but never
+    // consulted here, so a plain WrRule.After("Label").NextLines(1) has no effect on its own -
+    // confirmed on wr51__sw0480192006__..., "Met with: <names> and" continuing as "<name>" alone
+    // on the very next physical line (same left margin, no other field sharing that row).
+    // Setting this appends the label's own already-narrowed nextLines onto the result. Defaults
+    // to false/no-op - a label that doesn't opt in keeps ignoring nextLines exactly as before.
+    public bool AllowValueToWrapToNextLine { get; init; }
+
     public LabelToMatch Clone()
     {
         // TODO swap to a source generator
@@ -212,7 +223,8 @@ public class LabelToMatch
             RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,
             ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList(),
             BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions,
-            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag
+            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag,
+            AllowValueToWrapToNextLine = AllowValueToWrapToNextLine
         };
     }    
 }

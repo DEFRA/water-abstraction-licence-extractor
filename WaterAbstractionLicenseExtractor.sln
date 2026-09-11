@@ -130,6 +130,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.WrInspection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tabula", "WALE.ProcessFile.Services.Tabula\WALE.ProcessFile.Services.Tabula.csproj", "{49138433-84A6-44EC-B199-2889CF969BF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.Cache.WrInspectionReport", "WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj", "{33884DB1-E514-4A18-A090-483E60DACC8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -572,6 +574,18 @@ Global
 		{49138433-84A6-44EC-B199-2889CF969BF6}.Release|x64.Build.0 = Release|Any CPU
 		{49138433-84A6-44EC-B199-2889CF969BF6}.Release|x86.ActiveCfg = Release|Any CPU
 		{49138433-84A6-44EC-B199-2889CF969BF6}.Release|x86.Build.0 = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|x64.Build.0 = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Debug|x86.Build.0 = Debug|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|x64.ActiveCfg = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|x64.Build.0 = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|x86.ActiveCfg = Release|Any CPU
+		{33884DB1-E514-4A18-A090-483E60DACC8C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -624,5 +638,6 @@ Global
 		{C6E05D4F-854E-44EC-8B33-F7234D930028} = {53569D5F-4862-41A1-94A2-C633258F7641}
 		{FB937036-A9AB-44E5-8762-FE046AB6C8DF} = {27B58812-6EF5-423A-89C4-CA69E53C9915}
 		{49138433-84A6-44EC-B199-2889CF969BF6} = {6E79C08E-B1C8-4D98-A4B6-81BE88B53856}
+		{33884DB1-E514-4A18-A090-483E60DACC8C} = {53569D5F-4862-41A1-94A2-C633258F7641}
 	EndGlobalSection
 EndGlobal

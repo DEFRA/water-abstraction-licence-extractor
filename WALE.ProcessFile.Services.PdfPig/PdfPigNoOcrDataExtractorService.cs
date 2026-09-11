@@ -131,6 +131,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 Number = pageNumber,
                 NumberOfImages = pageElement.GetProperty("numberOfImages").GetInt32(),
                 DigitalText = pageElement.GetProperty("text").GetString(),
+                // TryGetProperty, not GetProperty - metadata cached before Width/Height were
+                // added here has no such keys; missing just means "unknown" (0), same as any
+                // other non-PdfPig IInternalPdfDocumentPage.
+                Width = pageElement.TryGetProperty("width", out var width) ? width.GetDouble() : 0,
+                Height = pageElement.TryGetProperty("height", out var height) ? height.GetDouble() : 0,
                 ScreenshotFilepaths = screenshotFilepaths
                     .Select(fp => fp.ImageReference)
                     .ToList()!
@@ -390,12 +395,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         };
             
         var numberOfImages = page.NumberOfImages;
-            
+        var pdfPigPage = (Page)page.InternalPage!.UnderlyingObject;
+
         pagesMetadata.Add(new Dictionary<string, object>
         {
             { "number", page.Number },
             { "numberOfImages", page.NumberOfImages },
             { "text", page.DigitalText! },
+            { "width", pdfPigPage.Width },
+            { "height", pdfPigPage.Height },
             { "detailReference", await cacheService.GetNoOcrPageReferenceAsync(pageRequest) }
         });
 

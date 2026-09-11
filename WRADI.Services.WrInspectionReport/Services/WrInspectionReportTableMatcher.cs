@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Methods;
+using WRADI.DocumentType.WrInspectionReport.Helpers;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -19,13 +20,7 @@ public static class WrInspectionReportTableMatcher
         string serviceName)
     {
         var results = new Dictionary<string, LabelGroupResult>();
-        var bestTable = FindBestGridTable(tables, labelLookups, gridFieldNames);
-
-        if (bestTable == null)
-        {
-            return results;
-        }
-
+        
         foreach (var fieldName in gridFieldNames)
         {
             var labels = labelLookups
@@ -39,37 +34,42 @@ public static class WrInspectionReportTableMatcher
                     continue;
                 }
 
-                var rawCellText = FindFieldValueInTable(bestTable, label.TextStart);
-
-                if (rawCellText == null)
+                foreach (var table in tables)
                 {
-                    continue;
+                    var rawRemainder = FindFreeTextValueInTable(table, label.TextStart);
+                    var rawCellText = FormattingHelper.GetTickedOrAcceptedStatus(rawRemainder);
+
+                    if (rawCellText == null)
+                    {
+                        continue;
+                    }
+
+                    var matchedPossibility = label.Possibilities
+                        .FirstOrDefault(possibility =>
+                            BaseMethod.MatchesPossibility(rawCellText, possibility));
+
+                    if (matchedPossibility == null)
+                    {
+                        continue;
+                    }
+
+                    var words = matchedPossibility.Text.Length == 0
+                        ? []
+                        : DocumentLineColumn.TextToWords(matchedPossibility.Text, null);
+
+                    var syntheticLine = new DocumentLine
+                    {
+                        Columns = [new DocumentLineColumn(words)]
+                    };
+
+                    results[fieldName] = new LabelGroupResult
+                    {
+                        LabelGroupName = fieldName,
+                        MatchedLabelName = fieldName,
+                        ServiceName = serviceName,
+                        Text = [syntheticLine]
+                    };
                 }
-
-                var matchedPossibility = label.Possibilities
-                    .FirstOrDefault(possibility => BaseMethod.MatchesPossibility(rawCellText, possibility));
-
-                if (matchedPossibility == null)
-                {
-                    continue;
-                }
-
-                var words = matchedPossibility.Text.Length == 0
-                    ? []
-                    : DocumentLineColumn.TextToWords(matchedPossibility.Text, null);
-
-                var syntheticLine = new DocumentLine
-                {
-                    Columns = [new DocumentLineColumn(words)]
-                };
-
-                results[fieldName] = new LabelGroupResult
-                {
-                    LabelGroupName = fieldName,
-                    MatchedLabelName = fieldName,
-                    ServiceName = serviceName,
-                    Text = [syntheticLine]
-                };
             }
         }
 
@@ -92,12 +92,6 @@ public static class WrInspectionReportTableMatcher
         string serviceName)
     {
         var results = new Dictionary<string, LabelGroupResult>();
-        var bestTable = FindBestGridTable(tables, labelLookups, gridFieldNames);
-
-        if (bestTable == null)
-        {
-            return results;
-        }
 
         foreach (var fieldName in freeTextFieldNames)
         {
@@ -118,8 +112,16 @@ public static class WrInspectionReportTableMatcher
                     continue;
                 }
 
-                rawValue = FindFreeTextValueInTable(bestTable, label.TextStart);
+                foreach (var table in tables)
+                {
+                    rawValue = FindFreeTextValueInTable(table, label.TextStart);
 
+                    if (!string.IsNullOrEmpty(rawValue))
+                    {
+                        break;
+                    }
+                }
+                
                 if (!string.IsNullOrEmpty(rawValue))
                 {
                     break;
@@ -149,10 +151,16 @@ public static class WrInspectionReportTableMatcher
         return results;
     }
 
-    // Same shape as FindFieldValueInTable, but for free text: no LooksLikeATickAnswer length
-    // gate and no selection-mark normalisation - a phone number, time, or serial number IS the
-    // value wanted, whatever its length, not something to be screened for "looks tick-shaped".
-    private static string? FindFreeTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textStarts)
+    /// <summary>
+    /// Handles both cell shapes seen in practice: (a) label and value merged into one cell (the
+    /// majority - strip the label prefix, remainder is the answer), and (b) label and value split
+    /// into adjacent cells (label cell's own remainder is empty, answer is the next cell in the
+    /// same row).
+    /// </summary>
+    /// <param name="table"></param>
+    /// <param name="textToMatch"></param>
+    /// <returns></returns>
+    private static string? FindFreeTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textToMatch)
     {
         foreach (var cell in table.Cells)
         {
@@ -161,15 +169,15 @@ public static class WrInspectionReportTableMatcher
                 continue;
             }
 
-            var matchedTextStart = textStarts.FirstOrDefault(textStart =>
+            var matchedTextToMatch = textToMatch.FirstOrDefault(textStart =>
                 cell.Content.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
 
-            if (matchedTextStart == null)
+            if (matchedTextToMatch == null)
             {
                 continue;
             }
 
-            var rawRemainder = cell.Content[matchedTextStart.Text.Length..].Trim().TrimStart(':').Trim();
+            var rawRemainder = cell.Content[matchedTextToMatch.Text.Length..].Trim().TrimStart(':').Trim();
 
             if (rawRemainder.Length > 0)
             {
@@ -179,130 +187,14 @@ public static class WrInspectionReportTableMatcher
             var nextCell = table.Cells.FirstOrDefault(c =>
                 c.RowIndex == cell.RowIndex && c.ColumnIndex == cell.ColumnIndex + 1);
 
+            if (nextCell?.Content == null)
+            {
+                return string.Empty;
+            }
+            
             return nextCell?.Content?.Trim();
         }
 
         return null;
     }
-
-    // The table whose cells collectively match the most grid field labels. A document can have
-    // several tables (header block, meter block, etc.); this picks out the LicenceProvisions
-    // grid specifically rather than assuming table order.
-    private static DocumentTable? FindBestGridTable(
-        IReadOnlyList<DocumentTable> tables,
-        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        IReadOnlyList<string> gridFieldNames)
-    {
-        DocumentTable? bestTable = null;
-        var bestCount = 0;
-
-        foreach (var table in tables)
-        {
-            var matchedFieldCount = gridFieldNames.Count(fieldName =>
-            {
-                var label = labelLookups
-                    .FirstOrDefault(l => l.LabelGroupName == fieldName).Labels?.FirstOrDefault();
-
-                return label?.TextStart != null
-                    && table.Cells.Any(cell => CellStartsWithAnyLabel(cell, label.TextStart));
-            });
-
-            if (matchedFieldCount > bestCount)
-            {
-                bestCount = matchedFieldCount;
-                bestTable = table;
-            }
-        }
-
-        // Require a meaningful majority of the grid before trusting this table at all - a
-        // table that only happens to contain one or two grid label texts (e.g. a coincidental
-        // overlap with an unrelated block) isn't a reliable source for the rest of the fields.
-        return bestCount >= gridFieldNames.Count / 2 ? bestTable : null;
-    }
-
-    private static bool CellStartsWithAnyLabel(DocumentTableCell cell, IReadOnlyList<TextToMatch> textStarts)
-    {
-        return cell.Content != null
-            && textStarts.Any(textStart => cell.Content
-                .StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
-    }
-
-    // A real tick/status answer ("✓", "N/A", "NI", "☑ ☐", etc. - see GetInOrderField's
-    // Possibilities list) is always a handful of characters once Azure's own ":selected:"/
-    // ":unselected:" annotation is stripped back out. Some templates put a full narrative
-    // sentence in the same cell instead (e.g. "Source of supply: Lower Greensand at Warwick
-    // Wold / Brewer St :selected:") - generous headroom above the longest real Possibility
-    // ("☑ ☐", 3 chars) while still excluding any real sentence.
-    private const int MaxTickAnswerLength = 8;
-
-    // Handles both cell shapes seen in practice: (a) label and value merged into one cell (the
-    // majority - strip the label prefix, remainder is the answer), and (b) label and value split
-    // into adjacent cells (label cell's own remainder is empty, answer is the next cell in the
-    // same row).
-    private static string? FindFieldValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textStarts)
-    {
-        foreach (var cell in table.Cells)
-        {
-            if (cell.Content == null)
-            {
-                continue;
-            }
-
-            var matchedTextStart = textStarts
-                .FirstOrDefault(textStart =>
-                    cell.Content.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
-
-            if (matchedTextStart == null)
-            {
-                continue;
-            }
-
-            // A bare leftover colon (the label's own punctuation, not part of the answer) must
-            // not be mistaken for a real merged-cell answer - otherwise the split-cell case
-            // below (label alone in its cell, e.g. "Special conditions:") never triggers and
-            // the real answer in the next cell is missed entirely. Checked against the RAW
-            // (not selection-mark-normalised) content - normalising first, then checking length,
-            // would already have turned ":selected:" into "✓" and hidden how long the rest of a
-            // narrative sentence actually is.
-            var rawRemainder = cell.Content[matchedTextStart.Text.Length..].Trim().TrimStart(':').Trim();
-
-            if (rawRemainder.Length > 0)
-            {
-                // Found the field's own label, but its content isn't tick-shaped - a narrative
-                // answer, which WrInspectionReportSchemaConverter.GetInOrderStatus has no way to
-                // represent anyway. Don't fabricate a status by matching a stray "in"/"n"/"✓"
-                // substring inside real prose - fall back to the heuristic instead.
-                return LooksLikeATickAnswer(rawRemainder)
-                    ? NormaliseSelectionMarks(rawRemainder)
-                    : null;
-            }
-
-            var nextCell = table.Cells.FirstOrDefault(c =>
-                c.RowIndex == cell.RowIndex && c.ColumnIndex == cell.ColumnIndex + 1);
-
-            if (nextCell?.Content == null)
-            {
-                return string.Empty;
-            }
-
-            var nextRaw = nextCell.Content.Trim();
-            return LooksLikeATickAnswer(nextRaw) ? NormaliseSelectionMarks(nextRaw) : null;
-        }
-
-        return null;
-    }
-
-    private static bool LooksLikeATickAnswer(string rawText)
-    {
-        var withoutSelectionMarks = rawText
-            .Replace(":selected:", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Replace(":unselected:", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Trim();
-
-        return withoutSelectionMarks.Length <= MaxTickAnswerLength;
-    }
-
-    private static string NormaliseSelectionMarks(string content) => content
-        .Replace(":selected:", "✓", StringComparison.OrdinalIgnoreCase)
-        .Replace(":unselected:", string.Empty, StringComparison.OrdinalIgnoreCase);
 }

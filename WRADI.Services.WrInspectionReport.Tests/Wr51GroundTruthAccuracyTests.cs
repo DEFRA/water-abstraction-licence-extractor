@@ -24,16 +24,16 @@ using Form = global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionRe
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Phase 0 accuracy harness for WR51. Ground truth is a hand-labelled golden set that
+/// Phase 0 accuracy harness for WR51. Ground truth is a hand-labelled truth set that
 /// intentionally lives OUTSIDE this repo - the source PDFs and their derived
 /// <c>.truth.json</c> files contain real names/addresses/phone numbers and must never be
 /// committed. This test reads that external folder, replays extraction against the same
-/// cached PdfPig text used by the other WR51 corpus tests, and reports per-field
+/// cached PdfPig text used by the other WR51 sample-set tests, and reports per-field
 /// precision/recall/hallucination stats - no DB, no API, replay-only.
 ///
 /// If the ground-truth folder isn't present (any machine other than the one it was labelled
 /// on, and CI), the test reports that and returns rather than failing - this is a reporting
-/// tool, not a gate, until enough of the golden set exists to set real thresholds.
+/// tool, not a gate, until enough of the truth set exists to set real thresholds.
 /// </summary>
 public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 {
@@ -46,7 +46,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
-    // Two T6-only measurement fields discovered while hand-labelling the golden set have no
+    // Two T6-only measurement fields discovered while hand-labelling the truth set have no
     // corresponding property anywhere in WrInspectionReportMeasurementDetails.cs - a genuine
     // model gap, not an extraction bug. Reported separately as "Unmodeled" rather than scored
     // as misses, so they don't drown out fields the pipeline could plausibly get right.
@@ -146,7 +146,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// they're scored as "no extraction", same as a genuinely empty string field.
     /// </summary>
     // internal, not private: WrInspectionReportPdfPigNoOcrPdfTests reuses these two for its
-    // full-corpus per-template coverage report, rather than duplicating the 50-field mapping.
+    // sample-set per-template coverage report, rather than duplicating the 50-field mapping.
     internal static string? FormatInOrderStatus(InOrderStatus status) =>
         status is InOrderStatus.Blank or InOrderStatus.Unknown or InOrderStatus.DidntMatch
             ? null
@@ -156,7 +156,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// Property-path extractors matching the 53 ground-truth field keys. Enum fields (the
     /// LicenceProvisions grid) are compared via FormatInOrderStatus() against the truth's
     /// status string - when truth instead holds narrative text (several real documents
-    /// describe provisions in prose rather than a tick mark - see the golden set's own notes)
+    /// describe provisions in prose rather than a tick mark - see the truth set's own notes)
     /// this will correctly score as a miss/wrong, which is real signal: the current model has
     /// no way to represent a narrative provisions answer, only InOrderStatus.
     /// </summary>
@@ -244,11 +244,11 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     // wrong character already produces a deceptively high similarity ratio - e.g. one wrong
     // digit in an 11-digit phone number is already ~91% similar, which would misreport a
     // genuinely wrong value as a near-hit. Every real narrative field (GeneralComments) in the
-    // golden set is reliably well over this; every real single-value field in FieldExtractors
+    // truth set is reliably well over this; every real single-value field in FieldExtractors
     // is reliably well under it.
     private const int MinLengthForSimilarityScoring = 200;
 
-    // Chosen from the 2026-09-08 golden-set GeneralComments analysis: real near-misses
+    // Chosen from the 2026-09-08 truth-set GeneralComments analysis: real near-misses
     // (superscript/whitespace encoding artifacts, e.g. "m3" vs "³", "13th" vs "13 th")
     // clustered at >=0.90 similarity; sub-0.90 cases were confirmed by manual inspection to be
     // genuine content differences (extraction running past the field's true end and picking up
@@ -437,7 +437,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// default (cheapest - fallback only when the primary found nothing at all); 13 means "fall
     /// back unless Tabula resolved literally every grid field" (most accuracy, least saving). Uses
     /// the cached Azure DI results from the other runs in this file - no new API cost from running
-    /// this sweep itself, since the golden set's Azure DI table lookups are already cached per
+    /// this sweep itself, since the truth set's Azure DI table lookups are already cached per
     /// document regardless of which threshold is being evaluated in-process.
     /// </summary>
     [Fact]
@@ -479,7 +479,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         {
             testOutputHelper.WriteLine(
                 $"Ground-truth folder not found at {GroundTruthFolder} - this is an external, " +
-                "non-git-tracked golden set that only exists on the machine it was labelled on. " +
+                "non-git-tracked truth set that only exists on the machine it was labelled on. " +
                 "Copy the truth files there (a /truth subfolder of this project's PdfFolder " +
                 "dotnet user-secret) to run this test. Returning without failure.");
             return;
@@ -570,7 +570,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
                     if (!UnmodeledFields.Contains(fieldName) && !FieldExtractors.TryGetValue(fieldName, out _))
                     {
                         // Ground-truth field with no known mapping (schema drift between the
-                        // golden set and this test) - surface it rather than silently skipping.
+                        // truth set and this test) - surface it rather than silently skipping.
                         extractionFailures.Add((truth.SourceFile, $"No extractor registered for ground-truth field '{fieldName}'"));
                         continue;
                     }
@@ -634,7 +634,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         // Aggregate across ALL fields per document's classified template, not per-field-per-
-        // template - the golden set only has a handful of documents in most non-T1 buckets
+        // template - the truth set only has a handful of documents in most non-T1 buckets
         // (T7=1, Impounding=2 at last count), so a per-field breakdown there would mostly be
         // single data points dressed up as a percentage. This is still directly useful for the
         // one thing that's actually been asked about it: does accuracy differ by template.
@@ -667,7 +667,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         var scoredDocumentCount = detailRows.Select(r => r.SourceFile).Distinct().Count();
-        testOutputHelper.WriteLine($"Golden-set documents scored: {scoredDocumentCount}/{truthPaths.Length}");
+        testOutputHelper.WriteLine($"Truth-set documents scored: {scoredDocumentCount}/{truthPaths.Length}");
         testOutputHelper.WriteLine($"Detail CSV:  {detailPath}");
         testOutputHelper.WriteLine($"Summary CSV: {summaryPath}");
         testOutputHelper.WriteLine($"By-template summary CSV: {templateSummaryPath}");

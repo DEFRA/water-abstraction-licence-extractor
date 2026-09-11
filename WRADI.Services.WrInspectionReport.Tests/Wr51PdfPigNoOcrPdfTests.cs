@@ -22,9 +22,9 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// <summary>
 /// Ported from origin/task/wr51s (the pre-rewrite WR51 branch), which had 10 hand-crafted
 /// "dummy" WR51 documents with known, verified expected values - unlike the real 789-file
-/// corpus (WRADI.Services.WrInspectionReport.Tests), which has no ground truth and can only
+/// sample set (WRADI.Services.WrInspectionReport.Tests), which has no ground truth and can only
 /// measure coverage percentages. These are exact-value regression tests against fixed,
-/// synthetic content, so a failure here means a real behaviour change, not corpus noise.
+/// synthetic content, so a failure here means a real behaviour change, not sample-set noise.
 ///
 /// The dummy files use "dummy" instead of a real DMS GUID in their filename
 /// (WR51__&lt;licence&gt;__dummy.pdf), so FileHelper.ExtractFileId can't parse an id from

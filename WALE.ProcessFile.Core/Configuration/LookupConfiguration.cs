@@ -72,7 +72,7 @@ public class LookupConfiguration(
     // label into that label's row purely by horizontal position, corrupting the label
     // text itself. Anchored grouping fixes that but changes DocumentLine boundaries, so
     // it's gated behind this flag rather than applied universally without a regression
-    // suite to verify it against the licence corpus.
+    // suite to verify it against the licence sample set.
     public bool UseAnchoredLineGrouping { get; set; } = useAnchoredLineGrouping;
     
     public bool SavePurposeMapping { get; set; } = savePurposeMapping;

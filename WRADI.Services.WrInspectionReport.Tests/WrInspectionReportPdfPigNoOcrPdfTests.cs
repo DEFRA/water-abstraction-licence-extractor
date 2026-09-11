@@ -63,18 +63,18 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     }
 
     /// <summary>
-    /// Smoke/coverage test against the real WR51 corpus. There's no hand-verified ground truth
+    /// Smoke/coverage test against the real WR51 sample set. There's no hand-verified ground truth
     /// for these files, so this doesn't assert exact field values - it proves the ported label
     /// DSL (including the new LimitTo column-restriction behaviour) runs end-to-end against real
     /// documents without exceptions, and reports basic field-coverage stats.
     /// </summary>
     [Fact]
-    public async Task WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage()
+    public async Task WhenExtractingRealWr51Sample_ThenNoExceptionsAndReasonableFieldCoverage()
     {
         var pdfFolder = TestConfig.PdfFolder;
 
         // TestLicences is shared with the licence pipeline's own integration tests, so
-        // filter to just the WR51 corpus rather than picking up every licence PDF too.
+        // filter to just the WR51 sample set rather than picking up every licence PDF too.
         // The handful of hand-verified "dummy" fixtures (WR51__<licence>__dummy.pdf, no
         // real DMS GUID in the filename) belong to Wr51PdfPigNoOcrPdfTests instead, which
         // derives a stable id via GuidHelper rather than relying on a real one.
@@ -161,26 +161,26 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     }
 
     /// <summary>
-    /// Same full real corpus, with the cost-optimised table extraction overlay enabled (Tabula
+    /// Same full real sample set, with the cost-optimised table extraction overlay enabled (Tabula
     /// primary, free; Azure DI fallback, paid, only on documents where Tabula resolves fewer than
     /// WrInspectionReportExtractionOrchestrator's default minimumFieldsToSkipFallback (10) of the
     /// 13 grid fields - see that class and the wr51_textract_tables_design memory for how that
-    /// default was tuned against the golden set). No ground truth exists at corpus scale, so this
+    /// default was tuned against the truth set). No ground truth exists at sample-set scale, so this
     /// reports coverage (field presence), not accuracy - compare against
-    /// WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
+    /// WhenExtractingRealWr51Sample_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
     /// hand for the LicenceProvisions.*/meter fields the overlay targets. Real Azure DI cost is
     /// incurred here (once per T1 document where the fallback fires) - this is NOT a free test to
     /// re-run casually; each first run against a given document is billed, further runs hit that
     /// document's cache.
     /// </summary>
     [Fact]
-    public async Task WhenExtractingRealWr51CorpusWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
+    public async Task WhenExtractingRealWr51SampleWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
     {
         if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
         {
             testOutputHelper.WriteLine(
                 "AiServicesEndpoint/AiServicesKey user secrets not set for " +
-                "WRADI.Services.WrInspectionReport.Tests - skipping the full-corpus table-extraction run. " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the sample-set table-extraction run. " +
                 "Set both via dotnet user-secrets to enable it.");
             return;
         }
@@ -321,7 +321,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
 
         // The next-line same-column fetch swept the "Name and address:" row in as a second
-        // line of the licence number on 197/789 real corpus files - additionalSameLineEndTexts
+        // line of the licence number on 197/789 real sample-set files - additionalSameLineEndTexts
         // fix. A handful of newline-separated values remain (wrapped labels, genuine
         // multi-licence inspections) - this only guards against the dominant leak returning.
         var licenceNumberLeaksNameAndAddress = formsList.Count(f =>
@@ -571,7 +571,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
     // Categorical, not a pinned accuracy number that would go stale the next time the harness
     // runs - High covers templates the classifier itself is least sure about (Unknown) or where
-    // the golden set so far is thin (T4/T7/Impounding all have single-digit sample counts - see
+    // the truth set so far is thin (T4/T7/Impounding all have single-digit sample counts - see
     // analysis/08-wr51-field-report.md section 3), Medium is the heterogeneous narrative bucket,
     // Normal is the two best-covered templates (T1, T6).
     private static string ReviewPriority(WrTemplateType template) => template switch
@@ -589,7 +589,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         _ => 2
     };
 
-    private record TemplateDistributionRow(string Template, int Documents, string PercentOfCorpus);
+    private record TemplateDistributionRow(string Template, int Documents, string PercentOfSample);
 
     private record QaReviewRow(
         string Filename,
@@ -609,9 +609,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         string ReviewOutcome,
         string ReviewNotes);
 
-    // No ground truth exists for the full real corpus (only the 46-doc golden set has that), so
+    // No ground truth exists for the full real sample set (only the 46-doc truth set has that), so
     // this is coverage - "did the field produce anything" - not accuracy - "was it right". Still
-    // useful at full corpus scale precisely where the golden set's per-template samples are too
+    // useful at full sample-set scale precisely where the truth set's per-template samples are too
     // small to trust (T4=3, T7=1, Impounding=1 documents there vs the real counts here). One row
     // per (template, field) rather than one column per field, since it covers every field
     // Wr51GroundTruthAccuracyTests.FieldExtractors knows about (reused from there directly, not

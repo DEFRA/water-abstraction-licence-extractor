@@ -8,7 +8,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// Regression coverage for the shape of GetT1Labels() vs GetLabels(), and for the
 /// ExceptWhenInsideWord guard on the checkbox-style possibility fields - both were found the
 /// hard way this session (a blanket prune attempt that measured as a real accuracy regression
-/// against the golden set and full corpus, and a stray lowercase "n" winning
+/// against the truth set and full sample set, and a stray lowercase "n" winning
 /// checkbox-possibility matches inside unrelated words). These are cheap to assert directly and
 /// catch a silent reintroduction of either without needing to rerun the harness.
 /// </summary>
@@ -70,11 +70,11 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenEveryMeasurementDetailsAlternateSurvivesUnchanged()
     {
-        // The decisive finding from the corpus-wide diff: every MeasurementDetails alternate
+        // The decisive finding from the sample-wide diff: every MeasurementDetails alternate
         // attributed to "T6 template" in its own comment turned out to have real usage among
         // T1-classified documents too (Calibration alone lost 11% of its real matches when
         // pruned). None of these fields should ever differ between the two rulesets again
-        // without a fresh, evidenced corpus-wide check - this test just pins today's "unchanged"
+        // without a fresh, evidenced sample-wide check - this test just pins today's "unchanged"
         // state so a future edit has to deliberately touch it.
         string[] fieldsThatMustStayIdentical =
         [

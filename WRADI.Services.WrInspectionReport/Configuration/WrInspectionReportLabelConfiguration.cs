@@ -106,7 +106,7 @@ public static class WrInspectionReportLabelConfiguration
     // "☒" possibility would win a .First() match against "☒ ☐" before the position-based
     // paired check gets a chance. The four Private Use Area entries are Wingdings-style tick
     // glyphs, written as \u escapes rather than literal glyphs so they survive editing/rendering
-    // intact - confirmed present in the real corpus by scanning all 789 real PDFs' extracted text
+    // intact - confirmed present in the real sample set by scanning all 789 real PDFs' extracted text
     // directly (2026-09-08): U+F0FC (638 occurrences/81 docs), U+F061 (87/11), U+F050 (192/36),
     // U+F072 (4/1). These four were previously present as `new("")` (a genuinely empty string,
     // not the intended glyph - lost at some point before this comment's own claim about them was
@@ -181,7 +181,7 @@ public static class WrInspectionReportLabelConfiguration
     private static (string, List<LabelToMatch>) RuleMeansOfMeasurement() =>
         (WrInspectionReportFieldNames.MeansOfMeasurement, [WrRule.InOrder("Means of measurement", InOrderPossibilities, "Charging factors").Named(WrInspectionReportFieldNames.MeansOfMeasurement).Build()]);
 
-    // "Records" renders with progressively wider letter-kerning on 340/789 real corpus docs
+    // "Records" renders with progressively wider letter-kerning on 340/789 real sample-set docs
     // (43%) - only 7 distinct literal patterns cover all occurrences, so literal alternates are
     // sufficient here rather than a whitespace-tolerant matching engine change.
     private static (string, List<LabelToMatch>) RuleRecords() =>
@@ -493,7 +493,7 @@ public static class WrInspectionReportLabelConfiguration
                 "General / relevant background", "General comments, background"
             ]));
 
-    // The baseline heading alone only covers 61% of the real corpus - "Actions"/"Summary" are
+    // The baseline heading alone only covers 61% of the real sample set - "Actions"/"Summary" are
     // deliberately kept as valid anchors (a different, longer-form report template) but
     // excluded from Remove: they're common enough to legitimately recur as a genuine
     // sub-heading later in the same captured block, and stripping them there silently corrupts
@@ -521,8 +521,8 @@ public static class WrInspectionReportLabelConfiguration
 
     // Tried and reverted (2026-09-09): adding a loose "Date:" alternate to catch the case where
     // "Inspection Date:" wraps onto two lines ("Inspection" / "Date: ...") - confirmed on
-    // wr51__73417g0068__... and wr51__an0340003001r01__... (the golden set's own only
-    // InspectionDate Miss). Measured net regression against the golden set: recall 98%->40%
+    // wr51__73417g0068__... and wr51__an0340003001r01__... (the truth set's own only
+    // InspectionDate Miss). Measured net regression against the truth set: recall 98%->40%
     // (54 Hit->22 Hit, 32 newly Wrong) - bare "Date:" is too ambiguous against this document's
     // other "Date:" occurrences (e.g. "Date of certificate or record:") and started winning over
     // the correct match on documents where the primary rule already worked fine. Needs a

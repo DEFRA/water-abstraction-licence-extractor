@@ -26,7 +26,7 @@ public class PdfPigRowGroupingTests
         };
 
     /// <summary>
-    /// Real-world shape of the bug this exists to catch: on the WR51 corpus, "Inspection
+    /// Real-world shape of the bug this exists to catch: on the WR51 sample set, "Inspection
     /// Date:" and its neighbouring fields sit ~5pt apart on one row (font-baseline jitter),
     /// while the date value directly beneath the label is ~5pt further down again - so the
     /// gap from row to row is individually smaller than lineHeight even though the total

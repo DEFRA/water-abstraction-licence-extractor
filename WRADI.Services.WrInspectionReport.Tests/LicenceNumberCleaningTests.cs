@@ -5,7 +5,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// <summary>
 /// Direct unit tests for WrInspectionReportSchemaConverter.CleanLicenceNumbers - pure string
 /// logic, no MatchesResult/PDF fixture needed. Pins the delimiter set and the "drop pieces with
-/// no digits" heuristic found while tracing real corpus values (see
+/// no digits" heuristic found while tracing real sample-set values (see
 /// WrInspectionReport.LicenceNumberCleaned's own comment for the full rationale and the
 /// DEFRA water-abstraction-licence-finder precedent this canonical form matches).
 /// </summary>
@@ -47,7 +47,7 @@ public class LicenceNumberCleaningTests
     [Fact]
     public void WhenPieceHasNoDigitsAtAll_ThenThatPieceIsDropped()
     {
-        // Real corpus case: "26 71 314 004 Brennand and Whitendale" - "Whitendale" is a
+        // Real sample-set case: "26 71 314 004 Brennand and Whitendale" - "Whitendale" is a
         // reservoir/site name caught by the "and" split, not a second licence number. No
         // licence number is ever digit-free, so this heuristic drops it rather than emitting a
         // false match key.

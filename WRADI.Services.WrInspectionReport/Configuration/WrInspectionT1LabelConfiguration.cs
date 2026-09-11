@@ -10,15 +10,15 @@ public static class WrInspectionT1LabelConfiguration
     // MeasurementDetails "T6 template" alternate (MeterMake/SerialNumber/Reading/Units/
     // Calibration/Conformance/FlowVerification/MeterVerification, plus the T6-only fields
     // MeterName/FlowRate/Verification/SpotCheckResult/MeterAssetNumber) was checked for removal
-    // and kept, because a corpus-wide coverage diff (all 480 real T1-classified documents, not
-    // just the golden set) showed real, substantial usage under T1 despite the "T6" name -
+    // and kept, because a sample-wide coverage diff (all 480 real T1-classified documents, not
+    // just the truth set) showed real, substantial usage under T1 despite the "T6" name -
     // Calibration alone loses 51/480 T1 docs (11%) without it. The "T6 template" label describes
     // where a phrasing was FIRST found, not a template-exclusivity boundary; don't trust it as
     // one. Two alternates DID show zero T1 impact and are removed below: NameAndAddress's
     // "Permit holder name and address" (T4 only) and GeneralComments's non-baseline headings.
     //
-    // Any future change here MUST re-verify via the full corpus-wide per-field coverage report,
-    // not just the golden-set harness or the alternate's own attribution comment - a narrower
+    // Any future change here MUST re-verify via the full sample-wide per-field coverage report,
+    // not just the truth-set harness or the alternate's own attribution comment - a narrower
     // check already missed this once.
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
     {
@@ -46,7 +46,7 @@ public static class WrInspectionT1LabelConfiguration
         labels[generalCommentsIndex] = (WrInspectionReportFieldNames.GeneralComments, [
             // Tried (2026-09-08) and reverted: an "Actions" end-anchor and a "Page N of M"
             // footer end-anchor, meant to stop the field short of a trailing checklist/footer
-            // section seen on some T1 documents. Measured against the golden set: fixed 1 case
+            // section seen on some T1 documents. Measured against the truth set: fixed 1 case
             // but broke 2 others - "Actions" isn't reliably a section boundary (wr51__1142109's
             // truth genuinely includes "Actions:\n<content>" as narrative, indistinguishable via
             // StartsWith from the standalone "Actions" heading that IS a real boundary elsewhere)

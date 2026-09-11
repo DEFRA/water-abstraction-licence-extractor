@@ -9,7 +9,7 @@ namespace WALE.ProcessFile.Core.Tests.UnitTests;
 /// ':' '/' already are, a standalone tick-mark answer disappears entirely - most visibly via
 /// DocumentLineColumn.FilterWordsFromText, which calls this per-word with
 /// trimPunctuationEnd=true for the last word, so a captured value like "Source of supply: ✓"
-/// silently lost its own answer. Measured impact on the real WR51 corpus: the whole 13-field
+/// silently lost its own answer. Measured impact on the real WR51 sample set: the whole 13-field
 /// LicenceProvisions grid's resolved rate was suppressed by this (masked until a separate fix
 /// stopped an unrelated false-positive match from winning first).
 /// </summary>

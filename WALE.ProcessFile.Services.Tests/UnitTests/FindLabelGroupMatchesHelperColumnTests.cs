@@ -167,7 +167,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void DoesNotStop_WhenColumnContainsEndMarkerButDoesNotStartWithIt()
         {
-            // This is the real bug found on the WR51 corpus: a column whose text is
+            // This is the real bug found on the WR51 sample set: a column whose text is
             // "record: January 2026" CONTAINS no end marker text here, but more generally,
             // an end marker occurring mid-column (not at its start) must not be treated as
             // the next field starting - only a column that genuinely STARTS a new field

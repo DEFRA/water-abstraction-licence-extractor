@@ -28,7 +28,7 @@ namespace WALE.ProcessFile.Services.Tabula;
 // candidates only ever helps: a genuine Lattice table (real ruled borders) still wins outright
 // against Stream's coarser output whenever both are present, and Stream is the only one of the
 // two that can find anything at all on documents with no ruled borders around the grid at all
-// (e.g. wr51__114222355, confirmed via the golden-set harness run that motivated adding this -
+// (e.g. wr51__114222355, confirmed via the truth-set harness run that motivated adding this -
 // each LicenceProvisions field sits on its own paragraph line there, no drawn table).
 // SimpleNurminenDetectionAlgorithm (region detection) + BasicExtractionAlgorithm (the actual cell
 // split) is the Stream-mode pairing tabula-sharp's own README documents.

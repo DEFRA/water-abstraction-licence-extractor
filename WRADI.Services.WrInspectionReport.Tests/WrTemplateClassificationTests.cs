@@ -66,7 +66,7 @@ public class WrTemplateClassificationTests
     public void WhenCommentsSectionHasNeitherBaselineNorAlternateHeading_ThenNonStandardNarrative()
     {
         // A deliberate, evidenced tradeoff, not an oversight - two candidate rules were
-        // measured against the golden set: treating "no heading at all" as T1 (alternate-only
+        // measured against the truth set: treating "no heading at all" as T1 (alternate-only
         // exclusion) missed 6 genuinely non-standard documents (headingless narratives,
         // multi-section reports) that this rule catches; treating it as NonStandardNarrative
         // (this rule, chosen) costs 2 false positives on documents that are genuinely T1 but

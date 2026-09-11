@@ -42,7 +42,7 @@ public static class TestConfig
         }
     }
 
-    // Only needed for the opt-in table-based grid extraction golden-set run
+    // Only needed for the opt-in table-based grid extraction truth-set run
     // (Wr51GroundTruthAccuracyTests) - null (not thrown) when unset, so every other test in
     // this project is unaffected by whether these are configured.
     [field: AllowNull, MaybeNull]

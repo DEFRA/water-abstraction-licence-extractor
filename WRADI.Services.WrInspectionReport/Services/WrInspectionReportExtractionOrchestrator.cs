@@ -48,7 +48,7 @@ public static class WrInspectionReportExtractionOrchestrator
             // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
             // behaviour unchanged.
             ITableExtractorService? fallbackTableExtractorService = null,
-            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08, see
+            // The cost/accuracy dial. Swept 1/4/7/10/13 against the truth set (2026-09-08, see
             // wr51_textract_tables_design memory for the full curve) - it's a step function, not
             // smooth: 1/4/7 are flat at the same recall as Tabula alone (fallback usage climbs from
             // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
@@ -56,7 +56,7 @@ public static class WrInspectionReportExtractionOrchestrator
             // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the
             // measured sweet spot and the default here - raise towards GridFieldNames.Length for more
             // accuracy at more cost, lower towards 1 to spend as little as possible, but neither
-            // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
+            // direction is evidenced to help past this curve without a fresh sample-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
         var classificationConfiguration = configuration.Clone();
@@ -182,7 +182,7 @@ public static class WrInspectionReportExtractionOrchestrator
         // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
         // table/service the grid-field logic above ended up using - deliberately AFTER the
         // fallback-escalation decision, and never folded into tableMatches.Count before that
-        // decision is made. minimumFieldsToSkipFallback was tuned against the golden set purely
+        // decision is made. minimumFieldsToSkipFallback was tuned against the truth set purely
         // against the 13 tick/cross grid fields; letting free-text hits count towards it would
         // silently change what "confident enough, skip the paid fallback" means without
         // re-measuring it.
@@ -266,7 +266,7 @@ public static class WrInspectionReportExtractionOrchestrator
     // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
     // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
     // Tried and reverted (2026-09-09): adding MeterMake/Reading/Units alongside Time/
-    // SerialNumber/TelephoneNumber. Measured against the golden-set harness with both table
+    // SerialNumber/TelephoneNumber. Measured against the truth-set harness with both table
     // backends - Tabula: MeterMake/Reading unchanged, Units regressed (55%->52%); Azure DI: all
     // three showed zero change at all. Not a wrong-table-extractor problem -
     // FindFreeTextValueInTable's cell-matching (TextStart-prefix against cell.Content) isn't

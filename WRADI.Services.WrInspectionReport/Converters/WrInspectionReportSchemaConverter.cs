@@ -412,7 +412,7 @@ public static class WrInspectionReportSchemaConverter
             : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
     }
 
-    // Splits a verbatim LicenceNumber cell on the delimiters seen across the real corpus
+    // Splits a verbatim LicenceNumber cell on the delimiters seen across the real sample set
     // ("X and Y", "X & Y", "X, Y, Z" - all three occur) and canonicalises each piece to
     // alphanumeric-only/uppercase. A cleaned piece with no digits at all is dropped - real
     // licence numbers always contain digits, but "and"/"," can occasionally split a site-name
@@ -421,7 +421,7 @@ public static class WrInspectionReportSchemaConverter
     // genuine licence-shaped piece and drops the site-name fragment rather than mis-cleaning
     // it into a false match key. Not perfect (a licence number's own site-name suffix stays
     // glued to it if the split lands there instead), but no false-negative case has been seen
-    // in the corpus - see the LicenceNumberCleaned property comment for why this exists.
+    // in the sample set - see the LicenceNumberCleaned property comment for why this exists.
     internal static List<string> CleanLicenceNumbers(string? rawLicenceNumber)
     {
         if (string.IsNullOrWhiteSpace(rawLicenceNumber))
@@ -491,7 +491,7 @@ public static class WrInspectionReportSchemaConverter
     // T4/T6/T7 are all positive, distinguishing markers).
     //
     // v1 made T1 the plain default/fallback for anything not T4/T6/T7/Impounding, which measured
-    // at 86% of the real corpus against the client's own ~60% expectation - the gap was largely
+    // at 86% of the real sample set against the client's own ~60% expectation - the gap was largely
     // documents whose GeneralComments section uses an alternate heading, or none at all. v2
     // (current) excludes on EITHER signal: a positive alternate-heading match, or the baseline
     // heading being absent entirely.
@@ -701,7 +701,7 @@ public static class WrInspectionReportSchemaConverter
         // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
         // export toolchain happened to produce, not consistently ✓ - see
         // WrInspectionReportLabelConfiguration's InOrderPossibilities list for the
-        // full evidence (corpus-wide symbol frequency behind each of these).
+        // full evidence (sample-wide symbol frequency behind each of these).
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✔", StringComparison.InvariantCultureIgnoreCase)

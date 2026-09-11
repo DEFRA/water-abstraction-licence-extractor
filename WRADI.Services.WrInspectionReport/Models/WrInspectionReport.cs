@@ -8,7 +8,7 @@ public class WrInspectionReport
 
     // Canonical form for cross-system matching (e.g. against NALD/DMS licence records) -
     // LicenceNumber itself stays a verbatim transcription of the printed cell (deliberately,
-    // see the golden set's own labelling notes), which can read "28/39/23/0090 and
+    // see the truth set's own labelling notes), which can read "28/39/23/0090 and
     // 28/39/23/0143" for a multi-licence inspection. This splits that apart and normalises
     // each licence number to alphanumeric-only, uppercase - the same canonical form the
     // DEFRA water-abstraction-licence-finder tool's own permit-number matching

@@ -36,7 +36,7 @@ public class WrInspectionReportSchemaConverterTests
     }
 
     [Theory]
-    // Real values pulled from the WR51 corpus CSV - a PDF kerning/export artefact renders a
+    // Real values pulled from the WR51 sample-set CSV - a PDF kerning/export artefact renders a
     // stray space before the ordinal suffix ("10 th" instead of "10th"), which neither form
     // (glued or spaced) parses via DateOnly.TryParse until the whole suffix is stripped.
     [InlineData("10 th February 2026", 2026, 2, 10)]

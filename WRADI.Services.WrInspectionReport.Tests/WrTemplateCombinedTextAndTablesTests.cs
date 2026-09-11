@@ -53,7 +53,7 @@ public class WrTemplateCombinedTextAndTablesTests
     private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WrInspectionReportLabelWithTablesConfiguration.GetLabels(),
+            WrInspectionReportLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,

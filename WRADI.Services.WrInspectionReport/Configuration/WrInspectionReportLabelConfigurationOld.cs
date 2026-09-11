@@ -5,7 +5,7 @@ using WRADI.DocumentType.WrInspectionReport.Models.Configuration;
 
 namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
-public static class WrInspectionReportLabelWithTablesConfiguration
+public static class WrInspectionReportLabelConfigurationOld
 {
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
     [
@@ -154,12 +154,7 @@ public static class WrInspectionReportLabelWithTablesConfiguration
     // next field's label text into this field's captured value.
 
     private static (string, List<LabelToMatch>) RuleSourceOfSupply() =>
-        (WrInspectionReportFieldNames.SourceOfSupply, [
-            WrRule
-                .InOrder("Source of supply", InOrderPossibilities, "Quantities")
-                .Named(WrInspectionReportFieldNames.SourceOfSupply)
-                .FromTable()
-                .Build()]);
+        (WrInspectionReportFieldNames.SourceOfSupply, [WrRule.InOrder("Source of supply", InOrderPossibilities, "Quantities").Named(WrInspectionReportFieldNames.SourceOfSupply).Build()]);
 
     private static (string, List<LabelToMatch>) RulePointOfAbstraction() =>
         (WrInspectionReportFieldNames.PointOfAbstraction, [WrRule.InOrder("Point of abstraction", InOrderPossibilities, "Means of measurement").Named(WrInspectionReportFieldNames.PointOfAbstraction).Build()]);

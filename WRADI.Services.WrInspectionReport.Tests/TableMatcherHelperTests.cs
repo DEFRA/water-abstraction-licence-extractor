@@ -1,10 +1,8 @@
-using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Helpers;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Helpers;
-using WRADI.DocumentType.WrInspectionReport.Services;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
@@ -19,17 +17,6 @@ public class TableMatcherHelperTests
 {
     private static readonly IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
         WrInspectionReportLabelConfiguration.GetLabels();
-
-    private static readonly IReadOnlyList<string> GridFieldNames =
-    [
-        WrInspectionReportFieldNames.SourceOfSupply, WrInspectionReportFieldNames.PointOfAbstraction,
-        WrInspectionReportFieldNames.MeansOfAbstraction, WrInspectionReportFieldNames.Purposes,
-        WrInspectionReportFieldNames.Period, WrInspectionReportFieldNames.Quantities,
-        WrInspectionReportFieldNames.MeansOfMeasurement, WrInspectionReportFieldNames.Records,
-        WrInspectionReportFieldNames.ProvisionOfInformation, WrInspectionReportFieldNames.SpecialConditions,
-        WrInspectionReportFieldNames.Land, WrInspectionReportFieldNames.ChargingFactors,
-        WrInspectionReportFieldNames.OtherProvisions
-    ];
 
     private static DocumentTableCell Cell(int row, int col, string content) => new()
     {
@@ -48,7 +35,7 @@ public class TableMatcherHelperTests
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -73,7 +60,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -99,7 +86,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         var sourceOfSupply = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SourceOfSupply).Value;
@@ -124,7 +111,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         Assert.False(results.ContainsKey(WrInspectionReportFieldNames.SourceOfSupply));
@@ -145,7 +132,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
@@ -163,7 +150,7 @@ public class TableMatcherHelperTests
         };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], l, ["SpecialConditions"], "TestTableService",
+            [table], l, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
@@ -189,7 +176,7 @@ public class TableMatcherHelperTests
         };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [table], Labels, GridFieldNames, "TestTableService",
+            [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         Assert.Empty(results);
@@ -212,7 +199,7 @@ public class TableMatcherHelperTests
         var gridTable = BuildFullGridTable(specialConditionsValue: "✓");
 
         var results = TableMatcherHelper.MatchPossibility(
-            [headerTable, gridTable], Labels, GridFieldNames, "TestTableService",
+            [headerTable, gridTable], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         Assert.True(results.ContainsKey(WrInspectionReportFieldNames.SpecialConditions));
@@ -230,7 +217,7 @@ public class TableMatcherHelperTests
         };
 
         var results = TableMatcherHelper.MatchPossibility(
-            [unrelatedTable], Labels, GridFieldNames, "TestTableService",
+            [unrelatedTable], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
         Assert.Empty(results);
@@ -263,16 +250,7 @@ public class TableMatcherHelperTests
             ]
         };
     }
-
-    // MatchFreeTextFields - the sibling to MatchGridFields for Time/SerialNumber/TelephoneNumber:
-    // no Possibilities matching, the raw cell remainder (or split-cell next cell) IS the value.
-
-    private static readonly IReadOnlyList<string> FreeTextFieldNames =
-    [
-        WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,
-        WrInspectionReportFieldNames.TelephoneNumber
-    ];
-
+    
     [Fact]
     public void WhenFreeTextFieldsSitInTheSameTableAsTheGrid_ThenTheyAreExtracted()
     {
@@ -285,7 +263,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 7, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchFreeTextFields(
-            [table], Labels, FreeTextFieldNames, "TestTableService");
+            [table], Labels, "TestTableService");
 
         Assert.Equal("02380891203", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
         Assert.Equal("10:00", results[WrInspectionReportFieldNames.Time].Text!.Single().Text);
@@ -302,7 +280,7 @@ public class TableMatcherHelperTests
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
         var results = TableMatcherHelper.MatchFreeTextFields(
-            [table], Labels, FreeTextFieldNames, "TestTableService");
+            [table], Labels, "TestTableService");
 
         Assert.Empty(results);
     }
@@ -338,7 +316,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchFreeTextFields(
-            [table], Labels, FreeTextFieldNames, "TestTableService");
+            [table], Labels, "TestTableService");
 
         Assert.Equal("3K220000854902", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
     }
@@ -354,7 +332,7 @@ public class TableMatcherHelperTests
         var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
         var results = TableMatcherHelper.MatchFreeTextFields(
-            [table], Labels, FreeTextFieldNames, "TestTableService");
+            [table], Labels, "TestTableService");
 
         Assert.Equal("07794218297", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
     }

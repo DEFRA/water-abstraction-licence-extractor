@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Methods;
@@ -16,7 +17,6 @@ public static class TableMatcherHelper
     public static Dictionary<string, LabelGroupResult> MatchPossibility(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        IReadOnlyList<string> gridFieldNames,
         string serviceName,
         Func<string?, string?>? transformContentFunction)
     {
@@ -88,15 +88,21 @@ public static class TableMatcherHelper
     public static Dictionary<string, LabelGroupResult> MatchFreeTextFields(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        IReadOnlyList<string> freeTextFieldNames,
         string serviceName)
     {
         var results = new Dictionary<string, LabelGroupResult>();
 
-        foreach (var fieldName in freeTextFieldNames)
+        var filteredLabelLookups = labelLookups
+            .Where(labelGroup => labelGroup.Labels
+                .Any(l => l.TableBasedExtractorType is TabledBasedLayoutExtractor.Default
+                    or TabledBasedLayoutExtractor.FreeText))
+            .ToList();
+        
+        foreach (var labelGroup in filteredLabelLookups)
         {
             var labels = labelLookups
-                .FirstOrDefault(l => l.LabelGroupName == fieldName).Labels;
+                .FirstOrDefault(l => l.LabelGroupName == labelGroup.LabelGroupName)
+                .Labels;
 
             if (labels == null)
             {
@@ -104,6 +110,7 @@ public static class TableMatcherHelper
             }
 
             string? rawValue = null;
+            LabelToMatch? matchedLabel = null;
 
             foreach (var label in labels)
             {
@@ -118,6 +125,7 @@ public static class TableMatcherHelper
 
                     if (!string.IsNullOrEmpty(rawValue))
                     {
+                        matchedLabel = label;
                         break;
                     }
                 }
@@ -139,10 +147,10 @@ public static class TableMatcherHelper
                 Columns = [new DocumentLineColumn(words)]
             };
 
-            results[fieldName] = new LabelGroupResult
+            results[matchedLabel!.Name!] = new LabelGroupResult
             {
-                LabelGroupName = fieldName,
-                MatchedLabelName = fieldName,
+                LabelGroupName = labelGroup.LabelGroupName,
+                MatchedLabelName = matchedLabel.Name,
                 ServiceName = serviceName,
                 Text = [syntheticLine]
             };

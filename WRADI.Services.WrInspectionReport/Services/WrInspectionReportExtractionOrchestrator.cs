@@ -1,5 +1,5 @@
 using WALE.ProcessFile.Core.Configuration;
-using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
@@ -193,7 +193,6 @@ public static class WrInspectionReportExtractionOrchestrator
             var matches = TableMatcherHelper.MatchFreeTextFields(
                 tables,
                 labelLookups,
-                FreeTextFieldNames,
                 usedServiceName);
             
             foreach (var (key, value) in matches)
@@ -238,10 +237,15 @@ public static class WrInspectionReportExtractionOrchestrator
                 fileId,
                 processRunId);
 
+            var labels = labelLookups
+                .Where(labelGroup => labelGroup.Labels
+                    .Any(l => l.TableBasedExtractorType is TabledBasedLayoutExtractor.Default
+                        or TabledBasedLayoutExtractor.Grid))
+                .ToList();
+            
             var matches = TableMatcherHelper.MatchPossibility(
                 tables,
-                labelLookups,
-                GridFieldNames,
+                labels,
                 tableExtractorService.Name,
                 TickHelper.GetTickedOrAcceptedStatus);
 
@@ -253,29 +257,4 @@ public static class WrInspectionReportExtractionOrchestrator
             return ([], null, null);
         }
     }
-    
-    // The 13 LicenceProvisions grid fields WrInspectionReportTableMatcher can resolve via real
-    // table cells (Azure AI Document Intelligence "prebuilt-layout") instead of the heuristic
-    // column-walk.
-    private static readonly string[] GridFieldNames =
-    [
-        WrInspectionReportFieldNames.SourceOfSupply, WrInspectionReportFieldNames.PointOfAbstraction,
-        WrInspectionReportFieldNames.MeansOfAbstraction, WrInspectionReportFieldNames.Purposes,
-        WrInspectionReportFieldNames.Period, WrInspectionReportFieldNames.Quantities,
-        WrInspectionReportFieldNames.MeansOfMeasurement, WrInspectionReportFieldNames.Records,
-        WrInspectionReportFieldNames.ProvisionOfInformation, WrInspectionReportFieldNames.SpecialConditions,
-        WrInspectionReportFieldNames.Land, WrInspectionReportFieldNames.ChargingFactors,
-        WrInspectionReportFieldNames.OtherProvisions
-    ];
-
-    // Free-text (not tick/cross) fields also confirmed sitting in the same table as the grid on
-    // real T1 documents (2026-09-08 spot check) - the same 3 fields identified as affected by the
-    // column-walk engine's own known leak bugs (see wr51_column_walk_bug memory). Resolved via
-    // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
-    // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
-    private static readonly string[] FreeTextFieldNames =
-    [
-        WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,
-        WrInspectionReportFieldNames.TelephoneNumber
-    ];
 }

@@ -5,13 +5,14 @@ using WALE.Tools.Config;
 
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
-workflow = "ImportNaldData";
+//workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
+workflow = "RunInspectionReportProcessRun";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-workflow = "CopyS3Files";
+//workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
 //workflow = "GenerateLinkedLicencesCsv";
 workflow = "PurposeMapper";
@@ -28,6 +29,9 @@ switch (workflow)
     
     case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
         return await ImportDmsData.ImportAsync();
+
+    case "RunInspectionReportProcessRun": // Local WR51 process run from inspection_report_finder_result
+        return await RunInspectionReportProcessRun.RunAsync();
     
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO

@@ -19,8 +19,8 @@ public class FilesController(IFileService fileService) : Controller
     }
 
     // GetAsync's redirect target for IFileService implementations with no real presigned-URL
-    // concept (e.g. LocalFileService, pointed at the local golden-set corpus while there's no
-    // working S3 access) - streams the file's own bytes directly instead.
+    // concept (e.g. LocalFileService, for local-filesystem-backed dev/testing) - streams the
+    // file's own bytes directly instead.
     [HttpGet]
     public async Task<ActionResult> GetRawAsync([FromQuery] string filename)
     {

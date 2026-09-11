@@ -11,6 +11,7 @@ using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AwsSqs;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.Services;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence;
 using WRADI.Services.Cache.AbstractionLicence;
@@ -104,12 +105,14 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddAbstractionLicencePostgreSqlServices()
-        .AddAwsS3Services(
-            awsRegionName,
-            s3BucketName,
-            awsAccessKey,
-            awsSecretKey,
-            awsSessionToken)   
+        // TEMPORARY (2026-09-09): swapped from AddAwsS3Services to a local-filesystem
+        // IFileService - we have no working AWS credentials for wradi-s3-ingress-dev (the real
+        // bucket), only for shswals3bkt001 (NALD-transfer only, IAM-scoped, confirmed via
+        // Access Denied). Points at the existing golden-set corpus, which has real overlap with
+        // inspection_report_finder_result by permit number (212 of 2,772 real discovered
+        // permits also exist in the 789-doc local WR51 corpus). Revert to AddAwsS3Services once
+        // real S3 access exists.
+        .AddTransient<IFileService>(_ => new LocalFileService("/Users/edwardbutler/Documents/TestLicences/"))
         .AddAwsSqsServices(
             awsRegionName,
             awsAccessKey,

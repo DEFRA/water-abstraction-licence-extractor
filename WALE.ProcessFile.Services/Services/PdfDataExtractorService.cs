@@ -297,6 +297,12 @@ public class PdfDataExtractorService(
 
         if (needsToParseTables)
         {
+            // TODO hack - do this differently
+            if (pdfDocument.Bytes == null)
+            {
+                await pdfDocument.OpenInternalDocumentAsync();
+            }
+            
             documentTables = await configuration.TableExtractorService.GetTablesAsync(
                 pdfDocument.Bytes!,
                 fileId,

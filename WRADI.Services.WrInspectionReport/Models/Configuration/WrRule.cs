@@ -27,7 +27,8 @@ public sealed class WrRule
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private bool _boundSameLineWalkByOtherLabelPositions;
-
+    private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
+    
     public static WrRule Between(string startText, string endText)
     {
         var rule = new WrRule
@@ -80,6 +81,12 @@ public sealed class WrRule
     public WrRule Named(string name)
     {
         _name = name;
+        return this;
+    }
+    
+    public WrRule FromTable()
+    {
+        _layoutExtractor = LayoutExtractor.TableBased;
         return this;
     }
 
@@ -207,6 +214,7 @@ public sealed class WrRule
         RequireTextToBePresent = _requireTextToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-        LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions
+        LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
+        LayoutExtractor = _layoutExtractor
     };
 }

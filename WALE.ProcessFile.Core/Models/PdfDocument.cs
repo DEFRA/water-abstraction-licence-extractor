@@ -188,6 +188,8 @@ public class PdfDocument(
     
     private static byte[] ReadStreamFully(Stream input)
     {
+        input.Position = 0;
+        
         var buffer = new byte[16*1024];
         using var ms = new MemoryStream();
         int read;

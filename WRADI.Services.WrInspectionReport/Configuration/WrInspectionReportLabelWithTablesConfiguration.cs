@@ -154,7 +154,12 @@ public static class WrInspectionReportLabelWithTablesConfiguration
     // next field's label text into this field's captured value.
 
     private static (string, List<LabelToMatch>) RuleSourceOfSupply() =>
-        (WrInspectionReportFieldNames.SourceOfSupply, [WrRule.InOrder("Source of supply", InOrderPossibilities, "Quantities").Named(WrInspectionReportFieldNames.SourceOfSupply).Build()]);
+        (WrInspectionReportFieldNames.SourceOfSupply, [
+            WrRule
+                .InOrder("Source of supply", InOrderPossibilities, "Quantities")
+                .Named(WrInspectionReportFieldNames.SourceOfSupply)
+                .FromTable()
+                .Build()]);
 
     private static (string, List<LabelToMatch>) RulePointOfAbstraction() =>
         (WrInspectionReportFieldNames.PointOfAbstraction, [WrRule.InOrder("Point of abstraction", InOrderPossibilities, "Means of measurement").Named(WrInspectionReportFieldNames.PointOfAbstraction).Build()]);

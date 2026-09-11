@@ -9,6 +9,7 @@ using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tabula;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.Services.WrInspectionReport.Tests.Config;
 using WRADI.Services.WrInspectionReport.Tests.Helper;
@@ -52,13 +53,13 @@ public class WrTemplateCombinedTextAndTablesTests
     private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
         return new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportLabelWithTablesConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
             null!,
-            null!,
+            new TabulaTableExtractorService(),
             new DmsLookupService(),
             regionCode,
             DateTime.Now,

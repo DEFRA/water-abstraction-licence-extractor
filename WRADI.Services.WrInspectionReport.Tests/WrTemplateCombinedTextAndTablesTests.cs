@@ -77,6 +77,6 @@ public class WrTemplateCombinedTextAndTablesTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(42, resultList.Count);
+        Assert.Equal(46, resultList.Count);
     }
 }

@@ -29,7 +29,49 @@ public static class FindLabelGroupMatchesHelper
         Dictionary<string, object?> additionalInformationStore,
         IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {
-        return [];
+        var returnList = new List<LabelGroupResult>();
+        
+        foreach (var table in tables)
+        {
+            foreach (var cell in table.Cells)
+            {
+                foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
+                {
+                    var cellContainsLabelText =
+                        label.Text?.Any(text => cell.Content?.Contains(text.Text, StringComparison.OrdinalIgnoreCase) == true);
+
+                    if (cellContainsLabelText != true)
+                    {
+                        break;
+                    }
+                    
+                    var words = cell.Content!
+                        .Split(' ')
+                        .Select(w => new DocumentLineWord(
+                            w,
+                            null,
+                            DocumentLineWordCoordinates.NotKnown(),
+                            null))
+                        .ToList();
+                    
+                    var line = new DocumentLine
+                    {
+                        Columns = [new DocumentLineColumn(words)]
+                    };
+
+                    returnList.Add(new LabelGroupResult
+                    {
+                        IsOcr = false,
+                        MatchedLabel = label,
+                        Text = [line]
+                    });
+
+                    label.Completed = true;
+                }
+            }
+        }
+        
+        return returnList;
     }
     
     public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInLinesAsync(

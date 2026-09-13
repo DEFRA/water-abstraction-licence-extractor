@@ -298,7 +298,7 @@ public class PdfDataExtractorService(
 
         if (needsToParseTables)
         {
-            // TODO hack - do this differently
+            // TODO hack - do this differently - we can't always go back to the doc
             if (pdfDocument.Bytes == null)
             {
                 await pdfDocument.OpenInternalDocumentAsync();

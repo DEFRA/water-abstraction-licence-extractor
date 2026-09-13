@@ -20,9 +20,10 @@ public static class WrInspectionT1LabelConfiguration
     // Any future change here MUST re-verify via the full corpus-wide per-field coverage report,
     // not just the golden-set harness or the alternate's own attribution comment - a narrower
     // check already missed this once.
-    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels()
+    public static List<(string LabelGroupName, List<LabelToMatch> Labels)> FilterFrom(
+        List<(string LabelGroupName, List<LabelToMatch> Labels)> inputLabels)
     {
-        var labels = WrInspectionReportLabelConfiguration.GetLabels()
+        var labels = inputLabels
             .Where(label => label.LabelGroupName is not (
                 "TemplateMarkerT4"
                 or "TemplateMarkerT6"
@@ -58,6 +59,7 @@ public static class WrInspectionT1LabelConfiguration
                 .Named(WrInspectionReportFieldNames.GeneralComments)
                 .WholeLine()
                 .NextLines(100)
+                .FromText()
                 .Build()
         ]);
 

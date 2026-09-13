@@ -66,10 +66,13 @@ public static class WrInspectionReportExtractionOrchestrator
         configuration.LineHeight = 6;
         configuration.MinimumRowsForDigital = 30;
         configuration.UseAnchoredLineGrouping = true;
+
+        var originalLabels = configuration.Labels.ToList();
         
         var classificationConfiguration = configuration.Clone();
-        classificationConfiguration.Labels = WrInspectionClassificationLabelConfiguration.GetLabels();
-        //classificationConfiguration.UseLockExclusivity = false;
+        classificationConfiguration.Labels =
+            WrInspectionClassificationLabelConfiguration.FilterFrom(originalLabels);
+        classificationConfiguration.UseLockExclusivity = false;
 
         var (classificationStopExecution, _, classificationResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
@@ -93,7 +96,7 @@ public static class WrInspectionReportExtractionOrchestrator
 
         configuration = configuration.Clone();
         configuration.Labels = template == WrTemplateType.T1
-            ? WrInspectionT1LabelConfiguration.GetLabels()
+            ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
             : WrInspectionReportLabelConfiguration.GetLabels();;
 
         var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(

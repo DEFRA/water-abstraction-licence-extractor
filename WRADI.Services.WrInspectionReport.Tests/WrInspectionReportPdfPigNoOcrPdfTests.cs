@@ -30,16 +30,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
-    private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
+    private static LookupConfiguration BuildLookupConfiguration(
+        string pdfFolder,
+        bool textBasedConfig,
+        ITableExtractorService tableExtractorService)
     {
         return new LookupConfiguration(
-            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
+            textBasedConfig
+                ? WrInspectionReportTextBasedLabelConfiguration.GetLabels()
+                : WrInspectionReportLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
-            null,
+            tableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
@@ -86,7 +91,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, null!);
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -110,13 +115,14 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
                     var dmsFileData = new DmsFileData { FileId = fileId.Value };
 
-                    var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
-                        fileName,
-                        dmsFileData,
-                        lookupConfiguration,
-                        [fileName],
-                        processRunId: -99,
-                        pdfDataExtractor);
+                    var (stopExecution, _, matchesResult, template) =
+                        await WrInspectionReportExtractionOrchestrator.ExtractAsync(
+                            fileName,
+                            dmsFileData,
+                            lookupConfiguration,
+                            [fileName],
+                            processRunId: -99,
+                            pdfDataExtractor);
 
                     if (stopExecution || matchesResult == null)
                     {
@@ -199,10 +205,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
+        var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService();
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, false, primaryTableExtractorService);
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
-        var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
+        var forms = new ConcurrentBag<DocumentType.WrInspectionReport.Models.WrInspectionReport>();
         var t1FileNames = new ConcurrentBag<string>();
         var fallbackUsedFileNames = new ConcurrentBag<string>();
 
@@ -216,7 +223,6 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                 // is the paid fallback, invoked by the orchestrator only when Tabula resolves too
                 // little - a fresh instance per document mirrors how a real per-message Lambda
                 // invocation would construct these, and both are stateless.
-                var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService();
                 var fallbackTableExtractorService = new WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.AzureAiServicesDocumentIntelligenceTableExtractorService(
                     TestConfig.AiServicesEndpoint!,
                     TestConfig.AiServicesKey!,
@@ -235,16 +241,17 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                     var dmsFileData = new DmsFileData { FileId = fileId.Value };
                     var pdfBytes = await File.ReadAllBytesAsync(Path.Combine(pdfFolder, fileName));
 
-                    var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
-                        fileName,
-                        dmsFileData,
-                        lookupConfiguration,
-                        [fileName],
-                        processRunId: -99,
-                        pdfDataExtractor,
-                        primaryTableExtractorService,
-                        pdfBytes,
-                        fallbackTableExtractorService);
+                    var (stopExecution, _, matchesResult, template) =
+                        await WrInspectionReportExtractionOrchestrator.ExtractAsync(
+                            fileName,
+                            dmsFileData,
+                            lookupConfiguration,
+                            [fileName],
+                            processRunId: -99,
+                            pdfDataExtractor,
+                            primaryTableExtractorService,
+                            pdfBytes,
+                            fallbackTableExtractorService);
 
                     if (stopExecution || matchesResult == null)
                     {

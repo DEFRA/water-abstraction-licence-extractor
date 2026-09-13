@@ -1,3 +1,4 @@
+using System.Data;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -301,6 +302,12 @@ public class PdfDataExtractorService(
             if (pdfDocument.Bytes == null)
             {
                 await pdfDocument.OpenInternalDocumentAsync();
+            }
+
+            if (configuration.TableExtractorService == null)
+            {
+                throw new NoNullAllowedException(
+                    "TableExtractorService cannot be null when config requires tables");
             }
             
             documentTables = await configuration.TableExtractorService.GetTablesAsync(

@@ -124,12 +124,16 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                         return;
                     }
 
-                    var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, dmsFileData, template);
+                    var form = WrInspectionReportSchemaConverter.ToForm(
+                        matchesResult,
+                        dmsFileData,
+                        template);
+                    
                     forms.Add(form);
                 }
                 catch (Exception ex)
                 {
-                    failures.Add((fileName, ex.Message));
+                    failures.Add((fileName, ex.ToString()));
                 }
                 finally
                 {

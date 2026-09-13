@@ -97,7 +97,7 @@ public static class WrInspectionReportExtractionOrchestrator
         configuration = configuration.Clone();
         configuration.Labels = template == WrTemplateType.T1
             ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
-            : WrInspectionReportLabelConfiguration.GetLabels();;
+            : originalLabels;
 
         var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,

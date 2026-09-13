@@ -536,6 +536,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
                     truth.SourceFile,
                     dmsFileData,
                     lookupConfiguration,
+                    lookupConfiguration,
                     [truth.SourceFile],
                     processRunId: -99,
                     pdfDataExtractor,

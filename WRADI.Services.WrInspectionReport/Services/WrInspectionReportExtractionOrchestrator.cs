@@ -33,7 +33,8 @@ public static class WrInspectionReportExtractionOrchestrator
         ExtractAsync(
             string pdfFileName,
             DmsFileData dmsDataForFile,
-            LookupConfiguration configuration,
+            LookupConfiguration configuration1,
+            LookupConfiguration configuration2,
             List<string> previouslyParsedFiles,
             int processRunId,
             IPdfDataExtractorService pdfDataExtractor,
@@ -62,14 +63,14 @@ public static class WrInspectionReportExtractionOrchestrator
             // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
-        configuration = configuration.Clone();
-        configuration.LineHeight = 6;
-        configuration.MinimumRowsForDigital = 30;
-        configuration.UseAnchoredLineGrouping = true;
+        configuration1 = configuration1.Clone();
+        configuration1.LineHeight = 6;
+        configuration1.MinimumRowsForDigital = 30;
+        configuration1.UseAnchoredLineGrouping = true;
 
-        var originalLabels = configuration.Labels.ToList();
+        var originalLabels = configuration1.Labels.ToList();
         
-        var classificationConfiguration = configuration.Clone();
+        var classificationConfiguration = configuration1.Clone();
         classificationConfiguration.Labels =
             WrInspectionClassificationLabelConfiguration.FilterFrom(originalLabels);
         classificationConfiguration.UseLockExclusivity = false;
@@ -94,15 +95,15 @@ public static class WrInspectionReportExtractionOrchestrator
             classificationResult,
             documentHeader);
 
-        configuration = configuration.Clone();
-        configuration.Labels = template == WrTemplateType.T1
+        configuration1 = configuration1.Clone();
+        configuration1.Labels = template == WrTemplateType.T1
             ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
             : originalLabels;
 
         var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
             dmsDataForFile,
-            configuration,
+            configuration1,
             previouslyParsedFiles,
             processRunId);
 
@@ -122,7 +123,7 @@ public static class WrInspectionReportExtractionOrchestrator
             {
                 await ApplyTableBasedGridMatchesAsync(
                     scrapeResult,
-                    configuration.Labels,
+                    configuration2.Labels,
                     tableExtractorService,
                     pdfBytesForTableExtraction,
                     dmsDataForFile.FileId,

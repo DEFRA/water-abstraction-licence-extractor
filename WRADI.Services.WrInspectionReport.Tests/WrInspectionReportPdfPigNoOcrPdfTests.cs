@@ -120,6 +120,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                             fileName,
                             dmsFileData,
                             lookupConfiguration,
+                            lookupConfiguration,
                             [fileName],
                             processRunId: -99,
                             pdfDataExtractor);
@@ -206,7 +207,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
         var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService();
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, false, primaryTableExtractorService);
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, primaryTableExtractorService);
+        var lookupConfiguration2 = BuildLookupConfiguration(pdfFolder, false, primaryTableExtractorService);
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -246,6 +248,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                             fileName,
                             dmsFileData,
                             lookupConfiguration,
+                            lookupConfiguration2,
                             [fileName],
                             processRunId: -99,
                             pdfDataExtractor,

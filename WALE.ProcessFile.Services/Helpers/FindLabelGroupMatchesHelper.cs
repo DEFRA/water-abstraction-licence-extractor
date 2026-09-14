@@ -119,7 +119,11 @@ public static class FindLabelGroupMatchesHelper
 
                     previousPartialLine = partialLine;
 
-                    var (continueOut, nullOutPartialLine, returnResults, labelGroupResults)
+                    var (continueOut,
+                            nullOutPartialLine,
+                            setPartialLine,
+                            returnResults,
+                            labelGroupResults)
                         = await FindLabelGroupMatchesInLineAsync(
                             label,
                             fullLine,
@@ -145,6 +149,11 @@ public static class FindLabelGroupMatchesHelper
                             labelPositionIndex);
 
                     returnList = labelGroupResults;
+
+                    if (setPartialLine != null)
+                    {
+                        partialLine = setPartialLine;
+                    }
                     
                     if (nullOutPartialLine)
                     {
@@ -204,6 +213,7 @@ public static class FindLabelGroupMatchesHelper
     private static async Task<(
             bool ContinueOut,
             bool NullOutPartialLine,
+            DocumentLine? SetPartialLine,
             List<LabelGroupResult>? ReturnResults,
             List<LabelGroupResult> ReturnList)>
         FindLabelGroupMatchesInLineAsync(
@@ -230,9 +240,11 @@ public static class FindLabelGroupMatchesHelper
             Dictionary<string, object?> additionalInformationStore,
             IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {
+        var setPartialLine = false;
+        
         if (partialLine == null)
         {
-            return (false, false, null, returnList);
+            return (false, false, setPartialLine ? partialLine : null, null, returnList);
         }
         
         var textBeforeAtAndAfterLabel = new List<TextAndLabelAndPosition>();
@@ -242,7 +254,7 @@ public static class FindLabelGroupMatchesHelper
         switch (label.Format)
         {
             case LinkedLicenceDontInline.Constant:
-                return (true, true, null, returnList);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
             case LinkedLicence.Constant:
             {
                 var linkedLicences = await ProcessLinkedLicenceAsync(
@@ -256,7 +268,7 @@ public static class FindLabelGroupMatchesHelper
                     pdfDataExtractorService);
 
                 returnList.AddRange(linkedLicences);
-                return (true, true, null, returnList);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
             }
         }
         
@@ -265,7 +277,7 @@ public static class FindLabelGroupMatchesHelper
                 text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
             && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
         {
-            return (true, true, null, returnList);
+            return (true, true, setPartialLine ? partialLine : null, null, returnList);
         }
         
         TextToMatch? matchedStartText = null;
@@ -323,7 +335,7 @@ public static class FindLabelGroupMatchesHelper
 
                 if (!anyNotLookingForSingleLine)
                 {
-                    return (true, true, null, returnList);
+                    return (true, true, setPartialLine ? partialLine : null, null, returnList);
                 }
             }
         }
@@ -353,7 +365,7 @@ public static class FindLabelGroupMatchesHelper
                 out labelEndLineNumber,
                 out labelEndCharIndex))
             {
-                return (true, true, null, returnList);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
             }
         }
         else if (label.Possibilities?.Any() == true && label.Format == "Text")
@@ -363,7 +375,7 @@ public static class FindLabelGroupMatchesHelper
             
             if (matchedPossibilities.Count == 0)
             {
-                return (true, true, null, returnList);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
             }
 
             matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
@@ -371,7 +383,7 @@ public static class FindLabelGroupMatchesHelper
         
         if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
         {
-            return (true, true, null, returnList);
+            return (true, true, setPartialLine ? partialLine : null, null, returnList);
         }
 
         if (label.MatchAllText)
@@ -381,7 +393,7 @@ public static class FindLabelGroupMatchesHelper
 
             if (NotMatchedAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
             {
-                return (true, true, null, returnList);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
             }
         }
         else
@@ -618,7 +630,7 @@ public static class FindLabelGroupMatchesHelper
             
             if (result.Return)
             {
-                return (false, false, result.Results, returnList);
+                return (false, false, setPartialLine ? partialLine : null, result.Results, returnList);
             }
             
             if (result.ContinuePartialLoop)
@@ -643,15 +655,26 @@ public static class FindLabelGroupMatchesHelper
             if (result.NewPartialLine != null)
             {
                 partialLine = result.NewPartialLine;
+                setPartialLine = true;
             }
         }
 
         if (continuePartialLoop)
         {
-            return (true, partialLine == null, null, returnList);
+            return (
+                true,
+                partialLine == null,
+                setPartialLine ? partialLine : null,
+                null,
+                returnList);
         }
         
-        return (true, true, null, returnList);
+        return (
+            true,
+            true,
+            setPartialLine ? partialLine : null,
+            null,
+            returnList);
     }
 
     /// <summary>

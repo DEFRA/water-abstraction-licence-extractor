@@ -163,4 +163,127 @@ public class WrInspectionReportSchemaConverterTests
         // Assert
         Assert.Equal(expectedStatus, form.LicenceProvisions.SourceOfSupply);
     }
+
+    private static MatchesResult BuildMatchesResultWithFormSentTo(string rawText)
+    {
+        var documentLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(rawText, null))],
+            0,
+            0,
+            0,
+            0);
+
+        return new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    Text = [documentLine],
+                    LabelGroupName = WrInspectionReportFieldNames.FormSentTo,
+                    MatchedLabelName = WrInspectionReportFieldNames.FormSentTo
+                }
+            ]
+        };
+    }
+
+    // "Form sent to:" and "Date:" share the same physical line - RuleFormSentTo's own end
+    // marker requires "Date" to start its own column, which only happens when "Form sent to:"
+    // is blank (a wide gap before "Date:" triggers the column split). A real value filled in
+    // close enough to "Date:" leaves both in one column with nothing to bound the match, so
+    // "Date: <whatever>" rides along as part of the captured text - confirmed real on
+    // sw0480020004__5e8bbcc0-...: "Form sent to: NA – response to operator by email Date: 4
+    // January 2018". SplitFormSentToAndDate cuts the raw text at "Date" as a converter-level
+    // fix, without touching the shared column-splitting matching engine.
+    [Theory]
+    [InlineData(
+        "NA – response to operator by email Date: 4 January 2018",
+        "NA – response to operator by email")]
+    [InlineData("NA – response to operator by email", "NA – response to operator by email")] // no "Date" present - untouched
+    [InlineData("", "")]
+    public void WhenFormSentToRunsIntoDateOnSameLine_ThenTruncatesAtDate(string rawText, string expected)
+    {
+        // Arrange
+        var matchesResult = BuildMatchesResultWithFormSentTo(rawText);
+
+        // Act
+        var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
+
+        // Assert
+        Assert.Equal(expected, form.Metadata.FormSentTo);
+    }
+
+    // The same column collision that strands "Date: 4 January 2018" inside FormSentTo also
+    // stops RuleDate's own "Date:" label (also column-start-anchored) from ever matching on
+    // this line at all - so truncating FormSentTo alone would silently make the date
+    // disappear from the form entirely, rather than just move it back into its rightful
+    // Metadata.Date field. Confirmed real on the same sw0480020004__5e8bbcc0-... document -
+    // zero "Date" labelGroupName matches at all before this fix.
+    [Fact]
+    public void WhenFormSentToRunsIntoDateAndNoSeparateDateMatchExists_ThenDateIsRecoveredFromFormSentTo()
+    {
+        // Arrange - no separate "Date" LabelGroupResult at all, matching the real document
+        var matchesResult = BuildMatchesResultWithFormSentTo(
+            "NA – response to operator by email Date: 4 January 2018");
+
+        // Act
+        var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
+
+        // Assert
+        Assert.Equal("NA – response to operator by email", form.Metadata.FormSentTo);
+        Assert.Equal("4 January 2018", form.Metadata.Date.RawDate);
+        Assert.Equal(new DateOnly(2018, 1, 4), form.Metadata.Date.Date);
+    }
+
+    [Fact]
+    public void WhenSeparateDateMatchAlreadyExists_ThenFormSentToFallbackIsNotUsed()
+    {
+        // Arrange - a real, separate "Date" match should always win over the FormSentTo
+        // fallback, which only exists to cover the case where RuleDate found nothing at all.
+        var formSentToLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(
+                "NA – response to operator by email Date: 4 January 2018", null))],
+            0,
+            0,
+            0,
+            0);
+
+        var dateLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords("10/02/2026", null))],
+            0,
+            0,
+            0,
+            0);
+
+        var matchesResult = new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    Text = [formSentToLine],
+                    LabelGroupName = WrInspectionReportFieldNames.FormSentTo,
+                    MatchedLabelName = WrInspectionReportFieldNames.FormSentTo
+                },
+                new LabelGroupResult
+                {
+                    Text = [dateLine],
+                    LabelGroupName = "Date",
+                    MatchedLabelName = "Date"
+                }
+            ]
+        };
+
+        // Act
+        var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
+
+        // Assert
+        Assert.Equal(new DateOnly(2026, 2, 10), form.Metadata.Date.Date);
+    }
 }

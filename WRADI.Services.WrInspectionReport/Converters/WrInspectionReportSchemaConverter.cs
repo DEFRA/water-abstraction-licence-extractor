@@ -32,7 +32,11 @@ public static class WrInspectionReportSchemaConverter
         DmsFileData? dmsFileData,
         WrTemplateType? knownTemplate = null)
     {
-        var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
+        var (formSentTo, formSentToDateFallback) = SplitFormSentToAndDate(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.FormSentTo));
+
+        var rawFormDateMatched = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
+        var rawFormDate = string.IsNullOrWhiteSpace(rawFormDateMatched) ? formSentToDateFallback : rawFormDateMatched;
 
         DateOnly? formDate = null;
         if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), out var tFormDate))
@@ -331,7 +335,7 @@ public static class WrInspectionReportSchemaConverter
                 Filename = matchesResult.Filename,
                 FileId = dmsFileData?.FileId,
                 IsScan = matchesResult.ScannedFile,
-                FormSentTo = GetMultilineText(matchesResult, WrInspectionReportFieldNames.FormSentTo),
+                FormSentTo = formSentTo,
                 Date = new WrInspectionReportInspectionDate()
                 {
                     RawDate = rawFormDate,
@@ -430,6 +434,38 @@ public static class WrInspectionReportSchemaConverter
         return string.IsNullOrEmpty(text)
             ? text
             : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
+    }
+
+    // "Form sent to:" and "Date:" sit on the same physical line, separated by whatever gap the
+    // rule engine's column-splitting heuristic uses to tell two labels apart. When "Form sent
+    // to:" is blank that gap is wide and the two columns split cleanly, but a real value filled
+    // in close to "Date:" (confirmed on sw0480020004__5e8bbcc0-...: "NA - response to operator
+    // by email Date: 4 January 2018") leaves no gap at all, so both land in one column and the
+    // rule's own end marker never gets a chance to bound the match - "Date:" and everything
+    // after it rides along as part of FormSentTo, and for the exact same reason RuleDate's own
+    // "Date:" label match (also column-start-anchored) never fires at all on this line, leaving
+    // Metadata.Date genuinely empty rather than just duplicated. Splitting here - instead of
+    // just truncating - keeps the date recoverable as a fallback rather than silently dropping
+    // it once it's cut out of FormSentTo. Field-local fix, doesn't touch the shared
+    // column-splitting logic other rules also depend on.
+    private static (string? FormSentTo, string? DateFallback) SplitFormSentToAndDate(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return (text, null);
+        }
+
+        var dateIndex = text.IndexOf("Date", StringComparison.OrdinalIgnoreCase);
+
+        if (dateIndex < 0)
+        {
+            return (text, null);
+        }
+
+        var formSentTo = text[..dateIndex].TrimEnd();
+        var dateFallback = text[(dateIndex + "Date".Length)..].TrimStart(':', ' ').Trim();
+
+        return (formSentTo, string.IsNullOrWhiteSpace(dateFallback) ? null : dateFallback);
     }
 
     // Splits a verbatim LicenceNumber cell on the delimiters seen across the real sample set

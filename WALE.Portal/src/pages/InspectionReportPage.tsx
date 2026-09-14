@@ -7,7 +7,9 @@ import {ScrapeDocuments} from '../components/ScrapeDocuments';
 
 interface SimpleMatchResult {
     fileId: string;
-    filename: string;
+    // Genuinely nullable - a stub row (created before extraction runs, or left behind by an
+    // errored file) can have no filename yet.
+    filename: string | null;
     status: string;
 }
 
@@ -156,7 +158,7 @@ function InspectionReportPage() {
     const filteredFiles = useMemo(() => {
         const getSortValue = (file: SimpleMatchResult, field: SortField): string | number | undefined => {
             switch (field) {
-                case 'filename': return file.filename;
+                case 'filename': return file.filename ?? undefined;
                 case 'status': return file.status;
                 case 'date': return detailsByFileId[file.fileId]?.date;
                 case 'template': return detailsByFileId[file.fileId]?.template;
@@ -166,7 +168,7 @@ function InspectionReportPage() {
 
         const term = filterText.trim().toLowerCase();
         const matching = files.filter(f =>
-            (term === '' || f.filename.toLowerCase().includes(term)) &&
+            (term === '' || (f.filename ?? '').toLowerCase().includes(term)) &&
             (statusFilter === '' || f.status === statusFilter) &&
             (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
         );

@@ -8,8 +8,6 @@ import {ScrapeDocuments} from '../components/ScrapeDocuments';
 
 interface SimpleMatchResult {
     fileId: string;
-    // Genuinely nullable - a stub row (created before extraction runs, or left behind by an
-    // errored file) can have no filename yet.
     filename: string | null;
     status: string;
 }
@@ -126,13 +124,9 @@ function InspectionReportPage() {
                         ...previous,
                         [file.fileId]: {
                             template: wrInspectionReport?.metadata?.template,
-                            // Prefer inspectionDate (parsed dateTime, not rawDate - rawDate can
-                            // carry trailing garbage from a label boundary running onto the next
-                            // field's text, a real WR51 extraction bug separate from this
-                            // display). Fall back to metadata.date (the form's own send date,
+                            // Prefer inspectionDate. Fall back to metadata.date (the form's own send date,
                             // not the inspection visit date) when inspectionDate's date portion
-                            // wasn't captured for this document - confirmed real for
-                            // wr51__73417g0068__... (inspectionDate has only rawTime, no date).
+                            // wasn't captured for this document
                             date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
                                 ?? wrInspectionReport?.metadata?.date?.date,
                             completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined

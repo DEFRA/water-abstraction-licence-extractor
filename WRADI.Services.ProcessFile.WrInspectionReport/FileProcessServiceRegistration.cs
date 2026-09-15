@@ -177,7 +177,8 @@ public static class FileProcessServiceRegistration
                 outputService,
                 pdfPigDocumentService,
                 docnetAlternativeDocumentService,
-                messageQueueService);
+                messageQueueService,
+                documentType: "WrInspectionReport");
 
             return pdfDataExtractor;
         });

@@ -1,6 +1,0 @@
-*
-!bin/
-!bin/Release/
-!bin/Release/lambda-publish/
-!bin/Release/lambda-publish/**
-!Dockerfile

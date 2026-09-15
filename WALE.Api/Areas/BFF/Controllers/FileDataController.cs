@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -64,6 +65,29 @@ public class FileDataController(
 
         var result = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportCsvAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns);
+        return File(bytes, "text/csv", $"WR51-ProcessRun-{processRunId}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportXlsxAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildXlsx(lines, excludeInternalColumns);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"WR51-ProcessRun-{processRunId}.xlsx");
     }
 
     [HttpGet]
@@ -176,6 +200,43 @@ public class FileDataController(
             await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
                 licenceList.ToArray());
         }
+    }
+
+    // Reuses the exact same MatchesResult -> ToForm -> WrInspectionReportCsvLine path
+    // WrInspectionReportStringAsync already uses for a single file's JSON view, just looped
+    // across every file in the run with bounded concurrency (fetching each file's MatchesResult
+    // is a DB read, not a re-scrape, so this stays cheap even for large runs) - skips files with
+    // no saved MatchesResult (errored out before ever saving), matching the report's own
+    // skip-on-null convention from the earlier standalone GenerateWrInspectionReportCsv tool.
+    private async Task<List<WrInspectionReportCsvLine>> BuildWrInspectionReportCsvLinesAsync(int processRunId)
+    {
+        var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
+
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = simpleResults.Select(async simpleResult =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                if (matchesResult == null)
+                {
+                    return null;
+                }
+
+                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
+                return WrInspectionReportCsvLine.FromForm(form);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var lines = await Task.WhenAll(tasks);
+        return lines.Where(line => line != null).Cast<WrInspectionReportCsvLine>().ToList();
     }
 
     // AdditionalInformation values round-trip through JSON (matches_result.data), so a value

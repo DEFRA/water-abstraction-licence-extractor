@@ -1,3 +1,4 @@
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -44,6 +45,12 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
         {
             var linkedLicenceNumber = linkedLicence.LicenceNumber;
             if (string.IsNullOrWhiteSpace(linkedLicenceNumber) || !existingItemIds.Add(linkedLicenceNumber))
+            {
+                continue;
+            }
+
+            // Only add the dummy entry if the LL is outgoing
+            if (linkedLicence.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) != true)
             {
                 continue;
             }

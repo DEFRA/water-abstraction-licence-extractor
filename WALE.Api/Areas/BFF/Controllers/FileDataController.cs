@@ -227,7 +227,16 @@ public class FileDataController(
                 }
 
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
-                return WrInspectionReportCsvLine.FromForm(form);
+                var line = WrInspectionReportCsvLine.FromForm(form);
+
+                // Not part of the form (file identity, not document content) - same stable link
+                // the portal's own "View PDF" uses (images.ts's getPdfUrl), which redirects to a
+                // fresh presigned S3 URL on each click rather than baking in one that'd expire.
+                line.Metadata__FileUrl = matchesResult.Filename == null
+                    ? null
+                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/Get?filename={Uri.EscapeDataString(matchesResult.Filename)}";
+
+                return line;
             }
             finally
             {

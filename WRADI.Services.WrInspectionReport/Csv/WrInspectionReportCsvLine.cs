@@ -3,6 +3,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Csv;
 public class WrInspectionReportCsvLine
 {
     public string? Metadata__Filename { get; set; }
+    public string? Metadata__FileUrl { get; set; }
     public string? Metadata__Template { get; set; }
     public string? Metadata__DocumentTemplateVerison { get; set; }
     public string? Metadata__DocumentHeader { get; set; }

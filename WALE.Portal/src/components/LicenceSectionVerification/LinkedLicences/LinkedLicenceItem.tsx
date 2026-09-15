@@ -4,7 +4,8 @@ import {
     NullableOfInformationDirection,
     ContainedInInformation,
     InformationSource,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
@@ -12,7 +13,7 @@ import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 import NaldOnlyTag from "../../NaldOnlyTag.tsx";
 
@@ -30,6 +31,7 @@ interface LinkedLicenceItemProps {
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
     onOpenReport?: (fileId: string) => void;
+    outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -47,6 +49,7 @@ export const LinkedLicenceItem = ({
                                       onRequestBusinessReview,
                                       onCompleteBusinessReview,
                                       onOpenReport,
+                                      outputListDataItem,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
@@ -297,6 +300,7 @@ export const LinkedLicenceItem = ({
             )}</strong>
             <NaldStatusTag status={linkedLicence.naldStatus}/>
             <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+            {isScrapedDataDifferent(outputListDataItem, 'Linked Licences', linkedLicence.licenceNumber) && '🚩'}
         </div>
     );
 

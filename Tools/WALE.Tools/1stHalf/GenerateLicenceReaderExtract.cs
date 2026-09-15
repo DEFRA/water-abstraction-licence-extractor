@@ -366,7 +366,8 @@ public static class GenerateLicenceReaderExtract
 
         // TODO - May need to implement paging above soon
         
-        var licenceFinderResultsRaw = await abstractionLicenceCacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        var licenceFinderResultsRaw = await abstractionLicenceCacheService
+            .GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
         foreach (var licenceFinderResult in licenceFinderResultsRaw)

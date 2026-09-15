@@ -14,6 +14,8 @@ using WALE.ProcessFile.Services.Output;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence;
 using WRADI.Services.Cache.AbstractionLicence;
+using WRADI.Services.Cache.WrInspectionReport;
+using WRADI.Services.Cache.WrInspectionReport.Interfaces;
 using WRADI.Services.Output.AbstractionLicence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -116,6 +118,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<IAbstractionLicenceOutputService, DatabaseAbstractionLicenceOutputService>()
         .AddTransient<ICacheService, DatabaseCacheService>()
+        .AddTransient<IInspectionReportFinderCacheService, DatabaseInspectionReportFinderCacheService>()
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<IUiProcessRunService, UiProcessRunService>()

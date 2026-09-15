@@ -28,6 +28,7 @@
       <ProjectReference Include="..\..\WRADI.Services.AbstractionLicence\WRADI.Services.AbstractionLicence.csproj" />
       <ProjectReference Include="..\..\WRADI.Services.Cache.AbstractionLicence\WRADI.Services.Cache.AbstractionLicence.csproj" />
       <ProjectReference Include="..\..\WRADI.Services.Output.AbstractionLicence\WRADI.Services.Output.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -26,7 +26,8 @@ public static class FindLabelGroupMatchesHelper
         LookupConfiguration lookupConfiguration,
         PdfDataExtractorService pdfDataExtractorService,
         IDocumentLineService documentLineService,
-        Dictionary<string, object?> additionalInformationStore)
+        Dictionary<string, object?> additionalInformationStore,
+        IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {
         var returnList = new List<LabelGroupResult>();
 
@@ -37,7 +38,7 @@ public static class FindLabelGroupMatchesHelper
         {
             var fullLine = line.Line;
             var breakLineLoop = false;
-            
+
             foreach (var label in labels.Where(whereLabel => !whereLabel.Completed)) // TODO we should change this to just accept one label
             {
                 var partialLine = fullLine;
@@ -163,7 +164,7 @@ public static class FindLabelGroupMatchesHelper
                     {
                         nextLines ??= line.NextLines(lines, label);
                         var nextLine = nextLines.FirstOrDefault();
-                        
+
                         if (!LabelMatchingHelper.LineContainsLabel(
                             partialLine,
                             nextLine,
@@ -259,7 +260,97 @@ public static class FindLabelGroupMatchesHelper
                     
                     previousLines ??= line.PreviousLines(lines, label);
                     nextLines ??= line.NextLines(lines, label);
-                    
+
+                    var lineForPosition = fullLine;
+                    var lineForRequest = partialLine;
+
+                    if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
+                    {
+                        var clonedPartialLine = partialLine.Clone();
+                        var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
+
+                        // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of
+                        // the nearest other known field's column, restricted to this field's own
+                        // section (via FindSectionEndTop) so an unrelated field in a different
+                        // section can't coincidentally bound it. Skipped if the section end can't
+                        // be found, rather than falling back to an unbounded document-wide search.
+                        double? nextFieldBoundaryX = null;
+
+                        if (label.BoundSameLineWalkByOtherLabelPositions
+                            && labelPositionIndex != null
+                            && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
+                        {
+                            var sectionEndTop = FindSectionEndTop(lines, matchedLabel.TextEnd);
+
+                            if (sectionEndTop.HasValue)
+                            {
+                                nextFieldBoundaryX = labelPositionIndex
+                                    .Where(kv => kv.Key != labelGroupName
+                                        && kv.Value.Left > ownFieldPosition.Left
+                                        && kv.Value.Top > sectionEndTop.Value)
+                                    .Select(kv => (double?)kv.Value.Left)
+                                    .DefaultIfEmpty(null)
+                                    .Min();
+                            }
+                        }
+
+                        var (newColumns, columnIndex) = WalkSameLineColumns(
+                            clonedPartialLine.Columns,
+                            matchedText,
+                            matchedLabel.TextEnd,
+                            nextFieldBoundaryX);
+
+                        clonedPartialLine.Columns = newColumns;
+                        lineForPosition = clonedPartialLine;
+                        lineForRequest = clonedPartialLine;
+
+                        textBeforeAtAndAfterLabel = clonedPartialLine.Columns.Count == 0
+                            ? []
+                            : [
+                                new TextAndLabelAndPosition
+                                {
+                                    ColumnsText = clonedPartialLine.Columns.Select(c => c.Text).ToList(),
+                                    Label = matchedLabel
+                                }
+                            ];
+
+                        if (label.LimitTo == LimitTo.SpecifiedColumn)
+                        {
+                            columnIndex = label.LimitToColumnIndex;
+                        }
+
+                        var firstLineColumnLeftPosition = newColumns
+                            .FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates.Left;
+
+                        var newNextLines = new List<DocumentLine>();
+
+                        foreach (var nextLine in nextLines)
+                        {
+                            if (ShouldExcludeNextLine(nextLine, label.ExcludeNextLineIfFirstColumnStartsWith))
+                            {
+                                continue;
+                            }
+
+                            var columnToKeep = FindNextLineColumnByPosition(
+                                nextLine,
+                                label.LimitTo,
+                                columnIndex,
+                                firstLineColumnLeftPosition);
+
+                            if (columnToKeep == null)
+                            {
+                                continue;
+                            }
+
+                            var newNextLine = nextLine.Clone();
+                            newNextLine.Columns.Clear();
+                            newNextLine.Columns.Add(columnToKeep);
+                            newNextLines.Add(newNextLine);
+                        }
+
+                        nextLines = newNextLines;
+                    }
+
                     var request = new FunctionInputModel
                     {
                         actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
@@ -285,8 +376,8 @@ public static class FindLabelGroupMatchesHelper
                         dmsLookupService = lookupConfiguration.DmsLookupService,
                         isSingleWord = matchedLabel.Format == SingleWord.Constant,
                         isUnitsLookup = matchedLabel.Format == Units.Constant,
-                        line = partialLine,
-                        lineForPosition = fullLine,
+                        line = lineForRequest,
+                        lineForPosition = lineForPosition,
                         lineNumber = partialLine.LineNumber,
                         processRunId = processRunId,
                         regionCode = regionCode,
@@ -437,8 +528,229 @@ public static class FindLabelGroupMatchesHelper
         
         return returnList;
     }
-    
-    
+
+    /// <summary>
+    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - the Y (top) of the first line
+    /// starting with one of the field's own real TextEnd markers (skips the "[END_OF_BLOCK]"
+    /// sentinel). Reuses the field's own already-correct section boundary rather than an
+    /// arbitrary Y-distance tolerance, which can't reliably separate "the real next field in
+    /// this grid" from "an unrelated field in the next section down" - on real documents these
+    /// have sat as little as ~20 units apart.
+    /// </summary>
+    internal static double? FindSectionEndTop(
+        IReadOnlyList<DocumentLineWrapped> lines,
+        IReadOnlyList<TextToMatch>? textEnd)
+    {
+        var realEndMarkers = (textEnd ?? [])
+            .Where(end => !string.IsNullOrEmpty(end.Text) && end.Text != "[END_OF_BLOCK]")
+            .Select(end => end.Text)
+            .ToList();
+
+        if (realEndMarkers.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var wrappedLine in lines)
+        {
+            var line = wrappedLine.Line;
+
+            if (line == null)
+            {
+                continue;
+            }
+
+            if (realEndMarkers.Any(marker => line.Text.StartsWith(marker, StringComparison.OrdinalIgnoreCase)))
+            {
+                return line.Top;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// For a LimitTo.SameColumn/SpecifiedColumn label, finds the column on this line whose
+    /// text contains the label's own matched text, then keeps walking forward through
+    /// subsequent columns on the SAME line - the value may sit in an adjacent column
+    /// rather than on a following line (e.g. a grid row like "Source of supply: [tick]
+    /// Quantities: [tick]"). The walk stops at the first column that starts with one of the
+    /// label's own end markers (the next field), or runs out of columns.
+    /// Returns the columns to keep, and the 0-based index of the label's own column (used by
+    /// <see cref="FindNextLineColumnByPosition"/> for LimitTo.SpecifiedColumn).
+    ///
+    /// nextFieldBoundaryX (LabelToMatch.BoundSameLineWalkByOtherLabelPositions) also stops the
+    /// walk once a candidate column reaches or passes it - a position-based bound alongside the
+    /// textEnd check, for intruding content that isn't itself another field's label text.
+    /// </summary>
+    internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
+        IReadOnlyList<DocumentLineColumn> columns,
+        string? matchedText,
+        IReadOnlyList<TextToMatch>? textEnd,
+        double? nextFieldBoundaryX = null)
+    {
+        var newColumns = new List<DocumentLineColumn>();
+        var columnIndex = 0;
+
+        foreach (var column in columns)
+        {
+            if (newColumns.Count == 0)
+            {
+                if (string.IsNullOrEmpty(matchedText) || !column.Text.Contains(matchedText))
+                {
+                    columnIndex += 1;
+                    continue;
+                }
+
+                // A loose (not column-start) match - e.g. LabelToMatch.AlsoStartsWithLoose, for a
+                // label sitting mid-column instead of at a real column boundary (confirmed on
+                // wr51__SO0420031002__..., "Meter make: <value> Serial number: N/A" as one
+                // undifferentiated column) - lands matchedText somewhere other than the start of
+                // column.Text. Without trimming, the whole column (including whatever precedes
+                // matchedText) would wrongly become the captured value. No-op when the column
+                // already starts with matchedText (every existing ColumnMustStartWith-only rule),
+                // so this can only fix a previously-broken case, never change a working one.
+                var columnToAdd = column;
+
+                if (!column.Text.StartsWith(matchedText))
+                {
+                    var indexOfMatch = column.Text.IndexOf(matchedText, StringComparison.Ordinal);
+
+                    if (indexOfMatch > 0)
+                    {
+                        var textFromMatch = column.Text[indexOfMatch..];
+                        var trimmedWords = DocumentLineColumn.FilterWordsFromText(column.Words, textFromMatch);
+
+                        if (trimmedWords.Count > 0)
+                        {
+                            columnToAdd = new DocumentLineColumn(trimmedWords);
+                        }
+                    }
+                }
+
+                newColumns.Add(columnToAdd);
+                continue;
+            }
+
+            var isNextFieldStart = textEnd?.Any(end =>
+                !string.IsNullOrEmpty(end.Text)
+                && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
+
+            var candidateLeft = column.Words.FirstOrDefault()?.Coordinates.Left;
+            var isPastKnownFieldBoundary = nextFieldBoundaryX.HasValue
+                && candidateLeft.HasValue
+                && candidateLeft.Value >= nextFieldBoundaryX.Value;
+
+            if (isNextFieldStart || isPastKnownFieldBoundary)
+            {
+                break;
+            }
+
+            newColumns.Add(column);
+        }
+
+        return (newColumns, columnIndex);
+    }
+
+    /// <summary>
+    /// Whether a next-line candidate should be rejected outright, before any column is even
+    /// picked from it, because its own leading column visibly belongs to a different,
+    /// identifiable field (that field's own label starting the row) rather than being a blank
+    /// or genuine continuation row for the label being matched. See
+    /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
+    /// WrInspectionReportLabelConfiguration's Calibration/Conformance/FlowVerification/
+    /// MeterVerification for the real case this exists for: on several real WR51 templates the
+    /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
+    /// row, with no dedicated value row for these fields in between at all.
+    ///
+    /// Deliberately only checks the row's first column, not the specific column that will end
+    /// up selected for this field - rejecting the whole row on a multi-column line risks
+    /// discarding a legitimate answer sitting in a later column just because the row's own
+    /// first column happens to resemble something else.
+    /// </summary>
+    internal static bool ShouldExcludeNextLine(DocumentLine nextLine, IReadOnlyList<string>? excludeIfFirstColumnStartsWith)
+    {
+        if (excludeIfFirstColumnStartsWith?.Any() != true)
+        {
+            return false;
+        }
+
+        var firstColumnText = nextLine.Columns.FirstOrDefault()?.Text;
+
+        return firstColumnText != null
+            && excludeIfFirstColumnStartsWith.Any(excluded =>
+                firstColumnText.StartsWith(excluded, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Finds the column on a following line that corresponds to the label's own column.
+    /// LimitTo.SpecifiedColumn uses a fixed ordinal index (the caller asked for column N
+    /// specifically, regardless of position). LimitTo.SameColumn matches by X-position
+    /// proximity instead - a following line can have fewer or more columns than the
+    /// label's own line (e.g. a value sitting alone on its own single-column row, directly
+    /// beneath a label that shares its row with other fields), so indexing by ordinal
+    /// position would silently miss it. Either way, the match is rejected if it's more
+    /// than 100 units away from the label's own column - a same-column value that's
+    /// genuinely absent from this line must not fall back to an unrelated column.
+    /// </summary>
+    internal static DocumentLineColumn? FindNextLineColumnByPosition(
+        DocumentLine nextLine,
+        LimitTo limitTo,
+        int columnIndex,
+        double? anchorLeftPosition)
+    {
+        if (limitTo == LimitTo.SpecifiedColumn)
+        {
+            return nextLine.Columns.Count > columnIndex ? nextLine.Columns[columnIndex] : null;
+        }
+
+        var columnToKeep = nextLine.Columns
+            .Where(c => c.Words.FirstOrDefault() != null)
+            .OrderBy(c => Math.Abs(c.Words[0].Coordinates.Left - (anchorLeftPosition ?? 0)))
+            .FirstOrDefault();
+
+        var columnLeftPosition = columnToKeep?.Words.FirstOrDefault()?.Coordinates.Left;
+
+        if (columnToKeep != null
+            && columnLeftPosition <= anchorLeftPosition + 100
+            && columnLeftPosition >= anchorLeftPosition - 100)
+        {
+            return columnToKeep;
+        }
+
+        if (anchorLeftPosition == null)
+        {
+            return null;
+        }
+
+        // The label's own column didn't line up with any whole column on this line - it may
+        // still be here, glued onto an unrelated field's text because the gap between them
+        // fell just under the column-splitting X-gap threshold (e.g. an address ending and a
+        // same-row value starting ~17pt later, just short of the ~18pt split point - see the
+        // xDiff >= 18 check in PdfPigNoOcrDataExtractorService's row builder). Only treat a
+        // word as a candidate split point if the gap immediately before it is itself close to
+        // that threshold (clearly wider than an ordinary inter-word space, roughly 2-5pt) -
+        // otherwise any word from an unrelated sentence that happens to drift within 100 units
+        // of the anchor would be picked up as if it were this field's value.
+        const double minimumNearMissGap = 10;
+
+        var nearestWord = nextLine.Columns
+            .SelectMany(column => column.Words
+                .Select((word, index) => (column, word, index)))
+            .Where(cw => cw.index > 0
+                && cw.word.Coordinates.Left - cw.column.Words[cw.index - 1].Coordinates.Right >= minimumNearMissGap
+                && Math.Abs(cw.word.Coordinates.Left - anchorLeftPosition.Value) <= 100)
+            .OrderBy(cw => Math.Abs(cw.word.Coordinates.Left - anchorLeftPosition.Value))
+            .FirstOrDefault();
+
+        if (nearestWord.column == null)
+        {
+            return null;
+        }
+
+        return new DocumentLineColumn(nearestWord.column.Words.Skip(nearestWord.index).ToList());
+    }
+
     private static async Task<IReadOnlyList<LabelGroupResult>> ProcessLinkedLicenceAsync(
         DocumentLine line,
         IReadOnlyList<LabelGroupResult> siblingMatches,

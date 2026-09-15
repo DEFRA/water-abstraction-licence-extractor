@@ -43,8 +43,18 @@ public static class TextToFindIsBetweenLabels
         
         var labelLineAlreadyIncluded = false;
         var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.TextToMatch?.FirstOrDefault()?.Text;
-        
-        if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
+
+        // When LimitTo restricts matching to a column, the label's own line has already been
+        // narrowed down to just the columns relevant to this match (the label's column plus
+        // any same-line value columns up to the next field). If that narrowed line holds more
+        // than the label text alone, the value is sitting right there and must be included -
+        // otherwise only nextLines gets used and a same-line value is silently dropped.
+        var sameLineValuePresent = request.label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn
+            && lineContainsSomethingOtherThenJustLabel;
+
+        if (lineContainsLabel != true
+            || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel)
+            || sameLineValuePresent)
         {
             labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);
@@ -96,9 +106,10 @@ public static class TextToFindIsBetweenLabels
             request.line!,
             labelLineAlreadyIncluded,
             request.label.DoNotTrimLines,
+            request.label.AllowValueToWrapPastSameLineEndTag,
             out var foundEndTag,
             out var matchedEndText);
-        
+
         if (betweenText == null)
         {
             return [];
@@ -166,7 +177,7 @@ public static class TextToFindIsBetweenLabels
         {
             return [];
         }
-        
+
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchedPosition = MatchedPosition.BetweenLabels;
         labelGroupResult.MatchedLabel = request.label.Clone();
@@ -211,6 +222,7 @@ public static class TextToFindIsBetweenLabels
         DocumentLine lineInput,
         bool labelLineAlreadyIncluded,
         bool doNotTrimLines,
+        bool allowValueToWrapPastSameLineEndTag,
         out bool foundEndTag,
         out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
@@ -300,8 +312,19 @@ public static class TextToFindIsBetweenLabels
                 
                 if (labelMatchCount[matchedEndTextTemp.Text] >= requiredCount)
                 {
-                    matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
-                    foundEndTag = true;
+                    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag. Only the label's own
+                    // first line (returnList still empty) is eligible - the fragment before the
+                    // end-tag is still extracted and kept below either way; subsequent lines get
+                    // evaluated by this same loop as normal, so this label's own end-tag further
+                    // down still stops the scan at the right place when the flag is set.
+                    var isFirstLineMatch = returnList.Count == 0;
+                    var continueScanningPastThisMatch = isFirstLineMatch && allowValueToWrapPastSameLineEndTag;
+
+                    if (!continueScanningPastThisMatch)
+                    {
+                        matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
+                        foundEndTag = true;
+                    }
 
                     if (returnList.Count == 0 || line.Columns.Count == 1)
                     {
@@ -347,7 +370,12 @@ public static class TextToFindIsBetweenLabels
                             }
                         }
                     }
-                    
+
+                    if (continueScanningPastThisMatch)
+                    {
+                        continue;
+                    }
+
                     break;
                 }
             }

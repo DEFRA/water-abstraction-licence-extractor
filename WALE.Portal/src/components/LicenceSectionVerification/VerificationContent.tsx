@@ -80,7 +80,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             setActiveSubTab('scraped');
                         }}
                     >
-                        Scraped / Original
+                        {`Scraped PR ${processRunId}`}
                     </a>
                 </li>
                 <li>

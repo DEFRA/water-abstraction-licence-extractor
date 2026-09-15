@@ -17,6 +17,7 @@ interface FileDetails {
     template?: string;
     date?: string;
     completeness?: number;
+    isScan?: boolean;
 }
 
 // Unknown means classification failed outright; NonStandardNarrative means the document didn't
@@ -68,6 +69,7 @@ function InspectionReportPage() {
     const [filterText, setFilterText] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [templateFilter, setTemplateFilter] = useState('');
+    const [scanFilter, setScanFilter] = useState<'' | 'scan' | 'native'>('');
 
     const [inlineFileId, setInlineFileId] = useState<string | null>(null);
     const [inlineJson, setInlineJson] = useState<unknown>(null);
@@ -77,7 +79,7 @@ function InspectionReportPage() {
 
     const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
 
-    type SortField = 'filename' | 'status' | 'date' | 'template' | 'completeness';
+    type SortField = 'filename' | 'status' | 'date' | 'template' | 'completeness' | 'isScan';
     const [sortField, setSortField] = useState<SortField | ''>('');
     const [sortAscending, setSortAscending] = useState(true);
 
@@ -125,7 +127,8 @@ function InspectionReportPage() {
                             template: wrInspectionReport?.metadata?.template,
                             date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
                                 ?? wrInspectionReport?.metadata?.date?.date,
-                            completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined
+                            completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined,
+                            isScan: wrInspectionReport?.metadata?.isScan
                         }
                     }));
                 } catch (err) {
@@ -163,15 +166,25 @@ function InspectionReportPage() {
                 case 'date': return detailsByFileId[file.fileId]?.date;
                 case 'template': return detailsByFileId[file.fileId]?.template;
                 case 'completeness': return detailsByFileId[file.fileId]?.completeness;
+                // Sorted as 0/1 rather than true/false - booleans don't compare with </> the
+                // same way numbers do, and false-first (native docs first) reads naturally
+                // ascending anyway.
+                case 'isScan': {
+                    const isScan = detailsByFileId[file.fileId]?.isScan;
+                    return isScan === undefined ? undefined : (isScan ? 1 : 0);
+                }
             }
         };
 
         const term = filterText.trim().toLowerCase();
-        const matching = files.filter(f =>
-            (term === '' || (f.filename ?? '').toLowerCase().includes(term)) &&
-            (statusFilter === '' || f.status === statusFilter) &&
-            (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
-        );
+        const matching = files.filter(f => {
+            const isScan = detailsByFileId[f.fileId]?.isScan;
+
+            return (term === '' || (f.filename ?? '').toLowerCase().includes(term))
+                && (statusFilter === '' || f.status === statusFilter)
+                && (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
+                && (scanFilter === '' || (scanFilter === 'scan' ? isScan === true : isScan === false));
+        });
 
         if (!sortField) return matching;
 
@@ -188,7 +201,7 @@ function InspectionReportPage() {
             const comparison = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
             return sortAscending ? comparison : -comparison;
         });
-    }, [files, filterText, statusFilter, templateFilter, detailsByFileId, sortField, sortAscending]);
+    }, [files, filterText, statusFilter, templateFilter, scanFilter, detailsByFileId, sortField, sortAscending]);
 
     const toggleInline = (fileId: string) => {
         if (inlineFileId === fileId) {
@@ -277,6 +290,13 @@ function InspectionReportPage() {
                             ))}
                         </select>
                     </td>
+                    <td>
+                        <select value={scanFilter} onChange={(e) => setScanFilter(e.target.value as '' | 'scan' | 'native')}>
+                            <option value="">All</option>
+                            <option value="scan">Scanned</option>
+                            <option value="native">Native</option>
+                        </select>
+                    </td>
                     <td></td>
                 </tr>
                 <tr>
@@ -291,6 +311,9 @@ function InspectionReportPage() {
                     </th>
                     <th style={{textAlign: 'left'}}>
                         Template <a href="#" onClick={(e) => { e.preventDefault(); handleSort('template'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Scan? <a href="#" onClick={(e) => { e.preventDefault(); handleSort('isScan'); }}>&#8693;</a>
                     </th>
                     <th style={{textAlign: 'left'}}>
                         Completeness <a href="#" onClick={(e) => { e.preventDefault(); handleSort('completeness'); }}>&#8693;</a>
@@ -326,11 +349,12 @@ function InspectionReportPage() {
                                     </span>
                                 )}
                             </td>
+                            <td>{details ? (details.isScan === undefined ? '-' : (details.isScan ? 'Yes' : 'No')) : '...'}</td>
                             <td>{details ? (details.completeness !== undefined ? `${details.completeness}%` : '-') : '...'}</td>
                         </tr>
                         {inlineFileId === file.fileId && (
                             <tr>
-                                <td colSpan={5} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
+                                <td colSpan={6} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
                                     {inlineLoading
                                         ? <p>Loading...</p>
                                         : <JsonView src={inlineJson} collapsed={1} theme="default"/>}

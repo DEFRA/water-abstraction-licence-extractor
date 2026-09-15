@@ -345,12 +345,13 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
+                        AND cardinality(item.verification_types) > 0
                   )
                 """);
 
             return;
         }
-        
+
         if (verificationType.Equals(
                 "AllVerifications",
                 StringComparison.OrdinalIgnoreCase))
@@ -365,6 +366,7 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
+                        AND cardinality(item.verification_types) > 0
                   )
                 """);
 

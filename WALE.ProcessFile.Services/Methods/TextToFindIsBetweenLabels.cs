@@ -390,7 +390,7 @@ public static class TextToFindIsBetweenLabels
         return matchData == null ? null : returnList;
     }
     
-    // TODO move this to somewhere more standardised and check the distances are correct for none-digital
+    // TODO move this to somewhere more standardised
     private static void ToColumns(
         List<DocumentLineWord> words,
         DocumentLine line,

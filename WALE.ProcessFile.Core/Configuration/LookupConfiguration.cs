@@ -24,7 +24,7 @@ public class LookupConfiguration(
     bool useLockExclusivity = true,
     bool lockInProcess = false,
     bool savePurposeMapping = false,
-    int horizontalGapBetweenColumns = 19) // TODO maybe tweak futher to a higher number
+    int horizontalGapBetweenColumns = 19)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
     // set, then re-run extraction with a different one chosen from the result - see

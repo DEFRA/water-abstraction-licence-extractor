@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -7,6 +8,13 @@ namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
 public static class WrInspectionReportLabelConfiguration
 {
+    public static void ConfigurationPropertiesToSet(LookupConfiguration lookupConfiguration)
+    {
+        lookupConfiguration.LineHeight = 6;
+        lookupConfiguration.MinimumRowsForDigital = 30;
+        lookupConfiguration.UseAnchoredLineGrouping = true;
+    }
+    
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
     [
         RuleSourceOfSupply(),

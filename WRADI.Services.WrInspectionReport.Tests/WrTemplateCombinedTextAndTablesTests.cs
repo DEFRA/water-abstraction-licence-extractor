@@ -59,7 +59,7 @@ public class WrTemplateCombinedTextAndTablesTests
     
     private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
-        return new LookupConfiguration(
+        var config = new LookupConfiguration(
             WrInspectionReportLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
@@ -70,10 +70,10 @@ public class WrTemplateCombinedTextAndTablesTests
             new DmsLookupService(),
             regionCode,
             DateTime.Now,
-            useLockExclusivity: false,
-            lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            useLockExclusivity: false);
+        
+        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        return config;
     }
     
     [Fact]

@@ -51,7 +51,7 @@ public class Wr51PdfPigNoOcrPdfTests
 
     private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
     {
-        return new LookupConfiguration(
+        var config = new LookupConfiguration(
             WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
@@ -61,10 +61,10 @@ public class Wr51PdfPigNoOcrPdfTests
             null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
-            DateTime.Now,
-            lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            DateTime.Now);
+
+        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        return config;
     }
 
     private static IPdfDataExtractorService BuildPdfDataExtractor()

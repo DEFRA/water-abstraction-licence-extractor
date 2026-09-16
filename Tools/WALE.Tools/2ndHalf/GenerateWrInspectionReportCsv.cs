@@ -318,7 +318,7 @@ public static class GenerateWrInspectionReportCsv
         ICacheService cacheService,
         IOutputService outputService)
     {
-        return new LookupConfiguration(
+        var config = new LookupConfiguration(
             WrInspectionReportLabelConfiguration.GetLabels(),
             [],
             fileService,
@@ -329,10 +329,10 @@ public static class GenerateWrInspectionReportCsv
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,
-            lineHeight: 6,
             skipFileIfMoreThenPages: 100,
-            skipFileIfMoreThenImages: 1000,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            skipFileIfMoreThenImages: 1000);
+
+        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        return config;
     }
 }

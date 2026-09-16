@@ -26,14 +26,13 @@ namespace WALE.Tools.Tests;
 // operators first (genuine removal), then overlays the new paragraph exactly as before.
 //
 // Deliberately "the simple splice": find each matched line's text-show operator by reconstructing
-// its literal string content via regex and comparing against the line text PdfPig already gave
-// us - no font-width/text-matrix interpretation, no glyph-ID decoding. That means it only works
-// where the target text is stored as literal, readable strings (plain WinAnsi/TrueType fonts).
-// Confirmed empirically this session: one of our two real sample files qualifies in full, the
-// other's matched paragraph uses an Identity-H/Type0 font - the text is glyph-ID hex strings with
-// no literal characters to reconstruct at all, so splicing correctly (and honestly) fails there,
-// falling back to whiteout-only for that file. The full geometry-based interpreter needed to
-// handle that case too is a separate, much bigger piece of work - not attempted here.
+// its string content via regex and comparing against the line text PdfPig already gave us - no
+// font-width/text-matrix interpretation. Handles both literal WinAnsi/TrueType text and
+// Identity-H/Type0 glyph IDs (resolved through the font's own embedded /ToUnicode CMap - see
+// BuildToUnicodeMap/ParseToUnicodeCMap) - so it covers both real sample files' fonts. What it
+// still can't do: a Type0 font with no /ToUnicode entry at all (nothing to resolve a glyph ID
+// against - genuinely undecodable without a full glyph-outline interpreter), or a line whose text
+// spans across more than one Tj/TJ operator (only a whole-operator match is attempted).
 public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
 {
     // The content stream is read/written as Latin1 - a 1:1 byte<->char mapping, needed so any
@@ -58,14 +57,18 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
 
     // One text-show operator: either a TJ array of interleaved strings/kerning numbers, or a
-    // single-string Tj. Doesn't handle a literal, unescaped ']' inside a string (would end the
-    // array match early) - a real limitation of a regex-based approach, acceptable for this POC.
+    // single-string Tj (literal "(...)" or hex "<...>" - the latter needed for Identity-H/Type0
+    // fonts, whose glyph IDs are always hex strings). Doesn't handle a literal, unescaped ']'
+    // inside a string (would end the array match early) - a real limitation of a regex-based
+    // approach, acceptable for this POC.
     private static readonly Regex TjOperatorRegex = new(
-        @"\[(?:[^\[\]]|\\.)*\]\s*TJ|\((?:[^()\\]|\\.)*\)\s*Tj",
+        @"\[(?:[^\[\]]|\\.)*\]\s*TJ|\((?:[^()\\]|\\.)*\)\s*Tj|<[0-9A-Fa-f\s]*>\s*Tj",
         RegexOptions.Singleline);
 
-    private static readonly Regex ParenGroupRegex = new(
-        @"\((?<text>(?:[^()\\]|\\.)*)\)",
+    // A literal "(...)" run or a hex "<...>" run, in the order they appear within one operator -
+    // order matters because a TJ array interleaves them with kerning numbers between glyphs/words.
+    private static readonly Regex StringRunRegex = new(
+        @"\((?<lit>(?:[^()\\]|\\.)*)\)|<(?<hex>[0-9A-Fa-f\s]*)>",
         RegexOptions.Singleline);
 
     [Theory]
@@ -183,16 +186,17 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     {
         var contentDictionary = page.Contents.Elements.GetDictionary(0);
         var content = Encoding.Latin1.GetString(contentDictionary.Stream!.UnfilteredValue);
+        var toUnicodeMap = BuildToUnicodeMap(page);
 
         foreach (var line in lines)
         {
-            var (spliced, removed) = TryRemoveLineOperator(content, line.Text);
+            var (spliced, removed) = TryRemoveLineOperator(content, line.Text, toUnicodeMap);
             content = spliced;
 
             testOutputHelper.WriteLine(
                 removed
                     ? $"  SPLICED page={line.PageNumber}: \"{line.Text}\""
-                    : $"  NOT SPLICEABLE (no literal text match - likely Identity-H/glyph-ID encoded) " +
+                    : $"  NOT SPLICEABLE (no literal or ToUnicode-mapped text match) " +
                       $"page={line.PageNumber}: \"{line.Text}\"");
         }
 
@@ -202,52 +206,253 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         contentDictionary.Elements.Remove("/Filter");
     }
 
-    private static (string Content, bool Removed) TryRemoveLineOperator(string content, string lineText)
+    // How many consecutive operators to accumulate while looking for one line's text - a generous
+    // cap, not a precisely-tuned one; real lines seen so far need at most 4 (marker + space + "If"
+    // + body, on WQ__003101).
+    private const int MaxOperatorsPerLine = 10;
+
+    // A PdfPig "line" doesn't always correspond to one Tj/TJ operator - confirmed empirically on
+    // WQ__003101, whose generator draws a lettered-list marker, the following space, and the
+    // paragraph body as three-or-more SEPARATE operators (each its own BT/Tm/TJ/ET block) rather
+    // than one. The original single-operator match missed this entirely: it would find the long
+    // body operator alone (already >90% of the target's length on its own) and delete only that,
+    // silently leaving the "(a)"/"If" marker operators behind - a false "SPLICED" that still left
+    // real text in the file, confirmed via pdftotext showing leftover fragments under the new
+    // overlay. Fixed by greedily accumulating forward from every possible starting operator until
+    // the combined reconstructed text covers the whole target line, then deleting the entire
+    // matched run in one go. Trying starting points in document order and returning on the first
+    // success means a line split across several operators is matched from its earliest operator
+    // (the marker), not from partway through - so the whole run gets removed, not just the tail.
+    //
+    // Growing accumulation must stay an exact prefix of the target throughout, not just "contain
+    // it somewhere" - confirmed necessary empirically: WQ__003101's "3.1.4" section-heading
+    // operator sits immediately before the "(a)" marker operator, and accumulating from there
+    // ("3.1.4 (a) If the measured...then the") still legitimately CONTAINS the real target text,
+    // so a loose either-direction Contains() check (an earlier version of this method) accepted
+    // it as a match starting at "3.1.4" and deleted the heading along with the real line. Requiring
+    // the accumulation to only ever grow along the target's own leading edge - and, once it's
+    // reached the target's length, to literally start with the target - rules that out while still
+    // allowing a final operator to bundle a little extra trailing content beyond the line's end
+    // (the 1.5x cap below).
+    private static (string Content, bool Removed) TryRemoveLineOperator(
+        string content, string lineText, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var target = NormalizeWhitespace(lineText);
+        var matches = TjOperatorRegex.Matches(content).Cast<Match>().ToList();
+        var reconstructedPerOperator = matches
+            .Select(match => ReconstructLiteralText(match.Value, toUnicodeMap))
+            .ToList();
 
-        foreach (Match match in TjOperatorRegex.Matches(content))
+        for (var startIndex = 0; startIndex < matches.Count; startIndex++)
         {
-            var reconstructed = NormalizeWhitespace(ReconstructLiteralText(match.Value));
+            var accumulated = new StringBuilder();
+            var matchEndIndex = -1;
 
-            // A short reconstructed fragment (e.g. an operator reconstructing to just "the" from
-            // an unrelated part of the page) can trivially satisfy a plain Contains() check
-            // against almost any real sentence - confirmed empirically as a real false-positive
-            // source (WQ__003101's Identity-H-encoded target lines were wrongly reported as
-            // spliced, via unrelated same-page WinAnsi text matching this way). Requiring the
-            // match to cover a substantial proportion of the target line's length, not just any
-            // containment, rules that out while still tolerating minor punctuation/whitespace
-            // differences between PdfPig's line text and the operator's own literal content.
-            if (reconstructed.Length == 0
-                || reconstructed.Length < target.Length * 0.6)
+            for (var index = startIndex;
+                 index < matches.Count && index - startIndex < MaxOperatorsPerLine;
+                 index++)
+            {
+                accumulated.Append(reconstructedPerOperator[index]);
+                var normalizedAccumulated = NormalizeWhitespace(accumulated.ToString());
+
+                if (normalizedAccumulated.Length == 0)
+                {
+                    continue;
+                }
+
+                if (normalizedAccumulated.Length >= target.Length)
+                {
+                    if (normalizedAccumulated.Length <= target.Length * 1.5
+                        && normalizedAccumulated.StartsWith(target, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchEndIndex = index;
+                    }
+
+                    break;
+                }
+
+                if (!target.StartsWith(normalizedAccumulated, StringComparison.OrdinalIgnoreCase))
+                {
+                    // This start doesn't lead toward the target - no point growing it further.
+                    break;
+                }
+            }
+
+            if (matchEndIndex < 0)
             {
                 continue;
             }
 
-            if (target.Contains(reconstructed, StringComparison.OrdinalIgnoreCase)
-                || reconstructed.Contains(target, StringComparison.OrdinalIgnoreCase))
-            {
-                return (content.Remove(match.Index, match.Length), true);
-            }
+            var removeStart = matches[startIndex].Index;
+            var removeLength = matches[matchEndIndex].Index + matches[matchEndIndex].Length - removeStart;
+
+            return (content.Remove(removeStart, removeLength), true);
         }
 
         return (content, false);
     }
 
-    // Concatenates the literal parenthesized string runs within one Tj/TJ operator, ignoring the
-    // kerning numbers between them - e.g. "[(If )6.4(the)8( )-6.4(mea)8(s)...]TJ" reconstructs to
-    // "If the mea s...". Spaces inside the runs (like the one after "If") are preserved as-is
-    // since PDF encodes them as literal space characters within a run.
-    private static string ReconstructLiteralText(string operatorText)
+    // Concatenates the literal "(...)" and hex "<...>" string runs within one Tj/TJ operator, in
+    // the order they appear, ignoring the kerning numbers between them - e.g.
+    // "[(If )6.4(the)8( )-6.4(mea)8(s)...]TJ" reconstructs to "If the mea s...". A literal run is
+    // WinAnsi text (Windows-1252 - see ToWindows1252); a hex run is a string of fixed 2-byte
+    // Identity-H glyph IDs, resolved to real characters through the font's own /ToUnicode CMap
+    // (see BuildToUnicodeMap/ParseToUnicodeCMap) - already correct Unicode, no further decoding
+    // needed. Spaces inside a literal run (like the one after "If") are preserved as-is since PDF
+    // encodes them as literal space characters within a run.
+    private static string ReconstructLiteralText(string operatorText, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var builder = new StringBuilder();
 
-        foreach (Match match in ParenGroupRegex.Matches(operatorText))
+        foreach (Match match in StringRunRegex.Matches(operatorText))
         {
-            builder.Append(UnescapePdfString(match.Groups["text"].Value));
+            if (match.Groups["lit"].Success)
+            {
+                builder.Append(ToWindows1252(UnescapePdfString(match.Groups["lit"].Value)));
+            }
+            else if (match.Groups["hex"].Success)
+            {
+                builder.Append(DecodeHexGlyphs(match.Groups["hex"].Value, toUnicodeMap));
+            }
         }
 
-        return ToWindows1252(builder.ToString());
+        return builder.ToString();
+    }
+
+    private static string DecodeHexGlyphs(string hex, IReadOnlyDictionary<int, string> toUnicodeMap)
+    {
+        var cleaned = Regex.Replace(hex, @"\s+", string.Empty);
+        var builder = new StringBuilder();
+
+        for (var i = 0; i + 4 <= cleaned.Length; i += 4)
+        {
+            var cid = Convert.ToInt32(cleaned.Substring(i, 4), 16);
+
+            if (toUnicodeMap.TryGetValue(cid, out var mapped))
+            {
+                builder.Append(mapped);
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    // Reads every Type0 font's embedded /ToUnicode CMap on this page and merges them into one
+    // CID -> character lookup. Assumes CIDs don't collide meaningfully across fonts sharing a
+    // page - true for both real sample files here, which each have at most one embedded
+    // Identity-H font; a POC-level simplification, not a general solution for documents mixing
+    // several distinct embedded CID fonts.
+    private static Dictionary<int, string> BuildToUnicodeMap(PdfSharp.Pdf.PdfPage page)
+    {
+        var map = new Dictionary<int, string>();
+        var fontDictionary = page.Resources.Elements.GetDictionary("/Font");
+
+        if (fontDictionary == null)
+        {
+            return map;
+        }
+
+        foreach (var fontName in fontDictionary.Elements.Keys.ToList())
+        {
+            var font = fontDictionary.Elements.GetDictionary(fontName);
+
+            if (font == null || font.Elements.GetName("/Subtype") != "/Type0")
+            {
+                continue;
+            }
+
+            var toUnicode = font.Elements.GetDictionary("/ToUnicode");
+
+            if (toUnicode?.Stream == null)
+            {
+                continue;
+            }
+
+            var cmapText = Encoding.Latin1.GetString(toUnicode.Stream.UnfilteredValue);
+
+            foreach (var (cid, character) in ParseToUnicodeCMap(cmapText))
+            {
+                map[cid] = character;
+            }
+        }
+
+        return map;
+    }
+
+    private static readonly Regex BfCharBlockRegex =
+        new(@"beginbfchar(?<body>.*?)endbfchar", RegexOptions.Singleline);
+
+    private static readonly Regex BfRangeBlockRegex =
+        new(@"beginbfrange(?<body>.*?)endbfrange", RegexOptions.Singleline);
+
+    private static readonly Regex BfCharEntryRegex = new(
+        @"<(?<src>[0-9A-Fa-f]+)>\s*<(?<dst>[0-9A-Fa-f]+)>",
+        RegexOptions.Singleline);
+
+    private static readonly Regex BfRangeEntryRegex = new(
+        @"<(?<lo>[0-9A-Fa-f]+)>\s*<(?<hi>[0-9A-Fa-f]+)>\s*(?:<(?<dst>[0-9A-Fa-f]+)>|\[(?<dstArray>(?:\s*<[0-9A-Fa-f]+>)+)\s*\])",
+        RegexOptions.Singleline);
+
+    private static readonly Regex HexTokenRegex = new(@"<([0-9A-Fa-f]+)>");
+
+    // Parses the two mapping constructs a /ToUnicode CMap uses (PDF spec 9.10.3): "bfchar" is a
+    // flat list of one-CID-to-one-string mappings; "bfrange" maps a contiguous span of CIDs either
+    // to a single base codepoint (incrementing per CID) or to an explicit array of per-CID
+    // strings. Scoped to just the beginbfchar/beginbfrange blocks - the codespacerange line (e.g.
+    // "<0000> <FFFF>") would otherwise coincidentally match the same "<hex> <hex>" shape as a
+    // bfchar entry.
+    private static IEnumerable<(int Cid, string Character)> ParseToUnicodeCMap(string cmapText)
+    {
+        foreach (Match block in BfCharBlockRegex.Matches(cmapText))
+        {
+            foreach (Match entry in BfCharEntryRegex.Matches(block.Groups["body"].Value))
+            {
+                yield return (
+                    Convert.ToInt32(entry.Groups["src"].Value, 16),
+                    HexToUtf16String(entry.Groups["dst"].Value));
+            }
+        }
+
+        foreach (Match block in BfRangeBlockRegex.Matches(cmapText))
+        {
+            foreach (Match entry in BfRangeEntryRegex.Matches(block.Groups["body"].Value))
+            {
+                var lo = Convert.ToInt32(entry.Groups["lo"].Value, 16);
+                var hi = Convert.ToInt32(entry.Groups["hi"].Value, 16);
+
+                if (entry.Groups["dstArray"].Success)
+                {
+                    var values = HexTokenRegex.Matches(entry.Groups["dstArray"].Value)
+                        .Select(tokenMatch => tokenMatch.Groups[1].Value)
+                        .ToList();
+
+                    for (var cid = lo; cid <= hi && cid - lo < values.Count; cid++)
+                    {
+                        yield return (cid, HexToUtf16String(values[cid - lo]));
+                    }
+                }
+                else
+                {
+                    var dstHex = entry.Groups["dst"].Value;
+
+                    for (var cid = lo; cid <= hi; cid++)
+                    {
+                        yield return (cid, OffsetHexCodepoint(dstHex, cid - lo));
+                    }
+                }
+            }
+        }
+    }
+
+    // PDF ToUnicode destination strings are UTF-16BE - BigEndianUnicode decodes that directly,
+    // with no manual byte-swapping needed.
+    private static string HexToUtf16String(string hex) =>
+        Encoding.BigEndianUnicode.GetString(Convert.FromHexString(hex));
+
+    private static string OffsetHexCodepoint(string dstHex, int offset)
+    {
+        var value = Convert.ToInt64(dstHex, 16) + offset;
+        return HexToUtf16String(value.ToString($"X{dstHex.Length}"));
     }
 
     // builder's chars are still Latin1-per-byte (see the Windows1252 field comment above) -

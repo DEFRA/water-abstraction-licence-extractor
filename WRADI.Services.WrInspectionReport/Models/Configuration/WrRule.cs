@@ -26,7 +26,6 @@ public sealed class WrRule
     private bool _requireTextToClaimGroup;
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
-    private bool _boundSameLineWalkByOtherLabelPositions;
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
     private TableBasedLayoutExtractor _tableBasedExtractorType = TableBasedLayoutExtractor.Default;
     private TableShape _tableShape = TableShape.Default;
@@ -146,12 +145,6 @@ public sealed class WrRule
         return this;
     }
 
-    public WrRule BoundByOtherLabels()
-    {
-        _boundSameLineWalkByOtherLabelPositions = true;
-        return this;
-    }
-
     public WrRule Possibilities(IEnumerable<TextToMatch> p)
     {
         _possibilities = p.ToList();
@@ -252,7 +245,6 @@ public sealed class WrRule
         RequireTextToBePresent = _requireTextToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-        LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
         LayoutExtractor = _layoutExtractor,
         TableBasedExtractorType = _tableBasedExtractorType,
         TableShape = _tableShape

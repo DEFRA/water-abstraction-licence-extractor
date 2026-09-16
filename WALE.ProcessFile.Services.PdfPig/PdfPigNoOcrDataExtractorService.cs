@@ -624,11 +624,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(textLine => textLine.Words)
             .ToList();
 
-        var useLegacyGrouping = false;
-        
-        var groupedWords = !useLegacyGrouping
-            ? GroupWordsIntoRowsByAnchor(allWords, lineHeight)
-            : GroupWordsIntoRowsByChain(allWords, lineHeight);
+        var groupedWords = GroupWordsIntoRowsByAnchor(allWords, lineHeight);
 
         var returnList = groupedWords
             .SelectMany(lineWords =>
@@ -705,51 +701,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
         return returnList;
-    }
-
-    /// <summary>
-    /// Original row-grouping algorithm (unchanged) - default for every caller that
-    /// doesn't opt into <see cref="GroupWordsIntoRowsByAnchor"/>. Sorts all page words by
-    /// rounded Bottom (descending) then CentroidX, then chain-merges consecutive words in
-    /// that order into the same row whenever the gap to the immediately PREVIOUS word is
-    /// under lineHeight. This is transitive: a sequence of small sub-threshold gaps can
-    /// drag a genuinely different visual row into the same group, and because ties are
-    /// broken by horizontal position, a dragged-in word can be sorted in between two
-    /// words of an unrelated row rather than after them.
-    /// </summary>
-    internal static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByChain(
-        List<MinimalWord> words,
-        int lineHeight)
-    {
-        MinimalWord? previousWord = null;
-        var lineIndex = 0;
-
-        return words
-            .OrderByDescending(word => LineSnappingHelper.RoundToNearestN(
-                word.BoundingBox.Bottom,
-                lineHeight,
-                word.Text))
-            .ThenBy(word => word.BoundingBox.CentroidX)
-            .GroupBy(word =>
-            {
-                previousWord ??= word;
-
-                var yDiff =
-                    LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        previousWord.Text,
-                        previousWord.BoundingBox.Bottom)
-                    - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        word.Text,
-                        word.BoundingBox.Bottom);
-
-                if (yDiff >= lineHeight)
-                {
-                    lineIndex += 1;
-                }
-
-                previousWord = word;
-                return lineIndex;
-            });
     }
 
     /// <summary>

@@ -258,7 +258,6 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Special conditions", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.SpecialConditions)
-                .BoundByOtherLabels()
                 .FromLetterAndTableGrid()
                 .Build()
         ]);

@@ -520,36 +520,10 @@ public static class FindLabelGroupMatchesHelper
             var clonedPartialLine = partialLine.Clone();
             var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
 
-            // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of
-            // the nearest other known field's column, restricted to this field's own
-            // section (via FindSectionEndTop) so an unrelated field in a different
-            // section can't coincidentally bound it. Skipped if the section end can't
-            // be found, rather than falling back to an unbounded document-wide search.
-            double? nextFieldBoundaryX = null;
-
-            if (label.LimitToBoundSameLineWalkByOtherLabelPositions
-                && labelPositionIndex != null
-                && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
-            {
-                var sectionEndTop = FindSectionEndTop(lines, matchedLabel.TextEnd);
-
-                if (sectionEndTop.HasValue)
-                {
-                    nextFieldBoundaryX = labelPositionIndex
-                        .Where(kv => kv.Key != labelGroupName
-                            && kv.Value.Left > ownFieldPosition.Left
-                            && kv.Value.Top > sectionEndTop.Value)
-                        .Select(kv => (double?)kv.Value.Left)
-                        .DefaultIfEmpty(null)
-                        .Min();
-                }
-            }
-
             var (newColumns, columnIndex) = WalkSameLineColumns(
                 clonedPartialLine.Columns,
                 matchedText,
-                matchedLabel.TextEnd,
-                nextFieldBoundaryX);
+                matchedLabel.TextEnd);
 
             clonedPartialLine.Columns = newColumns;
             lineForPosition = clonedPartialLine;
@@ -756,13 +730,14 @@ public static class FindLabelGroupMatchesHelper
     /// this grid" from "an unrelated field in the next section down" - on real documents these
     /// have sat as little as ~20 units apart.
     /// </summary>
-    internal static double? FindSectionEndTop(
+    private static double? FindSectionEndTop(
         IReadOnlyList<DocumentLineWrapped> lines,
         IReadOnlyList<TextToMatch>? textEnd)
     {
         var realEndMarkers = (textEnd ?? [])
-            .Where(end => !string.IsNullOrEmpty(end.Text) && end.Text != "[END_OF_BLOCK]")
-            .Select(end => end.Text)
+            .Where(textToMatch => !string.IsNullOrEmpty(textToMatch.Text)
+                && textToMatch.Text != "[END_OF_BLOCK]")
+            .Select(textToMatch => textToMatch.Text)
             .ToList();
 
         if (realEndMarkers.Count == 0)
@@ -805,8 +780,7 @@ public static class FindLabelGroupMatchesHelper
     internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
         IReadOnlyList<DocumentLineColumn> columns,
         string? matchedText,
-        IReadOnlyList<TextToMatch>? textEnd,
-        double? nextFieldBoundaryX = null)
+        IReadOnlyList<TextToMatch>? textEnd)
     {
         var newColumns = new List<DocumentLineColumn>();
         var columnIndex = 0;
@@ -829,12 +803,7 @@ public static class FindLabelGroupMatchesHelper
                 !string.IsNullOrEmpty(end.Text)
                 && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
 
-            var candidateLeft = column.Words.FirstOrDefault()?.Coordinates.Left;
-            var isPastKnownFieldBoundary = nextFieldBoundaryX.HasValue
-                && candidateLeft.HasValue
-                && candidateLeft.Value >= nextFieldBoundaryX.Value;
-
-            if (isNextFieldStart || isPastKnownFieldBoundary)
+            if (isNextFieldStart)
             {
                 break;
             }

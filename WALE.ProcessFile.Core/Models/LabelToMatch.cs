@@ -112,8 +112,6 @@ public class LabelToMatch
     public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
 
     public int LimitToColumnIndex { get; set; }
-
-    public bool LimitToBoundSameLineWalkByOtherLabelPositions { get; init; }
     
     // A next-line candidate is rejected outright
     // (not narrowed to a column at all) when its own first/leftmost column starts with one of
@@ -181,8 +179,7 @@ public class LabelToMatch
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
-            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
-            LimitToBoundSameLineWalkByOtherLabelPositions = LimitToBoundSameLineWalkByOtherLabelPositions,            
+            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(), 
             RequireTextToBePresent = RequireTextToBePresent,
             LayoutExtractor = LayoutExtractor,
             TableBasedExtractorType = TableBasedExtractorType,

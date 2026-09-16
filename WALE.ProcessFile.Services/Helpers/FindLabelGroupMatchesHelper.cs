@@ -125,12 +125,7 @@ public static class FindLabelGroupMatchesHelper
                                     additionalInformationStore,
                                     labelPositionIndex);
 
-                            returnList.AddRange(labelGroupResults);
-
-                            if (label.Name == "DateOfCertification" && (labelGroupResults.Count > 0 || returnResults != null))
-                            {
-                                
-                            }
+                            returnList = labelGroupResults;
                             
                             if (continueOut)
                             {

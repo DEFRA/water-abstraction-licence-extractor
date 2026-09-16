@@ -28,7 +28,8 @@ public sealed class WrRule
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private bool _boundSameLineWalkByOtherLabelPositions;
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
-    private TabledBasedLayoutExtractor _tableBasedExtractorType = TabledBasedLayoutExtractor.Default;
+    private TableBasedLayoutExtractor _tableBasedExtractorType = TableBasedLayoutExtractor.Default;
+    private TableShape _tableShape = TableShape.Default;
     
     public static WrRule Between(string startText, string endText)
     {
@@ -85,10 +86,29 @@ public sealed class WrRule
         return this;
     }
     
+    public WrRule FromLetterAndTableGrid()
+    {
+        _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
+        _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
+        _tableShape = TableShape.Inconsistent;
+        
+        return this;
+    }
+    
     public WrRule FromTableGrid()
     {
         _layoutExtractor = LayoutExtractor.TableBased;
-        _tableBasedExtractorType = TabledBasedLayoutExtractor.Grid;
+        _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
+        _tableShape = TableShape.Inconsistent;
+        
+        return this;
+    }
+    
+    public WrRule FromLetterAndTableFreeText()
+    {
+        _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
+        _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
+        _tableShape = TableShape.Inconsistent;
         
         return this;
     }
@@ -96,7 +116,8 @@ public sealed class WrRule
     public WrRule FromTableFreeText()
     {
         _layoutExtractor = LayoutExtractor.TableBased;
-        _tableBasedExtractorType = TabledBasedLayoutExtractor.FreeText;
+        _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
+        _tableShape = TableShape.Inconsistent;
         
         return this;
     }
@@ -233,6 +254,7 @@ public sealed class WrRule
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
         LayoutExtractor = _layoutExtractor,
-        TableBasedExtractorType = _tableBasedExtractorType
+        TableBasedExtractorType = _tableBasedExtractorType,
+        TableShape = _tableShape
     };
 }

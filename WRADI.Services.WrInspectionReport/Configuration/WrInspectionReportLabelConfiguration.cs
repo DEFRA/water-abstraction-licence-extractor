@@ -164,7 +164,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Source of supply", InOrderPossibilities, "Quantities")
                 .Named(WrInspectionReportFieldNames.SourceOfSupply)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RulePointOfAbstraction() =>
@@ -172,7 +172,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Point of abstraction", InOrderPossibilities, "Means of measurement")
                 .Named(WrInspectionReportFieldNames.PointOfAbstraction)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // "Records" sometimes renders letter-kerned - without these as alternate end markers, the
@@ -184,7 +184,7 @@ public static class WrInspectionReportLabelConfiguration
                 .InOrder("Means of abstraction", InOrderPossibilities, "Records")
                 .Named(WrInspectionReportFieldNames.MeansOfAbstraction)
                 .AlsoEndsAtLineStart("R ecords", "R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -193,7 +193,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Purpose(s)", InOrderPossibilities, "Provision of information")
                 .Named(WrInspectionReportFieldNames.Purposes)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RulePeriod() =>
@@ -201,7 +201,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Period",InOrderPossibilities, "Special conditions")
                 .Named(WrInspectionReportFieldNames.Period)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleQuantities() =>
@@ -209,7 +209,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Quantities", InOrderPossibilities, "Land")
                 .Named(WrInspectionReportFieldNames.Quantities)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleMeansOfMeasurement() =>
@@ -217,7 +217,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Means of measurement", InOrderPossibilities, "Charging factors")
                 .Named(WrInspectionReportFieldNames.MeansOfMeasurement)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // "Records" renders with progressively wider letter-kerning on 340/789 real corpus docs
@@ -229,7 +229,7 @@ public static class WrInspectionReportLabelConfiguration
                 .InOrder("R ecords", InOrderPossibilities, "Other provisions")
                 .Named(WrInspectionReportFieldNames.Records)
                 .AlsoStartsWith("R e cords", "R e c ords", "R e c o rds", "R e c o r ds", "R e c o r d s")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -240,7 +240,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Provision of information", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.ProvisionOfInformation)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // BoundByOtherLabels fixes a fabricated "InOrder" value caused by the same-line column walk
@@ -251,7 +251,7 @@ public static class WrInspectionReportLabelConfiguration
                 .InOrder("Special conditions", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.SpecialConditions)
                 .BoundByOtherLabels()
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -260,7 +260,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Land (only if specified)", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.Land)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleChargingFactors() =>
@@ -268,7 +268,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Charging factors", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.ChargingFactors)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleOtherProvisions() =>
@@ -276,7 +276,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .InOrder("Other provisions (specify below)", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.OtherProvisions)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // ---- Header / address block ----
@@ -288,7 +288,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Named(WrInspectionReportFieldNames.LicenceNumber)
                 .NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Name and address", "Name / address")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Long form
             WrRule
                 .Between("Licence No", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
@@ -304,7 +304,7 @@ public static class WrInspectionReportLabelConfiguration
                     new("(or Application No. or GIC No)"),
                     new("(or Application No. or GIC No.")
                 ])
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 
@@ -313,7 +313,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Met with")
                 .Named(WrInspectionReportFieldNames.MetWith)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleInspectingOfficer() =>
@@ -321,7 +321,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Inspecting Officer")
                 .Named(WrInspectionReportFieldNames.InspectingOfficer)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleSiteAddress() =>
@@ -333,7 +333,7 @@ public static class WrInspectionReportLabelConfiguration
                 .AlsoEndsAt("Email", "Inspecting Officer")
                 .AlsoStartsWith("Site address (if different from above)")
                 .SkipNextLineWhenStartsWith("Desktop Review", "Desktop:", "Site Visit: Desktop", "Liaised with")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -345,7 +345,7 @@ public static class WrInspectionReportLabelConfiguration
                 .AlsoEndsAt(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "Email")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -358,7 +358,7 @@ public static class WrInspectionReportLabelConfiguration
                 .AlsoStartsWith(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
-                .FromTableFreeText()
+                .FromLetterAndTableFreeText()
                 .Build()
         ]);
 
@@ -368,7 +368,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Position", "Inspection Date")
                 .Named(WrInspectionReportFieldNames.Position)
                 .NextLines(1)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleTime() =>
@@ -377,7 +377,7 @@ public static class WrInspectionReportLabelConfiguration
                 .After("Time")
                 .Named(WrInspectionReportFieldNames.Time)
                 .AlsoStartsWithLoose("Time:")
-                .FromTableFreeText()
+                .FromLetterAndTableFreeText()
                 .Build()
         ]);
 
@@ -391,24 +391,24 @@ public static class WrInspectionReportLabelConfiguration
                     "Telephone No", "Email",
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .After("Name / address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Water Company template
             WrRule
                 .After("Name & address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Water Company template
             WrRule
                 .After("Permit holder name and address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
                 .NextLines(1)
                 .Remove([new("Telephone No:")])
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Permit holder template
         ]);
 
@@ -430,7 +430,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Meter Name", "Meter Make")
                 .Named(WrInspectionReportFieldNames.MeterName)
                 .NextLines(MeterTableNextLines)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleMeterMake() =>
@@ -441,7 +441,7 @@ public static class WrInspectionReportLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Meter Make", "Meter Serial Number")
@@ -449,7 +449,7 @@ public static class WrInspectionReportLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Meter Serial No")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // T6 template
         ]);
 
@@ -459,21 +459,21 @@ public static class WrInspectionReportLabelConfiguration
                 .After("Serial number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .RequireTextToClaimGroup()
-                .FromTableFreeText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrRule
                 .Between("Meter Serial Number", "Meter Asset Number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromTableFreeText()
+                .FromLetterAndTableFreeText()
                 .Build(), // T6 template
             WrRule
                 .Between("Serial number", "Units")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromTableFreeText()
+                .FromLetterAndTableFreeText()
                 .Build() // Baseline two-column table
         ]);
 
@@ -483,17 +483,17 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Meter Asset Number", "Meter Reading")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
                 .NextLines(MeterTableNextLines)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // T6 template
             WrRule
                 .After("Asset no:")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .After("Asset number:")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Existing template
         ]);
 
@@ -505,14 +505,14 @@ public static class WrInspectionReportLabelConfiguration
                 .After("Reading:")
                 .Named(WrInspectionReportFieldNames.Reading)
                 .RequireTextToClaimGroup()
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Meter Reading", "Flow Rate")
                 .Named(WrInspectionReportFieldNames.Reading)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // T6 template
             // AlsoEndsAt markers added alongside the MeterTableNextLines widening - when the
             // meter table's own "Units" header genuinely never reappears (a blank/N-A table),
@@ -525,7 +525,7 @@ public static class WrInspectionReportLabelConfiguration
                 .RequireTextToClaimGroup()
                 .SkipNextLineWhenStartsWith("Other")
                 .AlsoEndsAt("Other:-", "Certificates or records available for", "Date of certificate", "Meter verification")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Baseline two-column table
         ]);
 
@@ -535,7 +535,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Flow Rate", "Calibration")
                 .Named(WrInspectionReportFieldNames.FlowRate)
                 .NextLines(MeterTableNextLines)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleUnits() =>
@@ -543,7 +543,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Units")
                 .Named(WrInspectionReportFieldNames.Units)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             // "Flow Rate" is T6-only and never appears on a T1 form at all, so on T1 documents
             // this alternate's real end boundary never fires and the widened window otherwise
@@ -555,7 +555,7 @@ public static class WrInspectionReportLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Other:-", "Certificates or records available for", "Date of certificate", "Meter verification")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // T6 template
         ]);
 
@@ -564,7 +564,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Other:")
                 .Named(WrInspectionReportFieldNames.Other)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleCertificatesOfRecords() =>
@@ -572,7 +572,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Certificates or records available for")
                 .Named(WrInspectionReportFieldNames.CertificatesOfRecords)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleDateOfCertification() =>
@@ -582,7 +582,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Named(WrInspectionReportFieldNames.DateOfCertification)
                 .NextLines(1)
                 .Remove([new("record:"), new("Conformance:")])
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -596,20 +596,20 @@ public static class WrInspectionReportLabelConfiguration
                 .NextLines(1)
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Conformance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrRule
                 .Between("Calibration", "Conformance").Named(WrInspectionReportFieldNames.Calibration).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Conformance")
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms, "Certificate"])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // T6 / Grid template
         ]);
 
@@ -619,7 +619,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Verification", "Spot Check Result")
                 .Named(WrInspectionReportFieldNames.Verification)
                 .NextLines(1)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleSpotCheckResult() =>
@@ -629,7 +629,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Named(WrInspectionReportFieldNames.SpotCheckResult)
                 .NextLines(1)
                 .Remove([new("–")])
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]); // T6 template only
 
@@ -642,7 +642,7 @@ public static class WrInspectionReportLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Flow verification")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrRule
                 .Between("Conformance", "Flow verification")
@@ -650,7 +650,7 @@ public static class WrInspectionReportLabelConfiguration
                 .WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Conformance", "Flow verification")
@@ -659,7 +659,7 @@ public static class WrInspectionReportLabelConfiguration
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -672,20 +672,20 @@ public static class WrInspectionReportLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Meter verification")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrRule
                 .Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1)
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -697,20 +697,20 @@ public static class WrInspectionReportLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Maintenance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrRule
                 .Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrRule
                 .Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1)
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -719,7 +719,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Where kept")
                 .Named(WrInspectionReportFieldNames.WhereKept)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleFormSentTo() =>
@@ -728,7 +728,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Form sent to", "Date")
                 .Named(WrInspectionReportFieldNames.FormSentTo)
                 .NextLines(1)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleDate() =>
@@ -736,7 +736,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Date:")
                 .Named(WrInspectionReportFieldNames.Date)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleDocumentTemplateVersion() =>
@@ -744,7 +744,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Document Template Version:")
                 .Named(WrInspectionReportFieldNames.DocumentTemplateVersion)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleDocumentHeader() =>
@@ -752,7 +752,7 @@ public static class WrInspectionReportLabelConfiguration
             WrRule
                 .After("Form WR - ")
                 .Named(WrInspectionReportFieldNames.DocumentHeader)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // ---- Template-family markers (presence checks, not value extraction) ----
@@ -813,7 +813,7 @@ public static class WrInspectionReportLabelConfiguration
                     "Actions",
                     "Summary")
                 .ExceptFromRemove("Actions", "Summary")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -844,7 +844,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()
         ]);
 
@@ -854,7 +854,7 @@ public static class WrInspectionReportLabelConfiguration
                 .Between("Email", "Position:")
                 .Named(WrInspectionReportFieldNames.Email)
                 .NextLines(1)
-                .FromTableGrid()
+                .FromLetterAndTableGrid()
                 .Build()]);
 
     // A pure presence check, not a value extraction - used for the WrTemplateType marker
@@ -883,7 +883,8 @@ public static class WrInspectionReportLabelConfiguration
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Name = labelName,
-                TableBasedExtractorType = TabledBasedLayoutExtractor.Grid,
+                TableBasedExtractorType = TableBasedLayoutExtractor.Grid,
+                TableShape = TableShape.Inconsistent,
                 LayoutExtractor = LayoutExtractor.TableBased
             }
         ];
@@ -920,12 +921,12 @@ public static class WrInspectionReportLabelConfiguration
                             .After("Maintenance:")
                             .Named($"{name}Maintenance")
                             .EndsAt("Frequency")
-                            .FromTableGrid()
+                            .FromLetterAndTableGrid()
                         : WrRule
                             .After("Readings taken:")
                             .Named($"{name}ReadingsTaken")
                             .EndsAt("Frequency")
-                            .FromTableGrid())
+                            .FromLetterAndTableGrid())
                             .Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
                         ? WrRule
@@ -933,13 +934,13 @@ public static class WrInspectionReportLabelConfiguration
                             .Named($"{name}MaintenanceYes")
                             .WholeLine()
                             .Possibilities([new("✓"), new("X")])
-                            .FromTableGrid()
+                            .FromLetterAndTableGrid()
                         : WrRule
                             .Between("Readings taken:", "N:")
                             .Named($"{name}ReadingsTakenYes")
                             .WholeLine()
                             .Possibilities([new("✓"), new("X")])
-                            .FromTableGrid()
+                            .FromLetterAndTableGrid()
                         ).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
                         ? WrRule
@@ -947,24 +948,24 @@ public static class WrInspectionReportLabelConfiguration
                             .Named($"{name}MaintenanceNo")
                             .WholeLine()
                             .Possibilities([new("✓"), new("X")])
-                            .FromTableGrid()
+                            .FromLetterAndTableGrid()
                         : WrRule
                             .Between("N:", "Frequency:")
                             .Named($"{name}ReadingsTakenNo")
                             .WholeLine()
                             .Possibilities([new("✓"), new("X")])
-                            .FromTableGrid()
+                            .FromLetterAndTableGrid()
                         ).Build(),
                     WrRule
                         .After("Frequency:")
                         .Named($"{name}Frequency")
                         .EndsAt("By whom")
-                        .FromTableGrid()
+                        .FromLetterAndTableGrid()
                         .Build(),
                     WrRule
                         .After("By whom:")
                         .Named($"{name}ByWhom")
-                        .FromTableGrid()
+                        .FromLetterAndTableGrid()
                         .Build()
                 ]
             }

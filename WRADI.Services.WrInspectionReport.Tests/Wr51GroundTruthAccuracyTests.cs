@@ -490,7 +490,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
-        lookupConfiguration.TableExtractorService = tableExtractorService!;
+        lookupConfiguration.NoOcrTableExtractorService = tableExtractorService!;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();

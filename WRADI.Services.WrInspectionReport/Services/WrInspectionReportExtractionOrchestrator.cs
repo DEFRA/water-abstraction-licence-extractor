@@ -243,8 +243,8 @@ public static class WrInspectionReportExtractionOrchestrator
 
             var labels = labelLookups
                 .Where(labelGroup => labelGroup.Labels
-                    .Any(l => l.TableBasedExtractorType is TabledBasedLayoutExtractor.Default
-                        or TabledBasedLayoutExtractor.Grid))
+                    .Any(l => l.TableBasedExtractorType is TableBasedLayoutExtractor.Default
+                        or TableBasedLayoutExtractor.Grid))
                 .ToList();
             
             var matches = TableMatcherHelper.MatchPossibility(

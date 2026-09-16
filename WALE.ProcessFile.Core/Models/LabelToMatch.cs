@@ -130,9 +130,11 @@ public class LabelToMatch
     public bool RequireTextToBePresent { get; init; }
 
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
+
+    public TableBasedLayoutExtractor TableBasedExtractorType { get; init; }
+        = TableBasedLayoutExtractor.Default;
     
-    public TabledBasedLayoutExtractor TableBasedExtractorType { get; init; }
-        = TabledBasedLayoutExtractor.Default;
+    public TableShape TableShape { get; init; } = TableShape.Default;
 
     public LabelToMatch Clone()
     {
@@ -183,7 +185,8 @@ public class LabelToMatch
             LimitToBoundSameLineWalkByOtherLabelPositions = LimitToBoundSameLineWalkByOtherLabelPositions,            
             RequireTextToBePresent = RequireTextToBePresent,
             LayoutExtractor = LayoutExtractor,
-            TableBasedExtractorType = TableBasedExtractorType
+            TableBasedExtractorType = TableBasedExtractorType,
+            TableShape = TableShape
         };
     }    
 }

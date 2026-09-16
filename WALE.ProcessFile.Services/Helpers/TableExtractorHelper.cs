@@ -94,8 +94,8 @@ public static class TableMatcherHelper
 
         var filteredLabelLookups = labelLookups
             .Where(labelGroup => labelGroup.Labels
-                .Any(l => l.TableBasedExtractorType is TabledBasedLayoutExtractor.Default
-                    or TabledBasedLayoutExtractor.FreeText))
+                .Any(l => l.TableBasedExtractorType is TableBasedLayoutExtractor.Default
+                    or TableBasedLayoutExtractor.FreeText))
             .ToList();
         
         foreach (var labelGroup in filteredLabelLookups)

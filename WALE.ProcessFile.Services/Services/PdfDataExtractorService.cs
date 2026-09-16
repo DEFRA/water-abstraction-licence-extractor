@@ -287,16 +287,18 @@ public class PdfDataExtractorService(
             .SelectMany(label => label.Labels)
             .ToList();
         
-        var needsToParseTables = allLabels
+        var needsToParseConsistentTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
-                or LayoutExtractor.LetterBasedAndTableBased);
+                or LayoutExtractor.LetterBasedAndTableBased
+                && label.TableShape is TableShape.Default
+                    or TableShape.Consistent);
 
         var needsToParseText = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.Default
                 or LayoutExtractor.LetterBased
                 or LayoutExtractor.LetterBasedAndTableBased);
 
-        if (needsToParseTables)
+        if (needsToParseConsistentTables)
         {
             // TODO hack - do this differently - we can't always go back to the doc
             if (pdfDocument.Bytes == null)
@@ -304,13 +306,13 @@ public class PdfDataExtractorService(
                 await pdfDocument.OpenInternalDocumentAsync();
             }
 
-            if (configuration.TableExtractorService == null)
+            if (configuration.NoOcrTableExtractorService == null)
             {
                 throw new NoNullAllowedException(
-                    "TableExtractorService cannot be null when config requires tables");
+                    $"{nameof(configuration.NoOcrTableExtractorService)} cannot be null when config requires tables");
             }
             
-            documentTables = await configuration.TableExtractorService.GetTablesAsync(
+            documentTables = await configuration.NoOcrTableExtractorService.GetTablesAsync(
                 pdfDocument.Bytes!,
                 fileId,
                 processRunId);
@@ -1161,30 +1163,11 @@ public class PdfDataExtractorService(
                     continue;
                 }
 
-                IReadOnlyList<LabelGroupResult> labelGroupMatch;
+                IReadOnlyList<LabelGroupResult> labelGroupMatchResult = [];
 
-                if (labelIsInDocumentLines)
+                if (labelIsInDocumentTables)
                 {
-                    labelGroupMatch =
-                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                            wrappedLines!,
-                            [label],
-                            isOcr,
-                            serviceName,
-                            labelGroupName,
-                            labelGroupMatches,
-                            previouslyParsedPaths,
-                            regionCode,
-                            processRunId,
-                            lookupConfiguration,
-                            this,
-                            documentLineService,
-                            additionalInformationStore,
-                            labelPositionIndex);
-                }
-                else if (labelIsInDocumentTables)
-                {
-                    labelGroupMatch =
+                    labelGroupMatchResult =
                         await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInTablesAsync(
                             documentTables!,
                             [label],
@@ -1201,22 +1184,43 @@ public class PdfDataExtractorService(
                             additionalInformationStore,
                             labelPositionIndex);
                 }
-                else
+                
+                if (labelIsInDocumentLines && labelGroupMatchResult.Count == 0)
+                {
+                    labelGroupMatchResult =
+                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
+                            wrappedLines!,
+                            [label],
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            labelGroupMatches,
+                            previouslyParsedPaths,
+                            regionCode,
+                            processRunId,
+                            lookupConfiguration,
+                            this,
+                            documentLineService,
+                            additionalInformationStore,
+                            labelPositionIndex);
+                }
+                
+                if (!labelIsInDocumentTables && !labelIsInDocumentLines)
                 {
                     throw new Exception("Neither lines nor tables passed");
                 }
 
-                if (!ShouldClaimLabelGroup(labelGroupMatch, label.RequireTextToBePresent))
+                if (!ShouldClaimLabelGroup(labelGroupMatchResult, label.RequireTextToBePresent))
                 {
                     continue;
                 }
 
-                foreach (var labelGroup in labelGroupMatch)
+                foreach (var labelGroup in labelGroupMatchResult)
                 {
                     labelGroup.LabelGroupName = labelGroupName;
                 }
 
-                labelGroupMatches.AddRange(labelGroupMatch);
+                labelGroupMatches.AddRange(labelGroupMatchResult);
                 break;
             }
         }

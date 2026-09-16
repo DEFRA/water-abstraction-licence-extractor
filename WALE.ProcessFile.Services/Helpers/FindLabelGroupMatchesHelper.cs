@@ -35,17 +35,19 @@ public static class FindLabelGroupMatchesHelper
         {
             foreach (var cell in table.Cells)
             {
-                foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
-                {
-                    var cellContainsLabelText =
-                        label.Text?.Any(text => cell.Content?.Contains(text.Text, StringComparison.OrdinalIgnoreCase) == true);
+                var cellContent = cell.Content!;
+                var cellLines = cellContent
+                    .Replace("\r\n", "\n")
+                    .Replace("\r", "\n")
+                    .Split('\n');
 
-                    if (cellContainsLabelText != true)
-                    {
-                        break;
-                    }
-                    
-                    var words = cell.Content!
+                var psuedoLines = new List<DocumentLineWrapped>();
+                var cellLineIndex = 0;
+                
+                foreach (var cellLine in cellLines)
+                {
+                    var words = cellLine
+                        .Trim()
                         .Split(' ')
                         .Select(w => new DocumentLineWord(
                             w,
@@ -54,19 +56,93 @@ public static class FindLabelGroupMatchesHelper
                             null))
                         .ToList();
                     
-                    var line = new DocumentLine
+                    var psuedoLine = new DocumentLine
                     {
                         Columns = [new DocumentLineColumn(words)]
                     };
-
-                    returnList.Add(new LabelGroupResult
+                    
+                    psuedoLines.Add(new DocumentLineWrapped
                     {
-                        IsOcr = false,
-                        MatchedLabel = label,
-                        Text = [line]
+                        Line = psuedoLine,
+                        Index = cellLineIndex++
                     });
+                }
 
-                    label.Completed = true;
+                foreach (var psuedoLineWrapped in psuedoLines)
+                {
+                    foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
+                    {
+                        var useOldWay = false;
+
+                        if (useOldWay)
+                        {
+                            var cellContainsLabelText =
+                                label.Text?.Any(text =>
+                                    psuedoLineWrapped.Line?.Text.Contains(text.Text, StringComparison.OrdinalIgnoreCase) == true);
+
+                            if (cellContainsLabelText != true)
+                            {
+                                continue;
+                            }
+
+                            returnList.Add(new LabelGroupResult
+                            {
+                                IsOcr = false,
+                                MatchedLabel = label,
+                                Text = [psuedoLineWrapped.Line!]
+                            });
+
+                            label.Completed = true;
+                        }
+                        else
+                        {
+                            var (continueOut,
+                                    _,
+                                    _,
+                                    returnResults,
+                                    labelGroupResults)
+                                = await FindLabelGroupMatchesInLineAsync(
+                                    label,
+                                    psuedoLineWrapped.Line,
+                                    psuedoLineWrapped.Line,
+                                    psuedoLineWrapped,
+                                    psuedoLines,
+                                    returnList,
+                                    psuedoLines.Count,
+                                    psuedoLines.Count,
+                                    isOcr,
+                                    serviceName,
+                                    labelGroupName,
+                                    lookupConfiguration,
+                                    siblingMatches,
+                                    null,
+                                    null,
+                                    pdfDataExtractorService,
+                                    processRunId,
+                                    regionCode,
+                                    documentLineService,
+                                    previouslyParsedPaths,
+                                    additionalInformationStore,
+                                    labelPositionIndex);
+
+                            returnList.AddRange(labelGroupResults);
+
+                            if (label.Name == "DateOfCertification" && (labelGroupResults.Count > 0 || returnResults != null))
+                            {
+                                
+                            }
+                            
+                            if (continueOut)
+                            {
+                                continue;
+                            }
+                            
+                            if (returnResults != null)
+                            {
+                                return returnResults;
+                            }
+                        }
+                    }
                 }
             }
         }

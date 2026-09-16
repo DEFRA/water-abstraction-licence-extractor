@@ -10,7 +10,7 @@ public class LookupConfiguration(
     ICacheService cacheService,
     IOutputService outputService,
     ILicenceNumberServiceCore licenceNumberService,
-    ITableExtractorService tableExtractorService,
+    ITableExtractorService noOcrTableExtractorService,
     IDmsLookupService dmsLookupService,
     int regionId,
     DateTime requestedAt,
@@ -42,7 +42,7 @@ public class LookupConfiguration(
 
     public ILicenceNumberServiceCore LicenceNumberService { get; set; } = licenceNumberService;
     
-    public ITableExtractorService TableExtractorService { get; set; } = tableExtractorService;
+    public ITableExtractorService NoOcrTableExtractorService { get; set; } = noOcrTableExtractorService;
     
     public IDmsLookupService DmsLookupService { get; set; } = dmsLookupService;
 
@@ -89,7 +89,7 @@ public class LookupConfiguration(
             CacheService,
             OutputService,
             LicenceNumberService,
-            TableExtractorService,
+            NoOcrTableExtractorService,
             DmsLookupService,
             RegionId,
             RequestedAt,

@@ -23,7 +23,8 @@ public class LookupConfiguration(
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
     bool lockInProcess = false,
-    bool savePurposeMapping = false)
+    bool savePurposeMapping = false,
+    int horizontalGapBetweenColumns = 18)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
     // set, then re-run extraction with a different one chosen from the result - see
@@ -69,6 +70,8 @@ public class LookupConfiguration(
     
     public bool SavePurposeMapping { get; set; } = savePurposeMapping;
 
+    public int HorizontalGapBetweenColumns { get; set; } = horizontalGapBetweenColumns;
+
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -91,6 +94,7 @@ public class LookupConfiguration(
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
             LockInProcess,
-            SavePurposeMapping);
+            SavePurposeMapping,
+            HorizontalGapBetweenColumns);
     }
 }

@@ -254,7 +254,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var pageLinesTransformed = FormatPageLines(
                 pageLines,
                 pageNumber,
-                configuration.LineHeight);
+                configuration.LineHeight,
+                configuration.HorizontalGapBetweenColumns);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -428,7 +429,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var pageLinesFormatted = FormatPageLines(
             pageLines,
             page.Number,
-            configuration.LineHeight);
+            configuration.LineHeight,
+            configuration.HorizontalGapBetweenColumns);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -604,7 +606,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
         int pageNumber,
-        int lineHeight)
+        int lineHeight,
+        int horizontalGapBetweenColumns)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -630,7 +633,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var returnList = groupedWords
             .SelectMany(lineWords =>
             {
-                var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
+                var orderedWords = lineWords
+                    .OrderBy(x => x.BoundingBox.Left)
+                    .ToList();
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -668,7 +673,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
                     
-                    if (xDiff >= 18)
+                    if (xDiff >= horizontalGapBetweenColumns)
                     {
                         columns.Add(new DocumentLineColumn());
                     }

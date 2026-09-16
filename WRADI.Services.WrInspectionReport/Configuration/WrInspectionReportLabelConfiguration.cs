@@ -12,6 +12,7 @@ public static class WrInspectionReportLabelConfiguration
     {
         lookupConfiguration.LineHeight = 6;
         lookupConfiguration.MinimumRowsForDigital = 30;
+        lookupConfiguration.HorizontalGapBetweenColumns = 15;
     }
     
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>

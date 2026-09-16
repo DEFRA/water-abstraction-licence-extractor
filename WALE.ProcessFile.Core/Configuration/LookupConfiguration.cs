@@ -24,7 +24,8 @@ public class LookupConfiguration(
     bool useLockExclusivity = true,
     bool lockInProcess = false,
     bool savePurposeMapping = false,
-    int horizontalGapBetweenColumns = 19)
+    int horizontalGapBetweenColumns = 19,
+    bool inferMissingColumns = false)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
     // set, then re-run extraction with a different one chosen from the result - see
@@ -72,6 +73,8 @@ public class LookupConfiguration(
 
     public int HorizontalGapBetweenColumns { get; set; } = horizontalGapBetweenColumns;
 
+    public bool InferMissingColumns { get; set; } = inferMissingColumns;
+
     public LookupConfiguration Clone()
     {
         return new LookupConfiguration(
@@ -95,6 +98,7 @@ public class LookupConfiguration(
             UseLockExclusivity,
             LockInProcess,
             SavePurposeMapping,
-            HorizontalGapBetweenColumns);
+            HorizontalGapBetweenColumns,
+            InferMissingColumns);
     }
 }

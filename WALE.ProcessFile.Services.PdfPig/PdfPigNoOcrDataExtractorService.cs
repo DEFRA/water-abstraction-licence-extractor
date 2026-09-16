@@ -255,7 +255,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 pageLines,
                 pageNumber,
                 configuration.LineHeight,
-                configuration.HorizontalGapBetweenColumns);
+                configuration.HorizontalGapBetweenColumns,
+                configuration.InferMissingColumns);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -430,7 +431,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pageLines,
             page.Number,
             configuration.LineHeight,
-            configuration.HorizontalGapBetweenColumns);
+            configuration.HorizontalGapBetweenColumns,
+            configuration.InferMissingColumns);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -607,7 +609,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
         int pageNumber,
         int lineHeight,
-        int horizontalGapBetweenColumns)
+        int horizontalGapBetweenColumns,
+        bool inferMissingColumns)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -699,27 +702,30 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             })
         .ToList();
 
-        /*DocumentLine? previousLine = null;
-        
-        // Add in missing columns
-        foreach (var line in returnList)
+        if (inferMissingColumns)
         {
-            if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
-            {
-                var previousLineSecondColumnLeft = previousLine.Columns[1].Words.FirstOrDefault()?.Coordinates.Left;
-                var thisLineFirstColumnLeft = line.Columns[0].Words.FirstOrDefault()?.Coordinates.Left;
+            DocumentLine? previousLine = null;
 
-                const double xLeeway = 10;
-                
-                if (thisLineFirstColumnLeft + xLeeway >= previousLineSecondColumnLeft)
+            // Add in missing columns based on lines above
+            foreach (var line in returnList)
+            {
+                if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
                 {
-                    line.Columns.Insert(0, new DocumentLineColumn());
+                    var thisLineFirstColumnLeft = line.Columns[0].Words.FirstOrDefault()?.Coordinates.Left;
+                    var previousLineSecondColumnLeft = previousLine.Columns[1].Words.FirstOrDefault()?.Coordinates.Left;
+
+                    const double xLeeway = 10;
+
+                    if (thisLineFirstColumnLeft + xLeeway >= previousLineSecondColumnLeft)
+                    {
+                        line.Columns.Insert(0, new DocumentLineColumn());
+                    }
                 }
+
+                previousLine = line;
             }
-            
-            previousLine = line;
-        }*/
-        
+        }
+
         // Remove weird spaces in some words
         foreach (var line in returnList)
         {

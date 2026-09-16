@@ -64,9 +64,7 @@ public static class WrInspectionReportExtractionOrchestrator
             int minimumFieldsToSkipFallback = 10)
     {
         configuration1 = configuration1.Clone();
-        configuration1.LineHeight = 6;
-        configuration1.MinimumRowsForDigital = 30;
-        configuration1.UseAnchoredLineGrouping = true;
+        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
 
         var originalLabels = configuration1.Labels.ToList();
         

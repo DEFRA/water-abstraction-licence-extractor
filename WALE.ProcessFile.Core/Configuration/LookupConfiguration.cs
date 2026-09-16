@@ -23,7 +23,6 @@ public class LookupConfiguration(
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
     bool lockInProcess = false,
-    bool useAnchoredLineGrouping = false,
     bool savePurposeMapping = false)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
@@ -67,16 +66,6 @@ public class LookupConfiguration(
     public int LineHeight { get; set; } = lineHeight;
 
     public int MinimumRowsForDigital { get; set; } = minimumRowsForDigital;
-
-    // Opt-in only - default false preserves the existing PdfPig row-grouping algorithm
-    // for every consumer that doesn't set this explicitly (i.e. the licence pipeline).
-    // See PdfPigNoOcrDataExtractorService.FormatPageLines for why this exists: the
-    // default chain-merge grouping can splice a value stacked directly beneath its own
-    // label into that label's row purely by horizontal position, corrupting the label
-    // text itself. Anchored grouping fixes that but changes DocumentLine boundaries, so
-    // it's gated behind this flag rather than applied universally without a regression
-    // suite to verify it against the licence corpus.
-    public bool UseAnchoredLineGrouping { get; set; } = useAnchoredLineGrouping;
     
     public bool SavePurposeMapping { get; set; } = savePurposeMapping;
 
@@ -102,7 +91,6 @@ public class LookupConfiguration(
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
             LockInProcess,
-            UseAnchoredLineGrouping,
             SavePurposeMapping);
     }
 }

@@ -254,8 +254,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             var pageLinesTransformed = FormatPageLines(
                 pageLines,
                 pageNumber,
-                configuration.LineHeight,
-                configuration.UseAnchoredLineGrouping);
+                configuration.LineHeight);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -429,8 +428,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var pageLinesFormatted = FormatPageLines(
             pageLines,
             page.Number,
-            configuration.LineHeight,
-            configuration.UseAnchoredLineGrouping);
+            configuration.LineHeight);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -606,8 +604,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
     private static IReadOnlyList<DocumentLine> FormatPageLines(
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
         int pageNumber,
-        int lineHeight,
-        bool useAnchoredLineGrouping = false)
+        int lineHeight)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -624,7 +621,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(textLine => textLine.Words)
             .ToList();
 
-        var groupedWords = useAnchoredLineGrouping
+        var useLegacyGrouping = false;
+        
+        var groupedWords = !useLegacyGrouping
             ? GroupWordsIntoRowsByAnchor(allWords, lineHeight)
             : GroupWordsIntoRowsByChain(allWords, lineHeight);
 
@@ -789,18 +788,19 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         foreach (var word in orderedByY)
         {
-            var y = word.BoundingBox.Bottom;
+            var wordBottom = word.BoundingBox.Bottom;
 
-            if (anchorY == null || anchorY.Value - y >= lineHeight)
+            if (anchorY == null || anchorY.Value - wordBottom >= lineHeight)
             {
                 lineIndex += 1;
-                anchorY = y;
+                anchorY = wordBottom;
             }
 
             assignments.Add((lineIndex, word));
         }
 
-        return assignments.GroupBy(a => a.LineIndex, a => a.Word);
+        return assignments
+            .GroupBy(a => a.LineIndex, a => a.Word);
     }
 
     private static async Task<IReadOnlyList<TextBlock>> GetPageLinesAsync(Page page)

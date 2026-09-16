@@ -12,7 +12,6 @@ public static class WrInspectionReportLabelConfiguration
     {
         lookupConfiguration.LineHeight = 6;
         lookupConfiguration.MinimumRowsForDigital = 30;
-        lookupConfiguration.UseAnchoredLineGrouping = true;
     }
     
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>

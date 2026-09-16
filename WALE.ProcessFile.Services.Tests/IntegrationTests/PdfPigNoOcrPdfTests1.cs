@@ -889,7 +889,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.NotNull(abstractionLimitsSection);
         Assert.False(abstractionLimitsSection.IsOcr);
         Assert.Equal(12, abstractionLimitsSection.Text!.Count);
-        Assert.Equal(27, abstractionLimitsSection.LabelStartLineNumber);
+        Assert.Equal(28, abstractionLimitsSection.LabelStartLineNumber);
         
         Assert.NotNull(abstractionLimitsSection.SubResults);        
         Assert.Equal(2, abstractionLimitsSection.SubResults.Count);
@@ -899,7 +899,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         
         var section1Sub1 = sectionPoint1.SubResults[0];
         Assert.Equal(9, section1Sub1.SubResults.Count);
-        Assert.Equal(28, section1Sub1.LabelStartLineNumber);
+        Assert.Equal(29, section1Sub1.LabelStartLineNumber);
         
         //var abstractionLimitsSection1 = section1Sub1.SubResults[0];
         Assert.Equal(4, section1Sub1.Text!.Count);
@@ -925,7 +925,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per day")) == true);
 
         Assert.NotNull(perDay);
-        Assert.Equal(29, perDay.LabelStartLineNumber);
+        Assert.Equal(30, perDay.LabelStartLineNumber);
         Assert.Equal("409.5", perDay.Text?.FirstOrDefault()?.Text);
         
         var perDayUnits = section1Sub1.SubResults
@@ -940,7 +940,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per year")) == true);
 
         Assert.NotNull(perYear);
-        Assert.Equal(30, perYear.LabelStartLineNumber);
+        Assert.Equal(31, perYear.LabelStartLineNumber);
         Assert.Equal("20457", perYear.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits = section1Sub1.SubResults
@@ -955,7 +955,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
                 && subResult.MatchedLabel.Text?.Any(text => text.Text.Contains("per second")) == true);
 
         Assert.NotNull(perSecond);
-        Assert.Equal(31, perSecond.LabelStartLineNumber);
+        Assert.Equal(32, perSecond.LabelStartLineNumber);
         Assert.Equal("15.2", perSecond.Text?.FirstOrDefault()?.Text);
             
         var perSecondUnits = section1Sub1.SubResults

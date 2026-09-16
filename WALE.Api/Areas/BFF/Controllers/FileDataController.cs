@@ -20,7 +20,8 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
-    IMemoryCache memoryCache) : Controller
+    IMemoryCache memoryCache,
+    IFileService fileService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
@@ -229,12 +230,13 @@ public class FileDataController(
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
                 var line = WrInspectionReportCsvLine.FromForm(form);
 
-                // Not part of the form (file identity, not document content) - same stable link
-                // the portal's own "View PDF" uses (images.ts's getPdfUrl), which redirects to a
-                // fresh presigned S3 URL on each click rather than baking in one that'd expire.
+                // Not part of the form (file identity, not document content) - the real s3:// URI
+                // rather than a portal redirect link, so the export is a standalone reference
+                // (usable directly with the AWS CLI/SDK, not dependent on WALE.Api still being up
+                // or the file's name not having changed by the time someone opens the export).
                 line.Metadata__FileUrl = matchesResult.Filename == null
                     ? null
-                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/Get?filename={Uri.EscapeDataString(matchesResult.Filename)}";
+                    : $"s3://{fileService.FolderPath}/{matchesResult.Filename}";
 
                 return line;
             }

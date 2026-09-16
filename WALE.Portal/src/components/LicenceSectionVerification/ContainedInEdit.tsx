@@ -75,6 +75,13 @@ export const ContainedInEdit = ({
                                 >
                                     <option value="">Select section</option>
 
+                                    {section.sectionName &&
+                                        !documentSections.includes(section.sectionName) && (
+                                            <option value={section.sectionName}>
+                                                {section.sectionName}
+                                            </option>
+                                        )}
+
                                     {documentSections.map(sectionName => (
                                         <option key={sectionName} value={sectionName}>
                                             {sectionName}
@@ -98,12 +105,20 @@ export const ContainedInEdit = ({
                                     >
                                         <option value="">Select link reason</option>
 
+                                        {section.linkReason &&
+                                            !linkReasons.includes(section.linkReason) && (
+                                                <option value={section.linkReason}>
+                                                    {section.linkReason}
+                                                </option>
+                                            )}
+
                                         {linkReasons.map(linkReason => (
                                             <option key={linkReason} value={linkReason}>
                                                 {linkReason}
                                             </option>
                                         ))}
-                                    </select>          <ValidationError message={getFieldError?.(idx, 'linkReason')}/>
+                                    </select>
+                                    <ValidationError message={getFieldError?.(idx, 'linkReason')}/>
                                 </div>
                             )}
                             {section.pageNumber !== undefined && section.pageNumber !== null && section.pageNumber > 0 && (

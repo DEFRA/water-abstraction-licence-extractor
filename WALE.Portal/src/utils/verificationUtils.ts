@@ -15,6 +15,10 @@ export const isScrapedDataDifferent = (
 export const getVerificationTypeColor = (type: string): string =>
     getVerificationTypeBackgroundColor(type);
 
+export const getVerificationWithNotesFirstPart = (value: string): string => {
+    return value.split("::")[0];
+};
+
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
         case 'AutoConfirm':

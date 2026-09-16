@@ -1,5 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import { getVerificationWithNotesFirstPart, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -66,9 +66,9 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                             return (
                                                 <span key={itemId}>
                                                     {itemId}{' '}
-                                                    {(v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                        <span key={idx} title={vt ?? ''} style={{
-                                                            backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                    {(v.verificationTypesWithNotes || []).map((vt: string, idx: number) => (
+                                                        <span key={idx} title={vt.replace('::', ' #') ?? ''} style={{
+                                                            backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',
                                                             fontSize: '0.7em',
                                                             padding: '1px 3px',
@@ -78,7 +78,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                             fontWeight: 'bold',
                                                             fontFamily: 'sans-serif'
                                                         }}>
-                                                            {getVerificationTypeInitials(vt)}
+                                                            {getVerificationTypeInitials(getVerificationWithNotesFirstPart(vt))}
                                                         </span>
                                                     ))}
                                                     {v.scrapedDataIsDifferent && '🚩'}

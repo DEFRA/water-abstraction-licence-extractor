@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
-using Aspose.Pdf;
-using Aspose.Pdf.Text;
+using GemBox.Pdf;
+using GemBox.Pdf.Content;
+using Path = System.IO.Path;
+using PdfDocument = GemBox.Pdf.PdfDocument;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -17,22 +19,25 @@ using Xunit.Abstractions;
 namespace WALE.Tools.Tests;
 
 /// <summary>
-/// Trial of Aspose.PDF's TextFragment/TextFragmentAbsorber "find and replace" API, which is
-/// architecturally different from the other two POCs: rather than removing old text and drawing a
-/// separate new overlay, it edits a matched TextFragment's Text property in place, with explicit
-/// policies (TextReplaceOptions.FontSizeAdjustment / ReplaceAdjustment) for how to handle the
-/// replacement being a different length than the original - the "richer tooling for smaller/bigger
-/// replacement" question this trial exists to answer. Each lettered clause (marker line plus any
-/// wrapped continuation lines) collapses onto a single replaced fragment on the marker line, with
-/// the continuation lines' fragments deleted - see ReplaceLinesInPlace for why. Aspose.PDF is
-/// fully commercial with no free tier - this trial runs unlicensed, so output carries an
-/// evaluation watermark; not for distribution.
+/// Trial of GemBox.Pdf's PdfText.Find/Replace API - architecturally the same per-fragment
+/// find-and-replace-in-place model as WqFormAsposeTests (not remove-then-overlay, like the
+/// PdfSharp and iText POCs), so expect the same "lettered-list marker gets lost" outcome unless
+/// grouped differently. GemBox.Pdf's free tier limits reading/writing to 2 pages per document but
+/// is otherwise full-featured and licensed for commercial use - both real sample files' matched
+/// blocks fit that limit (WQ__002671 spans 2 pages, WQ__003101 just 1), so this reuses the same
+/// page-extraction workaround built for the Aspose trial, this time because the free tier requires
+/// it rather than because evaluation mode blocks page access outright.
 /// </summary>
-public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
+public class WqFormGemBoxTests(ITestOutputHelper testOutputHelper)
 {
+    static WqFormGemBoxTests()
+    {
+        ComponentInfo.SetLicense("FREE-LIMITED-KEY");
+    }
+
     [Theory]
     [MemberData(nameof(WqFormParagraphOverlayTests.SampleFiles), MemberType = typeof(WqFormParagraphOverlayTests))]
-    public async Task WhenRealWqFormFile_ThenAsposeReplacesTextInPlace(string sourcePath)
+    public async Task WhenRealWqFormFile_ThenGemBoxReplacesTextInPlace(string sourcePath)
     {
         var folder = Path.GetDirectoryName(sourcePath)!;
         var filename = Path.GetFileName(sourcePath);
@@ -102,12 +107,12 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
 
         var outputPath = Path.Combine(
             comparisonFolder,
-            $"{Path.GetFileNameWithoutExtension(filename)}-aspose-replaced.pdf");
+            $"{Path.GetFileNameWithoutExtension(filename)}-gembox-replaced.pdf");
 
         ReplaceLinesInPlace(sourcePath, outputPath, matchedLines, new WqFormParagraphOverlayTests.FillerTextCursor());
 
         testOutputHelper.WriteLine($"Wrote original copy to {originalCopyPath}");
-        testOutputHelper.WriteLine($"Wrote Aspose in-place-replace PDF to {outputPath}");
+        testOutputHelper.WriteLine($"Wrote GemBox in-place-replace PDF to {outputPath}");
         Assert.True(File.Exists(outputPath));
     }
 
@@ -115,31 +120,16 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
 
     /// <summary>
     /// Replaces one whole clause (a marker line plus any wrapped continuation lines) by
-    /// distributing new filler text back across those same lines' fragments, one chunk per line.
+    /// distributing new filler text back across those same lines' matches, one chunk per line.
     /// </summary>
     /// <remarks>
-    /// Went through two earlier versions. First, replacing every original PdfPig line
-    /// independently - including the line carrying the "(a) " marker - silently overwrote the
-    /// marker along with the rest of its line, since that whole line's text got replaced. Grouping
-    /// lines into clauses and putting the WHOLE new paragraph on just the marker line's fragment
-    /// fixed that, but exposed a bigger problem: TextFragment.Text replacement doesn't wrap - even
-    /// with FontSizeAdjustment.ShrinkToFit, cramming a 5-line clause's worth of text into one
-    /// line's fragment just ran the text off the page edge unwrapped (confirmed via pdftotext, not
-    /// just a render artifact).
-    ///
-    /// Fixed by manually word-wrapping the filler text into as many chunks as the clause has
-    /// lines, then giving each original line's fragment its own chunk - the marker line gets the
-    /// marker plus the first chunk, continuation lines get the rest, and any line left over once
-    /// the filler text runs out gets redacted. Each line's chunk budget (in characters) reuses that
-    /// line's own original text length - the real wrap point this document's own renderer already
-    /// chose for this font and column width - rather than us measuring font metrics ourselves.
-    ///
-    /// Aspose.PDF's unlicensed evaluation mode caps any internal collection (including a document's
-    /// own pages) at 4 elements - opening page 7 of these 24-26 page real files throws "At most 4
-    /// elements can be viewed in evaluation mode" outright, regardless of how many pages are
-    /// actually touched. Worked around by first extracting only the pages that contain matched
-    /// lines (via PdfSharp, which has no such limit) into a small standalone PDF, so Aspose only
-    /// ever sees 1-2 pages - a real license would remove the need for this.
+    /// Same two-stage fix as WqFormAsposeTests.ReplaceLinesInPlace. Putting the whole clause's new
+    /// text on just the marker line's match (an earlier version of this method) restored the "(a) "
+    /// marker but exposed that PdfText.Replace doesn't wrap either - it just ran the combined text
+    /// off the page edge unwrapped, confirmed via pdftotext. Fixed the same way: manually
+    /// word-wrapping the filler text into as many chunks as the clause has lines (each line's
+    /// character budget taken from its own original text length - the real wrap point this
+    /// document's own renderer already chose), then giving each line's match its own chunk.
     /// </remarks>
     private void ReplaceLinesInPlace(
         string sourcePath,
@@ -149,7 +139,7 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
     {
         var (extractedPath, pageNumberMap) = ExtractMatchedPages(sourcePath, matchedLines);
 
-        using var document = new Document(extractedPath);
+        using var document = PdfDocument.Load(extractedPath);
 
         var itemGroups = WqFormParagraphOverlayTests.GroupLinesByMarker(matchedLines);
 
@@ -167,9 +157,20 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
             for (var index = 0; index < itemLines.Count; index++)
             {
                 var chunk = chunks[index];
-                var replacementText = index == 0 ? prefix + chunk : chunk;
+                var line = itemLines[index];
 
-                ReplaceLine(document, pageNumberMap, itemLines[index], replacementText);
+                if (index == 0)
+                {
+                    FindLine(document, pageNumberMap, line)?.Replace(prefix + chunk);
+                }
+                else if (string.IsNullOrEmpty(chunk))
+                {
+                    FindLine(document, pageNumberMap, line)?.Redact();
+                }
+                else
+                {
+                    FindLine(document, pageNumberMap, line)?.Replace(chunk);
+                }
             }
         }
 
@@ -219,42 +220,30 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
         return chunks;
     }
 
-    private void ReplaceLine(
-        Document document, IReadOnlyDictionary<int, int> pageNumberMap, DocumentLine line, string replacementText)
+    private GemBox.Pdf.Content.PdfText? FindLine(
+        PdfDocument document, IReadOnlyDictionary<int, int> pageNumberMap, DocumentLine line)
     {
         if (string.IsNullOrWhiteSpace(line.Text))
         {
-            return;
+            return null;
         }
 
-        var page = document.Pages[pageNumberMap[line.PageNumber]];
+        var page = document.Pages[pageNumberMap[line.PageNumber] - 1];
         var pattern = BuildWhitespaceTolerantPattern(line.Text);
-        var absorber = new TextFragmentAbsorber(new Regex(pattern))
-        {
-            TextReplaceOptions = new TextReplaceOptions(TextReplaceOptions.ReplaceAdjustment.None)
-            {
-                FontSizeAdjustmentAction = TextReplaceOptions.FontSizeAdjustment.ShrinkToFit,
-            },
-        };
+        var match = page.Content.GetText().Find(new Regex(pattern)).FirstOrDefault();
 
-        page.Accept(absorber);
-
-        if (absorber.TextFragments.Count == 0)
+        if (match == null)
         {
             testOutputHelper.WriteLine($"  NOT FOUND page={line.PageNumber}: \"{line.Text}\"");
-            return;
         }
 
-        foreach (TextFragment fragment in absorber.TextFragments)
-        {
-            fragment.Text = replacementText;
-        }
+        return match;
     }
 
     /// <summary>
-    /// Copies only the pages containing matched lines into a new standalone PDF (via PdfSharp, the
-    /// same permission-bypassing Import-mode approach the other two POCs use), returning its path
-    /// and a map from original page number to the new document's page number.
+    /// Copies only the pages containing matched lines into a new standalone PDF (via PdfSharp),
+    /// returning its path and a map from original page number to the new document's page number -
+    /// same technique as WqFormAsposeTests.ExtractMatchedPages.
     /// </summary>
     private static (string ExtractedPath, Dictionary<int, int> PageNumberMap) ExtractMatchedPages(
         string sourcePath, IReadOnlyList<DocumentLine> matchedLines)
@@ -280,7 +269,7 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
         var extractedPath = Path.Combine(
             AppContext.BaseDirectory,
             "ComparisonOutput",
-            $"{Path.GetFileNameWithoutExtension(sourcePath)}-aspose-extracted-pages.pdf");
+            $"{Path.GetFileNameWithoutExtension(sourcePath)}-gembox-extracted-pages.pdf");
         Directory.CreateDirectory(Path.GetDirectoryName(extractedPath)!);
         extracted.Save(extractedPath);
 
@@ -290,8 +279,7 @@ public class WqFormAsposeTests(ITestOutputHelper testOutputHelper)
     /// <summary>
     /// Builds a regex matching the given line's words in order with flexible whitespace between
     /// them, and either straight or curly quote characters wherever the line has an apostrophe or
-    /// quote mark - same technique (and same reason) as WqFormITextSweepTests: the PDF's real text
-    /// may not match PdfPig's normalized single-spaced, ASCII-quoted line text exactly.
+    /// quote mark - same technique (and same reason) as WqFormITextSweepTests/WqFormAsposeTests.
     /// </summary>
     private static string BuildWhitespaceTolerantPattern(string lineText)
     {

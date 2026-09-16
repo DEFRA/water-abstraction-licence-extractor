@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Aspose.PDF" Version="26.9.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.0" />
         <PackageReference Include="itext7" Version="9.7.0" />
         <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.7.0" />

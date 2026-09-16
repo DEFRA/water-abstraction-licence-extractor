@@ -70,7 +70,10 @@ public class WrTemplateCombinedTextAndTablesTests
             new DmsLookupService(),
             regionCode,
             DateTime.Now,
-            useLockExclusivity: false);
+            useLockExclusivity: false,
+            lineHeight: 6,
+            minimumRowsForDigital: 30,
+            useAnchoredLineGrouping: true);
     }
     
     [Fact]
@@ -86,7 +89,7 @@ public class WrTemplateCombinedTextAndTablesTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(41, resultList.Count);
+        Assert.Equal(42, resultList.Count);
         
         var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
@@ -340,11 +343,11 @@ public class WrTemplateCombinedTextAndTablesTests
         Assert.Equal(WrInspectionReportFieldNames.ReadingsTakenLineByWhom, byWhomSubLabel.MatchedLabelName);
         Assert.Equal("MP", byWhomSubLabel.Text[0].Text);
         
-        /*var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
+        var inspectionDate = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.InspectionDate);
         Assert.NotNull(inspectionDate);
         Assert.Single(inspectionDate.Text!);
         Assert.Equal(WrInspectionReportFieldNames.InspectionDate, inspectionDate.LabelGroupName);
-        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);*/
+        Assert.Equal("04/03/2024", inspectionDate.Text[0].Text);
 
         var converted = WrInspectionReportSchemaConverter.ToForm(resultFull, resultFullX.Item2);
         Assert.NotNull(converted);

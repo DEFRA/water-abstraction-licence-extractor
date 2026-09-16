@@ -249,9 +249,8 @@ public static class TextToFindIsBetweenLabels
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
-            /*clonedLine.Columns.Add(new DocumentLineColumn());
-            ToColumns(textWords, clonedLine, config.HorizontalGapBetweenColumns);*/
+            clonedLine.Columns.Add(new DocumentLineColumn());
+            ToColumns(textWords, clonedLine, config.HorizontalGapBetweenColumns);
             
             linesLoop.Add(clonedLine);
         }
@@ -356,9 +355,8 @@ public static class TextToFindIsBetweenLabels
                                 
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
-                                /*clonedLine2.Columns.Add(new DocumentLineColumn());
-                                ToColumns(ctWords, clonedLine2, config.HorizontalGapBetweenColumns);*/
+                                clonedLine2.Columns.Add(new DocumentLineColumn());
+                                ToColumns(ctWords, clonedLine2, config.HorizontalGapBetweenColumns);
 
                                 returnList.Add(clonedLine2);
                             }

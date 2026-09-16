@@ -1631,6 +1631,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     new("(3)"),
                                     new("(4)"),
                                     new("(5)"),
+                                    new("ii)"),
+                                    new("i)"),
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
@@ -1646,6 +1648,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     new("(4)"),
                                     new("(5)"),
                                     new("(6)"),
+                                    new("iii)"),
+                                    new("ii)"),                     
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1671,6 +1675,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("(3)"),
                                             new("(4)"),
                                             new("(5)"),
+                                            new("ii)"),
+                                            new("i)")
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
@@ -1704,7 +1710,10 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)"),
-                                            new("(5)")
+                                            new("(5)"),
+                                            new("iii)"),
+                                            new("ii)"),
+                                            new("i)"),
                                         ],
                                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,

@@ -1331,7 +1331,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_section_item_id,
                 verification_types,
                 scraped_data_is_different,
-             current_verification_type
+             current_verification_type,
+             verification_types_with_notes
             )
             VALUES
             (
@@ -1339,7 +1340,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @LicenceSectionItemId,
                 @VerificationTypes,
                 @ScrapedDataIsDifferent,
-             @CurrentVerificationType
+             @CurrentVerificationType,
+             @VerificationTypesWithNotes
             )
             ON CONFLICT
             (
@@ -1349,6 +1351,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             DO UPDATE SET
                 verification_types =
                     EXCLUDED.verification_types,
+                verification_types_with_notes =
+                EXCLUDED.verification_types_with_notes,
                 current_verification_type = 
                 EXCLUDED.current_verification_type,
                 scraped_data_is_different =
@@ -1364,6 +1368,15 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
+        var verificationTypesWithNotes =
+            item.VerificationTypesWithNotes
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        
         return connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
@@ -1380,7 +1393,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
 
                     item.ScrapedDataIsDifferent,
                     
-                    item.CurrentVerificationType
+                    item.CurrentVerificationType,
+                   
+                    VerificationTypesWithNotes =
+                        verificationTypesWithNotes,
                 },
                 transaction,
                 cancellationToken: cancellationToken));

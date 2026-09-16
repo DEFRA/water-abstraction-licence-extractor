@@ -1161,6 +1161,119 @@ export class Client {
     }
 
     /**
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getResults(skip: number | undefined, take: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/InspectionReportFinder/GetResults?";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetResults(_response);
+        });
+    }
+
+    protected processGetResults(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    saveResults(body: InspectionReportFinderResult[]): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/InspectionReportFinder/SaveResults";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSaveResults(_response);
+        });
+    }
+
+    protected processSaveResults(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    clearResults(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/InspectionReportFinder/ClearResults";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processClearResults(_response);
+        });
+    }
+
+    protected processClearResults(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param processRunId (optional) 
      * @param skip (optional) 
      * @param take (optional) 
@@ -1495,7 +1608,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getResults(skip: number | undefined, take: number | undefined): Promise<void> {
+    getResults2(skip: number | undefined, take: number | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/LicenceFinder/GetResults?";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
@@ -1514,11 +1627,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetResults(_response);
+            return this.processGetResults2(_response);
         });
     }
 
-    protected processGetResults(response: Response): Promise<void> {
+    protected processGetResults2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1536,7 +1649,7 @@ export class Client {
     /**
      * @return OK
      */
-    clearResults(): Promise<void> {
+    clearResults2(): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/LicenceFinder/ClearResults";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1547,11 +1660,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processClearResults(_response);
+            return this.processClearResults2(_response);
         });
     }
 
-    protected processClearResults(response: Response): Promise<void> {
+    protected processClearResults2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1569,7 +1682,7 @@ export class Client {
     /**
      * @return OK
      */
-    saveResults(body: LicenceFinderCreateRequest): Promise<void> {
+    saveResults2(body: LicenceFinderCreateRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/LicenceFinder/SaveResults";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1584,11 +1697,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processSaveResults(_response);
+            return this.processSaveResults2(_response);
         });
     }
 
-    protected processSaveResults(response: Response): Promise<void> {
+    protected processSaveResults2(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -6729,6 +6842,94 @@ export enum InformationSource {
     MixedSourcesOrMixedReasons = "MixedSourcesOrMixedReasons",
 }
 
+export class InspectionReportFinderResult implements IInspectionReportFinderResult {
+    permitNumber?: string | undefined;
+    fileUrl?: string | undefined;
+    fileName?: string | undefined;
+    libraryName?: string | undefined;
+    regime?: string | undefined;
+    fileSize?: string | undefined;
+    fileId?: string | undefined;
+    documentDate?: string | undefined;
+    otherReference?: string | undefined;
+    disclosureStatus?: string | undefined;
+    processRunId?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IInspectionReportFinderResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.permitNumber = _data["permitNumber"];
+            this.fileUrl = _data["fileUrl"];
+            this.fileName = _data["fileName"];
+            this.libraryName = _data["libraryName"];
+            this.regime = _data["regime"];
+            this.fileSize = _data["fileSize"];
+            this.fileId = _data["fileId"];
+            this.documentDate = _data["documentDate"];
+            this.otherReference = _data["otherReference"];
+            this.disclosureStatus = _data["disclosureStatus"];
+            this.processRunId = _data["processRunId"];
+        }
+    }
+
+    static fromJS(data: any): InspectionReportFinderResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new InspectionReportFinderResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["permitNumber"] = this.permitNumber;
+        data["fileUrl"] = this.fileUrl;
+        data["fileName"] = this.fileName;
+        data["libraryName"] = this.libraryName;
+        data["regime"] = this.regime;
+        data["fileSize"] = this.fileSize;
+        data["fileId"] = this.fileId;
+        data["documentDate"] = this.documentDate;
+        data["otherReference"] = this.otherReference;
+        data["disclosureStatus"] = this.disclosureStatus;
+        data["processRunId"] = this.processRunId;
+        return data;
+    }
+}
+
+export interface IInspectionReportFinderResult {
+    permitNumber?: string | undefined;
+    fileUrl?: string | undefined;
+    fileName?: string | undefined;
+    libraryName?: string | undefined;
+    regime?: string | undefined;
+    fileSize?: string | undefined;
+    fileId?: string | undefined;
+    documentDate?: string | undefined;
+    otherReference?: string | undefined;
+    disclosureStatus?: string | undefined;
+    processRunId?: number;
+
+    [key: string]: any;
+}
+
 export class LabelGroupResult implements ILabelGroupResult {
     text?: DocumentLine[] | undefined;
     matchedPosition?: MatchedPosition;
@@ -7285,6 +7486,7 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     licenceSectionItemId!: string;
     currentVerificationType?: string | undefined;
     verificationTypes!: string[];
+    verificationTypesWithNotes?: string[];
     scrapedDataIsDifferent?: boolean;
 
     [key: string]: any;
@@ -7314,6 +7516,11 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 for (let item of _data["verificationTypes"])
                     this.verificationTypes!.push(item);
             }
+            if (Array.isArray(_data["verificationTypesWithNotes"])) {
+                this.verificationTypesWithNotes = [] as any;
+                for (let item of _data["verificationTypesWithNotes"])
+                    this.verificationTypesWithNotes!.push(item);
+            }
             this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
         }
     }
@@ -7338,6 +7545,11 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
             for (let item of this.verificationTypes)
                 data["verificationTypes"].push(item);
         }
+        if (Array.isArray(this.verificationTypesWithNotes)) {
+            data["verificationTypesWithNotes"] = [];
+            for (let item of this.verificationTypesWithNotes)
+                data["verificationTypesWithNotes"].push(item);
+        }
         data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         return data;
     }
@@ -7347,6 +7559,7 @@ export interface ILicenceSectionItemSummary {
     licenceSectionItemId: string;
     currentVerificationType?: string | undefined;
     verificationTypes: string[];
+    verificationTypesWithNotes?: string[];
     scrapedDataIsDifferent?: boolean;
 
     [key: string]: any;

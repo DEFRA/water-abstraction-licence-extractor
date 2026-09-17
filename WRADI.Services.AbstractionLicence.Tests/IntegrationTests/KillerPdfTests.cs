@@ -30,15 +30,17 @@ public class KillerPdfTests
         var source = File.ReadAllBytes("output2.pdf");
         var document = KillerPdf.Engine.Documents.PdfDocument.Open(source);
         
+        var black = new PdfSpotColor("Black", new PdfCmykColor(0, 0, 0, 1));
+        var page = PdfPageInformation.Read(document)[0];
+        
         var content = new PdfContentStreamBuilder()
             .BeginText()
             .SetFont(PdfStandardFont.Helvetica, 18)
-            .MoveText(0, 0)
-            .SetStrokeSpotColor(new PdfSpotColor("Black", new PdfCmykColor(0, 0, 0, 1)), 1)
+            .MoveText(page.Width / 2, page.Height / 2)
+            .SetStrokeSpotColor(black, 1)
+            .SetFillSpotColor(black, 1)
             .ShowLatin1Text("Test to try and replace something")
             .EndText();
-        
-        var page = PdfPageInformation.Read(document)[0];
         
         var updated = new PdfIncrementalPageEditor(document)
             .AppendPageDescribedContent(0, page.Width, page.Height, content, "...")

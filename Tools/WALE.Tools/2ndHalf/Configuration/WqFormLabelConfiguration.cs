@@ -43,7 +43,7 @@ public static class WqFormLabelConfiguration
         [
             new LabelToMatch
             {
-                TextStart =
+                TextStart = 
                 [
                     new("If the measured Dry Weather Flow exceeds the permitted Dry Weather Flow limit then the"),
                 ],

@@ -128,7 +128,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
             comparisonFolder,
             $"{Path.GetFileNameWithoutExtension(filename)}-spliced.pdf");
 
-        SpliceAndOverlay(sourcePath, outputPath, matchedLines, new WqFormParagraphOverlayTests.FillerTextCursor());
+        SpliceAndOverlay(sourcePath, outputPath, matchedLines);
 
         testOutputHelper.WriteLine($"Wrote original copy to {originalCopyPath}");
         testOutputHelper.WriteLine($"Wrote spliced+edited PDF to {outputPath}");
@@ -138,13 +138,16 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// <summary>
     /// Copies the source PDF's pages into a fresh document (bypassing its edit-permission
     /// restriction), then for each page containing matched lines splices out their text-show
-    /// operators and overlays replacement text.
+    /// operators and whites out their bounding box, before drawing the replacement text once across
+    /// the whole match. Drawing happens in a second pass (not per page, like the splicing) because
+    /// the replacement text is fixed and independent of how many lines the old text happened to
+    /// occupy on each page - a match spanning a page break must not draw the same fixed text twice,
+    /// once per page's box, which is what a naive per-page loop would do.
     /// </summary>
     private void SpliceAndOverlay(
         string sourcePath,
         string outputPath,
-        IReadOnlyList<DocumentLine> matchedLines,
-        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor)
+        IReadOnlyList<DocumentLine> matchedLines)
     {
         using var sourceDocument = PdfReader.Open(sourcePath, PdfDocumentOpenMode.Import);
         using var document = new PdfSharp.Pdf.PdfDocument();
@@ -156,15 +159,21 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
 
         var linesByPage = matchedLines
             .GroupBy(line => line.PageNumber)
-            .OrderBy(group => group.Key);
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        (string Family, bool Bold, bool Italic, double Size)? matchFontInfo = null;
+        var boxes = new List<(PdfSharp.Pdf.PdfPage Page, XRect Rect)>();
 
         foreach (var pageGroup in linesByPage)
         {
             var page = document.Pages[pageGroup.Key - 1];
-
-            var fontInfo = SpliceMatchedLinesFromContentStream(page, pageGroup);
-            OverlayNewParagraph(page, pageGroup, fillerCursor, fontInfo);
+            var detectedFont = SpliceMatchedLinesFromContentStream(page, pageGroup);
+            matchFontInfo ??= detectedFont;
+            boxes.Add((page, WhiteoutMatchedRegion(page, pageGroup)));
         }
+
+        DrawReplacementContentAcrossPages(boxes, matchedLines, matchFontInfo ?? ("Arial", false, false, 10));
 
         document.Save(outputPath);
     }
@@ -575,13 +584,12 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
             .Replace('“', '"').Replace('”', '"');
 
     /// <summary>
-    /// Draws a white rectangle over the given lines' bounding box and overlays replacement text.
+    /// Computes the bounding box for the given page's matched lines and draws a white rectangle
+    /// over it (still needed even where splicing succeeded - splicing only removes the matched
+    /// glyphs, not any other marks that might be there, and it's needed outright wherever splicing
+    /// failed), returning the box for replacement content to be drawn into afterwards.
     /// </summary>
-    private static void OverlayNewParagraph(
-        PdfSharp.Pdf.PdfPage page,
-        IEnumerable<DocumentLine> lines,
-        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor,
-        (string Family, bool Bold, bool Italic, double Size) fontInfo)
+    private static XRect WhiteoutMatchedRegion(PdfSharp.Pdf.PdfPage page, IEnumerable<DocumentLine> lines)
     {
         var words = lines
             .SelectMany(line => line.Columns.SelectMany(column => column.Words))
@@ -602,29 +610,28 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         var pageHeight = page.Height.Point;
         var rect = new XRect(left, pageHeight - top, right - left, top - bottom);
 
-        // Still whiteout the region even where splicing succeeded - splicing only removes the
-        // matched glyphs, not any other marks that might be there, and it's needed outright
-        // wherever splicing failed.
         graphics.DrawRectangle(XBrushes.White, rect);
-        DrawReplacementContent(graphics, rect, lines, fillerCursor, fontInfo);
+
+        return rect;
     }
 
     /// <summary>Matches a lettered-list marker at the start of a line, e.g. "(a) " or "(e) ".</summary>
     private static readonly Regex ItemMarkerRegex = new(@"^\(([a-z])\)\s+", RegexOptions.IgnoreCase);
 
     /// <summary>
-    /// Draws one filler-text item per detected (a)/(b)/... marker in the given lines, each as its
-    /// own hanging-indent paragraph sized to its own measured wrapped height. Falls back to a
-    /// single plain block if no markers are found.
+    /// Draws the real replacement text (<see cref="WqFormParagraphOverlayTests.New315Items"/>) once
+    /// across <paramref name="boxes"/> - the whited-out region on each page the match touched, in
+    /// page order. Label/continuation indent are computed once from every matched line across the
+    /// whole match (not per page), so alignment stays consistent even when the match spans a page
+    /// break. A whole item (including its sub-items, if any) is measured before being drawn and
+    /// moved to the next page's box entirely if it doesn't fit in the space remaining on the current
+    /// one, rather than split mid-item.
     /// </summary>
-    private static void DrawReplacementContent(
-        XGraphics graphics,
-        XRect rect,
-        IEnumerable<DocumentLine> lines,
-        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor,
+    private static void DrawReplacementContentAcrossPages(
+        IReadOnlyList<(PdfSharp.Pdf.PdfPage Page, XRect Rect)> boxes,
+        IReadOnlyList<DocumentLine> matchedLines,
         (string Family, bool Bold, bool Italic, double Size) fontInfo)
     {
-        var lineList = lines.ToList();
         var fontStyle = (fontInfo.Bold, fontInfo.Italic) switch
         {
             (true, true) => XFontStyleEx.BoldItalic,
@@ -634,28 +641,15 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         };
         var font = new XFont(fontInfo.Family, fontInfo.Size, fontStyle);
 
-        if (!lineList.Any(line => ItemMarkerRegex.IsMatch(line.Text)))
-        {
-            var textFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
-            textFormatter.DrawString(
-                fillerCursor.Next(WqFormParagraphOverlayTests.CombinedLength(lineList)),
-                font,
-                XBrushes.Black,
-                rect);
-            return;
-        }
-
-        var itemGroups = WqFormParagraphOverlayTests.GroupLinesByMarker(lineList);
-
-        var labelIndent = lineList
+        var labelIndent = matchedLines
             .Where(line => ItemMarkerRegex.IsMatch(line.Text))
             .SelectMany(line => line.Columns.SelectMany(column => column.Words))
             .Select(word => word.Coordinates.Left)
             .Where(value => value >= 0)
-            .DefaultIfEmpty(rect.X)
+            .DefaultIfEmpty(boxes[0].Rect.X)
             .Min();
 
-        var continuationLefts = lineList
+        var continuationLefts = matchedLines
             .Where(line => !ItemMarkerRegex.IsMatch(line.Text) && !string.IsNullOrWhiteSpace(line.Text))
             .SelectMany(line => line.Columns.SelectMany(column => column.Words))
             .Select(word => word.Coordinates.Left)
@@ -666,27 +660,34 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
             ? continuationLefts.Min()
             : labelIndent + 35;
 
-        var bodyWidth = rect.Right - continuationIndent;
-        var itemTexts = itemGroups
-            .Select(itemLines => fillerCursor.Next(WqFormParagraphOverlayTests.CombinedLength(itemLines)))
-            .ToList();
-        var itemHeights = itemTexts
-            .Select(text => WqFormParagraphOverlayTests.MeasureWrappedHeight(graphics, text, font, bodyWidth))
-            .ToList();
-        var itemFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
+        var hangingIndent = continuationIndent - labelIndent;
+
+        var boxIndex = 0;
+        var rect = boxes[boxIndex].Rect;
         var itemTop = rect.Y;
+        var graphics = XGraphics.FromPdfPage(boxes[boxIndex].Page);
+        var textFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
 
-        for (var index = 0; index < itemGroups.Count; index++)
+        foreach (var item in WqFormParagraphOverlayTests.New315Items)
         {
-            var itemLines = itemGroups[index];
-            var label = ItemMarkerRegex.Match(itemLines[0].Text).Groups[1].Value;
-            var itemHeight = itemHeights[index];
-            var labelRect = new XRect(rect.X, itemTop, continuationIndent - rect.X, itemHeight);
-            var bodyRect = new XRect(continuationIndent, itemTop, bodyWidth, itemHeight);
+            var itemHeight = WqFormParagraphOverlayTests.MeasureItemHeight(
+                graphics, item, font, rect.Width, rect.Right - continuationIndent,
+                rect.Right - (continuationIndent + hangingIndent));
 
-            graphics.DrawString($"({label})", font, XBrushes.Black, labelRect, XStringFormats.TopLeft);
-            itemFormatter.DrawString(itemTexts[index], font, XBrushes.Black, bodyRect);
-            itemTop += itemHeight + WqFormParagraphOverlayTests.InterItemGap;
+            if (itemTop + itemHeight > rect.Bottom && boxIndex < boxes.Count - 1)
+            {
+                graphics.Dispose();
+                boxIndex++;
+                rect = boxes[boxIndex].Rect;
+                itemTop = rect.Y;
+                graphics = XGraphics.FromPdfPage(boxes[boxIndex].Page);
+                textFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
+            }
+
+            itemTop = WqFormParagraphOverlayTests.DrawItem(
+                graphics, textFormatter, font, rect.X, rect.Right, continuationIndent, hangingIndent, itemTop, item);
         }
+
+        graphics.Dispose();
     }
 }

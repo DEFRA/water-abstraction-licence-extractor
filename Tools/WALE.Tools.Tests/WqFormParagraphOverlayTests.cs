@@ -22,10 +22,10 @@ namespace WALE.Tools.Tests;
 
 /// <summary>
 /// POC that locates the "SpecialTermsWholeBlock" paragraph in a real WQ form PDF and replaces it
-/// with placeholder text by drawing a white rectangle over the original and overlaying new text.
-/// Handles a match spanning a page break by grouping matched lines by page and drawing one
-/// whiteout+overlay per page. Source PDFs live outside the repo (~/Downloads/WQ__*.pdf); skips
-/// gracefully if none are present.
+/// with the real new clause 3.1.5 text (see <see cref="New315Items"/>) by drawing a white
+/// rectangle over the original and overlaying the new wording. Handles a match spanning a page
+/// break by grouping matched lines by page and drawing one whiteout+overlay per page. Source PDFs
+/// live outside the repo (~/Downloads/WQ__*.pdf); skips gracefully if none are present.
 /// </summary>
 public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
 {
@@ -138,6 +138,56 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
         }
     }
 
+    /// <summary>
+    /// One item (or sub-item) of the real DWF 3.1.5 replacement text: a lettered marker (empty for
+    /// the unlettered intro paragraph) plus its body text, and optionally a nested list of
+    /// roman-numeral sub-items (e.g. item (b)'s (i)/(ii)/(iii)).
+    /// </summary>
+    internal sealed record New315Item(
+        string Label, string Body, IReadOnlyList<(string Label, string Body)>? SubItems = null);
+
+    /// <summary>
+    /// The real replacement text for clause 3.1.5, transcribed from
+    /// <c>~/Downloads/DWF updates NPS guide.pdf</c> (an unlettered intro paragraph followed by
+    /// lettered items). Item (c) is deliberately excluded: its final sentence depends on the
+    /// permit/variation's real issue date (whether to include it at all, and which calendar year to
+    /// cite), which nothing in this pipeline captures today.
+    /// </summary>
+    internal static readonly New315Item[] New315Items =
+    [
+        new(
+            "",
+            "The permitted Dry Weather Flow limit in schedule 3 table S3.1 is set at the operator's " +
+            "planned annual 80% exceeded daily volume discharged."),
+        new(
+            "a",
+            "For compliance purposes an exceedance shall be recorded for a calendar year only when " +
+            "the limit in effect on 31 December of that calendar year is exceeded by 90% or more of " +
+            "the 'good' recorded Total Daily Volumes in that calendar year."),
+        new(
+            "b",
+            "Up to and including 31 December 2025:",
+            [
+                (
+                    "i",
+                    "If an exceedance of the Dry Weather Flow limit is recorded in a calendar year " +
+                    "then the operator shall, as soon as is reasonably practicable, investigate the " +
+                    "reasons for the exceedance."
+                ),
+                (
+                    "ii",
+                    "The operator shall report the reasons for the exceedance to the Environment " +
+                    "Agency and the steps that it proposes to take to restore compliance."
+                ),
+                (
+                    "iii",
+                    "An exceedance of the Dry Weather Flow limit shall not be recorded as a failure " +
+                    "of the Dry Weather Flow limit in that calendar year if the operator takes " +
+                    "appropriate steps to restore compliance."
+                ),
+            ]),
+    ];
+
     /// <summary>Total character length of the given lines' text joined with single spaces.</summary>
     internal static int CombinedLength(IEnumerable<DocumentLine> lines) =>
         string.Join(" ", lines.Select(line => line.Text)).Length;
@@ -175,6 +225,91 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
         return lines * lineHeight;
     }
 
+    /// <summary>
+    /// Total rendered height of one <see cref="New315Item"/> including its sub-items (if any) and
+    /// the inter-item gap after each - used to decide, before drawing anything, whether the whole
+    /// item fits in the space remaining on the current page.
+    /// </summary>
+    internal static double MeasureItemHeight(
+        XGraphics graphics, New315Item item, XFont font, double introWidth, double bodyWidth, double subBodyWidth)
+    {
+        var isIntro = string.IsNullOrEmpty(item.Label);
+        var height = MeasureWrappedHeight(graphics, item.Body, font, isIntro ? introWidth : bodyWidth) + InterItemGap;
+
+        if (item.SubItems == null)
+        {
+            return height;
+        }
+
+        foreach (var (_, subBody) in item.SubItems)
+        {
+            height += MeasureWrappedHeight(graphics, subBody, font, subBodyWidth) + InterItemGap;
+        }
+
+        return height;
+    }
+
+    /// <summary>
+    /// Draws one <see cref="New315Item"/> - the unlettered intro as a plain block spanning
+    /// <paramref name="leftEdge"/> to <paramref name="rightEdge"/>, a lettered item as a
+    /// hanging-indent paragraph (label at <paramref name="leftEdge"/>, body at
+    /// <paramref name="bodyLeft"/>) - then, if it has sub-items, each as its own hanging-indent
+    /// paragraph one further indent step in (<paramref name="hangingIndent"/), matching the same
+    /// label-width convention as the top level. Returns the Y position immediately below what was
+    /// drawn, for the caller to continue from.
+    /// </summary>
+    internal static double DrawItem(
+        XGraphics graphics,
+        XTextFormatter textFormatter,
+        XFont font,
+        double leftEdge,
+        double rightEdge,
+        double bodyLeft,
+        double hangingIndent,
+        double top,
+        New315Item item)
+    {
+        var isIntro = string.IsNullOrEmpty(item.Label);
+        var width = isIntro ? rightEdge - leftEdge : rightEdge - bodyLeft;
+        var height = MeasureWrappedHeight(graphics, item.Body, font, width);
+
+        if (isIntro)
+        {
+            textFormatter.DrawString(item.Body, font, XBrushes.Black, new XRect(leftEdge, top, width, height));
+        }
+        else
+        {
+            var labelRect = new XRect(leftEdge, top, bodyLeft - leftEdge, height);
+            var bodyRect = new XRect(bodyLeft, top, width, height);
+
+            graphics.DrawString($"({item.Label})", font, XBrushes.Black, labelRect, XStringFormats.TopLeft);
+            textFormatter.DrawString(item.Body, font, XBrushes.Black, bodyRect);
+        }
+
+        top += height + InterItemGap;
+
+        if (item.SubItems == null)
+        {
+            return top;
+        }
+
+        var subBodyLeft = bodyLeft + hangingIndent;
+
+        foreach (var (subLabel, subBody) in item.SubItems)
+        {
+            var subWidth = rightEdge - subBodyLeft;
+            var subHeight = MeasureWrappedHeight(graphics, subBody, font, subWidth);
+            var subLabelRect = new XRect(bodyLeft, top, subBodyLeft - bodyLeft, subHeight);
+            var subBodyRect = new XRect(subBodyLeft, top, subWidth, subHeight);
+
+            graphics.DrawString($"({subLabel})", font, XBrushes.Black, subLabelRect, XStringFormats.TopLeft);
+            textFormatter.DrawString(subBody, font, XBrushes.Black, subBodyRect);
+            top += subHeight + InterItemGap;
+        }
+
+        return top;
+    }
+
     /// <summary>Yields every WQ__*.pdf file under ~/Downloads, or none if the folder doesn't exist.</summary>
     public static IEnumerable<object[]> SampleFiles()
     {
@@ -195,7 +330,7 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
 
     [Theory]
     [MemberData(nameof(SampleFiles))]
-    public async Task WhenRealWqFormFile_ThenSpecialTermsBlockIsReplacedWithLoremIpsum(string sourcePath)
+    public async Task WhenRealWqFormFile_ThenSpecialTermsBlockIsReplacedWithRealText(string sourcePath)
     {
         var folder = Path.GetDirectoryName(sourcePath)!;
         var filename = Path.GetFileName(sourcePath);
@@ -278,7 +413,7 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
             comparisonFolder,
             $"{Path.GetFileNameWithoutExtension(filename)}-edited.pdf");
 
-        ReplaceMatchedBlockWithLoremIpsum(sourcePath, outputPath, matchedLines, new FillerTextCursor());
+        ReplaceMatchedBlockWithRealText(sourcePath, outputPath, matchedLines);
 
         testOutputHelper.WriteLine($"Wrote original copy to {originalCopyPath}");
         testOutputHelper.WriteLine($"Wrote edited PDF to {outputPath}");
@@ -330,11 +465,10 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
     /// restriction), then for each page containing matched lines draws a white rectangle over
     /// their bounding box and overlays replacement text.
     /// </summary>
-    private static void ReplaceMatchedBlockWithLoremIpsum(
+    private static void ReplaceMatchedBlockWithRealText(
         string sourcePath,
         string outputPath,
-        IReadOnlyList<DocumentLine> matchedLines,
-        FillerTextCursor fillerCursor)
+        IReadOnlyList<DocumentLine> matchedLines)
     {
         using var sourceDocument = PdfReader.Open(sourcePath, PdfDocumentOpenMode.Import);
         using var document = new PdfSharp.Pdf.PdfDocument();
@@ -377,7 +511,7 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
             var rect = new XRect(left, pageHeight - top, right - left, top - bottom);
 
             graphics.DrawRectangle(XBrushes.White, rect);
-            DrawReplacementContent(graphics, rect, pageGroup, fillerCursor);
+            DrawReplacementContent(graphics, rect, pageGroup);
         }
 
         document.Save(outputPath);
@@ -387,25 +521,17 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
     private static readonly Regex ItemMarkerRegex = new(@"^\(([a-z])\)\s+", RegexOptions.IgnoreCase);
 
     /// <summary>
-    /// Draws one filler-text item per detected (a)/(b)/... marker in the given lines, each as its
-    /// own hanging-indent paragraph (label at the block's left edge, wrapped body text starting at
-    /// the original continuation indent), sized to its own measured wrapped height. Falls back to
-    /// a single plain block if no markers are found.
+    /// Draws the real replacement text (<see cref="New315Items"/>): an unlettered intro paragraph
+    /// followed by lettered items, each its own hanging-indent paragraph (label at the block's left
+    /// edge, wrapped body text starting at the original continuation indent) sized to its own
+    /// measured wrapped height. The original matched <paramref name="lines"/> are used only for
+    /// their layout (label/continuation indent), never their content - the replacement text has its
+    /// own fixed wording independent of what it's replacing.
     /// </summary>
-    private static void DrawReplacementContent(
-        XGraphics graphics, XRect rect, IEnumerable<DocumentLine> lines, FillerTextCursor fillerCursor)
+    private static void DrawReplacementContent(XGraphics graphics, XRect rect, IEnumerable<DocumentLine> lines)
     {
         var lineList = lines.ToList();
         var font = new XFont("Arial", 10);
-
-        if (!lineList.Any(line => ItemMarkerRegex.IsMatch(line.Text)))
-        {
-            var textFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
-            textFormatter.DrawString(fillerCursor.Next(CombinedLength(lineList)), font, XBrushes.Black, rect);
-            return;
-        }
-
-        var itemGroups = GroupLinesByMarker(lineList);
 
         // Label indent is the smallest left position among the marker lines themselves, not
         // rect.X, which can be dragged left by unrelated page furniture swept into the match.
@@ -431,27 +557,14 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
             ? continuationLefts.Min()
             : labelIndent + 35;
 
-        var bodyWidth = rect.Right - continuationIndent;
-        var itemTexts = itemGroups
-            .Select(itemLines => fillerCursor.Next(CombinedLength(itemLines)))
-            .ToList();
-        var itemHeights = itemTexts
-            .Select(text => MeasureWrappedHeight(graphics, text, font, bodyWidth))
-            .ToList();
-        var itemFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
+        var hangingIndent = continuationIndent - labelIndent;
+        var textFormatter = new XTextFormatter(graphics) { Alignment = XParagraphAlignment.Left };
         var itemTop = rect.Y;
 
-        for (var index = 0; index < itemGroups.Count; index++)
+        foreach (var item in New315Items)
         {
-            var itemLines = itemGroups[index];
-            var label = ItemMarkerRegex.Match(itemLines[0].Text).Groups[1].Value;
-            var itemHeight = itemHeights[index];
-            var labelRect = new XRect(rect.X, itemTop, continuationIndent - rect.X, itemHeight);
-            var bodyRect = new XRect(continuationIndent, itemTop, bodyWidth, itemHeight);
-
-            graphics.DrawString($"({label})", font, XBrushes.Black, labelRect, XStringFormats.TopLeft);
-            itemFormatter.DrawString(itemTexts[index], font, XBrushes.Black, bodyRect);
-            itemTop += itemHeight + InterItemGap;
+            itemTop = DrawItem(
+                graphics, textFormatter, font, rect.X, rect.Right, continuationIndent, hangingIndent, itemTop, item);
         }
     }
 

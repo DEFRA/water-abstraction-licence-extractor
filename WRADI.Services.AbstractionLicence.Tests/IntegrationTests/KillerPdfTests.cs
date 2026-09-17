@@ -2,7 +2,6 @@ using iTextSharp.text.pdf;
 using KillerPdf.Engine.Authoring;
 using KillerPdf.Engine.Documents;
 using KillerPdf.Engine.Editing;
-using PdfImage = KillerPdf.Engine.Authoring.PdfImage;
 using PdfSpotColor = KillerPdf.Engine.Authoring.PdfSpotColor;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests;
@@ -39,7 +38,7 @@ public class KillerPdfTests
             .MoveText(page.Width / 2, page.Height / 2)
             .SetStrokeSpotColor(black, 1)
             .SetFillSpotColor(black, 1)
-            .ShowLatin1Text("Test to try and replace something")
+            .ShowLatin1Text("Test to try and add something")
             .EndText();
         
         var updated = new PdfIncrementalPageEditor(document)

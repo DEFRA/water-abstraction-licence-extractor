@@ -31,112 +31,82 @@ public class PdfClownTests
         foreach (var page in doc.Pages)
         {
             var updatedContents = new List<(int, ContentObject)>();
-            var pageContentIndex = 0;
             
             // TODO, eventually swap for recursion ideally
-            foreach (var content0 in page.Contents)
+            for (var contentIdx0 = 0; contentIdx0 < page.Contents.Count; contentIdx0++)
             {
+                var content0 = page.Contents[contentIdx0];
+                
                 // E.g. LocalGraphicsState
-                if (content0 is CompositeObject compositeObject)
+                if (content0 is CompositeObject compositeObject0)
                 {
-                    var removes0 = new List<ContentObject?>();
+                    var contentNeedsUpdate = false;
                     
-                    foreach (var subContent in compositeObject.Objects)
+                    for (var contentIdx1 = 0; contentIdx1 < compositeObject0.Objects.Count; contentIdx1++)
                     {
-                        var replacementItem0 = HandleContentObject(subContent);
+                        var content1 = compositeObject0.Objects[contentIdx1];
+
+                        var replacementItem0 = HandleContentObject(content1);
                         if (replacementItem0 != null)
                         {
-                            removes0.Add(subContent);
+                            contentNeedsUpdate = true;
                         }
                         
                         // E.g. MarkedContent
-                        if (subContent is CompositeObject subCompositeObject)
+                        if (content1 is not CompositeObject compositeObject1)
                         {
-                            var removes1 = new List<ContentObject?>();
-                            
-                            foreach (var subSubContent in subCompositeObject.Objects)
+                            continue;
+                        }
+                        
+                        foreach (var content2 in compositeObject1.Objects)
+                        {
+                            var replacementItem1 = HandleContentObject(content2);
+                            if (replacementItem1 != null)
                             {
-                                var replacementItem1 = HandleContentObject(subSubContent);
-                                if (replacementItem1 != null)
+                                contentNeedsUpdate = true;
+                            }
+                                
+                            // E.g. LocalGraphicsState
+                            if (content2 is not CompositeObject compositeObject2)
+                            {
+                                continue;
+                            }
+                            foreach (var content3 in compositeObject2.Objects)
+                            {
+                                var replacementItem2 = HandleContentObject(content3);
+                                if (replacementItem2 != null)
                                 {
-                                    removes1.Add(subSubContent);
+                                    contentNeedsUpdate = true;
+                                }
+                                        
+                                // E.g. Path
+                                if (content3 is not CompositeObject compositeObject3)
+                                {
+                                    continue;
                                 }
                                 
-                                // E.g. LocalGraphicsState
-                                if (subSubContent is CompositeObject subSubCompositeObject)
+                                foreach (var content4 in compositeObject3.Objects)
                                 {
-                                    var removes2 = new List<ContentObject?>();
-                                    
-                                    foreach (var subSubSubContent in subSubCompositeObject.Objects)
+                                    // E.g. Draw Rectangle
+                                    var replacementItem3 = HandleContentObject(content4);
+                                    if (replacementItem3 != null)
                                     {
-                                        var replacementItem2 = HandleContentObject(subSubSubContent);
-                                        if (replacementItem2 != null)
-                                        {
-                                            removes2.Add(subSubSubContent);
-                                        }
-                                        
-                                        // E.g. Path
-                                        if (subSubSubContent is CompositeObject subSubSubCompositeObject)
-                                        {
-                                            var removes3 = new List<ContentObject?>();
-                                            
-                                            foreach (var subSubSubSubContent in subSubSubCompositeObject.Objects)
-                                            {
-                                                // E.g. Draw Rectangle
-                                                var replacementItem3 = HandleContentObject(subSubSubSubContent);
-                                                if (replacementItem3 != null)
-                                                {
-                                                    removes3.Add(subSubSubSubContent);
-                                                }
-                                                
-                                                if (subSubSubSubContent is CompositeObject)
-                                                {
-                                                    throw new Exception(
-                                                        $"Don't expect this level of iteration (4 levels deep) - {subSubSubSubContent.GetType().FullName}");
-                                                }
-                                            }
-
-                                            foreach (var remove in removes3)
-                                            {
-                                                var objs = subSubSubCompositeObject.Objects;
-                
-                                                // Changing inline doesnt work, this does
-                                                objs.Remove(remove);
-                                                
-                                                updatedContents.Add((pageContentIndex, content0));
-                                            }
-                                        }
+                                        contentNeedsUpdate = true;
                                     }
-                                    
-                                    foreach (var remove in removes2)
+                                                
+                                    if (content4 is CompositeObject)
                                     {
-                                        var objs = subSubCompositeObject.Objects;
-                
-                                        // Changing inline doesnt work, this does
-                                        objs.Remove(remove);
-                                        updatedContents.Add((pageContentIndex, content0));
+                                        throw new Exception(
+                                            $"Don't expect this level of iteration (4 levels deep) - {content4.GetType().FullName}");
                                     }
                                 }
-                            }
-                            
-                            foreach (var remove in removes1)
-                            {
-                                var objs = subCompositeObject.Objects;
-                
-                                // Changing inline doesnt work, this does
-                                objs.Remove(remove);
-                                updatedContents.Add((pageContentIndex, content0));
                             }
                         }
                     }
-                    
-                    foreach (var remove in removes0)
+
+                    if (contentNeedsUpdate)
                     {
-                        var objs = compositeObject.Objects;
-                
-                        // Changing inline doesnt work, this does
-                        objs.Remove(remove);
-                        updatedContents.Add((pageContentIndex, content0));
+                        updatedContents.Add((contentIdx0, content0));
                     }
                 }
                 else
@@ -144,18 +114,11 @@ public class PdfClownTests
                     throw new Exception(
                         $"Don't know how to handle a top-level none composite object - {content0.GetType().FullName}");
                 }
-
-                pageContentIndex += 1;
             }
             
             var contents = page.Contents;
-
-            var groupedUpdatedContents = updatedContents
-                .GroupBy(x => x.Item1)
-                .Select(x => x.First())
-                .ToList();
             
-            foreach (var content in groupedUpdatedContents)
+            foreach (var content in updatedContents)
             {
                 // Changing inline doesnt work, this does
                 contents.RemoveAt(content.Item1);
@@ -184,8 +147,12 @@ public class PdfClownTests
         {
             case "DrawRectangle":
                 var drawRectangle = contentObject as DrawRectangle;
-                drawRectangle!.Height = 50;
-                
+
+                if (drawRectangle!.Y != 0)
+                {
+                    drawRectangle.Y += 20;
+                }
+
                 return drawRectangle;
             case "LocalGraphicsState":
             case "Path":

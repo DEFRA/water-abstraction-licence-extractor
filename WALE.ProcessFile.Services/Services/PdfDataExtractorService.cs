@@ -292,13 +292,18 @@ public class PdfDataExtractorService(
                 or LayoutExtractor.LetterBasedAndTableBased
                 && label.TableShape is TableShape.Default
                     or TableShape.Consistent);
+        
+        var needsToParseInconsistentTables = allLabels
+            .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
+                or LayoutExtractor.LetterBasedAndTableBased
+                && label.TableShape is TableShape.Inconsistent);
 
         var needsToParseText = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.Default
                 or LayoutExtractor.LetterBased
                 or LayoutExtractor.LetterBasedAndTableBased);
 
-        if (needsToParseConsistentTables)
+        if (needsToParseConsistentTables || needsToParseInconsistentTables)
         {
             // TODO hack - do this differently - we can't always go back to the doc
             if (pdfDocument.Bytes == null)

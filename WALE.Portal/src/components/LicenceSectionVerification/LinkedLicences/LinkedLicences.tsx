@@ -13,7 +13,6 @@ import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
-
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     currentLicence?: Licence | null;
@@ -25,6 +24,7 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
     ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
+        const [implicitLinkedLicences, setImplicitLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<LinkedLicence[] | null>(null);
 
@@ -76,8 +76,14 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setIsLoading(true);
                 setError(null);
                 try {
+
+                    const implicitResults = await waleApiClient.getIncoming(permitNumber);
+                    setImplicitLinkedLicences(implicitResults || []);
+
                     const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
                     setLinkedLicences(scrapeResults || []);
+                    
+                    
                     setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
@@ -228,6 +234,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             )}
                         </div>
                     )}
+                            
                     {!isLoading && !error && linkedLicences.length > 0 && noneOutgoingVerification && (
                         <div style={{
                             marginBottom: '12px',
@@ -278,6 +285,40 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                 />
                             );
                         })}
+
+                    {!isLoading && !error && implicitLinkedLicences.length > 0 && (
+                        <div style={{
+                            marginBottom: '12px',
+                            padding: '8px',
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: '4px',
+                            textAlign: 'center'
+                        }}>
+                            <p style={{color: '#888', marginBottom: '16px'}}>Implicit back link linked licences found.</p>
+                            <ul>
+                                {implicitLinkedLicences
+                                    .map((_, i) => i)
+                                    .sort((a, b) => compareAlphanumeric(
+                                        implicitLinkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
+                                        implicitLinkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
+                                    ))
+                                    .map((index) => {
+                                        const ll = implicitLinkedLicences[index];
+                                        return (
+                                            <LinkedLicenceItem
+                                                key={index}
+                                                linkedLicence={ll}
+                                                onJumpToPage={onJumpToPage}
+                                                onOpenReport={onOpenReport}
+                                                outputListDataItem={outputListDataItem}
+                                                scrapedView={scrapedView}
+                                                history={history}
+                                            />
+                                        );
+                                    })}
+                            </ul>
+                        </div>
+                    )}
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (

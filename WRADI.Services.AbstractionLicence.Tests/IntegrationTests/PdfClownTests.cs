@@ -58,8 +58,10 @@ public class PdfClownTests
                             continue;
                         }
                         
-                        foreach (var content2 in compositeObject1.Objects)
+                        for (var contentIdx2 = 0; contentIdx2 < compositeObject1.Objects.Count; contentIdx2++)
                         {
+                            var content2 = compositeObject1.Objects[contentIdx2];
+                            
                             var replacementItem1 = HandleContentObject(content2);
                             if (replacementItem1 != null)
                             {
@@ -71,8 +73,11 @@ public class PdfClownTests
                             {
                                 continue;
                             }
-                            foreach (var content3 in compositeObject2.Objects)
+                            
+                            for (var contentIdx3 = 0; contentIdx3 < compositeObject2.Objects.Count; contentIdx3++)
                             {
+                                var content3 = compositeObject2.Objects[contentIdx3];
+                            
                                 var replacementItem2 = HandleContentObject(content3);
                                 if (replacementItem2 != null)
                                 {

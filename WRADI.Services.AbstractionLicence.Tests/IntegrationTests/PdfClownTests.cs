@@ -2,7 +2,6 @@ using iTextSharp.text.pdf;
 using org.pdfclown.documents.contents.objects;
 using org.pdfclown.files;
 using File = System.IO.File;
-using Path = org.pdfclown.documents.contents.objects.Path;
 
 namespace WRADI.Services.AbstractionLicence.Tests.IntegrationTests;
 
@@ -31,71 +30,190 @@ public class PdfClownTests
         
         foreach (var page in doc.Pages)
         {
+            var updatedContents = new List<(int, ContentObject)>();
+            var pageContentIndex = 0;
+            
             // TODO, eventually swap for recursion ideally
-            foreach (var content in page.Contents)
+            foreach (var content0 in page.Contents)
             {
                 // E.g. LocalGraphicsState
-                if (content is CompositeObject compositeObject)
+                if (content0 is CompositeObject compositeObject)
                 {
+                    var removes0 = new List<ContentObject?>();
+                    
                     foreach (var subContent in compositeObject.Objects)
                     {
+                        var replacementItem0 = HandleContentObject(subContent);
+                        if (replacementItem0 != null)
+                        {
+                            removes0.Add(subContent);
+                        }
+                        
                         // E.g. MarkedContent
                         if (subContent is CompositeObject subCompositeObject)
                         {
+                            var removes1 = new List<ContentObject?>();
+                            
                             foreach (var subSubContent in subCompositeObject.Objects)
                             {
+                                var replacementItem1 = HandleContentObject(subSubContent);
+                                if (replacementItem1 != null)
+                                {
+                                    removes1.Add(subSubContent);
+                                }
+                                
                                 // E.g. LocalGraphicsState
                                 if (subSubContent is CompositeObject subSubCompositeObject)
                                 {
+                                    var removes2 = new List<ContentObject?>();
+                                    
                                     foreach (var subSubSubContent in subSubCompositeObject.Objects)
                                     {
+                                        var replacementItem2 = HandleContentObject(subSubSubContent);
+                                        if (replacementItem2 != null)
+                                        {
+                                            removes2.Add(subSubSubContent);
+                                        }
+                                        
                                         // E.g. Path
                                         if (subSubSubContent is CompositeObject subSubSubCompositeObject)
                                         {
+                                            var removes3 = new List<ContentObject?>();
+                                            
                                             foreach (var subSubSubSubContent in subSubSubCompositeObject.Objects)
                                             {
+                                                // E.g. Draw Rectangle
+                                                var replacementItem3 = HandleContentObject(subSubSubSubContent);
+                                                if (replacementItem3 != null)
+                                                {
+                                                    removes3.Add(subSubSubSubContent);
+                                                }
+                                                
                                                 if (subSubSubSubContent is CompositeObject)
                                                 {
                                                     throw new Exception(
                                                         $"Don't expect this level of iteration (4 levels deep) - {subSubSubSubContent.GetType().FullName}");
                                                 }
-                                                // E.g. Draw Rectangle
-                                                else
-                                                {
-                                                    
-                                                }
+                                            }
+
+                                            foreach (var remove in removes3)
+                                            {
+                                                var objs = subSubSubCompositeObject.Objects;
+                
+                                                // Changing inline doesnt work, this does
+                                                objs.Remove(remove);
+                                                
+                                                updatedContents.Add((pageContentIndex, content0));
                                             }
                                         }
-                                        else
-                                        {
-                                            
-                                        }
+                                    }
+                                    
+                                    foreach (var remove in removes2)
+                                    {
+                                        var objs = subSubCompositeObject.Objects;
+                
+                                        // Changing inline doesnt work, this does
+                                        objs.Remove(remove);
+                                        updatedContents.Add((pageContentIndex, content0));
                                     }
                                 }
-                                else
-                                {
-                                    
-                                }
+                            }
+                            
+                            foreach (var remove in removes1)
+                            {
+                                var objs = subCompositeObject.Objects;
+                
+                                // Changing inline doesnt work, this does
+                                objs.Remove(remove);
+                                updatedContents.Add((pageContentIndex, content0));
                             }
                         }
-                        else
-                        {
-                            // TODO handle all the types we care about
-                        }
+                    }
+                    
+                    foreach (var remove in removes0)
+                    {
+                        var objs = compositeObject.Objects;
+                
+                        // Changing inline doesnt work, this does
+                        objs.Remove(remove);
+                        updatedContents.Add((pageContentIndex, content0));
                     }
                 }
                 else
                 {
                     throw new Exception(
-                        $"Don't know how to handle a top-level none composite object - {content.GetType().FullName}");
+                        $"Don't know how to handle a top-level none composite object - {content0.GetType().FullName}");
                 }
+
+                pageContentIndex += 1;
             }
+            
+            var contents = page.Contents;
+
+            var groupedUpdatedContents = updatedContents
+                .GroupBy(x => x.Item1)
+                .Select(x => x.First())
+                .ToList();
+            
+            foreach (var content in groupedUpdatedContents)
+            {
+                // Changing inline doesnt work, this does
+                contents.RemoveAt(content.Item1);
+                contents.Insert(content.Item1, content.Item2);
+            }
+            
+            contents.Flush();
         }
 
+        var allObjectTypes = string.Join('\n', ContentObjectTypes);
+        Assert.Equal(0, allObjectTypes.Length);
+
+        pdf.Save("PdfClown_DetectTableBorders.pdf", SerializationModeEnum.Incremental);
+        
         // Act
         // Assert
     }
 
+    private static readonly HashSet<string> ContentObjectTypes = [];
+    
+    private static ContentObject? HandleContentObject(ContentObject contentObject)
+    {
+        var typeName = contentObject.GetType().Name;
+        
+        switch (typeName)
+        {
+            case "DrawRectangle":
+                var drawRectangle = contentObject as DrawRectangle;
+                drawRectangle!.Height = 50;
+                
+                return drawRectangle;
+            case "LocalGraphicsState":
+            case "Path":
+            case "ModifyClipPath":
+            case "PaintPath":
+            case "Text":
+            case "SetFont":
+            case "SetTextMatrix":
+            case "ApplyExtGState":
+            case "SetDeviceGrayFillColor":
+            case "SetDeviceGrayStrokeColor":
+            case "ShowAdjustedText":
+            case "MarkedContent":
+            case "SetCharSpace":
+            case "SetDeviceRGBFillColor":
+            case "SetDeviceRGBStrokeColor":
+            case "ModifyCTM":
+            case "XObject":
+            case "PaintXObject":
+                break;
+            default:
+                ContentObjectTypes.Add(typeName);
+                break;
+        }
+
+        return null;
+    }
+    
     [Fact]
     public void PdfClown_ReplaceText()
     {
@@ -173,10 +291,9 @@ public class PdfClownTests
             }
         }
 
-        pdf.Save("Test2.pdf", SerializationModeEnum.Incremental);
+        pdf.Save("PdfClown_ReplaceText.pdf", SerializationModeEnum.Incremental);
 
         // Act
-
         // Assert
     }
 }

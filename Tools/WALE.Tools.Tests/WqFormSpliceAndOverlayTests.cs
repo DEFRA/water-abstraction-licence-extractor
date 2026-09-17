@@ -162,8 +162,8 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         {
             var page = document.Pages[pageGroup.Key - 1];
 
-            SpliceMatchedLinesFromContentStream(page, pageGroup);
-            OverlayNewParagraph(page, pageGroup, fillerCursor);
+            var fontInfo = SpliceMatchedLinesFromContentStream(page, pageGroup);
+            OverlayNewParagraph(page, pageGroup, fillerCursor, fontInfo);
         }
 
         document.Save(outputPath);
@@ -173,15 +173,30 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// Removes each matched line's text-show operator(s) from the page's content stream, logging
     /// whether each line was found and spliced or left in place.
     /// </summary>
-    private void SpliceMatchedLinesFromContentStream(PdfSharp.Pdf.PdfPage page, IEnumerable<DocumentLine> lines)
+    /// <summary>
+    /// Removes each matched line's text-show operator(s), returning the font family/weight/size
+    /// detected at the first successfully-matched line's position - see
+    /// <see cref="GetFontInfoAtPosition"/> - so the overlay can be drawn in a font that actually
+    /// matches the original text, instead of a fixed Arial 10pt regardless of the source document.
+    /// </summary>
+    private (string Family, bool Bold, bool Italic, double Size) SpliceMatchedLinesFromContentStream(
+        PdfSharp.Pdf.PdfPage page, IEnumerable<DocumentLine> lines)
     {
         var contentDictionary = page.Contents.Elements.GetDictionary(0);
         var content = Encoding.Latin1.GetString(contentDictionary.Stream!.UnfilteredValue);
         var toUnicodeMap = BuildToUnicodeMap(page);
+        var fontDictionary = page.Resources.Elements.GetDictionary("/Font");
+        (string Family, bool Bold, bool Italic, double Size)? detectedFont = null;
 
         foreach (var line in lines)
         {
-            var (spliced, removed) = TryRemoveLineOperator(content, line.Text, toUnicodeMap);
+            var (spliced, removed, matchIndex) = TryRemoveLineOperator(content, line.Text, toUnicodeMap);
+
+            if (removed)
+            {
+                detectedFont ??= GetFontInfoAtPosition(content, matchIndex, fontDictionary);
+            }
+
             content = spliced;
 
             testOutputHelper.WriteLine(
@@ -195,6 +210,84 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         // PDF; just skips the FlateDecode step) by setting Value directly and dropping /Filter.
         contentDictionary.Stream.Value = Encoding.Latin1.GetBytes(content);
         contentDictionary.Elements.Remove("/Filter");
+
+        return detectedFont ?? ("Arial", false, false, 10);
+    }
+
+    private static readonly Regex TfOperatorRegex = new(@"/(\w+)\s+([\d.]+)\s+Tf");
+
+    // Word/LibreOffice-style PDF generators (confirmed on WQ__002671, among others in the real
+    // batch) commonly emit "/TT2 1 Tf" - a nominal size of 1 - and bake the real, effective size
+    // into the following text matrix's scale instead (e.g. "7.5077 0 0 7.5077 x y Tm"). Reading
+    // Tf's own size parameter alone gave a nonsense "1pt" result for these files; the true
+    // rendered size is Tf's size multiplied by the text matrix's horizontal scale (its first of
+    // six operands - the "a" component - assuming no skew/rotation, true for normal upright text).
+    private static readonly Regex TextMatrixRegex = new(
+        @"([\d.\-]+)\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+Tm");
+
+    /// <summary>
+    /// Finds the font resource and effective size active at <paramref name="index"/> in the
+    /// content stream (the nearest preceding Tf operator, scaled by the nearest preceding text
+    /// matrix - see <see cref="TextMatrixRegex"/>), then resolves that resource's /BaseFont name
+    /// to a (family, bold, italic) triple. Falls back to Arial 10pt if nothing is found, e.g. a
+    /// subset font name this hasn't been taught to recognise.
+    /// </summary>
+    private static (string Family, bool Bold, bool Italic, double Size) GetFontInfoAtPosition(
+        string content, int index, PdfDictionary? fontDictionary)
+    {
+        const string defaultFamily = "Arial";
+        const double defaultSize = 10;
+
+        if (index < 0)
+        {
+            return (defaultFamily, false, false, defaultSize);
+        }
+
+        var preceding = content[..index];
+        var lastTf = TfOperatorRegex.Matches(preceding).Cast<Match>().LastOrDefault();
+
+        if (lastTf == null)
+        {
+            return (defaultFamily, false, false, defaultSize);
+        }
+
+        var nominalSize = double.TryParse(lastTf.Groups[2].Value, out var parsedSize) ? parsedSize : defaultSize;
+        var lastTm = TextMatrixRegex.Matches(preceding).Cast<Match>().LastOrDefault();
+        var scale = lastTm != null && double.TryParse(lastTm.Groups[1].Value, out var parsedScale)
+            ? Math.Abs(parsedScale)
+            : 1;
+        var size = nominalSize * scale;
+        var baseFont = fontDictionary?.Elements.GetDictionary($"/{lastTf.Groups[1].Value}")
+            ?.Elements.GetName("/BaseFont");
+        var (family, bold, italic) = ParseBaseFontName(baseFont);
+
+        return (family, bold, italic, size);
+    }
+
+    /// <summary>
+    /// Strips a subset-font tag (e.g. "ABCDEF+ArialMT") and classifies the remaining /BaseFont name
+    /// into a family PdfSharp can resolve (via WqFormParagraphOverlayTests.LocalFontResolver) plus
+    /// bold/italic flags. Only recognises the families actually seen in these real files (Arial,
+    /// Times New Roman) - anything else falls back to Arial.
+    /// </summary>
+    private static (string Family, bool Bold, bool Italic) ParseBaseFontName(string? baseFont)
+    {
+        if (string.IsNullOrEmpty(baseFont))
+        {
+            return ("Arial", false, false);
+        }
+
+        var name = Regex.Replace(baseFont.TrimStart('/'), @"^[A-Z]{6}\+", "");
+        var bold = name.Contains("Bold", StringComparison.OrdinalIgnoreCase);
+        var italic = name.Contains("Italic", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Oblique", StringComparison.OrdinalIgnoreCase);
+
+        var family = name.Contains("TimesNewRoman", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Times New Roman", StringComparison.OrdinalIgnoreCase)
+                ? "Times New Roman"
+                : "Arial";
+
+        return (family, bold, italic);
     }
 
     private const int MaxOperatorsPerLine = 10;
@@ -207,7 +300,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// and greedily accumulates forward - requiring the accumulation to stay an exact prefix of the
     /// target throughout - until the whole line is covered, then removes the entire matched run.
     /// </summary>
-    private static (string Content, bool Removed) TryRemoveLineOperator(
+    private static (string Content, bool Removed, int MatchIndex) TryRemoveLineOperator(
         string content, string lineText, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var target = NormalizeWhitespace(lineText);
@@ -258,10 +351,10 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
             var removeStart = matches[startIndex].Index;
             var removeLength = matches[matchEndIndex].Index + matches[matchEndIndex].Length - removeStart;
 
-            return (content.Remove(removeStart, removeLength), true);
+            return (content.Remove(removeStart, removeLength), true, removeStart);
         }
 
-        return (content, false);
+        return (content, false, -1);
     }
 
     /// <summary>
@@ -438,8 +531,35 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         return Windows1252.GetString(bytes);
     }
 
+    // PDF literal strings can escape a byte as 1-3 octal digits (e.g. "\222" = byte 0x92 - a
+    // second, distinct way of representing the same WinAnsi curly-apostrophe byte WQ__003101
+    // embedded raw, confirmed on a "Consolidated Permit" template file where "operator's" is
+    // written as "operator\222s"). The previous plain string-replace chain only handled
+    // "\(", "\)", and "\\", so an octal escape like "\222" passed through as four literal
+    // characters ('\', '2', '2', '2') instead of the one byte it represents, breaking the match
+    // against PdfPig's correctly-decoded line text the same way the raw-byte case did before it
+    // was fixed. A single regex pass now covers both that and the other standard PDF string
+    // escapes (PDF spec 7.3.4.2).
+    private static readonly Regex PdfStringEscapeRegex = new(@"\\(?:([()\\nrtbf])|([0-7]{1,3}))");
+
     private static string UnescapePdfString(string value) =>
-        value.Replace("\\(", "(").Replace("\\)", ")").Replace("\\\\", "\\");
+        PdfStringEscapeRegex.Replace(value, match =>
+        {
+            if (match.Groups[1].Success)
+            {
+                return match.Groups[1].Value switch
+                {
+                    "n" => "\n",
+                    "r" => "\r",
+                    "t" => "\t",
+                    "b" => "\b",
+                    "f" => "\f",
+                    var literal => literal,
+                };
+            }
+
+            return ((char)Convert.ToInt32(match.Groups[2].Value, 8)).ToString();
+        });
 
     /// <summary>
     /// Collapses whitespace and folds typographic quotes to their plain ASCII form, so text
@@ -460,7 +580,8 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     private static void OverlayNewParagraph(
         PdfSharp.Pdf.PdfPage page,
         IEnumerable<DocumentLine> lines,
-        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor)
+        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor,
+        (string Family, bool Bold, bool Italic, double Size) fontInfo)
     {
         var words = lines
             .SelectMany(line => line.Columns.SelectMany(column => column.Words))
@@ -485,7 +606,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         // matched glyphs, not any other marks that might be there, and it's needed outright
         // wherever splicing failed.
         graphics.DrawRectangle(XBrushes.White, rect);
-        DrawReplacementContent(graphics, rect, lines, fillerCursor);
+        DrawReplacementContent(graphics, rect, lines, fillerCursor, fontInfo);
     }
 
     /// <summary>Matches a lettered-list marker at the start of a line, e.g. "(a) " or "(e) ".</summary>
@@ -500,10 +621,18 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         XGraphics graphics,
         XRect rect,
         IEnumerable<DocumentLine> lines,
-        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor)
+        WqFormParagraphOverlayTests.FillerTextCursor fillerCursor,
+        (string Family, bool Bold, bool Italic, double Size) fontInfo)
     {
         var lineList = lines.ToList();
-        var font = new XFont("Arial", 10);
+        var fontStyle = (fontInfo.Bold, fontInfo.Italic) switch
+        {
+            (true, true) => XFontStyleEx.BoldItalic,
+            (true, false) => XFontStyleEx.Bold,
+            (false, true) => XFontStyleEx.Italic,
+            _ => XFontStyleEx.Regular,
+        };
+        var font = new XFont(fontInfo.Family, fontInfo.Size, fontStyle);
 
         if (!lineList.Any(line => ItemMarkerRegex.IsMatch(line.Text)))
         {

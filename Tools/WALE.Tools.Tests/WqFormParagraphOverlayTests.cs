@@ -30,15 +30,47 @@ namespace WALE.Tools.Tests;
 public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
 {
     /// <summary>Resolves the system Arial font for PdfSharp, which has no built-in font lookup.</summary>
+    /// <summary>
+    /// Resolves the small set of font families actually seen in these real WQ form PDFs (Arial and
+    /// Times New Roman, each with Bold/Italic variants) to their macOS system font files - the only
+    /// families WqFormSpliceAndOverlayTests.GetFontInfoAtPosition currently detects from a
+    /// document's own /BaseFont resource.
+    /// </summary>
     private sealed class LocalFontResolver : IFontResolver
     {
-        private const string FaceName = "Arial";
-        private const string FontPath = "/System/Library/Fonts/Supplemental/Arial.ttf";
+        private const string FontFolder = "/System/Library/Fonts/Supplemental/";
 
-        public byte[] GetFont(string faceName) => File.ReadAllBytes(FontPath);
+        private static readonly Dictionary<string, string> FacePaths = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Arial"] = $"{FontFolder}Arial.ttf",
+            ["Arial,Bold"] = $"{FontFolder}Arial Bold.ttf",
+            ["Arial,Italic"] = $"{FontFolder}Arial Italic.ttf",
+            ["Arial,BoldItalic"] = $"{FontFolder}Arial Bold Italic.ttf",
+            ["Times New Roman"] = $"{FontFolder}Times New Roman.ttf",
+            ["Times New Roman,Bold"] = $"{FontFolder}Times New Roman Bold.ttf",
+            ["Times New Roman,Italic"] = $"{FontFolder}Times New Roman Italic.ttf",
+            ["Times New Roman,BoldItalic"] = $"{FontFolder}Times New Roman Bold Italic.ttf",
+        };
 
-        public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic) =>
-            new(FaceName);
+        public byte[] GetFont(string faceName) => File.ReadAllBytes(
+            FacePaths.TryGetValue(faceName, out var path) ? path : FacePaths["Arial"]);
+
+        public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic)
+        {
+            var suffix = (isBold, isItalic) switch
+            {
+                (true, true) => ",BoldItalic",
+                (true, false) => ",Bold",
+                (false, true) => ",Italic",
+                _ => string.Empty,
+            };
+
+            var faceName = $"{familyName}{suffix}";
+
+            return FacePaths.ContainsKey(faceName)
+                ? new FontResolverInfo(faceName)
+                : new FontResolverInfo("Arial");
+        }
     }
 
     static WqFormParagraphOverlayTests()

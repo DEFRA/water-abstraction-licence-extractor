@@ -294,7 +294,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             borderRadius: '4px',
                             textAlign: 'center'
                         }}>
-                            <p style={{color: '#888', marginBottom: '16px'}}>Implicit back link linked licences found.</p>
+                            <p style={{color: '#888', marginBottom: '16px'}}>Incoming links found.</p>
                             <ul>
                                 {implicitLinkedLicences
                                     .map((_, i) => i)
@@ -317,6 +317,17 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         );
                                     })}
                             </ul>
+                        </div>
+                    )}
+                    {!isLoading && !error && implicitLinkedLicences.length === 0 && (
+                        <div style={{
+                            marginBottom: '12px',
+                            padding: '8px',
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: '4px',
+                            textAlign: 'center'
+                        }}>
+                            <p style={{color: '#888', marginBottom: '16px'}}>No Incoming links found.</p>
                         </div>
                     )}
                 </div>

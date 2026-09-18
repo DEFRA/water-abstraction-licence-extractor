@@ -158,6 +158,9 @@ public class PdfClownTests
                     drawRectangle.Y += 20;
                 }
 
+                //drawRectangle.Width += 5;
+                //drawRectangle.Height += 5;
+
                 return drawRectangle;
             case "LocalGraphicsState":
             case "Path":

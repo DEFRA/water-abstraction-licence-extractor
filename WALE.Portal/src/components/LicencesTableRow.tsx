@@ -66,7 +66,9 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                             return (
                                                 <span key={itemId}>
                                                     {itemId}{' '}
-                                                    {(v.verificationTypesWithNotes || []).map((vt: string, idx: number) => (
+                                                    {(v.verificationTypesWithNotes?.length
+                                                        ? v.verificationTypesWithNotes
+                                                        : v.verificationTypes || []).map((vt: string, idx: number) => (
                                                         <span key={idx} title={vt.replace('::', ' #') ?? ''} style={{
                                                             backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',

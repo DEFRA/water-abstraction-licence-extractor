@@ -373,7 +373,37 @@ public partial class AbstractionLicenceNumber(
             return false;
         }
 
+        if (DifferentPrimarySeperator(candidateText, entry.NaldLicence.LicenceNumber))
+        {
+            return false;
+        }
+
         return true;
+    }
+
+    private static bool DifferentPrimarySeperator(string text1, string text2)
+    {
+        var text1MostCommonSeperator = new List<(char, int)>
+            {
+                ('/', text1.Count(c => c == '/')),
+                ('.', text1.Count(c => c == '.')),
+                (' ', text1.Count(c => c == ' '))
+            }
+            .OrderByDescending(t => t.Item2)
+            .First()
+            .Item1;
+        
+        var text2MostCommonSeperator = new List<(char, int)>
+            {
+                ('/', text2.Count(c => c == '/')),
+                ('.', text2.Count(c => c == '.')),
+                (' ', text2.Count(c => c == ' '))
+            }
+            .OrderByDescending(t => t.Item2)
+            .First()
+            .Item1;
+        
+        return text1MostCommonSeperator != text2MostCommonSeperator;
     }
     
     public static bool SegmentsMatch(

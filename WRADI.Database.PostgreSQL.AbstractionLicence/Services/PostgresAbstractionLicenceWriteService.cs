@@ -1369,13 +1369,13 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 .ToArray();
 
         var verificationTypesWithNotes =
-            item.VerificationTypesWithNotes
+            item.VerificationTypesWithNotes?
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x))
                 .Select(x => x.Trim())
                 .Distinct(
                     StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+                .ToArray() ?? [];
         
         return connection.ExecuteAsync(
             new CommandDefinition(

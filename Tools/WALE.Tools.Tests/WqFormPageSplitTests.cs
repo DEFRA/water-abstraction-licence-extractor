@@ -592,23 +592,14 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         // The page's own footer isn't reliably positioned last in the content stream - confirmed
         // false on a real file for the MarkedContentPerFragment family (its footer draws first),
         // so the same defensive skip is applied here too rather than assuming SingleBlock always
-        // orders it the other way. See the identical check in
+        // orders it the other way. Also excludes any tagged header for the same reason a real
+        // file (wq__as1004501) needed it excluded elsewhere: an invisible, blank-space
+        // "/Subtype/Header" pagination element sitting right at the page's own true top margin
+        // otherwise looks like the page's first real content. See the identical checks in
         // <see cref="TryCutMarkedContentPageAtLine"/> for the full story.
-        var footerSpansForHead = new List<(int Start, int End)>();
-
-        foreach (Match footerTag in Regex.Matches(content, @"/Subtype\s*/Footer"))
-        {
-            // The dictionary text itself (where "/Subtype/Footer" is found) always precedes its
-            // own "BDC" operator in PDF marked-content syntax, and no Tm can occur inside a
-            // dictionary literal - so the tag's own match position is already a safe span start,
-            // no need to separately locate the operator itself.
-            var emcEnd = content.IndexOf("EMC", footerTag.Index, StringComparison.Ordinal);
-
-            if (emcEnd >= 0)
-            {
-                footerSpansForHead.Add((footerTag.Index, emcEnd + "EMC".Length));
-            }
-        }
+        var footerSpansForHead = FindTaggedMarkedContentSpans(content, "Footer")
+            .Concat(FindTaggedMarkedContentSpans(content, "Header"))
+            .ToList();
 
         var firstTmInPage = tmRegex.Matches(content)
             .Cast<Match>()
@@ -802,6 +793,35 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>
+    /// Finds every marked-content span tagged with the given <c>/Subtype</c> (e.g. "Footer" or
+    /// "Header") - used to exclude pagination artifacts from "what's the page's own first real
+    /// content Tm" searches. Confirmed necessary on a real file (wq__as1004501): it tags an
+    /// invisible, blank-space "/Subtype/Header" element right at the page's own true top margin,
+    /// alongside its ordinary "/Subtype/Footer" one - excluding only the footer left the header's
+    /// own Tm looking like the page's first content, anchoring a relocated fragment's shift by
+    /// the wrong amount and silently drawing real body text into the footer's own space (not
+    /// caught by pdftotext - a text overlap isn't a structural defect, only a real render shows
+    /// it).
+    /// </summary>
+    private static List<(int Start, int End)> FindTaggedMarkedContentSpans(string content, string subtypeName)
+    {
+        var spans = new List<(int Start, int End)>();
+        var pattern = $@"/\S+\s*<<[^>]*/Subtype\s*/{subtypeName}[^>]*>>\s*BDC";
+
+        foreach (Match tagMatch in Regex.Matches(content, pattern))
+        {
+            var emcEnd = content.IndexOf("EMC", tagMatch.Index, StringComparison.Ordinal);
+
+            if (emcEnd >= 0)
+            {
+                spans.Add((tagMatch.Index, emcEnd + "EMC".Length));
+            }
+        }
+
+        return spans;
+    }
+
+    /// <summary>
     /// Extracts a MarkedContentPerFragment page's entire body (its footer stripped out, wherever
     /// it falls) as one shiftable fragment, with no cut at all - used by the reflow cascade in
     /// <see cref="TrySplitAndInsert"/> when a candidate page's whole remaining content already
@@ -831,9 +851,12 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         var tmRegex = new Regex(
             @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
-        var firstTm = tmRegex.Match(content);
+        var headerSpans = FindTaggedMarkedContentSpans(content, "Header");
+        var firstTm = tmRegex.Matches(content)
+            .Cast<Match>()
+            .FirstOrDefault(m => !headerSpans.Any(span => m.Index >= span.Start && m.Index <= span.End));
 
-        if (!firstTm.Success)
+        if (firstTm == null)
         {
             return false;
         }
@@ -875,9 +898,12 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         var tmRegex = new Regex(
             @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
-        var firstTm = tmRegex.Match(content);
+        var headerSpansForWhole = FindTaggedMarkedContentSpans(content, "Header");
+        var firstTm = tmRegex.Matches(content)
+            .Cast<Match>()
+            .FirstOrDefault(m => !headerSpansForWhole.Any(span => m.Index >= span.Start && m.Index <= span.End));
 
-        if (!firstTm.Success)
+        if (firstTm == null)
         {
             return false;
         }
@@ -899,20 +925,38 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
     /// relocated "4 Information" heading. Returns null (letting the caller fall back to the
     /// constant) if no usable Tm can be found at all, rather than guessing.
     /// </summary>
-    private static double? MeasureNaturalTopY(string pageContent)
+    private static double? MeasureNaturalTopY(
+        string pageContent, string permitNumber, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var tmRegex = new Regex(
             @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
-        var footerSpans = new List<(int Start, int End)>();
-        var taggedFooter = Regex.Match(pageContent, @"/\S+\s*<<[^>]*/Subtype\s*/Footer[^>]*>>\s*BDC");
+        // Excludes any tagged header too, not just the footer - an invisible, blank-space
+        // "/Subtype/Header" pagination element sitting right at the page's own true top margin
+        // otherwise looks like the page's first real content (confirmed necessary on a real file,
+        // wq__as1004501 - see FindTaggedMarkedContentSpans's own comment for the full story).
+        var footerSpans = FindTaggedMarkedContentSpans(pageContent, "Footer")
+            .Concat(FindTaggedMarkedContentSpans(pageContent, "Header"))
+            .ToList();
 
-        if (taggedFooter.Success)
+        // SingleBlock has no such tag to find the footer by - its own Tm reset (found instead via
+        // the permit number's own literal text, the same anchor used everywhere else in this
+        // file) needs excluding directly. Confirmed necessary on a real file (wq__302142): its
+        // footer's own absolute Tm happens to be the very FIRST Tm in the page's raw byte order
+        // even though it's drawn at the bottom of the page - an untagged "first Tm" search
+        // anchored new content ~29pt from the bottom instead of the page's real top margin,
+        // silently losing everything that should have followed it (the shift this produced left
+        // the destination's own "available space" negative, so the reflow cascade never even
+        // started - confirmed via a real render, not pdftotext, which reported no error at all).
+        var (_, footerFound, footerIndex) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
+            pageContent, permitNumber, toUnicodeMap);
+
+        if (footerFound)
         {
-            var emcEnd = pageContent.IndexOf("EMC", taggedFooter.Index, StringComparison.Ordinal);
+            var footerTm = tmRegex.Matches(pageContent[..footerIndex]).Cast<Match>().LastOrDefault();
 
-            if (emcEnd >= 0)
+            if (footerTm != null)
             {
-                footerSpans.Add((taggedFooter.Index, emcEnd + "EMC".Length));
+                footerSpans.Add((footerTm.Index, footerTm.Index + footerTm.Length));
             }
         }
 
@@ -921,6 +965,37 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             .FirstOrDefault(m => !footerSpans.Any(span => m.Index >= span.Start && m.Index <= span.End));
 
         return firstTm != null ? double.Parse(firstTm.Groups[6].Value) : null;
+    }
+
+    /// <summary>
+    /// Measures where this page's own footer sits in the same Tm-native (raw content-stream)
+    /// coordinate space as <see cref="TryComputeAbsolutePositionAtCutPoint"/>'s own return
+    /// value - not the PdfPig-Top space <c>footerLabelLine.Top</c> lives in. The two spaces don't
+    /// always align: for most files the gap between a line's own Tm-native Y and its PdfPig Top
+    /// is small enough not to matter, but confirmed on a real file (wq__as1004501) to be as much
+    /// as ~32pt - enough that the reflow cascade's own "how much space is left" arithmetic
+    /// (entirely Tm-native, since it's built from <see cref="TryComputeAbsolutePositionAtCutPoint"/>
+    /// results) was comparing against a PdfPig-Top-space footer boundary as if the two were
+    /// interchangeable, silently overestimating the available space and drawing body text
+    /// straight into the footer - not caught by pdftotext (a text overlap isn't a structural
+    /// defect), only by a real render.
+    /// </summary>
+    private static double? MeasureFooterTmY(
+        string pageContent, string permitNumber, IReadOnlyDictionary<int, string> toUnicodeMap)
+    {
+        var (_, footerFound, footerIndex) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
+            pageContent, permitNumber, toUnicodeMap);
+
+        if (!footerFound)
+        {
+            return null;
+        }
+
+        var tmRegex = new Regex(
+            @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
+        var footerTm = tmRegex.Matches(pageContent[..footerIndex]).Cast<Match>().LastOrDefault();
+
+        return footerTm != null ? double.Parse(footerTm.Groups[6].Value) : null;
     }
 
     /// <summary>
@@ -1017,9 +1092,19 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         tailTopY = double.Parse(ownTm.Groups[6].Value);
 
-        var firstTm = tmRegex.Match(content);
+        // Excludes any tagged header, not just the footer already stripped above - an invisible,
+        // blank-space "/Subtype/Header" pagination element sitting right at the page's own true
+        // top margin otherwise looks like the page's first real content. Confirmed as the actual
+        // root cause of a real overlap (wq__as1004501): headTopY anchored ~32pt off from where
+        // this page's real first line sits, silently drawing pulled-forward body text into the
+        // footer's own space on the previous page - not caught by pdftotext (a text overlap isn't
+        // a structural defect), only by a real render.
+        var headerSpans = FindTaggedMarkedContentSpans(content, "Header");
+        var firstTm = tmRegex.Matches(content)
+            .Cast<Match>()
+            .FirstOrDefault(m => !headerSpans.Any(span => m.Index >= span.Start && m.Index <= span.End));
 
-        if (!firstTm.Success)
+        if (firstTm == null)
         {
             return false;
         }
@@ -1124,7 +1209,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         // assumed, so relocated/new content starts exactly where this document's own template
         // naturally starts a page, not a fixed guess. Falls back to a constant confirmed close
         // enough not to look broken on files where a natural top can't be measured.
-        var NewAnchorY = MeasureNaturalTopY(content) ?? 729.9;
+        var NewAnchorY = MeasureNaturalTopY(content, permitNumber, toUnicodeMap) ?? 729.9;
         var tmRegex = new Regex(
             @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
 
@@ -1576,11 +1661,15 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         var neededHeight = itemHeights.Sum();
 
-        var footerLabelLine = lines.FirstOrDefault(
-            line => line.PageNumber == cutLine.PageNumber && PermitNumberLabelRegex.IsMatch(line.Text.Trim()));
-        var footerLimit = footerLabelLine != null
-            ? targetPageHeight - footerLabelLine.Top - 10
-            : targetPageHeight - 50;
+        // Tm-native (raw content-stream), not PdfPig-Top - itemTopOnOldPage below is derived
+        // from drawAnchorY, itself Tm-native, and the two spaces don't always align closely
+        // enough to compare directly (confirmed on a real file, wq__as1004501, a ~32pt gap - see
+        // MeasureFooterTmY's own comment for the full story). A page whose footer can't be found
+        // this way falls back to a fixed margin from the page's own physical bottom instead.
+        var footerLimit =
+            (MeasureFooterTmY(content, permitNumber, toUnicodeMap) is { } footerTmY
+                ? targetPageHeight - footerTmY - 10
+                : targetPageHeight - 50);
 
         // oldAnchorY is the cut point's own position - originally wherever "4 Information" (a
         // section HEADING) used to start, carrying that heading's own pre-heading margin. A
@@ -1710,6 +1799,18 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         var newPageIndex = targetPageIndex + 1;
         PdfSharp.Pdf.PdfPage movedContentPage;
 
+        // The new page(s)' own printed footer numbers need to continue from THIS page's own
+        // actual printed number, not its physical position in the document ("cutLine.PageNumber"
+        // - confirmed wrong on a real file, wq__302142: it has unnumbered cover pages before the
+        // running count starts, so physical index and printed number differ by a constant offset
+        // throughout, the exact same reason the renumbering loop below never assumes one from the
+        // other either). Falls back to the physical index only if this page's own footer number
+        // genuinely can't be read - it always has one, so this is a last resort, not the norm.
+        var targetPagePrintedNumber = TryFindFooterPageNumberOperator(
+                content, permitNumber, toUnicodeMap, out var actualTargetPrinted, out _, out _, out _, out _)
+            ? actualTargetPrinted
+            : cutLine.PageNumber;
+
         if (needsContinuationPage)
         {
             // Page A: the continuation - either the items that didn't fit on the original page,
@@ -1719,7 +1820,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             clausePage.Width = targetPage.Width;
             clausePage.Height = targetPage.Height;
 
-            var clausePrintedNumber = cutLine.PageNumber + 1;
+            var clausePrintedNumber = targetPagePrintedNumber + 1;
 
             using (var graphics = XGraphics.FromPdfPage(clausePage))
             {
@@ -1763,7 +1864,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             contentPage.Height = targetPage.Height;
             movedContentPage = contentPage;
 
-            var contentPrintedNumber = cutLine.PageNumber + 2;
+            var contentPrintedNumber = targetPagePrintedNumber + 2;
 
             using (var graphics = XGraphics.FromPdfPage(contentPage))
             {
@@ -1785,7 +1886,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             newPage.Height = targetPage.Height;
             movedContentPage = newPage;
 
-            var newPrintedNumber = cutLine.PageNumber + 1;
+            var newPrintedNumber = targetPagePrintedNumber + 1;
 
             // Draw the new page's own footer BEFORE touching its /Font resources at all - this
             // lets PdfSharp register and track its own Arial font resource on this page normally.
@@ -1866,7 +1967,8 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             TryComputeAbsolutePositionAtCutPoint(cascadeDestBody, cascadeDestBody.Length, out _, out _, out var initialBottomY))
         {
             var cascadeDestBottomY = initialBottomY;
-            var cascadeFooterLimitY = (footerLabelLine?.Top ?? (targetPageHeight - footerLimit - 10)) + 10;
+            var cascadeFooterLimitY =
+                (MeasureFooterTmY(content, permitNumber, toUnicodeMap) ?? (targetPageHeight - footerLimit - 10)) + 10;
             var normalLineGap = interClauseGaps.Count > 0 ? interClauseGaps.Min() : 14.0;
             var cascadeTmRegex = new Regex(
                 @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");

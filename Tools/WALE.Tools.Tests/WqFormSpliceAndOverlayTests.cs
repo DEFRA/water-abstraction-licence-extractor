@@ -36,21 +36,21 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// untouched operator round-trips back out as the exact original bytes). Latin1 alone would
     /// map bytes like 0x92 (a curly apostrophe under WinAnsi) to the wrong character.
     /// </summary>
-    private static readonly Encoding Windows1252 = InitialiseWindows1252();
+    internal static readonly Encoding Windows1252 = InitialiseWindows1252();
 
-    private static Encoding InitialiseWindows1252()
+    internal static Encoding InitialiseWindows1252()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         return Encoding.GetEncoding(1252);
     }
 
     /// <summary>One text-show operator: a TJ array, or a single-string Tj (literal or hex).</summary>
-    private static readonly Regex TjOperatorRegex = new(
+    internal static readonly Regex TjOperatorRegex = new(
         @"\[(?:[^\[\]]|\\.)*\]\s*TJ|\((?:[^()\\]|\\.)*\)\s*Tj|<[0-9A-Fa-f\s]*>\s*Tj",
         RegexOptions.Singleline);
 
     /// <summary>A literal "(...)" run or a hex "&lt;...&gt;" run within one text-show operator.</summary>
-    private static readonly Regex StringRunRegex = new(
+    internal static readonly Regex StringRunRegex = new(
         @"\((?<lit>(?:[^()\\]|\\.)*)\)|<(?<hex>[0-9A-Fa-f\s]*)>",
         RegexOptions.Singleline);
 
@@ -144,7 +144,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// occupy on each page - a match spanning a page break must not draw the same fixed text twice,
     /// once per page's box, which is what a naive per-page loop would do.
     /// </summary>
-    private void SpliceAndOverlay(
+    internal void SpliceAndOverlay(
         string sourcePath,
         string outputPath,
         IReadOnlyList<DocumentLine> matchedLines)
@@ -223,7 +223,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         return detectedFont ?? ("Arial", false, false, 10);
     }
 
-    private static readonly Regex TfOperatorRegex = new(@"/(\w+)\s+([\d.]+)\s+Tf");
+    internal static readonly Regex TfOperatorRegex = new(@"/(\w+)\s+([\d.]+)\s+Tf");
 
     // Word/LibreOffice-style PDF generators (confirmed on WQ__002671, among others in the real
     // batch) commonly emit "/TT2 1 Tf" - a nominal size of 1 - and bake the real, effective size
@@ -231,7 +231,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     // Tf's own size parameter alone gave a nonsense "1pt" result for these files; the true
     // rendered size is Tf's size multiplied by the text matrix's horizontal scale (its first of
     // six operands - the "a" component - assuming no skew/rotation, true for normal upright text).
-    private static readonly Regex TextMatrixRegex = new(
+    internal static readonly Regex TextMatrixRegex = new(
         @"([\d.\-]+)\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+[\d.\-]+\s+Tm");
 
     /// <summary>
@@ -241,7 +241,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// to a (family, bold, italic) triple. Falls back to Arial 10pt if nothing is found, e.g. a
     /// subset font name this hasn't been taught to recognise.
     /// </summary>
-    private static (string Family, bool Bold, bool Italic, double Size) GetFontInfoAtPosition(
+    internal static (string Family, bool Bold, bool Italic, double Size) GetFontInfoAtPosition(
         string content, int index, PdfDictionary? fontDictionary)
     {
         const string defaultFamily = "Arial";
@@ -279,7 +279,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// bold/italic flags. Only recognises the families actually seen in these real files (Arial,
     /// Times New Roman) - anything else falls back to Arial.
     /// </summary>
-    private static (string Family, bool Bold, bool Italic) ParseBaseFontName(string? baseFont)
+    internal static (string Family, bool Bold, bool Italic) ParseBaseFontName(string? baseFont)
     {
         if (string.IsNullOrEmpty(baseFont))
         {
@@ -309,7 +309,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// and greedily accumulates forward - requiring the accumulation to stay an exact prefix of the
     /// target throughout - until the whole line is covered, then removes the entire matched run.
     /// </summary>
-    private static (string Content, bool Removed, int MatchIndex) TryRemoveLineOperator(
+    internal static (string Content, bool Removed, int MatchIndex) TryRemoveLineOperator(
         string content, string lineText, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var target = NormalizeWhitespace(lineText);
@@ -371,7 +371,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// the kerning numbers between them. A literal run is decoded as WinAnsi text; a hex run is a
     /// string of Identity-H glyph IDs resolved to characters via <paramref name="toUnicodeMap"/>.
     /// </summary>
-    private static string ReconstructLiteralText(string operatorText, IReadOnlyDictionary<int, string> toUnicodeMap)
+    internal static string ReconstructLiteralText(string operatorText, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var builder = new StringBuilder();
 
@@ -391,7 +391,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>Decodes a hex string of fixed 2-byte glyph IDs to characters via the given CMap.</summary>
-    private static string DecodeHexGlyphs(string hex, IReadOnlyDictionary<int, string> toUnicodeMap)
+    internal static string DecodeHexGlyphs(string hex, IReadOnlyDictionary<int, string> toUnicodeMap)
     {
         var cleaned = Regex.Replace(hex, @"\s+", string.Empty);
         var builder = new StringBuilder();
@@ -413,7 +413,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// Reads every Type0 font's embedded /ToUnicode CMap on the given page and merges them into
     /// one CID-to-character lookup. Assumes CIDs don't collide across fonts sharing a page.
     /// </summary>
-    private static Dictionary<int, string> BuildToUnicodeMap(PdfSharp.Pdf.PdfPage page)
+    internal static Dictionary<int, string> BuildToUnicodeMap(PdfSharp.Pdf.PdfPage page)
     {
         var map = new Dictionary<int, string>();
         var fontDictionary = page.Resources.Elements.GetDictionary("/Font");
@@ -450,27 +450,27 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
         return map;
     }
 
-    private static readonly Regex BfCharBlockRegex =
+    internal static readonly Regex BfCharBlockRegex =
         new(@"beginbfchar(?<body>.*?)endbfchar", RegexOptions.Singleline);
 
-    private static readonly Regex BfRangeBlockRegex =
+    internal static readonly Regex BfRangeBlockRegex =
         new(@"beginbfrange(?<body>.*?)endbfrange", RegexOptions.Singleline);
 
-    private static readonly Regex BfCharEntryRegex = new(
+    internal static readonly Regex BfCharEntryRegex = new(
         @"<(?<src>[0-9A-Fa-f]+)>\s*<(?<dst>[0-9A-Fa-f]+)>",
         RegexOptions.Singleline);
 
-    private static readonly Regex BfRangeEntryRegex = new(
+    internal static readonly Regex BfRangeEntryRegex = new(
         @"<(?<lo>[0-9A-Fa-f]+)>\s*<(?<hi>[0-9A-Fa-f]+)>\s*(?:<(?<dst>[0-9A-Fa-f]+)>|\[(?<dstArray>(?:\s*<[0-9A-Fa-f]+>)+)\s*\])",
         RegexOptions.Singleline);
 
-    private static readonly Regex HexTokenRegex = new(@"<([0-9A-Fa-f]+)>");
+    internal static readonly Regex HexTokenRegex = new(@"<([0-9A-Fa-f]+)>");
 
     /// <summary>
     /// Parses the "bfchar" (one-CID-to-one-string) and "bfrange" (a contiguous CID span mapped to
     /// either a base codepoint or an explicit array of strings) constructs of a /ToUnicode CMap.
     /// </summary>
-    private static IEnumerable<(int Cid, string Character)> ParseToUnicodeCMap(string cmapText)
+    internal static IEnumerable<(int Cid, string Character)> ParseToUnicodeCMap(string cmapText)
     {
         foreach (Match block in BfCharBlockRegex.Matches(cmapText))
         {
@@ -514,11 +514,11 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>Decodes a UTF-16BE hex string to its characters.</summary>
-    private static string HexToUtf16String(string hex) =>
+    internal static string HexToUtf16String(string hex) =>
         Encoding.BigEndianUnicode.GetString(Convert.FromHexString(hex));
 
     /// <summary>Adds <paramref name="offset"/> to a UTF-16BE hex codepoint and decodes the result.</summary>
-    private static string OffsetHexCodepoint(string dstHex, int offset)
+    internal static string OffsetHexCodepoint(string dstHex, int offset)
     {
         var value = Convert.ToInt64(dstHex, 16) + offset;
         return HexToUtf16String(value.ToString($"X{dstHex.Length}"));
@@ -528,7 +528,7 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// Converts a string whose characters are each one Latin1-decoded byte back into those bytes,
     /// then decodes them as Windows-1252 to recover the characters WinAnsi text actually represents.
     /// </summary>
-    private static string ToWindows1252(string latin1Text)
+    internal static string ToWindows1252(string latin1Text)
     {
         var bytes = new byte[latin1Text.Length];
 
@@ -549,9 +549,9 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     // against PdfPig's correctly-decoded line text the same way the raw-byte case did before it
     // was fixed. A single regex pass now covers both that and the other standard PDF string
     // escapes (PDF spec 7.3.4.2).
-    private static readonly Regex PdfStringEscapeRegex = new(@"\\(?:([()\\nrtbf])|([0-7]{1,3}))");
+    internal static readonly Regex PdfStringEscapeRegex = new(@"\\(?:([()\\nrtbf])|([0-7]{1,3}))");
 
-    private static string UnescapePdfString(string value) =>
+    internal static string UnescapePdfString(string value) =>
         PdfStringEscapeRegex.Replace(value, match =>
         {
             if (match.Groups[1].Success)
@@ -575,10 +575,10 @@ public class WqFormSpliceAndOverlayTests(ITestOutputHelper testOutputHelper)
     /// reconstructed from the content stream can be compared against PdfPig's own line text (which
     /// normalizes quotes the same way).
     /// </summary>
-    private static string NormalizeWhitespace(string value) =>
+    internal static string NormalizeWhitespace(string value) =>
         Regex.Replace(FoldTypographicQuotes(value), @"\s+", " ").Trim();
 
-    private static string FoldTypographicQuotes(string value) =>
+    internal static string FoldTypographicQuotes(string value) =>
         value
             .Replace('‘', '\'').Replace('’', '\'')
             .Replace('“', '"').Replace('”', '"');

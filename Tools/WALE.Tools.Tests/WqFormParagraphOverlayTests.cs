@@ -36,7 +36,7 @@ public class WqFormParagraphOverlayTests(ITestOutputHelper testOutputHelper)
     /// families WqFormSpliceAndOverlayTests.GetFontInfoAtPosition currently detects from a
     /// document's own /BaseFont resource.
     /// </summary>
-    private sealed class LocalFontResolver : IFontResolver
+    internal sealed class LocalFontResolver : IFontResolver
     {
         private const string FontFolder = "/System/Library/Fonts/Supplemental/";
 

@@ -24,10 +24,13 @@ public sealed class WrRule
     private readonly List<TextToMatch> _remove = [];
     private List<TextToMatch>? _possibilities;
     private bool _requireTextToClaimGroup;
+    private bool _requireCompleteDateToClaimGroup;
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private bool _boundSameLineWalkByOtherLabelPositions;
     private bool _allowValueToWrapPastSameLineEndTag;
+    private int _previousLinesToFetch;
+    private int _leewayBefore;
 
     public static WrRule Between(string startText, string endText)
     {
@@ -99,6 +102,23 @@ public sealed class WrRule
     public WrRule RequireTextToClaimGroup()
     {
         _requireTextToClaimGroup = true;
+        return this;
+    }
+
+    // See LabelToMatch.RequireCompleteDateToClaimGroup.
+    public WrRule RequireCompleteDateToClaimGroup()
+    {
+        _requireCompleteDateToClaimGroup = true;
+        return this;
+    }
+
+    // Pulls the N line(s) immediately before the matched start label into the captured value -
+    // for a Between()-shaped rule whose real value starts on a physical line above its own
+    // label. Wires into TextToFindIsBetweenLabels' LeewayBefore/PreviousLinesToFetch mechanism.
+    public WrRule PreviousLines(int n)
+    {
+        _previousLinesToFetch = n;
+        _leewayBefore = n;
         return this;
     }
 
@@ -209,12 +229,14 @@ public sealed class WrRule
         Position = _position,
         LimitTo = _limitTo,
         Format = "Text",
-        PreviousLinesToFetch = 0,
+        PreviousLinesToFetch = _previousLinesToFetch,
+        LeewayBefore = _leewayBefore,
         NextLinesToFetch = _nextLinesToFetch,
         Name = _name,
         Remove = _remove,
         Possibilities = _possibilities,
         RequireTextToClaimGroup = _requireTextToClaimGroup,
+        RequireCompleteDateToClaimGroup = _requireCompleteDateToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,

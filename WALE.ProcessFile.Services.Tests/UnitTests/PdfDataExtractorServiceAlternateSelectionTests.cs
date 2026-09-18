@@ -26,9 +26,12 @@ public class PdfDataExtractorServiceAlternateSelectionTests
             return new DocumentLine(0, 1, [], 0, 0, 0, 0);
         }
 
-        var column = new DocumentLineColumn([
-            new DocumentLineWord(text, null, DocumentLineWordCoordinates.NotKnown(), null)
-        ]);
+        // DocumentLineWord.Text can't itself contain a space, so a multi-word line needs one
+        // word per space-separated token - DocumentLineColumn.Text re-joins them with spaces.
+        var column = new DocumentLineColumn(
+            text.Split(' ')
+                .Select(word => new DocumentLineWord(word, null, DocumentLineWordCoordinates.NotKnown(), null))
+                .ToList());
 
         return new DocumentLine(0, 1, [column], 0, 0, 0, 0);
     }
@@ -124,5 +127,57 @@ public class PdfDataExtractorServiceAlternateSelectionTests
         var result = PdfDataExtractorService.ShouldClaimLabelGroup(labelGroupMatch, requireTextToClaimGroup: true);
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public void ReturnsTrue_WhenRequireCompleteDateToClaimGroupIsFalse_EvenWithNoDate()
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("not a date") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, requireCompleteDateToClaimGroup: false);
+
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData("Jul 26,")] // day+month, no year at all
+    [InlineData("Richard Smith")] // no date-shaped text whatsoever
+    public void ReturnsFalse_WhenRequireCompleteDateToClaimGroupIsTrue_AndNoLineHasAFullDate(string text)
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText(text) };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, requireCompleteDateToClaimGroup: true);
+
+        Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData("25/03/26")] // numeric, 2-digit year
+    [InlineData("06/05/2026")] // numeric, 4-digit year
+    [InlineData("15 th May 2026")] // day + ordinal suffix as its own token + month + year
+    [InlineData("Jul 26 2019")] // month + day + year
+    public void ReturnsTrue_WhenRequireCompleteDateToClaimGroupIsTrue_AndTextHasAFullDate(string text)
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText(text) };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, requireCompleteDateToClaimGroup: true);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ReturnsTrue_WhenRequireCompleteDateToClaimGroupIsTrue_AndDateSplitsAcrossLines()
+    {
+        // "15 th May" and "2026" as two separate matched lines - neither alone is a complete
+        // date, but joined they are. Checking each line in isolation would reject this.
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("15 th May", "2026") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, requireCompleteDateToClaimGroup: true);
+
+        Assert.True(result);
     }
 }

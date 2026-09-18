@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -64,7 +65,22 @@ public static class WrInspectionReportSchemaConverter
                 .Replace("NI", string.Empty) // Don't know why we get this
                 .Replace("\r", string.Empty)
                 .Replace("  ", " ");
-            
+
+            // A "Mon D" fragment and its year can land on different lines of the raw capture,
+            // in either order - neither parses alone, and the line-splitting heuristics below
+            // only ever keep one line as the date candidate. Recombine both into one candidate
+            // here, before that splitting runs.
+            var monthDayMatch = Regex.Match(
+                rawInspectionDateTweaked,
+                @"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b",
+                RegexOptions.IgnoreCase);
+            var yearMatch = Regex.Match(rawInspectionDateTweaked, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+            if (monthDayMatch.Success && yearMatch.Success)
+            {
+                potentialDates.Add($"{monthDayMatch.Value} {yearMatch.Value}");
+            }
+
             if (rawInspectionDateTweaked.Contains('&'))
             {
                 var parts = rawInspectionDateTweaked.Split("&");

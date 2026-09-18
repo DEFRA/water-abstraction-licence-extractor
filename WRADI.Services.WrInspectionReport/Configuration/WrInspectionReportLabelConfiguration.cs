@@ -531,32 +531,32 @@ public static class WrInspectionReportLabelConfiguration
     // column requirement, it doesn't span line boundaries. Not attempted further this session.
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
+            // The plain case: "Inspection Date:" as one unbroken phrase. RequireTextToClaimGroup
+            // covers a layout where AlsoEndsAt cuts the value to nothing; RequireCompleteDateToClaimGroup
+            // also rejects a non-blank match missing its year (wrapped past the "Inspecting
+            // Officer" row - see the fallback below), so either failure falls through instead
+            // of permanently claiming the group.
             WrRule.Between("Inspection Date:", "Quantities").Named(WrInspectionReportFieldNames.InspectionDate).NextLines(2)
-                .AlsoEndsAt("Time:", "Inspecting Officer").RequireTextToClaimGroup().Build(),
-            // Fixes the "Inspection Date:" wrap case (confirmed on wr51__73417g0068,
-            // wr51__an0340003001r01, wr51__73419g0036/WRADI-338): a squeezed layout puts
-            // "Inspection Date:" (or just "Inspection", wrapped onto its own row with "Date:"
-            // a further row down) in a narrow column, with the full-width
-            // "Inspecting Officer: ... Time: ..." row landing physically between the two. The
-            // primary rule above still fires first on documents where "Inspection Date:" is
-            // one unbroken phrase (e.g. an0340003001r01) - its AlsoEndsAt cuts the value to
-            // nothing there, which is exactly why the primary rule needs
-            // RequireTextToClaimGroup() too, otherwise that empty match would permanently claim
-            // the group and this alternate would never run.
-            //
-            // A bare "Inspection" start anchor is too ambiguous (also matches "Inspection
-            // report" and "Inspection Class:" elsewhere on the page - confirmed empirically,
-            // it grabbed the wrong occurrence). Anchoring on "Inspecting Officer" instead
-            // (unique, already used by RuleInspectingOfficer) and walking WholeLine to
-            // "Licence provisions" reliably spans all 3 rows regardless of which sub-variant
-            // this is. "Date:" is stripped via Remove (not used as a start anchor - that's the
-            // exact loose-"Date:" approach that regressed 98%->40% recall on 2026-09-09,
-            // colliding with "Date of certificate or record:") so downstream parsing sees a
-            // clean value. Relies on WrInspectionReportSchemaConverter.ToForm's existing
-            // "Inspecting Officer"/"Time" splitting and its containsYear/not-today validation
-            // to reject whatever this captures on a normal (non-wrapped) document.
+                .AlsoEndsAt("Time:", "Inspecting Officer").RequireTextToClaimGroup()
+                .RequireCompleteDateToClaimGroup().Build(),
+            // Fallback for a squeezed layout where "Inspection Date:" (or just "Inspection")
+            // wraps onto its own row, with the full-width "Inspecting Officer: ... Time: ..."
+            // row landing between the label and its value. A bare "Inspection" start anchor is
+            // too ambiguous (also matches "Inspection report"/"Inspection Class:" elsewhere on
+            // the page), so this anchors on the unique "Inspecting Officer" label instead and
+            // walks WholeLine to "Licence provisions", which spans any number of rows
+            // regardless of how the value wraps. PreviousLines(1) additionally pulls in the
+            // row above the anchor, for a layout where the value splits across both sides of it.
+            // "Inspection"/"Inspection Date:"/"Date:" are stripped via Remove rather than used
+            // as start anchors - a loose "Date:" anchor collides with "Date of certificate or
+            // record:" elsewhere on the page. Relies on
+            // WrInspectionReportSchemaConverter.ToForm's "Inspecting Officer"/"Time" splitting,
+            // its month-day/year recombination, and its containsYear/not-today validation to
+            // reject whatever this captures on a differently-shaped document.
             WrRule.Between("Inspecting Officer", "Licence provisions").Named(WrInspectionReportFieldNames.InspectionDate)
-                .NextLines(3).WholeLine().Remove([new TextToMatch("Date:")]).RequireTextToClaimGroup().Build()
+                .PreviousLines(1).NextLines(3).WholeLine()
+                .Remove([new TextToMatch("Inspection Date:"), new TextToMatch("Inspection"), new TextToMatch("Date:")])
+                .RequireTextToClaimGroup().Build()
         ]);
 
     private static (string, List<LabelToMatch>) RuleEmail() =>

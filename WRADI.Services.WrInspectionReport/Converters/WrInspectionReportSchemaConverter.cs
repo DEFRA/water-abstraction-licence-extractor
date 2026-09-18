@@ -169,7 +169,11 @@ public static class WrInspectionReportSchemaConverter
                 && rawInspectionDateTweaked.All(c => c != '/')
                 && rawInspectionDateTweaked.All(c => c != ' '))
             {
-                potentialDates.Add(rawInspectionDateTweaked.Replace(".", ":"));
+                // e.g. "27.02:26" - one separator typoed as ':' instead of '.'. Normalise
+                // toward '.' (not the other way): confirmed via DateTime.TryParse that
+                // "27.02.26" parses fine but "27:02:26" (both separators as ':') doesn't -
+                // colon-separated numerics read as an invalid time, not a date.
+                potentialDates.Add(rawInspectionDateTweaked.Replace(":", "."));
             }
 
             var words = rawInspectionDateTweaked.Split(' ');

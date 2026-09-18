@@ -419,7 +419,7 @@ public static class AbstractionLicenceSchemaConverter
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
             .ToList();
 
-        var swappedOutLinkedLicences = new List<LinkedLicence>();
+        var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
         
         // Swap out linked licence numbers to newest ones where needed
         foreach (var linkedLicence in linkedLicences)
@@ -427,13 +427,19 @@ public static class AbstractionLicenceSchemaConverter
             var (hasSuccessor, history) =
                 lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(linkedLicence.LicenceNumber);
 
+            linkedLicencesWithAddedFollowOns.Add(linkedLicence);
+            
             if (!hasSuccessor)
             {
-                swappedOutLinkedLicences.Add(linkedLicence);
                 continue;
             }
 
             var extendedHistory = ExtendedHistory(linkedLicence, history);
+            
+            foreach (var containedIn in linkedLicence.ContainedIn!)
+            {
+                containedIn.History = extendedHistory;   
+            }
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
@@ -445,11 +451,11 @@ public static class AbstractionLicenceSchemaConverter
                     containedIn.History = extendedHistory;   
                 }
                 
-                swappedOutLinkedLicences.Add(clonedLinkedLicence);
+                linkedLicencesWithAddedFollowOns.Add(clonedLinkedLicence);
             }
         }
 
-        linkedLicences = swappedOutLinkedLicences;
+        linkedLicences = linkedLicencesWithAddedFollowOns;
         
         var combinedAggregates = new List<Aggregate>(aggregates);
         

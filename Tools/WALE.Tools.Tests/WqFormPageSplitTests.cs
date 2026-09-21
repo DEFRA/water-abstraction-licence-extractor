@@ -499,6 +499,17 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         x = double.Parse(precedingTm.Groups[5].Value);
         y = double.Parse(precedingTm.Groups[6].Value);
 
+        // TD/Td/T*'s own dx/dy/leading are expressed in TEXT space (the em-square Tm itself
+        // scales), not device space - confirmed necessary on a real file (wq__302142): a
+        // 7-line remainder under a "9.427 0 0 9.427 ... Tm" scale computed as descending only
+        // ~12.8pt total (summing raw, unscaled TD dy's) when it actually spans ~121pt on the
+        // page, an ~108pt error that went undetected until a whole-page-fold happened to land
+        // right after it - text overlapping text isn't a structural defect pdftotext reports,
+        // only a visual one a render catches. The Tm's own "a"/"d" components are exactly this
+        // scale factor for the axis-aligned (no rotation/skew) matrices this document uses.
+        var scaleX = double.Parse(precedingTm.Groups[1].Value);
+        var scaleY = double.Parse(precedingTm.Groups[4].Value);
+
         var between = content[(precedingTm.Index + precedingTm.Length)..cutIndex];
         var leading = 0.0;
 
@@ -512,8 +523,8 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             {
                 var dx = double.Parse(move.Groups["tdx"].Value);
                 var dy = double.Parse(move.Groups["tdy"].Value);
-                x += dx;
-                y += dy;
+                x += dx * scaleX;
+                y += dy * scaleY;
 
                 if (move.Groups["tdop"].Value == "TD")
                 {
@@ -522,7 +533,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             }
             else if (move.Groups["tstar"].Success)
             {
-                y -= leading;
+                y -= leading * scaleY;
             }
         }
 
@@ -556,6 +567,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
     private static bool TryCutSingleBlockPageAtLine(
         string content,
         string cutAtLineText,
+        string permitNumber,
         IReadOnlyDictionary<int, string> toUnicodeMap,
         out string headPart,
         out string tailPartRaw,
@@ -601,9 +613,24 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             .Concat(FindTaggedMarkedContentSpans(content, "Header"))
             .ToList();
 
+        // The tagged-span exclusion above only catches a footer/header that's actually wrapped in
+        // its own "/Artifact .../Subtype/Footer" marked content - not every document tags it that
+        // way (confirmed on wq__302142: its own "Permit number" footer is plain, untagged BT/Tf/Tm
+        // text). Locating it directly by its own known text (the same technique already used to
+        // split the footer out of the tail/remainder side below) and excluding its own nearest Tm
+        // catches that case too - otherwise firstTmInPage silently resolves to the footer's own Y
+        // (near the page bottom) instead of the real body content's, corrupting headTopY and, via
+        // it, every Tm this fragment goes on to shift by a wildly wrong delta.
+        var (_, footerFoundInPage, footerIndexInPage) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
+            content, permitNumber, toUnicodeMap);
+        var footerOwnTmIndex = footerFoundInPage
+            ? tmRegex.Matches(content[..footerIndexInPage]).Cast<Match>().LastOrDefault()?.Index
+            : null;
+
         var firstTmInPage = tmRegex.Matches(content)
             .Cast<Match>()
-            .FirstOrDefault(m => !footerSpansForHead.Any(span => m.Index >= span.Start && m.Index <= span.End));
+            .FirstOrDefault(m => !footerSpansForHead.Any(span => m.Index >= span.Start && m.Index <= span.End)
+                                  && m.Index != footerOwnTmIndex);
 
         if (firstTmInPage == null)
         {
@@ -611,7 +638,26 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         }
 
         headTopY = double.Parse(firstTmInPage.Groups[6].Value);
-        headPart = content[..cutIndex] + "\nET";
+
+        var headContentRaw = content[..cutIndex];
+
+        // Strip the page's own footer out of the head part entirely rather than letting it ride
+        // along: headDelta is computed relative to the real body content's own Y, so shifting the
+        // footer's own Tm by that same delta moves it to whatever Y the body ends up at, not
+        // where a footer belongs - and even correctly positioned, it would just duplicate the
+        // destination page's own existing footer (cascadeDestFooter already covers that).
+        if (footerFoundInPage && footerOwnTmIndex.HasValue && footerIndexInPage < headContentRaw.Length)
+        {
+            var footerBtIndex = headContentRaw.LastIndexOf("BT", footerOwnTmIndex.Value, StringComparison.Ordinal);
+            var footerEtIndex = headContentRaw.IndexOf("ET", footerIndexInPage, StringComparison.Ordinal);
+
+            if (footerBtIndex >= 0 && footerEtIndex >= 0)
+            {
+                headContentRaw = headContentRaw[..footerBtIndex] + headContentRaw[(footerEtIndex + 2)..];
+            }
+        }
+
+        headPart = headContentRaw + "\nET";
         tailPartRaw = content[cutIndex..];
         cutIndexUsed = cutIndex;
 
@@ -882,22 +928,33 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         var (_, footerFound, footerIndex) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
             content, permitNumber, toUnicodeMap);
+        var tmRegex = new Regex(
+            @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
 
         if (footerFound)
         {
-            var tmRegexLocal = new Regex(
-                @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
-            var footerTm = tmRegexLocal.Matches(content[..footerIndex]).Cast<Match>().LastOrDefault();
+            var footerTm = tmRegex.Matches(content[..footerIndex]).Cast<Match>().LastOrDefault();
 
+            // Remove exactly the footer's own Tm and whatever it draws, up to (not including)
+            // the next Tm - not the footer's whole BT...ET block, which for this family isn't
+            // reliably self-contained: confirmed on wq__302142's own candidate page, the footer
+            // and the real body share a single BT, with the footer's Tm/text drawn FIRST and
+            // the body's own first Tm following immediately after with no ET in between.
+            // Stripping the whole BT...ET (as a self-contained-footer assumption would) deleted
+            // the entire real body along with it, leaving no Tm for the search below to find and
+            // silently failing this whole-page fold. Cutting only up to the next Tm removes
+            // precisely the footer's own draw calls, wherever in the stream they fall, and
+            // leaves the body's own BT/Tm/text/ET untouched.
             if (footerTm != null)
             {
-                var (closedBody, _) = RebalanceMarkedContentAt(content[..footerTm.Index], "");
-                content = closedBody + "\nET";
+                var nextTm = tmRegex.Matches(content, footerTm.Index + footerTm.Length)
+                    .Cast<Match>()
+                    .FirstOrDefault();
+                var removeEnd = nextTm?.Index ?? content.Length;
+                content = content[..footerTm.Index] + content[removeEnd..];
             }
         }
 
-        var tmRegex = new Regex(
-            @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
         var headerSpansForWhole = FindTaggedMarkedContentSpans(content, "Header");
         var firstTm = tmRegex.Matches(content)
             .Cast<Match>()
@@ -1993,14 +2050,31 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
                 var candidateOriginalPageNumber = cutLine.PageNumber + 1 + cascadeHops;
                 var candidateToUnicodeMap = WqFormSpliceAndOverlayTests.BuildToUnicodeMap(candidatePage);
+
+                // PdfPig's own line-grouping occasionally merges this two-line footer ("Permit
+                // number" / "<permitNumber> ... <page number>") into a single row when their Y
+                // bands sit close enough together - the merged line's word order comes out
+                // interleaved by X position (e.g. "Permit 302142 number 8"), which no longer
+                // starts with "Permit number" and so never matches PermitNumberLabelRegex.
+                // Left undetected, that merged line is treated as ordinary body content,
+                // becomes the candidate's own cut line (it's the page's lowest line), and the
+                // actual cut then fails on it - confirmed on wq__302142's own page 11, where
+                // this silently broke the cascade one hop short of where it needed to reach.
+                // Falling back to "contains Permit, number, and this document's own permit
+                // number" catches the merge without loosening the match for any other page.
                 var candidateFooterLabelLine = lines.FirstOrDefault(
-                    l => l.PageNumber == candidateOriginalPageNumber && PermitNumberLabelRegex.IsMatch(l.Text.Trim()));
+                    l => l.PageNumber == candidateOriginalPageNumber &&
+                         (PermitNumberLabelRegex.IsMatch(l.Text.Trim()) ||
+                          (l.Text.Contains("Permit", StringComparison.OrdinalIgnoreCase) &&
+                           l.Text.Contains("number", StringComparison.OrdinalIgnoreCase) &&
+                           l.Text.Contains(permitNumber, StringComparison.Ordinal))));
                 var candidateLinesTopDown = lines
                     .Where(l => l.PageNumber == candidateOriginalPageNumber
                                 && !string.IsNullOrWhiteSpace(l.Text)
                                 && (candidateFooterLabelLine == null || l.Top > candidateFooterLabelLine.Top))
                     .OrderByDescending(l => l.Top)
                     .ToList();
+
 
                 if (candidateLinesTopDown.Count == 0)
                 {
@@ -2127,11 +2201,14 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
                             break;
                         }
 
+                        // wholeBody (from TryExtractWholeSingleBlockPageBody) is always the
+                        // candidate's own original BT...ET with just the footer's draw calls
+                        // excised from wherever they fall inside it - self-contained by
+                        // construction, the same reasoning as headFragment above. Wrapping it in
+                        // another synthetic BT would nest an extra, unmatched one.
                         var wholeDelta = (cascadeDestBottomY - normalLineGap) - wholeTopY;
-                        var wholeFragment = family == TemplateFamily.SingleBlock
-                            ? BuildShiftedFragment(
-                                wholeBody, wholeDelta, null, null, wholeFont.Value, FragmentWrapMode.WrapWithNewBt)
-                            : BuildShiftedFragment(wholeBody, wholeDelta, null, null, "", FragmentWrapMode.NoFontNeeded);
+                        var wholeFragment =
+                            BuildShiftedFragment(wholeBody, wholeDelta, null, null, "", FragmentWrapMode.NoFontNeeded);
 
                         if (!IsMarkedContentBalanced(wholeFragment))
                         {
@@ -2175,7 +2252,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
                 if (family == TemplateFamily.SingleBlock)
                 {
                     if (!TryCutSingleBlockPageAtLine(
-                            candidateContent, cutLineForCandidate.Text, candidateToUnicodeMap,
+                            candidateContent, cutLineForCandidate.Text, permitNumber, candidateToUnicodeMap,
                             out headRaw, out tailRaw, out headTopY, out tailTopY,
                             out cutIndexUsed, out syntheticAnchorForTail))
                     {
@@ -2243,9 +2320,18 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
                 // Build both resulting fragments before writing anything - validated below before
                 // either is committed, so a bad cut never partially lands.
                 var headDelta = (cascadeDestBottomY - normalLineGap) - headTopY;
-                var headFragment = family == TemplateFamily.SingleBlock
-                    ? BuildShiftedFragment(headRaw, headDelta, null, null, headFont.Value, FragmentWrapMode.WrapWithNewBt)
-                    : BuildShiftedFragment(headRaw, headDelta, null, null, "", FragmentWrapMode.NoFontNeeded);
+
+                // headRaw is always content[..cutIndex] + "\nET" (see TryCutSingleBlockPageAtLine),
+                // with its own embedded footer already stripped out there - the candidate page's
+                // own prefix up to the cut, self-contained by construction (one "ET" appended to
+                // close whatever single text object was left open). Wrapping it in another
+                // synthetic BT (as WrapWithNewBt does for the genuinely-untethered remainder
+                // fragment below) would nest an extra, unmatched BT with no ET of its own - an
+                // illegal PDF state IsMarkedContentBalanced correctly rejects, safely stopping the
+                // cascade short of where it needed to reach. headRaw never needs the wrap or an
+                // injected font, matching the MarkedContentPerFragment family's own already-
+                // established NoFontNeeded treatment of its analogous head fragment.
+                var headFragment = BuildShiftedFragment(headRaw, headDelta, null, null, "", FragmentWrapMode.NoFontNeeded);
                 var remainderDelta = NewAnchorY - tailTopY;
                 var remainderFragment = family == TemplateFamily.SingleBlock
                     ? BuildShiftedFragment(

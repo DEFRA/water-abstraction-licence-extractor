@@ -46,6 +46,19 @@ public static class LinkedLicenceVerificationMergeHelper
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
                     }
+
+                    // These licences' active state is now contradicted by the newer NoneOutgoing confirmation
+                    var staleItemIds = sectionSummaries
+                        .Where(s => s.LicenceSectionItemId != NoneOutgoing
+                                    && s.LicenceSectionItemId != Review
+                                    && s.CurrentVerificationType != "Removed")
+                        .Select(s => s.LicenceSectionItemId)
+                        .ToList();
+
+                    foreach (var staleItemId in staleItemIds)
+                    {
+                        SimulateRemoval(sectionSummaries, staleItemId);
+                    }
                 }
 
                 continue;
@@ -109,6 +122,14 @@ public static class LinkedLicenceVerificationMergeHelper
                                 .Union(existingLinkedLicence.ContainedIn?.Where(c =>
                                     c.Direction != InformationDirection.Outgoing) ?? []).ToArray();
                             linkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        var noneOutgoingSummary =
+                            sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == NoneOutgoing);
+                        if (noneOutgoingSummary != null && noneOutgoingSummary.CurrentVerificationType != "Removed")
+                        {
+                            // This outgoing licence contradicts the earlier "confirmed none outgoing" state
+                            SimulateRemoval(sectionSummaries, NoneOutgoing);
                         }
 
                         break;
@@ -244,6 +265,17 @@ public static class LinkedLicenceVerificationMergeHelper
     private static void RemoveAllLinksForDirection(LinkedLicence linkedLicence, InformationDirection directionToRemove)
         => linkedLicence.ContainedIn = linkedLicence.ContainedIn?
             .Where(c => c.Direction != directionToRemove).ToArray();
+
+    private static void SimulateRemoval(List<LicenceSectionItemSummary> sectionSummaries, string itemId)
+    {
+        var syntheticVerification = new LicenceSectionVerification
+        {
+            LicenceSectionItemId = itemId,
+            VerificationType = "Removed"
+        };
+
+        UpdateSectionSummaries(sectionSummaries, syntheticVerification);
+    }
 
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)

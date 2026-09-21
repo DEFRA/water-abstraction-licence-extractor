@@ -94,7 +94,10 @@ public class DatabaseAbstractionLicenceOutputService(
             licenceStr,
             licence.DmsFileId!.Value,
             processRunId,
-            licence.Status.ToString());
+            licence.Status.ToString(),
+            licence.Filename,
+            licence.DmsPermitNumber,
+            licence.LicenceNumber?.Value);
     }
 
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId)

@@ -34,15 +34,26 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
-    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status)
+    public async Task UpdateLicenceAsync(
+        int licenceId,
+        string licenceData,
+        Guid fileId,
+        int processRunId,
+        string status,
+        string? filename,
+        string? permitNumber,
+        string? licenceNumber)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            UPDATE licence
                            SET
-                               file_id = @FileId
-                               , status = @Status
-                               , data = @Data
+                               filename = @Filename
+                               ,permit_number = @PermitNumber
+                               ,licence_number = @LicenceNumber
+                               ,file_id = @FileId
+                               ,status = @Status
+                               ,data = @Data
                            WHERE
                                 licence_id = @LicenceId
                                 AND process_run_id = @ProcessRunId
@@ -55,6 +66,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             new
             {
                 FileId = fileId,
+                Filename = filename,
+                PermitNumber = permitNumber,
+                LicenceNumber = licenceNumber,
                 LicenceId = licenceId,
                 Data = licenceData,
                 ProcessRunId = processRunId,
@@ -1369,13 +1383,13 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 .ToArray();
 
         var verificationTypesWithNotes =
-            item.VerificationTypesWithNotes
+            item.VerificationTypesWithNotes?
                 .Where(x =>
                     !string.IsNullOrWhiteSpace(x))
                 .Select(x => x.Trim())
                 .Distinct(
                     StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+                .ToArray() ?? [];
         
         return connection.ExecuteAsync(
             new CommandDefinition(

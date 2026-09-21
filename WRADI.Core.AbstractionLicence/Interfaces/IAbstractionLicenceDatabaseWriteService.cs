@@ -31,7 +31,15 @@ public interface IAbstractionLicenceDatabaseWriteService
     
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status);
+    public Task UpdateLicenceAsync(
+        int licenceId,
+        string licenceData,
+        Guid fileId,
+        int processRunId,
+        string status,
+        string? filename,
+        string? permitNumber,
+        string? licenceNumber);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,

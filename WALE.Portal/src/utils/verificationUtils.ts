@@ -1,5 +1,23 @@
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
+
+export const isScrapedDataDifferent = (
+    outputListDataItem: OutputListDataItem | undefined,
+    licenceSectionName: string,
+    licenceSectionItemId: string | undefined,
+): boolean => {
+    if (!outputListDataItem || !licenceSectionItemId) return false;
+    return (outputListDataItem.licenceSectionVerifications ?? [])
+        .filter(s => s.licenceSectionName === licenceSectionName)
+        .flatMap(s => s.licenceSectionItems ?? [])
+        .some(i => i.licenceSectionItemId === licenceSectionItemId && !!i.scrapedDataIsDifferent);
+};
+
 export const getVerificationTypeColor = (type: string): string =>
     getVerificationTypeBackgroundColor(type);
+
+export const getVerificationWithNotesFirstPart = (value: string): string => {
+    return value.split("::")[0];
+};
 
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {

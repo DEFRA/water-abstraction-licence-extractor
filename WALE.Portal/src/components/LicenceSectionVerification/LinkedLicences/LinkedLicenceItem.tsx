@@ -4,7 +4,8 @@ import {
     NullableOfInformationDirection,
     ContainedInInformation,
     InformationSource,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
@@ -12,9 +13,10 @@ import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 import NaldOnlyTag from "../../NaldOnlyTag.tsx";
+import ImpoundmentTag from "../../ImpoundmentTag.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -30,6 +32,7 @@ interface LinkedLicenceItemProps {
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
     onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -47,6 +50,7 @@ export const LinkedLicenceItem = ({
                                       onRequestBusinessReview,
                                       onCompleteBusinessReview,
                                       onOpenReport,
+                                      outputListDataItem,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
@@ -163,6 +167,7 @@ export const LinkedLicenceItem = ({
                         <ValidationError message={errors.licenceNumber}/>
                         <NaldStatusTag status={linkedLicence.naldStatus}/>
                         <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                        <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
                     </div>
                     <div style={{flex: 1}}>
                         <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px'}}>Permit
@@ -297,6 +302,8 @@ export const LinkedLicenceItem = ({
             )}</strong>
             <NaldStatusTag status={linkedLicence.naldStatus}/>
             <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+            <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
+            {isScrapedDataDifferent(outputListDataItem, 'Linked Licences', linkedLicence.licenceNumber) && '🚩'}
         </div>
     );
 
@@ -314,6 +321,7 @@ export const LinkedLicenceItem = ({
                     )}
                     <NaldStatusTag status={linkedLicence.naldStatus}/>
                     <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                    <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
                 </p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
                 <div style={{marginBottom: '8px'}}><strong>Because of

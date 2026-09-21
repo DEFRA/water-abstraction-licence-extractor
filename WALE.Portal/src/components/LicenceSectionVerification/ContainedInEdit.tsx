@@ -1,6 +1,10 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {ContainedInInformation} from "../../api/generated/apiClient.ts";
 import {ValidationError} from "./ValidationError.tsx";
+import {
+    getDocumentSections,
+    getLinkReasons
+} from '../../utils/dropDownUtils';
 
 const labelStyle: React.CSSProperties = {display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: 600};
 const inputStyle: React.CSSProperties = {width: '100%', height: '30px', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: '4px', boxSizing: 'border-box'};
@@ -28,6 +32,22 @@ export const ContainedInEdit = ({
                                      canRemove,
                                      getFieldError
                                  }: ContainedInEditProps) => {
+    const [documentSections, setDocumentSections] = useState<string[]>([]);
+    const [linkReasons, setLinkReasons] = useState<string[]>([]);
+
+    useEffect(() => {
+        Promise.all([
+            getDocumentSections(),
+            getLinkReasons()
+        ])
+            .then(([sections, reasons]) => {
+                setDocumentSections(sections);
+                setLinkReasons(reasons);
+            })
+            .catch(error => {
+                console.error('Error loading dropdown values:', error);
+            });
+    }, []);
     return (
         <>
             {sections.map((section, idx) => {
@@ -43,17 +63,61 @@ export const ContainedInEdit = ({
                             </div>
                             <div style={{flex: 1, minWidth: 0}}>
                                 <label style={labelStyle}>Section Name:</label>
-                                <input type="text" value={section.sectionName || ''}
-                                       onChange={(e) => onChange(idx, 'sectionName', e.target.value)}
-                                       style={{...inputStyle, borderColor: getFieldError?.(idx, 'sectionName') ? '#ff4d4f' : '#d9d9d9'}}/>
+                                <select
+                                    value={section.sectionName || ''}
+                                    onChange={(e) => onChange(idx, 'sectionName', e.target.value)}
+                                    style={{
+                                        ...inputStyle,
+                                        borderColor: getFieldError?.(idx, 'sectionName')
+                                            ? '#ff4d4f'
+                                            : '#d9d9d9'
+                                    }}
+                                >
+                                    <option value="">Select section</option>
+
+                                    {section.sectionName &&
+                                        !documentSections.includes(section.sectionName) && (
+                                            <option value={section.sectionName}>
+                                                {section.sectionName}
+                                            </option>
+                                        )}
+
+                                    {documentSections.map(sectionName => (
+                                        <option key={sectionName} value={sectionName}>
+                                            {sectionName}
+                                        </option>
+                                    ))}
+                                </select>
                                 <ValidationError message={getFieldError?.(idx, 'sectionName')}/>
                             </div>
                             {showLinkReason && (
                                 <div style={{flex: 1, minWidth: 0}}>
                                     <label style={labelStyle}>Link Reason:</label>
-                                    <input type="text" value={section.linkReason || ''}
-                                           onChange={(e) => onChange(idx, 'linkReason', e.target.value)}
-                                           style={{...inputStyle, borderColor: getFieldError?.(idx, 'linkReason') ? '#ff4d4f' : '#d9d9d9'}}/>
+                                    <select
+                                        value={section.linkReason || ''}
+                                        onChange={(e) => onChange(idx, 'linkReason', e.target.value)}
+                                        style={{
+                                            ...inputStyle,
+                                            borderColor: getFieldError?.(idx, 'linkReason')
+                                                ? '#ff4d4f'
+                                                : '#d9d9d9'
+                                        }}
+                                    >
+                                        <option value="">Select link reason</option>
+
+                                        {section.linkReason &&
+                                            !linkReasons.includes(section.linkReason) && (
+                                                <option value={section.linkReason}>
+                                                    {section.linkReason}
+                                                </option>
+                                            )}
+
+                                        {linkReasons.map(linkReason => (
+                                            <option key={linkReason} value={linkReason}>
+                                                {linkReason}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <ValidationError message={getFieldError?.(idx, 'linkReason')}/>
                                 </div>
                             )}

@@ -167,16 +167,42 @@ public static class AggregateVerificationMergeHelper
             sectionSummaries.Add(new LicenceSectionItemSummary
             {
                 LicenceSectionItemId = itemId,
-                VerificationTypes = [verification.VerificationType!]
+                VerificationTypes = [verification.VerificationType!],
+                CurrentVerificationType = verification.VerificationType!,
+                VerificationTypesWithNotes = [VerificationMergeHelper.GetVerificationWithNotes(verification)]
             });
         }
         else
         {
-            if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            // New business review tags should override previous ones - clear the previous ones first
+            if (VerificationMergeHelper.IsBusinessReview(verification.VerificationType))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Append(verification.VerificationType!)
+                    .Where(x => !VerificationMergeHelper.IsBusinessReview(x))
                     .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsBusinessReviewWithNotes(x))
+                    .ToArray();
+            }
+
+            existingSummary.CurrentVerificationType = verification.VerificationType!;
+            if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            {
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
+            }
+            else
+            {
+                // remove existing and re add
+                existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                    .Where(x => x != verification.VerificationType!)
+                    .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsExistingVerificationType(x, verification.VerificationType!))
+                    .ToArray();
+                
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
 
             if (!IsAutoOrBusinessReview(verification.VerificationType))

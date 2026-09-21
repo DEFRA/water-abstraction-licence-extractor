@@ -270,7 +270,8 @@ public static class LinkedLicenceVerificationMergeHelper
             {
                 LicenceSectionItemId = verification.LicenceSectionItemId!,
                 VerificationTypes = [verification.VerificationType!],
-                CurrentVerificationType = verification.VerificationType!
+                CurrentVerificationType = verification.VerificationType!,
+                VerificationTypesWithNotes = [VerificationMergeHelper.GetVerificationWithNotes(verification)]
             });
         }
         else
@@ -281,14 +282,29 @@ public static class LinkedLicenceVerificationMergeHelper
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
                     .Where(x => !IsBusinessReview(x))
                     .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsBusinessReviewWithNotes(x))
+                    .ToArray();
             }
 
             existingSummary.CurrentVerificationType = verification.VerificationType!;
             if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
             {
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
+            }
+            else
+            {
+                // remove existing and re add
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Append(verification.VerificationType!)
+                    .Where(x => x != verification.VerificationType!)
                     .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsExistingVerificationType(x, verification.VerificationType!))
+                    .ToArray();
+                
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
 
             if (!IsAutoOrBusinessReview(verification.VerificationType))

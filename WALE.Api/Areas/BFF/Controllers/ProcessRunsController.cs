@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Interfaces;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -27,6 +29,18 @@ public class ProcessRunsController(
     {
         var processRuns = await outputService.GetProcessRunsAsync();
         return Ok(processRuns.OrderByDescending(pr => pr.ProcessRunId));
+    }
+    
+    [HttpGet]
+    public ActionResult<IReadOnlyCollection<string>> GetDocumentSections()
+    {
+        return Ok(DocumentSectionNames.GetAll());
+    }
+    
+    [HttpGet]
+    public ActionResult<IReadOnlyCollection<string>> GetLinkReasons()
+    {
+        return Ok(LinkReason.GetAll());
     }
     
     [HttpGet]

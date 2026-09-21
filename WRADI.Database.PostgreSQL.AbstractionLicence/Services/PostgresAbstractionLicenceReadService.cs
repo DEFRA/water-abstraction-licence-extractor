@@ -3158,6 +3158,9 @@ private async Task<
             verification_item.verification_types
                 AS VerificationTypes,
             
+            verification_item.verification_types_with_notes
+               AS VerificationTypesWithNotes,
+            
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
@@ -3224,6 +3227,9 @@ private async Task<
                                     
                                     CurrentVerificationType =  
                                         row.CurrentVerificationType,
+                                    
+                                    VerificationTypesWithNotes = 
+                                        row.VerificationTypesWithNotes ?? [],
 
                                     ScrapedDataIsDifferent =
                                         row.ScrapedDataIsDifferent

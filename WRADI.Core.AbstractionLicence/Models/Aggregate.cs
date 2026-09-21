@@ -30,7 +30,7 @@ public class Aggregate : AbstractionLimitGroup
                 .Replace("/", string.Empty)
                 .Replace(" ", string.Empty);
 
-            var outputSb = new StringBuilder();
+            var linkedLicencesSb = new StringBuilder();
 
             if (LinkedLicences != null)
             {
@@ -40,11 +40,20 @@ public class Aggregate : AbstractionLimitGroup
                         .Replace("/", string.Empty)
                         .Replace(" ", string.Empty);
 
-                    outputSb.Append($"-{linkedLicenceNumber}");
+                    linkedLicencesSb.Append($"-{linkedLicenceNumber}");
                 }
             }
 
-            return $"{licenceNumber}-{SourceLicenceVersionId}-{primaryType}{subType}{outputSb}";
+            var outputSb = new StringBuilder();
+            outputSb.Append($"{licenceNumber}-{SourceLicenceVersionId}-{primaryType}{subType}");
+            outputSb.Append(linkedLicencesSb);
+            
+            if (!string.IsNullOrWhiteSpace(DocumentIdentifier))
+            {
+                outputSb.Append($"-{DocumentIdentifier.Replace(".", "_")}");
+            }
+            
+            return outputSb.ToString();
         }
     }
     

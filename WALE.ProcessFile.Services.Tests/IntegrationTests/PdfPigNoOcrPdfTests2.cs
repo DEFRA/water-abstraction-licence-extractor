@@ -1075,10 +1075,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(LimitPeriodType.PerHour, limitGroup.Limits[0].PeriodType);
         Assert.Equal(40000, limitGroup.Limits[1].Value);
         Assert.Equal(6000000, limitGroup.Limits[2].Value);
-        Assert.Equal(556, limitGroup.Limits[3].Value);        
+        Assert.Equal(556, limitGroup.Limits[3].Value);
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
-        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020",
+        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020-6_2",
             agreedSchemaLicence.AbstractionLimits.Aggregates![0].Id);
         Assert.Equal("LV2023020720380331",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].SourceLicenceVersionId);
@@ -1327,7 +1327,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
 
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
-        Assert.Equal("22705026-LV20210930-ILPU", aggregate.Id);
+        Assert.Equal("22705026-LV20210930-ILPU-6_3", aggregate.Id);
         Assert.Equal(2, aggregate.Purposes!.Length);
         Assert.Equal("4.1", aggregate.Purposes[0].Id);
         Assert.Equal("4.2", aggregate.Purposes[1].Id);
@@ -3024,11 +3024,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             .Where(x => x.LabelGroupName == "LinkedLicenceNumber")
             .ToList();
         
-        Assert.Equal(4, linkedLicences.Count);
+        Assert.Equal(3, linkedLicences.Count);
         Assert.Equal("MD/028/0084/008", linkedLicences[0].Text?.FirstOrDefault()?.Text);
         Assert.Equal("2/27/24/034", linkedLicences[1].Text?.FirstOrDefault()?.Text);
-        Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
-        Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("NE/027/0024/044", linkedLicences[2].Text?.FirstOrDefault()?.Text);
         
         var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

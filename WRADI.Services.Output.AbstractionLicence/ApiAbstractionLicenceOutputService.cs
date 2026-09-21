@@ -28,7 +28,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -50,7 +50,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -67,7 +67,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -87,7 +87,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         
@@ -108,7 +108,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             processRun.ProcessRunId
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();

@@ -27,5 +27,6 @@
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
       <ProjectReference Include="..\WRADI.Database.PostgreSQL.AbstractionLicence\WRADI.Database.PostgreSQL.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.ProcessFile.AbstractionLicence\WRADI.Services.ProcessFile.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj" />
     </ItemGroup>
 </Project>

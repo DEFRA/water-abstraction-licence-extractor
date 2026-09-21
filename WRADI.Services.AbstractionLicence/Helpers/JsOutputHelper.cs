@@ -98,8 +98,6 @@ public static class JsOutputHelper
                 new AggregatesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
 
-        var verificationSectionNames = verificationLookups.Keys.ToList();
-
         var orderedOutputLines = outputLines
             .OrderBy(ol => ol.Filename)
             .ToList();
@@ -159,13 +157,10 @@ public static class JsOutputHelper
                 licenceSets = licenceSets
             };
 
-            foreach (var sectionName in verificationSectionNames)
+            foreach (var strategy in verificationOutputStrategies.Values)
             {
-                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy)
-                    || !verificationLookups.TryGetValue(sectionName, out var sectionVerificationLookups))
-                {
-                    continue;
-                }
+                var sectionVerificationLookups = verificationLookups.GetValueOrDefault(
+                    strategy.SectionName, new LicenceVerificationLookups());
 
                 strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
                     outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);

@@ -2191,10 +2191,8 @@ export class Client {
      * @param licenceNumber (optional) 
      * @param regionCode (optional) 
      * @param slashesRemoved (optional) 
-     * @param slashesRemoved (optional) 
      * @return OK
      */
-    get4(licenceNumber: string | undefined, regionCode: number | undefined, slashesRemoved: boolean | undefined): Promise<void> {
     get4(licenceNumber: string | undefined, regionCode: number | undefined, slashesRemoved: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/Get?";
         if (licenceNumber === null)
@@ -2205,10 +2203,6 @@ export class Client {
             throw new globalThis.Error("The parameter 'regionCode' cannot be null.");
         else if (regionCode !== undefined)
             url_ += "regionCode=" + encodeURIComponent("" + regionCode) + "&";
-        if (slashesRemoved === null)
-            throw new globalThis.Error("The parameter 'slashesRemoved' cannot be null.");
-        else if (slashesRemoved !== undefined)
-            url_ += "slashesRemoved=" + encodeURIComponent("" + slashesRemoved) + "&";
         if (slashesRemoved === null)
             throw new globalThis.Error("The parameter 'slashesRemoved' cannot be null.");
         else if (slashesRemoved !== undefined)

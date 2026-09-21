@@ -225,4 +225,54 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence.LinkedLicences);
         Assert.Empty(licence.LinkedLicences);
     }
+    
+    [Fact]
+    public async Task WhenE_F()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "NE0270024095R01__Application Renewal Licence Issued - 17.12.2024.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(20, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Single(abstractionLicence);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("NE/027/0024/095/R01", licence.LicenceNumber!.Value);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Single(licence.AbstractionLimits.Individual);
+        
+        Assert.NotNull(licence.AbstractionLimits.Aggregates);
+        Assert.Equal(4, licence.AbstractionLimits.Aggregates.Length);
+        Assert.Equal("6.2.1", licence.AbstractionLimits.Aggregates[0].DocumentIdentifier);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
+        Assert.Equal(4, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].PageNumber);
+        Assert.Equal("6.2.2", licence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
+        Assert.Equal("6.3", licence.AbstractionLimits.Aggregates[2].DocumentIdentifier);
+        Assert.Equal("6.4", licence.AbstractionLimits.Aggregates[3].DocumentIdentifier);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.Empty(licence.LinkedLicences);
+        
+        
+    }
 }

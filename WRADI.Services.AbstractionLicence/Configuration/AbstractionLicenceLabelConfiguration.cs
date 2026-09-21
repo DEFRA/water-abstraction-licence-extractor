@@ -2207,6 +2207,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
                             new("6.1") { LineMustStartWith = true },
+                            new("6.2.1") { LineMustStartWith = true },
+                            new("6.2.2") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2233,6 +2235,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("6.1[END_OF_COLUMN]") { LineMustStartWith = true },
+                            new("6.2.1") { LineMustStartWith = true },
+                            new("6.2.2") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2308,6 +2312,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "DocumentIdentifier",
                         Possibilities = documentIdentifierPrefix != null ? [
                             new($"{documentIdentifierPrefix}.1") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.2.1") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.2.2") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.2") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.3") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.4") { LineMustStartWith = true },
@@ -2395,6 +2401,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         ],
                         Remove = [
                             new ($"{documentIdentifierPrefix}.1"),
+                            new ($"{documentIdentifierPrefix}.2.1"),
+                            new ($"{documentIdentifierPrefix}.2.2"),
                             new ($"{documentIdentifierPrefix}.2"),
                             new ($"{documentIdentifierPrefix}.3"),
                             new ($"{documentIdentifierPrefix}.4"),
@@ -2985,6 +2993,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("1 ")
@@ -3025,6 +3035,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },                            
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3049,6 +3061,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },                            
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3084,6 +3098,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3119,6 +3135,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3149,6 +3167,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3186,6 +3206,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3235,6 +3257,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("Abstraction Point Hourly")
                         ],
                         TextEnd = [
+                            new("6.2.1"),
+                            new("6.2.2"),
                             new("6.2"),
                             new("[END_OF_BLOCK]")
                         ],

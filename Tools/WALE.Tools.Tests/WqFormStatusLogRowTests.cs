@@ -25,7 +25,9 @@ namespace WALE.Tools.Tests;
 /// that has to move is the closing note and the blank placeholder paragraphs below it, shifted
 /// down by exactly one row's height. The table itself can span a page break with "Status log of
 /// the permit" repeated as a continuation header - insertion always targets the page the closing
-/// note actually falls on, not wherever the heading first appears.
+/// note actually falls on, not wherever the heading first appears. A multi-permit consolidation
+/// document titles each sub-permit's own table separately and shares one closing note between
+/// them - each table gets its own row, using its own permit number.
 /// </summary>
 public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
 {
@@ -58,6 +60,11 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
     // consolidation's own per-permit heading ("Status log of permit A: 002728").
     private static readonly Regex StatusLogHeadingRegex = new(
         @"^Status log of( the)? permit$", RegexOptions.IgnoreCase);
+
+    // A multi-permit consolidation titles each sub-permit's own table "Status log of [the ]permit
+    // <letter>: <permit number>", sharing one closing note between them.
+    private static readonly Regex MultiPermitStatusLogHeadingRegex = new(
+        @"^Status log of( the)? permit [A-Z]:\s*(?<permitNumber>.+)$", RegexOptions.IgnoreCase);
 
     static WqFormStatusLogRowTests()
     {
@@ -120,6 +127,61 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
         testOutputHelper.WriteLine(success ? $"OK: {message}" : $"FAILED: {message}");
         Assert.True(success, message);
     }
+
+    /// <summary>
+    /// Chains the status log row onto every sample file's own existing 3.1.5-replacement +
+    /// 3.3.x-insertion combined output
+    /// (<see cref="WqFormPageSplitTests.WhenRealWqFormFile_ThenReplacementAndInsertionAreCombined"/>,
+    /// which must be run first so each file's own "-combined.pdf" already exists in
+    /// ComparisonOutput) so a reviewer can see all three real-text features applied together - the
+    /// status log table and the other two features never touch the same content, so this is a
+    /// straight append onto whatever that combined file already contains. Skips gracefully (rather
+    /// than failing) when a sample file's own "-combined.pdf" doesn't exist yet.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(WqFormParagraphOverlayTests.SampleFiles), MemberType = typeof(WqFormParagraphOverlayTests))]
+    public async Task WhenRealWqFormFileCombined_ThenStatusLogRowIsAlsoAppended(string sourcePath)
+    {
+        var filename = Path.GetFileName(sourcePath);
+        var comparisonFolder = Path.Combine(AppContext.BaseDirectory, "ComparisonOutput");
+        var combinedPath = Path.Combine(comparisonFolder, $"{Path.GetFileNameWithoutExtension(filename)}-combined.pdf");
+
+        if (!File.Exists(combinedPath))
+        {
+            var skipLine = $"SKIPPED {filename}: no existing \"-combined.pdf\" output to chain onto - run the 3.1.5/3.3.x combined Theory first.";
+            testOutputHelper.WriteLine(skipLine);
+
+            lock (AllFeaturesResultsLock)
+            {
+                File.AppendAllText(AllFeaturesResultsPath, skipLine + Environment.NewLine);
+            }
+
+            return;
+        }
+
+        var outputPath = Path.Combine(comparisonFolder, $"{Path.GetFileNameWithoutExtension(filename)}-all-features.pdf");
+        var permitNumber = DerivePermitNumberFromFilename(filename);
+
+        var (success, message) = await TryAddStatusLogRowAsync(
+            combinedPath,
+            outputPath,
+            permitNumber,
+            description: "Permit modified",
+            date: DateTime.Today,
+            comment: "Lorem ipsum dolor sit amet.");
+
+        var line = success ? $"OK {filename}: {message}" : $"SKIPPED {filename}: {message}";
+        testOutputHelper.WriteLine(line);
+
+        lock (AllFeaturesResultsLock)
+        {
+            File.AppendAllText(AllFeaturesResultsPath, line + Environment.NewLine);
+        }
+    }
+
+    private static readonly object AllFeaturesResultsLock = new();
+    private static readonly string AllFeaturesResultsPath =
+        "/private/tmp/claude-501/-Users-edwardbutler-Documents-GitHub-wale/4f38b433-5ad9-40d2-b2ea-a18538294ced/scratchpad/corpus-all-features-results.txt";
 
     /// <summary>
     /// Runs the status log row append against every real sample file
@@ -203,31 +265,55 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
             .GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
                 pdfDocument, cacheService, outputService, -1);
 
-        // Most of the corpus titles this "Status log of the permit"; a few drop "the" ("Status log
-        // of permit"). Both are accepted, but only as the WHOLE heading line - documents that
-        // consolidate multiple permits title each one's own table "Status log of permit A: <n>" /
-        // "...B: <n>", which also starts with this text but is deliberately NOT matched here: with
-        // several tables and one shared closing note, there is no way to tell which permit's table
-        // the new row's own permit number (taken from the filename) actually belongs to.
-        var hasStatusLogTable = lines.Any(line =>
-            StatusLogHeadingRegex.IsMatch(line.Text.Trim()));
-
-        if (!hasStatusLogTable)
-        {
-            return (false, "could not find the \"Status log of the permit\" table.");
-        }
-
-        // The table can span a page break, with "Status log of the permit" repeated as a
-        // continuation header on the next page - anchoring to the FIRST page it appears on would
-        // miss the note entirely whenever the table (and so the note that closes it) actually ends
-        // on a later page. The note's own page is what matters for insertion: that is where the
-        // table's closing border, its last row, and the note itself all actually live.
+        // The table can span a page break, with its heading repeated as a continuation header on
+        // the next page - anchoring to the FIRST page a heading appears on would miss the note
+        // entirely whenever the table (and so the note that closes it) actually ends on a later
+        // page. The note's own page is what matters for insertion: that is where the table's
+        // closing border, its last row, and the note itself all actually live.
         var closingNoteLine = lines.FirstOrDefault(line =>
             line.Text.Contains("End of introductory note", StringComparison.OrdinalIgnoreCase));
 
         if (closingNoteLine == null)
         {
             return (false, "could not find \"End of introductory note\" to anchor the insertion point.");
+        }
+
+        // A multi-permit consolidation titles each sub-permit's own table separately ("Status log
+        // of [the ]permit A: <n>" / "...B: <n>") and shares one closing note between them - each
+        // table gets its own row, using its own permit number rather than the one derived from the
+        // filename, since there is no other way to tell which permit's table an event belongs to.
+        var multiPermitHeadings = lines
+            .Where(line => MultiPermitStatusLogHeadingRegex.IsMatch(line.Text.Trim()))
+            .ToList();
+
+        List<(string AnchorText, string PermitNumber)> tablesToFill;
+
+        if (multiPermitHeadings.Count >= 2)
+        {
+            if (multiPermitHeadings.Any(heading => heading.PageNumber != closingNoteLine.PageNumber))
+            {
+                return (false, "multi-permit tables spanning more than one page are not supported.");
+            }
+
+            tablesToFill = multiPermitHeadings
+                .Select((heading, i) => (
+                    AnchorText: i + 1 < multiPermitHeadings.Count ? multiPermitHeadings[i + 1].Text : closingNoteLine.Text,
+                    PermitNumber: MultiPermitStatusLogHeadingRegex.Match(heading.Text.Trim()).Groups["permitNumber"].Value.Trim()))
+                .ToList();
+        }
+        else
+        {
+            // Most of the corpus titles the table "Status log of the permit"; a few drop "the"
+            // ("Status log of permit"). Both are accepted, but only as the WHOLE heading line - a
+            // multi-permit heading also starts with this text but is handled by the branch above.
+            var hasStatusLogTable = lines.Any(line => StatusLogHeadingRegex.IsMatch(line.Text.Trim()));
+
+            if (!hasStatusLogTable)
+            {
+                return (false, "could not find the \"Status log of the permit\" table.");
+            }
+
+            tablesToFill = [(closingNoteLine.Text, permitNumber)];
         }
 
         var statusLogPageNumber = closingNoteLine.PageNumber;
@@ -249,27 +335,100 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
         var contentDict = targetPage.Contents.Elements.GetDictionary(0);
         var content = Encoding.Latin1.GetString(contentDict.Stream!.UnfilteredValue);
         var toUnicodeMap = WqFormSpliceAndOverlayTests.BuildToUnicodeMap(targetPage);
+        var fontDictionary = targetPage.Resources.Elements.GetDictionary("/Font");
 
-        var (_, noteFound, noteTjIndex) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
-            content, closingNoteLine.Text, toUnicodeMap);
+        // Processed from the LAST table upward: each insertion only shifts content after its own
+        // anchor, so an earlier table's anchor (a later table's own heading) is never disturbed by
+        // inserting a row into a table below it. The text shift is handled by
+        // ShiftTextMatrixOperatorsDown inside InsertRowBeforeAnchor, but the border rects already
+        // queued in rowsToDraw for tables processed so far (all LATER in the document than the one
+        // about to be processed) are plain numbers, not part of that content string - each of them
+        // needs the same downward shift applied explicitly, or they end up drawn at their old,
+        // now-stale position once an earlier table's own insertion pushes them further down.
+        var rowsToDraw = new List<((double Left, double DescriptionDate, double DateComments, double Right) Borders, double ClipTop, double ClipBottom)>();
 
-        if (!noteFound)
+        for (var i = tablesToFill.Count - 1; i >= 0; i--)
         {
-            return (false, "found \"End of introductory note\" via PdfPig but couldn't locate its operator in the raw content stream.");
+            var (anchorText, rowPermitNumber) = tablesToFill[i];
+
+            var result = InsertRowBeforeAnchor(
+                content, toUnicodeMap, fontDictionary, anchorText, description, rowPermitNumber, date, comment);
+
+            if (!result.Success)
+            {
+                return (false, result.Message);
+            }
+
+            content = result.Content;
+
+            for (var j = 0; j < rowsToDraw.Count; j++)
+            {
+                rowsToDraw[j] = (rowsToDraw[j].Borders, rowsToDraw[j].ClipTop - RowHeight, rowsToDraw[j].ClipBottom - RowHeight);
+            }
+
+            rowsToDraw.Add((result.Borders, result.ClipTop, result.ClipBottom));
+        }
+
+        // UnfilteredValue is read-only - writing raw bytes back via Value while /Filter still
+        // claims FlateDecode leaves the two inconsistent, so /Filter is dropped too.
+        contentDict.Stream.Value = Encoding.Latin1.GetBytes(content);
+        contentDict.Elements.Remove("/Filter");
+
+        using (var graphics = XGraphics.FromPdfPage(targetPage))
+        {
+            foreach (var row in rowsToDraw)
+            {
+                DrawTableRowBorders(graphics, row.Borders, row.ClipTop, row.ClipBottom, pageHeight);
+            }
+        }
+
+        document.Save(outputPath);
+
+        var permitNumbers = string.Join(", ", tablesToFill.Select(t => t.PermitNumber));
+
+        return (true,
+            $"appended \"{description}\" row(s) to page {statusLogPageNumber} for permit(s) {permitNumbers} " +
+            $"({date:dd/MM/yyyy}), shifted trailing content down by {RowHeight}pt per row.");
+    }
+
+    /// <summary>
+    /// Inserts one new row immediately before <paramref name="anchorText"/> (a table's closing
+    /// note, or the next table's own heading in a multi-permit document), returning the modified
+    /// content plus the new row's own column borders and clip Y-range for
+    /// <see cref="DrawTableRowBorders"/> to draw afterwards. On failure, <c>Content</c> is the
+    /// unmodified input and <c>Borders</c>/<c>ClipTop</c>/<c>ClipBottom</c> are unset - callers
+    /// must check <c>Success</c> first.
+    /// </summary>
+    private static (bool Success, string Message, string Content, (double Left, double DescriptionDate, double DateComments, double Right) Borders, double ClipTop, double ClipBottom) InsertRowBeforeAnchor(
+        string content,
+        IReadOnlyDictionary<int, string> toUnicodeMap,
+        PdfDictionary? fontDictionary,
+        string anchorText,
+        string description,
+        string permitNumber,
+        DateTime date,
+        string comment)
+    {
+        var (_, anchorFound, anchorTjIndex) = WqFormSpliceAndOverlayTests.TryRemoveLineOperator(
+            content, anchorText, toUnicodeMap);
+
+        if (!anchorFound)
+        {
+            return (false, $"found \"{anchorText}\" via PdfPig but couldn't locate its operator in the raw content stream.", content, default, 0, 0);
         }
 
         // TryRemoveLineOperator's index can land on a preceding blank filler operator ("[( )] TJ",
-        // which every cell in this template also emits) rather than the note's own text, since a
+        // which every cell in this template also emits) rather than the anchor's own text, since a
         // blank accumulation normalizes to empty and is skipped rather than validated. Scan forward
         // for the first operator that actually reconstructs to non-blank text.
         var tjMatches = WqFormSpliceAndOverlayTests.TjOperatorRegex.Matches(content).Cast<Match>().ToList();
         var realContentMatch = tjMatches
-            .Where(m => m.Index >= noteTjIndex)
+            .Where(m => m.Index >= anchorTjIndex)
             .FirstOrDefault(m => WqFormSpliceAndOverlayTests.NormalizeWhitespace(
                 WqFormSpliceAndOverlayTests.ReconstructLiteralText(m.Value, toUnicodeMap)).Length > 0);
-        var realContentIndex = realContentMatch?.Index ?? noteTjIndex;
+        var realContentIndex = realContentMatch?.Index ?? anchorTjIndex;
 
-        // Splitting mid-fragment (at realContentIndex's own TJ) separates the note's paint call
+        // Splitting mid-fragment (at realContentIndex's own TJ) separates the anchor's paint call
         // from the Tm that positions it, since only Tm operators get shifted - the text would then
         // render at its OLD, un-shifted position under the new row. Backing up to the fragment's
         // own BT keeps its Tf/Tm/TJ together as one atomic unit. A fragment can also be wrapped in
@@ -288,27 +447,27 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
             btIndex = realContentIndex;
         }
 
-        var noteIndex = FindOutermostOpenQIndex(content, btIndex) ?? btIndex;
+        var splitIndex = FindOutermostOpenQIndex(content, btIndex) ?? btIndex;
 
         // The new row's own clip-top is exactly where the table's border currently closes off
         // (the existing thin divider rects at the last row's own bottom edge, which sit
-        // immediately before the closing note in the raw content stream) - reused as-is as the
-        // new row's top border too, the same way every other internal divider in this table
-        // already does double duty between adjacent rows.
-        var newRowClipTop = FindTableBottomBorderY(content[..noteIndex]);
+        // immediately before the anchor in the raw content stream) - reused as-is as the new row's
+        // top border too, the same way every other internal divider in this table already does
+        // double duty between adjacent rows.
+        var newRowClipTop = FindTableBottomBorderY(content[..splitIndex]);
 
         if (newRowClipTop == null)
         {
-            return (false, "could not find the table's own closing border.");
+            return (false, "could not find the table's own closing border.", content, default, 0, 0);
         }
 
         var newRowClipBottom = newRowClipTop.Value - RowHeight;
 
-        var columnBorders = FindColumnBorders(content[..noteIndex], newRowClipTop.Value, newRowClipBottom);
+        var columnBorders = FindColumnBorders(content[..splitIndex], newRowClipTop.Value, newRowClipBottom);
 
         if (columnBorders == null)
         {
-            return (false, "could not determine the table's own column divider positions.");
+            return (false, "could not determine the table's own column divider positions.", content, default, 0, 0);
         }
 
         var descriptionColumnX = columnBorders.Value.Left + ColumnTextPadding;
@@ -323,13 +482,12 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
         // glyph-ID pairs, not characters - some documents embed both a WinAnsi and a CID instance
         // of "the same" font under different resource names, and the one active immediately before
         // the split point isn't always the WinAnsi one, so the nearest simple-font Tf is preferred.
-        var fontDictionary = targetPage.Resources.Elements.GetDictionary("/Font");
-        var tfMatches = WqFormSpliceAndOverlayTests.TfOperatorRegex.Matches(content[..noteIndex]).Cast<Match>().Reverse();
+        var tfMatches = WqFormSpliceAndOverlayTests.TfOperatorRegex.Matches(content[..splitIndex]).Cast<Match>().Reverse();
         var lastTf = tfMatches.FirstOrDefault(m => !IsType0Font(fontDictionary, m.Groups[1].Value));
 
         if (lastTf == null)
         {
-            return (false, "no simple (non-CID) font found active before the closing note.");
+            return (false, "no simple (non-CID) font found active before the anchor.", content, default, 0, 0);
         }
 
         var fontResourceName = lastTf.Groups[1].Value;
@@ -340,7 +498,7 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
         // Our own row's Tm is always an unscaled "1 0 0 1 x y", so the Tf value it needs is this
         // effective size, not the nominal one.
         var nominalFontSize = double.TryParse(lastTf.Groups[2].Value, out var parsedNominalSize) ? parsedNominalSize : 10;
-        var lastTm = WqFormSpliceAndOverlayTests.TextMatrixRegex.Matches(content[..noteIndex]).Cast<Match>().LastOrDefault();
+        var lastTm = WqFormSpliceAndOverlayTests.TextMatrixRegex.Matches(content[..splitIndex]).Cast<Match>().LastOrDefault();
         var textMatrixScale = lastTm != null && double.TryParse(lastTm.Groups[1].Value, out var parsedScale)
             ? Math.Abs(parsedScale)
             : 1;
@@ -348,10 +506,10 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
 
         // Tf is a persistent graphics-state parameter, not reset by BT/ET - it carries over into
         // whatever text object comes next. Some of this corpus's original content (e.g. the
-        // closing note itself) relies on inheriting a still-nominal Tf and applies its own Tm
-        // scale on top, rather than setting its own Tf. Leaving our own row's *effective* Tf value
-        // active would then compound with that later block's own Tm scale, rendering it at many
-        // times its intended size - so the original nominal Tf is explicitly restored afterwards.
+        // anchor's own text) relies on inheriting a still-nominal Tf and applies its own Tm scale
+        // on top, rather than setting its own Tf. Leaving our own row's *effective* Tf value active
+        // would then compound with that later block's own Tm scale, rendering it at many times its
+        // intended size - so the original nominal Tf is explicitly restored afterwards.
         var newRowContent =
             TextOperator(fontResourceName, fontSize, descriptionColumnX, newRowClipTop.Value - TitleLineOffsetFromTop, description) +
             TextOperator(fontResourceName, fontSize, descriptionColumnX, newRowClipTop.Value - PermitNumberLineOffsetFromTop, permitNumber) +
@@ -359,28 +517,16 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
             TextOperator(fontResourceName, fontSize, commentsColumnX, newRowClipTop.Value - TitleLineOffsetFromTop, comment) +
             $"BT\n/{fontResourceName} {lastTf.Groups[2].Value} Tf\nET\n";
 
-        var headContent = content[..noteIndex];
-        var tailContent = content[noteIndex..];
+        var headContent = content[..splitIndex];
+        var tailContent = content[splitIndex..];
         var shiftedTailContent = ShiftTextMatrixOperatorsDown(tailContent, RowHeight);
 
         // headContent's split point can land right after a bare "EMC" token with no guaranteed
         // trailing separator - gluing newRowContent's own leading "BT" straight onto it would
-        // produce an invalid "EMCBT" operator, so a newline is inserted explicitly. UnfilteredValue
-        // is read-only - writing raw bytes back via Value while /Filter still claims FlateDecode
-        // leaves the two inconsistent, so /Filter is dropped too.
-        contentDict.Stream.Value = Encoding.Latin1.GetBytes(headContent + "\n" + newRowContent + shiftedTailContent);
-        contentDict.Elements.Remove("/Filter");
+        // produce an invalid "EMCBT" operator, so a newline is inserted explicitly.
+        var newContent = headContent + "\n" + newRowContent + shiftedTailContent;
 
-        using (var graphics = XGraphics.FromPdfPage(targetPage))
-        {
-            DrawTableRowBorders(graphics, columnBorders.Value, newRowClipTop.Value, newRowClipBottom, pageHeight);
-        }
-
-        document.Save(outputPath);
-
-        return (true,
-            $"appended \"{description}\" / {permitNumber} / {date:dd/MM/yyyy} row to page {statusLogPageNumber}, " +
-            $"shifted the closing note and blank paragraphs down by {RowHeight}pt.");
+        return (true, "ok", newContent, columnBorders.Value, newRowClipTop.Value, newRowClipBottom);
     }
 
     /// <summary>
@@ -487,21 +633,34 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>
-    /// Shifts every text matrix's own Y operand down by <paramref name="amount"/> - used to move
-    /// already-correct content (the closing note, the blank placeholder paragraphs below it)
-    /// wholesale rather than re-drawing it, so its own text/kerning is untouched.
+    /// Shifts every text matrix's own Y operand, and every rect's own Y operand, down by
+    /// <paramref name="amount"/> - used to move already-correct content (the closing note, the
+    /// blank placeholder paragraphs below it, and - for a multi-permit document - an entire later
+    /// table, borders included) wholesale rather than re-drawing it, so its own text/kerning and
+    /// its own border rects stay aligned with each other. Shifting only Tm and not re was invisible
+    /// for a single-table document (the shifted tail is plain paragraph text, no rects in it) but
+    /// left a later table's own border lines behind at their old Y once an earlier table's
+    /// insertion pushed that table's text down without them, striking through the now-misaligned
+    /// text.
     /// </summary>
     private static string ShiftTextMatrixOperatorsDown(string content, double amount)
     {
         var tmRegex = new Regex(
             @"([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+Tm");
 
-        return tmRegex.Replace(content, match =>
+        var shifted = tmRegex.Replace(content, match =>
         {
             var y = double.Parse(match.Groups[6].Value) - amount;
 
             return $"{match.Groups[1].Value} {match.Groups[2].Value} {match.Groups[3].Value} " +
                    $"{match.Groups[4].Value} {match.Groups[5].Value} {y} Tm";
+        });
+
+        return RectRegex.Replace(shifted, match =>
+        {
+            var y = double.Parse(match.Groups[2].Value) - amount;
+
+            return $"{match.Groups[1].Value} {y} {match.Groups[3].Value} {match.Groups[4].Value} re";
         });
     }
 

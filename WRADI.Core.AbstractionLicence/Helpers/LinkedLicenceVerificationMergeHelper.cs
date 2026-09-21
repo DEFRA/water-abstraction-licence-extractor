@@ -271,7 +271,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 LicenceSectionItemId = verification.LicenceSectionItemId!,
                 VerificationTypes = [verification.VerificationType!],
                 CurrentVerificationType = verification.VerificationType!,
-                VerificationTypesWithNotes = [GetVerificationWithNotes(verification)]
+                VerificationTypesWithNotes = [VerificationMergeHelper.GetVerificationWithNotes(verification)]
             });
         }
         else
@@ -284,14 +284,14 @@ public static class LinkedLicenceVerificationMergeHelper
                     .ToArray();
                 
                 existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
-                    .Where(x => !IsBusinessReviewWithNotes(x))
+                    .Where(x => !VerificationMergeHelper.IsBusinessReviewWithNotes(x))
                     .ToArray();
             }
 
             existingSummary.CurrentVerificationType = verification.VerificationType!;
             if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
             {
-                AddNewVerificationType(verification, existingSummary);
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
             else
             {
@@ -301,10 +301,10 @@ public static class LinkedLicenceVerificationMergeHelper
                     .ToArray();
                 
                 existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
-                    .Where(x => !IsExistingVerificationType(x, verification.VerificationType!))
+                    .Where(x => !VerificationMergeHelper.IsExistingVerificationType(x, verification.VerificationType!))
                     .ToArray();
                 
-                AddNewVerificationType(verification, existingSummary);
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
 
             if (!IsAutoOrBusinessReview(verification.VerificationType))
@@ -313,23 +313,6 @@ public static class LinkedLicenceVerificationMergeHelper
                 existingSummary.ScrapedDataIsDifferent = false;
             }
         }
-    }
-
-    private static void AddNewVerificationType(LicenceSectionVerification verification,
-        LicenceSectionItemSummary existingSummary)
-    {
-        existingSummary.VerificationTypes = existingSummary.VerificationTypes
-            .Append(verification.VerificationType!)
-            .ToArray();
-
-        existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
-            .Append(GetVerificationWithNotes(verification))
-            .ToArray();
-    }
-
-    private static string GetVerificationWithNotes(LicenceSectionVerification verification)
-    {
-        return $"{(string.IsNullOrWhiteSpace(verification.Notes) ? verification.VerificationType : $"{verification.VerificationType}::{verification.Notes}")}";
     }
 
     private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
@@ -352,13 +335,4 @@ public static class LinkedLicenceVerificationMergeHelper
 
     private static bool IsBusinessReview(string? verificationType)
         => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
-    
-    private static bool IsBusinessReviewWithNotes(string? verificationTypeWithNotes)
-        => verificationTypeWithNotes != null 
-           && (verificationTypeWithNotes.Contains("RequestBusinessReview") || verificationTypeWithNotes.Contains("CompleteBusinessReview"));
-    
-    private static bool IsExistingVerificationType(string? verificationTypeWithNotes, string verificationType)
-        => verificationTypeWithNotes != null 
-           && (verificationTypeWithNotes.Contains(verificationType));
-
 }

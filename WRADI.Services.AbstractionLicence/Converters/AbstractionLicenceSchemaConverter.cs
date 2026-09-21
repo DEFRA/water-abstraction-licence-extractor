@@ -3627,7 +3627,18 @@ public static class AbstractionLicenceSchemaConverter
                     .ToList();
 
                 var bestResult = allDuplicates
-                    .OrderBy(vrg => vrg.Item2?.LabelStartLineNumber == vrg.vr.LabelStartLineNumber ? 0 : 1)
+                    .OrderBy(vrg =>
+                    {
+                        var lineDiff = vrg.Item2?.LabelStartLineNumber - vrg.vr.LabelStartLineNumber;
+                        
+                        // If just after it talks about it being over 5 years, prefer that match
+                        if (vrg.vr.MatchedLabelName == "Per5YearValue" && lineDiff <= 1)
+                        { 
+                            return -1;
+                        }
+                        
+                        return lineDiff == 0 ? 0 : 1;
+                    })
                     .First();
 
                 if (!newValueResults.Contains(bestResult.vr))

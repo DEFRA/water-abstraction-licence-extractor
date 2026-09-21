@@ -3024,11 +3024,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             .Where(x => x.LabelGroupName == "LinkedLicenceNumber")
             .ToList();
         
-        Assert.Equal(4, linkedLicences.Count);
+        Assert.Equal(3, linkedLicences.Count);
         Assert.Equal("MD/028/0084/008", linkedLicences[0].Text?.FirstOrDefault()?.Text);
         Assert.Equal("2/27/24/034", linkedLicences[1].Text?.FirstOrDefault()?.Text);
-        Assert.Equal("9.2.2", linkedLicences[2].Text?.FirstOrDefault()?.Text); // TODO this shouldnt be here
-        Assert.Equal("NE/027/0024/044", linkedLicences[3].Text?.FirstOrDefault()?.Text);
+        Assert.Equal("NE/027/0024/044", linkedLicences[2].Text?.FirstOrDefault()?.Text);
         
         var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

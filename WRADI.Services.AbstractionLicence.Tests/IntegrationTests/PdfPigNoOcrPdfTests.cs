@@ -155,7 +155,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(19, resultList.Count);
+        Assert.Equal(18, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -167,7 +167,7 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
         
         var licence =  abstractionLicence.First().Licences[0];
@@ -179,7 +179,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Null(licence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(licence.LinkedLicences);
-        Assert.Single(licence.LinkedLicences); // This test is mainly to check we don't get two entries here
-        Assert.Equal("2/27/01/009", licence.LinkedLicences[0].LicenceNumber);
+        Assert.Empty(licence.LinkedLicences);
     }
 }

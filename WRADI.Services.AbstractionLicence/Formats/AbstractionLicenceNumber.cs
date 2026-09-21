@@ -330,15 +330,34 @@ public partial class AbstractionLicenceNumber(
         return false;
     }
     
-    private static bool NumberOfSectionsMatch(string sourceLinkedLicenceNumber, string naldLinkedLicenceNumber)
+    private static bool NumberOfSectionsMatch(
+        string sourceLinkedLicenceNumber,
+        string naldLinkedLicenceNumber,
+        out int? sourceLength,
+        out int? naldLength)
     {
-        if (!sourceLinkedLicenceNumber.Contains('/'))
+        sourceLength = null;
+        naldLength = null;
+        
+        var sourceSeperator = sourceLinkedLicenceNumber.Contains('/') ? '/' : '.';
+        
+        if (!sourceLinkedLicenceNumber.Contains(sourceSeperator))
         {
             return true;
         }
         
-        var sourceParts =  sourceLinkedLicenceNumber.Split('/');
-        var naldParts = naldLinkedLicenceNumber.Split('/');
+        var naldSeperator = naldLinkedLicenceNumber.Contains('/') ? '/' : '.';
+        
+        if (!naldLinkedLicenceNumber.Contains(naldSeperator))
+        {
+            return true;
+        }
+        
+        var sourceParts =  sourceLinkedLicenceNumber.Split(sourceSeperator);
+        sourceLength = sourceParts.Length;
+        
+        var naldParts = naldLinkedLicenceNumber.Split(naldSeperator);
+        naldLength = naldParts.Length;
 
         if (naldParts.Length == 1)
         {
@@ -363,7 +382,11 @@ public partial class AbstractionLicenceNumber(
             return false;
         }
 
-        if (!NumberOfSectionsMatch(candidateText, entry.NaldLicence.LicenceNumber))
+        if (!NumberOfSectionsMatch(
+            candidateText,
+            entry.NaldLicence.LicenceNumber,
+            out var sourceLength,
+            out var naldLength))
         {
             return false;
         }
@@ -373,7 +396,9 @@ public partial class AbstractionLicenceNumber(
             return false;
         }
 
-        if (DifferentPrimarySeperator(candidateText, entry.NaldLicence.LicenceNumber))
+        var bothLong = sourceLength >= 4 && naldLength >= 4;
+        
+        if (!bothLong && DifferentPrimarySeperator(candidateText, entry.NaldLicence.LicenceNumber))
         {
             return false;
         }
@@ -383,27 +408,32 @@ public partial class AbstractionLicenceNumber(
 
     private static bool DifferentPrimarySeperator(string text1, string text2)
     {
-        var text1MostCommonSeperator = new List<(char, int)>
+        var text1MostCommonSeperator = new List<(char?, double)>
             {
                 ('/', text1.Count(c => c == '/')),
                 ('.', text1.Count(c => c == '.')),
-                (' ', text1.Count(c => c == ' '))
+                (' ', text1.Count(c => c == ' ')),
+                (null, 0.5)
             }
             .OrderByDescending(t => t.Item2)
             .First()
             .Item1;
         
-        var text2MostCommonSeperator = new List<(char, int)>
+        var text2MostCommonSeperator = new List<(char?, double)>
             {
                 ('/', text2.Count(c => c == '/')),
                 ('.', text2.Count(c => c == '.')),
-                (' ', text2.Count(c => c == ' '))
+                (' ', text2.Count(c => c == ' ')),
+                (null, 0.5)
             }
             .OrderByDescending(t => t.Item2)
             .First()
             .Item1;
         
-        return text1MostCommonSeperator != text2MostCommonSeperator;
+        return
+            text1MostCommonSeperator != null
+            && text2MostCommonSeperator != null
+            && text1MostCommonSeperator != text2MostCommonSeperator;
     }
     
     public static bool SegmentsMatch(

@@ -1075,10 +1075,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(LimitPeriodType.PerHour, limitGroup.Limits[0].PeriodType);
         Assert.Equal(40000, limitGroup.Limits[1].Value);
         Assert.Equal(6000000, limitGroup.Limits[2].Value);
-        Assert.Equal(556, limitGroup.Limits[3].Value);        
+        Assert.Equal(556, limitGroup.Limits[3].Value);
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
-        Assert.Equal("SW0470051003-LV2023020720380331-LL-6_2-1547013S020",
+        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020-6_2",
             agreedSchemaLicence.AbstractionLimits.Aggregates![0].Id);
         Assert.Equal("LV2023020720380331",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].SourceLicenceVersionId);

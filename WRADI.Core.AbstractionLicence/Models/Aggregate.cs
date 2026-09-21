@@ -46,13 +46,13 @@ public class Aggregate : AbstractionLimitGroup
 
             var outputSb = new StringBuilder();
             outputSb.Append($"{licenceNumber}-{SourceLicenceVersionId}-{primaryType}{subType}");
-
+            outputSb.Append(linkedLicencesSb);
+            
             if (!string.IsNullOrWhiteSpace(DocumentIdentifier))
             {
                 outputSb.Append($"-{DocumentIdentifier.Replace(".", "_")}");
             }
-
-            outputSb.Append(linkedLicencesSb);
+            
             return outputSb.ToString();
         }
     }

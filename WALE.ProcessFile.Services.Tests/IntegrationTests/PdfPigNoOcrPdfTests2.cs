@@ -1855,9 +1855,9 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         
         Assert.Equal(8, agreedSchemaLicence.AbstractionLimits.Aggregates!.Length);
         Assert.Equal(22, agreedSchemaLicence.AbstractionLimits.Aggregates.SelectMany(x => x.Limits).Count());
-        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[0].Value);
-        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[1].Value);
-        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Aggregates![4].Limits[2].Value);    
+        Assert.Equal(120, agreedSchemaLicence.AbstractionLimits.Aggregates![5].Limits[0].Value);
+        Assert.Equal(2_600, agreedSchemaLicence.AbstractionLimits.Aggregates![5].Limits[1].Value);
+        Assert.Equal(60_000, agreedSchemaLicence.AbstractionLimits.Aggregates![5].Limits[2].Value);    
     }
     
     [Fact]

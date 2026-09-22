@@ -659,7 +659,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.LicenceSectionVerifications,
             cancellationToken);
 
-
         return licenceListItemId;
     }
 
@@ -745,8 +744,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_number
             )
             DO UPDATE SET
-                licence_id = EXCLUDED.licence_id,
-                matches_result_id = EXCLUDED.matches_result_id,
+                licence_id = @LicenceId,
+                matches_result_id = @MatchesResultId,
                 filename = EXCLUDED.filename,
                 licence_holder = EXCLUDED.licence_holder,
                 limits_count = EXCLUDED.limits_count,

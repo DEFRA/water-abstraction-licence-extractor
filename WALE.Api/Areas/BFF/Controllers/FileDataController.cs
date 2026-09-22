@@ -36,6 +36,14 @@ public class FileDataController(
         return Ok(result);
     }
     
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
+    {
+        var result = await outputService.GetMatchesResultAsync(fileId);
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdAsync(
         [FromQuery] int matchesResultId)

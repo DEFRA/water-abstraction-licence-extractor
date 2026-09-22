@@ -107,6 +107,52 @@ public class LabelToMatch
     public bool DeDuplicateResults { get; set; }
     
     public bool GoOutsideTextBlock { get; set; }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LimitTo LimitTo { get; set; } = LimitTo.WholeLine;
+
+    public int LimitToColumnIndex { get; set; }
+
+    // When a label group has multiple alternates (e.g. one per template phrasing) and this
+    // alternate returns no non-empty text, allow the engine to try the next alternate instead
+    // of locking the group as matched. Defaults to false to preserve existing behaviour for
+    // every rule that doesn't opt in.
+    public bool RequireTextToClaimGroup { get; init; }
+
+    // LimitTo.SameColumn/SpecifiedColumn only: a next-line candidate is rejected outright
+    // (not narrowed to a column at all) when its own first/leftmost column starts with one of
+    // these texts - i.e. that whole row visibly belongs to a different, identifiable field
+    // (its own leading label), not a genuine continuation of this one. Distinct from
+    // IgnoreBlockIfContains, which rejects based on the already-narrowed picked column's own
+    // content and so can't tell "this field's genuine compound answer happens to contain the
+    // rejected text" apart from "this is really a different field's row" - checking the row's
+    // own leading label first avoids that ambiguity. Defaults to null/empty, so it's a no-op
+    // for every label that doesn't opt in.
+    public IReadOnlyList<string>? ExcludeNextLineIfFirstColumnStartsWith { get; init; }
+
+    // POSITION-based same-row bound: bounds WalkSameLineColumns' same-line walk by the
+    // X-position of the nearest OTHER known field's own column, built once per document from
+    // where every field's label is actually found (see PdfDataExtractorService.
+    // BuildLabelPositionIndex). Root cause and design: see the wr51_column_walk_bug analysis -
+    // a same-line walk with no positional awareness can wander into a sibling field's own
+    // column purely because nothing bounded how far to look, including a sibling field's own
+    // ANSWER value, not just its label, bleeding in via a row-grouping merge. Opt-in (defaults
+    // to false/no-op) because it depends on the caller actually supplying that per-document
+    // position index; a label that doesn't set this behaves exactly as before.
+    public bool BoundSameLineWalkByOtherLabelPositions { get; init; }
+
+    // GetTextBetween finds its end-tag on the label's OWN first line (e.g. a same-row
+    // "Meter make: <value> Serial number: <value>" layout) and stops there immediately -
+    // correct when nothing past the end-tag belongs to the field, but wrong when the value
+    // genuinely wraps onto a further line with no position/content signal telling it apart from
+    // an unrelated field's row (confirmed on wr51__SO0420031002__... - every line shares the
+    // same left margin). Setting this keeps the scan going past that first-line match instead,
+    // relying on this same label's own TextEnd to find the real boundary further down - only the
+    // first line's stop-immediately behaviour changes. Defaults to false/no-op for every label
+    // that doesn't opt in - see the wr51_metermake_wrap_gap memory for why a blanket version of
+    // this broke 9 of the other 10 tests in Wr51PdfPigNoOcrPdfTests.cs: this is the common
+    // correct-termination shape for most fields, not the rare case.
+    public bool AllowValueToWrapPastSameLineEndTag { get; init; }
 
     public LabelToMatch Clone()
     {
@@ -150,7 +196,13 @@ public class LabelToMatch
             NoOcrConfidence = NoOcrConfidence,
             RemoveStartOfBlockSectionsWhenMultiple = RemoveStartOfBlockSectionsWhenMultiple,
             DeDuplicateResults = DeDuplicateResults,
-            GoOutsideTextBlock = GoOutsideTextBlock
+            GoOutsideTextBlock = GoOutsideTextBlock,
+            LimitTo = LimitTo,
+            LimitToColumnIndex = LimitToColumnIndex,
+            RequireTextToClaimGroup = RequireTextToClaimGroup,
+            ExcludeNextLineIfFirstColumnStartsWith = ExcludeNextLineIfFirstColumnStartsWith?.ToList(),
+            BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions,
+            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag
         };
     }    
 }

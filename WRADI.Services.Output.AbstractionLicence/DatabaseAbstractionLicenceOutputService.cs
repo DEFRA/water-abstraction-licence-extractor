@@ -486,7 +486,7 @@ public class DatabaseAbstractionLicenceOutputService(
         return returnList;
     }
 
-    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         return databaseReadService.GetLicenceFileIdsAsync(processRunId);
     }

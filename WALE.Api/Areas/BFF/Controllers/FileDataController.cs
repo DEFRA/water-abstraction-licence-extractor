@@ -54,7 +54,8 @@ public class FileDataController(
     }
 
     [HttpGet]
-    public async Task<ActionResult<Dictionary<Guid, string>>> GetLicenceFileIdMapAsync([FromQuery] int processRunId)
+    public async Task<ActionResult<Dictionary<Guid, List<LicenceFileMapEntry>>>> GetLicenceFileIdMapAsync(
+        [FromQuery] int processRunId)
     {
         var result = await GetLicenceFileIdsAsync(processRunId);
         return Ok(result);
@@ -212,11 +213,10 @@ public class FileDataController(
     private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)
     {
         var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
-
-        return fileIdToLicenceNumberMapping[fileId];
+        return fileIdToLicenceNumberMapping[fileId][0].LicenceNumber!;
     }
 
-    private async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    private async Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         var cacheKey = $"licence-file-ids:{processRunId}";
 

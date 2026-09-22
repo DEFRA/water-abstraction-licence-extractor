@@ -3549,7 +3549,7 @@ export class Client {
      * @param processRunId (optional) 
      * @return OK
      */
-    getLicenceFileIdMap(processRunId: number | undefined): Promise<{ [key: string]: string; }> {
+    getLicenceFileIdMap(processRunId: number | undefined): Promise<{ [key: string]: LicenceFileMapEntry[]; }> {
         let url_ = this.baseUrl + "/BFF/FileData/GetLicenceFileIdMap?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
@@ -3569,7 +3569,7 @@ export class Client {
         });
     }
 
-    protected processGetLicenceFileIdMap(response: Response): Promise<{ [key: string]: string; }> {
+    protected processGetLicenceFileIdMap(response: Response): Promise<{ [key: string]: LicenceFileMapEntry[]; }> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3580,7 +3580,7 @@ export class Client {
                 result200 = {} as any;
                 for (let key in resultData200) {
                     if (resultData200.hasOwnProperty(key))
-                        (result200 as any)![key] = resultData200[key] !== undefined ? resultData200[key] : null as any;
+                        (result200 as any)![key] = resultData200[key] ? resultData200[key].map((i: any) => LicenceFileMapEntry.fromJS(i)) : [];
                 }
             }
             else {
@@ -3593,7 +3593,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<{ [key: string]: string; }>(null as any);
+        return Promise.resolve<{ [key: string]: LicenceFileMapEntry[]; }>(null as any);
     }
 
     /**
@@ -7484,6 +7484,66 @@ export interface ILicence {
     linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
+
+    [key: string]: any;
+}
+
+export class LicenceFileMapEntry implements ILicenceFileMapEntry {
+    licenceNumber?: string | undefined;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceFileMapEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumber = _data["licenceNumber"];
+            this.licenceId = _data["licenceId"];
+            this.matchesResultId = _data["matchesResultId"];
+            this.fileId = _data["fileId"];
+        }
+    }
+
+    static fromJS(data: any): LicenceFileMapEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceFileMapEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumber"] = this.licenceNumber;
+        data["licenceId"] = this.licenceId;
+        data["matchesResultId"] = this.matchesResultId;
+        data["fileId"] = this.fileId;
+        return data;
+    }
+}
+
+export interface ILicenceFileMapEntry {
+    licenceNumber?: string | undefined;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
 
     [key: string]: any;
 }

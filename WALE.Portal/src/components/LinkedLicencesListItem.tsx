@@ -14,7 +14,7 @@ interface LinkedLicencesListItemProps {
 }
 
 export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
-    const {getFileId} = useFileIdMap();
+    const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
@@ -34,6 +34,8 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
             : "black";
 
     let linkedFileId = getFileId(licenceNumber);
+    let linkedLicenceId = getLicenceId(licenceNumber);
+    let linkedMatchesResultId = getMatchesResultId(licenceNumber);
 
     if (linkedFileId) {
         return (
@@ -42,7 +44,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                    href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
+                       onOpenReport(linkedFileId, linkedLicenceId!, linkedMatchesResultId!);
                    }}>{styledLicenceNumber}
                 </a>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>

@@ -378,7 +378,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
                 onRefresh={() => fetchOutputList(true)}
-                /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);
 }

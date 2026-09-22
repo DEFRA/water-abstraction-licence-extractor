@@ -133,7 +133,7 @@ public static class LinkedLicenceVerificationMergeHelper
     public static void MergeIncoming(
         List<LinkedLicence> linkedLicences,
         IEnumerable<LicenceSectionVerification> verifications,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var orderedVerifications = verifications
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -142,7 +142,7 @@ public static class LinkedLicenceVerificationMergeHelper
         foreach (var verification in orderedVerifications)
         {
             var fileId = verification.LicenceFileId;
-            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceLicenceNumber))
+            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceMapping))
             {
                 ConsoleHelper.WriteLine(
                     $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Incoming LL Verifications - No licence number found for {fileId}");
@@ -178,13 +178,15 @@ public static class LinkedLicenceVerificationMergeHelper
                     continue;
                 }
 
+                var licenceNumber = sourceMapping[0].LicenceNumber;
+                
                 var existingLinkedLicence =
-                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == sourceLicenceNumber);
+                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == licenceNumber);
 
                 // TODO: We need to convert the verification licence to an incoming link - use the logic in WalSchemaConverter - but much of this will require looking up
                 var convertedToIncoming = new LinkedLicence
                 {
-                    LicenceNumber = sourceLicenceNumber,
+                    LicenceNumber = licenceNumber,
                     DmsFileId = fileId,
                     ContainedIn = verificationLicence.ContainedIn?.Select(c => new ContainedInInformation
                     {

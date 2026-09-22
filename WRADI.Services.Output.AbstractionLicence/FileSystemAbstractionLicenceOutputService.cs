@@ -182,7 +182,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

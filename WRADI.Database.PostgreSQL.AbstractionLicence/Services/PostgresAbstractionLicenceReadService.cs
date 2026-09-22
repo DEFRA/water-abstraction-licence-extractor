@@ -629,26 +629,43 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LinkedLicencesType);
     }
     
-    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public async Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
 
         const string sql = """
-                           SELECT max(licence_number) AS licence_number, file_id
+                           SELECT
+                               licence_number,
+                               licence_id,
+                               matches_result_id,
+                               file_id
                            FROM licence
-                           WHERE process_run_id = @ProcessRunId
-                             AND licence_number IS NOT NULL
-                             AND file_id IS NOT NULL
-                           GROUP BY file_id;
+                           WHERE
+                                process_run_id = @ProcessRunId
+                                AND licence_number IS NOT NULL
+                                AND file_id IS NOT NULL;
                            """;
 
-        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
+        var results = await QueryAsync<LicenceFileMapEntry>(
             connection,
             sql,
             0,
             new { ProcessRunId = processRunId });
 
-        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
+        var returnDictionary = new Dictionary<Guid, List<LicenceFileMapEntry>>();
+
+        foreach (var result in results)
+        {
+            if (returnDictionary.TryGetValue(result.FileId, out var value))
+            {
+                value.Add(result);
+                continue;
+            }
+            
+            returnDictionary.Add(result.FileId, [result]);
+        }
+        
+        return returnDictionary;
     }
     
     public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)

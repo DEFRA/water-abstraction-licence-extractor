@@ -45,6 +45,7 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
     const loadAllData = async () => {
         try {
             setLoading(true);
+            debugger;
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult, licenceVerificationStringResult] = await Promise.allSettled([

@@ -81,7 +81,7 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
-    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+    Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
 
     Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
         int processRunId,

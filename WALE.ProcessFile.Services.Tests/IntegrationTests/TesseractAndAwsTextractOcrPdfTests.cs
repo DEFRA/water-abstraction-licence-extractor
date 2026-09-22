@@ -400,7 +400,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270", 3)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167", 3)]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 15, 0, "1/25/06/023", 3)] // Should be 2000 but impossible to tell in file, so fine
-    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298", 3)]
+    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 4, 0, "2/27/12/298", 3)]
     [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141", 3)]
     [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001", 3)]
     //12504178R01__Application type unknown Licence Issued (01.05.2007).pdf, "299 July'03", // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong

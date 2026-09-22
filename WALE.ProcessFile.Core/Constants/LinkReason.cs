@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace WALE.ProcessFile.Core.Constants;
 
 public static class LinkReason
@@ -33,4 +35,16 @@ public static class LinkReason
     public const string RateOfFlow = "RateOfFlow"; // Excluded link reason
     public const string WhenTheFlow = "WhenTheFlow"; // Excluded link reason    
     public const string MinimumValue = "MinimumValue"; // Excluded link reason    
+    public const string Empty = "Empty";
+    
+    public static IReadOnlyCollection<string> GetAll()
+    {
+        return typeof(LinkReason)
+            .GetFields(
+                BindingFlags.Public |
+                BindingFlags.Static)
+            .Where(x => x.FieldType == typeof(string))
+            .Select(x => (string)x.GetValue(null)!)
+            .ToArray();
+    }
 }

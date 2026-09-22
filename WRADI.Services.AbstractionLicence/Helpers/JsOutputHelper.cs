@@ -61,6 +61,8 @@ public static class JsOutputHelper
         return new IntermediateOutputLicence
         {
             Filename = licence.Filename,
+            LicenceId = licence.LicenceId,
+            MatchesResultId = licence.MatchesResultId,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
@@ -85,7 +87,7 @@ public static class JsOutputHelper
     public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
         int processRunId,
         Dictionary<string, LicenceVerificationLookups> verificationLookups,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -95,8 +97,6 @@ public static class JsOutputHelper
                 new LinkedLicencesVerificationOutputStrategy(),
                 new AggregatesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
-
-        var verificationSectionNames = verificationLookups.Keys.ToList();
 
         var orderedOutputLines = outputLines
             .OrderBy(ol => ol.Filename)
@@ -137,6 +137,8 @@ public static class JsOutputHelper
                 processRunId = processRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
+                licenceId = outputLine.LicenceId,
+                matchesResultId = outputLine.MatchesResultId,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
@@ -155,13 +157,10 @@ public static class JsOutputHelper
                 licenceSets = licenceSets
             };
 
-            foreach (var sectionName in verificationSectionNames)
+            foreach (var strategy in verificationOutputStrategies.Values)
             {
-                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy)
-                    || !verificationLookups.TryGetValue(sectionName, out var sectionVerificationLookups))
-                {
-                    continue;
-                }
+                var sectionVerificationLookups = verificationLookups.GetValueOrDefault(
+                    strategy.SectionName, new LicenceVerificationLookups());
 
                 strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
                     outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);

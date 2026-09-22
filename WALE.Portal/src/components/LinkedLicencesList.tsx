@@ -4,7 +4,7 @@ import {compareAlphanumeric} from "../utils/formatting.ts";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
-    onOpenReport: (fileId: string) => void;
+    onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps) {

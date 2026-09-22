@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace WRADI.DocumentType.AbstractionLicence.Enums;
 
 public static class DocumentSectionNames
@@ -43,4 +45,15 @@ public static class DocumentSectionNames
     public static readonly string UnknownPage8 = "UnknownPage8";
     
     public static readonly string UnknownPage9 = "UnknownPage9";
+    
+    public static IReadOnlyCollection<string> GetAll()
+    {
+        return typeof(DocumentSectionNames)
+            .GetFields(
+                BindingFlags.Public |
+                BindingFlags.Static)
+            .Where(x => x.FieldType == typeof(string))
+            .Select(x => (string)x.GetValue(null)!)
+            .ToArray();
+    }
 }

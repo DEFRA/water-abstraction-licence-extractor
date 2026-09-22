@@ -23,8 +23,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status) 
-                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status) 
+                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status, document_type)
+                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status, @DocumentType)
                            RETURNING process_run_id
                            """;
 
@@ -37,7 +37,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 processRun.Description,
                 processRun.StartDateTimeUtc,
                 processRun.NumberOfFiles,
-                processRun.Status
+                processRun.Status,
+                processRun.DocumentType
             });
 
         return processRun;
@@ -989,7 +990,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    
     private async Task<DateTime> ExecuteDateTimeScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

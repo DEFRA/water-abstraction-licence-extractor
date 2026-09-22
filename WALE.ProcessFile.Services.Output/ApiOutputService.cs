@@ -450,6 +450,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
     }
 
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
         var path = $"/BFF/FileData/GetMatchesResult?fileId={fileId}&processRunId={processRunId}";

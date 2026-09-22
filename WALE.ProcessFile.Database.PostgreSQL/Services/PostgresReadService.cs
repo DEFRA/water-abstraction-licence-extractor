@@ -560,6 +560,28 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return matchesResult;
     }
 
+    public async Task<MatchesResult?> GetMatchesResult(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT data
+                           FROM matches_result
+                           WHERE file_id = @FileId
+                           ORDER BY process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new { FileId = fileId });
+
+        return result == null
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+    }
+
     public async Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();

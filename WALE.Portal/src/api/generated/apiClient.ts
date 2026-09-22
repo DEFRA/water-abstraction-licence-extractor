@@ -3589,6 +3589,54 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional)
+     * @param processRunId (optional)
+     * @return OK
+     */
+    wrInspectionReportString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/WrInspectionReportString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processWrInspectionReportString(_response);
+        });
+    }
+
+    protected processWrInspectionReportString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
      * @param processRunId (optional)
      * @return OK
      */
@@ -4292,6 +4340,44 @@ export class Client {
     }
 
     /**
+     * @param filename (optional) 
+     * @return OK
+     */
+    getRaw(filename: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Files/GetRaw?";
+        if (filename === null)
+            throw new globalThis.Error("The parameter 'filename' cannot be null.");
+        else if (filename !== undefined)
+            url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetRaw(_response);
+        });
+    }
+
+    protected processGetRaw(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @return OK
      */
     listAll(): Promise<string[]> {
@@ -4761,14 +4847,19 @@ export class Client {
 
     /**
      * @param delayInSeconds (optional) 
+     * @param documentType (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined): Promise<void> {
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, documentType: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
         if (delayInSeconds === null)
             throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
         else if (delayInSeconds !== undefined)
             url_ += "delayInSeconds=" + encodeURIComponent("" + delayInSeconds) + "&";
+        if (documentType === null)
+            throw new globalThis.Error("The parameter 'documentType' cannot be null.");
+        else if (documentType !== undefined)
+            url_ += "documentType=" + encodeURIComponent("" + documentType) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -9327,6 +9418,8 @@ export interface IPageImage {
 export class PdfPage implements IPdfPage {
     number?: number;
     numberOfImages?: number;
+    width?: number;
+    height?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
     likelyMapPage?: boolean;
@@ -9350,6 +9443,8 @@ export class PdfPage implements IPdfPage {
             }
             this.number = _data["number"];
             this.numberOfImages = _data["numberOfImages"];
+            this.width = _data["width"];
+            this.height = _data["height"];
             if (Array.isArray(_data["screenshotFilepaths"])) {
                 this.screenshotFilepaths = [] as any;
                 for (let item of _data["screenshotFilepaths"])
@@ -9379,6 +9474,8 @@ export class PdfPage implements IPdfPage {
         }
         data["number"] = this.number;
         data["numberOfImages"] = this.numberOfImages;
+        data["width"] = this.width;
+        data["height"] = this.height;
         if (Array.isArray(this.screenshotFilepaths)) {
             data["screenshotFilepaths"] = [];
             for (let item of this.screenshotFilepaths)
@@ -9397,6 +9494,8 @@ export class PdfPage implements IPdfPage {
 export interface IPdfPage {
     number?: number;
     numberOfImages?: number;
+    width?: number;
+    height?: number;
     screenshotFilepaths?: string[];
     providers?: PdfPageProvider[];
     likelyMapPage?: boolean;
@@ -9783,6 +9882,7 @@ export class ProcessRun implements IProcessRun {
     successCount?: number;
     status?: string | undefined;
     numberOfFilesNotFound?: number;
+    documentType?: string;
 
     [key: string]: any;
 
@@ -9809,6 +9909,7 @@ export class ProcessRun implements IProcessRun {
             this.successCount = _data["successCount"];
             this.status = _data["status"];
             this.numberOfFilesNotFound = _data["numberOfFilesNotFound"];
+            this.documentType = _data["documentType"];
         }
     }
 
@@ -9833,6 +9934,7 @@ export class ProcessRun implements IProcessRun {
         data["successCount"] = this.successCount;
         data["status"] = this.status;
         data["numberOfFilesNotFound"] = this.numberOfFilesNotFound;
+        data["documentType"] = this.documentType;
         return data;
     }
 }
@@ -9846,6 +9948,7 @@ export interface IProcessRun {
     successCount?: number;
     status?: string | undefined;
     numberOfFilesNotFound?: number;
+    documentType?: string;
 
     [key: string]: any;
 }

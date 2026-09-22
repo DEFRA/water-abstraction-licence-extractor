@@ -3,6 +3,7 @@ import {Fragment, useState, useEffect, useMemo} from 'react';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
+import {ScrapeDocuments} from '../components/ScrapeDocuments';
 
 interface SimpleMatchResult {
     fileId: string;
@@ -32,6 +33,8 @@ function InspectionReportPage() {
     const [inlineLoading, setInlineLoading] = useState(false);
 
     const [detailsByFileId, setDetailsByFileId] = useState<Record<string, FileDetails>>({});
+
+    const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
 
     useEffect(() => {
         if (!processRunId) return;
@@ -136,8 +139,38 @@ function InspectionReportPage() {
         <div className="list-page-container">
             <div style={{position: 'absolute', top: 5, left: 5, cursor: 'pointer'}} onClick={toHome}>&#8617;</div>
 
-            <h1>Inspection Report Files - Process Run {processRunId}</h1>
+            <h1>
+                Inspection Report Files - Process Run {processRunId}
+                {' | '}
+                <a
+                    href="#"
+                    className={activeTab === 'files' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('files');
+                    }}>
+                    Files
+                </a>
+                {' | '}
+                <a
+                    href="#"
+                    className={activeTab === 'actions' ? 'selected' : ''}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('actions');
+                    }}>
+                    Actions
+                </a>
+            </h1>
 
+            {activeTab === 'actions' && (
+                <div id="actions">
+                    <ScrapeDocuments documentType="WrInspectionReport"/>
+                </div>
+            )}
+
+            {activeTab === 'files' && (
+            <>
             <p>{filteredFiles.length} of {files.length} files</p>
 
             <table>
@@ -205,6 +238,8 @@ function InspectionReportPage() {
                 ))}
                 </tbody>
             </table>
+            </>
+            )}
         </div>
     );
 }

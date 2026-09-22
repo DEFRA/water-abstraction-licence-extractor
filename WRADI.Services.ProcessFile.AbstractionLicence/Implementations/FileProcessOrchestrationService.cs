@@ -46,7 +46,8 @@ public class FileProcessOrchestrationService(
                 Description = $"Batch process request for single file process from: {fileService.FolderPath}",
                 StartDateTimeUtc = DateTime.UtcNow,
                 NumberOfFiles = dmsFilesToProcess.Count,
-                Status = "Batch"
+                Status = "Batch",
+                DocumentType = "AbstractionLicence"
             });
 
         try

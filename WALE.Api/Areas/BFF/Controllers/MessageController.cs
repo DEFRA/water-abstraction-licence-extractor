@@ -17,8 +17,15 @@ public class MessageController(
 {
     [HttpPost]
     public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
-        [FromQuery] int delayInSeconds = 0)
+        [FromQuery] int delayInSeconds = 0,
+        [FromQuery] string documentType = "AbstractionLicence")
     {
+        var queueUrl = documentType switch
+        {
+            "WrInspectionReport" => awsQueueConfig.Value.WrInspectionReportOrchestratorQueue,
+            _ => awsQueueConfig.Value.OrchestratorQueue
+        };
+
         var payload = JsonSerializer.Serialize(new
         {
             RequestedAt = DateTime.UtcNow
@@ -27,11 +34,11 @@ public class MessageController(
         await sqsClient.SendMessageAsync(
             new SendMessageRequest
             {
-                QueueUrl = awsQueueConfig.Value.OrchestratorQueue,
+                QueueUrl = queueUrl,
                 MessageBody = payload,
                 DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
             });
-        
+
         return Ok();
     }
     

@@ -15,33 +15,31 @@ public class MessageController(
     IOptions<AwsSqsQueueConfig> awsQueueConfig,
     IAmazonSQS sqsClient) : Controller
 {
+    // Both queues are shared across every document type - the consumer picks the right
+    // document-type-specific implementation per message (DocumentType below), not per
+    // queue/deployment.
     [HttpPost]
     public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
         [FromQuery] int delayInSeconds = 0,
         [FromQuery] string documentType = "AbstractionLicence")
     {
-        var queueUrl = documentType switch
+        var payload = JsonSerializer.Serialize(new WALE.ProcessFile.Core.Models.FileProcessOrchestrationRequest
         {
-            "WrInspectionReport" => awsQueueConfig.Value.WrInspectionReportOrchestratorQueue,
-            _ => awsQueueConfig.Value.OrchestratorQueue
-        };
-
-        var payload = JsonSerializer.Serialize(new
-        {
+            DocumentType = documentType,
             RequestedAt = DateTime.UtcNow
         });
 
         await sqsClient.SendMessageAsync(
             new SendMessageRequest
             {
-                QueueUrl = queueUrl,
+                QueueUrl = awsQueueConfig.Value.OrchestratorQueue,
                 MessageBody = payload,
                 DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
             });
 
         return Ok();
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> SendFileProcessSingleMessageAsync(
         [FromBody] FileProcessSingleRequest request)
@@ -56,9 +54,10 @@ public class MessageController(
             request.RegionId,
             request.ProcessRunId,
             request.RequestedAt,
-            request.LockRetryCount
+            request.LockRetryCount,
+            request.DocumentType
         });
-        
+
         await sqsClient.SendMessageAsync(
             new SendMessageRequest
             {
@@ -66,7 +65,7 @@ public class MessageController(
                 MessageBody = payload,
                 DelaySeconds = request.DelayInSeconds > 0 ? request.DelayInSeconds : null
             });
-        
+
         return Ok();
     }
 }

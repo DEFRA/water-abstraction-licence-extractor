@@ -1,15 +1,18 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using WALE.ProcessFile.Core.Interfaces;
-using WRADI.Services.ProcessFile.WrInspectionReport;
+using WALE.ProcessFile.Core.Models;
+using WRADI.Services.ProcessFile.AbstractionLicence;
 
-namespace WRADI.ProcessFile.Local.WrInspectionReport.BackgroundServices;
+namespace WRADI.ProcessFile.Local.BackgroundServices;
 
 public sealed class FileProcessOrchestrationHostedService(
     IAmazonSQS sqsClient,
-    IFileProcessOrchestrator fileProcessOrchestrator,
+    DocumentTypeServiceProviders documentTypeServiceProviders,
     FileProcessAppSettings settings,
     ILogger<FileProcessOrchestrationHostedService> logger)
     : BackgroundService
@@ -27,11 +30,11 @@ public sealed class FileProcessOrchestrationHostedService(
         {
             request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
         }
-
+        
         logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
             nameof(FileProcessOrchestrationHostedService),
             request.QueueUrl);
-
+        
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -51,6 +54,17 @@ public sealed class FileProcessOrchestrationHostedService(
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
 
+                        var orchestrationRequest =
+                            JsonConvert.DeserializeObject<FileProcessOrchestrationRequest>(message.Body)
+                            ?? new FileProcessOrchestrationRequest();
+
+                        var serviceProvider = documentTypeServiceProviders.Get(
+                            orchestrationRequest.DocumentType, logger);
+
+                        using var scope = serviceProvider.CreateScope();
+                        var fileProcessOrchestrator = scope.ServiceProvider
+                            .GetRequiredService<IFileProcessOrchestrator>();
+
                         var result = await fileProcessOrchestrator.RunAsync(
                             cancellationToken);
 
@@ -58,7 +72,7 @@ public sealed class FileProcessOrchestrationHostedService(
                         {
                             continue;
                         }
-
+                        
                         await sqsClient.DeleteMessageAsync(
                             new DeleteMessageRequest
                             {
@@ -66,11 +80,11 @@ public sealed class FileProcessOrchestrationHostedService(
                                 ReceiptHandle = message.ReceiptHandle
                             },
                             cancellationToken);
-
+                           
                         logger.LogInformation("Deleted message {MessageId}", message.MessageId);
                     }
                     catch (Exception ex)
-                    {
+                    { 
                         logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
                         // Leave message on queue so it can be retried
                     }

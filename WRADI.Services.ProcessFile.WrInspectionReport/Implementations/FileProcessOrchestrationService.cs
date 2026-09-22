@@ -73,7 +73,8 @@ public class FileProcessOrchestrationService(
                         PermitNumber = candidate.PermitNumber,
                         RegionId = GeneralConstants.UnsetRegionCode,
                         ProcessRunId = processRun.ProcessRunId,
-                        RequestedAt = DateTime.UtcNow
+                        RequestedAt = DateTime.UtcNow,
+                        DocumentType = "WrInspectionReport"
                     });
 
                 ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {destinationFileName} sent to single process file queue");

@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.0" />
+        <PackageReference Include="FakeItEasy" Version="9.0.1" />
         <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" Version="2.3.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.9" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
@@ -27,6 +28,7 @@
         <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
         <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
         <ProjectReference Include="..\WALE.ProcessFile.Services.Tabula\WALE.ProcessFile.Services.Tabula.csproj" />
+        <ProjectReference Include="..\WRADI.Services.ProcessFile.WrInspectionReport\WRADI.Services.ProcessFile.WrInspectionReport.csproj" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">

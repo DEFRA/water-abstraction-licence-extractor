@@ -692,7 +692,7 @@ public class PdfDataExtractorService(
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;
-        const int minHeightWhenWidthEnough = 130;
+        const int minHeightWhenWidthEnough = 150;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -702,7 +702,7 @@ public class PdfDataExtractorService(
         }
 
         const int minHeight = 1800;
-        const int minWidthWhenHeightEnough = 130;
+        const int minWidthWhenHeightEnough = 150;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;

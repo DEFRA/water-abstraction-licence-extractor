@@ -443,12 +443,13 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                process_run_id, 
                                description, 
                                start_date_time_utc, 
-                               end_date_time_utc, 
+                               end_date_time_utc,
                                (
                                SELECT COUNT(*)
                                    FROM licence
                                    WHERE process_run_id = process_run.process_run_id
                            ) AS number_of_files,
+                               document_type,
                                (
                                    SELECT COUNT(*)
                                        FROM licence_list_item
@@ -669,7 +670,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         return results.ToList();
     }
-    
+
     public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
         await using var connection = GetPostgresConnection();
@@ -734,12 +735,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               number_of_files
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
+                               end_date_time_utc,
+                               number_of_files,
+                               status,
+                               document_type
                            FROM process_run
                            """;
 
@@ -754,8 +757,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            select
-                               filename,
                                file_id,
+                               filename,
                                status
                            FROM public.matches_result
                            where

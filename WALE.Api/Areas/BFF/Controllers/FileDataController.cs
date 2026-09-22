@@ -7,6 +7,8 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -41,6 +43,19 @@ public class FileDataController(
     public async Task<ActionResult<string?>> MatchesResultStringAsync([FromQuery] Guid fileId)
     {
         var result = await outputService.GetMatchesResultAsync(fileId);
+        return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    // This version of the method just here so the generated TS client doesn't mangle some properties
+    [HttpGet]
+    public async Task<ActionResult<string?>> WrInspectionReportStringAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var matchesResult = await outputService.GetMatchesResultAsync(fileId, processRunId);
+        if (matchesResult == null) return Ok((string?)null);
+
+        var result = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
 
@@ -216,6 +231,28 @@ public class FileDataController(
             await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
                 licenceList.ToArray());
         }
+    }
+
+    // AdditionalInformation values round-trip through JSON (matches_result.data), so a value
+    // saved as a string comes back as a JsonElement, not a plain string - handle both rather
+    // than assume the runtime shape of an untyped object? dictionary value.
+    private static WrTemplateType? GetKnownTemplate(MatchesResult matchesResult)
+    {
+        if (matchesResult.AdditionalInformation == null
+            || !matchesResult.AdditionalInformation.TryGetValue(
+                WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey, out var value))
+        {
+            return null;
+        }
+
+        var rawTemplate = value switch
+        {
+            string s => s,
+            JsonElement { ValueKind: JsonValueKind.String } element => element.GetString(),
+            _ => null
+        };
+
+        return Enum.TryParse<WrTemplateType>(rawTemplate, out var template) ? template : null;
     }
 
     private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)

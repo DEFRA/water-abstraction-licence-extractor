@@ -7,8 +7,8 @@ public class IntermediateOutputLicence
     public string? Filename;
 
     public int LicenceId;
-    
-    public int MatchesResultId { get; set; }
+
+    public int MatchesResultId;
     
     public string? LicenceHolder;
     

@@ -1126,10 +1126,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var sql = new StringBuilder(
             """
-            SELECT data, licence_id
+            SELECT
+                data
+                 , licence_id
+                 , matches_result_id
             FROM licence
-            WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+            WHERE
+                process_run_id = @ProcessRunId
+                AND data::jsonb ->> 'status' = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -1147,7 +1151,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             OFFSET @Skip;
             """);
 
-        var results = await QueryAsync<(string Data, int LicenceId)>(
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId)>(
             connection,
             sql.ToString(),
             0,
@@ -1161,6 +1165,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                     GetSerializerOptions())!;
 
                 licence.LicenceId = result.LicenceId;
+                licence.MatchesResultId = result.MatchesResultId;
                 licence.NoneSchemaData.TryAdd(
                     "licenceId",
                     result.LicenceId);

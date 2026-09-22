@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(73)]
+[Migration(75)]
 public class AddDataToNullMatchResultdColumns2 : Migration
 {
     public override void Up()
@@ -11,7 +11,7 @@ public class AddDataToNullMatchResultdColumns2 : Migration
                     update public.licence_list_item
                     set matches_result_id = (select matches_result_id from public.matches_result where public.licence_list_item.process_run_id = public.matches_result.process_run_id and public.licence_list_item.file_id = public.matches_result.file_id LIMIT 1)
                     WHERE
-                        matches_result_id is null
+                        (matches_result_id is null or matches_result_id = 0)
                         and file_id is not null
                     """);
     }

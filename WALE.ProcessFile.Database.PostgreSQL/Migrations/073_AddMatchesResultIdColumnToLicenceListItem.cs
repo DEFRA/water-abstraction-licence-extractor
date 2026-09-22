@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(71)]
+[Migration(73)]
 public class AddMatchesResultIdColumnToLicenceListItem : Migration
 {
     public override void Up()

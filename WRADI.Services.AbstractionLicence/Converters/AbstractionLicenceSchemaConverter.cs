@@ -507,7 +507,9 @@ public static class AbstractionLicenceSchemaConverter
 
         var limits = new AbstractionLimits
         {
-            Aggregates = aggregates,
+            Aggregates = aggregates?
+                .OrderBy(agg => agg.DocumentIdentifier)
+                .ToArray(),
             Individual = individual
         };
         

@@ -43,6 +43,7 @@ public interface IAbstractionLicenceDatabaseWriteService
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        int matchesResultId,
         string? filename,
         string status,
         string licenceData,

@@ -1,4 +1,4 @@
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {LicenceFileMapEntry, OutputListDataItem} from "../api/generated/apiClient.ts";
 
 export const isScrapedDataDifferent = (
     outputListDataItem: OutputListDataItem | undefined,
@@ -79,10 +79,44 @@ export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
     return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
 };
 
-export function getFileId(fileIdMap: Record<string, string> | undefined, licenceNumber: string | undefined): string | false {
+export function getFileId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): string | false {
     if (!licenceNumber || !fileIdMap) {
         return false;
     }
 
-    return fileIdMap[licenceNumber] ?? false;
+    let list = fileIdMap[licenceNumber];
+    
+    if (!list) {
+        return false;
+    }
+    
+    return list[0].fileId ?? false;
+}
+
+export function getLicenceId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): number | undefined {
+    if (!licenceNumber || !fileIdMap) {
+        return undefined;
+    }
+
+    let list = fileIdMap[licenceNumber];
+
+    if (!list) {
+        return undefined;
+    }
+
+    return list[0].licenceId;
+}
+
+export function getMatchesResultId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): number | undefined {
+    if (!licenceNumber || !fileIdMap) {
+        return undefined;
+    }
+
+    let list = fileIdMap[licenceNumber];
+
+    if (!list) {
+        return undefined;
+    }
+
+    return list[0].matchesResultId;
 }

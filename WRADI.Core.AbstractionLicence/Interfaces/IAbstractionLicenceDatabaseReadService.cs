@@ -14,6 +14,8 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
 
+    Task<List<LicenceSetTable>> GetLicenceSetsSimpleByLicenceIdAsync(int licenceId);    
+    
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
@@ -27,6 +29,8 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
     
     Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
+
+    Task<Licence?> GetLicenceAsync(int licenceId);
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
@@ -77,7 +81,7 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
-    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+    Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
 
     Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
         int processRunId,

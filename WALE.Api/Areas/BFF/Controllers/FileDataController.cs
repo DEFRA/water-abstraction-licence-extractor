@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -19,7 +20,8 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
-    IMemoryCache memoryCache) : Controller
+    IMemoryCache memoryCache,
+    IFileService fileService) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
@@ -66,7 +68,7 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(result);
     }
-    
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
     public async Task<ActionResult<string?>> GetMatchesResultByMatchesResultIdStringAsync(
@@ -74,6 +76,29 @@ public class FileDataController(
     {
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportCsvAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns);
+        return File(bytes, "text/csv", $"WR51-ProcessRun-{processRunId}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportXlsxAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildXlsx(lines, excludeInternalColumns);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"WR51-ProcessRun-{processRunId}.xlsx");
     }
 
     [HttpGet]
@@ -231,6 +256,43 @@ public class FileDataController(
             await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
                 licenceList.ToArray());
         }
+    }
+
+    private async Task<List<WrInspectionReportCsvLine>> BuildWrInspectionReportCsvLinesAsync(int processRunId)
+    {
+        var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
+
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = simpleResults.Select(async simpleResult =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                if (matchesResult == null)
+                {
+                    return null;
+                }
+
+                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
+                var line = WrInspectionReportCsvLine.FromForm(form);
+
+                line.Metadata__FileUrl = matchesResult.Filename == null
+                    ? null
+                    : $"s3://{fileService.FolderPath}/{matchesResult.Filename}";
+
+                return line;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var lines = await Task.WhenAll(tasks);
+        return lines.Where(line => line != null).Cast<WrInspectionReportCsvLine>().ToList();
     }
 
     private static WrTemplateType? GetKnownTemplate(MatchesResult matchesResult)

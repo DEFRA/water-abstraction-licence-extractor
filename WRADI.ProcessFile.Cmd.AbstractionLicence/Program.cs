@@ -121,6 +121,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
         services.OutputService!,
         services.LicenceNumberService!,
         null,
+        null,
         services.DmsLookupService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,

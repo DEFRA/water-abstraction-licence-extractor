@@ -134,6 +134,7 @@ public class NoOcrDatabaseTests
             OutputService,
             await GetLicenceNumbersAsync(3),
             null,
+            null,
             new DmsLookupService(),
             3,
             DateTime.Now,

@@ -87,6 +87,7 @@ public static class TestsForAiPrompts
                         outputService,
                         licenceNumberService,
                         null,
+                        null,
                         dmsLookupService,
                         -1,
                         DateTime.Now));

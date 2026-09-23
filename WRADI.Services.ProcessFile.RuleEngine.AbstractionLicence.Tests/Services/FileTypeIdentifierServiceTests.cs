@@ -102,6 +102,7 @@ public class FileTypeIdentifierServiceTests
             null,
             null,
             null,
+            null,
             1,
             DateTime.Now);
     }

@@ -99,6 +99,7 @@ public class PdfPigNoOcrPdfTests
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now,

@@ -111,6 +111,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);

@@ -892,7 +892,7 @@ public static class WrInspectionReportLabelConfiguration
                 NextLinesToFetch = 0,
                 Name = labelName,
                 TableBasedExtractorType = TableBasedLayoutExtractor.Grid,
-                TableShape = TableShape.Inconsistent,
+                TableShape = TableShape.Unstructured,
                 LayoutExtractor = LayoutExtractor.TableBased
             }
         ];

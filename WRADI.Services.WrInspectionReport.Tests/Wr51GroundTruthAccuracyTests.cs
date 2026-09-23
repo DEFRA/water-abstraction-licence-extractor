@@ -71,6 +71,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             OutputService,
             new NullLicenceNumberService(),
             null,
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
@@ -490,7 +491,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
-        lookupConfiguration.NoOcrTableExtractorService = tableExtractorService!;
+        lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();

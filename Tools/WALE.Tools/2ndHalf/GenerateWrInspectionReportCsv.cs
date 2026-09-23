@@ -326,6 +326,7 @@ public static class GenerateWrInspectionReportCsv
             outputService,
             new NullLicenceNumberService(),
             null,
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,

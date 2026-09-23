@@ -95,6 +95,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);

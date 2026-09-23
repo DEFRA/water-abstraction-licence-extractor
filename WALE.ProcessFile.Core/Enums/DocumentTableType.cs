@@ -1,8 +1,7 @@
 namespace WALE.ProcessFile.Core.Enums;
 
-public enum TableShape
+public enum DocumentTableType
 {
-    Default, // Default is Structured
     Structured,
     Unstructured
 }

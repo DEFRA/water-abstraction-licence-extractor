@@ -279,31 +279,31 @@ public class PdfDataExtractorService(
         
         var isOcr = false;
 
-        IReadOnlyList<DocumentTable>? documentTables = null;
         List<DocumentLine>? documentLines = null;
+        var documentTables = new List<DocumentTable>();
 
         var allLabels = configuration
             .Labels
             .SelectMany(label => label.Labels)
             .ToList();
         
-        var needsToParseConsistentTables = allLabels
+        var needsToParseStructuredTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
                 or LayoutExtractor.LetterBasedAndTableBased
                 && label.TableShape is TableShape.Default
-                    or TableShape.Consistent);
+                    or TableShape.Structured);
         
-        var needsToParseInconsistentTables = allLabels
+        var needsToParseUnstructuredTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
                 or LayoutExtractor.LetterBasedAndTableBased
-                && label.TableShape is TableShape.Inconsistent);
+                && label.TableShape is TableShape.Unstructured);
 
         var needsToParseText = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.Default
                 or LayoutExtractor.LetterBased
                 or LayoutExtractor.LetterBasedAndTableBased);
-
-        if (needsToParseConsistentTables || needsToParseInconsistentTables)
+        
+        if (needsToParseStructuredTables)
         {
             // TODO hack - do this differently - we can't always go back to the doc
             if (pdfDocument.Bytes == null)
@@ -311,18 +311,52 @@ public class PdfDataExtractorService(
                 await pdfDocument.OpenInternalDocumentAsync();
             }
 
-            if (configuration.NoOcrTableExtractorService == null)
+            if (configuration.StructuredTableExtractorService == null)
             {
                 throw new NoNullAllowedException(
-                    $"{nameof(configuration.NoOcrTableExtractorService)} cannot be null when config requires tables");
+                    $"{nameof(configuration.StructuredTableExtractorService)} cannot be null when config requires structured tables");
             }
             
-            documentTables = await configuration.NoOcrTableExtractorService.GetTablesAsync(
+            var structuredDocumentTables = await configuration.StructuredTableExtractorService.GetTablesAsync(
                 pdfDocument.Bytes!,
                 fileId,
                 processRunId);
+            
+            foreach (var table in structuredDocumentTables)
+            {
+                table.TableType = DocumentTableType.Structured;
+            }
+            
+            documentTables.AddRange(structuredDocumentTables);
         }
+        
+        if (needsToParseUnstructuredTables)
+        {
+            // TODO hack - do this differently - we can't always go back to the doc
+            if (pdfDocument.Bytes == null)
+            {
+                await pdfDocument.OpenInternalDocumentAsync();
+            }
 
+            if (configuration.UnstructuredTableExtractorService == null)
+            {
+                throw new NoNullAllowedException(
+                    $"{nameof(configuration.UnstructuredTableExtractorService)} cannot be null when config requires unstructured tables");
+            }
+            
+            var unstructuredDocumentTables = await configuration.UnstructuredTableExtractorService.GetTablesAsync(
+                pdfDocument.Bytes!,
+                fileId,
+                processRunId);
+            
+            foreach (var table in unstructuredDocumentTables)
+            {
+                table.TableType = DocumentTableType.Unstructured;
+            }
+            
+            documentTables.AddRange(unstructuredDocumentTables);
+        }
+        
         if (needsToParseText)
         {
             documentLines = pdfDocument.DocumentLines;

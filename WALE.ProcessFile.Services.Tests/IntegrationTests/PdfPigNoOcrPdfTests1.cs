@@ -188,6 +188,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
             OutputService,
             await fixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now,

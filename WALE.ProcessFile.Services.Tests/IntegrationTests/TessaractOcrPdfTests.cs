@@ -141,6 +141,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             OutputService,
             await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
             null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);

@@ -89,7 +89,7 @@ public sealed class WrRule
     {
         _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
         _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
-        _tableShape = TableShape.Inconsistent;
+        _tableShape = TableShape.Unstructured;
         
         return this;
     }
@@ -98,7 +98,7 @@ public sealed class WrRule
     {
         _layoutExtractor = LayoutExtractor.TableBased;
         _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
-        _tableShape = TableShape.Inconsistent;
+        _tableShape = TableShape.Unstructured;
         
         return this;
     }
@@ -107,7 +107,7 @@ public sealed class WrRule
     {
         _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
         _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
-        _tableShape = TableShape.Inconsistent;
+        _tableShape = TableShape.Unstructured;
         
         return this;
     }
@@ -116,7 +116,7 @@ public sealed class WrRule
     {
         _layoutExtractor = LayoutExtractor.TableBased;
         _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
-        _tableShape = TableShape.Inconsistent;
+        _tableShape = TableShape.Unstructured;
         
         return this;
     }

@@ -38,6 +38,10 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync();
+
+    Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
+    
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);

@@ -58,4 +58,8 @@ public interface IAbstractionLicenceDatabaseWriteService
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
     Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification>  verifications);
+
+    Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications);
 }

@@ -146,6 +146,26 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        throw new NotImplementedException();
+    }
+
     public
         Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
     {

@@ -10,11 +10,6 @@ using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
-// WR51 equivalent of WRADI.Services.ProcessFile.AbstractionLicence's FileProcessSingleService.
-// Deliberately skips everything AbstractionLicence-specific (NALD linking, licence number
-// service, LicenceSets) - none of it applies to inspection reports, matching
-// RunInspectionReportProcessRun.cs's already-proven approach (NullLicenceNumberService,
-// WrInspectionReportLabelConfiguration, WrInspectionReportExtractionOrchestrator.ExtractAsync).
 public class FileProcessSingleService(
     FileProcessAppSettings settings,
     ICacheService cacheService,

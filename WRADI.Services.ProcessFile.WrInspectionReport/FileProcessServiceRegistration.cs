@@ -155,7 +155,6 @@ public static class FileProcessServiceRegistration
 
         services.AddSingleton<IPdfDataExtractorService>(sp =>
         {
-            var settings = sp.GetRequiredService<FileProcessAppSettings>();
             var cacheService = sp.GetRequiredService<ICacheService>();
             var outputService = sp.GetRequiredService<IOutputService>();
             var messageQueueService = sp.GetRequiredService<IMessageQueueService>();
@@ -163,13 +162,7 @@ public static class FileProcessServiceRegistration
             var docnetAlternativeDocumentService = sp.GetRequiredService<DocnetNoOcrAlternativePdfDocumentService>();
 
             var pdfPigNoOcr = new PdfPigNoOcrDataExtractorService();
-
-            // WR51 documents are native (non-scanned) PDFs - PdfPig's native text layer is
-            // sufficient, matching RunInspectionReportProcessRun.cs's already-proven approach of
-            // no OCR extractors at all. Unlike AbstractionLicence's scanned sample set, there's no
-            // need for Tesseract/Azure AI Vision here, which also means the WR51 Single Lambda's
-            // Docker image doesn't need the native Tesseract/Leptonica build AbstractionLicence's
-            // does.
+            
             var pdfDataExtractor = new PdfDataExtractorService(
                 pdfPigNoOcr,
                 [],

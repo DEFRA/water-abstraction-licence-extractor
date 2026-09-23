@@ -279,10 +279,6 @@ public class FileDataController(
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
                 var line = WrInspectionReportCsvLine.FromForm(form);
 
-                // Not part of the form (file identity, not document content) - the real s3:// URI
-                // rather than a portal redirect link, so the export is a standalone reference
-                // (usable directly with the AWS CLI/SDK, not dependent on WALE.Api still being up
-                // or the file's name not having changed by the time someone opens the export).
                 line.Metadata__FileUrl = matchesResult.Filename == null
                     ? null
                     : $"s3://{fileService.FolderPath}/{matchesResult.Filename}";

@@ -6,18 +6,8 @@ using CsvHelper;
 
 namespace WRADI.DocumentType.WrInspectionReport.Csv;
 
-// Pure byte-builders for the WR51 process-run export - no DB/IO dependency, callers fetch the
-// already-saved MatchesResult rows for a run, convert each to a WrInspectionReportCsvLine (see
-// WrInspectionReportSchemaConverter.ToForm + WrInspectionReportCsvLine.FromForm, exactly as
-// FileDataController.WrInspectionReportStringAsync already does per-file), and hand the list here.
 public static class WrInspectionReportReportBuilder
 {
-    // Internal/derived-only columns - useful for debugging extraction, not for a business report.
-    // Raw* columns duplicate an already-parsed column in unprocessed form; Year is a pure
-    // derivative of InspectionDate__DateTime; DocumentTemplateVerison is template-versioning
-    // metadata; Images is a list of internal artifact filenames. Flagged out via
-    // excludeInternalColumns rather than removed outright - still useful when debugging a
-    // specific extraction. Chosen 2026-09-15 while trimming a ~17,600-row export.
     private static readonly HashSet<string> InternalColumnNames = new(StringComparer.Ordinal)
     {
         nameof(WrInspectionReportCsvLine.Images),
@@ -35,9 +25,6 @@ public static class WrInspectionReportReportBuilder
 
         using var memoryStream = new MemoryStream();
 
-        // UTF-8 (with BOM, so Excel on Windows auto-detects it rather than mis-reading as
-        // Windows-1252) - roughly halves the file versus the old UTF-16 convention, still opens
-        // correctly anywhere UTF-16 did.
         using (var writer = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true))
         using (var csv = new CsvWriter(writer, new CultureInfo("en-GB")))
         {

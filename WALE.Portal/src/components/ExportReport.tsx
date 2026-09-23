@@ -5,14 +5,7 @@ interface ExportReportProps {
     processRunId: number;
 }
 
-// Plain links straight at the BFF export endpoints rather than the generated NSwag client -
-// these are simple no-auth GETs that return a file with Content-Disposition: attachment already
-// set server-side (see FileDataController.ExportWrInspectionReportCsv/Xlsx), so the browser's
-// native download behaviour is all that's needed; no client regeneration required to add this.
 export function ExportReport({processRunId}: ExportReportProps) {
-    // Defaults to excluded - internal/derived-only columns (Images, the Raw* duplicates,
-    // InspectionDate__Year, Metadata__DocumentTemplateVerison) roughly double the export's size
-    // for little report value; still available via the checkbox for debugging a specific file.
     const [excludeInternalColumns, setExcludeInternalColumns] = useState(true);
 
     const base = waleApiBaseUrl.replace(/\/$/, '');

@@ -20,7 +20,13 @@ public class PdfDataExtractorService(
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     IMessageQueueService  apiMessageQueueService,
-    int id = -1) : IPdfDataExtractorService
+    int id = -1,
+    // Stamped onto the requeue-on-lock message CheckExclusiveAccess sends when a file is
+    // already being processed by another instance - the file-process queue is now shared
+    // across all document types, so the requeued message needs to say which one it's for.
+    // Optional/defaulted so the many existing call sites (tests, tools) that don't care about
+    // this don't need to change.
+    string documentType = "AbstractionLicence") : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
@@ -191,7 +197,8 @@ public class PdfDataExtractorService(
                 ProcessRunId = processRunId,
                 RegionId = regionId,
                 RequestedAt = DateTime.Now,
-                LockRetryCount = currentLockRetryCount + 1
+                LockRetryCount = currentLockRetryCount + 1,
+                DocumentType = documentType
             });
 
         return (true, null);

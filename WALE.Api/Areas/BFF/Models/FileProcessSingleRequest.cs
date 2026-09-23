@@ -21,4 +21,10 @@ public class FileProcessSingleRequest
     public DateTime RequestedAt { get; set; }
     
     public int LockRetryCount { get; set; }
+
+    // Which document type's services should process this file - the file-process queue is now
+    // shared across all document types, so this is what the consumer dispatches on. Defaults to
+    // AbstractionLicence for backward compatibility with anything already in flight/unaware of
+    // this field.
+    public string DocumentType { get; set; } = "AbstractionLicence";
 }

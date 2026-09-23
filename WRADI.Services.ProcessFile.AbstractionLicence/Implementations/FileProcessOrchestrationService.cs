@@ -46,7 +46,8 @@ public class FileProcessOrchestrationService(
                 Description = $"Batch process request for single file process from: {fileService.FolderPath}",
                 StartDateTimeUtc = DateTime.UtcNow,
                 NumberOfFiles = dmsFilesToProcess.Count,
-                Status = "Batch"
+                Status = "Batch",
+                DocumentType = "AbstractionLicence"
             });
 
         try
@@ -63,7 +64,8 @@ public class FileProcessOrchestrationService(
                         PermitNumber = dmsFileData.PermitNumber,
                         RegionId = naldLicence.RegionCode,
                         ProcessRunId = processRun.ProcessRunId,
-                        RequestedAt =  DateTime.UtcNow
+                        RequestedAt =  DateTime.UtcNow,
+                        DocumentType = "AbstractionLicence"
                     });
                 
                 ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {filePath} sent to single process file queue");

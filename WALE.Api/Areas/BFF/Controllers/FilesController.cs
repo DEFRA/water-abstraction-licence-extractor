@@ -16,8 +16,20 @@ public class FilesController(IFileService fileService) : Controller
     {
         var presignedUrl = await fileService.GetPresignedUrlAsync(filename);
         return Redirect(presignedUrl);
-    }  
-    
+    }
+
+    // GetAsync's redirect target for IFileService implementations with no real presigned-URL
+    // concept (e.g. LocalFileService, for local-filesystem-backed dev/testing) - streams the
+    // file's own bytes directly instead.
+    [HttpGet]
+    public async Task<ActionResult> GetRawAsync([FromQuery] string filename)
+    {
+        var stream = await fileService.GetFileAsStreamAsync(filename);
+        if (stream == null) return NotFound();
+
+        return File(stream, "application/pdf", filename);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<string>>> ListAllAsync()
     {

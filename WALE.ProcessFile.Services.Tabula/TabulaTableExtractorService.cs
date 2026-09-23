@@ -111,6 +111,10 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             }
         }
 
+        await cacheService.SaveOcrImageTextAsync(
+            request,
+            JsonSerializer.Serialize(tables, JsonHelper.GetSerializerOptions()));
+        
         return tables;
     }
 

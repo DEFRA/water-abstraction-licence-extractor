@@ -311,10 +311,11 @@ public class PdfDataExtractorService(
                     $"{nameof(configuration.StructuredTableExtractorService)} cannot be null when config requires structured tables");
             }
             
-            var structuredDocumentTables = await configuration.StructuredTableExtractorService.GetTablesAsync(
-                pdfDocument,
-                fileId,
-                processRunId);
+            var structuredDocumentTables =
+                await configuration.StructuredTableExtractorService.GetTablesAsync(
+                    pdfDocument,
+                    fileId,
+                    processRunId);
             
             foreach (var table in structuredDocumentTables)
             {
@@ -332,10 +333,11 @@ public class PdfDataExtractorService(
                     $"{nameof(configuration.UnstructuredTableExtractorService)} cannot be null when config requires unstructured tables");
             }
             
-            var unstructuredDocumentTables = await configuration.UnstructuredTableExtractorService.GetTablesAsync(
-                pdfDocument,
-                fileId,
-                processRunId);
+            var unstructuredDocumentTables =
+                await configuration.UnstructuredTableExtractorService.GetTablesAsync(
+                    pdfDocument,
+                    fileId,
+                    processRunId);
             
             foreach (var table in unstructuredDocumentTables)
             {

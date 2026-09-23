@@ -7,8 +7,6 @@ import {ScrapeDocuments} from '../components/ScrapeDocuments';
 
 interface SimpleMatchResult {
     fileId: string;
-    // Genuinely nullable - a stub row (created before extraction runs, or left behind by an
-    // errored file) can have no filename yet.
     filename: string | null;
     status: string;
 }
@@ -21,10 +19,7 @@ interface FileDetails {
 }
 
 // Unknown means classification failed outright; NonStandardNarrative means the document didn't
-// match the client's expected format and fell back to generic heuristics - both get essentially
-// none of the template-specific rule tuning T1/T4/T6/T7 have, so they're a genuine, honest
-// lower-confidence signal rather than an invented one. T4/T6/T7 have their own (thinner, but
-// real) rule paths, so they're not included here.
+// match the client's expected format and fell back to generic rules
 const LOW_CONFIDENCE_TEMPLATES = new Set(['unknown', 'nonStandardNarrative']);
 
 function hasContent(value: unknown): boolean {
@@ -36,11 +31,7 @@ function hasContent(value: unknown): boolean {
 }
 
 // Rough completeness proxy: percentage of the report's top-level sections that have at least
-// some content, not a precise field-count - null/omitted leaf fields don't round-trip through
-// the JSON at all (JsonHelper serializes with WhenWritingNull), so there's no way to know the
-// true denominator of "fields that could have been extracted" from the JSON alone without
-// duplicating the whole schema client-side. Section-level is a stable, small, honest signal
-// instead.
+// some content
 function computeCompleteness(report: Record<string, any>): number {
     const sections = [
         report.licenceNumber,
@@ -83,8 +74,6 @@ function InspectionReportPage() {
     const [sortField, setSortField] = useState<SortField | ''>('');
     const [sortAscending, setSortAscending] = useState(true);
 
-    // Same toggle behaviour as ProcessRunLicenceFilters.handleSort on the licence list page:
-    // clicking a new column sorts ascending, clicking the same column again flips direction.
     const handleSort = (field: SortField) => {
         setSortAscending(previous => (sortField === field ? !previous : true));
         setSortField(field);
@@ -166,9 +155,6 @@ function InspectionReportPage() {
                 case 'date': return detailsByFileId[file.fileId]?.date;
                 case 'template': return detailsByFileId[file.fileId]?.template;
                 case 'completeness': return detailsByFileId[file.fileId]?.completeness;
-                // Sorted as 0/1 rather than true/false - booleans don't compare with </> the
-                // same way numbers do, and false-first (native docs first) reads naturally
-                // ascending anyway.
                 case 'isScan': {
                     const isScan = detailsByFileId[file.fileId]?.isScan;
                     return isScan === undefined ? undefined : (isScan ? 1 : 0);
@@ -188,8 +174,6 @@ function InspectionReportPage() {
 
         if (!sortField) return matching;
 
-        // Missing values (still loading, or genuinely absent) always sort to the end regardless
-        // of direction, rather than clumping at whichever end '' or -Infinity would land on.
         return [...matching].sort((a, b) => {
             const valueA = getSortValue(a, sortField);
             const valueB = getSortValue(b, sortField);

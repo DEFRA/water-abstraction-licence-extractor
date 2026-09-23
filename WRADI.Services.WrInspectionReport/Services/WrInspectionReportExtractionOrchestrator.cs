@@ -235,7 +235,26 @@ public static class WrInspectionReportExtractionOrchestrator
         try
         {
             var tables = await tableExtractorService.GetTablesAsync(
-                pdfBytes,
+                new PdfDocument(
+                    null!,
+                    fileId,
+                    false,
+                    pdfBytes,
+                    pdfBytes.Length,
+                    null!,
+                    null!, 
+                    null!, 
+                    new LookupConfiguration(
+                        [],
+                        [],
+                        null!,
+                        null!, null!,
+                        null!,
+                        null!,
+                        null!,
+                        null!,
+                        -1,
+                        DateTime.UtcNow)),
                 fileId,
                 processRunId);
 

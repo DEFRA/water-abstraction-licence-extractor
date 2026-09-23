@@ -1,9 +1,13 @@
+using System.Text.Json;
 using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
 using UglyToad.PdfPig;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OcrService;
+using PdfDocument = WALE.ProcessFile.Core.Models.PdfDocument;
 
 namespace WALE.ProcessFile.Services.Tabula;
 
@@ -25,17 +29,43 @@ namespace WALE.ProcessFile.Services.Tabula;
 //
 // No caching - unlike the cloud-based implementations of this interface, there's no API cost to
 // avoid on a repeat call, only CPU time, which is fast (local PDF parsing, no network round trip).
-public class TabulaTableExtractorService : ITableExtractorService
+public class TabulaTableExtractorService(ICacheService cacheService) : ITableExtractorService
 {
     public string Name => "TabulaSharp";
+    private const int SharedPageNumber = 1;
 
-    public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
-        byte[] documentBytes,
+    public async Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+        PdfDocument pdfDocument,
         Guid fileId,
         int processRunId)
     {
+        var request = new OcrServiceImageTextCacheRequest
+        {
+            PageNumber = SharedPageNumber,
+            ImageNumber = 0,
+            FileId = fileId,
+            OcrServiceName = Name,
+            ProcessRunId = processRunId
+        };
+        
+        var cacheText = await cacheService.GetOcrImageTextAsync(request);
+
+        if (!string.IsNullOrEmpty(cacheText))
+        {
+            var cachedTables = JsonSerializer.Deserialize<List<DocumentTable>>(
+                cacheText,
+                JsonHelper.GetSerializerOptions());
+
+            return cachedTables!;
+        }
+        
+        if (pdfDocument.Bytes == null)
+        {
+            await pdfDocument.OpenInternalDocumentAsync();
+        }
+        
         using var document = UglyToad.PdfPig.PdfDocument.Open(
-            documentBytes,
+            pdfDocument.Bytes!,
             new ParsingOptions { ClipPaths = true });
 
         var tables = new List<DocumentTable>();
@@ -81,7 +111,7 @@ public class TabulaTableExtractorService : ITableExtractorService
             }
         }
 
-        return Task.FromResult<IReadOnlyList<DocumentTable>>(tables);
+        return tables;
     }
 
     private static DocumentTable ToOcrTable(Table table, int pageNumber)

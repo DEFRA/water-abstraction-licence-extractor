@@ -397,7 +397,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task WhenScoringWithTabulaTableExtractionEnabled_ThenReportsPerFieldAccuracy()
     {
-        var tableExtractorService = new TabulaTableExtractorService();
+        var tableExtractorService = new TabulaTableExtractorService(CacheService);
 
         await RunHarnessAsync(tableExtractorService, outputSuffix: "-tabula-table-based");
     }
@@ -424,7 +424,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             return;
         }
 
-        var primaryTableExtractorService = new TabulaTableExtractorService();
+        var primaryTableExtractorService = new TabulaTableExtractorService(CacheService);
         var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
             TestConfig.AiServicesEndpoint,
             TestConfig.AiServicesKey,
@@ -456,7 +456,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         foreach (var threshold in new[] { 1, 4, 7, 10, 13 })
         {
-            var primaryTableExtractorService = new TabulaTableExtractorService();
+            var primaryTableExtractorService = new TabulaTableExtractorService(CacheService);
             var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
                 TestConfig.AiServicesEndpoint,
                 TestConfig.AiServicesKey,

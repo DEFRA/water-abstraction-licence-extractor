@@ -207,7 +207,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService();
+        var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService(CacheService);
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, primaryTableExtractorService);
         var lookupConfiguration2 = BuildLookupConfiguration(pdfFolder, false, primaryTableExtractorService);
 

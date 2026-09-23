@@ -305,12 +305,6 @@ public class PdfDataExtractorService(
         
         if (needsToParseStructuredTables)
         {
-            // TODO hack - do this differently - we can't always go back to the doc
-            if (pdfDocument.Bytes == null)
-            {
-                await pdfDocument.OpenInternalDocumentAsync();
-            }
-
             if (configuration.StructuredTableExtractorService == null)
             {
                 throw new NoNullAllowedException(
@@ -318,7 +312,7 @@ public class PdfDataExtractorService(
             }
             
             var structuredDocumentTables = await configuration.StructuredTableExtractorService.GetTablesAsync(
-                pdfDocument.Bytes!,
+                pdfDocument,
                 fileId,
                 processRunId);
             
@@ -332,12 +326,6 @@ public class PdfDataExtractorService(
         
         if (needsToParseUnstructuredTables)
         {
-            // TODO hack - do this differently - we can't always go back to the doc
-            if (pdfDocument.Bytes == null)
-            {
-                await pdfDocument.OpenInternalDocumentAsync();
-            }
-
             if (configuration.UnstructuredTableExtractorService == null)
             {
                 throw new NoNullAllowedException(
@@ -345,7 +333,7 @@ public class PdfDataExtractorService(
             }
             
             var unstructuredDocumentTables = await configuration.UnstructuredTableExtractorService.GetTablesAsync(
-                pdfDocument.Bytes!,
+                pdfDocument,
                 fileId,
                 processRunId);
             

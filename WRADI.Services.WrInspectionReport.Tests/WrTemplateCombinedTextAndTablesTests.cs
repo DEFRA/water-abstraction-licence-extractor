@@ -59,7 +59,7 @@ public class WrTemplateCombinedTextAndTablesTests
     
     private static async Task<LookupConfiguration> LookupConfigurationAsync(int regionCode, string pdfFolder)
     {
-        var tableExtractorService = new TabulaTableExtractorService();
+        var tableExtractorService = new TabulaTableExtractorService(CacheService);
         
         var config = new LookupConfiguration(
             WrInspectionReportLabelConfiguration.GetLabels(),

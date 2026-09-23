@@ -7,13 +7,46 @@ import {ScrapeDocuments} from '../components/ScrapeDocuments';
 
 interface SimpleMatchResult {
     fileId: string;
-    filename: string;
+    filename: string | null;
     status: string;
 }
 
 interface FileDetails {
     template?: string;
     date?: string;
+    completeness?: number;
+    isScan?: boolean;
+}
+
+// Unknown means classification failed outright; NonStandardNarrative means the document didn't
+// match the client's expected format and fell back to generic rules
+const LOW_CONFIDENCE_TEMPLATES = new Set(['unknown', 'nonStandardNarrative']);
+
+function hasContent(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (Array.isArray(value)) return value.some(hasContent);
+    if (typeof value === 'object') return Object.values(value as Record<string, unknown>).some(hasContent);
+    return true;
+}
+
+// Rough completeness proxy: percentage of the report's top-level sections that have at least
+// some content
+function computeCompleteness(report: Record<string, any>): number {
+    const sections = [
+        report.licenceNumber,
+        report.licenceNumberCleaned,
+        report.inspectionClass,
+        report.address,
+        report.metWith,
+        report.inspectingOfficer,
+        report.inspectionDate,
+        report.licenceProvisions,
+        report.measurementDetails,
+        report.generalComments
+    ];
+
+    return Math.round((sections.filter(hasContent).length / sections.length) * 100);
 }
 
 function InspectionReportPage() {
@@ -27,6 +60,7 @@ function InspectionReportPage() {
     const [filterText, setFilterText] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [templateFilter, setTemplateFilter] = useState('');
+    const [scanFilter, setScanFilter] = useState<'' | 'scan' | 'native'>('');
 
     const [inlineFileId, setInlineFileId] = useState<string | null>(null);
     const [inlineJson, setInlineJson] = useState<unknown>(null);
@@ -35,6 +69,15 @@ function InspectionReportPage() {
     const [detailsByFileId, setDetailsByFileId] = useState<Record<string, FileDetails>>({});
 
     const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
+
+    type SortField = 'filename' | 'status' | 'date' | 'template' | 'completeness' | 'isScan';
+    const [sortField, setSortField] = useState<SortField | ''>('');
+    const [sortAscending, setSortAscending] = useState(true);
+
+    const handleSort = (field: SortField) => {
+        setSortAscending(previous => (sortField === field ? !previous : true));
+        setSortField(field);
+    };
 
     useEffect(() => {
         if (!processRunId) return;
@@ -72,7 +115,9 @@ function InspectionReportPage() {
                         [file.fileId]: {
                             template: wrInspectionReport?.metadata?.template,
                             date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
-                                ?? wrInspectionReport?.metadata?.date?.date
+                                ?? wrInspectionReport?.metadata?.date?.date,
+                            completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined,
+                            isScan: wrInspectionReport?.metadata?.isScan
                         }
                     }));
                 } catch (err) {
@@ -103,13 +148,44 @@ function InspectionReportPage() {
     );
 
     const filteredFiles = useMemo(() => {
+        const getSortValue = (file: SimpleMatchResult, field: SortField): string | number | undefined => {
+            switch (field) {
+                case 'filename': return file.filename ?? undefined;
+                case 'status': return file.status;
+                case 'date': return detailsByFileId[file.fileId]?.date;
+                case 'template': return detailsByFileId[file.fileId]?.template;
+                case 'completeness': return detailsByFileId[file.fileId]?.completeness;
+                case 'isScan': {
+                    const isScan = detailsByFileId[file.fileId]?.isScan;
+                    return isScan === undefined ? undefined : (isScan ? 1 : 0);
+                }
+            }
+        };
+
         const term = filterText.trim().toLowerCase();
-        return files.filter(f =>
-            (term === '' || f.filename.toLowerCase().includes(term)) &&
-            (statusFilter === '' || f.status === statusFilter) &&
-            (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
-        );
-    }, [files, filterText, statusFilter, templateFilter, detailsByFileId]);
+        const matching = files.filter(f => {
+            const isScan = detailsByFileId[f.fileId]?.isScan;
+
+            return (term === '' || (f.filename ?? '').toLowerCase().includes(term))
+                && (statusFilter === '' || f.status === statusFilter)
+                && (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
+                && (scanFilter === '' || (scanFilter === 'scan' ? isScan === true : isScan === false));
+        });
+
+        if (!sortField) return matching;
+
+        return [...matching].sort((a, b) => {
+            const valueA = getSortValue(a, sortField);
+            const valueB = getSortValue(b, sortField);
+
+            if (valueA === undefined && valueB === undefined) return 0;
+            if (valueA === undefined) return 1;
+            if (valueB === undefined) return -1;
+
+            const comparison = valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+            return sortAscending ? comparison : -comparison;
+        });
+    }, [files, filterText, statusFilter, templateFilter, scanFilter, detailsByFileId, sortField, sortAscending]);
 
     const toggleInline = (fileId: string) => {
         if (inlineFileId === fileId) {
@@ -198,18 +274,44 @@ function InspectionReportPage() {
                             ))}
                         </select>
                     </td>
+                    <td>
+                        <select value={scanFilter} onChange={(e) => setScanFilter(e.target.value as '' | 'scan' | 'native')}>
+                            <option value="">All</option>
+                            <option value="scan">Scanned</option>
+                            <option value="native">Native</option>
+                        </select>
+                    </td>
+                    <td></td>
                 </tr>
                 <tr>
-                    <th style={{textAlign: 'left'}}>Filename</th>
-                    <th style={{textAlign: 'left'}}>Status</th>
-                    <th style={{textAlign: 'left'}}>Date</th>
-                    <th style={{textAlign: 'left'}}>Template</th>
+                    <th style={{textAlign: 'left'}}>
+                        Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Status <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Date <a href="#" onClick={(e) => { e.preventDefault(); handleSort('date'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Template <a href="#" onClick={(e) => { e.preventDefault(); handleSort('template'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Scan? <a href="#" onClick={(e) => { e.preventDefault(); handleSort('isScan'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
+                        Completeness <a href="#" onClick={(e) => { e.preventDefault(); handleSort('completeness'); }}>&#8693;</a>
+                    </th>
                 </tr>
                 </thead>
                 <tbody>
-                {filteredFiles.map(file => (
+                {filteredFiles.map(file => {
+                    const details = detailsByFileId[file.fileId];
+                    const lowConfidence = !!details?.template && LOW_CONFIDENCE_TEMPLATES.has(details.template);
+
+                    return (
                     <Fragment key={file.fileId}>
-                        <tr>
+                        <tr style={lowConfidence ? {backgroundColor: '#fff8e1'} : undefined}>
                             <td>
                                 <a href="#" onClick={(e) => {
                                     e.preventDefault();
@@ -219,12 +321,24 @@ function InspectionReportPage() {
                                 </a>
                             </td>
                             <td>{file.status}</td>
-                            <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].date ?? '-') : '...'}</td>
-                            <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].template ?? '-') : '...'}</td>
+                            <td>{details ? (details.date ?? '-') : '...'}</td>
+                            <td>
+                                {details ? (details.template ?? '-') : '...'}
+                                {lowConfidence && (
+                                    <span
+                                        title="Classified as Unknown or NonStandardNarrative - little to no template-specific rule tuning applies, worth a manual check"
+                                        style={{marginLeft: '6px', cursor: 'help'}}
+                                    >
+                                        &#9888;
+                                    </span>
+                                )}
+                            </td>
+                            <td>{details ? (details.isScan === undefined ? '-' : (details.isScan ? 'Yes' : 'No')) : '...'}</td>
+                            <td>{details ? (details.completeness !== undefined ? `${details.completeness}%` : '-') : '...'}</td>
                         </tr>
                         {inlineFileId === file.fileId && (
                             <tr>
-                                <td colSpan={4} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
+                                <td colSpan={6} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
                                     {inlineLoading
                                         ? <p>Loading...</p>
                                         : <JsonView src={inlineJson} collapsed={1} theme="default"/>}
@@ -232,7 +346,8 @@ function InspectionReportPage() {
                             </tr>
                         )}
                     </Fragment>
-                ))}
+                    );
+                })}
                 </tbody>
             </table>
             </>

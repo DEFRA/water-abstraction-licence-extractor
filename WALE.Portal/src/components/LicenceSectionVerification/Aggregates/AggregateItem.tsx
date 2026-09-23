@@ -321,8 +321,7 @@ export const AggregateItem = ({
                                            onChange={(e) => handleLinkedLicenceChange(idx, e.target.value)}
                                            style={{...inputStyle, borderColor: errors[`linkedLicence_${idx}`] ? '#ff4d4f' : '#d9d9d9'}}/>
                                 </div>
-                                <button onClick={() => handleRemoveLinkedLicence(idx)} disabled={linkedLicences.length <= 1}
-                                        style={linkedLicences.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
+                                <button onClick={() => handleRemoveLinkedLicence(idx)} style={removeButtonStyle}>Remove</button>
                             </div>
                             <ValidationError message={errors[`linkedLicence_${idx}`]}/>
                         </div>

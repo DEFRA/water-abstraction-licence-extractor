@@ -14,9 +14,6 @@ using WRADI.Services.ProcessFile.WrInspectionReport;
 
 namespace WRADI.Lambda.FileProcess.Single;
 
-// Shared file-process Lambda for every document type - see WRADI.Lambda.FileProcess.Orchestrator's
-// MessageReceivedFunction for why this keeps one independent IServiceProvider per document type
-// rather than combining registrations into one container.
 [UsedImplicitly]
 public class MessageReceivedFunction
 {

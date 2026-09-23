@@ -8,10 +8,6 @@ using WRADI.ProcessFile.Local.BackgroundServices;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 using WRADI.Services.ProcessFile.WrInspectionReport;
 
-// NOTE - This is used locally rather than running the lambdas to process messages. Polls the one
-// shared queue pair for every document type - see DocumentTypeServiceProviders for why each
-// document type keeps its own independent IServiceProvider rather than sharing one container.
-
 var configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .AddUserSecrets<DocumentTypeServiceProviders>(optional: true)
@@ -32,11 +28,6 @@ var documentTypeServiceProviders = new DocumentTypeServiceProviders(
         ["WrInspectionReport"] = wrInspectionReportServices
     });
 
-// The two hosted services poll the shared queue pair using AbstractionLicence's own
-// FileProcessAppSettings for the queue URLs/polling parameters - the queues are shared, so only
-// one settings instance's queue URLs are actually used going forward. Which document type's
-// services actually process a given message is decided per-message via
-// DocumentTypeServiceProviders, independently of this.
 var pollingSettings = abstractionLicenceServices
     .GetRequiredService<WRADI.Services.ProcessFile.AbstractionLicence.FileProcessAppSettings>();
 

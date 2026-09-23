@@ -14,13 +14,6 @@ using WRADI.Services.ProcessFile.WrInspectionReport;
 
 namespace WRADI.Lambda.FileProcess.Orchestrator;
 
-// Shared orchestrator Lambda for every document type - one queue, one deployable. Each document
-// type keeps its own fully independent IServiceProvider (built from its own, unmodified
-// Add(WrInspectionReport)?FileProcessServices call) rather than sharing one container, since both
-// register IFileProcessOrchestrator against the same WALE.ProcessFile.Core interface with
-// different concrete graphs (different cache/output services, different OCR extractor sets) -
-// combining them into one container would mean one registration silently shadowing the other.
-// Which provider handles a given message is decided per-record from its own DocumentType field.
 [UsedImplicitly]
 public class MessageReceivedFunction
 {

@@ -3,9 +3,6 @@ import {useState, useEffect, useMemo} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import ProcessRunListItem from '../components/ProcessRunListItem.tsx';
 
-// Declared statically rather than derived from the loaded runs, so a document type with zero
-// runs (e.g. AbstractionLicence, if every run happens to currently be an inspection report)
-// still gets a tab instead of silently disappearing.
 const DOCUMENT_TYPES: { key: string; label: string }[] = [
     {key: 'AbstractionLicence', label: 'Abstraction Licence'},
     {key: 'WrInspectionReport', label: 'Inspection Report'},

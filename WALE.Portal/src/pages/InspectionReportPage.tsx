@@ -71,9 +71,6 @@ function InspectionReportPage() {
                         ...previous,
                         [file.fileId]: {
                             template: wrInspectionReport?.metadata?.template,
-                            // Prefer inspectionDate. Fall back to metadata.date (the form's own send date,
-                            // not the inspection visit date) when inspectionDate's date portion
-                            // wasn't captured for this document
                             date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
                                 ?? wrInspectionReport?.metadata?.date?.date
                         }

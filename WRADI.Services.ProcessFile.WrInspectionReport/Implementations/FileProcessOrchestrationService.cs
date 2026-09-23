@@ -6,12 +6,6 @@ using WRADI.Services.Cache.WrInspectionReport.Interfaces;
 
 namespace WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
-// WR51 equivalent of WRADI.Services.ProcessFile.AbstractionLicence's FileProcessOrchestrationService.
-// Sources candidates from InspectionReportFinderResult (the SharePoint-discovery candidate list)
-// instead of NALD/licence_finder_result. No "already processed" exclusion here, matching
-// AbstractionLicence's own orchestrator exactly - it re-enumerates every candidate on every
-// trigger and re-enqueues all of them; de-duplication happens later, per-file, via the generic
-// check-then-claim pattern already inside PdfDataExtractorService.GetMatchesAsync.
 public class FileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,

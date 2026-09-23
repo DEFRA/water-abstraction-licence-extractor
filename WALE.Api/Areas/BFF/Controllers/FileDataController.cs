@@ -233,9 +233,6 @@ public class FileDataController(
         }
     }
 
-    // AdditionalInformation values round-trip through JSON (matches_result.data), so a value
-    // saved as a string comes back as a JsonElement, not a plain string - handle both rather
-    // than assume the runtime shape of an untyped object? dictionary value.
     private static WrTemplateType? GetKnownTemplate(MatchesResult matchesResult)
     {
         if (matchesResult.AdditionalInformation == null

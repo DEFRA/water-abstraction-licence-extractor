@@ -15,9 +15,6 @@ public class MessageController(
     IOptions<AwsSqsQueueConfig> awsQueueConfig,
     IAmazonSQS sqsClient) : Controller
 {
-    // Both queues are shared across every document type - the consumer picks the right
-    // document-type-specific implementation per message (DocumentType below), not per
-    // queue/deployment.
     [HttpPost]
     public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
         [FromQuery] int delayInSeconds = 0,

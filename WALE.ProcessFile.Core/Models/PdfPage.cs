@@ -9,10 +9,6 @@ public class PdfPage
 
     public int NumberOfImages { get; set; }
 
-    // In PDF points, same coordinate space as DocumentLineWordCoordinates - lets a consumer
-    // (the portal's PDF-highlight overlay) normalise a matched word's rectangle to a
-    // percentage of the page regardless of the rendered image's actual pixel size. 0 when
-    // unknown (not populated by every IInternalPdfDocumentPage implementation).
     public double Width { get; set; }
 
     public double Height { get; set; }

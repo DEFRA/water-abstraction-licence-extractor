@@ -20,10 +20,6 @@ interface FieldBox {
     bottom: number;
 }
 
-// One box per matched line, in PDF point-space (same units as DocumentLineWordCoordinates) -
-// deliberately built from the WORD coordinates within each matched line, not the line's own
-// top/left/right/bottom, since the line-level box covers the whole row (label text included);
-// the words are what's left after the label/column narrowing, i.e. just the extracted value.
 function buildFieldBoxes(matches: unknown): Map<string, FieldBox[]> {
     const map = new Map<string, FieldBox[]>();
 
@@ -65,10 +61,6 @@ function buildFieldBoxes(matches: unknown): Map<string, FieldBox[]> {
     return map;
 }
 
-// PDF points use a bottom-left origin (Y grows upward); CSS percentages need a top-left
-// origin, hence the (pageHeight - y) flip. null when the page's own Width/Height aren't
-// known (pages persisted before that was added, or a non-PdfPig source) - callers must
-// treat that as "can't highlight this one", not throw.
 function toPercentBox(box: FieldBox, page: Record<string, any> | undefined) {
     if (!page?.width || !page?.height) return null;
 
@@ -91,9 +83,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
     const [highlightBoxes, setHighlightBoxes] = useState<FieldBox[]>([]);
     const [lastClickInfo, setLastClickInfo] = useState<string | null>(null);
 
-    // Same drag/minimize/maximize/close chrome as the licence report modal (DraggableModal) -
-    // this one's just a single always-present instance rather than an array of stacked modals,
-    // so the position/size state lives here instead of in useReportModals.
     const [position, setPosition] = useState({top: 40, left: 40});
     const [size, setSize] = useState({width: 'calc(100% - 80px)', height: 'calc(100% - 80px)'});
 
@@ -110,9 +99,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
     const pdfScrollRef = useRef<HTMLDivElement>(null);
     const jsonContainerRef = useRef<HTMLDivElement>(null);
     const primaryHighlightRef = useRef<HTMLDivElement | null>(null);
-    // Plain refs, not state - moving between rows is a DOM/imperative concern (which row has
-    // the blue outline), not something that needs its own re-render; only the two pieces that
-    // actually change what's drawn (highlightBoxes, lastClickInfo) are React state.
     const selectedIndexRef = useRef<number>(-1);
     const selectedRowRef = useRef<HTMLElement | null>(null);
 
@@ -149,10 +135,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
         [reportData]
     );
 
-    // react18-json-view has no node-click callback, but every key/value row renders as
-    // <div class="json-view--pair"><span class="json-view--property">name</span>: value</div> -
-    // reading a row's own property span is the shared lookup both a click and an arrow-key
-    // step use once they've picked which row is "current".
     const getPropertyRows = (): HTMLElement[] => {
         if (!jsonContainerRef.current) return [];
 
@@ -186,16 +168,8 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
         setLastClickInfo(anyPercent
             ? null
             : `"${propertyName}" matched, but this file's page size wasn't recorded (reprocess it to enable highlighting).`);
-
-        // Scrolling itself happens in the effect below, once the highlight boxes below have
-        // actually rendered - scrollIntoView on the highlight div (not the page image) handles
-        // both "wrong page" and "right page but scrolled past the highlight" in one call,
-        // rather than only bringing the page's top edge into view.
     };
 
-    // Shared by click and arrow-key navigation - applies the blue "current row" outline
-    // imperatively (there's no React element per rendered JsonView row to attach state-driven
-    // styling to) and scrolls it into view within the JSON pane's own scroll container.
     const selectRow = (row: HTMLElement, index: number) => {
         if (selectedRowRef.current) {
             selectedRowRef.current.style.outline = '';
@@ -220,9 +194,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
         if (index !== -1) selectRow(pairEle, index);
     };
 
-    // Arrow keys, not Tab - Tab is the browser's own focus-traversal key and would fight with
-    // the Close button and JsonView's copy-icon buttons; arrows are free and match how most
-    // tree/JSON viewers already handle stepping between nodes.
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -248,9 +219,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [fieldBoxes, reportData]);
 
-    // The first highlight box (in matched-line order) that actually has page dimensions to
-    // place it with - marked so it can be scrolled into view once rendered, regardless of
-    // which page it's on or how far down that page it sits.
     const percentHighlightsByPage = useMemo(() => {
         const byPage = new Map<number, {percent: NonNullable<ReturnType<typeof toPercentBox>>, isPrimary: boolean}[]>();
         let primaryAssigned = false;
@@ -270,9 +238,6 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
         return byPage;
     }, [highlightBoxes, reportData]);
 
-    // Runs after the highlight divs above have committed to the DOM (primaryHighlightRef is
-    // only ever attached during render, so it's guaranteed current by the time this effect
-    // fires) - centers the PDF pane's scroll on whichever page/position the highlight is at.
     useEffect(() => {
         primaryHighlightRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'});
     }, [percentHighlightsByPage]);

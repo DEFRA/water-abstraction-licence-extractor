@@ -166,7 +166,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 sourceLicenceVersionId: licence?.licenceVersion?.licenceVersionId,
                 primaryType: PrimaryType.NotSet,
                 subType: NullableOfSubType.NotSet,
-                linkedLicences: [''],
+                linkedLicences: [],
                 containedIn: [new ContainedInInformation({source: InformationSource.Document, sectionName: '', linkReason: ''})],
                 points: [new Point({id: '', description: ''})],
                 purposes: [new Purpose({id: '', description: ''})],

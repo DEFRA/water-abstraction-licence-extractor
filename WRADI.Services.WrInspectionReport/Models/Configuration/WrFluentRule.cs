@@ -29,12 +29,10 @@ public sealed class WrFluentRule
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
     private LayoutExtractorTableLookupType _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Default;
     private LayoutExtractorTableShape _layoutExtractorTableShape = LayoutExtractorTableShape.Default;
-    
-    public static WrFluentRule Between(string startText, string endText)
     private bool _boundSameLineWalkByOtherLabelPositions;
     private bool _allowValueToWrapPastSameLineEndTag;
 
-    public static WrRule Between(string startText, string endText)
+    public static WrFluentRule Between(string startText, string endText)
     {
         var rule = new WrFluentRule
         {
@@ -149,8 +147,7 @@ public sealed class WrFluentRule
         return this;
     }
 
-    public WrFluentRule Possibilities(IEnumerable<TextToMatch> p)
-    public WrRule BoundByOtherLabels()
+    public WrFluentRule BoundByOtherLabels()
     {
         _boundSameLineWalkByOtherLabelPositions = true;
         return this;
@@ -159,13 +156,13 @@ public sealed class WrFluentRule
     // See LabelToMatch.AllowValueToWrapPastSameLineEndTag for the full explanation - opt-in
     // only, use for a field whose real value is confirmed to wrap onto a further physical line
     // with no reusable position/content signal distinguishing it from an unrelated field's row.
-    public WrRule AllowValueToWrapPastSameLineEndTag()
+    public WrFluentRule AllowValueToWrapPastSameLineEndTag()
     {
         _allowValueToWrapPastSameLineEndTag = true;
         return this;
     }
 
-    public WrRule Possibilities(IEnumerable<TextToMatch> p)
+    public WrFluentRule Possibilities(IEnumerable<TextToMatch> p)
     {
         _possibilities = p.ToList();
         return this;
@@ -268,8 +265,6 @@ public sealed class WrFluentRule
         LayoutExtractor = _layoutExtractor,
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
         LayoutExtractorTableShape = _layoutExtractorTableShape,
-        ExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
-        BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
         AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag
     };
 }

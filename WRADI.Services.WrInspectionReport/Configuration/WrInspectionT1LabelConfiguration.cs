@@ -54,7 +54,7 @@ public static class WrInspectionT1LabelConfiguration
             // and the footer marker cut a different document short of its true end. Net regression
             // (Hit+PartialHit 36->35), not an improvement - genuine per-document diversity here,
             // not a bounded fix. See wr51_general_comments_gap memory before trying this again.
-            WrRule
+            WrFluentRule
                 .Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
                 .Named(WrInspectionReportFieldNames.GeneralComments)
                 .WholeLine()

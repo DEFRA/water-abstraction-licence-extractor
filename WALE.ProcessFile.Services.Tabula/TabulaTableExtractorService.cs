@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Tabula;
 using Tabula.Detectors;
@@ -152,7 +153,7 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
                 {
                     RowIndex = rowIndex,
                     ColumnIndex = columnIndex,
-                    Content = cell.GetText().Trim(),
+                    Content = GetCellText(cell).Trim(),
                     Left = cell.Left,
                     Top = cell.Top
                 }));
@@ -165,5 +166,77 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             ColumnCount = table.ColumnCount,
             Cells = cells
         };
+    }
+    
+    private static string GetCellText(Cell cell)
+    {
+        var lines = GroupIntoLines(cell.TextElements);
+        var outputTextSb = new StringBuilder();
+        
+        foreach (var line in lines)
+        {
+            var letters = line
+                .SelectMany(word => word.TextElements.OrderBy(letter => letter.Left))
+                .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))
+                .ToList();
+            
+            TextElement? previousLetter = null;
+            var widestLetterWidth = -1.0;
+
+            foreach (var letter in letters)
+            {
+                if (letter.Width > widestLetterWidth)
+                {
+                    widestLetterWidth = letter.Letter.Width;
+                }
+            }
+
+            const double spaceSizeRatio = 0.3;
+            var maxXDiff = widestLetterWidth * spaceSizeRatio;
+        
+            foreach (var letter in letters)
+            {
+                if (previousLetter != null)
+                {
+                    var xDiff = letter.Left - (previousLetter.Left + previousLetter.Letter.Width);
+                
+                    if (xDiff > maxXDiff)
+                    {
+                        outputTextSb.Append(' ');
+                    }
+                }
+
+                outputTextSb.Append(letter.Letter.Value);
+                previousLetter = letter;
+            }
+            
+            outputTextSb.Append('\n');
+        }
+
+        var returnString = outputTextSb.ToString().Trim();
+        return returnString;
+    }
+    
+    private static List<List<TextChunk>> GroupIntoLines(IReadOnlyList<TextChunk> words)
+    {
+        var lines = new List<List<TextChunk>>();
+        const double lineGroupingTolerance = 2.5;
+        
+        // PDF space is Y-up (0 at bottom of the document)
+        foreach (var word in words.OrderByDescending(chunk => chunk.Top))
+        {
+            var currentLine = lines.Count > 0 ? lines[^1] : null;
+
+            if (currentLine != null && currentLine[0].Top - word.Top <= lineGroupingTolerance)
+            {
+                currentLine.Add(word);
+            }
+            else
+            {
+                lines.Add([word]);
+            }
+        }
+
+        return lines;
     }
 }

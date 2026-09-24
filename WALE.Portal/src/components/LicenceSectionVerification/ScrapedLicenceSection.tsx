@@ -4,7 +4,7 @@ import { CollapsibleItem } from './CollapsibleItem';
 
 export interface LicenceSectionBodyProps {
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 interface ScrapedLicenceSectionProps {
@@ -16,7 +16,7 @@ interface ScrapedLicenceSectionProps {
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 export function ScrapedLicenceSection({ title, children, initialOpen = false, outputListDataItem, onOpenReport }: ScrapedLicenceSectionProps) {

@@ -29,7 +29,7 @@ public record LicenceSectionItemSummary
     
     public string? CurrentVerificationType { get; set; }
     public required string[] VerificationTypes { get; set; }
-    
-    public string[] VerificationTypesWithNotes { get; set; }
+
+    public string[] VerificationTypesWithNotes { get; set; } = [];
     public bool ScrapedDataIsDifferent { get; set; }
 }

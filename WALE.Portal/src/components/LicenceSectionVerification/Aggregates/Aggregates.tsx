@@ -15,7 +15,7 @@ import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
-import {getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
+import {getVerificationTypeBackgroundColor, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
@@ -166,7 +166,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 sourceLicenceVersionId: licence?.licenceVersion?.licenceVersionId,
                 primaryType: PrimaryType.NotSet,
                 subType: NullableOfSubType.NotSet,
-                linkedLicences: [''],
+                linkedLicences: [],
                 containedIn: [new ContainedInInformation({source: InformationSource.Document, sectionName: '', linkReason: ''})],
                 points: [new Point({id: '', description: ''})],
                 purposes: [new Purpose({id: '', description: ''})],
@@ -212,6 +212,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             }
             setIsAddingNew(false);
         };
+
+        const linkedLicenceOptions = (currentLicence?.linkedLicences ?? [])
+            .filter(ll => hasAnyOutgoingSections(ll.containedIn))
+            .map(ll => ll.licenceNumber)
+            .filter((n): n is string => !!n);
 
         return (
             <div className="aggregates-container" style={{padding: '8px'}}>
@@ -266,6 +271,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     key={index}
                                     aggregate={aggregate}
                                     itemId={itemId}
+                                    linkedLicenceOptions={linkedLicenceOptions}
                                     isEditing={editingIndex === index && !isWaitingForVerification}
                                     isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                     onUpdate={(updated) => handleUpdateAggregate(index, updated)}

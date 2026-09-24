@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using WALE.ProcessFile.Services.AwsSqs;
 using WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
 using WRADI.Services.ProcessFile.AbstractionLicence;
-//using WRADI.Services.AbstractionLicence.Extensions;
 
 // NOTE - This is used locally rather than running the lambdas to process messages
 
@@ -19,7 +18,6 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         services
-            //.AddAddAbstractionLicenceServices(context.Configuration)
             .AddFileProcessServices(context.Configuration)
             .AddHostedService<FileProcessOrchestrationHostedService>()
             .AddHostedService<FileProcessSingleFileHostedService>()

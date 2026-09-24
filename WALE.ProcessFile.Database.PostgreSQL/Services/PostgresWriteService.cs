@@ -15,10 +15,6 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, JsonSerializerOptions? jsonSerializerOptions = null)
     : IDatabaseWriteService
 {
-    
-    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
-    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
-
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();
@@ -162,87 +158,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
 
         return processRunFile;
-    }
-
-    public async Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set (schema_licence_set_id, short_licence_set_id, process_run_id, date_time_utc) 
-                           VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @ProcessRunId, @DateTimeUtc)
-                           RETURNING licence_set_id
-                           """;
-
-        return await ExecuteScalarAsync(
-            connection,
-            sql,
-            0,
-            new {
-                SchemaLicenceSetId = licenceSetId,
-                ShortLicenceSetId = shortLicenceSetId,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
-    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE licence
-                           SET
-                               file_id = @FileId
-                               , status = @Status
-                               , data = @Data
-                           WHERE
-                                licence_id = @LicenceId
-                                AND process_run_id = @ProcessRunId
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                LicenceId = licenceId,
-                Data = licenceData,
-                ProcessRunId = processRunId,
-                Status = status
-            });
-    }
-
-    public async Task<int> SaveLicenceAsync(
-        string? licenceNumber,
-        string? filename,
-        string status,
-        string licenceData,
-        Guid? fileId,
-        string? permitNumber,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence (file_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
-                           RETURNING licence_id
-                           """;
-
-        return await ExecuteScalarAsync(
-            connection,
-            sql,
-            0,
-            new {
-                FileId = fileId,
-                LicenceNumber = licenceNumber,
-                Filename = filename,
-                Status = status,
-                Data = licenceData,
-                ProcessRunId = processRunId,
-                PermitNumber = permitNumber,
-                DateTimeUtc = DateTime.UtcNow
-            });
     }
 
     public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data)
@@ -741,50 +656,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 
             });
     }
-
-    public async Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber,
-        string licenceVersionId,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set_licence (licence_set_id, licence_id, licence_number, licence_version_id, process_run_id, date_time_utc) 
-                           VALUES (@LicenceSetId, @LicenceId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                LicenceId = licenceId,
-                LicenceNumber = licenceNumber ?? "UNKNOWN",
-                LicenceVersionId = licenceVersionId,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
-    public async Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set_type (licence_set_id, licence_set_type) 
-                           VALUES (@LicenceSetId, @LicenceSetType)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                LicenceSetType = licenceSetType
-            });
-    }
     
     public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
     {
@@ -945,28 +816,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
     
-    public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO aggregate_set (licence_set_id, schema_aggregate_set_id, data, process_run_id, date_time_utc)
-                           VALUES (@LicenceSetId, @SchemaAggregateSetId, @Data, @ProcessRunId, @DateTimeUtc)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                SchemaAggregateSetId = aggregateSetId,
-                Data = data,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         await using var connection = GetPostgresConnection();

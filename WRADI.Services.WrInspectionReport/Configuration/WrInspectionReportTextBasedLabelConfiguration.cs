@@ -84,7 +84,8 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         new("☒") { ExceptWhenInsideWord = true },
         new("☐") { ExceptWhenInsideWord = true },
         new("X") { ExceptWhenInsideWord = true },
-        new("x") { ExceptWhenInsideWord = true }
+        new("x") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true } // Wingdings-style tick glyph (U+F0D6) - see InOrderPossibilities
     ];
 
     // The "grid template" layout prints "Calibration: Conformance: Flow verification: Meter
@@ -139,6 +140,8 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true }, // U+F0D6 - a fifth Wingdings-style tick codepoint,
+        // found on real documents missed by the original 789-doc scan (see comment above)
         new("X") { ExceptWhenInsideWord = true },
         new("☒") { ExceptWhenInsideWord = true },
         new("×") { ExceptWhenInsideWord = true },
@@ -938,13 +941,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("Maintenance:", "N:")
                             .Named($"{name}MaintenanceYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("Readings taken:", "N:")
                             .Named($"{name}ReadingsTakenYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
@@ -952,13 +955,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("N:", "Frequency:")
                             .Named($"{name}MaintenanceNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("N:", "Frequency:")
                             .Named($"{name}ReadingsTakenNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     WrFluentRule

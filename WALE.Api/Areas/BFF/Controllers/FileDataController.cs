@@ -194,8 +194,29 @@ public class FileDataController(
 
     private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
-        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+        var processRuns = await outputService.GetAllProcessRunsAsync();
 
+        var currentProcessId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId;
+        var processRunIds = new List<int> {verification.ProcessRunId};
+
+        if (currentProcessId is > 0 &&
+            currentProcessId > verification.ProcessRunId)
+        {
+            foreach (var processRun in processRuns
+                         .Where(x => x.ProcessRunId > verification.ProcessRunId)
+                         .OrderBy(x => x.ProcessRunId))
+            {
+                processRunIds.Add(processRun.ProcessRunId);
+
+                if (processRun.ProcessRunId == currentProcessId)
+                {
+                    break;
+                }
+            }
+        }
+        
+        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+        
         if (!string.IsNullOrWhiteSpace(mainLicence))
         {
             var licenceList = new List<string> { mainLicence };
@@ -205,8 +226,11 @@ public class FileDataController(
                 licenceList.Add(verification.LicenceSectionItemId);
             }
 
-            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
-                licenceList.ToArray());
+            foreach (var processRunId in processRunIds)
+            {
+                await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId,
+                    licenceList.ToArray());
+            }
         }
     }
 

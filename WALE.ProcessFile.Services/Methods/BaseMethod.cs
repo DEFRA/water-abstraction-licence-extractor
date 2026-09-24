@@ -176,7 +176,7 @@ public static class BaseMethod
                 break;
             case Text.Constant:
                 var result = RestrictToPossibility(request, lines);
-                
+
                 if (result.HasPossiblites)
                 {
                     if (result.LabelGroupResult?.Text != null)
@@ -185,8 +185,17 @@ public static class BaseMethod
                         returnList.Add(labelGroupResult);
                     }
                 }
-                else
+                else if (lines.Count > 0)
                 {
+                    // A field with no Possibilities (a free-text .FromText() rule) and zero
+                    // matched lines means this candidate found nothing on its own line - e.g.
+                    // Units's same-line-only .After("Units") alternate, when the real value
+                    // wraps to the next line instead. Adding an empty-but-present result here
+                    // makes downstream single-value selection see results.Count >= 1 and stop
+                    // trying the label's other alternates (its own .Between("Units","Flow
+                    // Rate") widened candidate included) before they ever run - confirmed via
+                    // isolated trace on wr51__73407g0045 (Units wraps to the line below its own
+                    // "Units:" header, real value "M3 x10").
                     labelGroupResult.Text = lines;
                     returnList.Add(labelGroupResult);
                 }

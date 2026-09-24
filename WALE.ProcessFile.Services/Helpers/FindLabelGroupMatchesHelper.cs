@@ -72,70 +72,45 @@ public static class FindLabelGroupMatchesHelper
                 {
                     foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
                     {
-                        var useOldWay = false;
+                        var (continueOut,
+                                _,
+                                _,
+                                returnResults,
+                                labelGroupResults)
+                            = await FindLabelGroupMatchesInLineAsync(
+                                label,
+                                psuedoLineWrapped.Line,
+                                psuedoLineWrapped.Line,
+                                psuedoLineWrapped,
+                                psuedoLines,
+                                returnList,
+                                psuedoLines.Count,
+                                psuedoLines.Count,
+                                isOcr,
+                                serviceName,
+                                labelGroupName,
+                                lookupConfiguration,
+                                siblingMatches,
+                                null,
+                                null,
+                                pdfDataExtractorService,
+                                processRunId,
+                                regionCode,
+                                documentLineService,
+                                previouslyParsedPaths,
+                                additionalInformationStore,
+                                labelPositionIndex);
 
-                        if (useOldWay)
+                        returnList = labelGroupResults;
+                        
+                        if (continueOut)
                         {
-                            var cellContainsLabelText =
-                                label.Text?.Any(text =>
-                                    psuedoLineWrapped.Line?.Text.Contains(text.Text, StringComparison.OrdinalIgnoreCase) == true);
-
-                            if (cellContainsLabelText != true)
-                            {
-                                continue;
-                            }
-
-                            returnList.Add(new LabelGroupResult
-                            {
-                                IsOcr = false,
-                                MatchedLabel = label,
-                                Text = [psuedoLineWrapped.Line!]
-                            });
-
-                            label.Completed = true;
+                            continue;
                         }
-                        else
+                        
+                        if (returnResults != null)
                         {
-                            var (continueOut,
-                                    _,
-                                    _,
-                                    returnResults,
-                                    labelGroupResults)
-                                = await FindLabelGroupMatchesInLineAsync(
-                                    label,
-                                    psuedoLineWrapped.Line,
-                                    psuedoLineWrapped.Line,
-                                    psuedoLineWrapped,
-                                    psuedoLines,
-                                    returnList,
-                                    psuedoLines.Count,
-                                    psuedoLines.Count,
-                                    isOcr,
-                                    serviceName,
-                                    labelGroupName,
-                                    lookupConfiguration,
-                                    siblingMatches,
-                                    null,
-                                    null,
-                                    pdfDataExtractorService,
-                                    processRunId,
-                                    regionCode,
-                                    documentLineService,
-                                    previouslyParsedPaths,
-                                    additionalInformationStore,
-                                    labelPositionIndex);
-
-                            returnList = labelGroupResults;
-                            
-                            if (continueOut)
-                            {
-                                continue;
-                            }
-                            
-                            if (returnResults != null)
-                            {
-                                return returnResults;
-                            }
+                            return returnResults;
                         }
                     }
                 }
@@ -1422,6 +1397,18 @@ public static class FindLabelGroupMatchesHelper
                 ColumnsText = [textAfterLabel],
                 Label = returnLabel,
                 Position = "AfterLabel"
+            });
+        }
+
+        if (label.Position == LabelPosition.LabelIsActuallyResult
+            && !string.IsNullOrEmpty(textAtLabel) 
+            && returnItems.All(item => item.Position != nameof(LabelPosition.LabelIsActuallyResult)))
+        {
+            returnItems.Add(new TextAndLabelAndPosition
+            {
+                ColumnsText = [textAtLabel],
+                Label = label,
+                Position = "AtLabel"
             });
         }
 

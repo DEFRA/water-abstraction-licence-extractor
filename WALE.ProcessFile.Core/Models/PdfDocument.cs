@@ -44,18 +44,18 @@ public class PdfDocument(
 
     public static int SkipFileIfMoreThenImages { get; set; } = 50;
 
-    public async Task<bool> OpenInternalDocumentAsync()
+    public async Task<IInternalPdfDocument?> OpenInternalDocumentAsync()
     {
         if (InternalDocument != null)
         {
-            return true;
+            return InternalDocument;
         }
 
         InternalDocument = await NoOcrPdfDocumentService.GetPdfDocumentAsync(FileService, PdfFilename);
 
         if (InternalDocument == null)
         {
-            return false;
+            return null;
         }
         
         SizeBytes = InternalDocument.SizeBytes;
@@ -69,7 +69,7 @@ public class PdfDocument(
         }
         
         AlternativeImageProvider = NoOcrAlternativePdfDocumentService.GetAlternativeImageProvider();
-        return true;
+        return InternalDocument;
     }
 
     [field: AllowNull, MaybeNull]
@@ -138,7 +138,7 @@ public class PdfDocument(
     {
         if (FromCache && InternalDocument == null)
         {
-            if (!await OpenInternalDocumentAsync())
+            if (await OpenInternalDocumentAsync() == null)
             {
                 throw new Exception("Could not open internal document");
             }

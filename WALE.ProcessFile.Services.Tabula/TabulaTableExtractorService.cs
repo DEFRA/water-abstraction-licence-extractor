@@ -59,15 +59,13 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             return cachedTables!;
         }
         
-        if (pdfDocument.Bytes == null)
+        var internalDocument = await pdfDocument.OpenInternalDocumentAsync();
+
+        if (internalDocument?.UnderlyingDocument is not UglyToad.PdfPig.PdfDocument document)
         {
-            await pdfDocument.OpenInternalDocumentAsync();
+            throw new Exception("Tabula can only be used when provider is PdfPig");
         }
         
-        using var document = UglyToad.PdfPig.PdfDocument.Open(
-            pdfDocument.Bytes!,
-            new ParsingOptions { ClipPaths = true });
-
         var tables = new List<DocumentTable>();
         var latticeAlgorithm = new SpreadsheetExtractionAlgorithm();
         var streamDetector = new SimpleNurminenDetectionAlgorithm();
@@ -111,6 +109,29 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             }
         }
 
+        var noneEmptyTables = new List<DocumentTable>();
+        
+        foreach (var table in tables)
+        {
+            var anyNoneEmptyCells = false;
+
+            foreach (var cell in table.Cells)
+            {
+                if (!string.IsNullOrEmpty(cell.Content))
+                {
+                    anyNoneEmptyCells = true;
+                    break;
+                }
+            }
+
+            if (anyNoneEmptyCells)
+            {
+                noneEmptyTables.Add(table);
+            }
+        }
+        
+        tables = noneEmptyTables;
+        
         await cacheService.SaveOcrImageTextAsync(
             request,
             JsonSerializer.Serialize(tables, JsonHelper.GetSerializerOptions()));

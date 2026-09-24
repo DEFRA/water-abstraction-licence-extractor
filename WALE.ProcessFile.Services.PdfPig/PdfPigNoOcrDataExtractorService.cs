@@ -70,7 +70,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             return pdfDocument;
         }
 
-        if (!await pdfDocument.OpenInternalDocumentAsync())
+        if (await pdfDocument.OpenInternalDocumentAsync() == null)
         {
             return null;
         }

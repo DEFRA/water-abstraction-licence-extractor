@@ -53,6 +53,17 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
     private static readonly Regex PermitNumberValueRegex = new(@"^[A-Za-z0-9/.\-]{5,20}$");
 
     /// <summary>
+    /// Catches a reconstructed line that's actually the page's own running footer (a "Permit
+    /// number" / value pair, or a "Consolidated Permit Number" / "Page N of M" pair) merged into
+    /// one line by PdfPig's own Y-proximity line grouping - "Permit" and "number" together is
+    /// never genuine clause-heading text, so this is safe to use as a general exclusion rather
+    /// than needing this document's own permit number value to hand.
+    /// </summary>
+    private static bool LooksLikePermitFooterLine(string text) =>
+        text.Contains("Permit", StringComparison.OrdinalIgnoreCase) &&
+        text.Contains("number", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// The real DWF data-quality condition, transcribed from
     /// <c>~/Downloads/DWF updates NPS guide.pdf</c>. Unlike the 3.1.5 replacement text (see
     /// <see cref="WqFormParagraphOverlayTests.New315Items"/>), this clause has no unlettered
@@ -286,13 +297,38 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
         // The cut point is the first line, after the highest 3.3.N clause on the same page, that
         // returns to the same left margin the clause number itself started at - lettered
         // sub-items and wrapped continuation lines are always indented further right than that.
+        //
+        // That margin-return line can itself be the page's own running footer, not a real
+        // heading - confirmed on 8 real files (e.g. wq__17160028, wq__w00243): PdfPig's own line
+        // grouping occasionally merges a two-line "Permit number" / value footer (or a
+        // "Consolidated Permit Number" / "Page N of M" one) into a single reconstructed line
+        // whenever their Y bands sit close enough together, and that merged line sits at the
+        // same left margin as the clause numbers themselves. The exact same merge already had to
+        // be worked around for the reflow cascade's own page-selection lower down in this file -
+        // reusing its "contains both Permit and number" fallback here too, since a real clause
+        // heading never contains both words together.
         var baseMargin = highestClauseLine.Left;
         var cutLine = lines
             .Where(line => line.PageNumber == highestClauseLine.PageNumber)
             .OrderByDescending(line => line.Top)
             .SkipWhile(line => line.LineNumber != highestClauseLine.LineNumber)
             .Skip(1)
-            .FirstOrDefault(line => line.Left >= 0 && line.Left <= baseMargin + 1 && !string.IsNullOrWhiteSpace(line.Text));
+            .FirstOrDefault(line => line.Left >= 0 && line.Left <= baseMargin + 1 && !string.IsNullOrWhiteSpace(line.Text)
+                                     && !LooksLikePermitFooterLine(line.Text));
+
+        // The highest 3.3.N clause can be the very last real content on its own page, with the
+        // next heading-level line (e.g. "4 Information") being the first line of the FOLLOWING
+        // page instead - confirmed on 4 real files (e.g. wq__17160028: clause 3.3.8 ends right at
+        // the bottom of page 8, "4 Information" starts page 9). The same base-margin/footer
+        // exclusion applies; a fresh page's own topmost real line is simply the first candidate
+        // rather than the one after a same-page clause line.
+        cutLine ??= lines
+            .Where(line => line.PageNumber == highestClauseLine.PageNumber + 1
+                            && line.Left >= 0 && line.Left <= baseMargin + 1
+                            && !string.IsNullOrWhiteSpace(line.Text)
+                            && !LooksLikePermitFooterLine(line.Text))
+            .OrderByDescending(line => line.Top)
+            .FirstOrDefault();
 
         if (cutLine == null)
         {

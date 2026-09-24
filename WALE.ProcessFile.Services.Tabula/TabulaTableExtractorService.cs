@@ -175,17 +175,30 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         
         foreach (var line in lines)
         {
+            // Sorting each chunk's own letters and relying on the chunks' insertion order isn't
+            // enough - GroupIntoLines only orders by Top (grouping into rows), so two chunks on
+            // the same row aren't guaranteed to already be left-to-right, and if they overlap in
+            // X a per-chunk sort can't fix that anyway. Flatten first, then sort every letter on
+            // the line globally by its own Left.
             var letters = line
-                .SelectMany(word => word.TextElements.OrderBy(letter => letter.Left))
+                .SelectMany(word => word.TextElements)
                 .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))
+                .OrderBy(letter => letter.Left)
                 .ToList();
-            
+
             TextElement? previousLetter = null;
             var widestLetterWidth = -1.0;
 
             foreach (var letter in letters)
             {
-                if (letter.Width > widestLetterWidth)
+                // Letter.Width (PdfPig's advance width - how far the cursor moves) is what
+                // previousLetterEndX below is actually built from, not TextElement.Width (the
+                // rendered glyph's own bounding-box width, inherited from Tabula's
+                // TableRectangle) - the two measure different things and can diverge
+                // significantly for narrow glyphs. Comparing on one and storing the other meant
+                // widestLetterWidth didn't reliably track the widest letter by the metric this
+                // method actually uses for gap detection.
+                if (letter.Letter.Width > widestLetterWidth)
                 {
                     widestLetterWidth = letter.Letter.Width;
                 }

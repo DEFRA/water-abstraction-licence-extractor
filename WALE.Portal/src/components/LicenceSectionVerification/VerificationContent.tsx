@@ -14,7 +14,7 @@ interface VerificationContentProps {
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 type SubTabType = 'scraped' | 'current' | 'history';
@@ -56,6 +56,10 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
         <div id="properties" style={{ padding: '10px' }}>
             <div id="simpleOverview" style={{ textAlign: 'right' }}>
                 <strong>Licence contains Aggregates (NALD):</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
+                <br/>
+                <strong>NALD Original Signature Date:</strong> {licence.licenceVersion?.naldOrigSignatureDate ? new Date(licence.licenceVersion.naldOrigSignatureDate).toLocaleDateString() : 'N/A'}
+                <br/>
+                <strong>Issue Date:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
             </div>
                 
             <ul className="ul-links">
@@ -80,7 +84,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             setActiveSubTab('scraped');
                         }}
                     >
-                        Scraped / Original
+                        {`Scraped PR ${processRunId}`}
                     </a>
                 </li>
                 <li>

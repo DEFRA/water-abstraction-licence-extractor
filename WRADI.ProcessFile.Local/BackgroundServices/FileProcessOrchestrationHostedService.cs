@@ -1,15 +1,18 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
-namespace WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
+namespace WRADI.ProcessFile.Local.BackgroundServices;
 
 public sealed class FileProcessOrchestrationHostedService(
     IAmazonSQS sqsClient,
-    IFileProcessOrchestrator fileProcessOrchestrator,
+    DocumentTypeServiceProviders documentTypeServiceProviders,
     FileProcessAppSettings settings,
     ILogger<FileProcessOrchestrationHostedService> logger)
     : BackgroundService
@@ -50,6 +53,17 @@ public sealed class FileProcessOrchestrationHostedService(
                     {
                         logger.LogInformation("Processing message {MessageId}", message.MessageId);
                         logger.LogInformation("Message body: {Body}", message.Body);
+
+                        var orchestrationRequest =
+                            JsonConvert.DeserializeObject<FileProcessOrchestrationRequest>(message.Body)
+                            ?? new FileProcessOrchestrationRequest();
+
+                        var serviceProvider = documentTypeServiceProviders.Get(
+                            orchestrationRequest.DocumentType, logger);
+
+                        using var scope = serviceProvider.CreateScope();
+                        var fileProcessOrchestrator = scope.ServiceProvider
+                            .GetRequiredService<IFileProcessOrchestrator>();
 
                         var result = await fileProcessOrchestrator.RunAsync(
                             cancellationToken);

@@ -33,6 +33,8 @@ public sealed class WrFluentRule
     private LayoutExtractorTableLookupType _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Default;
     private LayoutExtractorTableShape _layoutExtractorTableShape = LayoutExtractorTableShape.Default;
     private bool _allowValueToWrapToNextLine;
+    private bool _boundSameLineWalkByOtherLabelPositions;
+    private bool _allowValueToWrapPastSameLineEndTag;
 
     public static WrFluentRule Between(string startText, string endText)
     {
@@ -166,6 +168,21 @@ public sealed class WrFluentRule
         return this;
     }
 
+    public WrFluentRule BoundByOtherLabels()
+    {
+        _boundSameLineWalkByOtherLabelPositions = true;
+        return this;
+    }
+
+    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag for the full explanation - opt-in
+    // only, use for a field whose real value is confirmed to wrap onto a further physical line
+    // with no reusable position/content signal distinguishing it from an unrelated field's row.
+    public WrFluentRule AllowValueToWrapPastSameLineEndTag()
+    {
+        _allowValueToWrapPastSameLineEndTag = true;
+        return this;
+    }
+
     public WrFluentRule Possibilities(IEnumerable<TextToMatch> p)
     {
         _possibilities = p.ToList();
@@ -280,6 +297,7 @@ public sealed class WrFluentRule
         LayoutExtractor = _layoutExtractor,
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
         LayoutExtractorTableShape = _layoutExtractorTableShape,
-        AllowValueToWrapToNextLine = _allowValueToWrapToNextLine
+        AllowValueToWrapToNextLine = _allowValueToWrapToNextLine,
+        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag
     };
 }

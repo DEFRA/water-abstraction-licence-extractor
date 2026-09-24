@@ -140,7 +140,7 @@ public class LabelToMatch
 
     public LayoutExtractorTableLookupType LayoutExtractorTableLookupType { get; init; }
         = LayoutExtractorTableLookupType.Default;
-    
+
     public LayoutExtractorTableShape LayoutExtractorTableShape { get; init; } = LayoutExtractorTableShape.Default;
 
     // ApplicableToMost's Format=="Text" branch (the LabelIsBeforeTextToFind/LabelIsAfterTextToFind
@@ -153,6 +153,19 @@ public class LabelToMatch
     // result. Defaults to false/no-op - a label that doesn't opt in keeps ignoring nextLines
     // exactly as before.
     public bool AllowValueToWrapToNextLine { get; init; }
+
+    // GetTextBetween finds its end-tag on the label's OWN first line (e.g. a same-row
+    // "Meter make: <value> Serial number: <value>" layout) and stops there immediately -
+    // correct when nothing past the end-tag belongs to the field, but wrong when the value
+    // genuinely wraps onto a further line with no position/content signal telling it apart from
+    // an unrelated field's row (confirmed on wr51__SO0420031002__... - every line shares the
+    // same left margin). Setting this keeps the scan going past that first-line match instead,
+    // relying on this same label's own TextEnd to find the real boundary further down - only the
+    // first line's stop-immediately behaviour changes. Defaults to false/no-op for every label
+    // that doesn't opt in - see the wr51_metermake_wrap_gap memory for why a blanket version of
+    // this broke 9 of the other 10 tests in Wr51PdfPigNoOcrPdfTests.cs: this is the common
+    // correct-termination shape for most fields, not the rare case.
+    public bool AllowValueToWrapPastSameLineEndTag { get; init; }
 
     public LabelToMatch Clone()
     {
@@ -205,7 +218,8 @@ public class LabelToMatch
             LayoutExtractor = LayoutExtractor,
             LayoutExtractorTableLookupType = LayoutExtractorTableLookupType,
             LayoutExtractorTableShape = LayoutExtractorTableShape,
-            AllowValueToWrapToNextLine = AllowValueToWrapToNextLine
+            AllowValueToWrapToNextLine = AllowValueToWrapToNextLine,
+            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag
         };
     }
 }

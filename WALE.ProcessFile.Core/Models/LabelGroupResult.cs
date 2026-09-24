@@ -12,7 +12,7 @@ public class LabelGroupResult
 
     public bool IsOcr { get; init; }
 
-    public int LabelStartPageNumber { get; init; }
+    public int LabelStartPageNumber { get; set; }
     
     public int LabelStartLineNumber { get; set; }
     
@@ -212,13 +212,20 @@ public class LabelGroupResult
         MatchedPosition matchedPosition,
         LabelPosition position,
         LabelToMatch label,
-        IEnumerable<DocumentLine> text)
+        IReadOnlyList<DocumentLine> text)
     {
         var labelGroupResult = Clone();
         labelGroupResult.MatchedPosition = matchedPosition;
         labelGroupResult.MatchedLabel = label.Clone();
         labelGroupResult.MatchedLabel.Position = position;
         labelGroupResult.Text = text.ToList();
+        
+        labelGroupResult.LabelStartPageNumber = text.Count > 0
+            ? text.First().PageNumber
+            : labelGroupResult.LabelStartPageNumber;
+        labelGroupResult.LabelStartLineNumber = text.Count > 0
+            ? text.First().LineNumber
+            : labelGroupResult.LabelStartLineNumber;
 
         return labelGroupResult;
     }

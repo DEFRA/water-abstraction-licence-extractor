@@ -1,5 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import { getVerificationWithNotesFirstPart, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -8,8 +8,8 @@ import LinkedLicencesList from "./LinkedLicencesList";
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
     oddRow: boolean;
-    onOpenReport: (fileId: string) => void;
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
@@ -23,7 +23,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(item.fileId!);
+                       onOpenReport(item.fileId!, item.licenceId!, item.matchesResultId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
             </td>
@@ -66,9 +66,11 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                             return (
                                                 <span key={itemId}>
                                                     {itemId}{' '}
-                                                    {(v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                        <span key={idx} title={vt ?? ''} style={{
-                                                            backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                    {(v.verificationTypesWithNotes?.length
+                                                        ? v.verificationTypesWithNotes
+                                                        : v.verificationTypes || []).map((vt: string, idx: number) => (
+                                                        <span key={idx} title={vt.replace('::', ' #') ?? ''} style={{
+                                                            backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',
                                                             fontSize: '0.7em',
                                                             padding: '1px 3px',
@@ -78,7 +80,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                             fontWeight: 'bold',
                                                             fontFamily: 'sans-serif'
                                                         }}>
-                                                            {getVerificationTypeInitials(vt)}
+                                                            {getVerificationTypeInitials(getVerificationWithNotesFirstPart(vt))}
                                                         </span>
                                                     ))}
                                                     {v.scrapedDataIsDifferent && '🚩'}

@@ -38,9 +38,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// </summary>
 public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 {
-    private static readonly string GroundTruthFolder =
-        Environment.GetEnvironmentVariable("WR51_GROUND_TRUTH_FOLDER")
-        ?? $"{TestConfig.PdfFolder}/truth";
+    private static readonly string GroundTruthFolder = $"{TestConfig.PdfFolder}/truth";
 
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
@@ -482,7 +480,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             testOutputHelper.WriteLine(
                 $"Ground-truth folder not found at {GroundTruthFolder} - this is an external, " +
                 "non-git-tracked golden set that only exists on the machine it was labelled on. " +
-                "Set WR51_GROUND_TRUTH_FOLDER to point at it, or skip this test elsewhere. Returning without failure.");
+                "Copy the truth files there (a /truth subfolder of this project's PdfFolder " +
+                "dotnet user-secret) to run this test. Returning without failure.");
             return;
         }
 

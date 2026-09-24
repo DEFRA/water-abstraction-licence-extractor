@@ -976,13 +976,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("Maintenance:", "N:")
                             .Named($"{name}MaintenanceYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new(""), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("Readings taken:", "N:")
                             .Named($"{name}ReadingsTakenYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new(""), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
@@ -990,13 +990,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("N:", "Frequency:")
                             .Named($"{name}MaintenanceNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new(""), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("N:", "Frequency:")
                             .Named($"{name}ReadingsTakenNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new(""), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     WrFluentRule

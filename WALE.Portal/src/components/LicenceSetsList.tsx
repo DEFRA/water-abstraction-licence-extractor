@@ -4,7 +4,7 @@ import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListProps {
     item: OutputListDataItem;
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
@@ -26,6 +26,8 @@ export function LicenceSetsList({item, onOpenLicenceSetReport, showSingles}: Lic
                 key={index} 
                 licenceSet={ls}
                 fileId={item.fileId}
+                licenceId={item.licenceId}
+                matchesResultId={item.matchesResultId}
                 onOpenLicenceSetReport={onOpenLicenceSetReport}
             />
         ))}

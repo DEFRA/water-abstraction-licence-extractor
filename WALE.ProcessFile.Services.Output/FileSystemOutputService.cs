@@ -1,4 +1,3 @@
-using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
@@ -233,6 +232,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     }
 
     public Task<List<ProcessRun>> GetAllProcessRunsAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId)
     {
         throw new NotImplementedException();
     }

@@ -67,9 +67,11 @@ public interface IOutputService
     Task<List<ProcessRun>> GetProcessRunsAsync();
 
     Task<List<ProcessRun>> GetAllProcessRunsAsync();
-    
+
+    Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId);
+
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId);
-    
+
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId);
     
     Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,

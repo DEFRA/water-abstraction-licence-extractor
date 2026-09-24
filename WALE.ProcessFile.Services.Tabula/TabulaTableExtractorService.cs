@@ -187,34 +187,17 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
                 .ToList();
 
             TextElement? previousLetter = null;
-            var widestLetterWidth = -1.0;
+            const double spaceGapTolerance = 0.5;
 
-            foreach (var letter in letters)
-            {
-                // Letter.Width (PdfPig's advance width - how far the cursor moves) is what
-                // previousLetterEndX below is actually built from, not TextElement.Width (the
-                // rendered glyph's own bounding-box width, inherited from Tabula's
-                // TableRectangle) - the two measure different things and can diverge
-                // significantly for narrow glyphs. Comparing on one and storing the other meant
-                // widestLetterWidth didn't reliably track the widest letter by the metric this
-                // method actually uses for gap detection.
-                if (letter.Letter.Width > widestLetterWidth)
-                {
-                    widestLetterWidth = letter.Letter.Width;
-                }
-            }
-
-            const double spaceSizeRatio = 0.3; // Ratio of a space compared to normal characters in that font
-            var maxDiffInX = widestLetterWidth * spaceSizeRatio;
-        
             foreach (var letter in letters)
             {
                 if (previousLetter != null)
                 {
-                    var previousLetterEndX = previousLetter.Left + previousLetter.Letter.Width;
-                    var diffInX = letter.Left - previousLetterEndX;
-                
-                    if (diffInX > maxDiffInX)
+                    var previousLetterRight = previousLetter.Left + previousLetter.Letter.Width;
+                    var gap = letter.Left - previousLetterRight;
+                    var threshold = Math.Max(previousLetter.WidthOfSpace, letter.WidthOfSpace) * spaceGapTolerance;
+
+                    if (gap > threshold)
                     {
                         outputTextSb.Append(' ');
                     }

@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
@@ -440,22 +439,38 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               (
-                               SELECT COUNT(*)
-                                   FROM licence
-                                   WHERE process_run_id = process_run.process_run_id
-                           ) AS number_of_files,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM licence_list_item
-                                       WHERE process_run_id = process_run.process_run_id
-                                         AND status = 'Live'
-                               ) AS SuccessCount
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
+                               end_date_time_utc,
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                               END AS number_of_files,
+                               document_type,
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence_list_item
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Live'
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Ok'
+                                   )
+                               END AS SuccessCount
                            FROM process_run
                            WHERE end_date_time_utc IS NOT NULL;
                            """;
@@ -479,8 +494,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM licence l
                            JOIN process_run pr
                                ON l.process_run_id = pr.process_run_id 
-                           WHERE file_id = @FileId 
-                           ORDER BY l.process_run_id DESC
+                           WHERE
+                               file_id = @FileId 
+                           ORDER BY
+                               l.process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -493,13 +510,78 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId
             });
     }
-    
+
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               l.process_run_id, 
+                               pr.description, 
+                               pr.start_date_time_utc, 
+                               pr.end_date_time_utc, 
+                               pr.number_of_files 
+                           FROM licence l
+                           JOIN process_run pr
+                               ON l.process_run_id = pr.process_run_id 
+                           WHERE
+                               licence_id = @LicenceId 
+                           ORDER BY
+                               l.process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<ProcessRun>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
+            });
+    }
+
+    public async Task<MatchesResult?> GetMatchesResult(int matchesResultId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               data 
+                           FROM matches_result 
+                           WHERE
+                               matches_result_id = @MatchesResultId
+                           ORDER BY
+                               process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                MatchesResultId = matchesResultId
+            });
+
+        var matchesResult = result == null
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = matchesResultId;
+        }
+
+        return matchesResult;
+    }
+
     public async Task<MatchesResult?> GetMatchesResult(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
-                           FROM matches_result 
+                           SELECT data
+                           FROM matches_result
                            WHERE file_id = @FileId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
@@ -520,7 +602,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
+                           SELECT
+                               matches_result_id,
+                               data 
                            FROM matches_result 
                            WHERE
                                file_id = @FileId
@@ -529,7 +613,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<string>(
+        var result = await QuerySingleOrDefaultAsync<(int MatchesResultId, string? Data)>(
             connection,
             sql,
             0,
@@ -539,9 +623,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId
             });
 
-        return result == null
+        var matchesResult = result.Data == null
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+            : JsonSerializer.Deserialize<MatchesResult>(result.Data, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = result.MatchesResultId;
+        }
+
+        return matchesResult;
     }
     
     public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
@@ -594,7 +685,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
         return results.ToList();
     }
-    
+
     public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
         await using var connection = GetPostgresConnection();
@@ -659,12 +750,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               number_of_files
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
+                               end_date_time_utc,
+                               number_of_files,
+                               status,
+                               document_type
                            FROM process_run
                            """;
 
@@ -679,8 +772,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            select
-                               filename,
                                file_id,
+                               filename,
                                status
                            FROM public.matches_result
                            where

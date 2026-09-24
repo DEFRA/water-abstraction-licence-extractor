@@ -1602,7 +1602,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 1, 2);
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

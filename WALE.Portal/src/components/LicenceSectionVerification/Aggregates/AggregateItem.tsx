@@ -12,13 +12,15 @@ import {
     LimitPeriodType,
     NullableOfCutoffType,
     InformationSource,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
+import {isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
 
 interface AggregateItemProps {
     aggregate?: Aggregate;
@@ -34,7 +36,8 @@ interface AggregateItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -65,6 +68,7 @@ export const AggregateItem = ({
                                    onOverride,
                                    onRequestBusinessReview,
                                    onCompleteBusinessReview,
+                                   outputListDataItem,
                                    scrapedView,
                                    history
                                }: AggregateItemProps) => {
@@ -560,6 +564,7 @@ export const AggregateItem = ({
     const summary = (
         <div style={{fontSize: '0.9rem'}}>
             <strong>{aggregate.id || 'N/A'}</strong>
+            {isScrapedDataDifferent(outputListDataItem, 'Aggregates', itemId) && ' 🚩'}
         </div>
     );
 

@@ -21,7 +21,8 @@ public class PdfDataExtractorService(
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     IMessageQueueService  apiMessageQueueService,
-    int id = -1) : IPdfDataExtractorService
+    int id = -1,
+    string documentType = "AbstractionLicence") : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
@@ -98,6 +99,7 @@ public class PdfDataExtractorService(
             processRunId,
             isUpdate);
 
+        matchesResult.MatchesResultId = matchResultId;
         var dtStartSaveMatches = DateTime.Now;
 
         if (matchesResult.Matches == null)
@@ -191,7 +193,8 @@ public class PdfDataExtractorService(
                 ProcessRunId = processRunId,
                 RegionId = regionId,
                 RequestedAt = DateTime.Now,
-                LockRetryCount = currentLockRetryCount + 1
+                LockRetryCount = currentLockRetryCount + 1,
+                DocumentType = documentType
             });
 
         return (true, null);
@@ -213,6 +216,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            MatchesResultId = -1,
             FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(ScrapeStatus.Ok),

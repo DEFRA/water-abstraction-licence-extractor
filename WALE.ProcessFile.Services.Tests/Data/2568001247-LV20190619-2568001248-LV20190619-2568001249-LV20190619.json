@@ -155,6 +155,8 @@
   ],
   "licences": [
     {
+      "licenceId": 0,
+      "matchesResultId": -1,
       "id": "2568001249-LV20190619",
       "status": "Ok",
       "licenceNumber": {
@@ -446,6 +448,8 @@
       }
     },
     {
+      "licenceId": 0,
+      "matchesResultId": -1,
       "id": "2568001247-LV20190619",
       "status": "Ok",
       "licenceNumber": {
@@ -735,6 +739,8 @@
       }
     },
     {
+      "licenceId": 0,
+      "matchesResultId": -1,
       "id": "2568001248-LV20190619",
       "status": "Ok",
       "licenceNumber": {

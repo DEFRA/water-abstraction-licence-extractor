@@ -28,7 +28,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -50,7 +50,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -67,7 +67,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -87,7 +87,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         
@@ -108,7 +108,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             processRun.ProcessRunId
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
@@ -269,9 +269,32 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         return licenceSets;
     }
 
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
+    {
+        throw new NotImplementedException();
+    }
+    
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
+    {
+        var path = $"/Extractor/Licence/GetByLicenceId?licenceId={licenceId}&applyVerifications={applyVerifications}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        if (string.IsNullOrEmpty(content))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
@@ -395,7 +418,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

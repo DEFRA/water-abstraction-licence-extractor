@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Interfaces;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -27,6 +29,18 @@ public class ProcessRunsController(
     {
         var processRuns = await outputService.GetProcessRunsAsync();
         return Ok(processRuns.OrderByDescending(pr => pr.ProcessRunId));
+    }
+    
+    [HttpGet]
+    public ActionResult<IReadOnlyCollection<string>> GetDocumentSections()
+    {
+        return Ok(DocumentSectionNames.GetAll());
+    }
+    
+    [HttpGet]
+    public ActionResult<IReadOnlyCollection<string>> GetLinkReasons()
+    {
+        return Ok(LinkReason.GetAll());
     }
     
     [HttpGet]
@@ -98,41 +112,24 @@ public class ProcessRunsController(
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunList(
+    public async Task<ActionResult<ProcessRunResponse>> GetProcessRunListAsync(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     {
-        var countTask =
-            licenceListRepository.GetLicencesListSearchCountAsync(
-                processRunId,
-                query);
+        var countTask = licenceListRepository.GetLicencesListSearchCountAsync(
+            processRunId,
+            query);
 
-        var licenceListItemsTask =
-            licenceListRepository.GetLicencesListSearchAsync(
-                processRunId,
-                query);
+        var licenceListItemsTask = licenceListRepository.GetLicencesListSearchAsync(
+            processRunId,
+            query);
 
-        var issuersTask =
-            GetDistinctListIssuers(processRunId);
+        var issuersTask = GetDistinctListIssuers(processRunId);
+        var licenceSetIdsTask = GetDistinctListLicenceSetIds(processRunId);
+        var issueDatesTask = GetDistinctListDates(processRunId);
 
-        var licenceSetIdsTask =
-            GetDistinctListLicenceSetIds(processRunId);
-
-        var issueDatesTask =
-            GetDistinctListDates(processRunId);
-
-        await Task.WhenAll(
-            countTask,
-            licenceListItemsTask,
-            issuersTask,
-            licenceSetIdsTask,
-            issueDatesTask);
-
-        var licenceListItems = await licenceListItemsTask;
-
-        var outputList =
-            licenceListItemModelService
-                .ConvertToOutputListDataItems(licenceListItems);
+        var outputList = licenceListItemModelService.ConvertToOutputListDataItems(
+            await licenceListItemsTask);
 
         var processRun = new ProcessRunResponse
         {
@@ -151,7 +148,10 @@ public class ProcessRunsController(
         [FromRoute] int processRunId,
         [FromBody] string[] licenceNumbers)
     {
-        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId, licenceNumbers);  
+        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
+            processRunId,
+            licenceNumbers);
+        
         return Ok(result);
     }
 

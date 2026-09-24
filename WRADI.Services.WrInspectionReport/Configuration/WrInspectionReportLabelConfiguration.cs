@@ -449,6 +449,7 @@ public static class WrInspectionReportLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no")
+                .AlsoEndsAt("Other:-", "Certificates or records", "Date of certificate", "Meter verification")
                 .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrFluentRule

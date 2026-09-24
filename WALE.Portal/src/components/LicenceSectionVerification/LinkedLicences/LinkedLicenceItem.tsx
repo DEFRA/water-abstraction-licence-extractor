@@ -4,7 +4,8 @@ import {
     NullableOfInformationDirection,
     ContainedInInformation,
     InformationSource,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
@@ -12,9 +13,10 @@ import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 import NaldOnlyTag from "../../NaldOnlyTag.tsx";
+import ImpoundmentTag from "../../ImpoundmentTag.tsx";
 
 interface LinkedLicenceItemProps {
     linkedLicence?: LinkedLicence;
@@ -29,7 +31,8 @@ interface LinkedLicenceItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
 }
@@ -47,6 +50,7 @@ export const LinkedLicenceItem = ({
                                       onRequestBusinessReview,
                                       onCompleteBusinessReview,
                                       onOpenReport,
+                                      outputListDataItem,
                                       scrapedView,
                                       history
                                   }: LinkedLicenceItemProps) => {
@@ -58,7 +62,7 @@ export const LinkedLicenceItem = ({
         return null;
     }
 
-    const linkedFilename = getFileId(linkedLicence.licenceNumber);
+    const linkedFileId = getFileId(linkedLicence.licenceNumber);
 
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
@@ -163,6 +167,7 @@ export const LinkedLicenceItem = ({
                         <ValidationError message={errors.licenceNumber}/>
                         <NaldStatusTag status={linkedLicence.naldStatus}/>
                         <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                        <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
                     </div>
                     <div style={{flex: 1}}>
                         <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px'}}>Permit
@@ -286,17 +291,19 @@ export const LinkedLicenceItem = ({
 
     const summary = (
         <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.9rem'}}>
-            <strong>{linkedFilename ? (
+            <strong>{linkedFileId ? (
                 <a href="#" onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onOpenReport?.(linkedFilename);
+                    onOpenReport?.(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
                 }}>{linkedLicence.licenceNumber || 'N/A'}</a>
             ) : (
                 linkedLicence.licenceNumber || 'N/A'
             )}</strong>
             <NaldStatusTag status={linkedLicence.naldStatus}/>
             <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+            <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
+            {isScrapedDataDifferent(outputListDataItem, 'Linked Licences', linkedLicence.licenceNumber) && '🚩'}
         </div>
     );
 
@@ -304,16 +311,17 @@ export const LinkedLicenceItem = ({
         <CollapsibleItem summary={summary} defaultOpen={true}>
             <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '8px'}}>
                 <p style={{margin: 0}}><strong>Linked Licence Number:</strong>
-                    {linkedFilename ? (
+                    {linkedFileId ? (
                         <a href="#" onClick={(e) => {
                             e.preventDefault();
-                            onOpenReport?.(linkedFilename);
+                            onOpenReport?.(linkedFileId, linkedLicence.licenceId, linkedLicence.matchesResultId);
                         }}>{linkedLicence.licenceNumber || 'N/A'}</a>
                     ) : (
                         linkedLicence.licenceNumber || 'N/A'
                     )}
                     <NaldStatusTag status={linkedLicence.naldStatus}/>
                     <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                    <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
                 </p>
                 <p style={{margin: 0}}><strong>Permit Number:</strong> {linkedLicence.permitNumber || 'N/A'}</p>
                 <div style={{marginBottom: '8px'}}><strong>Because of

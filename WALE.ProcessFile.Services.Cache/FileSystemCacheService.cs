@@ -481,7 +481,7 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
     {
         return Task.CompletedTask;
     }
-    
+
     public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
         throw new NotImplementedException();

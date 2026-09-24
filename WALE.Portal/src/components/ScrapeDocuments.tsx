@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { waleApiBaseUrl } from '../api/apiClient.ts';
 import  { Client }from '../api/generated/apiClient';
 
-export function ScrapeDocuments() {
+interface ScrapeDocumentsProps {
+    documentType?: string;
+}
+
+export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDocumentsProps) {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isStarting, setIsStarting] = useState(false);
@@ -14,7 +18,7 @@ export function ScrapeDocuments() {
         setIsStarting(true);
 
         try {
-            await client.sendFileProcessOrchestrationMessage(undefined);
+            await client.sendFileProcessOrchestrationMessage(undefined, documentType);
 
             setSuccessMessage('Scraping orchestration process started successfully.');
         } catch (err) {

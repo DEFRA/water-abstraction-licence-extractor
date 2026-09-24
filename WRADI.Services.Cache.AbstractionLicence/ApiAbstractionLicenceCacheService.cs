@@ -277,9 +277,10 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
         int regionCode,
-        bool slashesRemoved = false)
+        bool slashesRemoved = false,
+        bool includeDetail = true)
     {
-        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}&slashesRemoved={slashesRemoved}";
+        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}&slashesRemoved={slashesRemoved}&includeDetail={includeDetail}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

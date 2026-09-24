@@ -1,4 +1,4 @@
-import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
+import {useState, useImperativeHandle, forwardRef, useEffect, useRef} from 'react';
 import {
     type Licence,
     LinkedLicence,
@@ -42,6 +42,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         const [originalItem, setOriginalItem] = useState<LinkedLicence | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
+        const naldLookupRequestRef = useRef(0);
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
@@ -109,6 +110,43 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
             fetchLinkedLicences();
         }, [licence?.dmsPermitNumber, currentLicence]);
+
+        const addingLicenceNumber = isAddingNew && editingIndex !== null
+            ? linkedLicences[editingIndex]?.licenceNumber?.trim()
+            : undefined;
+
+        const lookupNaldData = async (index: number, licenceNumber: string) => {
+            const requestId = ++naldLookupRequestRef.current;
+            try {
+                const naldData = await waleApiClient.getLicenceNaldData(licenceNumber);
+                if (requestId !== naldLookupRequestRef.current) return;
+
+                setLinkedLicences(prev => {
+                    const ll = prev[index];
+                    if (!ll || ll.licenceNumber?.trim() !== licenceNumber) return prev;
+
+                    const newList = [...prev];
+                    newList[index] = new LinkedLicence({
+                        ...ll,
+                        naldStatus: naldData.naldStatus,
+                        licenceType: naldData.licenceType,
+                        regionId: naldData.regionId
+                    });
+                    return newList;
+                });
+            } catch (err) {
+                console.error('Error looking up NALD data:', err);
+            }
+        };
+
+        // Debounced so typing a licence number doesn't fire a request per keystroke
+        useEffect(() => {
+            if (!addingLicenceNumber || editingIndex === null) return;
+
+            const handle = setTimeout(() => lookupNaldData(editingIndex, addingLicenceNumber), 500);
+
+            return () => clearTimeout(handle);
+        }, [addingLicenceNumber, editingIndex]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({
@@ -267,8 +305,13 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                                     onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                                     onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                                    onOverride={() => {
+                                    onOverride={async () => {
                                         if (editingIndex === index) {
+                                            // Added before the debounced lookup resolved, so resolve now to save the LL with its NALD data
+                                            const licenceNumber = ll.licenceNumber?.trim();
+                                            if (isAddingNew && licenceNumber && !ll.naldStatus) {
+                                                await lookupNaldData(index, licenceNumber);
+                                            }
                                             setIsWaitingForVerification(true);
                                             onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
                                         } else {

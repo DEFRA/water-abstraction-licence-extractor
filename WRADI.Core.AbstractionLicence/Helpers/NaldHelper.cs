@@ -1,3 +1,4 @@
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using CartesianReference = WALE.ProcessFile.Core.Models.CartesianReference;
 using NationalGridReference = WALE.ProcessFile.Core.Models.NationalGridReference;
@@ -272,5 +273,54 @@ public static class NaldHelper
         {
             naldDataPoint.PurposeIds.Add(purposeId);
         }
+    }
+
+    public static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
+        NaldAbstractionData? naldData)
+    {
+        if (naldData == null)
+        {
+            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
+        }
+        
+        NaldLicenceStatus status;
+
+        if (naldData.RevocationDate != null && naldData.RevocationDate.Value < DateTime.Now)
+        {
+            status = NaldLicenceStatus.Revoked;
+        }
+        else if (naldData.ExpiryDate != null && naldData.ExpiryDate.Value < DateTime.Now)
+        {
+            status = NaldLicenceStatus.Expired;
+        }
+        else if (naldData.LapsedDate != null && naldData.LapsedDate.Value < DateTime.Now)
+        {
+            status = NaldLicenceStatus.Lapsed;
+        }
+        else if ((naldData.EffEndDate == null || naldData.EffEndDate.Value > DateTime.Now)
+            && (naldData.EffStDate == null || DateTime.Now > naldData.EffStDate.Value))
+        {
+            status = NaldLicenceStatus.Live;
+        }
+        else
+        {
+            status = NaldLicenceStatus.Unknown;
+        }
+        
+        var type = naldData.AsrcCode switch
+        {
+            "G" => LicenceType.GroundWaterAbstraction,
+            "S" => LicenceType.SurfaceWaterAbstraction,
+            _ => LicenceType.Abstraction
+        };
+
+        return (status, type);
+    }
+
+    public static NaldLicenceStatus GetImpoundmentLicenceStatus(NaldImpoundmentData? naldData)
+    {
+        return naldData?.RevocationDate == null
+            ? NaldLicenceStatus.Live
+            : NaldLicenceStatus.Revoked;
     }
 }

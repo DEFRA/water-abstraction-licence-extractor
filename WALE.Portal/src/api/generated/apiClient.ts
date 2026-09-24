@@ -2191,9 +2191,10 @@ export class Client {
      * @param licenceNumber (optional) 
      * @param regionCode (optional) 
      * @param slashesRemoved (optional) 
+     * @param includeDetail (optional) 
      * @return OK
      */
-    get4(licenceNumber: string | undefined, regionCode: number | undefined, slashesRemoved: boolean | undefined): Promise<void> {
+    get4(licenceNumber: string | undefined, regionCode: number | undefined, slashesRemoved: boolean | undefined, includeDetail: boolean | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NaldData/Get?";
         if (licenceNumber === null)
             throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
@@ -2207,6 +2208,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'slashesRemoved' cannot be null.");
         else if (slashesRemoved !== undefined)
             url_ += "slashesRemoved=" + encodeURIComponent("" + slashesRemoved) + "&";
+        if (includeDetail === null)
+            throw new globalThis.Error("The parameter 'includeDetail' cannot be null.");
+        else if (includeDetail !== undefined)
+            url_ += "includeDetail=" + encodeURIComponent("" + includeDetail) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4789,6 +4794,48 @@ export class Client {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @return OK
+     */
+    getLicenceNaldData(licenceNumber: string | undefined): Promise<LicenceNaldData> {
+        let url_ = this.baseUrl + "/BFF/NaldLookup/GetLicenceNaldData?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceNaldData(_response);
+        });
+    }
+
+    protected processGetLicenceNaldData(response: Response): Promise<LicenceNaldData> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceNaldData.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceNaldData>(null as any);
     }
 
     /**
@@ -7776,6 +7823,66 @@ export interface ILicenceFinderResult {
     seenInDmsExtract?: boolean;
     weHaveDownloaded?: boolean | undefined;
     liveLicenceFound?: boolean | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceNaldData implements ILicenceNaldData {
+    licenceNumber?: string | undefined;
+    naldStatus?: NaldLicenceStatus;
+    licenceType?: LicenceType;
+    regionId?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceNaldData) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumber = _data["licenceNumber"];
+            this.naldStatus = _data["naldStatus"];
+            this.licenceType = _data["licenceType"];
+            this.regionId = _data["regionId"];
+        }
+    }
+
+    static fromJS(data: any): LicenceNaldData {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceNaldData();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumber"] = this.licenceNumber;
+        data["naldStatus"] = this.naldStatus;
+        data["licenceType"] = this.licenceType;
+        data["regionId"] = this.regionId;
+        return data;
+    }
+}
+
+export interface ILicenceNaldData {
+    licenceNumber?: string | undefined;
+    naldStatus?: NaldLicenceStatus;
+    licenceType?: LicenceType;
+    regionId?: number | undefined;
 
     [key: string]: any;
 }

@@ -191,16 +191,17 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
                 }
             }
 
-            const double spaceSizeRatio = 0.3;
-            var maxXDiff = widestLetterWidth * spaceSizeRatio;
+            const double spaceSizeRatio = 0.3; // Ratio of a space compared to normal characters in that font
+            var maxDiffInX = widestLetterWidth * spaceSizeRatio;
         
             foreach (var letter in letters)
             {
                 if (previousLetter != null)
                 {
-                    var xDiff = letter.Left - (previousLetter.Left + previousLetter.Letter.Width);
+                    var previousLetterEndX = previousLetter.Left + previousLetter.Letter.Width;
+                    var diffInX = letter.Left - previousLetterEndX;
                 
-                    if (xDiff > maxXDiff)
+                    if (diffInX > maxDiffInX)
                     {
                         outputTextSb.Append(' ');
                     }
@@ -213,27 +214,26 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             outputTextSb.Append('\n');
         }
 
-        var returnString = outputTextSb.ToString().Trim();
-        return returnString;
+        return outputTextSb.ToString().Trim();
     }
     
-    private static List<List<TextChunk>> GroupIntoLines(IReadOnlyList<TextChunk> words)
+    private static List<List<TextChunk>> GroupIntoLines(IReadOnlyList<TextChunk> wordsOrChunks)
     {
         var lines = new List<List<TextChunk>>();
         const double lineGroupingTolerance = 2.5;
         
         // PDF space is Y-up (0 at bottom of the document)
-        foreach (var word in words.OrderByDescending(chunk => chunk.Top))
+        foreach (var wordOrChunk in wordsOrChunks.OrderByDescending(chunk => chunk.Top))
         {
             var currentLine = lines.Count > 0 ? lines[^1] : null;
 
-            if (currentLine != null && currentLine[0].Top - word.Top <= lineGroupingTolerance)
+            if (currentLine != null && currentLine[0].Top - wordOrChunk.Top <= lineGroupingTolerance)
             {
-                currentLine.Add(word);
+                currentLine.Add(wordOrChunk);
             }
             else
             {
-                lines.Add([word]);
+                lines.Add([wordOrChunk]);
             }
         }
 

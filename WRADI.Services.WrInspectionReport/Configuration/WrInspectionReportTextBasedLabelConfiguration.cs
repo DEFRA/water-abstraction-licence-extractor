@@ -454,10 +454,14 @@ public static class WrInspectionReportTextBasedLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleSerialNumber() =>
         (WrInspectionReportFieldNames.SerialNumber, [
+            // AlsoStartsWithLoose: "Meter make: <value> Serial number: N/A" is one
+            // undifferentiated column on some real documents, so the column-start-only start
+            // text never matches - same shape as Time sharing a row with Inspection Date.
             WrFluentRule
                 .After("Serial number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .RequireTextToClaimGroup()
+                .AlsoStartsWithLoose("Serial number")
                 .FromText()
                 .Build(), // Existing template
             WrFluentRule

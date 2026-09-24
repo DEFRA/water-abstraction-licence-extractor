@@ -419,7 +419,7 @@ public static class ApplicableToMost
 
                     foreach (var possibility in matchedLabel.Possibilities)
                     {
-                        if (!outputText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                        if (!MatchesPossibility(outputText, possibility)
                             && !autoCorrectedOutput.Any(aco =>
                                 aco.Text.Equals(possibility.Text, StringComparison.OrdinalIgnoreCase)))
                         {

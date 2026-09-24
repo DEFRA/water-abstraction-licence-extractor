@@ -357,7 +357,7 @@ public static class BaseMethod
         foreach (var line in lines)
         {
             var possiblityFound = request.label.Possibilities.Any(possibility =>
-                line.Text.Contains(possibility.Text));
+                MatchesPossibility(line.Text, possibility));
 
             if (!possiblityFound)
             {
@@ -365,7 +365,7 @@ public static class BaseMethod
             }
 
             var possibility = request.label.Possibilities
-                .First(possibility => line.Text.Contains(possibility.Text));
+                .First(possibility => MatchesPossibility(line.Text, possibility));
 
             var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
